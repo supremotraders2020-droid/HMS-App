@@ -10,7 +10,7 @@ import { Stethoscope, UserPlus, LogIn } from "lucide-react";
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
 interface AuthFormsProps {
-  onLogin?: (username: string, role: UserRole, tenantId: string) => void;
+  onLogin?: (username: string, role: UserRole) => void;
   onRegister?: (userData: any) => void;
 }
 
@@ -21,17 +21,9 @@ export default function AuthForms({ onLogin, onRegister }: AuthFormsProps) {
     email: "",
     password: "",
     role: "" as UserRole,
-    tenantId: "",
     firstName: "",
     lastName: ""
   });
-
-  // Mock hospitals for tenant selection
-  const mockHospitals = [
-    { id: "1", name: "City General Hospital" },
-    { id: "2", name: "St. Mary's Medical Center" },
-    { id: "3", name: "Regional Healthcare Network" }
-  ];
 
   const roles: { value: UserRole; label: string; description: string }[] = [
     { value: "ADMIN", label: "Administrator", description: "Full system access" },
@@ -44,7 +36,7 @@ export default function AuthForms({ onLogin, onRegister }: AuthFormsProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin && onLogin) {
-      onLogin(formData.username, formData.role, formData.tenantId);
+      onLogin(formData.username, formData.role);
       console.log("Login attempted:", formData);
     } else if (!isLogin && onRegister) {
       onRegister(formData);
@@ -141,21 +133,6 @@ export default function AuthForms({ onLogin, onRegister }: AuthFormsProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="hospital" data-testid="label-hospital">Hospital</Label>
-              <Select value={formData.tenantId} onValueChange={(value) => handleInputChange("tenantId", value)}>
-                <SelectTrigger data-testid="select-hospital">
-                  <SelectValue placeholder="Select your hospital" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockHospitals.map((hospital) => (
-                    <SelectItem key={hospital.id} value={hospital.id}>
-                      {hospital.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="role" data-testid="label-role">Role</Label>

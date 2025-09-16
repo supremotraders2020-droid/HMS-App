@@ -11,7 +11,6 @@ import HMSSidebar from "@/components/HMSSidebar";
 import HMSDashboard from "@/components/HMSDashboard";
 import UserManagement from "@/components/UserManagement";
 import PatientCard from "@/components/PatientCard";
-import TenantSwitcher from "@/components/TenantSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotFound from "@/pages/not-found";
 
@@ -191,22 +190,20 @@ function App() {
     status: "ACTIVE"
   });
 
-  // Hospital data
+  // Hospital data (Galaxy Multi Specialty Hospital only)
   const hospitals: Hospital[] = [
-    { id: "1", name: "Galaxy Multi Specialty Hospital", location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062", status: "ACTIVE" },
-    { id: "2", name: "St. Mary's Medical Center", location: "Westside", status: "ACTIVE" },
-    { id: "3", name: "Regional Healthcare Network", location: "Northside", status: "MAINTENANCE" }
+    { id: "1", name: "Galaxy Multi Specialty Hospital", location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062", status: "ACTIVE" }
   ];
 
-  const handleLogin = (username: string, role: UserRole, tenantId: string) => {
-    const selectedHospital = hospitals.find(h => h.id === tenantId) || hospitals[0];
-    setCurrentHospital(selectedHospital);
+  const handleLogin = (username: string, role: UserRole) => {
+    const galaxyHospital = hospitals[0]; // Galaxy Multi Specialty Hospital
+    setCurrentHospital(galaxyHospital);
     setCurrentUser({
       username,
       name: getDisplayName(username, role),
       role,
-      tenantId,
-      hospitalName: selectedHospital.name
+      tenantId: galaxyHospital.id,
+      hospitalName: galaxyHospital.name
     });
   };
 
@@ -224,17 +221,6 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
-  };
-
-  const handleHospitalChange = (hospital: Hospital) => {
-    setCurrentHospital(hospital);
-    if (currentUser) {
-      setCurrentUser({
-        ...currentUser,
-        tenantId: hospital.id,
-        hospitalName: hospital.name
-      });
-    }
   };
 
   // Custom sidebar width for HMS
@@ -279,16 +265,12 @@ function App() {
                 <header className="flex items-center justify-between p-4 border-b bg-background">
                   <div className="flex items-center space-x-4">
                     <SidebarTrigger data-testid="button-sidebar-toggle" />
-                    <TenantSwitcher 
-                      currentHospital={currentHospital}
-                      hospitals={hospitals}
-                      onHospitalChange={handleHospitalChange}
-                    />
+                    <div className="flex flex-col">
+                      <span className="text-lg font-semibold">Galaxy Multi Specialty Hospital</span>
+                      <span className="text-xs text-muted-foreground">HMS Core System</span>
+                    </div>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <span className="text-sm text-muted-foreground">
-                      Tenant ID: {currentUser.tenantId}
-                    </span>
                     <ThemeToggle />
                   </div>
                 </header>
