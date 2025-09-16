@@ -142,13 +142,6 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
         </div>
       </Route>
-      <Route path="/review-service">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold">Review Service</h2>
-          <p className="text-muted-foreground">Patient Feedback & Review Management</p>
-          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
-        </div>
-      </Route>
       <Route path="/hospitality-service">
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold">Hospitality Service</h2>
