@@ -113,9 +113,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
     }
   };
 
-  const handleMenuClick = (url: string) => {
+  const handleMenuClick = (url: string, external?: boolean, externalUrl?: string) => {
     console.log(`Navigating to: ${url}`);
-    onNavigate?.(url);
+    if (external && externalUrl) {
+      window.open(externalUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      onNavigate?.(url);
+    }
   };
 
   return (
@@ -186,7 +190,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                     <Button
                       variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => handleMenuClick(item.url)}
+                      onClick={() => {
+                        if (item.title === "OPD Service") {
+                          handleMenuClick(item.url, true, "https://clinic-flow-kadamatulp.replit.app");
+                        } else {
+                          handleMenuClick(item.url);
+                        }
+                      }}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       <span>{item.title}</span>
@@ -213,7 +223,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                     <Button
                       variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => handleMenuClick(item.url)}
+                      onClick={() => {
+                        if (item.title === "OPD Service") {
+                          handleMenuClick(item.url, true, "https://clinic-flow-kadamatulp.replit.app");
+                        } else {
+                          handleMenuClick(item.url);
+                        }
+                      }}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       <span>{item.title}</span>
@@ -240,7 +256,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                     <Button
                       variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => handleMenuClick(item.url)}
+                      onClick={() => {
+                        if (item.title === "OPD Service") {
+                          handleMenuClick(item.url, true, "https://clinic-flow-kadamatulp.replit.app");
+                        } else {
+                          handleMenuClick(item.url);
+                        }
+                      }}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       <span>{item.title}</span>
