@@ -126,14 +126,14 @@ function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentHospital, setCurrentHospital] = useState<Hospital>({
     id: "1",
-    name: "City General Hospital", 
-    location: "Downtown",
+    name: "Galaxy Multi Specialty Hospital", 
+    location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062",
     status: "ACTIVE"
   });
 
-  // Mock hospital data
+  // Hospital data
   const hospitals: Hospital[] = [
-    { id: "1", name: "City General Hospital", location: "Downtown", status: "ACTIVE" },
+    { id: "1", name: "Galaxy Multi Specialty Hospital", location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062", status: "ACTIVE" },
     { id: "2", name: "St. Mary's Medical Center", location: "Westside", status: "ACTIVE" },
     { id: "3", name: "Regional Healthcare Network", location: "Northside", status: "MAINTENANCE" }
   ];
