@@ -197,6 +197,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           handleMenuClick(item.url, true, "https://stock-flow-kadamatulp.replit.app");
                         } else if (item.title === "Patient Tracking") {
                           handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
+                        } else if (item.title === "Biometric Service") {
+                          handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
                         } else if (item.title === "Chatbot Service") {
                           handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
                         } else if (item.title === "Notification Service") {
@@ -240,6 +242,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           handleMenuClick(item.url, true, "https://stock-flow-kadamatulp.replit.app");
                         } else if (item.title === "Patient Tracking") {
                           handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
+                        } else if (item.title === "Biometric Service") {
+                          handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
                         } else if (item.title === "Chatbot Service") {
                           handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
                         } else if (item.title === "Notification Service") {
@@ -283,6 +287,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           handleMenuClick(item.url, true, "https://stock-flow-kadamatulp.replit.app");
                         } else if (item.title === "Patient Tracking") {
                           handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
+                        } else if (item.title === "Biometric Service") {
+                          handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
                         } else if (item.title === "Chatbot Service") {
                           handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
                         } else if (item.title === "Notification Service") {
