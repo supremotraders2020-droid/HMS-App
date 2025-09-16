@@ -105,6 +105,73 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           </div>
         </div>
       </Route>
+
+      {/* Service Routes */}
+      <Route path="/opd-service">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold">OPD Service</h2>
+          <p className="text-muted-foreground">Outpatient Department Management System</p>
+          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
+        </div>
+      </Route>
+      <Route path="/patient-service">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold">Patient Service</h2>
+          <p className="text-muted-foreground">Comprehensive Patient Management System</p>
+          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
+        </div>
+      </Route>
+      <Route path="/inventory-service">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold">Inventory Service</h2>
+          <p className="text-muted-foreground">Medical Equipment & Supply Management</p>
+          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
+        </div>
+      </Route>
+      <Route path="/patient-tracking">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold">Patient Tracking Service</h2>
+          <p className="text-muted-foreground">Real-time Patient Location & Status Tracking</p>
+          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
+        </div>
+      </Route>
+      <Route path="/biometric-service">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold">Biometric Service</h2>
+          <p className="text-muted-foreground">Biometric Authentication & Identification</p>
+          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
+        </div>
+      </Route>
+      <Route path="/review-service">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold">Review Service</h2>
+          <p className="text-muted-foreground">Patient Feedback & Review Management</p>
+          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
+        </div>
+      </Route>
+      <Route path="/hospitality-service">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold">Hospitality Service</h2>
+          <p className="text-muted-foreground">Patient Comfort & Amenity Management</p>
+          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
+        </div>
+      </Route>
+      <Route path="/chatbot-service">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold">Chatbot Service</h2>
+          <p className="text-muted-foreground">AI-Powered Patient Assistance</p>
+          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
+        </div>
+      </Route>
+      <Route path="/notification-service">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold">Notification Service</h2>
+          <p className="text-muted-foreground">Real-time Alerts & Communication</p>
+          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
+        </div>
+      </Route>
+
+      {/* Other Routes */}
       <Route path="/appointments">
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold">Appointments</h2>

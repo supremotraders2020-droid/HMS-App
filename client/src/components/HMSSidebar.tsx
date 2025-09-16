@@ -24,7 +24,14 @@ import {
   ClipboardList,
   Activity,
   Building2,
-  LogOut
+  LogOut,
+  Package,
+  MapPin,
+  Fingerprint,
+  Star,
+  Coffee,
+  MessageCircle,
+  Bell
 } from "lucide-react";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
@@ -46,6 +53,22 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Dashboard", url: "/dashboard", icon: Home }
     ];
 
+    // Define all services with their access levels
+    const services = [
+      { title: "OPD Service", url: "/opd-service", icon: ClipboardList, roles: ["ADMIN", "OPD_MANAGER", "DOCTOR", "NURSE"] },
+      { title: "Patient Service", url: "/patient-service", icon: Users, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"] },
+      { title: "Inventory Service", url: "/inventory-service", icon: Package, roles: ["ADMIN", "NURSE", "OPD_MANAGER"] },
+      { title: "Patient Tracking", url: "/patient-tracking", icon: MapPin, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"] },
+      { title: "Biometric Service", url: "/biometric-service", icon: Fingerprint, roles: ["ADMIN", "NURSE", "DOCTOR"] },
+      { title: "Review Service", url: "/review-service", icon: Star, roles: ["ADMIN", "DOCTOR", "OPD_MANAGER", "PATIENT"] },
+      { title: "Hospitality Service", url: "/hospitality-service", icon: Coffee, roles: ["ADMIN", "NURSE", "OPD_MANAGER"] },
+      { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
+      { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"] }
+    ];
+
+    // Filter services based on user role
+    const accessibleServices = services.filter(service => service.roles.includes(role));
+
     const roleSpecificItems: Record<UserRole, any[]> = {
       ADMIN: [
         { title: "User Management", url: "/users", icon: UserCog },
@@ -54,32 +77,27 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
         { title: "Audit Logs", url: "/audit", icon: FileText }
       ],
       DOCTOR: [
-        { title: "Patients", url: "/patients", icon: Users },
         { title: "Appointments", url: "/appointments", icon: Calendar },
         { title: "Medical Records", url: "/records", icon: FileText },
-        { title: "Prescriptions", url: "/prescriptions", icon: ClipboardList }
+        { title: "Prescriptions", url: "/prescriptions", icon: Stethoscope }
       ],
       NURSE: [
         { title: "Patient Care", url: "/patient-care", icon: Activity },
         { title: "Schedules", url: "/schedules", icon: Calendar },
-        { title: "Vitals", url: "/vitals", icon: Stethoscope },
-        { title: "Reports", url: "/reports", icon: FileText }
+        { title: "Vitals", url: "/vitals", icon: Stethoscope }
       ],
       OPD_MANAGER: [
-        { title: "OPD Queue", url: "/opd-queue", icon: ClipboardList },
-        { title: "Appointments", url: "/appointments", icon: Calendar },
         { title: "Staff Schedule", url: "/staff", icon: Users },
         { title: "Reports", url: "/opd-reports", icon: FileText }
       ],
       PATIENT: [
         { title: "My Appointments", url: "/my-appointments", icon: Calendar },
         { title: "Medical History", url: "/my-history", icon: FileText },
-        { title: "Test Results", url: "/test-results", icon: Activity },
-        { title: "Prescriptions", url: "/my-prescriptions", icon: ClipboardList }
+        { title: "Test Results", url: "/test-results", icon: Activity }
       ]
     };
 
-    return [...baseItems, ...roleSpecificItems[role]];
+    return [...baseItems, ...accessibleServices, ...roleSpecificItems[role]];
   };
 
   const menuItems = getMenuItems(currentRole);
@@ -134,10 +152,86 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild data-testid="link-dashboard">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => handleMenuClick("/dashboard")}
+                  >
+                    <Home className="h-4 w-4 mr-2" />
+                    <span>Dashboard</span>
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Core Services</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {getMenuItems(currentRole).filter(item => 
+                ['OPD Service', 'Patient Service', 'Patient Tracking', 'Biometric Service'].includes(item.title)
+              ).map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild
+                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => handleMenuClick(item.url)}
+                    >
+                      <item.icon className="h-4 w-4 mr-2" />
+                      <span>{item.title}</span>
+                    </Button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Support Services</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {getMenuItems(currentRole).filter(item => 
+                ['Inventory Service', 'Review Service', 'Hospitality Service', 'Chatbot Service', 'Notification Service'].includes(item.title)
+              ).map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild
+                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => handleMenuClick(item.url)}
+                    >
+                      <item.icon className="h-4 w-4 mr-2" />
+                      <span>{item.title}</span>
+                    </Button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Management</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {getMenuItems(currentRole).filter(item => 
+                !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Review Service', 'Hospitality Service', 'Chatbot Service', 'Notification Service'].includes(item.title)
+              ).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild
