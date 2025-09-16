@@ -1,0 +1,214 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Stethoscope, UserPlus, LogIn } from "lucide-react";
+
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+
+interface AuthFormsProps {
+  onLogin?: (username: string, role: UserRole, tenantId: string) => void;
+  onRegister?: (userData: any) => void;
+}
+
+export default function AuthForms({ onLogin, onRegister }: AuthFormsProps) {
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    role: "" as UserRole,
+    tenantId: "",
+    firstName: "",
+    lastName: ""
+  });
+
+  // Mock hospitals for tenant selection
+  const mockHospitals = [
+    { id: "1", name: "City General Hospital" },
+    { id: "2", name: "St. Mary's Medical Center" },
+    { id: "3", name: "Regional Healthcare Network" }
+  ];
+
+  const roles: { value: UserRole; label: string; description: string }[] = [
+    { value: "ADMIN", label: "Administrator", description: "Full system access" },
+    { value: "DOCTOR", label: "Doctor", description: "Patient care & diagnosis" },
+    { value: "NURSE", label: "Nurse", description: "Patient care & monitoring" },
+    { value: "OPD_MANAGER", label: "OPD Manager", description: "Outpatient department" },
+    { value: "PATIENT", label: "Patient", description: "Personal health records" }
+  ];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLogin && onLogin) {
+      onLogin(formData.username, formData.role, formData.tenantId);
+      console.log("Login attempted:", formData);
+    } else if (!isLogin && onRegister) {
+      onRegister(formData);
+      console.log("Registration attempted:", formData);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <Stethoscope className="h-8 w-8 text-primary mr-2" />
+            <span className="text-2xl font-semibold">HMS Core</span>
+          </div>
+          <CardTitle className="text-2xl">{isLogin ? "Sign In" : "Create Account"}</CardTitle>
+          <CardDescription>
+            {isLogin 
+              ? "Enter your credentials to access the hospital system" 
+              : "Register for a new account in the hospital system"
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" data-testid="label-firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    data-testid="input-firstName"
+                    placeholder="John"
+                    value={formData.firstName}
+                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" data-testid="label-lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    data-testid="input-lastName"
+                    placeholder="Doe"
+                    value={formData.lastName}
+                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="username" data-testid="label-username">Username</Label>
+              <Input
+                id="username"
+                data-testid="input-username"
+                placeholder="Enter your username"
+                value={formData.username}
+                onChange={(e) => handleInputChange("username", e.target.value)}
+                required
+              />
+            </div>
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="email" data-testid="label-email">Email</Label>
+                <Input
+                  id="email"
+                  data-testid="input-email"
+                  type="email"
+                  placeholder="doctor@hospital.com"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="password" data-testid="label-password">Password</Label>
+              <Input
+                id="password"
+                data-testid="input-password"
+                type="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="hospital" data-testid="label-hospital">Hospital</Label>
+              <Select value={formData.tenantId} onValueChange={(value) => handleInputChange("tenantId", value)}>
+                <SelectTrigger data-testid="select-hospital">
+                  <SelectValue placeholder="Select your hospital" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockHospitals.map((hospital) => (
+                    <SelectItem key={hospital.id} value={hospital.id}>
+                      {hospital.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="role" data-testid="label-role">Role</Label>
+              <Select value={formData.role} onValueChange={(value: UserRole) => handleInputChange("role", value)}>
+                <SelectTrigger data-testid="select-role">
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      <div className="flex items-center justify-between w-full">
+                        <span>{role.label}</span>
+                        <Badge variant="secondary" className="ml-2 text-xs">
+                          {role.description}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              data-testid={isLogin ? "button-login" : "button-register"}
+            >
+              {isLogin ? (
+                <>
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign In
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Create Account
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              data-testid="button-toggle-mode"
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-sm"
+            >
+              {isLogin ? "Need an account? Register here" : "Already have an account? Sign in"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
