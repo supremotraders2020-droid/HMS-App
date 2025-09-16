@@ -199,6 +199,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
                         } else if (item.title === "Chatbot Service") {
                           handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
+                        } else if (item.title === "Notification Service") {
+                          handleMenuClick(item.url, true, "https://medi-notify-hub-kadamatulp.replit.app");
                         } else {
                           handleMenuClick(item.url);
                         }
@@ -240,6 +242,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
                         } else if (item.title === "Chatbot Service") {
                           handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
+                        } else if (item.title === "Notification Service") {
+                          handleMenuClick(item.url, true, "https://medi-notify-hub-kadamatulp.replit.app");
                         } else {
                           handleMenuClick(item.url);
                         }
@@ -281,6 +285,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
                         } else if (item.title === "Chatbot Service") {
                           handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
+                        } else if (item.title === "Notification Service") {
+                          handleMenuClick(item.url, true, "https://medi-notify-hub-kadamatulp.replit.app");
                         } else {
                           handleMenuClick(item.url);
                         }
