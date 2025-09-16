@@ -9,10 +9,12 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthForms from "@/components/AuthForms";
 import HMSSidebar from "@/components/HMSSidebar";
 import HMSDashboard from "@/components/HMSDashboard";
-import UserManagement from "@/components/UserManagement";
 import PatientCard from "@/components/PatientCard";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotFound from "@/pages/not-found";
+import UserManagement from "@/pages/UserManagement";
+import HospitalSettings from "@/pages/HospitalSettings";
+import SystemSettings from "@/pages/SystemSettings";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -74,16 +76,31 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
       </Route>
       <Route path="/users">
         {currentUser.role === "ADMIN" ? (
-          <UserManagement 
-            onCreateUser={(userData) => console.log('Create user:', userData)}
-            onEditUser={(id, userData) => console.log('Edit user:', id, userData)}
-            onDeleteUser={(id) => console.log('Delete user:', id)}
-            onChangeRole={(id, role) => console.log('Change role:', id, role)}
-          />
+          <UserManagement />
         ) : (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only administrators can access user management.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/hospitals">
+        {currentUser.role === "ADMIN" ? (
+          <HospitalSettings />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators can access hospital settings.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/settings">
+        {currentUser.role === "ADMIN" ? (
+          <SystemSettings />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators can access system settings.</p>
           </div>
         )}
       </Route>

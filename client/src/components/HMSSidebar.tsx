@@ -71,8 +71,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       ADMIN: [
         { title: "User Management", url: "/users", icon: UserCog },
         { title: "Hospital Settings", url: "/hospitals", icon: Building2 },
-        { title: "System Settings", url: "/settings", icon: Settings },
-        { title: "Audit Logs", url: "/audit", icon: FileText }
+        { title: "System Settings", url: "/settings", icon: Settings }
       ],
       DOCTOR: [
         { title: "Appointments", url: "/appointments", icon: Calendar },
@@ -308,28 +307,6 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {currentRole === "ADMIN" && (
-          <SidebarGroup>
-            <SidebarGroupLabel>System</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => handleMenuClick("/system-health")}
-                      data-testid="link-system-health"
-                    >
-                      <Activity className="h-4 w-4 mr-2" />
-                      <span>System Health</span>
-                    </Button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
 
       <SidebarFooter className="p-4">
