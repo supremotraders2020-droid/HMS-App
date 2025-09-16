@@ -193,6 +193,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                       onClick={() => {
                         if (item.title === "OPD Service") {
                           handleMenuClick(item.url, true, "https://clinic-flow-kadamatulp.replit.app");
+                        } else if (item.title === "Patient Service") {
+                          handleMenuClick(item.url, true, "https://patient-care-central-kadamatulp.replit.app");
                         } else {
                           handleMenuClick(item.url);
                         }
@@ -226,6 +228,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                       onClick={() => {
                         if (item.title === "OPD Service") {
                           handleMenuClick(item.url, true, "https://clinic-flow-kadamatulp.replit.app");
+                        } else if (item.title === "Patient Service") {
+                          handleMenuClick(item.url, true, "https://patient-care-central-kadamatulp.replit.app");
                         } else {
                           handleMenuClick(item.url);
                         }
@@ -259,6 +263,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                       onClick={() => {
                         if (item.title === "OPD Service") {
                           handleMenuClick(item.url, true, "https://clinic-flow-kadamatulp.replit.app");
+                        } else if (item.title === "Patient Service") {
+                          handleMenuClick(item.url, true, "https://patient-care-central-kadamatulp.replit.app");
                         } else {
                           handleMenuClick(item.url);
                         }
