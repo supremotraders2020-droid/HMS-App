@@ -70,6 +70,63 @@
 - **Drawer Panels**: Quick actions, additional patient information
 - **Toast Notifications**: System alerts, success confirmations
 
+## Dashboard-Specific Design Enhancements
+
+### Medical Gradients & Visual Elements
+- **Primary Gradient**: `bg-gradient-to-br from-blue-50 via-white to-blue-50/50` (Light mode)
+- **Card Gradients**: `bg-gradient-to-r from-white to-blue-50/30` for stat cards
+- **Accent Gradients**: `bg-gradient-to-r from-primary/10 via-primary/5 to-transparent`
+- **Emergency Gradients**: `bg-gradient-to-r from-destructive/10 to-destructive/5` for urgent items
+- **Success Gradients**: `bg-gradient-to-r from-green-50 to-emerald-50/30` for positive metrics
+
+### Enhanced Visual Hierarchy
+- **Stat Cards**: Elevated cards with subtle shadows and gradient backgrounds
+- **Icon Styling**: Medical icons with proper sizing (h-5 w-5 for stats, h-4 w-4 for actions)
+- **Typography Scale**: 
+  - Dashboard title: `text-2xl md:text-3xl font-semibold`
+  - Section headers: `text-lg font-medium`
+  - Stat values: `text-2xl md:text-3xl font-bold`
+  - Supporting text: `text-sm text-muted-foreground`
+
+### Responsive Breakpoints (Mobile-First)
+- **Mobile**: `base` - Single column layout, compact spacing
+- **Tablet**: `md:` (768px+) - 2-column grid for stats, stacked sections
+- **Desktop**: `lg:` (1024px+) - 4-column stats grid, side-by-side sections
+- **Large Desktop**: `xl:` (1280px+) - Expanded spacing and larger components
+
+### Dashboard Layout Patterns
+- **Stats Grid**: `grid gap-4 md:grid-cols-2 lg:grid-cols-4`
+- **Section Grid**: `grid gap-6 md:grid-cols-2 xl:grid-cols-3`
+- **Container Spacing**: `space-y-6` for main sections, `space-y-4` for subsections
+- **Card Padding**: `p-6` on desktop, `p-4` on mobile
+- **Icon Spacing**: `mr-2` for inline icons, `mb-2` for stacked layouts
+
+### Medical-Themed Visual Elements
+- **Status Indicators**: Colored dots with proper medical semantics
+  - Critical/Emergency: `bg-red-500`
+  - Warning/Attention: `bg-amber-500`
+  - Normal/Success: `bg-green-500`
+  - Info/Pending: `bg-blue-500`
+- **Activity Timeline**: Left border indicators with role-based colors
+- **Hover Effects**: Subtle elevation with `hover-elevate` utility
+- **Focus States**: Enhanced focus rings for accessibility
+- **Loading States**: Medical-themed skeleton components
+
+### Dashboard Card Styling
+- **Stat Cards**: 
+  - Background: `bg-gradient-to-br from-card via-card/95 to-card/90`
+  - Border: Subtle with `border-card-border/50`
+  - Shadow: `shadow-sm hover:shadow-md` transition
+  - Icon container: Subtle background with role-appropriate colors
+- **Quick Actions**: 
+  - Button styling: `variant="outline"` with medical icons
+  - Hover states: Subtle background changes
+  - Loading states: Disabled appearance with spinner
+- **Activity Feed**:
+  - Timeline design with connecting lines
+  - Badge indicators for activity types
+  - Relative timestamps with proper spacing
+
 ## Healthcare-Specific Considerations
 - **Patient Privacy**: Subtle indicators when viewing sensitive data
 - **Emergency States**: Clear visual hierarchy for urgent patient needs
