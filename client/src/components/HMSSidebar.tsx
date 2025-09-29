@@ -30,7 +30,8 @@ import {
   Fingerprint,
   Coffee,
   MessageCircle,
-  Bell
+  Bell,
+  Wrench
 } from "lucide-react";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
@@ -60,6 +61,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Patient Tracking", url: "/patient-tracking", icon: MapPin, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"] },
       { title: "Biometric Service", url: "/biometric-service", icon: Fingerprint, roles: ["ADMIN", "NURSE", "DOCTOR"] },
       { title: "Hospitality Service", url: "/hospitality-service", icon: Coffee, roles: ["ADMIN", "NURSE", "OPD_MANAGER"] },
+      { title: "Equipment Servicing", url: "/equipment-servicing", icon: Wrench, roles: ["ADMIN", "NURSE", "OPD_MANAGER"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
       { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"] }
     ];
@@ -198,6 +200,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
                         } else if (item.title === "Biometric Service") {
                           handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
+                        } else if (item.title === "Equipment Servicing") {
+                          handleMenuClick(item.url, true, "https://care-connect-1-kadamatulp.replit.app");
                         } else if (item.title === "Chatbot Service") {
                           handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
                         } else if (item.title === "Notification Service") {
@@ -222,7 +226,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           <SidebarGroupContent>
             <SidebarMenu>
               {getMenuItems(currentRole).filter(item => 
-                ['Inventory Service', 'Hospitality Service', 'Chatbot Service', 'Notification Service'].includes(item.title)
+                ['Inventory Service', 'Hospitality Service', 'Equipment Servicing', 'Chatbot Service', 'Notification Service'].includes(item.title)
               ).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
@@ -243,6 +247,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
                         } else if (item.title === "Biometric Service") {
                           handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
+                        } else if (item.title === "Equipment Servicing") {
+                          handleMenuClick(item.url, true, "https://care-connect-1-kadamatulp.replit.app");
                         } else if (item.title === "Chatbot Service") {
                           handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
                         } else if (item.title === "Notification Service") {
@@ -267,7 +273,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           <SidebarGroupContent>
             <SidebarMenu>
               {getMenuItems(currentRole).filter(item => 
-                !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Hospitality Service', 'Chatbot Service', 'Notification Service'].includes(item.title)
+                !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Hospitality Service', 'Equipment Servicing', 'Chatbot Service', 'Notification Service'].includes(item.title)
               ).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
@@ -288,6 +294,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
                         } else if (item.title === "Biometric Service") {
                           handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
+                        } else if (item.title === "Equipment Servicing") {
+                          handleMenuClick(item.url, true, "https://care-connect-1-kadamatulp.replit.app");
                         } else if (item.title === "Chatbot Service") {
                           handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
                         } else if (item.title === "Notification Service") {
