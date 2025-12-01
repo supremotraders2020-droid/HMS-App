@@ -1,0 +1,339 @@
+# Galaxy Multi Specialty Hospital - Notification Service
+
+## Project Overview
+
+Build a comprehensive hospital notification service for **"Galaxy Multi Specialty Hospital"** featuring multi-channel notifications (push, email, SMS, WhatsApp), hospital team management, and an attractive responsive interface with modern medical-grade design.
+
+**Hospital Address:** Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062
+
+---
+
+## Core Features
+
+### 1. Multi-Channel Notification System
+
+Create a notification management system that supports multiple communication channels:
+
+- **Push Notifications** - In-app and browser push notifications
+- **Email Notifications** - Using SendGrid integration for professional email delivery
+- **SMS Notifications** - Text message alerts for urgent communications
+- **WhatsApp Notifications** - WhatsApp Business API integration for patient communication
+
+#### Notification Categories
+- Health Tips
+- Hospital Updates
+- Emergency Alerts
+- OPD Announcements
+- Disease Alerts
+- General Notifications
+
+#### Priority Levels
+- Low (routine updates)
+- Medium (important notices)
+- High (urgent matters)
+- Critical (emergency alerts with visual pulse effects)
+
+---
+
+### 2. Advanced Notification Form Wizard
+
+Implement a 2-step form wizard for creating notifications:
+
+#### Step 1: Compose Message
+- Title input with character limit
+- Rich text message composition
+- Category selection with icons
+- Priority level selection with visual indicators
+- Scheduled delivery option with date/time picker
+
+#### Step 2: Channels & Media
+- Multi-channel selection (Push, Email, SMS, WhatsApp)
+- Live preview for each selected channel
+- Drag-and-drop file upload with object storage integration
+- Link attachment capability
+- Media file validation (10MB limit, allowed types: images, videos, PDFs)
+
+#### Form Features
+- Progress indicator showing current step
+- Live preview of notification appearance
+- Form validation with clear error messages
+- Draft saving capability
+- Success/error feedback with toast notifications
+
+---
+
+### 3. Hospital Team Directory
+
+Create a comprehensive team management system:
+
+#### Team Member Profiles
+- Full name and professional title
+- Department assignment
+- Specialization details
+- Contact information (phone, email)
+- Profile photo with avatar fallback
+- On-call status indicator
+- Availability status
+
+#### Team Features
+- Searchable team directory
+- Filter by department
+- Filter by on-call status
+- Team member cards with quick actions
+- Detailed profile modal/dialog
+- Real-time on-call status management
+
+#### Departments
+- Emergency Medicine
+- Cardiology
+- Neurology
+- Orthopedics
+- Pediatrics
+- General Surgery
+- Internal Medicine
+- Radiology
+- Pathology
+- Administration
+
+---
+
+### 4. Dashboard & Analytics
+
+Build an informative dashboard with:
+
+#### Hero Section
+- Hospital branding with gradient background
+- Welcome message with hospital name
+- Quick action buttons
+- Hospital address display
+
+#### Statistics Cards
+- Total notifications sent
+- Active team members
+- Pending notifications
+- Channel-wise delivery stats
+- Real-time counters with animations
+
+#### Recent Activity
+- Latest notifications list
+- Quick preview of notification status
+- Filter by channel/priority
+
+---
+
+## Design Requirements
+
+### Color Scheme - Medical Teal Theme
+
+```css
+/* Primary Colors */
+--primary: 188 78% 42%        /* Medical Teal */
+--primary-foreground: 0 0% 100%
+
+/* Background Colors */
+--background: 180 20% 99%
+--card: 0 0% 100%
+
+/* Accent Colors */
+--accent: 188 60% 95%
+--accent-foreground: 188 78% 32%
+
+/* Semantic Colors */
+--destructive: 0 84% 60%      /* Emergency Red */
+--warning: 38 92% 50%         /* Alert Orange */
+--success: 142 76% 36%        /* Health Green */
+```
+
+### Typography
+- Clean, professional medical-grade fonts
+- Clear hierarchy with proper heading sizes
+- Readable body text for medical information
+- Proper contrast ratios for accessibility
+
+### Visual Elements
+- Gradient backgrounds for hero sections
+- Subtle shadows for depth
+- Rounded corners (consistent border-radius)
+- Medical-themed icons from Lucide React
+- Heartbeat pulse effects for critical alerts
+- Professional healthcare aesthetic
+
+---
+
+## Responsive Design
+
+### Mobile-First Approach
+- Fluid layouts that adapt to all screen sizes
+- Touch-friendly interactive elements
+- Mobile navigation with collapsible sidebar
+- Swipe gestures where appropriate
+
+### Breakpoints
+- Mobile: < 640px
+- Tablet: 640px - 1024px
+- Desktop: > 1024px
+
+### Mobile Optimizations
+- Collapsible sidebar navigation
+- Bottom sheet for mobile filters
+- Stacked card layouts
+- Touch-optimized form inputs
+- Responsive data tables
+
+---
+
+## Animations & Micro-interactions
+
+### Component Animations
+- Subtle scale transforms on hover (1.02x)
+- Smooth transitions for state changes
+- Fade-in animations for page loads
+- Loading skeletons for data fetching
+
+### Medical-themed Effects
+- Heartbeat pulse for on-call status indicators
+- Gentle glow for critical notifications
+- Progress animations in form wizard
+- Ripple effects on button clicks
+
+### Accessibility
+- Respect `prefers-reduced-motion` settings
+- All animations have graceful fallbacks
+- Focus indicators maintained during transitions
+- ARIA labels for animated elements
+
+---
+
+## Technical Stack
+
+### Frontend
+- React with TypeScript
+- Vite for build tooling
+- TanStack Query for data fetching
+- Wouter for routing
+- Tailwind CSS for styling
+- Shadcn UI components
+- Framer Motion for animations
+- Lucide React for icons
+
+### Backend
+- Express.js server
+- TypeScript
+- Drizzle ORM
+- PostgreSQL database (optional)
+- Object storage integration
+
+### Integrations
+- SendGrid for email delivery
+- Object storage for file uploads
+
+---
+
+## Data Models
+
+### Notification Schema
+```typescript
+{
+  id: number
+  title: string
+  message: string
+  category: string
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  channels: string[]  // ['push', 'email', 'sms', 'whatsapp']
+  scheduledAt: Date | null
+  mediaFiles: MediaFile[]
+  status: 'draft' | 'scheduled' | 'sent' | 'failed'
+  createdAt: Date
+  createdBy: string
+}
+```
+
+### Team Member Schema
+```typescript
+{
+  id: number
+  name: string
+  title: string
+  department: string
+  specialization: string
+  email: string
+  phone: string
+  photoUrl: string | null
+  isOnCall: boolean
+  status: 'available' | 'busy' | 'offline'
+}
+```
+
+### Media File Schema
+```typescript
+{
+  id: string
+  type: 'image' | 'video' | 'document' | 'link'
+  url: string
+  filename: string
+  size: number
+}
+```
+
+---
+
+## API Endpoints
+
+### Notifications
+- `GET /api/notifications` - List all notifications
+- `POST /api/notifications` - Create new notification
+- `GET /api/notifications/:id` - Get notification details
+- `PUT /api/notifications/:id` - Update notification
+- `DELETE /api/notifications/:id` - Delete notification
+
+### Team Members
+- `GET /api/team-members` - List all team members
+- `POST /api/team-members` - Add new team member
+- `GET /api/team-members/:id` - Get member details
+- `PUT /api/team-members/:id` - Update member
+- `DELETE /api/team-members/:id` - Remove member
+
+### File Uploads
+- `POST /api/uploads` - Upload files to object storage
+
+---
+
+## User Experience Goals
+
+1. **Intuitive Navigation** - Easy-to-use sidebar with clear section labels
+2. **Quick Actions** - One-click access to common tasks
+3. **Visual Feedback** - Clear loading states and success/error messages
+4. **Professional Appearance** - Medical-grade design that inspires trust
+5. **Responsive Performance** - Fast load times and smooth interactions
+6. **Accessibility** - WCAG compliant with proper ARIA labels
+7. **Mobile Friendly** - Full functionality on all devices
+
+---
+
+## Sample Content
+
+### Sample Team Members
+- Dr. Priya Sharma - Chief Medical Officer (Emergency Medicine)
+- Dr. Rajesh Kumar - Senior Cardiologist (Cardiology)
+- Dr. Anjali Patel - Head of Pediatrics (Pediatrics)
+- Dr. Suresh Reddy - Orthopedic Surgeon (Orthopedics)
+- Dr. Meera Gupta - Neurologist (Neurology)
+
+### Sample Notifications
+- "OPD timings changed for Diwali holidays"
+- "New COVID-19 vaccination drive starting Monday"
+- "Emergency blood donation camp this weekend"
+- "Health tip: Stay hydrated during summer"
+
+---
+
+## Success Criteria
+
+1. All notification channels functional and tested
+2. Team directory with full CRUD operations
+3. Responsive design working on all screen sizes
+4. File uploads persisting to object storage
+5. Form validation with clear error messages
+6. Animations respecting reduced-motion preferences
+7. Professional medical-grade visual appearance
+8. Clean, maintainable codebase

@@ -1,0 +1,481 @@
+# Galaxy Multi Specialty Hospital - Patient Portal
+
+## Project Overview
+
+Create a comprehensive **Hospital Management System Patient Portal** for "Galaxy Multi Specialty Hospital" - a modern, full-featured web application that enables patients to manage their healthcare journey digitally.
+
+**Hospital Details:**
+- **Name:** Galaxy Multi Specialty Hospital
+- **Address:** Sane Chowk, Nair Colony, More Vesti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062
+- **Tagline:** "Your Health, Our Priority"
+
+---
+
+## Technology Stack
+
+### Frontend
+- **Framework:** React 18+ with Vite
+- **Routing:** Wouter (lightweight React router)
+- **State Management:** TanStack Query (React Query v5)
+- **Styling:** Tailwind CSS with custom design system
+- **UI Components:** Shadcn/ui component library
+- **Icons:** Lucide React
+- **Animations:** Framer Motion + CSS animations
+- **Forms:** React Hook Form with Zod validation
+
+### Backend
+- **Runtime:** Node.js with Express
+- **Database:** PostgreSQL (via Neon serverless)
+- **ORM:** Drizzle ORM
+- **Session Management:** Express Session with connect-pg-simple
+- **Authentication:** Passport.js with local strategy
+
+### Development
+- **Language:** TypeScript (strict mode)
+- **Build Tool:** Vite with HMR
+- **Package Manager:** npm
+
+---
+
+## Core Features
+
+### 1. Patient Dashboard
+- **Welcome Section:** Personalized greeting with patient name
+- **Quick Stats Cards:** Display key metrics with animated counters
+  - Total Appointments
+  - Upcoming Appointments
+  - Health Records Count
+  - Pending Bills
+- **Upcoming Appointments Widget:** Shows next 3 scheduled appointments
+- **Recent Health Records:** Quick access to latest medical records
+- **Quick Actions Grid:** One-click access to common tasks
+
+### 2. OPD (Outpatient Department) Booking
+- **Department Selection:** Browse medical departments/specialties
+- **Doctor Directory:** 
+  - Doctor cards with photo, name, specialty, rating
+  - Experience level and qualifications
+  - Consultation fees display
+  - Location and availability
+- **Appointment Scheduling:**
+  - Interactive calendar view
+  - Available time slots grid
+  - Real-time availability checking
+  - Booking confirmation flow
+
+### 3. Health Records Management
+- **Medical History:** Complete patient medical history
+- **Lab Reports:** View and download lab results
+- **Prescriptions:** Digital prescription records
+- **Diagnostic Reports:** X-rays, MRIs, CT scans
+- **Vaccination Records:** Immunization history
+- **Filter & Search:** Easy record retrieval
+
+### 4. Admission Management
+- **Current Admission Status:** Real-time admission tracking
+- **Room/Bed Information:** Ward and bed details
+- **Attending Physician:** Doctor assignment
+- **Treatment Plan:** Current treatment details
+- **Billing Information:** 
+  - Itemized charges
+  - Insurance details
+  - Payment history
+  - Outstanding balance
+
+### 5. Healthcare Chatbot Assistant
+- **AI-Powered Chat Interface:**
+  - Natural language understanding
+  - Quick responses for common queries
+  - Appointment booking assistance
+  - Record retrieval help
+  - Billing inquiries
+- **Features:**
+  - Typing indicators
+  - Message timestamps
+  - Smooth animations
+  - Mobile-optimized layout
+
+### 6. Notifications Center
+- **Notification Types:**
+  - Appointment reminders
+  - Lab results ready
+  - Prescription updates
+  - Payment due alerts
+  - General announcements
+- **Features:**
+  - Read/unread status
+  - Action buttons
+  - Time-based sorting
+  - Mark as read functionality
+
+### 7. Hospital Team Directory
+- **Staff Categories:**
+  - Doctors by specialty
+  - Nursing staff
+  - Administrative team
+  - Support staff
+- **Profile Information:**
+  - Professional photo
+  - Qualifications
+  - Experience
+  - Contact availability
+
+### 8. User Profile & Settings
+- **Personal Information:** Name, contact, emergency contacts
+- **Medical Profile:** Blood type, allergies, conditions
+- **Preferences:** Notification settings, language
+- **Security:** Password management
+
+---
+
+## Design System & Visual Guidelines
+
+### Color Palette
+```css
+/* Primary Colors - Medical Blue/Teal */
+--primary: 199 89% 48%          /* Vibrant teal for primary actions */
+--primary-foreground: 0 0% 100%  /* White text on primary */
+
+/* Secondary Colors */
+--secondary: 210 40% 96%         /* Light gray-blue for secondary elements */
+--accent: 199 89% 48%            /* Accent color matching primary */
+
+/* Background Colors */
+--background: 210 20% 98%        /* Off-white background */
+--card: 0 0% 100%                /* Pure white cards */
+--sidebar: 210 40% 96%           /* Subtle sidebar background */
+
+/* Chart/Data Visualization Colors */
+--chart-1: 199 89% 48%           /* Primary chart color */
+--chart-2: 160 84% 39%           /* Success/positive green */
+--chart-3: 30 80% 55%            /* Warning orange */
+--chart-4: 280 65% 60%           /* Purple accent */
+--chart-5: 340 75% 55%           /* Pink accent */
+```
+
+### Typography
+- **Headings:** Bold, clear hierarchy (text-2xl to text-4xl)
+- **Body Text:** Readable 14-16px base size
+- **Labels:** Smaller muted text for secondary info
+
+### Visual Elements
+- **Gradients:** Subtle primary-to-accent gradients for headers
+- **Shadows:** Layered shadows for depth (shadow-sm to shadow-xl)
+- **Border Radius:** Consistent rounded-md (0.375rem) for elements
+- **Animations:** Motion-safe prefixed for accessibility
+
+### Responsive Breakpoints
+```css
+sm: 640px   /* Small devices */
+md: 768px   /* Tablets */
+lg: 1024px  /* Laptops */
+xl: 1280px  /* Desktops */
+2xl: 1536px /* Large screens */
+```
+
+---
+
+## Component Architecture
+
+### Layout Components
+```
+Layout.tsx
+├── Sidebar (collapsible on mobile)
+│   ├── Hospital Branding
+│   ├── Navigation Menu
+│   └── User Profile Quick Access
+├── Main Content Area
+│   ├── Header (mobile menu trigger, theme toggle)
+│   └── Page Content (Router Outlet)
+└── ChatbotWidget (floating)
+```
+
+### Page Components
+```
+pages/
+├── dashboard.tsx      # Main patient dashboard
+├── opd.tsx           # OPD booking and doctors
+├── records.tsx       # Health records management
+├── admission.tsx     # Admission details
+├── notifications.tsx # Notification center
+├── team.tsx          # Hospital staff directory
+└── profile.tsx       # User profile settings
+```
+
+### Reusable Components
+```
+components/
+├── DoctorCard.tsx       # Doctor profile card
+├── ScheduleGrid.tsx     # Appointment slot picker
+├── NotificationCard.tsx # Notification item
+├── ChatbotWidget.tsx    # Floating chat assistant
+├── StatCard.tsx         # Dashboard stat display
+└── ui/                  # Shadcn component library
+```
+
+---
+
+## Data Models
+
+### Patient
+```typescript
+interface Patient {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  dateOfBirth: string;
+  bloodType: string;
+  allergies: string[];
+  emergencyContact: {
+    name: string;
+    phone: string;
+    relation: string;
+  };
+}
+```
+
+### Doctor
+```typescript
+interface Doctor {
+  id: number;
+  name: string;
+  specialty: string;
+  qualification: string;
+  experience: number;
+  rating: number;
+  consultationFee: number;
+  location: string;
+  image: string;
+  availableSlots: TimeSlot[];
+}
+```
+
+### Appointment
+```typescript
+interface Appointment {
+  id: number;
+  patientId: number;
+  doctorId: number;
+  date: string;
+  time: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  type: 'consultation' | 'follow-up' | 'emergency';
+  notes?: string;
+}
+```
+
+### HealthRecord
+```typescript
+interface HealthRecord {
+  id: number;
+  patientId: number;
+  type: 'lab_report' | 'prescription' | 'diagnostic' | 'vaccination';
+  title: string;
+  date: string;
+  doctorName: string;
+  department: string;
+  fileUrl?: string;
+  summary?: string;
+}
+```
+
+### Notification
+```typescript
+interface Notification {
+  id: number;
+  patientId: number;
+  type: 'appointment' | 'lab_result' | 'payment' | 'general';
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  actionUrl?: string;
+}
+```
+
+---
+
+## API Endpoints
+
+### Authentication
+```
+POST /api/auth/login     # Patient login
+POST /api/auth/register  # New patient registration
+POST /api/auth/logout    # Session logout
+GET  /api/auth/me        # Current user info
+```
+
+### Appointments
+```
+GET    /api/appointments           # List patient appointments
+POST   /api/appointments           # Book new appointment
+GET    /api/appointments/:id       # Get appointment details
+PATCH  /api/appointments/:id       # Update appointment
+DELETE /api/appointments/:id       # Cancel appointment
+```
+
+### Doctors
+```
+GET /api/doctors                   # List all doctors
+GET /api/doctors/:id               # Doctor details
+GET /api/doctors/:id/schedule      # Doctor availability
+GET /api/doctors/specialty/:name   # Doctors by specialty
+```
+
+### Health Records
+```
+GET  /api/records                  # Patient's records
+GET  /api/records/:id              # Record details
+GET  /api/records/type/:type       # Records by type
+```
+
+### Notifications
+```
+GET   /api/notifications           # Patient notifications
+PATCH /api/notifications/:id/read  # Mark as read
+PATCH /api/notifications/read-all  # Mark all as read
+```
+
+---
+
+## User Experience Features
+
+### Animations & Micro-interactions
+- **Page Transitions:** Smooth fade-in on route changes
+- **Card Hover Effects:** Subtle elevation and shadow changes
+- **Button Feedback:** Scale and color transitions on press
+- **Loading States:** Skeleton loaders and spinners
+- **Success Feedback:** Animated checkmarks and toasts
+
+### Accessibility
+- **Motion-safe Animations:** Respects prefers-reduced-motion
+- **Keyboard Navigation:** Full keyboard support
+- **Focus Indicators:** Clear focus states
+- **ARIA Labels:** Screen reader support
+- **Color Contrast:** WCAG AA compliant
+
+### Mobile Optimization
+- **Responsive Sidebar:** Collapsible drawer on mobile
+- **Touch-friendly Targets:** Minimum 44px tap targets
+- **Swipe Gestures:** Natural mobile interactions
+- **Viewport Optimization:** Proper mobile viewport handling
+
+---
+
+## Security Considerations
+
+### Authentication
+- Session-based authentication with secure cookies
+- Password hashing with bcrypt
+- CSRF protection
+- Rate limiting on auth endpoints
+
+### Data Protection
+- HTTPS-only communication
+- Input validation with Zod schemas
+- SQL injection prevention via ORM
+- XSS protection headers
+
+### Privacy
+- Patient data encryption at rest
+- Minimal data exposure in responses
+- Audit logging for sensitive operations
+
+---
+
+## Deployment Requirements
+
+### Environment Variables
+```env
+DATABASE_URL=postgresql://...
+SESSION_SECRET=<secure-random-string>
+NODE_ENV=production
+```
+
+### Build Commands
+```bash
+npm run build    # Build for production
+npm run dev      # Development server
+npm run db:push  # Push database schema
+```
+
+### Recommended Hosting
+- **Frontend + Backend:** Single deployment on Replit, Vercel, or Railway
+- **Database:** Neon PostgreSQL (serverless)
+- **CDN:** Cloudflare for static assets
+
+---
+
+## Future Enhancements
+
+### Phase 2 Features
+- [ ] Telemedicine video consultations
+- [ ] Online prescription ordering
+- [ ] Insurance claim integration
+- [ ] Family member management
+- [ ] Health analytics dashboard
+
+### Phase 3 Features
+- [ ] Mobile app (React Native)
+- [ ] Wearable device integration
+- [ ] AI-powered health insights
+- [ ] Multi-language support
+- [ ] Appointment reminders via SMS/WhatsApp
+
+---
+
+## Project Structure
+
+```
+hospital-portal/
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ui/           # Shadcn components
+│   │   │   ├── Layout.tsx
+│   │   │   ├── DoctorCard.tsx
+│   │   │   ├── ScheduleGrid.tsx
+│   │   │   ├── NotificationCard.tsx
+│   │   │   └── ChatbotWidget.tsx
+│   │   ├── pages/
+│   │   │   ├── dashboard.tsx
+│   │   │   ├── opd.tsx
+│   │   │   ├── records.tsx
+│   │   │   ├── admission.tsx
+│   │   │   ├── notifications.tsx
+│   │   │   ├── team.tsx
+│   │   │   └── profile.tsx
+│   │   ├── hooks/
+│   │   ├── lib/
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── index.css
+│   └── index.html
+├── server/
+│   ├── routes.ts
+│   ├── storage.ts
+│   ├── index.ts
+│   └── vite.ts
+├── shared/
+│   └── schema.ts
+├── package.json
+├── tailwind.config.ts
+├── vite.config.ts
+└── tsconfig.json
+```
+
+---
+
+## Summary
+
+This Hospital Management System Patient Portal is a modern, user-friendly web application designed to digitize and streamline patient healthcare management. Built with React, TypeScript, and Tailwind CSS, it provides a comprehensive suite of features including appointment booking, health record management, admission tracking, and an AI-powered chatbot assistant.
+
+The design prioritizes:
+- **User Experience:** Intuitive navigation and clear visual hierarchy
+- **Accessibility:** Motion-safe animations and keyboard navigation
+- **Responsiveness:** Seamless experience across all devices
+- **Security:** Protected patient data and secure authentication
+- **Performance:** Optimized loading and smooth interactions
+
+This portal transforms the traditional healthcare experience into a modern digital journey, empowering patients to take control of their health management while maintaining the professionalism expected in medical environments.

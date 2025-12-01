@@ -144,6 +144,8 @@ export const inventoryTransactions = pgTable("inventory_transactions", {
 export const insertInventoryTransactionSchema = createInsertSchema(inventoryTransactions).omit({
   id: true,
   createdAt: true,
+  remainingStock: true,
+  totalCost: true,
 });
 export type InsertInventoryTransaction = z.infer<typeof insertInventoryTransactionSchema>;
 export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
@@ -165,6 +167,8 @@ export const trackingPatients = pgTable("tracking_patients", {
 
 export const insertTrackingPatientSchema = createInsertSchema(trackingPatients).omit({
   id: true,
+  admissionDate: true,
+  status: true,
 });
 export type InsertTrackingPatient = z.infer<typeof insertTrackingPatientSchema>;
 export type TrackingPatient = typeof trackingPatients.$inferSelect;
@@ -184,6 +188,7 @@ export const medications = pgTable("medications", {
 
 export const insertMedicationSchema = createInsertSchema(medications).omit({
   id: true,
+  administeredAt: true,
 });
 export type InsertMedication = z.infer<typeof insertMedicationSchema>;
 export type Medication = typeof medications.$inferSelect;
@@ -204,6 +209,7 @@ export const meals = pgTable("meals", {
 
 export const insertMealSchema = createInsertSchema(meals).omit({
   id: true,
+  servedAt: true,
 });
 export type InsertMeal = z.infer<typeof insertMealSchema>;
 export type Meal = typeof meals.$inferSelect;
@@ -225,6 +231,7 @@ export const vitals = pgTable("vitals", {
 
 export const insertVitalsSchema = createInsertSchema(vitals).omit({
   id: true,
+  recordedAt: true,
 });
 export type InsertVitals = z.infer<typeof insertVitalsSchema>;
 export type Vitals = typeof vitals.$inferSelect;

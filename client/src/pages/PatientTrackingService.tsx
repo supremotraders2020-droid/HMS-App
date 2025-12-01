@@ -1,0 +1,805 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  Activity, 
+  MapPin, 
+  Phone, 
+  Clock, 
+  Plus,
+  Search,
+  Bed,
+  Pill,
+  Utensils,
+  Heart,
+  User,
+  AlertCircle,
+  ChevronRight,
+  Thermometer
+} from "lucide-react";
+import type { TrackingPatient, Medication, Meal, Vitals } from "@shared/schema";
+
+type TabType = "patients" | "admit" | "vitals" | "medications" | "meals";
+
+export default function PatientTrackingService() {
+  const [activeTab, setActiveTab] = useState<TabType>("patients");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const { toast } = useToast();
+
+  const { data: patients = [], isLoading: patientsLoading } = useQuery<TrackingPatient[]>({
+    queryKey: ["/api/tracking/patients"],
+  });
+
+  const { data: patientHistory } = useQuery<{
+    patient: TrackingPatient;
+    medications: Medication[];
+    meals: Meal[];
+    vitals: Vitals[];
+  }>({
+    queryKey: ["/api/tracking/patients", selectedPatientId, "history"],
+    enabled: !!selectedPatientId,
+  });
+
+  const admitPatientMutation = useMutation({
+    mutationFn: async (data: {
+      name: string;
+      age: number;
+      gender: string;
+      room: string;
+      diagnosis: string;
+      doctor: string;
+    }) => {
+      return await apiRequest("POST", "/api/tracking/patients", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      toast({
+        title: "Patient Admitted",
+        description: "Patient has been admitted successfully.",
+      });
+      setActiveTab("patients");
+    },
+    onError: () => {
+      toast({
+        title: "Admission Failed",
+        description: "Failed to admit patient. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const addVitalsMutation = useMutation({
+    mutationFn: async (data: {
+      patientId: string;
+      temperature?: string;
+      heartRate?: number;
+      bloodPressureSystolic?: number;
+      bloodPressureDiastolic?: number;
+      respiratoryRate?: number;
+      oxygenSaturation?: number;
+      recordedBy: string;
+      notes?: string;
+    }) => {
+      return await apiRequest("POST", `/api/tracking/patients/${data.patientId}/vitals`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      toast({
+        title: "Vitals Recorded",
+        description: "Patient vitals have been recorded successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed",
+        description: "Failed to record vitals. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const addMedicationMutation = useMutation({
+    mutationFn: async (data: {
+      patientId: string;
+      name: string;
+      dosage: string;
+      route: string;
+      frequency: string;
+      administeredBy: string;
+      notes?: string;
+    }) => {
+      return await apiRequest("POST", `/api/tracking/patients/${data.patientId}/meds`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      toast({
+        title: "Medication Added",
+        description: "Medication has been administered successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed",
+        description: "Failed to add medication. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const addMealMutation = useMutation({
+    mutationFn: async (data: {
+      patientId: string;
+      mealType: string;
+      description: string;
+      calories?: number;
+      servedBy: string;
+      consumptionPercentage?: number;
+      notes?: string;
+    }) => {
+      return await apiRequest("POST", `/api/tracking/patients/${data.patientId}/meals`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      toast({
+        title: "Meal Logged",
+        description: "Meal has been logged successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed",
+        description: "Failed to log meal. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      return await apiRequest("PATCH", `/api/tracking/patients/${id}/status`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      toast({
+        title: "Status Updated",
+        description: "Patient status has been updated.",
+      });
+    },
+  });
+
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      admitted: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+      critical: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+      stable: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+      discharged: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300",
+    };
+    return styles[status] || styles.admitted;
+  };
+
+  const filteredPatients = patients.filter((patient) => {
+    const matchesSearch = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      patient.room.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all" || patient.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const criticalPatients = patients.filter(p => p.status === "critical");
+  const admittedPatients = patients.filter(p => p.status === "admitted");
+
+  const handleAdmitPatient = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    admitPatientMutation.mutate({
+      name: formData.get("name") as string,
+      age: parseInt(formData.get("age") as string),
+      gender: formData.get("gender") as string,
+      room: formData.get("room") as string,
+      diagnosis: formData.get("diagnosis") as string,
+      doctor: formData.get("doctor") as string,
+    });
+  };
+
+  const handleAddVitals = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    addVitalsMutation.mutate({
+      patientId: formData.get("patientId") as string,
+      temperature: formData.get("temperature") as string || undefined,
+      heartRate: parseInt(formData.get("heartRate") as string) || undefined,
+      bloodPressureSystolic: parseInt(formData.get("bpSystolic") as string) || undefined,
+      bloodPressureDiastolic: parseInt(formData.get("bpDiastolic") as string) || undefined,
+      respiratoryRate: parseInt(formData.get("respiratoryRate") as string) || undefined,
+      oxygenSaturation: parseInt(formData.get("oxygenSaturation") as string) || undefined,
+      recordedBy: formData.get("recordedBy") as string,
+      notes: formData.get("notes") as string || undefined,
+    });
+  };
+
+  const handleAddMedication = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    addMedicationMutation.mutate({
+      patientId: formData.get("patientId") as string,
+      name: formData.get("name") as string,
+      dosage: formData.get("dosage") as string,
+      route: formData.get("route") as string,
+      frequency: formData.get("frequency") as string,
+      administeredBy: formData.get("administeredBy") as string,
+      notes: formData.get("notes") as string || undefined,
+    });
+  };
+
+  const handleAddMeal = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    addMealMutation.mutate({
+      patientId: formData.get("patientId") as string,
+      mealType: formData.get("mealType") as string,
+      description: formData.get("description") as string,
+      calories: parseInt(formData.get("calories") as string) || undefined,
+      servedBy: formData.get("servedBy") as string,
+      consumptionPercentage: parseInt(formData.get("consumption") as string) || 100,
+      notes: formData.get("notes") as string || undefined,
+    });
+  };
+
+  const tabs = [
+    { id: "patients" as TabType, label: "All Patients", icon: Bed },
+    { id: "admit" as TabType, label: "Admit Patient", icon: Plus },
+    { id: "vitals" as TabType, label: "Record Vitals", icon: Activity },
+    { id: "medications" as TabType, label: "Medications", icon: Pill },
+    { id: "meals" as TabType, label: "Meal Tracking", icon: Utensils },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 text-white">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Activity className="h-8 w-8" />
+              <div>
+                <h1 className="text-2xl font-bold">Patient Tracking System</h1>
+                <div className="flex items-center gap-2 text-white/80 text-sm">
+                  <MapPin className="h-4 w-4" />
+                  <span>Inpatient Wing, Galaxy Multi Specialty Hospital</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-lg">
+                <Phone className="h-4 w-4" />
+                <span className="text-sm">Nursing: +91 20 1234 5683</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-lg">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm">24/7 Patient Care</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-wrap gap-2 mb-6 bg-muted/50 p-1 rounded-lg">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.id}
+              variant={activeTab === tab.id ? "default" : "ghost"}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex items-center gap-2"
+              data-testid={`tab-${tab.id}`}
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </Button>
+          ))}
+        </div>
+
+        {activeTab === "patients" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Patients</p>
+                      <p className="text-3xl font-bold">{patients.length}</p>
+                    </div>
+                    <Bed className="h-10 w-10 text-purple-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Critical</p>
+                      <p className="text-3xl font-bold text-red-600">{criticalPatients.length}</p>
+                    </div>
+                    <AlertCircle className="h-10 w-10 text-red-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Admitted</p>
+                      <p className="text-3xl font-bold text-blue-600">{admittedPatients.length}</p>
+                    </div>
+                    <User className="h-10 w-10 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">ICU Beds</p>
+                      <p className="text-3xl font-bold">{patients.filter(p => p.room.includes("ICU")).length}</p>
+                    </div>
+                    <Heart className="h-10 w-10 text-pink-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or room..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-search-patients"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-48" data-testid="select-status-filter">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="admitted">Admitted</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                  <SelectItem value="stable">Stable</SelectItem>
+                  <SelectItem value="discharged">Discharged</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {patientsLoading ? (
+              <div className="text-center py-8">Loading patients...</div>
+            ) : (
+              <div className="grid gap-4">
+                {filteredPatients.map((patient) => (
+                  <Card key={patient.id} data-testid={`card-patient-${patient.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                            <User className="h-6 w-6 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{patient.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {patient.age} yrs, {patient.gender} | Room: {patient.room}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Diagnosis: {patient.diagnosis}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4">
+                          <Badge className={getStatusBadge(patient.status)}>{patient.status}</Badge>
+                          <div className="text-center">
+                            <p className="text-sm text-muted-foreground">Attending</p>
+                            <p className="font-medium">{patient.doctor}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-muted-foreground">Admitted</p>
+                            <p className="font-medium">{new Date(patient.admissionDate).toLocaleDateString()}</p>
+                          </div>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedPatientId(patient.id)}
+                                data-testid={`button-view-history-${patient.id}`}
+                              >
+                                View Details
+                                <ChevronRight className="h-4 w-4 ml-1" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>Patient History: {patient.name}</DialogTitle>
+                              </DialogHeader>
+                              {patientHistory && (
+                                <div className="space-y-4">
+                                  <div>
+                                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                                      <Activity className="h-4 w-4" /> Recent Vitals
+                                    </h4>
+                                    {patientHistory.vitals.length > 0 ? (
+                                      <div className="space-y-2">
+                                        {patientHistory.vitals.slice(0, 3).map((v) => (
+                                          <div key={v.id} className="p-3 border rounded-lg text-sm">
+                                            <div className="grid grid-cols-3 gap-2">
+                                              <span>Temp: {v.temperature}F</span>
+                                              <span>HR: {v.heartRate} bpm</span>
+                                              <span>BP: {v.bloodPressureSystolic}/{v.bloodPressureDiastolic}</span>
+                                              <span>RR: {v.respiratoryRate}/min</span>
+                                              <span>SpO2: {v.oxygenSaturation}%</span>
+                                            </div>
+                                            <p className="text-muted-foreground mt-1">
+                                              {new Date(v.recordedAt).toLocaleString()} by {v.recordedBy}
+                                            </p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-muted-foreground">No vitals recorded</p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                                      <Pill className="h-4 w-4" /> Medications
+                                    </h4>
+                                    {patientHistory.medications.length > 0 ? (
+                                      <div className="space-y-2">
+                                        {patientHistory.medications.slice(0, 5).map((m) => (
+                                          <div key={m.id} className="p-3 border rounded-lg text-sm">
+                                            <p className="font-medium">{m.name} - {m.dosage}</p>
+                                            <p className="text-muted-foreground">
+                                              {m.route} | {m.frequency} | by {m.administeredBy}
+                                            </p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-muted-foreground">No medications recorded</p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                                      <Utensils className="h-4 w-4" /> Recent Meals
+                                    </h4>
+                                    {patientHistory.meals.length > 0 ? (
+                                      <div className="space-y-2">
+                                        {patientHistory.meals.slice(0, 3).map((m) => (
+                                          <div key={m.id} className="p-3 border rounded-lg text-sm">
+                                            <p className="font-medium">{m.mealType}: {m.description}</p>
+                                            <p className="text-muted-foreground">
+                                              {m.calories} cal | {m.consumptionPercentage}% consumed
+                                            </p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-muted-foreground">No meals recorded</p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </DialogContent>
+                          </Dialog>
+                          <Select
+                            value={patient.status}
+                            onValueChange={(status) => updateStatusMutation.mutate({ id: patient.id, status })}
+                          >
+                            <SelectTrigger className="w-32" data-testid={`select-status-${patient.id}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admitted">Admitted</SelectItem>
+                              <SelectItem value="critical">Critical</SelectItem>
+                              <SelectItem value="stable">Stable</SelectItem>
+                              <SelectItem value="discharged">Discharged</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "admit" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Admit New Patient</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAdmitPatient} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Patient Name</Label>
+                    <Input name="name" required placeholder="Full name" data-testid="input-patient-name" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="age">Age</Label>
+                    <Input type="number" name="age" required min="0" max="150" placeholder="Age" data-testid="input-age" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select name="gender" required>
+                      <SelectTrigger data-testid="select-gender">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="room">Room Number</Label>
+                    <Input name="room" required placeholder="e.g., 301A, ICU-1" data-testid="input-room" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="diagnosis">Diagnosis</Label>
+                    <Textarea name="diagnosis" required placeholder="Primary diagnosis" data-testid="input-diagnosis" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="doctor">Attending Doctor</Label>
+                    <Input name="doctor" required placeholder="Doctor's name" data-testid="input-doctor" />
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={admitPatientMutation.isPending}
+                  data-testid="button-admit-patient"
+                >
+                  {admitPatientMutation.isPending ? "Admitting..." : "Admit Patient"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "vitals" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Thermometer className="h-5 w-5" />
+                Record Patient Vitals
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddVitals} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="patientId">Select Patient</Label>
+                    <Select name="patientId" required>
+                      <SelectTrigger data-testid="select-vitals-patient">
+                        <SelectValue placeholder="Select patient" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {patients.filter(p => p.status !== "discharged").map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name} (Room {p.room})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="temperature">Temperature (F)</Label>
+                    <Input name="temperature" placeholder="e.g., 98.6" data-testid="input-temperature" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="heartRate">Heart Rate (bpm)</Label>
+                    <Input type="number" name="heartRate" placeholder="e.g., 72" data-testid="input-heart-rate" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bpSystolic">BP Systolic</Label>
+                    <Input type="number" name="bpSystolic" placeholder="e.g., 120" data-testid="input-bp-systolic" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bpDiastolic">BP Diastolic</Label>
+                    <Input type="number" name="bpDiastolic" placeholder="e.g., 80" data-testid="input-bp-diastolic" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="respiratoryRate">Respiratory Rate (/min)</Label>
+                    <Input type="number" name="respiratoryRate" placeholder="e.g., 16" data-testid="input-respiratory-rate" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="oxygenSaturation">SpO2 (%)</Label>
+                    <Input type="number" name="oxygenSaturation" min="0" max="100" placeholder="e.g., 98" data-testid="input-spo2" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recordedBy">Recorded By</Label>
+                    <Input name="recordedBy" required placeholder="Nurse/Staff name" data-testid="input-vitals-recorded-by" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Input name="notes" placeholder="Optional notes" data-testid="input-vitals-notes" />
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={addVitalsMutation.isPending}
+                  data-testid="button-record-vitals"
+                >
+                  {addVitalsMutation.isPending ? "Recording..." : "Record Vitals"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "medications" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Pill className="h-5 w-5" />
+                Administer Medication
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddMedication} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="patientId">Select Patient</Label>
+                    <Select name="patientId" required>
+                      <SelectTrigger data-testid="select-med-patient">
+                        <SelectValue placeholder="Select patient" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {patients.filter(p => p.status !== "discharged").map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name} (Room {p.room})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Medication Name</Label>
+                    <Input name="name" required placeholder="e.g., Amoxicillin" data-testid="input-med-name" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dosage">Dosage</Label>
+                    <Input name="dosage" required placeholder="e.g., 500mg" data-testid="input-dosage" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="route">Route</Label>
+                    <Select name="route" required>
+                      <SelectTrigger data-testid="select-route">
+                        <SelectValue placeholder="Select route" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Oral">Oral</SelectItem>
+                        <SelectItem value="IV">IV</SelectItem>
+                        <SelectItem value="IM">IM</SelectItem>
+                        <SelectItem value="SC">SC</SelectItem>
+                        <SelectItem value="Topical">Topical</SelectItem>
+                        <SelectItem value="Inhalation">Inhalation</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="frequency">Frequency</Label>
+                    <Input name="frequency" required placeholder="e.g., Every 8 hours" data-testid="input-frequency" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="administeredBy">Administered By</Label>
+                    <Input name="administeredBy" required placeholder="Nurse name" data-testid="input-administered-by" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea name="notes" placeholder="Additional notes (optional)" data-testid="input-med-notes" />
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={addMedicationMutation.isPending}
+                  data-testid="button-administer-med"
+                >
+                  {addMedicationMutation.isPending ? "Recording..." : "Administer Medication"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "meals" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Utensils className="h-5 w-5" />
+                Log Patient Meal
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddMeal} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="patientId">Select Patient</Label>
+                    <Select name="patientId" required>
+                      <SelectTrigger data-testid="select-meal-patient">
+                        <SelectValue placeholder="Select patient" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {patients.filter(p => p.status !== "discharged").map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name} (Room {p.room})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mealType">Meal Type</Label>
+                    <Select name="mealType" required>
+                      <SelectTrigger data-testid="select-meal-type">
+                        <SelectValue placeholder="Select meal type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Breakfast">Breakfast</SelectItem>
+                        <SelectItem value="Lunch">Lunch</SelectItem>
+                        <SelectItem value="Dinner">Dinner</SelectItem>
+                        <SelectItem value="Snack">Snack</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="description">Meal Description</Label>
+                    <Input name="description" required placeholder="e.g., Grilled chicken with vegetables" data-testid="input-meal-description" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="calories">Calories</Label>
+                    <Input type="number" name="calories" placeholder="e.g., 450" data-testid="input-calories" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="consumption">Consumption (%)</Label>
+                    <Input type="number" name="consumption" min="0" max="100" placeholder="e.g., 80" data-testid="input-consumption" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="servedBy">Served By</Label>
+                    <Input name="servedBy" required placeholder="Staff name" data-testid="input-served-by" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Input name="notes" placeholder="Dietary notes (optional)" data-testid="input-meal-notes" />
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={addMealMutation.isPending}
+                  data-testid="button-log-meal"
+                >
+                  {addMealMutation.isPending ? "Logging..." : "Log Meal"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,333 @@
+# Hospital/Hotel Management System - Equipment Servicing & Emergency Numbers Module
+
+## Project Overview
+
+A clean, modern, and professional user interface for a **Hospital/Hotel Management System** additional module that handles **Equipment Servicing** and **Emergency Numbers** management. The system is designed to give professional "Doctor/Hospital/Medicine" vibes while being user-friendly and responsive.
+
+---
+
+## Module 1: Equipment Servicing Dashboard
+
+### Features
+
+#### 1. Dashboard Card Layout
+- Grid-based layout displaying all machines/equipment
+- Each card displays:
+  - **Equipment Name** - Primary identifier
+  - **Model/Serial Number** - Unique device identification
+  - **Last Service Date** - When the equipment was last serviced
+  - **Next Due Date** - Upcoming service schedule
+  - **Status Indicator**:
+    - Green = Up-to-date (serviced recently)
+    - Yellow = Due Soon (service approaching)
+    - Red = Overdue (service past due date)
+  - **"View History" Button** - Opens detailed past servicing log
+
+#### 2. Calendar View
+- Visual calendar showing upcoming servicing schedules
+- Color-coded events based on status
+- Month navigation controls
+- List of upcoming services for current month
+
+#### 3. Statistics Dashboard
+- Total Equipment count
+- Up-to-date equipment count (green indicator)
+- Due Soon equipment count (yellow indicator)
+- Overdue equipment count (red indicator)
+
+#### 4. Service History Modal
+- Detailed view of past servicing records
+- Information displayed:
+  - Service Date
+  - Technician Name
+  - Description of work performed
+  - Service Cost
+- Scrollable list sorted by most recent first
+
+---
+
+## Module 2: Emergency Numbers Tab
+
+### Features
+
+#### 1. Categorized Emergency Contacts
+Service categories include:
+- **Plumber** - Water and pipe emergencies
+- **Electrician** - Electrical issues
+- **Medical Help** - Emergency medical services
+- **Fire Service** - Fire emergencies
+- **Police** - Security and law enforcement
+- **Lift Service** - Elevator maintenance
+- **IT Support** - Technical assistance
+
+#### 2. Contact Card Display
+Each contact shows:
+- **Name/Service Type** - Contact or company name
+- **Service Category** - Type of service with icon
+- **Phone Number** - Displayed in mono font
+- **"Click-to-Call" Button** - Direct dialing functionality
+- **Primary/Backup Badge** - Priority indicator
+
+#### 3. Search Functionality
+- Real-time search bar
+- Filter by name, service type, or phone number
+- Clear search button
+
+#### 4. Category Tabs
+- All Services
+- Medical
+- Maintenance (Plumber, Electrician, Lift)
+- Security (Police, Fire)
+- Technical (IT)
+- Badge showing count per category
+
+#### 5. Statistics Cards
+- Total Contacts count
+- Primary Contacts count
+- Number of Service Types
+
+---
+
+## Design Specifications
+
+### Color Palette
+
+#### Light Mode
+```css
+--background: White (#FFFFFF)
+--primary: Medical Blue (hsl(210, 55%, 65%))
+--status-green: #22C55E (Up-to-date)
+--status-yellow: #F59E0B (Due Soon)
+--status-red: #EF4444 (Overdue)
+--card: Light Gray (#F8FAFC)
+--border: Subtle Gray
+```
+
+#### Dark Mode
+```css
+--background: Dark Blue-Gray (hsl(220, 15%, 8%))
+--primary: Medical Blue (same)
+--card: Darker shade
+--foreground: Light text
+```
+
+### Typography
+- **Font Family**: Inter (Google Fonts)
+- **Hierarchy**:
+  - Headers: Semibold, larger sizes
+  - Body: Regular weight
+  - Labels: Muted foreground color
+  - Mono: For phone numbers
+
+### UI Elements
+- Rounded corners (border-radius: md)
+- Soft shadows on cards
+- Hover elevation effects
+- Smooth transitions
+- Responsive grid layouts
+
+### Icons (Lucide React)
+- Wrench - Equipment/Maintenance
+- Phone - Emergency Contacts
+- Calendar - Service Schedule
+- Bell - Notifications
+- Heart - Medical/Hospital logo
+- Settings - Configuration
+- CheckCircle - Up-to-date status
+- Clock - Due soon status
+- AlertTriangle - Overdue status
+- Zap - Electrician
+- Flame - Fire Service
+- Shield - Police
+- Wifi - IT Support
+- Truck - Lift Service
+
+---
+
+## Navigation Structure
+
+### Sidebar Menu
+1. **Equipment Servicing** - Main dashboard with equipment cards
+2. **Emergency Contacts** - Contact management panel
+3. **Service Calendar** - Calendar view for scheduling
+4. **Notifications** - Alert center for pending items
+5. **Settings** - Configuration options (footer)
+
+### Header
+- Sidebar toggle button
+- Page title with description
+- Dark/Light mode toggle
+
+---
+
+## Technical Implementation
+
+### Frontend Stack
+- React with TypeScript
+- Tailwind CSS for styling
+- Shadcn UI component library
+- Lucide React for icons
+- Wouter for routing
+- TanStack Query for data fetching
+
+### Component Architecture
+```
+client/src/
+├── components/
+│   ├── AppSidebar.tsx         # Navigation sidebar
+│   ├── StatusIndicator.tsx    # Status badges
+│   ├── EquipmentCard.tsx      # Individual equipment card
+│   ├── EquipmentDashboard.tsx # Main equipment view
+│   ├── ServiceHistoryModal.tsx # Service history popup
+│   ├── EmergencyContactCard.tsx # Contact card
+│   ├── EmergencyContactsList.tsx # Contacts management
+│   ├── CalendarView.tsx       # Service calendar
+│   └── SearchBar.tsx          # Search functionality
+├── pages/
+│   └── HomePage.tsx           # Main application page
+└── App.tsx                    # Root component
+```
+
+### Backend Structure
+```
+server/
+├── routes.ts    # API endpoints
+└── storage.ts   # Data storage interface
+shared/
+└── schema.ts    # Data models and types
+```
+
+### Data Models
+
+#### Equipment
+```typescript
+{
+  id: string;
+  name: string;
+  model: string;
+  serialNumber: string;
+  lastServiceDate: Date | null;
+  nextDueDate: Date;
+  status: 'up-to-date' | 'due-soon' | 'overdue';
+  location: string | null;
+}
+```
+
+#### Service History
+```typescript
+{
+  id: string;
+  equipmentId: string;
+  serviceDate: Date;
+  technician: string;
+  description: string;
+  cost: string | null;
+}
+```
+
+#### Emergency Contact
+```typescript
+{
+  id: string;
+  name: string;
+  serviceType: string;
+  phoneNumber: string;
+  isPrimary: boolean;
+  isActive: boolean;
+}
+```
+
+---
+
+## Responsive Design
+
+### Desktop (1024px+)
+- Full sidebar visible
+- 3-column grid for equipment cards
+- 2-column grid for contacts
+- Full calendar view
+
+### Tablet (768px - 1023px)
+- Collapsible sidebar
+- 2-column grids
+- Compact calendar
+
+### Mobile (< 768px)
+- Hidden sidebar with toggle
+- Single column layout
+- Touch-friendly buttons
+- Click-to-call functionality
+
+---
+
+## Accessibility Features
+
+- Semantic HTML structure
+- ARIA labels on interactive elements
+- Keyboard navigation support
+- High contrast status indicators
+- Focus indicators on inputs
+- Screen reader compatible
+
+---
+
+## User Interactions
+
+### Equipment Tab
+1. View all equipment in card grid
+2. See real-time status indicators
+3. Click "View History" to see service logs
+4. Monitor upcoming services in calendar
+5. Check statistics dashboard
+
+### Emergency Tab
+1. Search for contacts by name/type
+2. Filter by category using tabs
+3. Click-to-call on mobile devices
+4. Identify primary vs backup contacts
+5. Quick access to critical services
+
+---
+
+## Future Enhancements
+
+1. Add/Edit/Delete equipment functionality
+2. Schedule new service appointments
+3. Email/SMS notifications for due services
+4. Contact management (add/edit/delete)
+5. Export service reports to PDF
+6. User authentication and roles
+7. Integration with hospital inventory system
+8. Vendor/supplier contact management
+9. Warranty tracking per equipment
+10. Cost analytics and budgeting
+
+---
+
+## Installation & Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+---
+
+## Project Goals
+
+1. **Professional Appearance** - Medical/hospital themed design
+2. **User-Friendly Interface** - Intuitive navigation and interactions
+3. **Responsive Design** - Works on desktop, tablet, and mobile
+4. **Real-time Status Tracking** - Visual indicators for equipment status
+5. **Quick Emergency Access** - One-click calling for emergencies
+6. **Efficient Workflow** - Streamlined equipment management
+
+---
+
+*This module is part of a larger Hospital/Hotel Management System designed to improve operational efficiency and emergency response capabilities.*

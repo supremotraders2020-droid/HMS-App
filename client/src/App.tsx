@@ -16,6 +16,8 @@ import UserManagement from "@/pages/UserManagement";
 import HospitalSettings from "@/pages/HospitalSettings";
 import SystemSettings from "@/pages/SystemSettings";
 import OPDService from "@/pages/OPDService";
+import InventoryService from "@/pages/InventoryService";
+import PatientTrackingService from "@/pages/PatientTrackingService";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -135,18 +137,10 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         </div>
       </Route>
       <Route path="/inventory-service">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold">Inventory Service</h2>
-          <p className="text-muted-foreground">Medical Equipment & Supply Management</p>
-          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
-        </div>
+        <InventoryService />
       </Route>
       <Route path="/patient-tracking">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold">Patient Tracking Service</h2>
-          <p className="text-muted-foreground">Real-time Patient Location & Status Tracking</p>
-          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
-        </div>
+        <PatientTrackingService />
       </Route>
       <Route path="/biometric-service">
         <div className="text-center py-12">

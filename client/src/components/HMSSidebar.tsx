@@ -195,9 +195,9 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                         } else if (item.title === "Patient Service") {
                           handleMenuClick(item.url, true, "https://patient-care-central-kadamatulp.replit.app");
                         } else if (item.title === "Inventory Service") {
-                          handleMenuClick(item.url, true, "https://stock-flow-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Patient Tracking") {
-                          handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Biometric Service") {
                           handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
                         } else if (item.title === "Equipment Servicing") {
@@ -238,13 +238,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                       className="w-full justify-start"
                       onClick={() => {
                         if (item.title === "OPD Service") {
-                          handleMenuClick(item.url, true, "https://clinic-flow-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Patient Service") {
                           handleMenuClick(item.url, true, "https://patient-care-central-kadamatulp.replit.app");
                         } else if (item.title === "Inventory Service") {
-                          handleMenuClick(item.url, true, "https://stock-flow-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Patient Tracking") {
-                          handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Biometric Service") {
                           handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
                         } else if (item.title === "Equipment Servicing") {
@@ -285,13 +285,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                       className="w-full justify-start"
                       onClick={() => {
                         if (item.title === "OPD Service") {
-                          handleMenuClick(item.url, true, "https://clinic-flow-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Patient Service") {
                           handleMenuClick(item.url, true, "https://patient-care-central-kadamatulp.replit.app");
                         } else if (item.title === "Inventory Service") {
-                          handleMenuClick(item.url, true, "https://stock-flow-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Patient Tracking") {
-                          handleMenuClick(item.url, true, "https://patient-tracker-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Biometric Service") {
                           handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
                         } else if (item.title === "Equipment Servicing") {
