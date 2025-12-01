@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -50,6 +50,27 @@ export interface IStorage {
   getInventoryReports(): Promise<any>;
   getPatientWiseReport(): Promise<any[]>;
   getStaffWiseReport(): Promise<any[]>;
+  
+  // Patient Tracking
+  getAllTrackingPatients(): Promise<TrackingPatient[]>;
+  getTrackingPatientById(id: string): Promise<TrackingPatient | undefined>;
+  createTrackingPatient(patient: InsertTrackingPatient): Promise<TrackingPatient>;
+  updateTrackingPatientStatus(id: string, status: string): Promise<TrackingPatient | undefined>;
+  
+  // Medications
+  getMedicationsByPatient(patientId: string): Promise<Medication[]>;
+  createMedication(medication: InsertMedication): Promise<Medication>;
+  
+  // Meals
+  getMealsByPatient(patientId: string): Promise<Meal[]>;
+  createMeal(meal: InsertMeal): Promise<Meal>;
+  
+  // Vitals
+  getVitalsByPatient(patientId: string): Promise<Vitals[]>;
+  createVitals(vitals: InsertVitals): Promise<Vitals>;
+  
+  // Patient Tracking History
+  getPatientTrackingHistory(patientId: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -65,6 +86,12 @@ export class MemStorage implements IStorage {
   private inventoryPatients: Map<string, InventoryPatient>;
   private inventoryTransactions: Map<string, InventoryTransaction>;
   private patientIdCounter: number;
+  
+  // Patient Tracking data stores
+  private trackingPatients: Map<string, TrackingPatient>;
+  private medications: Map<string, Medication>;
+  private meals: Map<string, Meal>;
+  private vitalsRecords: Map<string, Vitals>;
 
   constructor() {
     this.users = new Map();
@@ -80,8 +107,15 @@ export class MemStorage implements IStorage {
     this.inventoryTransactions = new Map();
     this.patientIdCounter = 1;
     
+    // Patient Tracking initialization
+    this.trackingPatients = new Map();
+    this.medications = new Map();
+    this.meals = new Map();
+    this.vitalsRecords = new Map();
+    
     this.initializeDefaultData();
     this.initializeInventoryData();
+    this.initializePatientTrackingData();
   }
 
   private initializeDefaultData() {
@@ -596,6 +630,213 @@ export class MemStorage implements IStorage {
         totalItemsDisposed: totalDisposed,
       };
     }).filter(s => s.totalTransactions > 0);
+  }
+
+  // ========== PATIENT TRACKING INITIALIZATION ==========
+  private initializePatientTrackingData() {
+    // Default tracking patients
+    const defaultPatients = [
+      { name: "Rahul Mehta", age: 45, gender: "Male", room: "301A", diagnosis: "Pneumonia", status: "admitted", doctor: "Dr. Priya Sharma" },
+      { name: "Anita Desai", age: 38, gender: "Female", room: "205B", diagnosis: "Post-surgery recovery", status: "admitted", doctor: "Dr. Rajesh Kumar" },
+      { name: "Vikram Reddy", age: 62, gender: "Male", room: "ICU-1", diagnosis: "Cardiac monitoring", status: "critical", doctor: "Dr. Priya Sharma" },
+      { name: "Meera Nair", age: 28, gender: "Female", room: "402C", diagnosis: "Diabetes management", status: "admitted", doctor: "Dr. Amit Singh" },
+      { name: "Sanjay Gupta", age: 55, gender: "Male", room: "310A", diagnosis: "Hypertension", status: "admitted", doctor: "Dr. Kavita Joshi" },
+    ];
+
+    const patientIds: string[] = [];
+    defaultPatients.forEach(patient => {
+      const id = randomUUID();
+      patientIds.push(id);
+      const trackingPatient: TrackingPatient = {
+        ...patient,
+        id,
+        admissionDate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+      };
+      this.trackingPatients.set(id, trackingPatient);
+    });
+
+    // Sample medications
+    const sampleMedications = [
+      { patientId: patientIds[0], name: "Amoxicillin", dosage: "500mg", route: "Oral", frequency: "Every 8 hours", administeredBy: "Nurse Priya Sharma", notes: "Take with food" },
+      { patientId: patientIds[0], name: "Paracetamol", dosage: "650mg", route: "Oral", frequency: "Every 6 hours", administeredBy: "Nurse Anjali Patel", notes: "For fever" },
+      { patientId: patientIds[1], name: "Ibuprofen", dosage: "400mg", route: "Oral", frequency: "Every 8 hours", administeredBy: "Nurse Priya Sharma", notes: "For pain management" },
+      { patientId: patientIds[2], name: "Aspirin", dosage: "75mg", route: "Oral", frequency: "Once daily", administeredBy: "Nurse Anjali Patel", notes: "Blood thinner" },
+      { patientId: patientIds[3], name: "Metformin", dosage: "500mg", route: "Oral", frequency: "Twice daily", administeredBy: "Nurse Priya Sharma", notes: "With meals" },
+    ];
+
+    sampleMedications.forEach(med => {
+      const id = randomUUID();
+      const medication: Medication = {
+        ...med,
+        id,
+        administeredAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000),
+        notes: med.notes ?? null,
+      };
+      this.medications.set(id, medication);
+    });
+
+    // Sample meals
+    const sampleMeals = [
+      { patientId: patientIds[0], mealType: "Breakfast", description: "Oatmeal with fruits", calories: 350, consumptionPercentage: 80, servedBy: "Kitchen Staff", notes: "Low sodium" },
+      { patientId: patientIds[0], mealType: "Lunch", description: "Grilled chicken with vegetables", calories: 450, consumptionPercentage: 75, servedBy: "Kitchen Staff", notes: null },
+      { patientId: patientIds[1], mealType: "Dinner", description: "Fish curry with rice", calories: 500, consumptionPercentage: 90, servedBy: "Kitchen Staff", notes: "Soft diet" },
+      { patientId: patientIds[2], mealType: "Breakfast", description: "Toast with eggs", calories: 300, consumptionPercentage: 50, servedBy: "ICU Staff", notes: "Cardiac diet" },
+      { patientId: patientIds[3], mealType: "Lunch", description: "Dal with roti", calories: 400, consumptionPercentage: 100, servedBy: "Kitchen Staff", notes: "Diabetic friendly" },
+    ];
+
+    sampleMeals.forEach(meal => {
+      const id = randomUUID();
+      const mealRecord: Meal = {
+        ...meal,
+        id,
+        servedAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000),
+        dietaryRestrictions: null,
+        calories: meal.calories ?? null,
+        notes: meal.notes ?? null,
+      };
+      this.meals.set(id, mealRecord);
+    });
+
+    // Sample vitals
+    const sampleVitals = [
+      { patientId: patientIds[0], temperature: "98.6", heartRate: 72, bloodPressureSystolic: 120, bloodPressureDiastolic: 80, respiratoryRate: 16, oxygenSaturation: 98, recordedBy: "Nurse Priya Sharma", notes: "All vitals normal" },
+      { patientId: patientIds[1], temperature: "99.2", heartRate: 78, bloodPressureSystolic: 130, bloodPressureDiastolic: 85, respiratoryRate: 18, oxygenSaturation: 97, recordedBy: "Nurse Anjali Patel", notes: "Slight elevation in temperature" },
+      { patientId: patientIds[2], temperature: "98.4", heartRate: 88, bloodPressureSystolic: 145, bloodPressureDiastolic: 92, respiratoryRate: 20, oxygenSaturation: 94, recordedBy: "ICU Nurse", notes: "Monitor BP closely" },
+      { patientId: patientIds[3], temperature: "98.8", heartRate: 70, bloodPressureSystolic: 118, bloodPressureDiastolic: 78, respiratoryRate: 14, oxygenSaturation: 99, recordedBy: "Nurse Priya Sharma", notes: "Stable" },
+      { patientId: patientIds[4], temperature: "98.6", heartRate: 82, bloodPressureSystolic: 155, bloodPressureDiastolic: 95, respiratoryRate: 17, oxygenSaturation: 96, recordedBy: "Nurse Anjali Patel", notes: "Hypertension noted" },
+    ];
+
+    sampleVitals.forEach(vital => {
+      const id = randomUUID();
+      const vitalsRecord: Vitals = {
+        ...vital,
+        id,
+        recordedAt: new Date(Date.now() - Math.random() * 12 * 60 * 60 * 1000),
+        temperature: vital.temperature ?? null,
+        heartRate: vital.heartRate ?? null,
+        bloodPressureSystolic: vital.bloodPressureSystolic ?? null,
+        bloodPressureDiastolic: vital.bloodPressureDiastolic ?? null,
+        respiratoryRate: vital.respiratoryRate ?? null,
+        oxygenSaturation: vital.oxygenSaturation ?? null,
+        notes: vital.notes ?? null,
+      };
+      this.vitalsRecords.set(id, vitalsRecord);
+    });
+  }
+
+  // ========== PATIENT TRACKING METHODS ==========
+  async getAllTrackingPatients(): Promise<TrackingPatient[]> {
+    return Array.from(this.trackingPatients.values()).sort(
+      (a, b) => b.admissionDate.getTime() - a.admissionDate.getTime()
+    );
+  }
+
+  async getTrackingPatientById(id: string): Promise<TrackingPatient | undefined> {
+    return this.trackingPatients.get(id);
+  }
+
+  async createTrackingPatient(patient: InsertTrackingPatient): Promise<TrackingPatient> {
+    const id = randomUUID();
+    const trackingPatient: TrackingPatient = {
+      ...patient,
+      id,
+      admissionDate: patient.admissionDate ?? new Date(),
+      status: patient.status ?? "admitted",
+    };
+    this.trackingPatients.set(id, trackingPatient);
+    return trackingPatient;
+  }
+
+  async updateTrackingPatientStatus(id: string, status: string): Promise<TrackingPatient | undefined> {
+    const patient = this.trackingPatients.get(id);
+    if (patient) {
+      patient.status = status;
+      this.trackingPatients.set(id, patient);
+    }
+    return patient;
+  }
+
+  // ========== MEDICATIONS METHODS ==========
+  async getMedicationsByPatient(patientId: string): Promise<Medication[]> {
+    return Array.from(this.medications.values()).filter(
+      m => m.patientId === patientId
+    ).sort((a, b) => b.administeredAt.getTime() - a.administeredAt.getTime());
+  }
+
+  async createMedication(medication: InsertMedication): Promise<Medication> {
+    const id = randomUUID();
+    const med: Medication = {
+      ...medication,
+      id,
+      administeredAt: medication.administeredAt ?? new Date(),
+      notes: medication.notes ?? null,
+    };
+    this.medications.set(id, med);
+    return med;
+  }
+
+  // ========== MEALS METHODS ==========
+  async getMealsByPatient(patientId: string): Promise<Meal[]> {
+    return Array.from(this.meals.values()).filter(
+      m => m.patientId === patientId
+    ).sort((a, b) => b.servedAt.getTime() - a.servedAt.getTime());
+  }
+
+  async createMeal(meal: InsertMeal): Promise<Meal> {
+    const id = randomUUID();
+    const mealRecord: Meal = {
+      ...meal,
+      id,
+      servedAt: meal.servedAt ?? new Date(),
+      consumptionPercentage: meal.consumptionPercentage ?? 100,
+      calories: meal.calories ?? null,
+      dietaryRestrictions: meal.dietaryRestrictions ?? null,
+      notes: meal.notes ?? null,
+    };
+    this.meals.set(id, mealRecord);
+    return mealRecord;
+  }
+
+  // ========== VITALS METHODS ==========
+  async getVitalsByPatient(patientId: string): Promise<Vitals[]> {
+    return Array.from(this.vitalsRecords.values()).filter(
+      v => v.patientId === patientId
+    ).sort((a, b) => b.recordedAt.getTime() - a.recordedAt.getTime());
+  }
+
+  async createVitals(vitals: InsertVitals): Promise<Vitals> {
+    const id = randomUUID();
+    const vitalsRecord: Vitals = {
+      ...vitals,
+      id,
+      recordedAt: vitals.recordedAt ?? new Date(),
+      temperature: vitals.temperature ?? null,
+      heartRate: vitals.heartRate ?? null,
+      bloodPressureSystolic: vitals.bloodPressureSystolic ?? null,
+      bloodPressureDiastolic: vitals.bloodPressureDiastolic ?? null,
+      respiratoryRate: vitals.respiratoryRate ?? null,
+      oxygenSaturation: vitals.oxygenSaturation ?? null,
+      notes: vitals.notes ?? null,
+    };
+    this.vitalsRecords.set(id, vitalsRecord);
+    return vitalsRecord;
+  }
+
+  // ========== PATIENT TRACKING HISTORY ==========
+  async getPatientTrackingHistory(patientId: string): Promise<any> {
+    const patient = await this.getTrackingPatientById(patientId);
+    if (!patient) return null;
+
+    const medications = await this.getMedicationsByPatient(patientId);
+    const meals = await this.getMealsByPatient(patientId);
+    const vitals = await this.getVitalsByPatient(patientId);
+
+    return {
+      patient,
+      medications,
+      meals,
+      vitals,
+    };
   }
 }
 

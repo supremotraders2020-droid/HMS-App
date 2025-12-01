@@ -1,0 +1,357 @@
+# Galaxy Multi Specialty Hospital - Chatbot Service
+
+A Node.js Express chatbot service with OpenAI integration for handling FAQs, insurance queries, and doctor availability.
+
+## Project Structure
+
+```
+chatbot-service/
+├── src/
+│   ├── chatbot/
+│   │   └── openai.ts          # OpenAI integration
+│   └── main.js                # Main entry point
+├── server/
+│   ├── index.ts               # Express server entry
+│   ├── routes.ts              # API route definitions
+│   ├── storage.ts             # In-memory storage for logs
+│   └── vite.ts                # Vite dev server setup
+├── client/
+│   └── src/
+│       ├── App.tsx            # Main React application
+│       ├── components/
+│       │   ├── ChatInterface.tsx      # Chat UI component
+│       │   ├── LogsViewer.tsx         # Logs viewer component
+│       │   ├── ApiDocumentation.tsx   # API docs component
+│       │   ├── AppSidebar.tsx         # Navigation sidebar
+│       │   ├── HospitalHeader.tsx     # Hospital branding header
+│       │   ├── HospitalFooter.tsx     # Hospital branding footer
+│       │   ├── ThemeProvider.tsx      # Dark/light theme
+│       │   └── ThemeToggle.tsx        # Theme toggle button
+│       └── pages/
+│           ├── Home.tsx               # Chat interface page
+│           ├── Logs.tsx               # Logs viewer page
+│           └── Documentation.tsx      # API documentation page
+├── shared/
+│   └── schema.ts              # Data models and types
+├── package.json
+└── README.md
+```
+
+## Features
+
+- **AI-Powered Chatbot**: OpenAI GPT-5 integration for intelligent responses
+- **Specialized Categories**: FAQ, Insurance, Doctor Availability queries
+- **Conversation Logging**: Store and retrieve all chatbot interactions
+- **API Documentation**: Built-in API reference with examples
+- **Dark/Light Theme**: User-selectable theme support
+- **Hospital Branding**: Galaxy Multi Specialty Hospital identity
+
+## API Endpoints
+
+### POST /api/chatbot/query
+Send a query to the chatbot and receive an AI-generated response.
+
+**Request Body:**
+```json
+{
+  "query": "What's covered under my health insurance?",
+  "userId": "user-123",
+  "category": "insurance"
+}
+```
+
+**Response:**
+```json
+{
+  "response": "Your insurance covers medical consultations, emergency care, and prescription medications.",
+  "category": "insurance",
+  "confidence": 0.95,
+  "timestamp": "2025-09-16T10:30:00Z"
+}
+```
+
+### GET /api/chatbot/logs
+Retrieve conversation logs with optional filtering.
+
+**Query Parameters:**
+- `userId` (optional): Filter by user ID
+- `category` (optional): Filter by category
+- `limit` (optional): Maximum logs to return (default: 50)
+
+**Response:**
+```json
+{
+  "logs": [
+    {
+      "id": "log-123",
+      "userId": "user-123",
+      "query": "What's covered under my health insurance?",
+      "response": "Your insurance covers...",
+      "category": "insurance",
+      "timestamp": "2025-09-16T10:30:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+## Setup Instructions
+
+### 1. Environment Variables
+
+Create a `.env` file or set the following secrets:
+
+```bash
+OPENAI_API_KEY=your_openai_api_key_here
+SESSION_SECRET=your_session_secret_here
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Run Development Server
+
+```bash
+npm run dev
+```
+
+The server will start on port 5000.
+
+## Complete Implementation Scripts
+
+### Step 1: Data Schema (shared/schema.ts)
+
+```typescript
+import { pgTable, text, varchar, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+import { sql } from "drizzle-orm";
+
+export const conversationLogs = pgTable("conversation_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id"),
+  query: text("query").notNull(),
+  response: text("response").notNull(),
+  category: text("category"),
+  timestamp: timestamp("timestamp").defaultNow(),
+  metadata: jsonb("metadata"),
+});
+
+export const insertConversationLogSchema = createInsertSchema(conversationLogs).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertConversationLog = z.infer<typeof insertConversationLogSchema>;
+export type ConversationLog = typeof conversationLogs.$inferSelect;
+```
+
+### Step 2: Storage Interface (server/storage.ts)
+
+```typescript
+import { type ConversationLog, type InsertConversationLog } from "@shared/schema";
+import { randomUUID } from "crypto";
+
+export interface IStorage {
+  createConversationLog(log: InsertConversationLog): Promise<ConversationLog>;
+  getConversationLogs(userId?: string, limit?: number): Promise<ConversationLog[]>;
+  getConversationLogsByCategory(category: string, limit?: number): Promise<ConversationLog[]>;
+}
+
+export class MemStorage implements IStorage {
+  private conversationLogs: Map<string, ConversationLog>;
+
+  constructor() {
+    this.conversationLogs = new Map();
+  }
+
+  async createConversationLog(insertLog: InsertConversationLog): Promise<ConversationLog> {
+    const id = randomUUID();
+    const timestamp = new Date();
+    const log: ConversationLog = { ...insertLog, id, timestamp };
+    this.conversationLogs.set(id, log);
+    return log;
+  }
+
+  async getConversationLogs(userId?: string, limit = 50): Promise<ConversationLog[]> {
+    let logs = Array.from(this.conversationLogs.values());
+    if (userId) {
+      logs = logs.filter(log => log.userId === userId);
+    }
+    logs.sort((a, b) => {
+      const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return timeB - timeA;
+    });
+    return logs.slice(0, limit);
+  }
+
+  async getConversationLogsByCategory(category: string, limit = 50): Promise<ConversationLog[]> {
+    return Array.from(this.conversationLogs.values())
+      .filter(log => log.category === category)
+      .sort((a, b) => {
+        const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timeB - timeA;
+      })
+      .slice(0, limit);
+  }
+}
+
+export const storage = new MemStorage();
+```
+
+### Step 3: OpenAI Integration (server/chatbot/openai.ts)
+
+```typescript
+import OpenAI from "openai";
+
+// the newest OpenAI model is "gpt-5" which was released August 7, 2025
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+export async function getChatbotResponse(
+  query: string,
+  category: string = "general"
+): Promise<{ response: string; confidence: number }> {
+  
+  const systemPrompts: Record<string, string> = {
+    faq: "You are a helpful FAQ assistant for Galaxy Multi Specialty Hospital. Answer common questions about hospital services, timings, and policies.",
+    insurance: "You are an insurance specialist assistant for Galaxy Multi Specialty Hospital. Help users understand their insurance coverage, claims, and benefits.",
+    doctor_availability: "You are a scheduling assistant for Galaxy Multi Specialty Hospital. Help users find available doctors and appointment slots.",
+    general: "You are a helpful assistant for Galaxy Multi Specialty Hospital located at Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062. Assist with general inquiries."
+  };
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-5",
+    messages: [
+      { role: "system", content: systemPrompts[category] || systemPrompts.general },
+      { role: "user", content: query }
+    ],
+    response_format: { type: "json_object" },
+  });
+
+  const content = response.choices[0].message.content || "";
+  
+  try {
+    const parsed = JSON.parse(content);
+    return {
+      response: parsed.response || content,
+      confidence: parsed.confidence || 0.85
+    };
+  } catch {
+    return { response: content, confidence: 0.85 };
+  }
+}
+```
+
+### Step 4: API Routes (server/routes.ts)
+
+```typescript
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { getChatbotResponse } from "./chatbot/openai";
+import { insertConversationLogSchema } from "@shared/schema";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // POST /api/chatbot/query - Send query to chatbot
+  app.post("/api/chatbot/query", async (req, res) => {
+    try {
+      const { query, userId, category = "general" } = req.body;
+      
+      if (!query || typeof query !== "string") {
+        return res.status(400).json({ error: "Query is required" });
+      }
+
+      const { response, confidence } = await getChatbotResponse(query, category);
+
+      // Log the conversation
+      const log = await storage.createConversationLog({
+        userId: userId || null,
+        query,
+        response,
+        category,
+        metadata: { confidence }
+      });
+
+      res.json({
+        response,
+        category,
+        confidence,
+        timestamp: log.timestamp
+      });
+    } catch (error) {
+      console.error("Chatbot error:", error);
+      res.status(500).json({ error: "Failed to process query" });
+    }
+  });
+
+  // GET /api/chatbot/logs - Get conversation logs
+  app.get("/api/chatbot/logs", async (req, res) => {
+    try {
+      const { userId, category, limit } = req.query;
+      
+      let logs;
+      if (category && typeof category === "string") {
+        logs = await storage.getConversationLogsByCategory(
+          category,
+          limit ? parseInt(limit as string) : 50
+        );
+      } else {
+        logs = await storage.getConversationLogs(
+          userId as string | undefined,
+          limit ? parseInt(limit as string) : 50
+        );
+      }
+
+      res.json({ logs, total: logs.length });
+    } catch (error) {
+      console.error("Logs error:", error);
+      res.status(500).json({ error: "Failed to retrieve logs" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
+```
+
+## Hospital Information
+
+**Galaxy Multi Specialty Hospital**
+Address: Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062
+
+## Live URL
+
+Production: https://chatbot-service-kadamatulp.replit.app
+
+## Testing the API
+
+### Test Chat Query
+```bash
+curl -X POST "https://chatbot-service-kadamatulp.replit.app/api/chatbot/query" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What are your hospital timings?", "category": "faq"}'
+```
+
+### Get Logs
+```bash
+curl -X GET "https://chatbot-service-kadamatulp.replit.app/api/chatbot/logs?limit=10"
+```
+
+## Technology Stack
+
+- **Backend**: Node.js, Express.js, TypeScript
+- **Frontend**: React, TailwindCSS, shadcn/ui
+- **AI**: OpenAI GPT-5
+- **State Management**: TanStack Query
+- **Routing**: Wouter
+- **Storage**: In-memory (MemStorage)
+
+## License
+
+MIT License - Galaxy Multi Specialty Hospital

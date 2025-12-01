@@ -147,3 +147,84 @@ export const insertInventoryTransactionSchema = createInsertSchema(inventoryTran
 });
 export type InsertInventoryTransaction = z.infer<typeof insertInventoryTransactionSchema>;
 export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
+
+// ========== PATIENT TRACKING SERVICE TABLES ==========
+
+// Tracking Patients table
+export const trackingPatients = pgTable("tracking_patients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  age: integer("age").notNull(),
+  gender: text("gender").notNull(),
+  room: text("room").notNull(),
+  diagnosis: text("diagnosis").notNull(),
+  admissionDate: timestamp("admission_date").notNull().defaultNow(),
+  status: text("status").notNull().default("admitted"),
+  doctor: text("doctor").notNull(),
+});
+
+export const insertTrackingPatientSchema = createInsertSchema(trackingPatients).omit({
+  id: true,
+});
+export type InsertTrackingPatient = z.infer<typeof insertTrackingPatientSchema>;
+export type TrackingPatient = typeof trackingPatients.$inferSelect;
+
+// Medications table
+export const medications = pgTable("medications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  name: text("name").notNull(),
+  dosage: text("dosage").notNull(),
+  route: text("route").notNull(),
+  frequency: text("frequency").notNull(),
+  administeredAt: timestamp("administered_at").notNull().defaultNow(),
+  administeredBy: text("administered_by").notNull(),
+  notes: text("notes"),
+});
+
+export const insertMedicationSchema = createInsertSchema(medications).omit({
+  id: true,
+});
+export type InsertMedication = z.infer<typeof insertMedicationSchema>;
+export type Medication = typeof medications.$inferSelect;
+
+// Meals table
+export const meals = pgTable("meals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  mealType: text("meal_type").notNull(),
+  description: text("description").notNull(),
+  calories: integer("calories"),
+  dietaryRestrictions: text("dietary_restrictions"),
+  consumptionPercentage: integer("consumption_percentage").notNull().default(100),
+  servedAt: timestamp("served_at").notNull().defaultNow(),
+  servedBy: text("served_by").notNull(),
+  notes: text("notes"),
+});
+
+export const insertMealSchema = createInsertSchema(meals).omit({
+  id: true,
+});
+export type InsertMeal = z.infer<typeof insertMealSchema>;
+export type Meal = typeof meals.$inferSelect;
+
+// Vitals table
+export const vitals = pgTable("vitals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  temperature: text("temperature"),
+  heartRate: integer("heart_rate"),
+  bloodPressureSystolic: integer("blood_pressure_systolic"),
+  bloodPressureDiastolic: integer("blood_pressure_diastolic"),
+  respiratoryRate: integer("respiratory_rate"),
+  oxygenSaturation: integer("oxygen_saturation"),
+  recordedAt: timestamp("recorded_at").notNull().defaultNow(),
+  recordedBy: text("recorded_by").notNull(),
+  notes: text("notes"),
+});
+
+export const insertVitalsSchema = createInsertSchema(vitals).omit({
+  id: true,
+});
+export type InsertVitals = z.infer<typeof insertVitalsSchema>;
+export type Vitals = typeof vitals.$inferSelect;

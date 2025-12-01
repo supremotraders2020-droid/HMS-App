@@ -1,0 +1,1070 @@
+# COMPLETE PATIENT-SERVICE PROJECT CREATION SCRIPT
+
+Copy and paste each section to create the complete healthcare management system.
+
+---
+
+## STEP 1: Create Project Structure
+
+```bash
+# Create directories
+mkdir -p server shared client/src/components client/src/lib client/src/pages
+mkdir -p patient-service/src/patients patient-service/src/admissions patient-service/src/records
+```
+
+---
+
+## STEP 2: Install Dependencies
+
+```bash
+npm install express drizzle-orm @neondatabase/serverless ws zod drizzle-zod
+npm install -D drizzle-kit tsx typescript @types/express @types/node @types/ws
+```
+
+---
+
+## STEP 3: Create Database Schema
+
+**File: `shared/schema.ts`**
+
+```typescript
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, timestamp, date, boolean } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Users table for HMS-core integration
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+});
+
+// Patients table for demographic data
+export const patients = pgTable("patients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: date("date_of_birth").notNull(),
+  gender: text("gender").notNull(),
+  phone: text("phone"),
+  email: text("email"),
+  address: text("address"),
+  emergencyContact: text("emergency_contact"),
+  emergencyPhone: text("emergency_phone"),
+  insuranceProvider: text("insurance_provider"),
+  insuranceNumber: text("insurance_number"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Admissions table
+export const admissions = pgTable("admissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").references(() => patients.id).notNull(),
+  admissionDate: timestamp("admission_date").defaultNow().notNull(),
+  dischargeDate: timestamp("discharge_date"),
+  department: text("department").notNull(),
+  roomNumber: text("room_number"),
+  admittingPhysician: text("admitting_physician").notNull(),
+  primaryDiagnosis: text("primary_diagnosis"),
+  status: text("status").default("admitted").notNull(), // admitted, discharged, transferred
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Medical records/history table
+export const medicalRecords = pgTable("medical_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").references(() => patients.id).notNull(),
+  recordDate: timestamp("record_date").defaultNow().notNull(),
+  recordType: text("record_type").notNull(), // diagnosis, treatment, prescription, lab_result, note
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  physician: text("physician").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Schema definitions
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
+
+export const insertPatientSchema = createInsertSchema(patients).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAdmissionSchema = createInsertSchema(admissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMedicalRecordSchema = createInsertSchema(medicalRecords).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+export type Patient = typeof patients.$inferSelect;
+export type InsertPatient = z.infer<typeof insertPatientSchema>;
+export type Admission = typeof admissions.$inferSelect;
+export type InsertAdmission = z.infer<typeof insertAdmissionSchema>;
+export type MedicalRecord = typeof medicalRecords.$inferSelect;
+export type InsertMedicalRecord = z.infer<typeof insertMedicalRecordSchema>;
+```
+
+---
+
+## STEP 4: Create Database Connection
+
+**File: `server/db.ts`**
+
+```typescript
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
+import * as schema from "@shared/schema";
+
+neonConfig.webSocketConstructor = ws;
+
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
+}
+
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle({ client: pool, schema });
+```
+
+---
+
+## STEP 5: Create Storage Layer
+
+**File: `server/storage.ts`**
+
+```typescript
+import { 
+  users, patients, admissions, medicalRecords,
+  type User, type InsertUser,
+  type Patient, type InsertPatient,
+  type Admission, type InsertAdmission,
+  type MedicalRecord, type InsertMedicalRecord
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc } from "drizzle-orm";
+
+export interface IStorage {
+  // User operations (for HMS-core sync)
+  getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+
+  // Patient operations
+  getPatient(id: string): Promise<Patient | undefined>;
+  getAllPatients(): Promise<Patient[]>;
+  createPatient(patient: InsertPatient): Promise<Patient>;
+  updatePatient(id: string, patient: Partial<InsertPatient>): Promise<Patient | undefined>;
+  deletePatient(id: string): Promise<boolean>;
+
+  // Admission operations
+  getAdmission(id: string): Promise<Admission | undefined>;
+  getAdmissionsByPatient(patientId: string): Promise<Admission[]>;
+  getActiveAdmissions(): Promise<Admission[]>;
+  createAdmission(admission: InsertAdmission): Promise<Admission>;
+  updateAdmission(id: string, admission: Partial<InsertAdmission>): Promise<Admission | undefined>;
+  dischargePatient(id: string, dischargeDate: Date, notes?: string): Promise<Admission | undefined>;
+
+  // Medical record operations
+  getMedicalRecord(id: string): Promise<MedicalRecord | undefined>;
+  getMedicalRecordsByPatient(patientId: string): Promise<MedicalRecord[]>;
+  createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
+  updateMedicalRecord(id: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord | undefined>;
+}
+
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  // Patient operations
+  async getPatient(id: string): Promise<Patient | undefined> {
+    const [patient] = await db.select().from(patients).where(eq(patients.id, id));
+    return patient || undefined;
+  }
+
+  async getAllPatients(): Promise<Patient[]> {
+    return await db.select().from(patients).orderBy(desc(patients.createdAt));
+  }
+
+  async createPatient(patient: InsertPatient): Promise<Patient> {
+    const [newPatient] = await db.insert(patients).values(patient).returning();
+    return newPatient;
+  }
+
+  async updatePatient(id: string, patient: Partial<InsertPatient>): Promise<Patient | undefined> {
+    const [updated] = await db
+      .update(patients)
+      .set(patient)
+      .where(eq(patients.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deletePatient(id: string): Promise<boolean> {
+    const result = await db.delete(patients).where(eq(patients.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Admission operations
+  async getAdmission(id: string): Promise<Admission | undefined> {
+    const [admission] = await db.select().from(admissions).where(eq(admissions.id, id));
+    return admission || undefined;
+  }
+
+  async getAdmissionsByPatient(patientId: string): Promise<Admission[]> {
+    return await db
+      .select()
+      .from(admissions)
+      .where(eq(admissions.patientId, patientId))
+      .orderBy(desc(admissions.admissionDate));
+  }
+
+  async getActiveAdmissions(): Promise<Admission[]> {
+    return await db
+      .select()
+      .from(admissions)
+      .where(eq(admissions.status, 'admitted'))
+      .orderBy(desc(admissions.admissionDate));
+  }
+
+  async createAdmission(admission: InsertAdmission): Promise<Admission> {
+    const [newAdmission] = await db.insert(admissions).values(admission).returning();
+    return newAdmission;
+  }
+
+  async updateAdmission(id: string, admission: Partial<InsertAdmission>): Promise<Admission | undefined> {
+    const [updated] = await db
+      .update(admissions)
+      .set(admission)
+      .where(eq(admissions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async dischargePatient(id: string, dischargeDate: Date, notes?: string): Promise<Admission | undefined> {
+    const updateData: Partial<InsertAdmission> = {
+      status: 'discharged',
+      dischargeDate: dischargeDate,
+    };
+    if (notes) {
+      updateData.notes = notes;
+    }
+    const [updated] = await db
+      .update(admissions)
+      .set(updateData)
+      .where(eq(admissions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Medical record operations
+  async getMedicalRecord(id: string): Promise<MedicalRecord | undefined> {
+    const [record] = await db.select().from(medicalRecords).where(eq(medicalRecords.id, id));
+    return record || undefined;
+  }
+
+  async getMedicalRecordsByPatient(patientId: string): Promise<MedicalRecord[]> {
+    return await db
+      .select()
+      .from(medicalRecords)
+      .where(eq(medicalRecords.patientId, patientId))
+      .orderBy(desc(medicalRecords.recordDate));
+  }
+
+  async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
+    const [newRecord] = await db.insert(medicalRecords).values(record).returning();
+    return newRecord;
+  }
+
+  async updateMedicalRecord(id: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord | undefined> {
+    const [updated] = await db
+      .update(medicalRecords)
+      .set(record)
+      .where(eq(medicalRecords.id, id))
+      .returning();
+    return updated || undefined;
+  }
+}
+
+export const storage = new DatabaseStorage();
+```
+
+---
+
+## STEP 6: Create API Routes
+
+**File: `server/routes.ts`**
+
+```typescript
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { insertPatientSchema, insertAdmissionSchema, insertMedicalRecordSchema } from "@shared/schema";
+import { z } from "zod";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // ============================================
+  // PATIENT ROUTES
+  // ============================================
+
+  // GET /api/patients - Get all patients
+  app.get("/api/patients", async (req, res) => {
+    try {
+      const patients = await storage.getAllPatients();
+      res.json(patients);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      res.status(500).json({ error: "Failed to fetch patients" });
+    }
+  });
+
+  // GET /api/patients/:id - Get patient by ID
+  app.get("/api/patients/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const patient = await storage.getPatient(id);
+      
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      
+      res.json(patient);
+    } catch (error) {
+      console.error("Error fetching patient:", error);
+      res.status(500).json({ error: "Failed to fetch patient" });
+    }
+  });
+
+  // POST /api/patients - Create new patient
+  app.post("/api/patients", async (req, res) => {
+    try {
+      const validatedData = insertPatientSchema.parse(req.body);
+      const patient = await storage.createPatient(validatedData);
+      res.status(201).json(patient);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      console.error("Error creating patient:", error);
+      res.status(500).json({ error: "Failed to create patient" });
+    }
+  });
+
+  // PATCH /api/patients/:id - Update patient
+  app.patch("/api/patients/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertPatientSchema.partial().parse(req.body);
+      const patient = await storage.updatePatient(id, validatedData);
+      
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      
+      res.json(patient);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      console.error("Error updating patient:", error);
+      res.status(500).json({ error: "Failed to update patient" });
+    }
+  });
+
+  // DELETE /api/patients/:id - Delete patient
+  app.delete("/api/patients/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deletePatient(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting patient:", error);
+      res.status(500).json({ error: "Failed to delete patient" });
+    }
+  });
+
+  // GET /api/patients/:id/admissions - Get patient admissions
+  app.get("/api/patients/:id/admissions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const admissions = await storage.getAdmissionsByPatient(id);
+      res.json(admissions);
+    } catch (error) {
+      console.error("Error fetching patient admissions:", error);
+      res.status(500).json({ error: "Failed to fetch admissions" });
+    }
+  });
+
+  // GET /api/patients/:id/records - Get patient medical records
+  app.get("/api/patients/:id/records", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const records = await storage.getMedicalRecordsByPatient(id);
+      res.json(records);
+    } catch (error) {
+      console.error("Error fetching patient records:", error);
+      res.status(500).json({ error: "Failed to fetch medical records" });
+    }
+  });
+
+  // ============================================
+  // ADMISSION ROUTES
+  // ============================================
+
+  // GET /api/admissions - Get all active admissions
+  app.get("/api/admissions", async (req, res) => {
+    try {
+      const admissions = await storage.getActiveAdmissions();
+      res.json(admissions);
+    } catch (error) {
+      console.error("Error fetching admissions:", error);
+      res.status(500).json({ error: "Failed to fetch admissions" });
+    }
+  });
+
+  // GET /api/admissions/:id - Get admission by ID
+  app.get("/api/admissions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const admission = await storage.getAdmission(id);
+      
+      if (!admission) {
+        return res.status(404).json({ error: "Admission not found" });
+      }
+      
+      res.json(admission);
+    } catch (error) {
+      console.error("Error fetching admission:", error);
+      res.status(500).json({ error: "Failed to fetch admission" });
+    }
+  });
+
+  // POST /api/admissions - Create new admission
+  app.post("/api/admissions", async (req, res) => {
+    try {
+      const validatedData = insertAdmissionSchema.parse(req.body);
+      
+      // Verify patient exists
+      const patient = await storage.getPatient(validatedData.patientId);
+      if (!patient) {
+        return res.status(400).json({ error: "Patient not found" });
+      }
+      
+      const admission = await storage.createAdmission(validatedData);
+      res.status(201).json(admission);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      console.error("Error creating admission:", error);
+      res.status(500).json({ error: "Failed to create admission" });
+    }
+  });
+
+  // PATCH /api/admissions/:id - Update admission
+  app.patch("/api/admissions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertAdmissionSchema.partial().parse(req.body);
+      const admission = await storage.updateAdmission(id, validatedData);
+      
+      if (!admission) {
+        return res.status(404).json({ error: "Admission not found" });
+      }
+      
+      res.json(admission);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      console.error("Error updating admission:", error);
+      res.status(500).json({ error: "Failed to update admission" });
+    }
+  });
+
+  // PATCH /api/admissions/:id/discharge - Discharge patient
+  app.patch("/api/admissions/:id/discharge", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { dischargeDate, notes } = req.body;
+      
+      // Verify admission exists and is active
+      const existingAdmission = await storage.getAdmission(id);
+      if (!existingAdmission) {
+        return res.status(404).json({ error: "Admission not found" });
+      }
+      
+      if (existingAdmission.status !== 'admitted') {
+        return res.status(400).json({ error: "Patient is not currently admitted" });
+      }
+      
+      const dischargeDateParsed = dischargeDate ? new Date(dischargeDate) : new Date();
+      const admission = await storage.dischargePatient(id, dischargeDateParsed, notes);
+      
+      res.json(admission);
+    } catch (error) {
+      console.error("Error discharging patient:", error);
+      res.status(500).json({ error: "Failed to discharge patient" });
+    }
+  });
+
+  // ============================================
+  // MEDICAL RECORDS ROUTES
+  // ============================================
+
+  // GET /api/records/:id - Get medical record by ID
+  app.get("/api/records/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const record = await storage.getMedicalRecord(id);
+      
+      if (!record) {
+        return res.status(404).json({ error: "Medical record not found" });
+      }
+      
+      res.json(record);
+    } catch (error) {
+      console.error("Error fetching medical record:", error);
+      res.status(500).json({ error: "Failed to fetch medical record" });
+    }
+  });
+
+  // POST /api/records - Create new medical record
+  app.post("/api/records", async (req, res) => {
+    try {
+      const validatedData = insertMedicalRecordSchema.parse(req.body);
+      
+      // Verify patient exists
+      const patient = await storage.getPatient(validatedData.patientId);
+      if (!patient) {
+        return res.status(400).json({ error: "Patient not found" });
+      }
+      
+      const record = await storage.createMedicalRecord(validatedData);
+      res.status(201).json(record);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      console.error("Error creating medical record:", error);
+      res.status(500).json({ error: "Failed to create medical record" });
+    }
+  });
+
+  // PATCH /api/records/:id - Update medical record
+  app.patch("/api/records/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertMedicalRecordSchema.partial().parse(req.body);
+      const record = await storage.updateMedicalRecord(id, validatedData);
+      
+      if (!record) {
+        return res.status(404).json({ error: "Medical record not found" });
+      }
+      
+      res.json(record);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      console.error("Error updating medical record:", error);
+      res.status(500).json({ error: "Failed to update medical record" });
+    }
+  });
+
+  // ============================================
+  // HMS-CORE SYNC ROUTES (for user identity)
+  // ============================================
+
+  // POST /api/sync/user - Sync user from HMS-core
+  app.post("/api/sync/user", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ error: "Username and password are required" });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.json({ message: "User already synced", user: { id: existingUser.id, username: existingUser.username } });
+      }
+      
+      // Create new user
+      const user = await storage.createUser({ username, password });
+      res.status(201).json({ message: "User synced successfully", user: { id: user.id, username: user.username } });
+    } catch (error) {
+      console.error("Error syncing user:", error);
+      res.status(500).json({ error: "Failed to sync user" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
+```
+
+---
+
+## STEP 7: Create Patient Service Modules
+
+**File: `patient-service/src/patients/index.js`**
+
+```javascript
+class PatientService {
+  constructor(storage) {
+    this.storage = storage;
+  }
+
+  async getAllPatients() {
+    return await this.storage.getAllPatients();
+  }
+
+  async getPatientById(id) {
+    return await this.storage.getPatient(id);
+  }
+
+  async createPatient(patientData) {
+    const requiredFields = ['firstName', 'lastName', 'dateOfBirth', 'gender'];
+    for (const field of requiredFields) {
+      if (!patientData[field]) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
+    return await this.storage.createPatient(patientData);
+  }
+
+  async updatePatient(id, patientData) {
+    return await this.storage.updatePatient(id, patientData);
+  }
+
+  async deletePatient(id) {
+    return await this.storage.deletePatient(id);
+  }
+
+  async getPatientAdmissions(patientId) {
+    return await this.storage.getAdmissionsByPatient(patientId);
+  }
+
+  async getPatientRecords(patientId) {
+    return await this.storage.getMedicalRecordsByPatient(patientId);
+  }
+}
+
+module.exports = { PatientService };
+```
+
+**File: `patient-service/src/admissions/index.js`**
+
+```javascript
+class AdmissionService {
+  constructor(storage) {
+    this.storage = storage;
+  }
+
+  async getActiveAdmissions() {
+    return await this.storage.getActiveAdmissions();
+  }
+
+  async getAdmissionById(id) {
+    return await this.storage.getAdmission(id);
+  }
+
+  async getPatientAdmissions(patientId) {
+    return await this.storage.getAdmissionsByPatient(patientId);
+  }
+
+  async admitPatient(admissionData) {
+    const requiredFields = ['patientId', 'department', 'admittingPhysician'];
+    for (const field of requiredFields) {
+      if (!admissionData[field]) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
+
+    const patient = await this.storage.getPatient(admissionData.patientId);
+    if (!patient) {
+      throw new Error('Patient not found');
+    }
+
+    const admission = {
+      ...admissionData,
+      status: 'admitted',
+      admissionDate: admissionData.admissionDate || new Date(),
+    };
+
+    return await this.storage.createAdmission(admission);
+  }
+
+  async updateAdmission(id, admissionData) {
+    return await this.storage.updateAdmission(id, admissionData);
+  }
+
+  async dischargePatient(admissionId, options = {}) {
+    const admission = await this.storage.getAdmission(admissionId);
+    if (!admission) {
+      throw new Error('Admission not found');
+    }
+
+    if (admission.status !== 'admitted') {
+      throw new Error('Patient is not currently admitted');
+    }
+
+    const dischargeDate = options.dischargeDate || new Date();
+    return await this.storage.dischargePatient(admissionId, dischargeDate, options.notes);
+  }
+
+  async transferPatient(admissionId, newDepartment, newRoom) {
+    const admission = await this.storage.getAdmission(admissionId);
+    if (!admission) {
+      throw new Error('Admission not found');
+    }
+
+    if (admission.status !== 'admitted') {
+      throw new Error('Patient is not currently admitted');
+    }
+
+    return await this.storage.updateAdmission(admissionId, {
+      department: newDepartment,
+      roomNumber: newRoom,
+      status: 'transferred',
+    });
+  }
+}
+
+module.exports = { AdmissionService };
+```
+
+**File: `patient-service/src/records/index.js`**
+
+```javascript
+const VALID_RECORD_TYPES = ['diagnosis', 'treatment', 'prescription', 'lab_result', 'note'];
+
+class MedicalRecordsService {
+  constructor(storage) {
+    this.storage = storage;
+  }
+
+  async getRecordById(id) {
+    return await this.storage.getMedicalRecord(id);
+  }
+
+  async getPatientRecords(patientId) {
+    return await this.storage.getMedicalRecordsByPatient(patientId);
+  }
+
+  async getPatientRecordsByType(patientId, recordType) {
+    if (!VALID_RECORD_TYPES.includes(recordType)) {
+      throw new Error(`Invalid record type: ${recordType}. Valid types: ${VALID_RECORD_TYPES.join(', ')}`);
+    }
+
+    const records = await this.storage.getMedicalRecordsByPatient(patientId);
+    return records.filter(record => record.recordType === recordType);
+  }
+
+  async createRecord(recordData) {
+    const requiredFields = ['patientId', 'recordType', 'title', 'description', 'physician'];
+    for (const field of requiredFields) {
+      if (!recordData[field]) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
+
+    if (!VALID_RECORD_TYPES.includes(recordData.recordType)) {
+      throw new Error(`Invalid record type: ${recordData.recordType}. Valid types: ${VALID_RECORD_TYPES.join(', ')}`);
+    }
+
+    const patient = await this.storage.getPatient(recordData.patientId);
+    if (!patient) {
+      throw new Error('Patient not found');
+    }
+
+    const record = {
+      ...recordData,
+      recordDate: recordData.recordDate || new Date(),
+    };
+
+    return await this.storage.createMedicalRecord(record);
+  }
+
+  async updateRecord(id, recordData) {
+    if (recordData.recordType && !VALID_RECORD_TYPES.includes(recordData.recordType)) {
+      throw new Error(`Invalid record type: ${recordData.recordType}. Valid types: ${VALID_RECORD_TYPES.join(', ')}`);
+    }
+
+    return await this.storage.updateMedicalRecord(id, recordData);
+  }
+
+  async addDiagnosis(patientId, title, description, physician) {
+    return await this.createRecord({
+      patientId,
+      recordType: 'diagnosis',
+      title,
+      description,
+      physician,
+    });
+  }
+
+  async addPrescription(patientId, medication, instructions, physician) {
+    return await this.createRecord({
+      patientId,
+      recordType: 'prescription',
+      title: medication,
+      description: instructions,
+      physician,
+    });
+  }
+
+  async addLabResult(patientId, testName, results, physician) {
+    return await this.createRecord({
+      patientId,
+      recordType: 'lab_result',
+      title: testName,
+      description: results,
+      physician,
+    });
+  }
+
+  getValidRecordTypes() {
+    return [...VALID_RECORD_TYPES];
+  }
+}
+
+module.exports = { MedicalRecordsService, VALID_RECORD_TYPES };
+```
+
+**File: `patient-service/src/main.js`**
+
+```javascript
+const { PatientService } = require('./patients');
+const { AdmissionService } = require('./admissions');
+const { MedicalRecordsService, VALID_RECORD_TYPES } = require('./records');
+
+function createPatientService(storage) {
+  if (!storage) {
+    throw new Error('Storage implementation is required');
+  }
+
+  const patientService = new PatientService(storage);
+  const admissionService = new AdmissionService(storage);
+  const recordsService = new MedicalRecordsService(storage);
+
+  return {
+    patients: patientService,
+    admissions: admissionService,
+    records: recordsService,
+    
+    async getCompletePatientProfile(patientId) {
+      const patient = await patientService.getPatientById(patientId);
+      if (!patient) {
+        return null;
+      }
+
+      const [admissions, records] = await Promise.all([
+        admissionService.getPatientAdmissions(patientId),
+        recordsService.getPatientRecords(patientId),
+      ]);
+
+      return {
+        ...patient,
+        admissions,
+        medicalRecords: records,
+        currentAdmission: admissions.find(a => a.status === 'admitted') || null,
+      };
+    },
+
+    async quickAdmit(patientId, department, physician, diagnosis) {
+      return await admissionService.admitPatient({
+        patientId,
+        department,
+        admittingPhysician: physician,
+        primaryDiagnosis: diagnosis,
+      });
+    },
+
+    async quickDischarge(admissionId, notes) {
+      return await admissionService.dischargePatient(admissionId, { notes });
+    },
+  };
+}
+
+module.exports = {
+  createPatientService,
+  PatientService,
+  AdmissionService,
+  MedicalRecordsService,
+  VALID_RECORD_TYPES,
+};
+```
+
+---
+
+## STEP 8: Push Database Schema
+
+```bash
+npm run db:push
+```
+
+---
+
+## STEP 9: Start the Application
+
+```bash
+npm run dev
+```
+
+---
+
+## STEP 10: Test the API
+
+```bash
+# Create a patient
+curl -X POST http://localhost:5000/api/patients \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe",
+    "dateOfBirth": "1985-03-15",
+    "gender": "Male",
+    "phone": "+1-555-123-4567",
+    "email": "john.doe@email.com"
+  }'
+
+# Admit a patient (use patient ID from above)
+curl -X POST http://localhost:5000/api/admissions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patientId": "YOUR_PATIENT_ID",
+    "department": "Cardiology",
+    "admittingPhysician": "Dr. Smith",
+    "roomNumber": "204A",
+    "primaryDiagnosis": "Chest pain evaluation"
+  }'
+
+# Discharge a patient (use admission ID from above)
+curl -X PATCH http://localhost:5000/api/admissions/YOUR_ADMISSION_ID/discharge \
+  -H "Content-Type: application/json" \
+  -d '{
+    "notes": "Patient recovered well. Follow-up in 2 weeks."
+  }'
+
+# Add a medical record
+curl -X POST http://localhost:5000/api/records \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patientId": "YOUR_PATIENT_ID",
+    "recordType": "diagnosis",
+    "title": "Hypertension",
+    "description": "Essential hypertension diagnosed. BP 145/92 mmHg.",
+    "physician": "Dr. Smith"
+  }'
+```
+
+---
+
+## API ENDPOINTS SUMMARY
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/patients` | List all patients |
+| GET | `/api/patients/:id` | Get patient by ID |
+| POST | `/api/patients` | Create patient |
+| PATCH | `/api/patients/:id` | Update patient |
+| DELETE | `/api/patients/:id` | Delete patient |
+| GET | `/api/patients/:id/admissions` | Get patient admissions |
+| GET | `/api/patients/:id/records` | Get patient records |
+| GET | `/api/admissions` | List active admissions |
+| GET | `/api/admissions/:id` | Get admission by ID |
+| POST | `/api/admissions` | Admit patient |
+| PATCH | `/api/admissions/:id` | Update admission |
+| PATCH | `/api/admissions/:id/discharge` | Discharge patient |
+| GET | `/api/records/:id` | Get medical record |
+| POST | `/api/records` | Create medical record |
+| PATCH | `/api/records/:id` | Update medical record |
+| POST | `/api/sync/user` | Sync user from HMS-core |
+
+---
+
+## Data Models
+
+### Patient
+```json
+{
+  "id": "uuid",
+  "firstName": "string (required)",
+  "lastName": "string (required)",
+  "dateOfBirth": "date (required)",
+  "gender": "string (required)",
+  "phone": "string",
+  "email": "string",
+  "address": "string",
+  "emergencyContact": "string",
+  "emergencyPhone": "string",
+  "insuranceProvider": "string",
+  "insuranceNumber": "string",
+  "createdAt": "timestamp"
+}
+```
+
+### Admission
+```json
+{
+  "id": "uuid",
+  "patientId": "uuid (required)",
+  "admissionDate": "timestamp",
+  "dischargeDate": "timestamp",
+  "department": "string (required)",
+  "roomNumber": "string",
+  "admittingPhysician": "string (required)",
+  "primaryDiagnosis": "string",
+  "status": "admitted | discharged | transferred",
+  "notes": "string",
+  "createdAt": "timestamp"
+}
+```
+
+### Medical Record
+```json
+{
+  "id": "uuid",
+  "patientId": "uuid (required)",
+  "recordDate": "timestamp",
+  "recordType": "diagnosis | treatment | prescription | lab_result | note",
+  "title": "string (required)",
+  "description": "string (required)",
+  "physician": "string (required)",
+  "createdAt": "timestamp"
+}
+```
