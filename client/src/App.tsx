@@ -23,6 +23,7 @@ import PatientService from "@/pages/PatientService";
 import BiometricService from "@/pages/BiometricService";
 import NotificationService from "@/pages/NotificationService";
 import PatientPortal from "@/pages/PatientPortal";
+import EquipmentServicing from "@/pages/EquipmentServicing";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -158,6 +159,9 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
       </Route>
       <Route path="/notification-service">
         <NotificationService />
+      </Route>
+      <Route path="/equipment-servicing">
+        <EquipmentServicing />
       </Route>
 
       {/* Other Routes */}
