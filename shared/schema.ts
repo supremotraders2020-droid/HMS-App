@@ -366,3 +366,54 @@ export const insertBiometricVerificationSchema = createInsertSchema(biometricVer
 });
 export type InsertBiometricVerification = z.infer<typeof insertBiometricVerificationSchema>;
 export type BiometricVerification = typeof biometricVerifications.$inferSelect;
+
+// ========== NOTIFICATION SERVICE TABLES ==========
+
+// Notifications table - stores all hospital notifications
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  category: text("category").notNull(), // 'health_tips', 'hospital_updates', 'emergency', 'opd_announcements', 'disease_alerts', 'general'
+  priority: text("priority").notNull().default("medium"), // 'low', 'medium', 'high', 'critical'
+  channels: text("channels").array().notNull(), // ['push', 'email', 'sms', 'whatsapp']
+  scheduledAt: timestamp("scheduled_at"),
+  mediaFiles: text("media_files"), // JSON string of media file objects
+  attachedLink: text("attached_link"),
+  status: text("status").notNull().default("draft"), // 'draft', 'scheduled', 'sent', 'failed'
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  sentAt: timestamp("sent_at"),
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+  sentAt: true,
+});
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+
+// Hospital Team Members table - for notification team directory
+export const hospitalTeamMembers = pgTable("hospital_team_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  title: text("title").notNull(),
+  department: text("department").notNull(), // 'emergency_medicine', 'cardiology', 'neurology', etc.
+  specialization: text("specialization"),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  photoUrl: text("photo_url"),
+  isOnCall: boolean("is_on_call").notNull().default(false),
+  status: text("status").notNull().default("available"), // 'available', 'busy', 'offline'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertHospitalTeamMemberSchema = createInsertSchema(hospitalTeamMembers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHospitalTeamMember = z.infer<typeof insertHospitalTeamMemberSchema>;
+export type HospitalTeamMember = typeof hospitalTeamMembers.$inferSelect;
