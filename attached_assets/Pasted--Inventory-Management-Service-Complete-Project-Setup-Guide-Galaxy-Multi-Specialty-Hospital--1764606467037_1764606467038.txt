@@ -1,0 +1,784 @@
+# Inventory Management Service - Complete Project Setup Guide
+## Galaxy Multi Specialty Hospital
+
+---
+
+## Project Overview
+
+A full-stack inventory management system for medical supplies built with:
+- **Frontend**: React + TypeScript + Tailwind CSS + shadcn/ui
+- **Backend**: Node.js + Express.js
+- **Database**: PostgreSQL with Drizzle ORM
+- **State Management**: TanStack Query (React Query)
+
+---
+
+## Project Structure
+
+```
+inventory-service/
+├── client/
+│   ├── index.html
+│   └── src/
+│       ├── components/
+│       │   ├── ui/                    # shadcn/ui components
+│       │   ├── examples/              # Component examples
+│       │   ├── InventoryCard.tsx      # Inventory item display
+│       │   ├── TransactionForm.tsx    # Transaction recording form
+│       │   ├── TransactionHistory.tsx # Transaction list view
+│       │   ├── StockOverview.tsx      # Dashboard stats
+│       │   ├── AddItemForm.tsx        # New item form
+│       │   ├── PatientWiseReport.tsx  # Patient inventory usage
+│       │   ├── NurseWiseReport.tsx    # Staff inventory usage
+│       │   ├── app-sidebar.tsx        # Navigation sidebar
+│       │   └── ThemeToggle.tsx        # Dark/light mode toggle
+│       ├── pages/
+│       │   ├── Dashboard.tsx          # Main dashboard
+│       │   ├── InventoryList.tsx      # All inventory items
+│       │   ├── AddItem.tsx            # Add new item page
+│       │   ├── Transactions.tsx       # Transaction history
+│       │   ├── PatientReports.tsx     # Patient-wise reports
+│       │   ├── StaffReports.tsx       # Staff-wise reports
+│       │   └── not-found.tsx          # 404 page
+│       ├── hooks/
+│       │   └── use-toast.ts
+│       ├── lib/
+│       │   └── queryClient.ts
+│       ├── App.tsx
+│       ├── main.tsx
+│       └── index.css
+├── server/
+│   ├── index.ts                       # Server entry point
+│   ├── routes.ts                      # API routes
+│   ├── storage.ts                     # Database storage layer
+│   ├── db.ts                          # Database connection
+│   └── vite.ts                        # Vite configuration
+├── shared/
+│   └── schema.ts                      # Database schema & types
+├── migrations/                        # Database migrations
+├── package.json
+├── tailwind.config.ts
+├── tsconfig.json
+├── vite.config.ts
+└── drizzle.config.ts
+```
+
+---
+
+## Step 1: Database Schema Design
+
+### File: `shared/schema.ts`
+
+```typescript
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, integer, decimal, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+import { relations } from "drizzle-orm";
+
+// Enums
+export const categoryEnum = pgEnum("category", ["disposables", "syringes", "gloves"]);
+export const transactionTypeEnum = pgEnum("transaction_type", ["ISSUE", "RETURN", "DISPOSE"]);
+export const staffRoleEnum = pgEnum("staff_role", ["doctor", "nurse", "technician", "pharmacist", "administrator"]);
+
+// Users table (for authentication)
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+});
+
+// Inventory Items table
+export const inventoryItems = pgTable("inventory_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  category: categoryEnum("category").notNull(),
+  currentStock: integer("current_stock").notNull().default(0),
+  lowStockThreshold: integer("low_stock_threshold").notNull().default(10),
+  unit: text("unit").notNull().default("units"),
+  cost: decimal("cost", { precision: 10, scale: 2 }).notNull(),
+  supplier: text("supplier"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Staff Members table
+export const staffMembers = pgTable("staff_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  role: staffRoleEnum("role").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  department: text("department"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Patients table
+export const patients = pgTable("patients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: text("patient_id").notNull().unique(), // e.g., "P-12345"
+  name: text("name").notNull(),
+  phone: text("phone"),
+  address: text("address"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Inventory Transactions table
+export const inventoryTransactions = pgTable("inventory_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: transactionTypeEnum("type").notNull(),
+  itemId: varchar("item_id").notNull().references(() => inventoryItems.id),
+  quantity: integer("quantity").notNull(),
+  staffId: varchar("staff_id").references(() => staffMembers.id),
+  patientId: varchar("patient_id").references(() => patients.id),
+  notes: text("notes"),
+  remainingStock: integer("remaining_stock").notNull(),
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations
+export const inventoryItemsRelations = relations(inventoryItems, ({ many }) => ({
+  transactions: many(inventoryTransactions),
+}));
+
+export const staffMembersRelations = relations(staffMembers, ({ many }) => ({
+  transactions: many(inventoryTransactions),
+}));
+
+export const patientsRelations = relations(patients, ({ many }) => ({
+  transactions: many(inventoryTransactions),
+}));
+
+export const inventoryTransactionsRelations = relations(inventoryTransactions, ({ one }) => ({
+  item: one(inventoryItems, {
+    fields: [inventoryTransactions.itemId],
+    references: [inventoryItems.id],
+  }),
+  staff: one(staffMembers, {
+    fields: [inventoryTransactions.staffId],
+    references: [staffMembers.id],
+  }),
+  patient: one(patients, {
+    fields: [inventoryTransactions.patientId],
+    references: [patients.id],
+  }),
+}));
+
+// Insert schemas
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
+
+export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStaffMemberSchema = createInsertSchema(staffMembers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPatientSchema = createInsertSchema(patients).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTransactionSchema = createInsertSchema(inventoryTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+
+export type InsertInventoryItem = z.infer<typeof insertInventoryItemSchema>;
+export type InventoryItem = typeof inventoryItems.$inferSelect;
+
+export type InsertStaffMember = z.infer<typeof insertStaffMemberSchema>;
+export type StaffMember = typeof staffMembers.$inferSelect;
+
+export type InsertPatient = z.infer<typeof insertPatientSchema>;
+export type Patient = typeof patients.$inferSelect;
+
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type Transaction = typeof inventoryTransactions.$inferSelect;
+```
+
+---
+
+## Step 2: Database Connection
+
+### File: `server/db.ts`
+
+```typescript
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
+import * as schema from "@shared/schema";
+
+neonConfig.webSocketConstructor = ws;
+
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
+}
+
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle({ client: pool, schema });
+```
+
+---
+
+## Step 3: Storage Layer (CRUD Operations)
+
+### File: `server/storage.ts`
+
+```typescript
+import { 
+  inventoryItems, 
+  inventoryTransactions, 
+  staffMembers, 
+  patients,
+  type InventoryItem, 
+  type InsertInventoryItem,
+  type Transaction,
+  type InsertTransaction,
+  type StaffMember,
+  type InsertStaffMember,
+  type Patient,
+  type InsertPatient
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, sql } from "drizzle-orm";
+
+export interface IStorage {
+  // Inventory Items
+  getAllItems(): Promise<InventoryItem[]>;
+  getItemById(id: string): Promise<InventoryItem | undefined>;
+  createItem(item: InsertInventoryItem): Promise<InventoryItem>;
+  updateItemStock(id: string, newStock: number): Promise<InventoryItem | undefined>;
+  
+  // Transactions
+  getAllTransactions(): Promise<Transaction[]>;
+  getTransactionsByItem(itemId: string): Promise<Transaction[]>;
+  getTransactionsByPatient(patientId: string): Promise<Transaction[]>;
+  getTransactionsByStaff(staffId: string): Promise<Transaction[]>;
+  createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  
+  // Staff
+  getAllStaff(): Promise<StaffMember[]>;
+  getStaffById(id: string): Promise<StaffMember | undefined>;
+  createStaff(staff: InsertStaffMember): Promise<StaffMember>;
+  
+  // Patients
+  getAllPatients(): Promise<Patient[]>;
+  getPatientById(id: string): Promise<Patient | undefined>;
+  createPatient(patient: InsertPatient): Promise<Patient>;
+  
+  // Reports
+  getPatientWiseReport(): Promise<any[]>;
+  getStaffWiseReport(): Promise<any[]>;
+  getLowStockItems(): Promise<InventoryItem[]>;
+}
+
+export class DatabaseStorage implements IStorage {
+  // ========== INVENTORY ITEMS ==========
+  async getAllItems(): Promise<InventoryItem[]> {
+    return await db.select().from(inventoryItems).orderBy(desc(inventoryItems.createdAt));
+  }
+
+  async getItemById(id: string): Promise<InventoryItem | undefined> {
+    const [item] = await db.select().from(inventoryItems).where(eq(inventoryItems.id, id));
+    return item || undefined;
+  }
+
+  async createItem(item: InsertInventoryItem): Promise<InventoryItem> {
+    const [newItem] = await db.insert(inventoryItems).values(item).returning();
+    return newItem;
+  }
+
+  async updateItemStock(id: string, newStock: number): Promise<InventoryItem | undefined> {
+    const [updated] = await db
+      .update(inventoryItems)
+      .set({ currentStock: newStock, updatedAt: new Date() })
+      .where(eq(inventoryItems.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // ========== TRANSACTIONS ==========
+  async getAllTransactions(): Promise<Transaction[]> {
+    return await db.select().from(inventoryTransactions).orderBy(desc(inventoryTransactions.createdAt));
+  }
+
+  async getTransactionsByItem(itemId: string): Promise<Transaction[]> {
+    return await db
+      .select()
+      .from(inventoryTransactions)
+      .where(eq(inventoryTransactions.itemId, itemId))
+      .orderBy(desc(inventoryTransactions.createdAt));
+  }
+
+  async getTransactionsByPatient(patientId: string): Promise<Transaction[]> {
+    return await db
+      .select()
+      .from(inventoryTransactions)
+      .where(eq(inventoryTransactions.patientId, patientId))
+      .orderBy(desc(inventoryTransactions.createdAt));
+  }
+
+  async getTransactionsByStaff(staffId: string): Promise<Transaction[]> {
+    return await db
+      .select()
+      .from(inventoryTransactions)
+      .where(eq(inventoryTransactions.staffId, staffId))
+      .orderBy(desc(inventoryTransactions.createdAt));
+  }
+
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    // Update inventory stock based on transaction type
+    const item = await this.getItemById(transaction.itemId);
+    if (!item) throw new Error("Item not found");
+
+    let newStock = item.currentStock;
+    if (transaction.type === "ISSUE" || transaction.type === "DISPOSE") {
+      newStock = item.currentStock - transaction.quantity;
+    } else if (transaction.type === "RETURN") {
+      newStock = item.currentStock + transaction.quantity;
+    }
+
+    if (newStock < 0) throw new Error("Insufficient stock");
+
+    // Update item stock
+    await this.updateItemStock(transaction.itemId, newStock);
+
+    // Create transaction with remaining stock
+    const [newTransaction] = await db
+      .insert(inventoryTransactions)
+      .values({
+        ...transaction,
+        remainingStock: newStock,
+        totalCost: String(Number(item.cost) * transaction.quantity),
+      })
+      .returning();
+
+    return newTransaction;
+  }
+
+  // ========== STAFF ==========
+  async getAllStaff(): Promise<StaffMember[]> {
+    return await db.select().from(staffMembers).orderBy(staffMembers.name);
+  }
+
+  async getStaffById(id: string): Promise<StaffMember | undefined> {
+    const [staff] = await db.select().from(staffMembers).where(eq(staffMembers.id, id));
+    return staff || undefined;
+  }
+
+  async createStaff(staff: InsertStaffMember): Promise<StaffMember> {
+    const [newStaff] = await db.insert(staffMembers).values(staff).returning();
+    return newStaff;
+  }
+
+  // ========== PATIENTS ==========
+  async getAllPatients(): Promise<Patient[]> {
+    return await db.select().from(patients).orderBy(patients.name);
+  }
+
+  async getPatientById(id: string): Promise<Patient | undefined> {
+    const [patient] = await db.select().from(patients).where(eq(patients.id, id));
+    return patient || undefined;
+  }
+
+  async createPatient(patient: InsertPatient): Promise<Patient> {
+    const [newPatient] = await db.insert(patients).values(patient).returning();
+    return newPatient;
+  }
+
+  // ========== REPORTS ==========
+  async getPatientWiseReport(): Promise<any[]> {
+    const result = await db
+      .select({
+        patientId: patients.id,
+        patientName: patients.name,
+        patientCode: patients.patientId,
+        totalTransactions: sql<number>`count(${inventoryTransactions.id})`,
+        totalCost: sql<number>`sum(${inventoryTransactions.totalCost})`,
+        totalItemsIssued: sql<number>`sum(case when ${inventoryTransactions.type} = 'ISSUE' then ${inventoryTransactions.quantity} else 0 end)`,
+        totalItemsReturned: sql<number>`sum(case when ${inventoryTransactions.type} = 'RETURN' then ${inventoryTransactions.quantity} else 0 end)`,
+      })
+      .from(inventoryTransactions)
+      .leftJoin(patients, eq(inventoryTransactions.patientId, patients.id))
+      .where(sql`${inventoryTransactions.patientId} is not null`)
+      .groupBy(patients.id, patients.name, patients.patientId);
+
+    return result;
+  }
+
+  async getStaffWiseReport(): Promise<any[]> {
+    const result = await db
+      .select({
+        staffId: staffMembers.id,
+        staffName: staffMembers.name,
+        role: staffMembers.role,
+        totalTransactions: sql<number>`count(${inventoryTransactions.id})`,
+        totalCost: sql<number>`sum(${inventoryTransactions.totalCost})`,
+        totalItemsIssued: sql<number>`sum(case when ${inventoryTransactions.type} = 'ISSUE' then ${inventoryTransactions.quantity} else 0 end)`,
+        totalItemsReturned: sql<number>`sum(case when ${inventoryTransactions.type} = 'RETURN' then ${inventoryTransactions.quantity} else 0 end)`,
+        totalItemsDisposed: sql<number>`sum(case when ${inventoryTransactions.type} = 'DISPOSE' then ${inventoryTransactions.quantity} else 0 end)`,
+      })
+      .from(inventoryTransactions)
+      .leftJoin(staffMembers, eq(inventoryTransactions.staffId, staffMembers.id))
+      .groupBy(staffMembers.id, staffMembers.name, staffMembers.role);
+
+    return result;
+  }
+
+  async getLowStockItems(): Promise<InventoryItem[]> {
+    return await db
+      .select()
+      .from(inventoryItems)
+      .where(sql`${inventoryItems.currentStock} <= ${inventoryItems.lowStockThreshold}`);
+  }
+}
+
+export const storage = new DatabaseStorage();
+```
+
+---
+
+## Step 4: API Routes
+
+### File: `server/routes.ts`
+
+```typescript
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { insertInventoryItemSchema, insertTransactionSchema, insertStaffMemberSchema, insertPatientSchema } from "@shared/schema";
+import { z } from "zod";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // ========== INVENTORY ITEMS ==========
+  
+  // GET /inventory/items - Get all inventory items
+  app.get("/api/inventory/items", async (req, res) => {
+    try {
+      const items = await storage.getAllItems();
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch items" });
+    }
+  });
+
+  // GET /inventory/items/:id - Get single item
+  app.get("/api/inventory/items/:id", async (req, res) => {
+    try {
+      const item = await storage.getItemById(req.params.id);
+      if (!item) {
+        return res.status(404).json({ error: "Item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch item" });
+    }
+  });
+
+  // POST /inventory/items - Create new inventory item
+  app.post("/api/inventory/items", async (req, res) => {
+    try {
+      const parsed = insertInventoryItemSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const newItem = await storage.createItem(parsed.data);
+      res.status(201).json(newItem);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create item" });
+    }
+  });
+
+  // ========== TRANSACTIONS ==========
+
+  // GET /inventory/transactions - Get all transactions
+  app.get("/api/inventory/transactions", async (req, res) => {
+    try {
+      const transactions = await storage.getAllTransactions();
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  });
+
+  // POST /inventory/transactions - Create new transaction
+  app.post("/api/inventory/transactions", async (req, res) => {
+    try {
+      const parsed = insertTransactionSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const newTransaction = await storage.createTransaction(parsed.data);
+      res.status(201).json(newTransaction);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to create transaction" });
+    }
+  });
+
+  // GET /inventory/transactions/patient/:patientId - Get transactions by patient
+  app.get("/api/inventory/transactions/patient/:patientId", async (req, res) => {
+    try {
+      const transactions = await storage.getTransactionsByPatient(req.params.patientId);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient transactions" });
+    }
+  });
+
+  // GET /inventory/transactions/staff/:staffId - Get transactions by staff
+  app.get("/api/inventory/transactions/staff/:staffId", async (req, res) => {
+    try {
+      const transactions = await storage.getTransactionsByStaff(req.params.staffId);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch staff transactions" });
+    }
+  });
+
+  // ========== STAFF ==========
+
+  // GET /api/staff - Get all staff members
+  app.get("/api/staff", async (req, res) => {
+    try {
+      const staff = await storage.getAllStaff();
+      res.json(staff);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch staff" });
+    }
+  });
+
+  // POST /api/staff - Create new staff member
+  app.post("/api/staff", async (req, res) => {
+    try {
+      const parsed = insertStaffMemberSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const newStaff = await storage.createStaff(parsed.data);
+      res.status(201).json(newStaff);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create staff member" });
+    }
+  });
+
+  // ========== PATIENTS ==========
+
+  // GET /api/patients - Get all patients
+  app.get("/api/patients", async (req, res) => {
+    try {
+      const patientsList = await storage.getAllPatients();
+      res.json(patientsList);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patients" });
+    }
+  });
+
+  // POST /api/patients - Create new patient
+  app.post("/api/patients", async (req, res) => {
+    try {
+      const parsed = insertPatientSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const newPatient = await storage.createPatient(parsed.data);
+      res.status(201).json(newPatient);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create patient" });
+    }
+  });
+
+  // ========== REPORTS ==========
+
+  // GET /inventory/reports - Get overall inventory reports
+  app.get("/api/inventory/reports", async (req, res) => {
+    try {
+      const items = await storage.getAllItems();
+      const transactions = await storage.getAllTransactions();
+      const lowStockItems = await storage.getLowStockItems();
+      
+      const totalValue = items.reduce((sum, item) => sum + (Number(item.cost) * item.currentStock), 0);
+      
+      res.json({
+        totalItems: items.length,
+        totalTransactions: transactions.length,
+        lowStockItems: lowStockItems.length,
+        outOfStockItems: items.filter(item => item.currentStock === 0).length,
+        totalValue,
+        items,
+        lowStock: lowStockItems,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to generate reports" });
+    }
+  });
+
+  // GET /inventory/reports/patient-wise - Get patient-wise inventory usage
+  app.get("/api/inventory/reports/patient-wise", async (req, res) => {
+    try {
+      const report = await storage.getPatientWiseReport();
+      res.json(report);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to generate patient-wise report" });
+    }
+  });
+
+  // GET /inventory/reports/staff-wise - Get staff-wise inventory usage
+  app.get("/api/inventory/reports/staff-wise", async (req, res) => {
+    try {
+      const report = await storage.getStaffWiseReport();
+      res.json(report);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to generate staff-wise report" });
+    }
+  });
+
+  // GET /inventory/alerts - Get low stock alerts
+  app.get("/api/inventory/alerts", async (req, res) => {
+    try {
+      const lowStockItems = await storage.getLowStockItems();
+      res.json({
+        count: lowStockItems.length,
+        items: lowStockItems,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch alerts" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
+```
+
+---
+
+## Step 5: Run Database Migrations
+
+After creating the schema, push it to the database:
+
+```bash
+npm run db:push
+```
+
+---
+
+## API Endpoints Summary
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/inventory/items` | Create new inventory item |
+| GET | `/api/inventory/items` | Get all inventory items |
+| GET | `/api/inventory/items/:id` | Get single item |
+| POST | `/api/inventory/transactions` | Record a transaction (ISSUE/RETURN/DISPOSE) |
+| GET | `/api/inventory/transactions` | Get all transactions |
+| GET | `/api/inventory/transactions/patient/:id` | Get transactions by patient |
+| GET | `/api/inventory/transactions/staff/:id` | Get transactions by staff |
+| GET | `/api/inventory/reports` | Get overall inventory reports |
+| GET | `/api/inventory/reports/patient-wise` | Get patient-wise inventory usage |
+| GET | `/api/inventory/reports/staff-wise` | Get staff-wise inventory usage |
+| GET | `/api/inventory/alerts` | Get low stock alerts |
+| GET | `/api/staff` | Get all staff members |
+| POST | `/api/staff` | Create staff member |
+| GET | `/api/patients` | Get all patients |
+| POST | `/api/patients` | Create patient |
+
+---
+
+## Environment Variables Required
+
+```env
+DATABASE_URL=postgresql://user:password@host:port/database
+SESSION_SECRET=your-session-secret-here
+```
+
+---
+
+## Key Features Implemented
+
+### 1. Inventory Management
+- Add new inventory items (disposables, syringes, gloves)
+- Track stock levels with low-stock thresholds
+- Automatic stock updates on transactions
+- Cost tracking in Indian Rupees (₹)
+
+### 2. Transaction Tracking
+- **ISSUE**: Items issued to patients (reduces stock)
+- **RETURN**: Items returned to inventory (increases stock)
+- **DISPOSE**: Items disposed/expired (reduces stock)
+- Staff identification for accountability
+
+### 3. Patient Linking
+- Link inventory usage to specific patients
+- Track patient-wise inventory consumption
+- View patient transaction history
+- Calculate total cost per patient
+
+### 4. Staff Tracking (Nurse-Wise)
+- Track which staff member performed each transaction
+- Role-based categorization (Doctor, Nurse, Technician, etc.)
+- Staff-wise inventory usage reports
+- Accountability and audit trail
+
+### 5. Reporting & Analytics
+- Dashboard with stock overview
+- Low stock alerts with configurable thresholds
+- Patient-wise inventory reports
+- Staff-wise inventory reports
+- Category-wise breakdown (Syringes, Gloves, Disposables)
+
+### 6. Hospital Branding
+- Galaxy Multi Specialty Hospital header
+- Address: Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062
+
+---
+
+## Running the Application
+
+```bash
+# Install dependencies
+npm install
+
+# Push database schema
+npm run db:push
+
+# Start development server
+npm run dev
+```
+
+The application runs on **http://localhost:5000**
+
+---
+
+## Technologies Used
+
+- **Frontend**: React 18, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Node.js, Express.js
+- **Database**: PostgreSQL with Drizzle ORM
+- **State Management**: TanStack Query (React Query)
+- **Routing**: Wouter
+- **Forms**: React Hook Form with Zod validation
+- **Icons**: Lucide React
+- **Date Handling**: date-fns
+
+---
+
+## Author
+
+Galaxy Multi Specialty Hospital - Inventory Management System

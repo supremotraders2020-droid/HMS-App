@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -15,6 +15,7 @@ import NotFound from "@/pages/not-found";
 import UserManagement from "@/pages/UserManagement";
 import HospitalSettings from "@/pages/HospitalSettings";
 import SystemSettings from "@/pages/SystemSettings";
+import OPDService from "@/pages/OPDService";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -124,11 +125,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
 
       {/* Service Routes */}
       <Route path="/opd-service">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold">OPD Service</h2>
-          <p className="text-muted-foreground">Outpatient Department Management System</p>
-          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
-        </div>
+        <OPDService />
       </Route>
       <Route path="/patient-service">
         <div className="text-center py-12">
@@ -198,7 +195,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
   );
 }
 
-function App() {
+function AppContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentHospital, setCurrentHospital] = useState<Hospital>({
     id: "1",
@@ -206,6 +203,7 @@ function App() {
     location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062",
     status: "ACTIVE"
   });
+  const [, setLocation] = useLocation();
 
   // Hospital data (Galaxy Multi Specialty Hospital only)
   const hospitals: Hospital[] = [
@@ -273,8 +271,7 @@ function App() {
                 }}
                 onNavigate={(path) => {
                   console.log('Navigating to:', path);
-                  // In a real app, this would use router navigation
-                  window.location.hash = path;
+                  setLocation(path);
                 }}
                 onLogout={handleLogout}
               />
@@ -304,4 +301,4 @@ function App() {
   );
 }
 
-export default App;
+export default AppContent;

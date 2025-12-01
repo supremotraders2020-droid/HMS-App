@@ -1,0 +1,185 @@
+OPD Service Project Design - Galaxy Multi Specialty Hospital
+Project Overview
+Create an OPD (Outpatient Department) management system for "Galaxy Multi Specialty Hospital" located at Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062.
+
+Technology Stack:
+
+Frontend: React.js with TypeScript
+Styling: Tailwind CSS with Shadcn UI components
+Backend: Node.js with Express
+Database: PostgreSQL
+Authentication: JWT-based (from external hms-core service)
+Color Scheme & Theming
+Primary Colors:
+Primary (Medical Blue): HSL 197 71% 53% (Light Mode) / HSL 197 61% 63% (Dark Mode)
+Background: HSL 0 0% 98% (Light) / HSL 215 28% 17% (Dark)
+Foreground: HSL 215 28% 17% (Light) / HSL 0 0% 95% (Dark)
+Status Colors:
+Scheduled: Blue (bg-blue-100/blue-800)
+Checked-in: Yellow (bg-yellow-100/yellow-800)
+Completed: Green (bg-green-100/green-800)
+Cancelled: Red (bg-red-100/red-800)
+Design Tokens:
+Border Radius: 0.5rem (8px) for cards, 0.375rem (6px) for buttons
+Shadows: Subtle elevation using HSL-based shadows
+Font: Roboto (sans-serif), Roboto Mono (monospace)
+Page Layout Structure
+1. OPD Header (Top of Page)
+┌─────────────────────────────────────────────────────────────────┐
+│ [Stethoscope Icon] OPD - Outpatient Department                  │
+│ 📍 OPD Wing, Galaxy Multi Specialty Hospital                    │
+│                    [OPD: +91 20 1234 5679] [Mon-Sat: 8AM-8PM]   │
+└─────────────────────────────────────────────────────────────────┘
+
+Styling:
+
+Gradient background: from-primary via-primary/90 to-primary
+Glass-effect contact panels with backdrop-blur
+Responsive: Stacks vertically on mobile, horizontal on desktop
+White/light text on primary background
+2. Navigation Tabs
+┌──────────────────────────────────────────────────────────────────┐
+│ [Doctor Schedules] [Book Appointment] [Appointments] [Check-in] [Our Team] │
+└──────────────────────────────────────────────────────────────────┘
+
+Styling:
+
+5-column grid layout
+Height: 56px (h-14)
+Gradient background: from-primary/5 via-primary/10 to-primary/5
+Active state: bg-primary with text-primary-foreground
+Transition animations on hover/active
+3. Content Sections
+A. Doctor Schedules Tab
+┌─────────────────────────────────────────┐
+│ [Avatar] Dr. Priya Sharma               │
+│         Cardiology                      │
+│         [5/8 slots available]   [Date]  │
+├─────────────────────────────────────────┤
+│ Available Time Slots          5 slots   │
+│ [09:00] [09:30] [10:00] [10:30]...     │
+│ ○ Available  ■ Booked                   │
+└─────────────────────────────────────────┘
+
+Features:
+
+Grid: 1 column mobile, 2 columns desktop
+Hover effects: scale-110 on avatar, primary color on text
+Slot buttons: outline variant for available, secondary for booked
+Slot hover: transforms to primary background color
+B. Book Appointment Tab
+┌─────────────────────────────────────────┐
+│ [Calendar Icon] Book New Appointment    │
+│ Fill in the details below to schedule   │
+├─────────────────────────────────────────┤
+│ Patient Name          Phone Number      │
+│ [_______________]     [_______________] │
+│ Email (Optional)      Select Doctor     │
+│ [_______________]     [Dropdown ▼]      │
+│ Appointment Date      Time Slot         │
+│ [_______________]     [Dropdown ▼]      │
+│ Symptoms / Reason for Visit             │
+│ [________________________________]      │
+│            [Book Appointment]           │
+└─────────────────────────────────────────┘
+
+Features:
+
+Form grid: 1 column mobile, 2 columns tablet+
+Icon labels for key fields
+Gradient header background
+Full-width submit button
+C. Appointments Tab
+┌─────────────────────────────────────────┐
+│ [Search...] [Status Filter▼] [Date▼]   │
+├─────────────────────────────────────────┤
+│ [Avatar] Rahul Mehta          Scheduled │
+│          APT-001                        │
+│ 📞 +91 98765... 👤 Dr. Priya Sharma    │
+│ 📅 March 15, 2024  🕐 10:00 AM         │
+│ 📋 Symptoms: Chest pain and...          │
+│            [Check In] [Cancel]          │
+└─────────────────────────────────────────┘
+
+Features:
+
+Search with icon prefix
+Filter dropdowns for status and date
+Status badges with color coding
+Action buttons for scheduled appointments only
+Hover effects on cards
+D. Check-in Tab
+Same as Appointments but filtered to show only "scheduled" status
+Quick access for front desk staff
+E. Our Team Tab
+┌─────────────────────────────────────────┐
+│ [Users Icon] Our Medical Team           │
+│ Meet our experienced healthcare...      │
+├─────────────────────────────────────────┤
+│ ┌─────────┐ ┌─────────┐ ┌─────────┐    │
+│ │[Avatar] │ │[Avatar] │ │[Avatar] │    │
+│ │Dr.Priya │ │Dr.Rajesh│ │Dr.Sneha │    │
+│ │Cardio.  │ │Ortho.   │ │Derma.   │    │
+│ │★ 4.9    │ │★ 4.8    │ │★ 4.7    │    │
+│ │15+ yrs  │ │12+ yrs  │ │10+ yrs  │    │
+│ │MD, DM   │ │MS Ortho │ │MD Derma │    │
+│ │Mon-Fri  │ │Mon-Sat  │ │Tue-Sat  │    │
+│ └─────────┘ └─────────┘ └─────────┘    │
+└─────────────────────────────────────────┘
+
+Team Members:
+
+Dr. Priya Sharma - Cardiology, 15+ years, MD Cardiology DM, ★4.9
+Dr. Rajesh Kumar - Orthopedics, 12+ years, MS Orthopedics, ★4.8
+Dr. Sneha Patel - Dermatology, 10+ years, MD Dermatology, ★4.7
+Dr. Amit Singh - General Medicine, 8+ years, MBBS MD, ★4.6
+Dr. Kavita Joshi - Pediatrics, 14+ years, MD Pediatrics, ★4.9
+Dr. Arjun Mehta - Neurology, 18+ years, DM Neurology, ★4.8
+Card Features:
+
+Grid: 1 col mobile, 2 cols tablet, 3 cols desktop
+Avatar with initials and gradient background
+Star rating badge (yellow)
+Specialty badge (primary color)
+Hover: scale avatar, color change on name
+4. Hospital Footer (Bottom of Page)
+┌─────────────────────────────────────────────────────────────────┐
+│               [Logo] Galaxy Multi Specialty Hospital             │
+├─────────────────────────────────────────────────────────────────┤
+│ 📍 Address        📞 Contact       🕐 Timings       ✉️ Online    │
+│ Sane Chowk,       Main: ...        24/7 Emergency   info@...     │
+│ Nair Colony,      Emergency:...    OPD: Mon-Sat     appt@...     │
+│ More Vasti,       OPD: ...         8AM-8PM          www....      │
+│ Chikhali,                          Sun: 9AM-1PM                  │
+│ Pimpri-Chinchwad                                                 │
+│ Maharashtra                                                      │
+│ 411062                                                           │
+├─────────────────────────────────────────────────────────────────┤
+│ © 2024 Galaxy Multi Specialty Hospital. All rights reserved.    │
+└─────────────────────────────────────────────────────────────────┘
+
+Styling:
+
+Gradient background: from-primary/5 via-primary/10 to-primary/5
+4-column grid on desktop, stacked on mobile
+Icons for each section
+Centered content with border separator
+Backend API Endpoints
+GET  /doctors/:id/schedules     - Get doctor's schedule
+POST /appointments              - Book new appointment (concurrency-safe)
+PATCH /appointments/:id/cancel  - Cancel appointment
+POST /appointments/:id/checkin  - Patient check-in
+
+All endpoints require:
+
+Header: Authorization: Bearer <JWT_TOKEN>
+JWT validated against hms-core service
+Key Design Principles
+Medical Professional Aesthetic: Clean, trustworthy blue color scheme
+Responsive First: Mobile-optimized with progressive enhancement
+Interactive Feedback: Hover animations, transitions, visual states
+Accessibility: Proper contrast, clear labels, keyboard navigation
+Dark Mode Support: Full theming with CSS variables
+Gradient Accents: Subtle gradients for visual depth
+Glass Morphism: Backdrop blur effects on overlays
+Consistent Spacing: 4px base unit system (Tailwind)
