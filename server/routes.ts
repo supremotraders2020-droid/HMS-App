@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema } from "@shared/schema";
+import { getChatbotResponse, getChatbotStats } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all doctors
@@ -410,6 +411,284 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(vitals);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch vitals" });
+    }
+  });
+
+  // ========== CHATBOT SERVICE ROUTES ==========
+
+  // Send message to chatbot
+  app.post("/api/chatbot/message", async (req, res) => {
+    try {
+      const { query, userId } = req.body;
+      if (!query) {
+        return res.status(400).json({ error: "Query is required" });
+      }
+
+      const { response, category } = await getChatbotResponse(query);
+      
+      const log = await storage.createConversationLog({
+        userId: userId || null,
+        query,
+        response,
+        category,
+      });
+
+      res.json({ response, category, logId: log.id });
+    } catch (error) {
+      console.error("Chatbot error:", error);
+      res.status(500).json({ error: "Failed to process message" });
+    }
+  });
+
+  // Get conversation logs
+  app.get("/api/chatbot/logs", async (req, res) => {
+    try {
+      const { userId, limit } = req.query;
+      const logs = await storage.getConversationLogs(
+        userId as string | undefined,
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch conversation logs" });
+    }
+  });
+
+  // Get conversation logs by category
+  app.get("/api/chatbot/logs/category/:category", async (req, res) => {
+    try {
+      const { limit } = req.query;
+      const logs = await storage.getConversationLogsByCategory(
+        req.params.category,
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch conversation logs" });
+    }
+  });
+
+  // Get chatbot statistics
+  app.get("/api/chatbot/stats", async (req, res) => {
+    try {
+      const logs = await storage.getConversationLogs(undefined, 1000);
+      const stats = getChatbotStats(logs);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch chatbot stats" });
+    }
+  });
+
+  // ========== PATIENT SERVICE ROUTES ==========
+
+  // Get all service patients
+  app.get("/api/patients/service", async (_req, res) => {
+    try {
+      const patients = await storage.getAllServicePatients();
+      res.json(patients);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patients" });
+    }
+  });
+
+  // Get service patient by ID
+  app.get("/api/patients/service/:id", async (req, res) => {
+    try {
+      const patient = await storage.getServicePatientById(req.params.id);
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient" });
+    }
+  });
+
+  // Create service patient
+  app.post("/api/patients/service", async (req, res) => {
+    try {
+      const parsed = insertServicePatientSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const patient = await storage.createServicePatient(parsed.data);
+      res.status(201).json(patient);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create patient" });
+    }
+  });
+
+  // Update service patient
+  app.patch("/api/patients/service/:id", async (req, res) => {
+    try {
+      const patient = await storage.updateServicePatient(req.params.id, req.body);
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update patient" });
+    }
+  });
+
+  // Delete service patient
+  app.delete("/api/patients/service/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteServicePatient(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete patient" });
+    }
+  });
+
+  // ========== ADMISSIONS ROUTES ==========
+
+  // Get all admissions
+  app.get("/api/admissions", async (_req, res) => {
+    try {
+      const admissions = await storage.getAllAdmissions();
+      res.json(admissions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch admissions" });
+    }
+  });
+
+  // Get active admissions
+  app.get("/api/admissions/active", async (_req, res) => {
+    try {
+      const admissions = await storage.getActiveAdmissions();
+      res.json(admissions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch active admissions" });
+    }
+  });
+
+  // Get admission by ID
+  app.get("/api/admissions/:id", async (req, res) => {
+    try {
+      const admission = await storage.getAdmissionById(req.params.id);
+      if (!admission) {
+        return res.status(404).json({ error: "Admission not found" });
+      }
+      res.json(admission);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch admission" });
+    }
+  });
+
+  // Get admissions by patient
+  app.get("/api/patients/service/:id/admissions", async (req, res) => {
+    try {
+      const admissions = await storage.getAdmissionsByPatient(req.params.id);
+      res.json(admissions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient admissions" });
+    }
+  });
+
+  // Create admission
+  app.post("/api/admissions", async (req, res) => {
+    try {
+      const parsed = insertAdmissionSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const admission = await storage.createAdmission(parsed.data);
+      res.status(201).json(admission);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create admission" });
+    }
+  });
+
+  // Update admission
+  app.patch("/api/admissions/:id", async (req, res) => {
+    try {
+      const admission = await storage.updateAdmission(req.params.id, req.body);
+      if (!admission) {
+        return res.status(404).json({ error: "Admission not found" });
+      }
+      res.json(admission);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update admission" });
+    }
+  });
+
+  // Discharge patient
+  app.post("/api/admissions/:id/discharge", async (req, res) => {
+    try {
+      const { notes } = req.body;
+      const admission = await storage.dischargePatient(req.params.id, new Date(), notes);
+      if (!admission) {
+        return res.status(404).json({ error: "Admission not found" });
+      }
+      res.json(admission);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to discharge patient" });
+    }
+  });
+
+  // ========== MEDICAL RECORDS ROUTES ==========
+
+  // Get all medical records
+  app.get("/api/medical-records", async (_req, res) => {
+    try {
+      const records = await storage.getAllMedicalRecords();
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch medical records" });
+    }
+  });
+
+  // Get medical record by ID
+  app.get("/api/medical-records/:id", async (req, res) => {
+    try {
+      const record = await storage.getMedicalRecordById(req.params.id);
+      if (!record) {
+        return res.status(404).json({ error: "Medical record not found" });
+      }
+      res.json(record);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch medical record" });
+    }
+  });
+
+  // Get medical records by patient
+  app.get("/api/patients/service/:id/medical-records", async (req, res) => {
+    try {
+      const records = await storage.getMedicalRecordsByPatient(req.params.id);
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient medical records" });
+    }
+  });
+
+  // Create medical record
+  app.post("/api/medical-records", async (req, res) => {
+    try {
+      const parsed = insertMedicalRecordSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const record = await storage.createMedicalRecord(parsed.data);
+      res.status(201).json(record);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create medical record" });
+    }
+  });
+
+  // Update medical record
+  app.patch("/api/medical-records/:id", async (req, res) => {
+    try {
+      const record = await storage.updateMedicalRecord(req.params.id, req.body);
+      if (!record) {
+        return res.status(404).json({ error: "Medical record not found" });
+      }
+      res.json(record);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update medical record" });
     }
   });
 
