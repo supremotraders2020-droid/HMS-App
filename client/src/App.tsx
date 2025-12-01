@@ -21,6 +21,7 @@ import PatientTrackingService from "@/pages/PatientTrackingService";
 import ChatbotService from "@/pages/ChatbotService";
 import PatientService from "@/pages/PatientService";
 import BiometricService from "@/pages/BiometricService";
+import NotificationService from "@/pages/NotificationService";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -155,11 +156,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         <ChatbotService />
       </Route>
       <Route path="/notification-service">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold">Notification Service</h2>
-          <p className="text-muted-foreground">Real-time Alerts & Communication</p>
-          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
-        </div>
+        <NotificationService />
       </Route>
 
       {/* Other Routes */}
