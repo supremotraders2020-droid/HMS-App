@@ -1,0 +1,484 @@
+# Patient Tracking Service
+
+## Galaxy Multi Specialty Hospital
+**Address:** Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062
+
+---
+
+## Project Overview
+
+A comprehensive patient tracking service built with Node.js, Express, and PostgreSQL for tracking medications, meals, and vitals for admitted patients.
+
+---
+
+## Project Structure
+
+```
+patient-tracking-service/
+├── client/
+│   └── src/
+│       ├── components/
+│       │   ├── PatientCard.tsx        # Patient card component
+│       │   ├── PatientDashboard.tsx   # Main dashboard component
+│       │   ├── MedicationForm.tsx     # Add medication form
+│       │   ├── MealForm.tsx           # Add meal form
+│       │   ├── VitalsForm.tsx         # Add vitals form
+│       │   ├── TrackingHistory.tsx    # Patient tracking history
+│       │   └── examples/              # Component examples
+│       ├── pages/
+│       │   └── Home.tsx               # Home page
+│       ├── lib/
+│       │   └── queryClient.ts         # API client configuration
+│       └── App.tsx                    # Main application
+├── server/
+│   ├── routes.ts                      # API routes
+│   ├── storage.ts                     # Database storage interface
+│   └── index.ts                       # Server entry point
+├── shared/
+│   └── schema.ts                      # Database schema definitions
+├── migrations/                        # Database migrations
+├── package.json
+└── README.md
+```
+
+---
+
+## Database Schema
+
+### Patients Table
+```sql
+CREATE TABLE patients (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  age INTEGER NOT NULL,
+  gender TEXT NOT NULL,
+  room TEXT NOT NULL,
+  diagnosis TEXT NOT NULL,
+  admission_date TIMESTAMP NOT NULL DEFAULT NOW(),
+  status TEXT NOT NULL DEFAULT 'admitted',
+  doctor TEXT NOT NULL
+);
+```
+
+### Medications Table
+```sql
+CREATE TABLE medications (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id VARCHAR NOT NULL REFERENCES patients(id),
+  name TEXT NOT NULL,
+  dosage TEXT NOT NULL,
+  route TEXT NOT NULL,
+  frequency TEXT NOT NULL,
+  administered_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  administered_by TEXT NOT NULL,
+  notes TEXT
+);
+```
+
+### Meals Table
+```sql
+CREATE TABLE meals (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id VARCHAR NOT NULL REFERENCES patients(id),
+  meal_type TEXT NOT NULL,
+  description TEXT NOT NULL,
+  calories INTEGER,
+  dietary_restrictions TEXT[],
+  consumption_percentage INTEGER NOT NULL DEFAULT 100,
+  served_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  served_by TEXT NOT NULL,
+  notes TEXT
+);
+```
+
+### Vitals Table
+```sql
+CREATE TABLE vitals (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id VARCHAR NOT NULL REFERENCES patients(id),
+  temperature DECIMAL,
+  heart_rate INTEGER,
+  blood_pressure_systolic INTEGER,
+  blood_pressure_diastolic INTEGER,
+  respiratory_rate INTEGER,
+  oxygen_saturation INTEGER,
+  recorded_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  recorded_by TEXT NOT NULL,
+  notes TEXT
+);
+```
+
+---
+
+## API Endpoints
+
+### 1. Add Medication
+```
+POST /api/patients/:id/meds
+```
+
+**Request Body:**
+```json
+{
+  "name": "Amoxicillin",
+  "dosage": "500mg",
+  "route": "Oral",
+  "frequency": "Every 8 hours",
+  "administeredBy": "Nurse Smith",
+  "notes": "Take with food"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "patientId": "patient-uuid",
+  "name": "Amoxicillin",
+  "dosage": "500mg",
+  "route": "Oral",
+  "frequency": "Every 8 hours",
+  "administeredAt": "2024-01-15T10:30:00Z",
+  "administeredBy": "Nurse Smith",
+  "notes": "Take with food"
+}
+```
+
+### 2. Add Meal
+```
+POST /api/patients/:id/meals
+```
+
+**Request Body:**
+```json
+{
+  "mealType": "Lunch",
+  "description": "Grilled chicken with vegetables",
+  "calories": 450,
+  "dietaryRestrictions": ["Low Sodium", "Diabetic"],
+  "consumptionPercentage": 75,
+  "servedBy": "Nurse Johnson",
+  "notes": "Patient preferred less rice"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "patientId": "patient-uuid",
+  "mealType": "Lunch",
+  "description": "Grilled chicken with vegetables",
+  "calories": 450,
+  "dietaryRestrictions": ["Low Sodium", "Diabetic"],
+  "consumptionPercentage": 75,
+  "servedAt": "2024-01-15T12:00:00Z",
+  "servedBy": "Nurse Johnson",
+  "notes": "Patient preferred less rice"
+}
+```
+
+### 3. Add Vitals
+```
+POST /api/patients/:id/vitals
+```
+
+**Request Body:**
+```json
+{
+  "temperature": 98.6,
+  "heartRate": 72,
+  "bloodPressureSystolic": 120,
+  "bloodPressureDiastolic": 80,
+  "respiratoryRate": 16,
+  "oxygenSaturation": 98,
+  "recordedBy": "Nurse Williams",
+  "notes": "All vitals normal"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "patientId": "patient-uuid",
+  "temperature": 98.6,
+  "heartRate": 72,
+  "bloodPressureSystolic": 120,
+  "bloodPressureDiastolic": 80,
+  "respiratoryRate": 16,
+  "oxygenSaturation": 98,
+  "recordedAt": "2024-01-15T08:00:00Z",
+  "recordedBy": "Nurse Williams",
+  "notes": "All vitals normal"
+}
+```
+
+### 4. Get Patient Tracking History
+```
+GET /api/patients/:id/tracking
+```
+
+**Response:**
+```json
+{
+  "patient": {
+    "id": "patient-uuid",
+    "name": "John Doe",
+    "age": 45,
+    "gender": "Male",
+    "room": "301A",
+    "diagnosis": "Pneumonia",
+    "admissionDate": "2024-01-10T09:00:00Z",
+    "status": "admitted",
+    "doctor": "Dr. Smith"
+  },
+  "medications": [
+    {
+      "id": "med-uuid",
+      "name": "Amoxicillin",
+      "dosage": "500mg",
+      "route": "Oral",
+      "frequency": "Every 8 hours",
+      "administeredAt": "2024-01-15T10:30:00Z",
+      "administeredBy": "Nurse Smith"
+    }
+  ],
+  "meals": [
+    {
+      "id": "meal-uuid",
+      "mealType": "Lunch",
+      "description": "Grilled chicken",
+      "consumptionPercentage": 75,
+      "servedAt": "2024-01-15T12:00:00Z"
+    }
+  ],
+  "vitals": [
+    {
+      "id": "vital-uuid",
+      "temperature": 98.6,
+      "heartRate": 72,
+      "bloodPressureSystolic": 120,
+      "bloodPressureDiastolic": 80,
+      "recordedAt": "2024-01-15T08:00:00Z"
+    }
+  ]
+}
+```
+
+### 5. Get All Patients
+```
+GET /api/patients
+```
+
+### 6. Create Patient
+```
+POST /api/patients
+```
+
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "age": 45,
+  "gender": "Male",
+  "room": "301A",
+  "diagnosis": "Pneumonia",
+  "doctor": "Dr. Smith"
+}
+```
+
+---
+
+## Setup Instructions
+
+### Prerequisites
+- Node.js 18+ or 20+
+- PostgreSQL database
+- npm or yarn
+
+### Step 1: Clone and Install Dependencies
+```bash
+# Navigate to project directory
+cd patient-tracking-service
+
+# Install dependencies
+npm install
+```
+
+### Step 2: Environment Variables
+Create a `.env` file with the following variables:
+```env
+DATABASE_URL=postgresql://username:password@host:port/database
+PGHOST=your-host
+PGPORT=5432
+PGUSER=your-username
+PGPASSWORD=your-password
+PGDATABASE=your-database
+SESSION_SECRET=your-secret-key
+```
+
+### Step 3: Run Database Migrations
+```bash
+npm run db:push
+```
+
+### Step 4: Start the Application
+```bash
+# Development mode
+npm run dev
+
+# Production mode
+npm run build
+npm start
+```
+
+### Step 5: Access the Application
+Open your browser and navigate to:
+```
+http://localhost:5000
+```
+
+---
+
+## Features
+
+### Patient Management
+- View all admitted patients
+- Add new patients
+- Update patient status
+- View patient details
+
+### Medication Tracking
+- Add medication entries
+- Track dosage, route, and frequency
+- Record administering nurse
+- Add notes for special instructions
+
+### Meal Tracking
+- Log meal consumption
+- Track dietary restrictions
+- Record consumption percentage
+- Note any dietary concerns
+
+### Vitals Monitoring
+- Record temperature, heart rate, blood pressure
+- Track respiratory rate and oxygen saturation
+- Color-coded status indicators (Normal, Warning, Critical)
+- Historical vitals chart
+
+### Tracking History
+- Complete timeline of all patient activities
+- Filter by type (medications, meals, vitals)
+- Export patient records
+- Visual charts for vitals trends
+
+---
+
+## Technology Stack
+
+- **Frontend:** React, TypeScript, Tailwind CSS, Shadcn UI
+- **Backend:** Node.js, Express.js
+- **Database:** PostgreSQL with Drizzle ORM
+- **State Management:** TanStack Query (React Query)
+- **Routing:** Wouter
+- **Forms:** React Hook Form with Zod validation
+- **Charts:** Recharts
+
+---
+
+## API Authentication (Future Enhancement)
+
+For integration with patient-service:
+```javascript
+// Example integration with patient-service
+const patientServiceUrl = process.env.PATIENT_SERVICE_URL;
+
+async function verifyPatientIdentity(patientId) {
+  const response = await fetch(`${patientServiceUrl}/api/patients/${patientId}`);
+  if (!response.ok) {
+    throw new Error('Patient not found in patient-service');
+  }
+  return response.json();
+}
+```
+
+---
+
+## Nurse Authentication (Future Enhancement)
+
+```javascript
+// Middleware for nurse authentication
+const authenticateNurse = async (req, res, next) => {
+  const nurseId = req.headers['x-nurse-id'];
+  // Verify nurse credentials
+  next();
+};
+```
+
+---
+
+## Error Handling
+
+All API endpoints return consistent error responses:
+```json
+{
+  "error": "Error message",
+  "code": "ERROR_CODE",
+  "details": {}
+}
+```
+
+Common error codes:
+- `PATIENT_NOT_FOUND` - Patient does not exist
+- `VALIDATION_ERROR` - Invalid request data
+- `DATABASE_ERROR` - Database operation failed
+- `UNAUTHORIZED` - Authentication required
+
+---
+
+## Testing
+
+```bash
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+---
+
+## Deployment
+
+### Using Replit
+1. Fork the project on Replit
+2. Configure environment variables in Secrets
+3. Click "Deploy" to publish
+
+### Using Docker
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 5000
+CMD ["npm", "start"]
+```
+
+---
+
+## License
+
+This project is proprietary software for Galaxy Multi Specialty Hospital.
+
+---
+
+## Support
+
+For technical support, contact the IT department at Galaxy Multi Specialty Hospital.
+
+**Galaxy Multi Specialty Hospital**
+Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062
