@@ -1,7 +1,12 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, date, time, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean, decimal, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Inventory Enums
+export const inventoryCategoryEnum = pgEnum("inventory_category", ["disposables", "syringes", "gloves", "medicines", "equipment"]);
+export const transactionTypeEnum = pgEnum("transaction_type", ["ISSUE", "RETURN", "DISPOSE"]);
+export const staffRoleEnum = pgEnum("staff_role", ["doctor", "nurse", "technician", "pharmacist", "administrator"]);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -61,3 +66,84 @@ export const appointments = pgTable("appointments", {
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({ id: true, appointmentId: true, createdAt: true });
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
+
+// ========== INVENTORY SERVICE TABLES ==========
+
+// Inventory Items table
+export const inventoryItems = pgTable("inventory_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  currentStock: integer("current_stock").notNull().default(0),
+  lowStockThreshold: integer("low_stock_threshold").notNull().default(10),
+  unit: text("unit").notNull().default("units"),
+  cost: text("cost").notNull(),
+  supplier: text("supplier"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertInventoryItem = z.infer<typeof insertInventoryItemSchema>;
+export type InventoryItem = typeof inventoryItems.$inferSelect;
+
+// Staff Members table
+export const staffMembers = pgTable("staff_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  role: text("role").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  department: text("department"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertStaffMemberSchema = createInsertSchema(staffMembers).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertStaffMember = z.infer<typeof insertStaffMemberSchema>;
+export type StaffMember = typeof staffMembers.$inferSelect;
+
+// Inventory Patients table (separate from appointments patients)
+export const inventoryPatients = pgTable("inventory_patients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: text("patient_id").notNull().unique(),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  address: text("address"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertInventoryPatientSchema = createInsertSchema(inventoryPatients).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertInventoryPatient = z.infer<typeof insertInventoryPatientSchema>;
+export type InventoryPatient = typeof inventoryPatients.$inferSelect;
+
+// Inventory Transactions table
+export const inventoryTransactions = pgTable("inventory_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(),
+  itemId: varchar("item_id").notNull(),
+  quantity: integer("quantity").notNull(),
+  staffId: varchar("staff_id"),
+  patientId: varchar("patient_id"),
+  notes: text("notes"),
+  remainingStock: integer("remaining_stock").notNull(),
+  totalCost: text("total_cost"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertInventoryTransactionSchema = createInsertSchema(inventoryTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertInventoryTransaction = z.infer<typeof insertInventoryTransactionSchema>;
+export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;

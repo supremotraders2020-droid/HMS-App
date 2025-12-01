@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -21,6 +21,35 @@ export interface IStorage {
   getAppointmentsByStatus(status: string): Promise<Appointment[]>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointmentStatus(id: string, status: string): Promise<Appointment | undefined>;
+  
+  // Inventory Items
+  getAllInventoryItems(): Promise<InventoryItem[]>;
+  getInventoryItemById(id: string): Promise<InventoryItem | undefined>;
+  createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem>;
+  updateInventoryItemStock(id: string, newStock: number): Promise<InventoryItem | undefined>;
+  getLowStockItems(): Promise<InventoryItem[]>;
+  
+  // Staff Members
+  getAllStaffMembers(): Promise<StaffMember[]>;
+  getStaffMemberById(id: string): Promise<StaffMember | undefined>;
+  createStaffMember(staff: InsertStaffMember): Promise<StaffMember>;
+  
+  // Inventory Patients
+  getAllInventoryPatients(): Promise<InventoryPatient[]>;
+  getInventoryPatientById(id: string): Promise<InventoryPatient | undefined>;
+  createInventoryPatient(patient: InsertInventoryPatient): Promise<InventoryPatient>;
+  
+  // Inventory Transactions
+  getAllInventoryTransactions(): Promise<InventoryTransaction[]>;
+  getTransactionsByItem(itemId: string): Promise<InventoryTransaction[]>;
+  getTransactionsByPatient(patientId: string): Promise<InventoryTransaction[]>;
+  getTransactionsByStaff(staffId: string): Promise<InventoryTransaction[]>;
+  createInventoryTransaction(transaction: InsertInventoryTransaction): Promise<InventoryTransaction>;
+  
+  // Reports
+  getInventoryReports(): Promise<any>;
+  getPatientWiseReport(): Promise<any[]>;
+  getStaffWiseReport(): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -29,6 +58,13 @@ export class MemStorage implements IStorage {
   private schedules: Map<string, Schedule>;
   private appointments: Map<string, Appointment>;
   private appointmentCounter: number;
+  
+  // Inventory data stores
+  private inventoryItems: Map<string, InventoryItem>;
+  private staffMembers: Map<string, StaffMember>;
+  private inventoryPatients: Map<string, InventoryPatient>;
+  private inventoryTransactions: Map<string, InventoryTransaction>;
+  private patientIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -36,7 +72,16 @@ export class MemStorage implements IStorage {
     this.schedules = new Map();
     this.appointments = new Map();
     this.appointmentCounter = 1;
+    
+    // Inventory initialization
+    this.inventoryItems = new Map();
+    this.staffMembers = new Map();
+    this.inventoryPatients = new Map();
+    this.inventoryTransactions = new Map();
+    this.patientIdCounter = 1;
+    
     this.initializeDefaultData();
+    this.initializeInventoryData();
   }
 
   private initializeDefaultData() {
