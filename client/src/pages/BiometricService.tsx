@@ -190,7 +190,11 @@ export default function BiometricService() {
 
   const getPatientName = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
-    return patient?.name || patientId;
+    return patient ? `${patient.firstName} ${patient.lastName}` : patientId;
+  };
+
+  const getPatientDisplay = (patient: ServicePatient) => {
+    return `${patient.firstName} ${patient.lastName}`;
   };
 
   return (
@@ -444,7 +448,7 @@ export default function BiometricService() {
                             <SelectContent>
                               {patients.map((patient) => (
                                 <SelectItem key={patient.id} value={patient.id}>
-                                  {patient.name} ({patient.patientNumber})
+                                  {getPatientDisplay(patient)} ({patient.id.slice(0, 8)})
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -750,7 +754,7 @@ export default function BiometricService() {
                         onClick={() => verifyForm.setValue("patientId", patient.id)}
                         data-testid={`quick-select-${patient.id}`}
                       >
-                        {patient.name.split(" ")[0]}
+                        {patient.firstName}
                       </Button>
                     ))}
                   </div>

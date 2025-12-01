@@ -20,6 +20,7 @@ import InventoryService from "@/pages/InventoryService";
 import PatientTrackingService from "@/pages/PatientTrackingService";
 import ChatbotService from "@/pages/ChatbotService";
 import PatientService from "@/pages/PatientService";
+import BiometricService from "@/pages/BiometricService";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -141,11 +142,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         <PatientTrackingService />
       </Route>
       <Route path="/biometric-service">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold">Biometric Service</h2>
-          <p className="text-muted-foreground">Biometric Authentication & Identification</p>
-          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
-        </div>
+        <BiometricService />
       </Route>
       <Route path="/hospitality-service">
         <div className="text-center py-12">
