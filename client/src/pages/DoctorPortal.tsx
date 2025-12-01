@@ -183,6 +183,9 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [schedules, setSchedules] = useState(MOCK_SCHEDULES);
+  const [editingSchedule, setEditingSchedule] = useState<{day: string; slots: Schedule[]} | null>(null);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const todayAppointments = MOCK_APPOINTMENTS.filter(a => a.date === "2024-12-01");
@@ -630,6 +633,74 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
     </div>
   );
 
+  const openScheduleEditor = (day: string) => {
+    const daySlots = schedules.filter(s => s.day === day);
+    setEditingSchedule({ day, slots: daySlots.length > 0 ? daySlots : [{ id: `new-${day}`, day, startTime: "09:00", endTime: "17:00", opd: "General OPD", isAvailable: true }] });
+    setScheduleDialogOpen(true);
+  };
+
+  const toggleDayAvailability = (day: string) => {
+    setSchedules(prev => prev.map(s => 
+      s.day === day ? { ...s, isAvailable: !s.isAvailable } : s
+    ));
+    toast({
+      title: "Schedule Updated",
+      description: `${day} availability has been toggled`,
+    });
+  };
+
+  const saveScheduleChanges = () => {
+    if (editingSchedule) {
+      setSchedules(prev => {
+        const filtered = prev.filter(s => s.day !== editingSchedule.day);
+        return [...filtered, ...editingSchedule.slots];
+      });
+      setScheduleDialogOpen(false);
+      setEditingSchedule(null);
+      toast({
+        title: "Schedule Saved",
+        description: `${editingSchedule.day} schedule has been updated`,
+      });
+    }
+  };
+
+  const updateSlotTime = (slotId: string, field: "startTime" | "endTime" | "opd", value: string) => {
+    if (editingSchedule) {
+      setEditingSchedule({
+        ...editingSchedule,
+        slots: editingSchedule.slots.map(s => 
+          s.id === slotId ? { ...s, [field]: value } : s
+        )
+      });
+    }
+  };
+
+  const addNewSlot = () => {
+    if (editingSchedule) {
+      const newSlot: Schedule = {
+        id: `new-${Date.now()}`,
+        day: editingSchedule.day,
+        startTime: "14:00",
+        endTime: "18:00",
+        opd: "General OPD",
+        isAvailable: true
+      };
+      setEditingSchedule({
+        ...editingSchedule,
+        slots: [...editingSchedule.slots, newSlot]
+      });
+    }
+  };
+
+  const removeSlot = (slotId: string) => {
+    if (editingSchedule && editingSchedule.slots.length > 1) {
+      setEditingSchedule({
+        ...editingSchedule,
+        slots: editingSchedule.slots.filter(s => s.id !== slotId)
+      });
+    }
+  };
+
   const renderSchedules = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -637,15 +708,47 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
           <h1 className="text-2xl font-bold" data-testid="text-schedules-title">Weekly Schedule</h1>
           <p className="text-muted-foreground">Manage your OPD timings and availability</p>
         </div>
-        <Button data-testid="button-add-slot">
+        <Button onClick={() => openScheduleEditor("Monday")} data-testid="button-add-slot">
           <Plus className="h-4 w-4 mr-2" />
           Add Time Slot
         </Button>
       </div>
 
+      <Card data-testid="card-weekly-overview">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            Weekly Overview
+          </CardTitle>
+          <CardDescription>Your availability across the week</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-7 gap-2 text-center mb-4">
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, idx) => {
+              const fullDay = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][idx];
+              const daySlots = schedules.filter(s => s.day === fullDay && s.isAvailable);
+              const hasSlots = daySlots.length > 0;
+              return (
+                <div 
+                  key={day}
+                  className={`p-2 rounded-lg cursor-pointer transition-colors ${hasSlots ? 'bg-green-100 dark:bg-green-900/50 hover:bg-green-200 dark:hover:bg-green-800' : 'bg-muted hover:bg-muted/80'}`}
+                  onClick={() => openScheduleEditor(fullDay)}
+                  data-testid={`overview-${day.toLowerCase()}`}
+                >
+                  <p className="font-medium text-sm">{day}</p>
+                  <p className={`text-xs ${hasSlots ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground'}`}>
+                    {hasSlots ? `${daySlots.length} slot${daySlots.length > 1 ? 's' : ''}` : 'Off'}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4">
         {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => {
-          const daySchedules = MOCK_SCHEDULES.filter(s => s.day === day);
+          const daySchedules = schedules.filter(s => s.day === day);
           const isAvailable = daySchedules.some(s => s.isAvailable);
           
           return (
@@ -672,8 +775,17 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Switch checked={isAvailable} data-testid={`switch-${day.toLowerCase()}`} />
-                    <Button variant="ghost" size="icon" data-testid={`button-edit-${day.toLowerCase()}`}>
+                    <Switch 
+                      checked={isAvailable} 
+                      onCheckedChange={() => toggleDayAvailability(day)}
+                      data-testid={`switch-${day.toLowerCase()}`} 
+                    />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => openScheduleEditor(day)}
+                      data-testid={`button-edit-${day.toLowerCase()}`}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                   </div>
@@ -683,6 +795,109 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
           );
         })}
       </div>
+
+      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+        <DialogContent className="max-w-lg" data-testid="dialog-edit-schedule">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              Edit {editingSchedule?.day} Schedule
+            </DialogTitle>
+            <DialogDescription>
+              Manage your time slots and OPD assignments
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 max-h-[400px] overflow-auto">
+            {editingSchedule?.slots.map((slot, idx) => (
+              <Card key={slot.id} data-testid={`slot-editor-${idx}`}>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Slot {idx + 1}</span>
+                    {editingSchedule.slots.length > 1 && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => removeSlot(slot.id)}
+                        data-testid={`button-remove-slot-${idx}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Start Time</Label>
+                      <Select 
+                        value={slot.startTime} 
+                        onValueChange={(v) => updateSlotTime(slot.id, "startTime", v)}
+                      >
+                        <SelectTrigger data-testid={`select-start-${idx}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"].map(t => (
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>End Time</Label>
+                      <Select 
+                        value={slot.endTime} 
+                        onValueChange={(v) => updateSlotTime(slot.id, "endTime", v)}
+                      >
+                        <SelectTrigger data-testid={`select-end-${idx}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"].map(t => (
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>OPD / Department</Label>
+                    <Select 
+                      value={slot.opd} 
+                      onValueChange={(v) => updateSlotTime(slot.id, "opd", v)}
+                    >
+                      <SelectTrigger data-testid={`select-opd-${idx}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Cardiology OPD">Cardiology OPD</SelectItem>
+                        <SelectItem value="General OPD">General OPD</SelectItem>
+                        <SelectItem value="Emergency">Emergency</SelectItem>
+                        <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
+                        <SelectItem value="Endocrinology">Endocrinology</SelectItem>
+                        <SelectItem value="Neurology">Neurology</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Button variant="outline" className="w-full" onClick={addNewSlot} data-testid="button-add-new-slot">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Another Slot
+          </Button>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setScheduleDialogOpen(false)} data-testid="button-cancel-schedule">
+              Cancel
+            </Button>
+            <Button onClick={saveScheduleChanges} data-testid="button-save-schedule">
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
