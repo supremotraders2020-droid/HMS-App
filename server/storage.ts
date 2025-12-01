@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -71,6 +71,34 @@ export interface IStorage {
   
   // Patient Tracking History
   getPatientTrackingHistory(patientId: string): Promise<any>;
+  
+  // Chatbot Service
+  createConversationLog(log: InsertConversationLog): Promise<ConversationLog>;
+  getConversationLogs(userId?: string, limit?: number): Promise<ConversationLog[]>;
+  getConversationLogsByCategory(category: string, limit?: number): Promise<ConversationLog[]>;
+  
+  // Patient Service
+  getAllServicePatients(): Promise<ServicePatient[]>;
+  getServicePatientById(id: string): Promise<ServicePatient | undefined>;
+  createServicePatient(patient: InsertServicePatient): Promise<ServicePatient>;
+  updateServicePatient(id: string, patient: Partial<InsertServicePatient>): Promise<ServicePatient | undefined>;
+  deleteServicePatient(id: string): Promise<boolean>;
+  
+  // Admissions
+  getAllAdmissions(): Promise<Admission[]>;
+  getActiveAdmissions(): Promise<Admission[]>;
+  getAdmissionById(id: string): Promise<Admission | undefined>;
+  getAdmissionsByPatient(patientId: string): Promise<Admission[]>;
+  createAdmission(admission: InsertAdmission): Promise<Admission>;
+  updateAdmission(id: string, admission: Partial<InsertAdmission>): Promise<Admission | undefined>;
+  dischargePatient(id: string, dischargeDate: Date, notes?: string): Promise<Admission | undefined>;
+  
+  // Medical Records
+  getAllMedicalRecords(): Promise<MedicalRecord[]>;
+  getMedicalRecordById(id: string): Promise<MedicalRecord | undefined>;
+  getMedicalRecordsByPatient(patientId: string): Promise<MedicalRecord[]>;
+  createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
+  updateMedicalRecord(id: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -92,6 +120,14 @@ export class MemStorage implements IStorage {
   private medications: Map<string, Medication>;
   private meals: Map<string, Meal>;
   private vitalsRecords: Map<string, Vitals>;
+  
+  // Chatbot data stores
+  private conversationLogs: Map<string, ConversationLog>;
+  
+  // Patient Service data stores
+  private servicePatients: Map<string, ServicePatient>;
+  private admissionsData: Map<string, Admission>;
+  private medicalRecordsData: Map<string, MedicalRecord>;
 
   constructor() {
     this.users = new Map();
@@ -113,9 +149,18 @@ export class MemStorage implements IStorage {
     this.meals = new Map();
     this.vitalsRecords = new Map();
     
+    // Chatbot initialization
+    this.conversationLogs = new Map();
+    
+    // Patient Service initialization
+    this.servicePatients = new Map();
+    this.admissionsData = new Map();
+    this.medicalRecordsData = new Map();
+    
     this.initializeDefaultData();
     this.initializeInventoryData();
     this.initializePatientTrackingData();
+    this.initializePatientServiceData();
   }
 
   private initializeDefaultData() {
@@ -837,6 +882,260 @@ export class MemStorage implements IStorage {
       meals,
       vitals,
     };
+  }
+
+  // ========== PATIENT SERVICE INITIALIZATION ==========
+  private initializePatientServiceData() {
+    const defaultPatients = [
+      { firstName: "Rahul", lastName: "Mehta", dateOfBirth: "1980-05-15", gender: "Male", phone: "+91 98765 43210", email: "rahul.mehta@email.com", address: "Chikhali, Pune", emergencyContact: "Sunita Mehta", emergencyPhone: "+91 98765 43211", insuranceProvider: "Star Health", insuranceNumber: "STH-2024-001" },
+      { firstName: "Anita", lastName: "Desai", dateOfBirth: "1987-08-22", gender: "Female", phone: "+91 87654 32109", email: "anita.desai@email.com", address: "Wakad, Pune", emergencyContact: "Suresh Desai", emergencyPhone: "+91 87654 32110", insuranceProvider: "HDFC Ergo", insuranceNumber: "HDF-2024-002" },
+      { firstName: "Vikram", lastName: "Reddy", dateOfBirth: "1962-03-10", gender: "Male", phone: "+91 76543 21098", email: "vikram.reddy@email.com", address: "Hinjewadi, Pune", emergencyContact: "Lakshmi Reddy", emergencyPhone: "+91 76543 21099", insuranceProvider: "ICICI Lombard", insuranceNumber: "ICL-2024-003" },
+      { firstName: "Meera", lastName: "Nair", dateOfBirth: "1995-11-28", gender: "Female", phone: "+91 65432 10987", email: "meera.nair@email.com", address: "Pimple Saudagar, Pune", emergencyContact: "Krishnan Nair", emergencyPhone: "+91 65432 10988", insuranceProvider: "Bajaj Allianz", insuranceNumber: "BAL-2024-004" },
+      { firstName: "Sanjay", lastName: "Gupta", dateOfBirth: "1968-07-04", gender: "Male", phone: "+91 54321 09876", email: "sanjay.gupta@email.com", address: "Aundh, Pune", emergencyContact: "Priya Gupta", emergencyPhone: "+91 54321 09877", insuranceProvider: "Max Bupa", insuranceNumber: "MBP-2024-005" },
+    ];
+
+    const patientIds: string[] = [];
+    defaultPatients.forEach(patient => {
+      const id = randomUUID();
+      patientIds.push(id);
+      const servicePatient: ServicePatient = {
+        ...patient,
+        id,
+        phone: patient.phone ?? null,
+        email: patient.email ?? null,
+        address: patient.address ?? null,
+        emergencyContact: patient.emergencyContact ?? null,
+        emergencyPhone: patient.emergencyPhone ?? null,
+        insuranceProvider: patient.insuranceProvider ?? null,
+        insuranceNumber: patient.insuranceNumber ?? null,
+        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+      };
+      this.servicePatients.set(id, servicePatient);
+    });
+
+    // Sample admissions
+    const sampleAdmissions = [
+      { patientId: patientIds[0], department: "Cardiology", roomNumber: "301A", admittingPhysician: "Dr. Priya Sharma", primaryDiagnosis: "Chest pain evaluation", status: "admitted", notes: "Monitoring required" },
+      { patientId: patientIds[1], department: "Orthopedics", roomNumber: "205B", admittingPhysician: "Dr. Rajesh Kumar", primaryDiagnosis: "Knee replacement surgery", status: "admitted", notes: "Post-operative care" },
+      { patientId: patientIds[2], department: "General Medicine", roomNumber: "ICU-1", admittingPhysician: "Dr. Amit Singh", primaryDiagnosis: "Cardiac monitoring", status: "admitted", notes: "Critical care required" },
+      { patientId: patientIds[3], department: "Endocrinology", roomNumber: "402C", admittingPhysician: "Dr. Kavita Joshi", primaryDiagnosis: "Diabetes management", status: "discharged", notes: "Discharged with medication" },
+    ];
+
+    sampleAdmissions.forEach(admission => {
+      const id = randomUUID();
+      const admissionRecord: Admission = {
+        ...admission,
+        id,
+        admissionDate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+        dischargeDate: admission.status === "discharged" ? new Date() : null,
+        roomNumber: admission.roomNumber ?? null,
+        primaryDiagnosis: admission.primaryDiagnosis ?? null,
+        notes: admission.notes ?? null,
+        createdAt: new Date(),
+      };
+      this.admissionsData.set(id, admissionRecord);
+    });
+
+    // Sample medical records
+    const sampleRecords = [
+      { patientId: patientIds[0], recordType: "diagnosis", title: "Essential Hypertension", description: "BP 145/92 mmHg. Prescribed Amlodipine 5mg once daily.", physician: "Dr. Priya Sharma" },
+      { patientId: patientIds[0], recordType: "lab_result", title: "Complete Blood Count", description: "Hemoglobin 14.2 g/dL, WBC 6500/μL, Platelets 250000/μL. All values within normal range.", physician: "Dr. Priya Sharma" },
+      { patientId: patientIds[1], recordType: "treatment", title: "Knee Arthroscopy", description: "Successful minimally invasive surgery. Patient tolerated procedure well.", physician: "Dr. Rajesh Kumar" },
+      { patientId: patientIds[1], recordType: "prescription", title: "Post-surgical Medication", description: "Tramadol 50mg for pain, Cefixime 200mg antibiotic course for 5 days.", physician: "Dr. Rajesh Kumar" },
+      { patientId: patientIds[2], recordType: "diagnosis", title: "Atrial Fibrillation", description: "ECG shows irregular heart rhythm. Started on Warfarin therapy.", physician: "Dr. Amit Singh" },
+      { patientId: patientIds[3], recordType: "note", title: "Follow-up Consultation", description: "Patient managing diabetes well. HbA1c reduced to 6.8%. Continue current medication.", physician: "Dr. Kavita Joshi" },
+    ];
+
+    sampleRecords.forEach(record => {
+      const id = randomUUID();
+      const medicalRecord: MedicalRecord = {
+        ...record,
+        id,
+        recordDate: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(),
+      };
+      this.medicalRecordsData.set(id, medicalRecord);
+    });
+  }
+
+  // ========== CHATBOT SERVICE METHODS ==========
+  async createConversationLog(log: InsertConversationLog): Promise<ConversationLog> {
+    const id = randomUUID();
+    const conversationLog: ConversationLog = {
+      ...log,
+      id,
+      userId: log.userId ?? null,
+      category: log.category ?? null,
+      timestamp: new Date(),
+    };
+    this.conversationLogs.set(id, conversationLog);
+    return conversationLog;
+  }
+
+  async getConversationLogs(userId?: string, limit = 50): Promise<ConversationLog[]> {
+    let logs = Array.from(this.conversationLogs.values());
+    if (userId) {
+      logs = logs.filter(log => log.userId === userId);
+    }
+    logs.sort((a, b) => {
+      const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return timeB - timeA;
+    });
+    return logs.slice(0, limit);
+  }
+
+  async getConversationLogsByCategory(category: string, limit = 50): Promise<ConversationLog[]> {
+    return Array.from(this.conversationLogs.values())
+      .filter(log => log.category === category)
+      .sort((a, b) => {
+        const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timeB - timeA;
+      })
+      .slice(0, limit);
+  }
+
+  // ========== PATIENT SERVICE METHODS ==========
+  async getAllServicePatients(): Promise<ServicePatient[]> {
+    return Array.from(this.servicePatients.values()).sort(
+      (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0)
+    );
+  }
+
+  async getServicePatientById(id: string): Promise<ServicePatient | undefined> {
+    return this.servicePatients.get(id);
+  }
+
+  async createServicePatient(patient: InsertServicePatient): Promise<ServicePatient> {
+    const id = randomUUID();
+    const servicePatient: ServicePatient = {
+      ...patient,
+      id,
+      phone: patient.phone ?? null,
+      email: patient.email ?? null,
+      address: patient.address ?? null,
+      emergencyContact: patient.emergencyContact ?? null,
+      emergencyPhone: patient.emergencyPhone ?? null,
+      insuranceProvider: patient.insuranceProvider ?? null,
+      insuranceNumber: patient.insuranceNumber ?? null,
+      createdAt: new Date(),
+    };
+    this.servicePatients.set(id, servicePatient);
+    return servicePatient;
+  }
+
+  async updateServicePatient(id: string, patient: Partial<InsertServicePatient>): Promise<ServicePatient | undefined> {
+    const existing = this.servicePatients.get(id);
+    if (!existing) return undefined;
+    
+    const updated: ServicePatient = { ...existing, ...patient };
+    this.servicePatients.set(id, updated);
+    return updated;
+  }
+
+  async deleteServicePatient(id: string): Promise<boolean> {
+    return this.servicePatients.delete(id);
+  }
+
+  // ========== ADMISSIONS METHODS ==========
+  async getAllAdmissions(): Promise<Admission[]> {
+    return Array.from(this.admissionsData.values()).sort(
+      (a, b) => (b.admissionDate?.getTime() ?? 0) - (a.admissionDate?.getTime() ?? 0)
+    );
+  }
+
+  async getActiveAdmissions(): Promise<Admission[]> {
+    return Array.from(this.admissionsData.values())
+      .filter(admission => admission.status === "admitted")
+      .sort((a, b) => (b.admissionDate?.getTime() ?? 0) - (a.admissionDate?.getTime() ?? 0));
+  }
+
+  async getAdmissionById(id: string): Promise<Admission | undefined> {
+    return this.admissionsData.get(id);
+  }
+
+  async getAdmissionsByPatient(patientId: string): Promise<Admission[]> {
+    return Array.from(this.admissionsData.values())
+      .filter(admission => admission.patientId === patientId)
+      .sort((a, b) => (b.admissionDate?.getTime() ?? 0) - (a.admissionDate?.getTime() ?? 0));
+  }
+
+  async createAdmission(admission: InsertAdmission): Promise<Admission> {
+    const id = randomUUID();
+    const admissionRecord: Admission = {
+      ...admission,
+      id,
+      admissionDate: new Date(),
+      dischargeDate: null,
+      roomNumber: admission.roomNumber ?? null,
+      primaryDiagnosis: admission.primaryDiagnosis ?? null,
+      status: admission.status ?? "admitted",
+      notes: admission.notes ?? null,
+      createdAt: new Date(),
+    };
+    this.admissionsData.set(id, admissionRecord);
+    return admissionRecord;
+  }
+
+  async updateAdmission(id: string, admission: Partial<InsertAdmission>): Promise<Admission | undefined> {
+    const existing = this.admissionsData.get(id);
+    if (!existing) return undefined;
+    
+    const updated: Admission = { ...existing, ...admission };
+    this.admissionsData.set(id, updated);
+    return updated;
+  }
+
+  async dischargePatient(id: string, dischargeDate: Date, notes?: string): Promise<Admission | undefined> {
+    const admission = this.admissionsData.get(id);
+    if (!admission) return undefined;
+    
+    admission.status = "discharged";
+    admission.dischargeDate = dischargeDate;
+    if (notes) {
+      admission.notes = notes;
+    }
+    this.admissionsData.set(id, admission);
+    return admission;
+  }
+
+  // ========== MEDICAL RECORDS METHODS ==========
+  async getAllMedicalRecords(): Promise<MedicalRecord[]> {
+    return Array.from(this.medicalRecordsData.values()).sort(
+      (a, b) => (b.recordDate?.getTime() ?? 0) - (a.recordDate?.getTime() ?? 0)
+    );
+  }
+
+  async getMedicalRecordById(id: string): Promise<MedicalRecord | undefined> {
+    return this.medicalRecordsData.get(id);
+  }
+
+  async getMedicalRecordsByPatient(patientId: string): Promise<MedicalRecord[]> {
+    return Array.from(this.medicalRecordsData.values())
+      .filter(record => record.patientId === patientId)
+      .sort((a, b) => (b.recordDate?.getTime() ?? 0) - (a.recordDate?.getTime() ?? 0));
+  }
+
+  async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
+    const id = randomUUID();
+    const medicalRecord: MedicalRecord = {
+      ...record,
+      id,
+      recordDate: new Date(),
+      createdAt: new Date(),
+    };
+    this.medicalRecordsData.set(id, medicalRecord);
+    return medicalRecord;
+  }
+
+  async updateMedicalRecord(id: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord | undefined> {
+    const existing = this.medicalRecordsData.get(id);
+    if (!existing) return undefined;
+    
+    const updated: MedicalRecord = { ...existing, ...record };
+    this.medicalRecordsData.set(id, updated);
+    return updated;
   }
 }
 

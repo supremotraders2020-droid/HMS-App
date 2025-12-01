@@ -235,3 +235,91 @@ export const insertVitalsSchema = createInsertSchema(vitals).omit({
 });
 export type InsertVitals = z.infer<typeof insertVitalsSchema>;
 export type Vitals = typeof vitals.$inferSelect;
+
+// ========== CHATBOT SERVICE TABLES ==========
+
+// Conversation Logs table
+export const conversationLogs = pgTable("conversation_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id"),
+  query: text("query").notNull(),
+  response: text("response").notNull(),
+  category: text("category"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertConversationLogSchema = createInsertSchema(conversationLogs).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertConversationLog = z.infer<typeof insertConversationLogSchema>;
+export type ConversationLog = typeof conversationLogs.$inferSelect;
+
+// ========== PATIENT SERVICE TABLES ==========
+
+// Service Patients table (for patient demographics)
+export const servicePatients = pgTable("service_patients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: text("date_of_birth").notNull(),
+  gender: text("gender").notNull(),
+  phone: text("phone"),
+  email: text("email"),
+  address: text("address"),
+  emergencyContact: text("emergency_contact"),
+  emergencyPhone: text("emergency_phone"),
+  insuranceProvider: text("insurance_provider"),
+  insuranceNumber: text("insurance_number"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertServicePatientSchema = createInsertSchema(servicePatients).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertServicePatient = z.infer<typeof insertServicePatientSchema>;
+export type ServicePatient = typeof servicePatients.$inferSelect;
+
+// Admissions table
+export const admissions = pgTable("admissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  admissionDate: timestamp("admission_date").defaultNow(),
+  dischargeDate: timestamp("discharge_date"),
+  department: text("department").notNull(),
+  roomNumber: text("room_number"),
+  admittingPhysician: text("admitting_physician").notNull(),
+  primaryDiagnosis: text("primary_diagnosis"),
+  status: text("status").notNull().default("admitted"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAdmissionSchema = createInsertSchema(admissions).omit({
+  id: true,
+  admissionDate: true,
+  createdAt: true,
+});
+export type InsertAdmission = z.infer<typeof insertAdmissionSchema>;
+export type Admission = typeof admissions.$inferSelect;
+
+// Medical Records table
+export const medicalRecords = pgTable("medical_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  recordDate: timestamp("record_date").defaultNow(),
+  recordType: text("record_type").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  physician: text("physician").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertMedicalRecordSchema = createInsertSchema(medicalRecords).omit({
+  id: true,
+  recordDate: true,
+  createdAt: true,
+});
+export type InsertMedicalRecord = z.infer<typeof insertMedicalRecordSchema>;
+export type MedicalRecord = typeof medicalRecords.$inferSelect;
