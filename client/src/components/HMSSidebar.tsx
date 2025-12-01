@@ -201,11 +201,11 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                         } else if (item.title === "Biometric Service") {
                           handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
                         } else if (item.title === "Equipment Servicing") {
-                          handleMenuClick(item.url, true, "https://care-connect-1-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Chatbot Service") {
-                          handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Notification Service") {
-                          handleMenuClick(item.url, true, "https://medi-notify-hub-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else {
                           handleMenuClick(item.url);
                         }
@@ -248,11 +248,11 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                         } else if (item.title === "Biometric Service") {
                           handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
                         } else if (item.title === "Equipment Servicing") {
-                          handleMenuClick(item.url, true, "https://care-connect-1-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Chatbot Service") {
-                          handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Notification Service") {
-                          handleMenuClick(item.url, true, "https://medi-notify-hub-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else {
                           handleMenuClick(item.url);
                         }
@@ -295,11 +295,11 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                         } else if (item.title === "Biometric Service") {
                           handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
                         } else if (item.title === "Equipment Servicing") {
-                          handleMenuClick(item.url, true, "https://care-connect-1-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Chatbot Service") {
-                          handleMenuClick(item.url, true, "https://chatbot-service-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else if (item.title === "Notification Service") {
-                          handleMenuClick(item.url, true, "https://medi-notify-hub-kadamatulp.replit.app");
+                          handleMenuClick(item.url);
                         } else {
                           handleMenuClick(item.url);
                         }
