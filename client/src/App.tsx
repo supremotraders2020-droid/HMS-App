@@ -18,6 +18,8 @@ import SystemSettings from "@/pages/SystemSettings";
 import OPDService from "@/pages/OPDService";
 import InventoryService from "@/pages/InventoryService";
 import PatientTrackingService from "@/pages/PatientTrackingService";
+import ChatbotService from "@/pages/ChatbotService";
+import PatientService from "@/pages/PatientService";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -130,11 +132,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         <OPDService />
       </Route>
       <Route path="/patient-service">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold">Patient Service</h2>
-          <p className="text-muted-foreground">Comprehensive Patient Management System</p>
-          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
-        </div>
+        <PatientService />
       </Route>
       <Route path="/inventory-service">
         <InventoryService />
@@ -157,11 +155,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         </div>
       </Route>
       <Route path="/chatbot-service">
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold">Chatbot Service</h2>
-          <p className="text-muted-foreground">AI-Powered Patient Assistance</p>
-          <p className="text-sm text-muted-foreground mt-2">Service link will be integrated here</p>
-        </div>
+        <ChatbotService />
       </Route>
       <Route path="/notification-service">
         <div className="text-center py-12">

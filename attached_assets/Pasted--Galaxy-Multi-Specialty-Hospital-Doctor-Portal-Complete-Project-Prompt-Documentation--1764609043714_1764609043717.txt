@@ -1,0 +1,510 @@
+# Galaxy Multi Specialty Hospital - Doctor Portal
+
+## Complete Project Prompt & Documentation
+
+---
+
+## Project Overview
+
+Build a comprehensive **Hospital Management System (HMS) Doctor Portal** for "Galaxy Multi Specialty Hospital" located at Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062.
+
+This web application serves as a dedicated interface for medical professionals (doctors) to manage their daily clinical operations. The system follows a **medical-first design approach** with professional aesthetics specifically tailored for healthcare environments.
+
+---
+
+## Target Users
+
+- **Primary Users**: Doctors and Medical Professionals
+- **Use Case**: Daily hospital operations management
+- **Environment**: Hospital/Clinic desktop and mobile access
+
+---
+
+## Core Features
+
+### 1. Authentication & Login
+- Secure login page with hospital branding
+- Username and password authentication
+- "Remember me" functionality
+- Session management with 24-hour expiry
+- Demo mode for design presentations (any credentials work)
+
+### 2. Dashboard
+- **KPI Cards**: Display key statistics
+  - Today's Appointments count
+  - Pending Prescriptions count
+  - Total Patients count
+  - Weekly Trend indicators
+- **Today's Appointments List**: Quick view of scheduled appointments
+- **Recent Notifications**: System alerts and updates
+- **Quick Actions**: Fast access to common tasks
+
+### 3. Patient Management
+- **Patient List View**: Searchable, filterable patient records
+- **Patient Cards**: Display patient info including:
+  - Name, Age, Gender
+  - Blood Group (with color-coded badge)
+  - Phone, Email, Address
+  - Emergency Contact
+- **CRUD Operations**: Add, Edit, View, Delete patients
+- **Search**: Filter by name, phone, or email
+
+### 4. Appointment Management
+- **Appointment List**: View all appointments
+- **Appointment Cards**: Show patient name, date, time, status
+- **Status Types**: Pending, Confirmed, Completed, Cancelled
+- **Appointment Details**: Complaint, Notes, OPD assignment
+- **CRUD Operations**: Create, update, cancel appointments
+
+### 5. Schedule Management
+- **Weekly Schedule**: Doctor's availability by day
+- **Time Slots**: Start time, End time for each day
+- **OPD Assignment**: Assign to specific OPD departments
+- **Availability Toggle**: Mark days as available/unavailable
+
+### 6. Prescription Management
+- **Prescription List**: View all prescriptions
+- **Prescription Details**:
+  - Patient information
+  - Diagnosis
+  - Medicines (array of medications)
+  - Instructions
+  - Date issued
+- **Create Prescriptions**: Link to appointments
+
+### 7. Notifications
+- **Notification Types**: Appointment, Patient, System
+- **Read/Unread Status**: Visual indicators
+- **Notification Actions**: Mark as read, Dismiss
+- **Time Display**: Relative time (e.g., "2h ago")
+
+### 8. Doctor Profile
+- **Personal Information**: Name, Specialty, Contact
+- **Professional Details**: Qualifications, Experience
+- **Working Hours**: Schedule overview
+- **Profile Management**: Update personal information
+
+---
+
+## Technical Stack
+
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| React 18+ | UI Framework |
+| TypeScript | Type Safety |
+| Wouter | Client-side Routing |
+| TanStack React Query | Server State Management |
+| React Hook Form | Form Handling |
+| Zod | Validation |
+| Tailwind CSS | Styling |
+| shadcn/ui | UI Components |
+| Radix UI | Accessible Primitives |
+| Lucide React | Icons |
+| Framer Motion | Animations |
+
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| Node.js | Runtime |
+| Express.js | Web Framework |
+| TypeScript | Type Safety |
+| Drizzle ORM | Database ORM |
+| PostgreSQL | Database |
+| Express Session | Session Management |
+| bcrypt | Password Hashing |
+| Zod | Request Validation |
+
+### Development Tools
+| Tool | Purpose |
+|------|---------|
+| Vite | Build Tool & Dev Server |
+| ESBuild | Fast Bundling |
+| PostCSS | CSS Processing |
+
+---
+
+## Database Schema
+
+### Users (Doctors)
+```typescript
+{
+  id: varchar (UUID, primary key),
+  username: text (unique, required),
+  password: text (hashed, required),
+  name: text (required),
+  specialty: text (required),
+  email: text (required),
+  phone: text (required)
+}
+```
+
+### Patients
+```typescript
+{
+  id: varchar (UUID, primary key),
+  name: text (required),
+  age: integer (required),
+  gender: text (required),
+  phone: text (required),
+  email: text (optional),
+  address: text (optional),
+  bloodGroup: text (optional),
+  emergencyContact: text (optional)
+}
+```
+
+### Appointments
+```typescript
+{
+  id: varchar (UUID, primary key),
+  patientId: varchar (foreign key, required),
+  doctorId: varchar (foreign key, required),
+  date: text (YYYY-MM-DD, required),
+  time: text (HH:MM, required),
+  status: text (pending|confirmed|completed|cancelled),
+  complaint: text (optional),
+  notes: text (optional),
+  opd: text (optional)
+}
+```
+
+### Schedules
+```typescript
+{
+  id: varchar (UUID, primary key),
+  doctorId: varchar (foreign key, required),
+  day: text (monday-sunday, required),
+  startTime: text (HH:MM, required),
+  endTime: text (HH:MM, required),
+  opd: text (optional),
+  isAvailable: boolean (default: true)
+}
+```
+
+### Prescriptions
+```typescript
+{
+  id: varchar (UUID, primary key),
+  patientId: varchar (foreign key, required),
+  doctorId: varchar (foreign key, required),
+  appointmentId: varchar (optional),
+  date: text (YYYY-MM-DD, required),
+  medicines: text[] (array of medicines),
+  instructions: text (optional),
+  diagnosis: text (optional)
+}
+```
+
+### Notifications
+```typescript
+{
+  id: varchar (UUID, primary key),
+  doctorId: varchar (foreign key, required),
+  title: text (required),
+  message: text (required),
+  type: text (appointment|patient|system, required),
+  isRead: boolean (default: false),
+  createdAt: text (ISO timestamp, required)
+}
+```
+
+---
+
+## API Endpoints
+
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | User login |
+| POST | `/api/auth/logout` | User logout |
+| GET | `/api/auth/me` | Get current user |
+
+### Dashboard
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/dashboard/stats` | Get dashboard statistics |
+
+### Patients
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/patients` | List all patients |
+| GET | `/api/patients/:id` | Get patient by ID |
+| POST | `/api/patients` | Create new patient |
+| PUT | `/api/patients/:id` | Update patient |
+| DELETE | `/api/patients/:id` | Delete patient |
+
+### Appointments
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/appointments` | List appointments |
+| GET | `/api/appointments/:id` | Get appointment by ID |
+| POST | `/api/appointments` | Create appointment |
+| PUT | `/api/appointments/:id` | Update appointment |
+| DELETE | `/api/appointments/:id` | Delete appointment |
+
+### Schedules
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/schedules` | List doctor schedules |
+| GET | `/api/schedules/:id` | Get schedule by ID |
+| POST | `/api/schedules` | Create schedule |
+| PUT | `/api/schedules/:id` | Update schedule |
+| DELETE | `/api/schedules/:id` | Delete schedule |
+
+### Prescriptions
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/prescriptions` | List prescriptions |
+| GET | `/api/prescriptions/:id` | Get prescription by ID |
+| POST | `/api/prescriptions` | Create prescription |
+| PUT | `/api/prescriptions/:id` | Update prescription |
+| DELETE | `/api/prescriptions/:id` | Delete prescription |
+
+### Notifications
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/notifications` | List notifications |
+| PUT | `/api/notifications/:id/read` | Mark as read |
+
+---
+
+## Page Structure
+
+```
+/                    → Dashboard (Home)
+/appointments        → Appointments Management
+/schedules           → Schedule Management
+/patients            → Patient Records
+/prescriptions       → Prescription Management
+/notifications       → Notification Center
+/profile             → Doctor Profile
+```
+
+---
+
+## Design System
+
+### Color Palette
+
+#### Primary Colors (Medical Teal)
+- **Primary**: HSL(197, 71%, 47%) - Clinical teal
+- **Primary Foreground**: HSL(197, 71%, 97%) - Light text on primary
+
+#### Status Colors
+- **Success/Healthy**: Green tones for positive status
+- **Warning**: Amber tones for attention needed
+- **Critical/Destructive**: Red tones for urgent/error states
+
+#### Neutral Colors
+- **Background**: HSL(220, 14%, 96%) - Light mode background
+- **Foreground**: HSL(220, 13%, 18%) - Dark text
+- **Muted**: HSL(220, 13%, 88%) - Subtle backgrounds
+- **Card**: HSL(220, 14%, 94%) - Card backgrounds
+
+### Typography
+- **Primary Font**: Inter (weights: 300-700)
+- **Secondary Font**: Source Sans Pro (weights: 400, 600)
+- **Purpose**: Optimized for medical data readability
+
+### Component Styling
+- **Border Radius**: 0.5rem (8px) - Rounded but professional
+- **Shadows**: Subtle elevation for depth
+- **Spacing**: Consistent padding/margins for medical data clarity
+
+### Design Principles
+1. **Medical-First**: Clean, professional, clinical aesthetic
+2. **Accessibility**: WCAG compliant, keyboard navigable
+3. **Responsive**: Mobile-first, works on all devices
+4. **Dark Mode**: Full dark mode support
+5. **Trust**: Professional appearance that inspires confidence
+
+---
+
+## UI Components
+
+### Layout Components
+- **Sidebar**: Collapsible navigation with hospital branding
+- **Header**: Top bar with user info and actions
+- **Main Content Area**: Scrollable content region
+
+### Card Components
+- **Dashboard KPI Cards**: Statistics display
+- **Patient Cards**: Patient information display
+- **Appointment Cards**: Appointment details
+- **Notification Cards**: Alert/notification display
+
+### Form Components
+- **Input Fields**: With icons and validation
+- **Select Dropdowns**: For status, gender, etc.
+- **Checkboxes**: For boolean options
+- **Buttons**: Primary, Secondary, Ghost, Destructive variants
+
+### Feedback Components
+- **Loading States**: Skeleton loaders
+- **Error States**: User-friendly error messages
+- **Empty States**: Helpful empty state messages
+- **Toast Notifications**: Success/error feedback
+
+---
+
+## Navigation Structure
+
+### Sidebar Menu Items
+1. **Dashboard** (Home icon) - `/`
+2. **Appointments** (Calendar icon) - `/appointments`
+3. **Schedules** (Calendar icon) - `/schedules`
+4. **Patients** (Users icon) - `/patients`
+5. **Prescriptions** (FileText icon) - `/prescriptions`
+6. **Notifications** (Bell icon) - `/notifications` (with badge count)
+7. **Profile** (Settings icon) - `/profile`
+
+---
+
+## Authentication Flow
+
+1. User visits application
+2. System checks for existing session (`/api/auth/me`)
+3. If no session → Show Login page
+4. User enters credentials
+5. POST to `/api/auth/login`
+6. On success → Create session, redirect to Dashboard
+7. On failure → Show error message
+8. Logout → Destroy session, redirect to Login
+
+### Demo Mode
+- For design/demo purposes, any username/password works
+- Creates temporary session with entered username
+- User appears as "Dr. [username]"
+
+---
+
+## Data Flow
+
+### React Query Pattern
+```typescript
+// Fetching data
+const { data, isLoading, error } = useQuery({
+  queryKey: ['/api/patients'],
+  queryFn: async () => {
+    const response = await fetch('/api/patients');
+    if (!response.ok) throw new Error('Failed to fetch');
+    return response.json();
+  }
+});
+
+// Mutations
+const mutation = useMutation({
+  mutationFn: async (newPatient) => {
+    return apiRequest('/api/patients', { method: 'POST', body: newPatient });
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/patients'] });
+  }
+});
+```
+
+---
+
+## Project Structure
+
+```
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ui/              # shadcn/ui components
+│   │   │   ├── Layout.tsx       # Main layout with sidebar
+│   │   │   ├── AppointmentCard.tsx
+│   │   │   └── NotificationCard.tsx
+│   │   ├── pages/
+│   │   │   ├── Login.tsx
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Appointments.tsx
+│   │   │   ├── Schedules.tsx
+│   │   │   ├── Patients.tsx
+│   │   │   ├── Prescriptions.tsx
+│   │   │   ├── Notifications.tsx
+│   │   │   └── Profile.tsx
+│   │   ├── hooks/
+│   │   ├── lib/
+│   │   │   └── queryClient.ts
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── index.css
+│   └── index.html
+├── server/
+│   ├── index.ts                 # Server entry point
+│   ├── routes.ts                # API routes
+│   ├── storage.ts               # Database operations
+│   ├── db.ts                    # Database connection
+│   └── vite.ts                  # Vite middleware
+├── shared/
+│   └── schema.ts                # Database schema & types
+├── attached_assets/             # Images and assets
+├── package.json
+├── tailwind.config.ts
+├── vite.config.ts
+├── drizzle.config.ts
+└── tsconfig.json
+```
+
+---
+
+## Demo Data
+
+### Sample Patients (12 total)
+1. John Smith - 45, Male, O+
+2. Emily Davis - 32, Female, A+
+3. Michael Brown - 58, Male, B+
+4. Sarah Wilson - 28, Female, AB+
+5. Maria Rodriguez - 42, Female, O-
+6. David Chen - 35, Male, A-
+7. Jennifer Thompson - 29, Female, B-
+8. Robert Johnson - 67, Male, AB-
+9. Lisa Anderson - 38, Female, O+
+10. James Miller - 52, Male, A+
+11. Amanda Taylor - 24, Female, B+
+12. Christopher Lee - 41, Male, AB+
+
+---
+
+## Key Requirements Summary
+
+1. **Professional Medical Design**: Clean, clinical, trustworthy UI
+2. **Full CRUD Operations**: For all entities (patients, appointments, etc.)
+3. **Real-time Data**: Using React Query for data management
+4. **Responsive Layout**: Works on desktop, tablet, mobile
+5. **Dark Mode Support**: Full light/dark theme switching
+6. **Session-based Auth**: Secure authentication system
+7. **Type Safety**: Full TypeScript implementation
+8. **Accessible**: WCAG compliant, keyboard navigable
+9. **Demo Ready**: Works with any login credentials
+
+---
+
+## Hospital Branding
+
+- **Hospital Name**: Galaxy Multi Specialty Hospital
+- **Tagline**: Doctor Portal
+- **Logo**: Medical stethoscope icon
+- **Address**: Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062
+- **Color Theme**: Clinical teal with professional neutrals
+
+---
+
+## Future Enhancements (Optional)
+
+- [ ] Role-based access control (Admin, Doctor, Nurse)
+- [ ] Patient medical history timeline
+- [ ] Appointment reminders/notifications
+- [ ] Lab report integration
+- [ ] Billing and invoice management
+- [ ] Multi-language support
+- [ ] Print prescription functionality
+- [ ] PDF export for reports
+- [ ] Real-time chat/messaging
+- [ ] Video consultation integration
+
+---
+
+*This document serves as the complete project specification for building the Galaxy Multi Specialty Hospital Doctor Portal application.*
