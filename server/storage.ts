@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification } from "@shared/schema";
+import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -99,6 +99,30 @@ export interface IStorage {
   getMedicalRecordsByPatient(patientId: string): Promise<MedicalRecord[]>;
   createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
   updateMedicalRecord(id: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord | undefined>;
+  
+  // Biometric Service
+  getAllBiometricTemplates(): Promise<BiometricTemplate[]>;
+  getBiometricTemplateById(id: string): Promise<BiometricTemplate | undefined>;
+  getBiometricTemplatesByPatient(patientId: string): Promise<BiometricTemplate[]>;
+  createBiometricTemplate(template: InsertBiometricTemplate): Promise<BiometricTemplate>;
+  updateBiometricTemplate(id: string, template: Partial<InsertBiometricTemplate>): Promise<BiometricTemplate | undefined>;
+  deleteBiometricTemplate(id: string): Promise<boolean>;
+  
+  // Biometric Verifications
+  getAllBiometricVerifications(): Promise<BiometricVerification[]>;
+  getRecentBiometricVerifications(limit?: number): Promise<BiometricVerification[]>;
+  getBiometricVerificationsByPatient(patientId: string): Promise<BiometricVerification[]>;
+  createBiometricVerification(verification: InsertBiometricVerification): Promise<BiometricVerification>;
+  
+  // Biometric Stats
+  getBiometricStats(): Promise<{
+    totalPatients: number;
+    totalTemplates: number;
+    verificationsToday: number;
+    successfulVerifications: number;
+    fingerprintTemplates: number;
+    faceTemplates: number;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -128,6 +152,10 @@ export class MemStorage implements IStorage {
   private servicePatients: Map<string, ServicePatient>;
   private admissionsData: Map<string, Admission>;
   private medicalRecordsData: Map<string, MedicalRecord>;
+  
+  // Biometric Service data stores
+  private biometricTemplates: Map<string, BiometricTemplate>;
+  private biometricVerifications: Map<string, BiometricVerification>;
 
   constructor() {
     this.users = new Map();
@@ -157,10 +185,15 @@ export class MemStorage implements IStorage {
     this.admissionsData = new Map();
     this.medicalRecordsData = new Map();
     
+    // Biometric Service initialization
+    this.biometricTemplates = new Map();
+    this.biometricVerifications = new Map();
+    
     this.initializeDefaultData();
     this.initializeInventoryData();
     this.initializePatientTrackingData();
     this.initializePatientServiceData();
+    this.initializeBiometricData();
   }
 
   private initializeDefaultData() {
@@ -1136,6 +1169,225 @@ export class MemStorage implements IStorage {
     const updated: MedicalRecord = { ...existing, ...record };
     this.medicalRecordsData.set(id, updated);
     return updated;
+  }
+
+  // ========== BIOMETRIC SERVICE METHODS ==========
+  
+  private initializeBiometricData() {
+    // Sample biometric templates linked to service patients
+    const sampleTemplates = [
+      { patientId: "patient-001", biometricType: "fingerprint", quality: 95 },
+      { patientId: "patient-002", biometricType: "face", quality: 88 },
+      { patientId: "patient-003", biometricType: "fingerprint", quality: 92 },
+      { patientId: "patient-001", biometricType: "face", quality: 90 },
+    ];
+
+    sampleTemplates.forEach(template => {
+      const id = randomUUID();
+      const iv = randomBytes(16).toString("hex");
+      const encryptedData = this.encryptBiometricData(`SIMULATED_TEMPLATE_${template.patientId}_${template.biometricType}`);
+      
+      const biometricTemplate: BiometricTemplate = {
+        id,
+        patientId: template.patientId,
+        biometricType: template.biometricType,
+        templateData: encryptedData.encrypted,
+        encryptionIv: encryptedData.iv,
+        quality: template.quality,
+        isActive: true,
+        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(),
+      };
+      this.biometricTemplates.set(id, biometricTemplate);
+    });
+
+    // Sample verification logs
+    const sampleVerifications = [
+      { patientId: "patient-001", biometricType: "fingerprint", confidenceScore: "98.5", isMatch: true },
+      { patientId: "patient-002", biometricType: "face", confidenceScore: "87.3", isMatch: true },
+      { patientId: "patient-003", biometricType: "fingerprint", confidenceScore: "45.2", isMatch: false },
+      { patientId: "patient-001", biometricType: "face", confidenceScore: "92.1", isMatch: true },
+      { patientId: "unknown", biometricType: "fingerprint", confidenceScore: "23.4", isMatch: false },
+    ];
+
+    sampleVerifications.forEach(verification => {
+      const id = randomUUID();
+      const templates = Array.from(this.biometricTemplates.values())
+        .filter(t => t.patientId === verification.patientId && t.biometricType === verification.biometricType);
+      
+      const biometricVerification: BiometricVerification = {
+        id,
+        patientId: verification.patientId,
+        templateId: templates[0]?.id || null,
+        biometricType: verification.biometricType,
+        confidenceScore: verification.confidenceScore,
+        isMatch: verification.isMatch,
+        verifiedAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000),
+        ipAddress: "192.168.1." + Math.floor(Math.random() * 255),
+        deviceInfo: "Biometric Scanner v2.1",
+      };
+      this.biometricVerifications.set(id, biometricVerification);
+    });
+  }
+
+  private encryptBiometricData(data: string): { encrypted: string; iv: string } {
+    const algorithm = "aes-256-cbc";
+    const key = process.env.BIOMETRIC_ENCRYPTION_KEY || randomBytes(32).toString("hex").slice(0, 32);
+    const iv = randomBytes(16);
+    
+    const cipher = createCipheriv(algorithm, Buffer.from(key.padEnd(32, "0").slice(0, 32)), iv);
+    let encrypted = cipher.update(data, "utf8", "hex");
+    encrypted += cipher.final("hex");
+    
+    return { encrypted, iv: iv.toString("hex") };
+  }
+
+  private decryptBiometricData(encrypted: string, ivHex: string): string {
+    const algorithm = "aes-256-cbc";
+    const key = process.env.BIOMETRIC_ENCRYPTION_KEY || randomBytes(32).toString("hex").slice(0, 32);
+    const iv = Buffer.from(ivHex, "hex");
+    
+    const decipher = createDecipheriv(algorithm, Buffer.from(key.padEnd(32, "0").slice(0, 32)), iv);
+    let decrypted = decipher.update(encrypted, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+    
+    return decrypted;
+  }
+
+  async getAllBiometricTemplates(): Promise<BiometricTemplate[]> {
+    return Array.from(this.biometricTemplates.values())
+      .filter(t => t.isActive)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+  }
+
+  async getBiometricTemplateById(id: string): Promise<BiometricTemplate | undefined> {
+    return this.biometricTemplates.get(id);
+  }
+
+  async getBiometricTemplatesByPatient(patientId: string): Promise<BiometricTemplate[]> {
+    return Array.from(this.biometricTemplates.values())
+      .filter(t => t.patientId === patientId && t.isActive)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+  }
+
+  async createBiometricTemplate(template: InsertBiometricTemplate): Promise<BiometricTemplate> {
+    const id = randomUUID();
+    const encrypted = this.encryptBiometricData(template.templateData);
+    
+    const biometricTemplate: BiometricTemplate = {
+      id,
+      patientId: template.patientId,
+      biometricType: template.biometricType,
+      templateData: encrypted.encrypted,
+      encryptionIv: encrypted.iv,
+      quality: template.quality ?? 0,
+      isActive: template.isActive ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.biometricTemplates.set(id, biometricTemplate);
+    return biometricTemplate;
+  }
+
+  async updateBiometricTemplate(id: string, template: Partial<InsertBiometricTemplate>): Promise<BiometricTemplate | undefined> {
+    const existing = this.biometricTemplates.get(id);
+    if (!existing) return undefined;
+    
+    let updatedData = existing.templateData;
+    let updatedIv = existing.encryptionIv;
+    
+    if (template.templateData) {
+      const encrypted = this.encryptBiometricData(template.templateData);
+      updatedData = encrypted.encrypted;
+      updatedIv = encrypted.iv;
+    }
+    
+    const updated: BiometricTemplate = {
+      ...existing,
+      ...template,
+      templateData: updatedData,
+      encryptionIv: updatedIv,
+      updatedAt: new Date(),
+    };
+    this.biometricTemplates.set(id, updated);
+    return updated;
+  }
+
+  async deleteBiometricTemplate(id: string): Promise<boolean> {
+    const template = this.biometricTemplates.get(id);
+    if (!template) return false;
+    
+    template.isActive = false;
+    template.updatedAt = new Date();
+    this.biometricTemplates.set(id, template);
+    return true;
+  }
+
+  async getAllBiometricVerifications(): Promise<BiometricVerification[]> {
+    return Array.from(this.biometricVerifications.values())
+      .sort((a, b) => (b.verifiedAt?.getTime() ?? 0) - (a.verifiedAt?.getTime() ?? 0));
+  }
+
+  async getRecentBiometricVerifications(limit: number = 10): Promise<BiometricVerification[]> {
+    return Array.from(this.biometricVerifications.values())
+      .sort((a, b) => (b.verifiedAt?.getTime() ?? 0) - (a.verifiedAt?.getTime() ?? 0))
+      .slice(0, limit);
+  }
+
+  async getBiometricVerificationsByPatient(patientId: string): Promise<BiometricVerification[]> {
+    return Array.from(this.biometricVerifications.values())
+      .filter(v => v.patientId === patientId)
+      .sort((a, b) => (b.verifiedAt?.getTime() ?? 0) - (a.verifiedAt?.getTime() ?? 0));
+  }
+
+  async createBiometricVerification(verification: InsertBiometricVerification): Promise<BiometricVerification> {
+    const id = randomUUID();
+    
+    const biometricVerification: BiometricVerification = {
+      id,
+      patientId: verification.patientId,
+      templateId: verification.templateId ?? null,
+      biometricType: verification.biometricType,
+      confidenceScore: verification.confidenceScore,
+      isMatch: verification.isMatch,
+      verifiedAt: new Date(),
+      ipAddress: verification.ipAddress ?? null,
+      deviceInfo: verification.deviceInfo ?? null,
+    };
+    this.biometricVerifications.set(id, biometricVerification);
+    return biometricVerification;
+  }
+
+  async getBiometricStats(): Promise<{
+    totalPatients: number;
+    totalTemplates: number;
+    verificationsToday: number;
+    successfulVerifications: number;
+    fingerprintTemplates: number;
+    faceTemplates: number;
+  }> {
+    const templates = Array.from(this.biometricTemplates.values()).filter(t => t.isActive);
+    const verifications = Array.from(this.biometricVerifications.values());
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const verificationsToday = verifications.filter(v => 
+      v.verifiedAt && v.verifiedAt >= today
+    ).length;
+    
+    const successfulVerifications = verifications.filter(v => v.isMatch).length;
+    
+    const uniquePatients = new Set(templates.map(t => t.patientId)).size;
+    
+    return {
+      totalPatients: uniquePatients,
+      totalTemplates: templates.length,
+      verificationsToday,
+      successfulVerifications,
+      fingerprintTemplates: templates.filter(t => t.biometricType === "fingerprint").length,
+      faceTemplates: templates.filter(t => t.biometricType === "face").length,
+    };
   }
 }
 
