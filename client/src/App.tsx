@@ -22,6 +22,7 @@ import ChatbotService from "@/pages/ChatbotService";
 import PatientService from "@/pages/PatientService";
 import BiometricService from "@/pages/BiometricService";
 import NotificationService from "@/pages/NotificationService";
+import PatientPortal from "@/pages/PatientPortal";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -239,6 +240,24 @@ function AppContent() {
     );
   }
 
+  // Patient Portal - separate interface for patients
+  if (currentUser.role === "PATIENT") {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <TooltipProvider>
+            <PatientPortal 
+              patientName={currentUser.name}
+              onLogout={handleLogout}
+            />
+            <Toaster />
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  // Staff Portal - for ADMIN, DOCTOR, NURSE, OPD_MANAGER
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
