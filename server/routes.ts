@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -840,6 +840,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, message: "Biometric template deactivated" });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete biometric template" });
+    }
+  });
+
+  // ========== NOTIFICATION SERVICE ROUTES ==========
+
+  // Get all notifications
+  app.get("/api/notifications", async (_req, res) => {
+    try {
+      const notifications = await storage.getAllNotifications();
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // Get notification by ID
+  app.get("/api/notifications/:id", async (req, res) => {
+    try {
+      const notification = await storage.getNotificationById(req.params.id);
+      if (!notification) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+      res.json(notification);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notification" });
+    }
+  });
+
+  // Get notifications by status
+  app.get("/api/notifications/status/:status", async (req, res) => {
+    try {
+      const notifications = await storage.getNotificationsByStatus(req.params.status);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // Get notifications by category
+  app.get("/api/notifications/category/:category", async (req, res) => {
+    try {
+      const notifications = await storage.getNotificationsByCategory(req.params.category);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // Create notification
+  app.post("/api/notifications", async (req, res) => {
+    try {
+      const parsed = insertNotificationSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const notification = await storage.createNotification(parsed.data);
+      res.status(201).json(notification);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create notification" });
+    }
+  });
+
+  // Update notification
+  app.patch("/api/notifications/:id", async (req, res) => {
+    try {
+      const notification = await storage.updateNotification(req.params.id, req.body);
+      if (!notification) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+      res.json(notification);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update notification" });
+    }
+  });
+
+  // Delete notification
+  app.delete("/api/notifications/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteNotification(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+      res.json({ success: true, message: "Notification deleted" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete notification" });
+    }
+  });
+
+  // Send notification
+  app.post("/api/notifications/:id/send", async (req, res) => {
+    try {
+      const notification = await storage.sendNotification(req.params.id);
+      if (!notification) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+      res.json(notification);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to send notification" });
+    }
+  });
+
+  // Get notification statistics
+  app.get("/api/notifications/stats/summary", async (_req, res) => {
+    try {
+      const stats = await storage.getNotificationStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notification stats" });
+    }
+  });
+
+  // ========== HOSPITAL TEAM MEMBER ROUTES ==========
+
+  // Get all team members
+  app.get("/api/team-members", async (_req, res) => {
+    try {
+      const members = await storage.getAllTeamMembers();
+      res.json(members);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch team members" });
+    }
+  });
+
+  // Get team member by ID
+  app.get("/api/team-members/:id", async (req, res) => {
+    try {
+      const member = await storage.getTeamMemberById(req.params.id);
+      if (!member) {
+        return res.status(404).json({ error: "Team member not found" });
+      }
+      res.json(member);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch team member" });
+    }
+  });
+
+  // Get team members by department
+  app.get("/api/team-members/department/:department", async (req, res) => {
+    try {
+      const members = await storage.getTeamMembersByDepartment(req.params.department);
+      res.json(members);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch team members" });
+    }
+  });
+
+  // Get on-call team members
+  app.get("/api/team-members/on-call/list", async (_req, res) => {
+    try {
+      const members = await storage.getOnCallTeamMembers();
+      res.json(members);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch on-call team members" });
+    }
+  });
+
+  // Create team member
+  app.post("/api/team-members", async (req, res) => {
+    try {
+      const parsed = insertHospitalTeamMemberSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const member = await storage.createTeamMember(parsed.data);
+      res.status(201).json(member);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create team member" });
+    }
+  });
+
+  // Update team member
+  app.patch("/api/team-members/:id", async (req, res) => {
+    try {
+      const member = await storage.updateTeamMember(req.params.id, req.body);
+      if (!member) {
+        return res.status(404).json({ error: "Team member not found" });
+      }
+      res.json(member);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update team member" });
+    }
+  });
+
+  // Delete team member
+  app.delete("/api/team-members/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteTeamMember(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Team member not found" });
+      }
+      res.json({ success: true, message: "Team member deleted" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete team member" });
+    }
+  });
+
+  // Update team member on-call status
+  app.patch("/api/team-members/:id/on-call", async (req, res) => {
+    try {
+      const { isOnCall } = req.body;
+      if (typeof isOnCall !== "boolean") {
+        return res.status(400).json({ error: "isOnCall must be a boolean" });
+      }
+      const member = await storage.updateTeamMemberOnCallStatus(req.params.id, isOnCall);
+      if (!member) {
+        return res.status(404).json({ error: "Team member not found" });
+      }
+      res.json(member);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update team member on-call status" });
     }
   });
 
