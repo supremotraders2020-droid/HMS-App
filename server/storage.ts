@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -123,6 +123,32 @@ export interface IStorage {
     fingerprintTemplates: number;
     faceTemplates: number;
   }>;
+  
+  // Notification Service
+  getAllNotifications(): Promise<Notification[]>;
+  getNotificationById(id: string): Promise<Notification | undefined>;
+  getNotificationsByStatus(status: string): Promise<Notification[]>;
+  getNotificationsByCategory(category: string): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  updateNotification(id: string, notification: Partial<InsertNotification>): Promise<Notification | undefined>;
+  deleteNotification(id: string): Promise<boolean>;
+  sendNotification(id: string): Promise<Notification | undefined>;
+  getNotificationStats(): Promise<{
+    totalSent: number;
+    pendingCount: number;
+    byChannel: Record<string, number>;
+    byCategory: Record<string, number>;
+  }>;
+  
+  // Hospital Team Members
+  getAllTeamMembers(): Promise<HospitalTeamMember[]>;
+  getTeamMemberById(id: string): Promise<HospitalTeamMember | undefined>;
+  getTeamMembersByDepartment(department: string): Promise<HospitalTeamMember[]>;
+  getOnCallTeamMembers(): Promise<HospitalTeamMember[]>;
+  createTeamMember(member: InsertHospitalTeamMember): Promise<HospitalTeamMember>;
+  updateTeamMember(id: string, member: Partial<InsertHospitalTeamMember>): Promise<HospitalTeamMember | undefined>;
+  deleteTeamMember(id: string): Promise<boolean>;
+  updateTeamMemberOnCallStatus(id: string, isOnCall: boolean): Promise<HospitalTeamMember | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -156,6 +182,10 @@ export class MemStorage implements IStorage {
   // Biometric Service data stores
   private biometricTemplates: Map<string, BiometricTemplate>;
   private biometricVerifications: Map<string, BiometricVerification>;
+  
+  // Notification Service data stores
+  private notificationsData: Map<string, Notification>;
+  private hospitalTeamMembers: Map<string, HospitalTeamMember>;
 
   constructor() {
     this.users = new Map();
@@ -189,11 +219,16 @@ export class MemStorage implements IStorage {
     this.biometricTemplates = new Map();
     this.biometricVerifications = new Map();
     
+    // Notification Service initialization
+    this.notificationsData = new Map();
+    this.hospitalTeamMembers = new Map();
+    
     this.initializeDefaultData();
     this.initializeInventoryData();
     this.initializePatientTrackingData();
     this.initializePatientServiceData();
     this.initializeBiometricData();
+    this.initializeNotificationData();
   }
 
   private initializeDefaultData() {
@@ -1388,6 +1423,231 @@ export class MemStorage implements IStorage {
       fingerprintTemplates: templates.filter(t => t.biometricType === "fingerprint").length,
       faceTemplates: templates.filter(t => t.biometricType === "face").length,
     };
+  }
+
+  // ========== NOTIFICATION SERVICE METHODS ==========
+  
+  private initializeNotificationData() {
+    // Sample team members
+    const sampleTeamMembers = [
+      { name: "Dr. Priya Sharma", title: "Chief Medical Officer", department: "emergency_medicine", specialization: "Emergency Medicine", email: "priya.sharma@galaxy.hospital", phone: "+91 98765 43210", isOnCall: true, status: "available" },
+      { name: "Dr. Rajesh Kumar", title: "Senior Cardiologist", department: "cardiology", specialization: "Interventional Cardiology", email: "rajesh.kumar@galaxy.hospital", phone: "+91 98765 43211", isOnCall: false, status: "available" },
+      { name: "Dr. Anjali Patel", title: "Head of Pediatrics", department: "pediatrics", specialization: "Pediatric Care", email: "anjali.patel@galaxy.hospital", phone: "+91 98765 43212", isOnCall: true, status: "busy" },
+      { name: "Dr. Suresh Reddy", title: "Orthopedic Surgeon", department: "orthopedics", specialization: "Joint Replacement", email: "suresh.reddy@galaxy.hospital", phone: "+91 98765 43213", isOnCall: false, status: "available" },
+      { name: "Dr. Meera Gupta", title: "Neurologist", department: "neurology", specialization: "Stroke Care", email: "meera.gupta@galaxy.hospital", phone: "+91 98765 43214", isOnCall: true, status: "available" },
+      { name: "Dr. Vikram Singh", title: "General Surgeon", department: "general_surgery", specialization: "Laparoscopic Surgery", email: "vikram.singh@galaxy.hospital", phone: "+91 98765 43215", isOnCall: false, status: "offline" },
+      { name: "Dr. Kavita Joshi", title: "Radiologist", department: "radiology", specialization: "Diagnostic Imaging", email: "kavita.joshi@galaxy.hospital", phone: "+91 98765 43216", isOnCall: false, status: "available" },
+      { name: "Dr. Arjun Mehta", title: "Pathologist", department: "pathology", specialization: "Clinical Pathology", email: "arjun.mehta@galaxy.hospital", phone: "+91 98765 43217", isOnCall: false, status: "available" },
+      { name: "Nurse Sunita Verma", title: "Head Nurse", department: "emergency_medicine", specialization: "Emergency Care", email: "sunita.verma@galaxy.hospital", phone: "+91 98765 43218", isOnCall: true, status: "available" },
+      { name: "Mr. Ramesh Nair", title: "Hospital Administrator", department: "administration", specialization: "Operations Management", email: "ramesh.nair@galaxy.hospital", phone: "+91 98765 43219", isOnCall: false, status: "available" },
+    ];
+
+    sampleTeamMembers.forEach(member => {
+      const id = randomUUID();
+      const teamMember: HospitalTeamMember = {
+        id,
+        name: member.name,
+        title: member.title,
+        department: member.department,
+        specialization: member.specialization,
+        email: member.email,
+        phone: member.phone,
+        photoUrl: null,
+        isOnCall: member.isOnCall,
+        status: member.status,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.hospitalTeamMembers.set(id, teamMember);
+    });
+
+    // Sample notifications
+    const sampleNotifications = [
+      { title: "OPD Timings Changed for Diwali Holidays", message: "Please note that OPD will operate from 9 AM to 2 PM from Nov 10-15, 2024. Emergency services will continue 24/7.", category: "opd_announcements", priority: "high", channels: ["push", "email", "sms"], status: "sent" },
+      { title: "New COVID-19 Vaccination Drive", message: "We are launching a new vaccination drive for booster doses starting Monday. Register at the OPD counter.", category: "hospital_updates", priority: "medium", channels: ["push", "email"], status: "sent" },
+      { title: "Emergency Blood Donation Camp", message: "Urgent! Blood donation camp this weekend. All blood groups needed. Contact reception for details.", category: "emergency", priority: "critical", channels: ["push", "email", "sms", "whatsapp"], status: "sent" },
+      { title: "Stay Hydrated During Summer", message: "Health Tip: Drink at least 8 glasses of water daily. Include fruits like watermelon and cucumber in your diet.", category: "health_tips", priority: "low", channels: ["push", "whatsapp"], status: "sent" },
+      { title: "New MRI Machine Installation", message: "We are pleased to announce the installation of a new 3 Tesla MRI machine. Now available for advanced diagnostic imaging.", category: "hospital_updates", priority: "medium", channels: ["email"], status: "scheduled" },
+      { title: "Monsoon Health Advisory", message: "Protect yourself from monsoon diseases. Avoid street food and stagnant water. Get vaccinated for flu.", category: "disease_alerts", priority: "high", channels: ["push", "sms"], status: "draft" },
+    ];
+
+    sampleNotifications.forEach(notif => {
+      const id = randomUUID();
+      const notification: Notification = {
+        id,
+        title: notif.title,
+        message: notif.message,
+        category: notif.category,
+        priority: notif.priority,
+        channels: notif.channels,
+        scheduledAt: notif.status === "scheduled" ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null,
+        mediaFiles: null,
+        attachedLink: null,
+        status: notif.status,
+        createdBy: "System Admin",
+        createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+        sentAt: notif.status === "sent" ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) : null,
+      };
+      this.notificationsData.set(id, notification);
+    });
+  }
+
+  async getAllNotifications(): Promise<Notification[]> {
+    return Array.from(this.notificationsData.values())
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+  }
+
+  async getNotificationById(id: string): Promise<Notification | undefined> {
+    return this.notificationsData.get(id);
+  }
+
+  async getNotificationsByStatus(status: string): Promise<Notification[]> {
+    return Array.from(this.notificationsData.values())
+      .filter(n => n.status === status)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+  }
+
+  async getNotificationsByCategory(category: string): Promise<Notification[]> {
+    return Array.from(this.notificationsData.values())
+      .filter(n => n.category === category)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const id = randomUUID();
+    const newNotification: Notification = {
+      id,
+      title: notification.title,
+      message: notification.message,
+      category: notification.category,
+      priority: notification.priority ?? "medium",
+      channels: notification.channels,
+      scheduledAt: notification.scheduledAt ?? null,
+      mediaFiles: notification.mediaFiles ?? null,
+      attachedLink: notification.attachedLink ?? null,
+      status: notification.status ?? "draft",
+      createdBy: notification.createdBy ?? null,
+      createdAt: new Date(),
+      sentAt: null,
+    };
+    this.notificationsData.set(id, newNotification);
+    return newNotification;
+  }
+
+  async updateNotification(id: string, notification: Partial<InsertNotification>): Promise<Notification | undefined> {
+    const existing = this.notificationsData.get(id);
+    if (!existing) return undefined;
+    
+    const updated: Notification = { ...existing, ...notification };
+    this.notificationsData.set(id, updated);
+    return updated;
+  }
+
+  async deleteNotification(id: string): Promise<boolean> {
+    return this.notificationsData.delete(id);
+  }
+
+  async sendNotification(id: string): Promise<Notification | undefined> {
+    const notification = this.notificationsData.get(id);
+    if (!notification) return undefined;
+    
+    notification.status = "sent";
+    notification.sentAt = new Date();
+    this.notificationsData.set(id, notification);
+    return notification;
+  }
+
+  async getNotificationStats(): Promise<{
+    totalSent: number;
+    pendingCount: number;
+    byChannel: Record<string, number>;
+    byCategory: Record<string, number>;
+  }> {
+    const notifications = Array.from(this.notificationsData.values());
+    
+    const totalSent = notifications.filter(n => n.status === "sent").length;
+    const pendingCount = notifications.filter(n => n.status === "draft" || n.status === "scheduled").length;
+    
+    const byChannel: Record<string, number> = { push: 0, email: 0, sms: 0, whatsapp: 0 };
+    const byCategory: Record<string, number> = {};
+    
+    notifications.filter(n => n.status === "sent").forEach(n => {
+      n.channels.forEach(channel => {
+        byChannel[channel] = (byChannel[channel] || 0) + 1;
+      });
+      byCategory[n.category] = (byCategory[n.category] || 0) + 1;
+    });
+    
+    return { totalSent, pendingCount, byChannel, byCategory };
+  }
+
+  // Hospital Team Members methods
+  async getAllTeamMembers(): Promise<HospitalTeamMember[]> {
+    return Array.from(this.hospitalTeamMembers.values())
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async getTeamMemberById(id: string): Promise<HospitalTeamMember | undefined> {
+    return this.hospitalTeamMembers.get(id);
+  }
+
+  async getTeamMembersByDepartment(department: string): Promise<HospitalTeamMember[]> {
+    return Array.from(this.hospitalTeamMembers.values())
+      .filter(m => m.department === department)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async getOnCallTeamMembers(): Promise<HospitalTeamMember[]> {
+    return Array.from(this.hospitalTeamMembers.values())
+      .filter(m => m.isOnCall)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async createTeamMember(member: InsertHospitalTeamMember): Promise<HospitalTeamMember> {
+    const id = randomUUID();
+    const newMember: HospitalTeamMember = {
+      id,
+      name: member.name,
+      title: member.title,
+      department: member.department,
+      specialization: member.specialization ?? null,
+      email: member.email,
+      phone: member.phone,
+      photoUrl: member.photoUrl ?? null,
+      isOnCall: member.isOnCall ?? false,
+      status: member.status ?? "available",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.hospitalTeamMembers.set(id, newMember);
+    return newMember;
+  }
+
+  async updateTeamMember(id: string, member: Partial<InsertHospitalTeamMember>): Promise<HospitalTeamMember | undefined> {
+    const existing = this.hospitalTeamMembers.get(id);
+    if (!existing) return undefined;
+    
+    const updated: HospitalTeamMember = { 
+      ...existing, 
+      ...member, 
+      updatedAt: new Date() 
+    };
+    this.hospitalTeamMembers.set(id, updated);
+    return updated;
+  }
+
+  async deleteTeamMember(id: string): Promise<boolean> {
+    return this.hospitalTeamMembers.delete(id);
+  }
+
+  async updateTeamMemberOnCallStatus(id: string, isOnCall: boolean): Promise<HospitalTeamMember | undefined> {
+    const member = this.hospitalTeamMembers.get(id);
+    if (!member) return undefined;
+    
+    member.isOnCall = isOnCall;
+    member.updatedAt = new Date();
+    this.hospitalTeamMembers.set(id, member);
+    return member;
   }
 }
 
