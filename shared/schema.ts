@@ -323,3 +323,46 @@ export const insertMedicalRecordSchema = createInsertSchema(medicalRecords).omit
 });
 export type InsertMedicalRecord = z.infer<typeof insertMedicalRecordSchema>;
 export type MedicalRecord = typeof medicalRecords.$inferSelect;
+
+// ========== BIOMETRIC SERVICE TABLES ==========
+
+// Biometric Templates table - stores encrypted biometric data
+export const biometricTemplates = pgTable("biometric_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  biometricType: text("biometric_type").notNull(), // 'fingerprint' or 'face'
+  templateData: text("template_data").notNull(), // AES-256 encrypted template
+  encryptionIv: text("encryption_iv").notNull(), // Initialization vector for AES
+  quality: integer("quality").notNull().default(0), // Template quality score 0-100
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBiometricTemplateSchema = createInsertSchema(biometricTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBiometricTemplate = z.infer<typeof insertBiometricTemplateSchema>;
+export type BiometricTemplate = typeof biometricTemplates.$inferSelect;
+
+// Biometric Verifications table - logs all verification attempts
+export const biometricVerifications = pgTable("biometric_verifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  templateId: varchar("template_id"),
+  biometricType: text("biometric_type").notNull(),
+  confidenceScore: decimal("confidence_score", { precision: 5, scale: 2 }).notNull(),
+  isMatch: boolean("is_match").notNull(),
+  verifiedAt: timestamp("verified_at").defaultNow(),
+  ipAddress: text("ip_address"),
+  deviceInfo: text("device_info"),
+});
+
+export const insertBiometricVerificationSchema = createInsertSchema(biometricVerifications).omit({
+  id: true,
+  verifiedAt: true,
+});
+export type InsertBiometricVerification = z.infer<typeof insertBiometricVerificationSchema>;
+export type BiometricVerification = typeof biometricVerifications.$inferSelect;
