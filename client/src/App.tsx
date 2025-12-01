@@ -23,6 +23,7 @@ import PatientService from "@/pages/PatientService";
 import BiometricService from "@/pages/BiometricService";
 import NotificationService from "@/pages/NotificationService";
 import PatientPortal from "@/pages/PatientPortal";
+import DoctorPortal from "@/pages/DoctorPortal";
 import EquipmentServicing from "@/pages/EquipmentServicing";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
@@ -261,7 +262,25 @@ function AppContent() {
     );
   }
 
-  // Staff Portal - for ADMIN, DOCTOR, NURSE, OPD_MANAGER
+  // Doctor Portal - separate interface for doctors
+  if (currentUser.role === "DOCTOR") {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <TooltipProvider>
+            <DoctorPortal 
+              doctorName={currentUser.name.replace("Dr. ", "")}
+              hospitalName={currentUser.hospitalName}
+              onLogout={handleLogout}
+            />
+            <Toaster />
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  // Staff Portal - for ADMIN, NURSE, OPD_MANAGER
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
