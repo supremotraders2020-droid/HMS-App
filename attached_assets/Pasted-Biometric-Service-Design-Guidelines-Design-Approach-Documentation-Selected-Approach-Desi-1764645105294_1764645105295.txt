@@ -1,0 +1,79 @@
+Biometric Service Design Guidelines
+
+## Design Approach Documentation
+**Selected Approach:** Design System (Material Design) with healthcare specialization
+**Justification:** Medical applications require trust, clarity, and accessibility. The utility-focused nature demands efficiency and learnability over visual flair.
+**Key Principles:** 
+- Medical-grade reliability and trust
+- HIPAA-compliant visual indicators
+- Clear data hierarchy for biometric information
+- Professional healthcare aesthetic
+
+## Core Design Elements
+
+### A. Color Palette
+**Primary Colors:**
+- Light mode: 210 100% 50% (medical blue)
+- Dark mode: 210 80% 60% (softer medical blue)
+- Success: 120 60% 45% (medical green)
+- Error: 0 70% 55% (medical red)
+- Warning: 35 80% 50% (amber)
+- Background: 210 20% 98% (light) / 210 15% 8% (dark)
+
+### B. Typography
+**Font Family:** Inter (Google Fonts)
+- Headers: Inter 600 (Semi-bold)
+- Body text: Inter 400 (Regular)  
+- Data/metrics: Inter 500 (Medium)
+- Small text: Inter 400 (Regular)
+
+### C. Layout System
+**Spacing Units:** Tailwind units 2, 4, 6, and 8
+- Tight spacing: p-2, m-2
+- Standard spacing: p-4, m-4, gap-4
+- Section spacing: p-6, m-6
+- Large spacing: p-8, m-8
+
+### D. Component Library
+
+**Navigation:**
+- Clean header with hospital branding
+- Sidebar navigation with medical iconography
+- Breadcrumb navigation for deep workflows
+
+**Forms:**
+- Large, accessible input fields
+- Clear validation states with medical-appropriate messaging
+- Biometric upload areas with drag-and-drop
+- Progress indicators for verification processes
+
+**Data Display:**
+- Patient cards with biometric status indicators
+- Verification result panels with clear success/failure states
+- Data tables with sortable biometric records
+- Status badges for template storage states
+
+**Medical-Specific Components:**
+- Biometric template preview cards
+- Verification confidence meters
+- Encryption status indicators
+- Patient-service integration status displays
+
+**Layout Sections:**
+- Hospital header: "Galaxy Multi Specialty Hospital" prominently displayed
+- Main content area with patient biometric management
+- Footer: Full hospital address "Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062"
+
+### E. Visual Treatments
+**Backgrounds:** Clean whites/grays with subtle medical blue accents
+**Borders:** Soft rounded corners (rounded-lg) for approachability
+**Shadows:** Subtle elevation for cards and modals
+**Icons:** Heroicons with medical/security focus
+
+### F. Trust & Security Indicators
+- Encryption badges on stored templates
+- Security status indicators
+- Clear data handling notifications
+- HIPAA compliance visual cues
+
+**No hero images required** - this is a utility-focused medical application prioritizing functionality and trust over visual marketing.

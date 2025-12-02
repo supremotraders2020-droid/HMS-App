@@ -189,13 +189,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                     <Button
                       variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (item.title === "Biometric Service") {
-                          handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
-                        } else {
-                          handleMenuClick(item.url);
-                        }
-                      }}
+                      onClick={() => handleMenuClick(item.url)}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       <span>{item.title}</span>
@@ -222,13 +216,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                     <Button
                       variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (item.title === "Biometric Service") {
-                          handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
-                        } else {
-                          handleMenuClick(item.url);
-                        }
-                      }}
+                      onClick={() => handleMenuClick(item.url)}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       <span>{item.title}</span>
@@ -255,13 +243,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                     <Button
                       variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (item.title === "Biometric Service") {
-                          handleMenuClick(item.url, true, "https://biometric-vault-kadamatulp.replit.app");
-                        } else {
-                          handleMenuClick(item.url);
-                        }
-                      }}
+                      onClick={() => handleMenuClick(item.url)}
                     >
                       <item.icon className="h-4 w-4 mr-2" />
                       <span>{item.title}</span>
