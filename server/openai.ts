@@ -5,10 +5,10 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL
 });
 
-const HOSPITAL_CONTEXT = `You are a helpful AI assistant for Galaxy Multi Specialty Hospital in Chikhali, Pimpri-Chinchwad, Maharashtra, India.
+const HOSPITAL_CONTEXT = `You are a helpful AI assistant for Gravity Hospital in Chikhali, Pimpri-Chinchwad, Maharashtra, India.
 
 Hospital Information:
-- Name: Galaxy Multi Specialty Hospital
+- Name: Gravity Hospital
 - Location: Chikhali, Pimpri-Chinchwad, Maharashtra 411057
 - Contact: +91 20 1234 5678
 - Emergency: +91 20 9876 5432
@@ -98,7 +98,7 @@ function getFallbackResponse(query: string, category: string): { response: strin
   
   if (category === "insurance") {
     return {
-      response: "Galaxy Multi Specialty Hospital accepts the following insurance providers:\n\n• Star Health Insurance\n• HDFC Ergo Health Insurance\n• ICICI Lombard Health Insurance\n• Bajaj Allianz Health Insurance\n• Max Bupa Health Insurance\n\nWe also accept government schemes like PMJAY (Ayushman Bharat) and MJPJAY. Please bring your insurance card and valid ID for verification. For specific coverage queries, please contact our billing department at +91 20 1234 5678.",
+      response: "Gravity Hospital accepts the following insurance providers:\n\n• Star Health Insurance\n• HDFC Ergo Health Insurance\n• ICICI Lombard Health Insurance\n• Bajaj Allianz Health Insurance\n• Max Bupa Health Insurance\n\nWe also accept government schemes like PMJAY (Ayushman Bharat) and MJPJAY. Please bring your insurance card and valid ID for verification. For specific coverage queries, please contact our billing department at +91 20 1234 5678.",
       category
     };
   }
@@ -112,20 +112,20 @@ function getFallbackResponse(query: string, category: string): { response: strin
   
   if (category === "contact") {
     return {
-      response: "Galaxy Multi Specialty Hospital\n\nAddress: Chikhali, Pimpri-Chinchwad, Maharashtra 411057\n\nContact Numbers:\n• General Enquiry: +91 20 1234 5678\n• Emergency: +91 20 9876 5432\n• Appointments: +91 20 1234 5679\n\nOPD Hours: 9 AM - 9 PM (Monday - Saturday)\nEmergency: 24/7",
+      response: "Gravity Hospital\n\nAddress: Chikhali, Pimpri-Chinchwad, Maharashtra 411057\n\nContact Numbers:\n• General Enquiry: +91 20 1234 5678\n• Emergency: +91 20 9876 5432\n• Appointments: +91 20 1234 5679\n\nOPD Hours: 9 AM - 9 PM (Monday - Saturday)\nEmergency: 24/7",
       category
     };
   }
   
   if (category === "services") {
     return {
-      response: "Galaxy Multi Specialty Hospital offers comprehensive healthcare services:\n\n• Outpatient Department (OPD)\n• Emergency Care (24/7)\n• Inpatient Services\n• Diagnostic Services (X-Ray, CT Scan, MRI, Laboratory)\n• Pharmacy\n• Ambulance Service\n• Health Checkup Packages\n\nDepartments: Cardiology, Orthopedics, General Medicine, Pediatrics, Dermatology, Neurology\n\nFor more information, please contact us at +91 20 1234 5678.",
+      response: "Gravity Hospital offers comprehensive healthcare services:\n\n• Outpatient Department (OPD)\n• Emergency Care (24/7)\n• Inpatient Services\n• Diagnostic Services (X-Ray, CT Scan, MRI, Laboratory)\n• Pharmacy\n• Ambulance Service\n• Health Checkup Packages\n\nDepartments: Cardiology, Orthopedics, General Medicine, Pediatrics, Dermatology, Neurology\n\nFor more information, please contact us at +91 20 1234 5678.",
       category
     };
   }
   
   return {
-    response: "Welcome to Galaxy Multi Specialty Hospital! I'm here to help you with information about our hospital services, doctor availability, appointments, and general queries. How can I assist you today?\n\nFor emergencies, please call: +91 20 9876 5432",
+    response: "Welcome to Gravity Hospital! I'm here to help you with information about our hospital services, doctor availability, appointments, and general queries. How can I assist you today?\n\nFor emergencies, please call: +91 20 9876 5432",
     category: "general"
   };
 }

@@ -162,7 +162,7 @@ export default function OPDService() {
                 <h1 className="text-2xl font-bold">OPD - Outpatient Department</h1>
                 <div className="flex items-center gap-2 text-primary-foreground/80 text-sm">
                   <MapPin className="h-4 w-4" />
-                  <span>OPD Wing, Galaxy Multi Specialty Hospital</span>
+                  <span>OPD Wing, Gravity Hospital</span>
                 </div>
               </div>
             </div>
@@ -630,7 +630,7 @@ export default function OPDService() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2">
               <Stethoscope className="h-6 w-6 text-primary" />
-              <h2 className="text-xl font-bold">Galaxy Multi Specialty Hospital</h2>
+              <h2 className="text-xl font-bold">Gravity Hospital</h2>
             </div>
           </div>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
@@ -684,7 +684,7 @@ export default function OPDService() {
             </div>
           </div>
           <div className="border-t mt-8 pt-6 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Galaxy Multi Specialty Hospital. All rights reserved.</p>
+            <p>&copy; 2024 Gravity Hospital. All rights reserved.</p>
           </div>
         </div>
       </footer>

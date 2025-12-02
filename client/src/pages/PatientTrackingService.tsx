@@ -274,7 +274,7 @@ export default function PatientTrackingService() {
                 <h1 className="text-2xl font-bold">Patient Tracking System</h1>
                 <div className="flex items-center gap-2 text-white/80 text-sm">
                   <MapPin className="h-4 w-4" />
-                  <span>Inpatient Wing, Galaxy Multi Specialty Hospital</span>
+                  <span>Inpatient Wing, Gravity Hospital</span>
                 </div>
               </div>
             </div>

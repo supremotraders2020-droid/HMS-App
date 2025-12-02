@@ -1,6 +1,6 @@
 # Patient Credentials
 
-## Galaxy Multi Specialty Hospital
+## Gravity Hospital
 **Location:** Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062 (Pune)
 
 ---

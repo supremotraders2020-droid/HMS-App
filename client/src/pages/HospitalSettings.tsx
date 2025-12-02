@@ -30,11 +30,11 @@ export default function HospitalSettings() {
   const { toast } = useToast();
   
   const [hospitalInfo, setHospitalInfo] = useState({
-    name: "Galaxy Multi Specialty Hospital",
+    name: "Gravity Hospital",
     address: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062",
     phone: "+91 20 2745 8900",
-    email: "info@galaxy-hospital.com",
-    website: "www.galaxy-hospital.com",
+    email: "info@gravityhospital.in",
+    website: "www.gravityhospital.in",
     establishedYear: "2015",
     licenseNumber: "MH-PUNE-2015-001234",
     registrationNumber: "REG-MH-15-001234"

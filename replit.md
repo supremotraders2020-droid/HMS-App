@@ -2,7 +2,7 @@
 
 ## Overview
 
-HMS Core is a comprehensive healthcare management system designed for multi-tenant hospital environments. The system provides role-based access control for different healthcare professionals (Administrators, Doctors, Nurses, OPD Managers, and Patients) with specialized dashboards and workflows for each role. Built with a focus on clinical clarity, professional trust, and efficient healthcare workflows, the system follows Material Design 3 principles adapted for healthcare industry requirements.
+HMS Core is a comprehensive healthcare management system configured for **Gravity Hospital** in Chikhali, Pimpri-Chinchwad, Maharashtra. The system provides role-based access control for different healthcare professionals (Administrators, Doctors, Nurses, OPD Managers, and Patients) with specialized dashboards and workflows for each role. Built with a focus on clinical clarity, professional trust, and efficient healthcare workflows, the system follows Material Design 3 principles adapted for healthcare industry requirements.
 
 ## User Preferences
 

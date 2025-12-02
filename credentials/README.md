@@ -1,6 +1,6 @@
 # HMS Core - Credential Files
 
-## Galaxy Multi Specialty Hospital, Pune
+## Gravity Hospital, Pune
 
 This folder contains login credentials for all user types in the Hospital Management System.
 
@@ -11,7 +11,7 @@ This folder contains login credentials for all user types in the Hospital Manage
 | File | User Type | Count | Default Password |
 |------|-----------|-------|------------------|
 | [ADMIN_CREDENTIALS.md](./ADMIN_CREDENTIALS.md) | Administrators | 3 | Admin@123 |
-| [DOCTOR_CREDENTIALS.md](./DOCTOR_CREDENTIALS.md) | Doctors | 10 | Galaxy@123 |
+| [DOCTOR_CREDENTIALS.md](./DOCTOR_CREDENTIALS.md) | Doctors | 10 | Doctor@123 |
 | [PATIENT_CREDENTIALS.md](./PATIENT_CREDENTIALS.md) | Patients | 10 | Patient@123 |
 | [NURSE_CREDENTIALS.md](./NURSE_CREDENTIALS.md) | Nurses | 10 | Nurse@123 |
 | [OPD_MANAGER_CREDENTIALS.md](./OPD_MANAGER_CREDENTIALS.md) | OPD Managers | 10 | OPD@123 |
@@ -23,7 +23,7 @@ This folder contains login credentials for all user types in the Hospital Manage
 | Role | Username | Password |
 |------|----------|----------|
 | ADMIN | admin.suhas.nair | Admin@123 |
-| DOCTOR | dr.anil.kulkarni | Galaxy@123 |
+| DOCTOR | dr.anil.kulkarni | Doctor@123 |
 | PATIENT | rohan.patil | Patient@123 |
 | NURSE | nurse.asha.patil | Nurse@123 |
 | OPD_MANAGER | opd.mahesh.patil | OPD@123 |

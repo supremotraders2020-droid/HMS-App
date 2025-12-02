@@ -219,7 +219,7 @@ export default function BiometricService() {
               </div>
               <div>
                 <h1 className="text-xl font-semibold" data-testid="text-hospital-name">
-                  Galaxy Multi Specialty Hospital
+                  Gravity Hospital
                 </h1>
                 <p className="text-blue-100 text-sm flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
@@ -1145,7 +1145,7 @@ export default function BiometricService() {
                 <div className="bg-blue-600 p-2 rounded-lg">
                   <HeartPulse className="h-5 w-5" />
                 </div>
-                <h3 className="font-semibold text-lg">Galaxy Multi Specialty Hospital</h3>
+                <h3 className="font-semibold text-lg">Gravity Hospital</h3>
               </div>
               <p className="text-slate-400 text-sm">
                 Providing world-class healthcare with cutting-edge technology and compassionate care.
@@ -1182,7 +1182,7 @@ export default function BiometricService() {
           </div>
           <Separator className="my-4 bg-slate-700" />
           <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
-            <p>© 2024 Galaxy Multi Specialty Hospital. All rights reserved.</p>
+            <p>© 2024 Gravity Hospital. All rights reserved.</p>
             <div className="flex items-center gap-4 mt-2 md:mt-0">
               <Badge variant="outline" className="border-slate-600 text-slate-400">
                 <ShieldCheck className="h-3 w-3 mr-1" />

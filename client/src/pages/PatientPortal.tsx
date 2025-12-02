@@ -180,7 +180,7 @@ export default function PatientPortal({ patientName, onLogout }: PatientPortalPr
               <Heart className="h-5 w-5 text-primary-foreground" />
             </div>
             <div className="group-data-[collapsible=icon]:hidden">
-              <h2 className="font-bold text-lg">Galaxy Hospital</h2>
+              <h2 className="font-bold text-lg">Gravity Hospital</h2>
               <p className="text-xs text-muted-foreground">Patient Portal</p>
             </div>
           </div>
@@ -1001,7 +1001,7 @@ export default function PatientPortal({ patientName, onLogout }: PatientPortalPr
                   {navigationItems.find(n => n.id === activeSection)?.label || "Dashboard"}
                 </h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">
-                  Galaxy Multi Specialty Hospital, Chikhali
+                  Gravity Hospital, Chikhali
                 </p>
               </div>
             </div>

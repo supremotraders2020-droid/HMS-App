@@ -187,19 +187,19 @@ function AppContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentHospital, setCurrentHospital] = useState<Hospital>({
     id: "1",
-    name: "Galaxy Multi Specialty Hospital", 
+    name: "Gravity Hospital", 
     location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062",
     status: "ACTIVE"
   });
   const [, setLocation] = useLocation();
 
-  // Hospital data (Galaxy Multi Specialty Hospital only)
+  // Hospital data (Gravity Hospital only)
   const hospitals: Hospital[] = [
-    { id: "1", name: "Galaxy Multi Specialty Hospital", location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062", status: "ACTIVE" }
+    { id: "1", name: "Gravity Hospital", location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062", status: "ACTIVE" }
   ];
 
   const handleLogin = (username: string, role: UserRole) => {
-    const galaxyHospital = hospitals[0]; // Galaxy Multi Specialty Hospital
+    const galaxyHospital = hospitals[0]; // Gravity Hospital
     setCurrentHospital(galaxyHospital);
     setCurrentUser({
       username,
@@ -304,7 +304,7 @@ function AppContent() {
                   <div className="flex items-center space-x-4">
                     <SidebarTrigger data-testid="button-sidebar-toggle" />
                     <div className="flex flex-col">
-                      <span className="text-lg font-semibold">Galaxy Multi Specialty Hospital</span>
+                      <span className="text-lg font-semibold">Gravity Hospital</span>
                       <span className="text-xs text-muted-foreground">HMS Core System</span>
                     </div>
                   </div>

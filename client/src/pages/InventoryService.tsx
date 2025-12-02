@@ -149,7 +149,7 @@ export default function InventoryService() {
                 <h1 className="text-2xl font-bold">Inventory Management System</h1>
                 <div className="flex items-center gap-2 text-white/80 text-sm">
                   <MapPin className="h-4 w-4" />
-                  <span>Central Store, Galaxy Multi Specialty Hospital</span>
+                  <span>Central Store, Gravity Hospital</span>
                 </div>
               </div>
             </div>

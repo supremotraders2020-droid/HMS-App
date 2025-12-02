@@ -44,7 +44,7 @@ export default function ChatbotService() {
     {
       id: "welcome",
       role: "assistant",
-      content: "Welcome to Galaxy Multi Specialty Hospital! I'm your AI assistant. I can help you with:\n\n• Hospital services and departments\n• Doctor availability and appointments\n• Insurance queries\n• Emergency information\n• General health inquiries\n\nHow can I assist you today?",
+      content: "Welcome to Gravity Hospital! I'm your AI assistant. I can help you with:\n\n• Hospital services and departments\n• Doctor availability and appointments\n• Insurance queries\n• Emergency information\n• General health inquiries\n\nHow can I assist you today?",
       timestamp: new Date(),
     }
   ]);

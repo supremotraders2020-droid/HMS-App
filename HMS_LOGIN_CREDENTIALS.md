@@ -1,6 +1,6 @@
 # HMS Core - Login Credentials
 
-## Galaxy Multi Specialty Hospital
+## Gravity Hospital
 **Location:** Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062 (Pune)
 
 ---
@@ -28,16 +28,16 @@
 
 | # | Name | Username | Password | Role | Specialty | Experience |
 |---|------|----------|----------|------|-----------|------------|
-| 1 | Dr. Anil Kulkarni | dr.anil.kulkarni | Galaxy@123 | DOCTOR | Cardiology | 18 years |
-| 2 | Dr. Snehal Patil | dr.snehal.patil | Galaxy@123 | DOCTOR | Neurology | 15 years |
-| 3 | Dr. Vikram Deshpande | dr.vikram.deshpande | Galaxy@123 | DOCTOR | Orthopedics | 12 years |
-| 4 | Dr. Priyanka Joshi | dr.priyanka.joshi | Galaxy@123 | DOCTOR | Pediatrics | 10 years |
-| 5 | Dr. Rajesh Bhosale | dr.rajesh.bhosale | Galaxy@123 | DOCTOR | General Medicine | 20 years |
-| 6 | Dr. Meena Sharma | dr.meena.sharma | Galaxy@123 | DOCTOR | Dermatology | 8 years |
-| 7 | Dr. Sunil Gaikwad | dr.sunil.gaikwad | Galaxy@123 | DOCTOR | ENT | 14 years |
-| 8 | Dr. Kavita Deshmukh | dr.kavita.deshmukh | Galaxy@123 | DOCTOR | Gynecology | 16 years |
-| 9 | Dr. Amit Jadhav | dr.amit.jadhav | Galaxy@123 | DOCTOR | Ophthalmology | 11 years |
-| 10 | Dr. Sunita Pawar | dr.sunita.pawar | Galaxy@123 | DOCTOR | Psychiatry | 13 years |
+| 1 | Dr. Anil Kulkarni | dr.anil.kulkarni | Doctor@123 | DOCTOR | Cardiology | 18 years |
+| 2 | Dr. Snehal Patil | dr.snehal.patil | Doctor@123 | DOCTOR | Neurology | 15 years |
+| 3 | Dr. Vikram Deshpande | dr.vikram.deshpande | Doctor@123 | DOCTOR | Orthopedics | 12 years |
+| 4 | Dr. Priyanka Joshi | dr.priyanka.joshi | Doctor@123 | DOCTOR | Pediatrics | 10 years |
+| 5 | Dr. Rajesh Bhosale | dr.rajesh.bhosale | Doctor@123 | DOCTOR | General Medicine | 20 years |
+| 6 | Dr. Meena Sharma | dr.meena.sharma | Doctor@123 | DOCTOR | Dermatology | 8 years |
+| 7 | Dr. Sunil Gaikwad | dr.sunil.gaikwad | Doctor@123 | DOCTOR | ENT | 14 years |
+| 8 | Dr. Kavita Deshmukh | dr.kavita.deshmukh | Doctor@123 | DOCTOR | Gynecology | 16 years |
+| 9 | Dr. Amit Jadhav | dr.amit.jadhav | Doctor@123 | DOCTOR | Ophthalmology | 11 years |
+| 10 | Dr. Sunita Pawar | dr.sunita.pawar | Doctor@123 | DOCTOR | Psychiatry | 13 years |
 
 ---
 
@@ -97,7 +97,7 @@
 | Role | Username | Password |
 |------|----------|----------|
 | Admin | admin.suhas.nair | Admin@123 |
-| Doctor | dr.anil.kulkarni | Galaxy@123 |
+| Doctor | dr.anil.kulkarni | Doctor@123 |
 | Patient | rohan.patil | Patient@123 |
 | Nurse | nurse.asha.patil | Nurse@123 |
 | OPD Manager | opd.mahesh.patil | OPD@123 |
@@ -117,7 +117,7 @@
 ---
 
 ## Notes
-- All users are registered at **Galaxy Multi Specialty Hospital, Pune**
+- All users are registered at **Gravity Hospital, Pune**
 - Passwords are case-sensitive
 - Select the correct **Role** when logging in to access the appropriate portal
 - Doctor and Patient roles have dedicated portals with specialized features

@@ -1,6 +1,6 @@
 # Administrator Credentials
 
-## Galaxy Multi Specialty Hospital
+## Gravity Hospital
 **Location:** Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062 (Pune)
 
 ---
@@ -17,9 +17,9 @@
 
 | # | Name | Username | Password | Email | Phone | Department |
 |---|------|----------|----------|-------|-------|------------|
-| 1 | Dr. Suhas Nair | admin.suhas.nair | Admin@123 | suhas.nair@galaxy.hospital | +91 95201 11111 | Administration |
-| 2 | Shweta Kulkarni | admin.shweta.kulkarni | Admin@123 | shweta.kulkarni@galaxy.hospital | +91 95201 22222 | Administration |
-| 3 | Ravi Sharma | admin.ravi.sharma | Admin@123 | ravi.sharma@galaxy.hospital | +91 95201 33333 | Administration |
+| 1 | Dr. Suhas Nair | admin.suhas.nair | Admin@123 | suhas.nair@gravity.hospital | +91 95201 11111 | Administration |
+| 2 | Shweta Kulkarni | admin.shweta.kulkarni | Admin@123 | shweta.kulkarni@gravity.hospital | +91 95201 22222 | Administration |
+| 3 | Ravi Sharma | admin.ravi.sharma | Admin@123 | ravi.sharma@gravity.hospital | +91 95201 33333 | Administration |
 
 ---
 

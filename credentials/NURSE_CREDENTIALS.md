@@ -1,6 +1,6 @@
 # Nurse Credentials
 
-## Galaxy Multi Specialty Hospital
+## Gravity Hospital
 **Location:** Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062 (Pune)
 
 ---
@@ -17,16 +17,16 @@
 
 | # | Name | Username | Password | Department | Phone | Email |
 |---|------|----------|----------|------------|-------|-------|
-| 1 | Nurse Asha Patil | nurse.asha.patil | Nurse@123 | General Ward | +91 97201 11111 | asha.patil@galaxy.hospital |
-| 2 | Nurse Rekha Sharma | nurse.rekha.sharma | Nurse@123 | ICU | +91 97201 22222 | rekha.sharma@galaxy.hospital |
-| 3 | Nurse Sunita Kulkarni | nurse.sunita.kulkarni | Nurse@123 | Emergency | +91 97201 33333 | sunita.kulkarni@galaxy.hospital |
-| 4 | Nurse Pooja Deshmukh | nurse.pooja.deshmukh | Nurse@123 | Pediatrics | +91 97201 44444 | pooja.deshmukh@galaxy.hospital |
-| 5 | Nurse Meena Jadhav | nurse.meena.jadhav | Nurse@123 | OPD | +91 97201 55555 | meena.jadhav@galaxy.hospital |
-| 6 | Nurse Kavita Bhosale | nurse.kavita.bhosale | Nurse@123 | Surgery | +91 97201 66666 | kavita.bhosale@galaxy.hospital |
-| 7 | Nurse Anjali Gaikwad | nurse.anjali.gaikwad | Nurse@123 | Cardiology | +91 97201 77777 | anjali.gaikwad@galaxy.hospital |
-| 8 | Nurse Priya Pawar | nurse.priya.pawar | Nurse@123 | Neurology | +91 97201 88888 | priya.pawar@galaxy.hospital |
-| 9 | Nurse Neha Deshpande | nurse.neha.deshpande | Nurse@123 | Orthopedics | +91 97201 99999 | neha.deshpande@galaxy.hospital |
-| 10 | Nurse Snehal Joshi | nurse.snehal.joshi | Nurse@123 | Maternity | +91 97201 10101 | snehal.joshi@galaxy.hospital |
+| 1 | Nurse Asha Patil | nurse.asha.patil | Nurse@123 | General Ward | +91 97201 11111 | asha.patil@gravity.hospital |
+| 2 | Nurse Rekha Sharma | nurse.rekha.sharma | Nurse@123 | ICU | +91 97201 22222 | rekha.sharma@gravity.hospital |
+| 3 | Nurse Sunita Kulkarni | nurse.sunita.kulkarni | Nurse@123 | Emergency | +91 97201 33333 | sunita.kulkarni@gravity.hospital |
+| 4 | Nurse Pooja Deshmukh | nurse.pooja.deshmukh | Nurse@123 | Pediatrics | +91 97201 44444 | pooja.deshmukh@gravity.hospital |
+| 5 | Nurse Meena Jadhav | nurse.meena.jadhav | Nurse@123 | OPD | +91 97201 55555 | meena.jadhav@gravity.hospital |
+| 6 | Nurse Kavita Bhosale | nurse.kavita.bhosale | Nurse@123 | Surgery | +91 97201 66666 | kavita.bhosale@gravity.hospital |
+| 7 | Nurse Anjali Gaikwad | nurse.anjali.gaikwad | Nurse@123 | Cardiology | +91 97201 77777 | anjali.gaikwad@gravity.hospital |
+| 8 | Nurse Priya Pawar | nurse.priya.pawar | Nurse@123 | Neurology | +91 97201 88888 | priya.pawar@gravity.hospital |
+| 9 | Nurse Neha Deshpande | nurse.neha.deshpande | Nurse@123 | Orthopedics | +91 97201 99999 | neha.deshpande@gravity.hospital |
+| 10 | Nurse Snehal Joshi | nurse.snehal.joshi | Nurse@123 | Maternity | +91 97201 10101 | snehal.joshi@gravity.hospital |
 
 ---
 
