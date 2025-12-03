@@ -24,8 +24,21 @@ import {
   User,
   AlertCircle,
   ChevronRight,
-  Thermometer
+  Thermometer,
+  Trash2,
+  LogOut
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { TrackingPatient, Medication, Meal, Vitals } from "@shared/schema";
 
 type TabType = "patients" | "admit" | "vitals" | "medications" | "meals";
@@ -174,6 +187,26 @@ export default function PatientTrackingService() {
       toast({
         title: "Status Updated",
         description: "Patient status has been updated.",
+      });
+    },
+  });
+
+  const dischargePatientMutation = useMutation({
+    mutationFn: async (patientId: string) => {
+      return await apiRequest("DELETE", `/api/tracking/patients/${patientId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      toast({
+        title: "Patient Discharged",
+        description: "Patient has been discharged and removed from tracking.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Discharge Failed",
+        description: "Failed to discharge patient. Please try again.",
+        variant: "destructive",
       });
     },
   });
@@ -513,6 +546,37 @@ export default function PatientTrackingService() {
                               <SelectItem value="discharged">Discharged</SelectItem>
                             </SelectContent>
                           </Select>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                data-testid={`button-discharge-${patient.id}`}
+                              >
+                                <LogOut className="h-4 w-4 mr-1" />
+                                Discharge
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Discharge Patient</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to discharge {patient.name}? This will remove the patient from active tracking and delete all associated records (vitals, medications, meals).
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => dischargePatientMutation.mutate(patient.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                  data-testid={`button-confirm-discharge-${patient.id}`}
+                                >
+                                  Confirm Discharge
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </CardContent>

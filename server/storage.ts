@@ -232,7 +232,52 @@ export class MemStorage implements IStorage {
     this.initializeNotificationData();
   }
 
-  private initializeDefaultData() {
+  private initializeDemoUsers() {
+    // Demo users: 5 per role (ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT)
+    const demoUsers = [
+      // Administrators
+      { username: "admin1", password: "Admin@123", role: "ADMIN", name: "Rajesh Sharma", email: "rajesh.sharma@gravity.hospital" },
+      { username: "admin2", password: "Admin@123", role: "ADMIN", name: "Priya Kulkarni", email: "priya.kulkarni@gravity.hospital" },
+      { username: "admin3", password: "Admin@123", role: "ADMIN", name: "Anil Deshmukh", email: "anil.deshmukh@gravity.hospital" },
+      { username: "admin4", password: "Admin@123", role: "ADMIN", name: "Sunita Joshi", email: "sunita.joshi@gravity.hospital" },
+      { username: "admin5", password: "Admin@123", role: "ADMIN", name: "Vijay Pawar", email: "vijay.pawar@gravity.hospital" },
+      // Doctors
+      { username: "doctor1", password: "Doctor@123", role: "DOCTOR", name: "Dr. Priya Sharma", email: "dr.sharma@gravity.hospital" },
+      { username: "doctor2", password: "Doctor@123", role: "DOCTOR", name: "Dr. Rajesh Kumar", email: "dr.kumar@gravity.hospital" },
+      { username: "doctor3", password: "Doctor@123", role: "DOCTOR", name: "Dr. Sneha Patel", email: "dr.patel@gravity.hospital" },
+      { username: "doctor4", password: "Doctor@123", role: "DOCTOR", name: "Dr. Amit Singh", email: "dr.singh@gravity.hospital" },
+      { username: "doctor5", password: "Doctor@123", role: "DOCTOR", name: "Dr. Kavita Joshi", email: "dr.joshi@gravity.hospital" },
+      // Nurses
+      { username: "nurse1", password: "Nurse@123", role: "NURSE", name: "Anjali Patel", email: "anjali.patel@gravity.hospital" },
+      { username: "nurse2", password: "Nurse@123", role: "NURSE", name: "Rekha Sharma", email: "rekha.sharma@gravity.hospital" },
+      { username: "nurse3", password: "Nurse@123", role: "NURSE", name: "Meena Gupta", email: "meena.gupta@gravity.hospital" },
+      { username: "nurse4", password: "Nurse@123", role: "NURSE", name: "Suman Reddy", email: "suman.reddy@gravity.hospital" },
+      { username: "nurse5", password: "Nurse@123", role: "NURSE", name: "Kavitha Nair", email: "kavitha.nair@gravity.hospital" },
+      // OPD Managers
+      { username: "opd1", password: "OPD@123", role: "OPD_MANAGER", name: "Rahul Mehta", email: "rahul.mehta@gravity.hospital" },
+      { username: "opd2", password: "OPD@123", role: "OPD_MANAGER", name: "Neha Kulkarni", email: "neha.kulkarni@gravity.hospital" },
+      { username: "opd3", password: "OPD@123", role: "OPD_MANAGER", name: "Suresh Patil", email: "suresh.patil@gravity.hospital" },
+      { username: "opd4", password: "OPD@123", role: "OPD_MANAGER", name: "Anita Verma", email: "anita.verma@gravity.hospital" },
+      { username: "opd5", password: "OPD@123", role: "OPD_MANAGER", name: "Deepak Jain", email: "deepak.jain@gravity.hospital" },
+      // Patients
+      { username: "patient1", password: "Patient@123", role: "PATIENT", name: "Rahul Mehta", email: "rahul.mehta@gmail.com" },
+      { username: "patient2", password: "Patient@123", role: "PATIENT", name: "Anita Desai", email: "anita.desai@gmail.com" },
+      { username: "patient3", password: "Patient@123", role: "PATIENT", name: "Vikram Reddy", email: "vikram.reddy@gmail.com" },
+      { username: "patient4", password: "Patient@123", role: "PATIENT", name: "Meera Nair", email: "meera.nair@gmail.com" },
+      { username: "patient5", password: "Patient@123", role: "PATIENT", name: "Sanjay Gupta", email: "sanjay.gupta@gmail.com" },
+    ];
+
+    demoUsers.forEach(user => {
+      const id = randomUUID();
+      this.users.set(id, {
+        id,
+        username: user.username,
+        password: user.password,
+      });
+    });
+  }
+
+  private initializeDefaultData() {    
     const defaultDoctors = [
       { name: "Dr. Priya Sharma", specialty: "Cardiology", qualification: "MD Cardiology, DM", experience: 15, rating: "4.9", availableDays: "Mon-Fri", avatarInitials: "PS" },
       { name: "Dr. Rajesh Kumar", specialty: "Orthopedics", qualification: "MS Orthopedics", experience: 12, rating: "4.8", availableDays: "Mon-Sat", avatarInitials: "RK" },
