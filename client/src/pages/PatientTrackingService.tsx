@@ -39,7 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { TrackingPatient, Medication, Meal, Vitals } from "@shared/schema";
+import type { TrackingPatient, Medication, Meal, Vitals, ServicePatient } from "@shared/schema";
 
 type TabType = "patients" | "admit" | "vitals" | "medications" | "meals";
 
@@ -67,6 +67,10 @@ export default function PatientTrackingService() {
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<TrackingPatient[]>({
     queryKey: ["/api/tracking/patients"],
+  });
+
+  const { data: servicePatients = [] } = useQuery<ServicePatient[]>({
+    queryKey: ["/api/patients/service"],
   });
 
   const { data: patientHistory } = useQuery<{
@@ -612,7 +616,18 @@ export default function PatientTrackingService() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Patient Name</Label>
-                    <Input name="name" required placeholder="Full name" data-testid="input-patient-name" />
+                    <Select name="name" required>
+                      <SelectTrigger data-testid="select-patient-name">
+                        <SelectValue placeholder="Select patient" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
+                        {servicePatients.map((patient) => (
+                          <SelectItem key={patient.id} value={`${patient.firstName} ${patient.lastName}`}>
+                            {patient.firstName} {patient.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="age">Age</Label>
