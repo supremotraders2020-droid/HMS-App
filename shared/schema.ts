@@ -20,13 +20,19 @@ export const users = pgTable("users", {
   email: text("email"),
 });
 
+const validRoles = ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"] as const;
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   role: true,
   name: true,
   email: true,
+}).extend({
+  role: z.enum(validRoles).default("PATIENT"),
 });
+
+export type UserRole = typeof validRoles[number];
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
