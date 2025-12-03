@@ -43,6 +43,21 @@ import type { TrackingPatient, Medication, Meal, Vitals } from "@shared/schema";
 
 type TabType = "patients" | "admit" | "vitals" | "medications" | "meals";
 
+const hospitalDoctors = [
+  { id: "dr-anil-kulkarni", name: "Dr. Anil Kulkarni", specialty: "General Medicine" },
+  { id: "dr-snehal-patil", name: "Dr. Snehal Patil", specialty: "Cardiology" },
+  { id: "dr-vikram-deshpande", name: "Dr. Vikram Deshpande", specialty: "Orthopedics" },
+  { id: "dr-priyanka-joshi", name: "Dr. Priyanka Joshi", specialty: "Pediatrics" },
+  { id: "dr-rajesh-bhosale", name: "Dr. Rajesh Bhosale", specialty: "Neurology" },
+  { id: "dr-meena-sharma", name: "Dr. Meena Sharma", specialty: "Gynecology" },
+  { id: "dr-suresh-patwardhan", name: "Dr. Suresh Patwardhan", specialty: "Pulmonology" },
+  { id: "dr-anita-deshmukh", name: "Dr. Anita Deshmukh", specialty: "Dermatology" },
+  { id: "dr-ramesh-kulkarni", name: "Dr. Ramesh Kulkarni", specialty: "Gastroenterology" },
+  { id: "dr-kavita-naik", name: "Dr. Kavita Naik", specialty: "Endocrinology" },
+  { id: "dr-sanjay-more", name: "Dr. Sanjay More", specialty: "Nephrology" },
+  { id: "dr-pallavi-shah", name: "Dr. Pallavi Shah", specialty: "Ophthalmology" },
+];
+
 export default function PatientTrackingService() {
   const [activeTab, setActiveTab] = useState<TabType>("patients");
   const [searchQuery, setSearchQuery] = useState("");
@@ -626,7 +641,18 @@ export default function PatientTrackingService() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="doctor">Attending Doctor</Label>
-                    <Input name="doctor" required placeholder="Doctor's name" data-testid="input-doctor" />
+                    <Select name="doctor" required>
+                      <SelectTrigger data-testid="select-doctor">
+                        <SelectValue placeholder="Select physician" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
+                        {hospitalDoctors.map((doctor) => (
+                          <SelectItem key={doctor.id} value={doctor.name}>
+                            {doctor.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <Button
