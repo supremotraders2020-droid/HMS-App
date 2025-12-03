@@ -329,6 +329,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete tracking patient (discharge/remove)
+  app.delete("/api/tracking/patients/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteTrackingPatient(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json({ success: true, message: "Patient discharged and removed from tracking" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete patient" });
+    }
+  });
+
   // Get patient tracking history
   app.get("/api/tracking/patients/:id/history", async (req, res) => {
     try {

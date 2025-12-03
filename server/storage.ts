@@ -56,6 +56,7 @@ export interface IStorage {
   getTrackingPatientById(id: string): Promise<TrackingPatient | undefined>;
   createTrackingPatient(patient: InsertTrackingPatient): Promise<TrackingPatient>;
   updateTrackingPatientStatus(id: string, status: string): Promise<TrackingPatient | undefined>;
+  deleteTrackingPatient(id: string): Promise<boolean>;
   
   // Medications
   getMedicationsByPatient(patientId: string): Promise<Medication[]>;
@@ -851,10 +852,15 @@ export class MemStorage implements IStorage {
   async createTrackingPatient(patient: InsertTrackingPatient): Promise<TrackingPatient> {
     const id = randomUUID();
     const trackingPatient: TrackingPatient = {
-      ...patient,
       id,
-      admissionDate: patient.admissionDate ?? new Date(),
-      status: patient.status ?? "admitted",
+      name: patient.name,
+      age: patient.age,
+      gender: patient.gender,
+      room: patient.room,
+      diagnosis: patient.diagnosis,
+      doctor: patient.doctor,
+      admissionDate: new Date(),
+      status: "admitted",
     };
     this.trackingPatients.set(id, trackingPatient);
     return trackingPatient;
@@ -869,6 +875,25 @@ export class MemStorage implements IStorage {
     return patient;
   }
 
+  async deleteTrackingPatient(id: string): Promise<boolean> {
+    const patient = this.trackingPatients.get(id);
+    if (!patient) return false;
+    
+    // Delete associated medications, meals, and vitals
+    const medications = Array.from(this.medications.values()).filter(m => m.patientId === id);
+    medications.forEach(m => this.medications.delete(m.id));
+    
+    const meals = Array.from(this.meals.values()).filter(m => m.patientId === id);
+    meals.forEach(m => this.meals.delete(m.id));
+    
+    const vitals = Array.from(this.vitalsRecords.values()).filter(v => v.patientId === id);
+    vitals.forEach(v => this.vitalsRecords.delete(v.id));
+    
+    // Delete the patient
+    this.trackingPatients.delete(id);
+    return true;
+  }
+
   // ========== MEDICATIONS METHODS ==========
   async getMedicationsByPatient(patientId: string): Promise<Medication[]> {
     return Array.from(this.medications.values()).filter(
@@ -879,9 +904,14 @@ export class MemStorage implements IStorage {
   async createMedication(medication: InsertMedication): Promise<Medication> {
     const id = randomUUID();
     const med: Medication = {
-      ...medication,
       id,
-      administeredAt: medication.administeredAt ?? new Date(),
+      patientId: medication.patientId,
+      name: medication.name,
+      dosage: medication.dosage,
+      route: medication.route,
+      frequency: medication.frequency,
+      administeredBy: medication.administeredBy,
+      administeredAt: new Date(),
       notes: medication.notes ?? null,
     };
     this.medications.set(id, med);
@@ -898,9 +928,12 @@ export class MemStorage implements IStorage {
   async createMeal(meal: InsertMeal): Promise<Meal> {
     const id = randomUUID();
     const mealRecord: Meal = {
-      ...meal,
       id,
-      servedAt: meal.servedAt ?? new Date(),
+      patientId: meal.patientId,
+      mealType: meal.mealType,
+      description: meal.description,
+      servedBy: meal.servedBy,
+      servedAt: new Date(),
       consumptionPercentage: meal.consumptionPercentage ?? 100,
       calories: meal.calories ?? null,
       dietaryRestrictions: meal.dietaryRestrictions ?? null,
@@ -920,9 +953,10 @@ export class MemStorage implements IStorage {
   async createVitals(vitals: InsertVitals): Promise<Vitals> {
     const id = randomUUID();
     const vitalsRecord: Vitals = {
-      ...vitals,
       id,
-      recordedAt: vitals.recordedAt ?? new Date(),
+      patientId: vitals.patientId,
+      recordedBy: vitals.recordedBy,
+      recordedAt: new Date(),
       temperature: vitals.temperature ?? null,
       heartRate: vitals.heartRate ?? null,
       bloodPressureSystolic: vitals.bloodPressureSystolic ?? null,
