@@ -273,6 +273,9 @@ export class MemStorage implements IStorage {
         id,
         username: user.username,
         password: user.password,
+        role: user.role,
+        name: user.name,
+        email: user.email,
       });
     });
   }
@@ -359,7 +362,14 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      id,
+      username: insertUser.username,
+      password: insertUser.password,
+      role: insertUser.role ?? "PATIENT",
+      name: insertUser.name ?? null,
+      email: insertUser.email ?? null,
+    };
     this.users.set(id, user);
     return user;
   }

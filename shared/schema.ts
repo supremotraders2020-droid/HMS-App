@@ -3,6 +3,9 @@ import { pgTable, text, varchar, integer, timestamp, boolean, decimal, pgEnum } 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// User Role Enum
+export const userRoleEnum = pgEnum("user_role", ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"]);
+
 // Inventory Enums
 export const inventoryCategoryEnum = pgEnum("inventory_category", ["disposables", "syringes", "gloves", "medicines", "equipment"]);
 export const transactionTypeEnum = pgEnum("transaction_type", ["ISSUE", "RETURN", "DISPOSE"]);
@@ -12,11 +15,17 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").notNull().default("PATIENT"),
+  name: text("name"),
+  email: text("email"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  role: true,
+  name: true,
+  email: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
