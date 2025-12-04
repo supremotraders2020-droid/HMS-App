@@ -73,6 +73,47 @@ const medicalRecordFormSchema = insertMedicalRecordSchema.extend({
   physician: z.string().min(1, "Physician is required"),
 });
 
+type AdmissionTimeFilter = "all" | "1day" | "1week" | "1month" | "quarter" | "yearly";
+
+const timeFilterOptions = [
+  { value: "all" as AdmissionTimeFilter, label: "All Time" },
+  { value: "1day" as AdmissionTimeFilter, label: "1 Day" },
+  { value: "1week" as AdmissionTimeFilter, label: "1 Week" },
+  { value: "1month" as AdmissionTimeFilter, label: "1 Month" },
+  { value: "quarter" as AdmissionTimeFilter, label: "Quarter" },
+  { value: "yearly" as AdmissionTimeFilter, label: "Yearly" },
+];
+
+function getFilteredAdmissions(admissions: Admission[], filter: AdmissionTimeFilter): Admission[] {
+  if (filter === "all") return admissions;
+  
+  const now = new Date();
+  const cutoffDate = new Date();
+  
+  switch (filter) {
+    case "1day":
+      cutoffDate.setDate(now.getDate() - 1);
+      break;
+    case "1week":
+      cutoffDate.setDate(now.getDate() - 7);
+      break;
+    case "1month":
+      cutoffDate.setMonth(now.getMonth() - 1);
+      break;
+    case "quarter":
+      cutoffDate.setMonth(now.getMonth() - 3);
+      break;
+    case "yearly":
+      cutoffDate.setFullYear(now.getFullYear() - 1);
+      break;
+  }
+  
+  return admissions.filter(admission => {
+    const admissionDate = new Date(admission.admissionDate!);
+    return admissionDate >= cutoffDate;
+  });
+}
+
 export default function PatientService() {
   const [activeTab, setActiveTab] = useState("patients");
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,6 +122,7 @@ export default function PatientService() {
   const [showNewAdmissionDialog, setShowNewAdmissionDialog] = useState(false);
   const [showNewRecordDialog, setShowNewRecordDialog] = useState(false);
   const [showPatientDetailDialog, setShowPatientDetailDialog] = useState(false);
+  const [admissionTimeFilter, setAdmissionTimeFilter] = useState<AdmissionTimeFilter>("all");
   const { toast } = useToast();
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<ServicePatient[]>({
@@ -704,13 +746,31 @@ export default function PatientService() {
                   </CardTitle>
                   <CardDescription>Track patient admissions and discharges</CardDescription>
                 </div>
-                <Dialog open={showNewAdmissionDialog} onOpenChange={setShowNewAdmissionDialog}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="button-new-admission">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Admission
-                    </Button>
-                  </DialogTrigger>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Select value={admissionTimeFilter} onValueChange={(value) => setAdmissionTimeFilter(value as AdmissionTimeFilter)}>
+                      <SelectTrigger className="w-[130px]" data-testid="select-admission-filter">
+                        <SelectValue placeholder="Filter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timeFilterOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Badge variant="secondary" className="text-xs px-2 py-1" data-testid="badge-admission-count">
+                      {getFilteredAdmissions(admissions, admissionTimeFilter).length} admissions
+                    </Badge>
+                  </div>
+                  <Dialog open={showNewAdmissionDialog} onOpenChange={setShowNewAdmissionDialog}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="button-new-admission">
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Admission
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="max-w-lg">
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2">
@@ -844,18 +904,23 @@ export default function PatientService() {
                       </form>
                     </Form>
                   </DialogContent>
-                </Dialog>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 {admissionsLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
                   </div>
-                ) : admissions.length === 0 ? (
+                ) : getFilteredAdmissions(admissions, admissionTimeFilter).length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400">
                     <BedDouble className="h-16 w-16 mb-4" />
                     <p className="text-lg font-medium text-slate-600 dark:text-slate-300">No Admissions</p>
-                    <p className="text-sm">Create a new admission to get started</p>
+                    <p className="text-sm">
+                      {admissionTimeFilter === "all" 
+                        ? "Create a new admission to get started" 
+                        : `No admissions in the selected time range`}
+                    </p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -867,12 +932,13 @@ export default function PatientService() {
                           <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Room</th>
                           <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Physician</th>
                           <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Admission Date</th>
+                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Discharge Date</th>
                           <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Status</th>
                           <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {admissions.map((admission) => {
+                        {getFilteredAdmissions(admissions, admissionTimeFilter).map((admission) => {
                           const statusConfig = getStatusBadge(admission.status);
                           const StatusIcon = statusConfig.icon;
                           return (
@@ -901,6 +967,9 @@ export default function PatientService() {
                               </td>
                               <td className="p-4 text-sm text-slate-500">
                                 {formatDate(admission.admissionDate)}
+                              </td>
+                              <td className="p-4 text-sm text-slate-500">
+                                {admission.dischargeDate ? formatDate(admission.dischargeDate) : "—"}
                               </td>
                               <td className="p-4">
                                 <Badge className={statusConfig.className}>
