@@ -70,6 +70,12 @@ export default function PatientTrackingService() {
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [admitPatientPopoverOpen, setAdmitPatientPopoverOpen] = useState(false);
   const [selectedAdmitPatientName, setSelectedAdmitPatientName] = useState<string>("");
+  const [vitalsPatientPopoverOpen, setVitalsPatientPopoverOpen] = useState(false);
+  const [selectedVitalsPatientId, setSelectedVitalsPatientId] = useState<string>("");
+  const [medsPatientPopoverOpen, setMedsPatientPopoverOpen] = useState(false);
+  const [selectedMedsPatientId, setSelectedMedsPatientId] = useState<string>("");
+  const [mealsPatientPopoverOpen, setMealsPatientPopoverOpen] = useState(false);
+  const [selectedMealsPatientId, setSelectedMealsPatientId] = useState<string>("");
   const { toast } = useToast();
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<TrackingPatient[]>({
@@ -141,6 +147,7 @@ export default function PatientTrackingService() {
         title: "Vitals Recorded",
         description: "Patient vitals have been recorded successfully.",
       });
+      setSelectedVitalsPatientId("");
     },
     onError: () => {
       toast({
@@ -169,6 +176,7 @@ export default function PatientTrackingService() {
         title: "Medication Added",
         description: "Medication has been administered successfully.",
       });
+      setSelectedMedsPatientId("");
     },
     onError: () => {
       toast({
@@ -197,6 +205,7 @@ export default function PatientTrackingService() {
         title: "Meal Logged",
         description: "Meal has been logged successfully.",
       });
+      setSelectedMealsPatientId("");
     },
     onError: () => {
       toast({
@@ -777,18 +786,61 @@ export default function PatientTrackingService() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="patientId">Select Patient</Label>
-                    <Select name="patientId" required>
-                      <SelectTrigger data-testid="select-vitals-patient">
-                        <SelectValue placeholder="Select patient" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.filter(p => p.status !== "discharged").map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name} (Room {p.room})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <input type="hidden" name="patientId" value={selectedVitalsPatientId} />
+                    <Popover open={vitalsPatientPopoverOpen} onOpenChange={setVitalsPatientPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={vitalsPatientPopoverOpen}
+                          className={cn(
+                            "w-full justify-between h-10",
+                            !selectedVitalsPatientId && "text-muted-foreground"
+                          )}
+                          data-testid="select-vitals-patient"
+                        >
+                          {selectedVitalsPatientId
+                            ? (() => {
+                                const p = patients.find(p => p.id === selectedVitalsPatientId);
+                                return p ? `${p.name} (Room ${p.room})` : "Select patient";
+                              })()
+                            : "Select patient"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search patients..." data-testid="input-vitals-patient-search" />
+                          <CommandList>
+                            <CommandEmpty>No patient found.</CommandEmpty>
+                            <CommandGroup>
+                              {patients.filter(p => p.status !== "discharged").map((p) => (
+                                <CommandItem
+                                  key={p.id}
+                                  value={`${p.name} Room ${p.room}`}
+                                  onSelect={() => {
+                                    setSelectedVitalsPatientId(p.id);
+                                    setVitalsPatientPopoverOpen(false);
+                                  }}
+                                  data-testid={`vitals-patient-option-${p.id}`}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedVitalsPatientId === p.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span>{p.name}</span>
+                                    <span className="text-xs text-muted-foreground">Room {p.room}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="temperature">Temperature (F)</Label>
@@ -849,18 +901,61 @@ export default function PatientTrackingService() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="patientId">Select Patient</Label>
-                    <Select name="patientId" required>
-                      <SelectTrigger data-testid="select-med-patient">
-                        <SelectValue placeholder="Select patient" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.filter(p => p.status !== "discharged").map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name} (Room {p.room})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <input type="hidden" name="patientId" value={selectedMedsPatientId} />
+                    <Popover open={medsPatientPopoverOpen} onOpenChange={setMedsPatientPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={medsPatientPopoverOpen}
+                          className={cn(
+                            "w-full justify-between h-10",
+                            !selectedMedsPatientId && "text-muted-foreground"
+                          )}
+                          data-testid="select-med-patient"
+                        >
+                          {selectedMedsPatientId
+                            ? (() => {
+                                const p = patients.find(p => p.id === selectedMedsPatientId);
+                                return p ? `${p.name} (Room ${p.room})` : "Select patient";
+                              })()
+                            : "Select patient"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search patients..." data-testid="input-meds-patient-search" />
+                          <CommandList>
+                            <CommandEmpty>No patient found.</CommandEmpty>
+                            <CommandGroup>
+                              {patients.filter(p => p.status !== "discharged").map((p) => (
+                                <CommandItem
+                                  key={p.id}
+                                  value={`${p.name} Room ${p.room}`}
+                                  onSelect={() => {
+                                    setSelectedMedsPatientId(p.id);
+                                    setMedsPatientPopoverOpen(false);
+                                  }}
+                                  data-testid={`meds-patient-option-${p.id}`}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedMedsPatientId === p.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span>{p.name}</span>
+                                    <span className="text-xs text-muted-foreground">Room {p.room}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="name">Medication Name</Label>
@@ -925,18 +1020,61 @@ export default function PatientTrackingService() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="patientId">Select Patient</Label>
-                    <Select name="patientId" required>
-                      <SelectTrigger data-testid="select-meal-patient">
-                        <SelectValue placeholder="Select patient" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.filter(p => p.status !== "discharged").map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name} (Room {p.room})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <input type="hidden" name="patientId" value={selectedMealsPatientId} />
+                    <Popover open={mealsPatientPopoverOpen} onOpenChange={setMealsPatientPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={mealsPatientPopoverOpen}
+                          className={cn(
+                            "w-full justify-between h-10",
+                            !selectedMealsPatientId && "text-muted-foreground"
+                          )}
+                          data-testid="select-meal-patient"
+                        >
+                          {selectedMealsPatientId
+                            ? (() => {
+                                const p = patients.find(p => p.id === selectedMealsPatientId);
+                                return p ? `${p.name} (Room ${p.room})` : "Select patient";
+                              })()
+                            : "Select patient"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search patients..." data-testid="input-meals-patient-search" />
+                          <CommandList>
+                            <CommandEmpty>No patient found.</CommandEmpty>
+                            <CommandGroup>
+                              {patients.filter(p => p.status !== "discharged").map((p) => (
+                                <CommandItem
+                                  key={p.id}
+                                  value={`${p.name} Room ${p.room}`}
+                                  onSelect={() => {
+                                    setSelectedMealsPatientId(p.id);
+                                    setMealsPatientPopoverOpen(false);
+                                  }}
+                                  data-testid={`meals-patient-option-${p.id}`}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedMealsPatientId === p.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span>{p.name}</span>
+                                    <span className="text-xs text-muted-foreground">Room {p.room}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="mealType">Meal Type</Label>
