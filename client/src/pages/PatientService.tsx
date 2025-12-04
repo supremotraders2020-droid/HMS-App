@@ -38,7 +38,10 @@ import {
   TestTube,
   FileEdit,
   Clock,
-  Globe
+  Globe,
+  Upload,
+  X,
+  File
 } from "lucide-react";
 import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/schema";
 import type { ServicePatient, MedicalRecord } from "@shared/schema";
@@ -59,6 +62,8 @@ const medicalRecordFormSchema = insertMedicalRecordSchema.extend({
   physician: z.string().min(1, "Physician is required"),
 });
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
 export default function PatientService() {
   const [activeTab, setActiveTab] = useState("patients");
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,6 +71,8 @@ export default function PatientService() {
   const [showNewPatientDialog, setShowNewPatientDialog] = useState(false);
   const [showNewRecordDialog, setShowNewRecordDialog] = useState(false);
   const [showPatientDetailDialog, setShowPatientDetailDialog] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; data: string; type: string } | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<ServicePatient[]>({
@@ -121,18 +128,58 @@ export default function PatientService() {
 
   const createRecordMutation = useMutation({
     mutationFn: async (data: z.infer<typeof medicalRecordFormSchema>) => {
-      return await apiRequest("POST", "/api/medical-records", data);
+      const payload = {
+        ...data,
+        fileName: uploadedFile?.name || null,
+        fileData: uploadedFile?.data || null,
+        fileType: uploadedFile?.type || null,
+      };
+      return await apiRequest("POST", "/api/medical-records", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/medical-records"] });
       toast({ title: "Record Created", description: "Medical record added successfully" });
       setShowNewRecordDialog(false);
       recordForm.reset();
+      setUploadedFile(null);
+      setFileError(null);
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to create medical record", variant: "destructive" });
     },
   });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      setFileError("File size exceeds 2MB limit");
+      setUploadedFile(null);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Data = reader.result as string;
+      setUploadedFile({
+        name: file.name,
+        data: base64Data,
+        type: file.type,
+      });
+      setFileError(null);
+    };
+    reader.onerror = () => {
+      setFileError("Failed to read file");
+      setUploadedFile(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeFile = () => {
+    setUploadedFile(null);
+    setFileError(null);
+  };
 
   const getPatientName = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
@@ -715,6 +762,55 @@ export default function PatientService() {
                             </FormItem>
                           )}
                         />
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Upload File (Max 2MB)</label>
+                          {!uploadedFile ? (
+                            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4">
+                              <label 
+                                htmlFor="file-upload" 
+                                className="flex flex-col items-center justify-center cursor-pointer"
+                              >
+                                <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                  Click to upload or drag and drop
+                                </span>
+                                <span className="text-xs text-slate-400 mt-1">
+                                  PDF, DOC, DOCX, JPG, PNG (Max 2MB)
+                                </span>
+                                <input
+                                  id="file-upload"
+                                  type="file"
+                                  className="hidden"
+                                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                  onChange={handleFileUpload}
+                                  data-testid="input-file-upload"
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <File className="h-5 w-5 text-purple-600" />
+                                <span className="text-sm text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
+                                  {uploadedFile.name}
+                                </span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={removeFile}
+                                className="h-8 w-8 text-slate-500 hover:text-red-500"
+                                data-testid="button-remove-file"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                          {fileError && (
+                            <p className="text-sm text-red-500">{fileError}</p>
+                          )}
+                        </div>
                         <div className="flex justify-end gap-2 pt-4">
                           <Button type="button" variant="outline" onClick={() => setShowNewRecordDialog(false)}>
                             Cancel

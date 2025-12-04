@@ -330,6 +330,9 @@ export const medicalRecords = pgTable("medical_records", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   physician: text("physician").notNull(),
+  fileName: text("file_name"),
+  fileData: text("file_data"),
+  fileType: text("file_type"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
