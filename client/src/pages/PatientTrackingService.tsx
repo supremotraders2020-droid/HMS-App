@@ -679,10 +679,6 @@ export default function PatientTrackingService() {
                     <Label htmlFor="room">Room Number</Label>
                     <Input name="room" required placeholder="e.g., 301A, ICU-1" data-testid="input-room" />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="diagnosis">Diagnosis</Label>
-                    <Textarea name="diagnosis" required placeholder="Primary diagnosis" data-testid="input-diagnosis" />
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="doctor">Attending Doctor</Label>
                     <Select name="doctor" required>
@@ -697,6 +693,10 @@ export default function PatientTrackingService() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="diagnosis">Diagnosis</Label>
+                    <Textarea name="diagnosis" required placeholder="Primary diagnosis" data-testid="input-diagnosis" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="notes">Notes</Label>
