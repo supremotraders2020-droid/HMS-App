@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,24 +25,16 @@ import {
   Users, 
   Stethoscope, 
   UserCheck, 
-  Settings, 
   Search,
   Edit,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { HospitalTeamMember } from "@shared/schema";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
-
-interface StaffMember {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  department: string;
-  status: "ACTIVE" | "INACTIVE";
-  joinDate: string;
-}
 
 export default function UserManagement() {
   const { toast } = useToast();
@@ -52,45 +45,75 @@ export default function UserManagement() {
   const [newStaff, setNewStaff] = useState({
     name: "",
     email: "",
+    phone: "",
     role: "" as UserRole,
     department: "",
-    password: "",
-    confirmPassword: ""
+    specialization: ""
   });
 
-  // Mock data for demonstration
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([
-    {
-      id: "1",
-      name: "Dr. Sarah Johnson",
-      email: "sarah.johnson@galaxy-hospital.com",
-      role: "DOCTOR",
-      department: "Cardiology",
-      status: "ACTIVE",
-      joinDate: "2023-01-15"
+  const { data: staffMembers = [], isLoading } = useQuery<HospitalTeamMember[]>({
+    queryKey: ["/api/team-members"],
+  });
+
+  const addStaffMutation = useMutation({
+    mutationFn: async (staffData: {
+      name: string;
+      title: string;
+      department: string;
+      specialization: string;
+      email: string;
+      phone: string;
+    }) => {
+      const response = await apiRequest("POST", "/api/team-members", staffData);
+      return response.json();
     },
-    {
-      id: "2",
-      name: "Nurse Mary Williams",
-      email: "mary.williams@galaxy-hospital.com",
-      role: "NURSE",
-      department: "Emergency",
-      status: "ACTIVE",
-      joinDate: "2023-03-20"
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/team-members"] });
+      setNewStaff({
+        name: "",
+        email: "",
+        phone: "",
+        role: "" as UserRole,
+        department: "",
+        specialization: ""
+      });
+      setIsAddDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Staff member added successfully",
+      });
     },
-    {
-      id: "3",
-      name: "John Smith",
-      email: "john.smith@galaxy-hospital.com",
-      role: "OPD_MANAGER",
-      department: "Outpatient",
-      status: "ACTIVE",
-      joinDate: "2023-02-10"
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add staff member",
+        variant: "destructive"
+      });
     }
-  ]);
+  });
+
+  const deleteStaffMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/team-members/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/team-members"] });
+      toast({
+        title: "Success",
+        description: "Staff member removed successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove staff member",
+        variant: "destructive"
+      });
+    }
+  });
 
   const handleAddStaff = () => {
-    if (!newStaff.name || !newStaff.email || !newStaff.role || !newStaff.department) {
+    if (!newStaff.name || !newStaff.email || !newStaff.role || !newStaff.department || !newStaff.phone) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -99,40 +122,37 @@ export default function UserManagement() {
       return;
     }
 
-    if (newStaff.password !== newStaff.confirmPassword) {
-      toast({
-        title: "Error", 
-        description: "Passwords do not match",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const newStaffMember: StaffMember = {
-      id: Date.now().toString(),
-      name: newStaff.name,
-      email: newStaff.email,
-      role: newStaff.role,
-      department: newStaff.department,
-      status: "ACTIVE",
-      joinDate: new Date().toISOString().split('T')[0]
+    const roleToTitle: Record<UserRole, string> = {
+      DOCTOR: "Doctor",
+      NURSE: "Nurse",
+      OPD_MANAGER: "OPD Manager",
+      ADMIN: "Administrator",
+      PATIENT: "Patient"
     };
 
-    setStaffMembers([...staffMembers, newStaffMember]);
-    setNewStaff({
-      name: "",
-      email: "",
-      role: "" as UserRole,
-      department: "",
-      password: "",
-      confirmPassword: ""
+    addStaffMutation.mutate({
+      name: newStaff.name,
+      title: roleToTitle[newStaff.role] || newStaff.role,
+      department: newStaff.department,
+      specialization: newStaff.specialization || newStaff.department,
+      email: newStaff.email,
+      phone: newStaff.phone
     });
-    setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Success",
-      description: `${newStaff.role.replace("_", " ")} added successfully`,
-    });
+  };
+
+  const handleDeleteStaff = (id: string) => {
+    if (confirm("Are you sure you want to remove this staff member?")) {
+      deleteStaffMutation.mutate(id);
+    }
+  };
+
+  const getRoleFromTitle = (title: string): UserRole => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes("doctor") || lowerTitle.includes("dr.")) return "DOCTOR";
+    if (lowerTitle.includes("nurse")) return "NURSE";
+    if (lowerTitle.includes("opd") || lowerTitle.includes("manager")) return "OPD_MANAGER";
+    if (lowerTitle.includes("admin")) return "ADMIN";
+    return "OPD_MANAGER";
   };
 
   const getRoleBadgeVariant = (role: UserRole) => {
@@ -148,13 +168,27 @@ export default function UserManagement() {
   const filteredStaff = staffMembers.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === "ALL" || member.role === filterRole;
+    const memberRole = getRoleFromTitle(member.title);
+    const matchesRole = filterRole === "ALL" || memberRole === filterRole;
     return matchesSearch && matchesRole;
   });
 
+  const doctorCount = staffMembers.filter(s => getRoleFromTitle(s.title) === "DOCTOR").length;
+  const nurseCount = staffMembers.filter(s => getRoleFromTitle(s.title) === "NURSE").length;
+  const activeCount = staffMembers.filter(s => s.status === "available").length;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading staff members...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-3xl font-bold" data-testid="text-page-title">User Management</h1>
           <p className="text-muted-foreground">Manage hospital staff and workforce</p>
@@ -199,8 +233,19 @@ export default function UserManagement() {
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="phone">Phone *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={newStaff.phone}
+                    onChange={(e) => setNewStaff({...newStaff, phone: e.target.value})}
+                    placeholder="+91 98765 43210"
+                    data-testid="input-staff-phone"
+                  />
+                </div>
                 <div>
                   <Label>Role *</Label>
                   <Select value={newStaff.role} onValueChange={(value) => setNewStaff({...newStaff, role: value as UserRole})}>
@@ -215,6 +260,9 @@ export default function UserManagement() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="department">Department *</Label>
                   <Input
@@ -225,29 +273,14 @@ export default function UserManagement() {
                     data-testid="input-staff-department"
                   />
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="password">Password *</Label>
+                  <Label htmlFor="specialization">Specialization</Label>
                   <Input
-                    id="password"
-                    type="password"
-                    value={newStaff.password}
-                    onChange={(e) => setNewStaff({...newStaff, password: e.target.value})}
-                    placeholder="Enter password"
-                    data-testid="input-staff-password"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={newStaff.confirmPassword}
-                    onChange={(e) => setNewStaff({...newStaff, confirmPassword: e.target.value})}
-                    placeholder="Confirm password"
-                    data-testid="input-staff-confirm-password"
+                    id="specialization"
+                    value={newStaff.specialization}
+                    onChange={(e) => setNewStaff({...newStaff, specialization: e.target.value})}
+                    placeholder="e.g., Heart Surgery"
+                    data-testid="input-staff-specialization"
                   />
                 </div>
               </div>
@@ -256,9 +289,17 @@ export default function UserManagement() {
                 <Button 
                   onClick={handleAddStaff} 
                   className="flex-1"
+                  disabled={addStaffMutation.isPending}
                   data-testid="button-submit-staff"
                 >
-                  Add Staff Member
+                  {addStaffMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Staff Member"
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -273,7 +314,6 @@ export default function UserManagement() {
         </Dialog>
       </div>
 
-      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -292,7 +332,7 @@ export default function UserManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" data-testid="text-doctors-count">
-              {staffMembers.filter(s => s.role === "DOCTOR").length}
+              {doctorCount}
             </div>
           </CardContent>
         </Card>
@@ -304,7 +344,7 @@ export default function UserManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" data-testid="text-nurses-count">
-              {staffMembers.filter(s => s.role === "NURSE").length}
+              {nurseCount}
             </div>
           </CardContent>
         </Card>
@@ -316,21 +356,20 @@ export default function UserManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" data-testid="text-active-staff">
-              {staffMembers.filter(s => s.status === "ACTIVE").length}
+              {activeCount}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters and Search */}
       <Card>
         <CardHeader>
           <CardTitle>Staff Directory</CardTitle>
           <CardDescription>Search and filter hospital staff members</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-4">
-            <div className="relative flex-1">
+          <div className="flex flex-wrap gap-4 mb-4">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name or email..."
@@ -354,43 +393,59 @@ export default function UserManagement() {
             </Select>
           </div>
 
-          {/* Staff List */}
           <div className="space-y-3">
-            {filteredStaff.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover-elevate">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Users className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium" data-testid={`text-staff-name-${member.id}`}>
-                        {member.name}
-                      </p>
-                      <Badge variant={getRoleBadgeVariant(member.role)}>
-                        {member.role.replace("_", " ")}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{member.email}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {member.department} • Joined {member.joinDate}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Badge variant={member.status === "ACTIVE" ? "default" : "secondary"}>
-                    {member.status}
-                  </Badge>
-                  <Button variant="ghost" size="sm" data-testid={`button-edit-${member.id}`}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" data-testid={`button-delete-${member.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+            {filteredStaff.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {searchTerm || filterRole !== "ALL" 
+                  ? "No staff members match your search criteria"
+                  : "No staff members yet. Add your first staff member above."}
               </div>
-            ))}
+            ) : (
+              filteredStaff.map((member) => {
+                const role = getRoleFromTitle(member.title);
+                return (
+                  <div key={member.id} className="flex flex-wrap items-center justify-between gap-2 p-4 border rounded-lg hover-elevate">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium" data-testid={`text-staff-name-${member.id}`}>
+                            {member.name}
+                          </p>
+                          <Badge variant={getRoleBadgeVariant(role)}>
+                            {member.title}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{member.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {member.department} • {member.phone}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Badge variant={member.status === "available" ? "default" : "secondary"}>
+                        {member.status === "available" ? "ACTIVE" : member.status?.toUpperCase()}
+                      </Badge>
+                      <Button variant="ghost" size="icon" data-testid={`button-edit-${member.id}`}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleDeleteStaff(member.id)}
+                        disabled={deleteStaffMutation.isPending}
+                        data-testid={`button-delete-${member.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </CardContent>
       </Card>
