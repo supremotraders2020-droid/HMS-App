@@ -367,7 +367,7 @@ export default function PatientService() {
                         New Patient
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                           <UserPlus className="h-5 w-5 text-blue-600" />
@@ -379,7 +379,7 @@ export default function PatientService() {
                       </DialogHeader>
                       <Form {...patientForm}>
                         <form onSubmit={patientForm.handleSubmit((data) => createPatientMutation.mutate(data))} className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                               control={patientForm.control}
                               name="firstName"
@@ -407,7 +407,7 @@ export default function PatientService() {
                               )}
                             />
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                               control={patientForm.control}
                               name="dateOfBirth"
@@ -444,7 +444,7 @@ export default function PatientService() {
                               )}
                             />
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                               control={patientForm.control}
                               name="phone"
@@ -489,7 +489,7 @@ export default function PatientService() {
                           <Separator />
                           <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Emergency Contact</p>
                           
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                               control={patientForm.control}
                               name="emergencyContact"
@@ -521,7 +521,7 @@ export default function PatientService() {
                           <Separator />
                           <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Insurance Information</p>
                           
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                               control={patientForm.control}
                               name="insuranceProvider"
@@ -652,7 +652,7 @@ export default function PatientService() {
                       Add Record
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-lg">
+                  <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-purple-600" />
@@ -939,7 +939,7 @@ export default function PatientService() {
 
       {/* Patient Detail Dialog */}
       <Dialog open={showPatientDetailDialog} onOpenChange={setShowPatientDetailDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="h-5 w-5 text-blue-600" />
@@ -962,7 +962,7 @@ export default function PatientService() {
               
               <Separator />
               
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-slate-500">Date of Birth</p>
                   <p className="font-medium flex items-center gap-1">
@@ -998,7 +998,7 @@ export default function PatientService() {
                   <Separator />
                   <div>
                     <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">Emergency Contact</p>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-slate-500">Name</p>
                         <p className="font-medium">{selectedPatient.emergencyContact || "—"}</p>
@@ -1017,7 +1017,7 @@ export default function PatientService() {
                   <Separator />
                   <div>
                     <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">Insurance</p>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-slate-500">Provider</p>
                         <p className="font-medium">{selectedPatient.insuranceProvider || "—"}</p>
