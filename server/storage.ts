@@ -56,6 +56,7 @@ export interface IStorage {
   getTrackingPatientById(id: string): Promise<TrackingPatient | undefined>;
   createTrackingPatient(patient: InsertTrackingPatient): Promise<TrackingPatient>;
   updateTrackingPatientStatus(id: string, status: string): Promise<TrackingPatient | undefined>;
+  dischargeTrackingPatient(id: string, dischargeDate: Date): Promise<TrackingPatient | undefined>;
   deleteTrackingPatient(id: string): Promise<boolean>;
   
   // Medications
@@ -819,7 +820,10 @@ export class MemStorage implements IStorage {
       const trackingPatient: TrackingPatient = {
         ...patient,
         id,
+        department: "General Medicine",
+        notes: null,
         admissionDate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+        dischargeDate: null,
       };
       this.trackingPatients.set(id, trackingPatient);
     });
@@ -911,10 +915,13 @@ export class MemStorage implements IStorage {
       name: patient.name,
       age: patient.age,
       gender: patient.gender,
+      department: patient.department,
       room: patient.room,
       diagnosis: patient.diagnosis,
       doctor: patient.doctor,
+      notes: patient.notes ?? null,
       admissionDate: new Date(),
+      dischargeDate: null,
       status: "admitted",
     };
     this.trackingPatients.set(id, trackingPatient);
@@ -925,6 +932,16 @@ export class MemStorage implements IStorage {
     const patient = this.trackingPatients.get(id);
     if (patient) {
       patient.status = status;
+      this.trackingPatients.set(id, patient);
+    }
+    return patient;
+  }
+
+  async dischargeTrackingPatient(id: string, dischargeDate: Date): Promise<TrackingPatient | undefined> {
+    const patient = this.trackingPatients.get(id);
+    if (patient) {
+      patient.status = "discharged";
+      patient.dischargeDate = dischargeDate;
       this.trackingPatients.set(id, patient);
     }
     return patient;
@@ -1110,6 +1127,9 @@ export class MemStorage implements IStorage {
         id,
         recordDate: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000),
         createdAt: new Date(),
+        fileName: null,
+        fileData: null,
+        fileType: null,
       };
       this.medicalRecordsData.set(id, medicalRecord);
     });
@@ -1281,6 +1301,9 @@ export class MemStorage implements IStorage {
       id,
       recordDate: new Date(),
       createdAt: new Date(),
+      fileName: record.fileName ?? null,
+      fileData: record.fileData ?? null,
+      fileType: record.fileType ?? null,
     };
     this.medicalRecordsData.set(id, medicalRecord);
     return medicalRecord;

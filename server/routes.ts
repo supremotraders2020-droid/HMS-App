@@ -329,14 +329,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete tracking patient (discharge/remove)
+  // Discharge tracking patient (update status to discharged with discharge date)
+  app.patch("/api/tracking/patients/:id/discharge", async (req, res) => {
+    try {
+      const updated = await storage.dischargeTrackingPatient(req.params.id, new Date());
+      if (!updated) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to discharge patient" });
+    }
+  });
+
+  // Delete tracking patient (permanent removal)
   app.delete("/api/tracking/patients/:id", async (req, res) => {
     try {
       const deleted = await storage.deleteTrackingPatient(req.params.id);
       if (!deleted) {
         return res.status(404).json({ error: "Patient not found" });
       }
-      res.json({ success: true, message: "Patient discharged and removed from tracking" });
+      res.json({ success: true, message: "Patient removed from tracking" });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete patient" });
     }

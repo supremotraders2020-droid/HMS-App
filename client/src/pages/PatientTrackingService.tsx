@@ -231,13 +231,13 @@ export default function PatientTrackingService() {
 
   const dischargePatientMutation = useMutation({
     mutationFn: async (patientId: string) => {
-      return await apiRequest("DELETE", `/api/tracking/patients/${patientId}`);
+      return await apiRequest("PATCH", `/api/tracking/patients/${patientId}/discharge`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
       toast({
         title: "Patient Discharged",
-        description: "Patient has been discharged and removed from tracking.",
+        description: "Patient has been discharged successfully.",
       });
     },
     onError: () => {
@@ -488,6 +488,12 @@ export default function PatientTrackingService() {
                             <p className="text-sm text-muted-foreground">Admitted</p>
                             <p className="font-medium">{new Date(patient.admissionDate).toLocaleDateString()}</p>
                           </div>
+                          {patient.status === "discharged" && patient.dischargeDate && (
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground">Discharged</p>
+                              <p className="font-medium">{new Date(patient.dischargeDate).toLocaleDateString()}</p>
+                            </div>
+                          )}
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button
@@ -587,37 +593,39 @@ export default function PatientTrackingService() {
                               <SelectItem value="discharged">Discharged</SelectItem>
                             </SelectContent>
                           </Select>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                data-testid={`button-discharge-${patient.id}`}
-                              >
-                                <LogOut className="h-4 w-4 mr-1" />
-                                Discharge
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Discharge Patient</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to discharge {patient.name}? This will remove the patient from active tracking and delete all associated records (vitals, medications, meals).
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => dischargePatientMutation.mutate(patient.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                  data-testid={`button-confirm-discharge-${patient.id}`}
+                          {patient.status !== "discharged" && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  data-testid={`button-discharge-${patient.id}`}
                                 >
-                                  Confirm Discharge
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                  <LogOut className="h-4 w-4 mr-1" />
+                                  Discharge
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Discharge Patient</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to discharge {patient.name}? The patient will be marked as discharged with today's date.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => dischargePatientMutation.mutate(patient.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                    data-testid={`button-confirm-discharge-${patient.id}`}
+                                  >
+                                    Confirm Discharge
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                         </div>
                       </div>
                     </CardContent>
