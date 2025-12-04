@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,8 +43,11 @@ import {
   Globe,
   Upload,
   X,
-  File
+  File,
+  Check,
+  ChevronsUpDown
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/schema";
 import type { ServicePatient, MedicalRecord } from "@shared/schema";
 import { z } from "zod";
@@ -73,6 +78,7 @@ export default function PatientService() {
   const [showPatientDetailDialog, setShowPatientDetailDialog] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{ name: string; data: string; type: string } | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<ServicePatient[]>({
@@ -662,22 +668,65 @@ export default function PatientService() {
                           control={recordForm.control}
                           name="patientId"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="flex flex-col">
                               <FormLabel>Patient *</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger className="h-11" data-testid="select-patient-record">
-                                    <SelectValue placeholder="Select patient" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {patients.map((p) => (
-                                    <SelectItem key={p.id} value={p.id}>
-                                      {p.firstName} {p.lastName}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <Popover open={patientPopoverOpen} onOpenChange={setPatientPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      aria-expanded={patientPopoverOpen}
+                                      className={cn(
+                                        "h-11 w-full justify-between",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                      data-testid="select-patient-record"
+                                    >
+                                      {field.value
+                                        ? patients.find((p) => p.id === field.value)
+                                            ? `${patients.find((p) => p.id === field.value)?.firstName} ${patients.find((p) => p.id === field.value)?.lastName}`
+                                            : "Select patient"
+                                        : "Select patient"}
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[400px] p-0" align="start">
+                                  <Command>
+                                    <CommandInput placeholder="Search patients..." data-testid="input-patient-search" />
+                                    <CommandList>
+                                      <CommandEmpty>No patient found.</CommandEmpty>
+                                      <CommandGroup>
+                                        {patients.map((p) => (
+                                          <CommandItem
+                                            key={p.id}
+                                            value={`${p.firstName} ${p.lastName}`}
+                                            onSelect={() => {
+                                              field.onChange(p.id);
+                                              setPatientPopoverOpen(false);
+                                            }}
+                                            data-testid={`patient-option-${p.id}`}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                field.value === p.id ? "opacity-100" : "opacity-0"
+                                              )}
+                                            />
+                                            <div className="flex flex-col">
+                                              <span>{p.firstName} {p.lastName}</span>
+                                              {p.phone && (
+                                                <span className="text-xs text-muted-foreground">{p.phone}</span>
+                                              )}
+                                            </div>
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
                               <FormMessage />
                             </FormItem>
                           )}
