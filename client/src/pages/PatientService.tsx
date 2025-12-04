@@ -17,7 +17,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { 
   Users, 
   UserPlus, 
-  BedDouble, 
   FileText, 
   Search, 
   Phone, 
@@ -26,30 +25,23 @@ import {
   Calendar,
   Stethoscope,
   Shield,
-  Building,
-  ClipboardList,
-  UserCheck,
-  LogOut,
   Plus,
   Loader2,
   HeartPulse,
-  Globe,
   Activity,
   Eye,
   Edit,
   Trash2,
   RefreshCw,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
   User,
   Pill,
   TestTube,
   FileEdit,
-  Hospital
+  Clock,
+  Globe
 } from "lucide-react";
-import { insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema } from "@shared/schema";
-import type { ServicePatient, Admission, MedicalRecord } from "@shared/schema";
+import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/schema";
+import type { ServicePatient, MedicalRecord } from "@shared/schema";
 import { z } from "zod";
 
 const patientFormSchema = insertServicePatientSchema.extend({
@@ -57,12 +49,6 @@ const patientFormSchema = insertServicePatientSchema.extend({
   lastName: z.string().min(1, "Last name is required"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   gender: z.string().min(1, "Gender is required"),
-});
-
-const admissionFormSchema = insertAdmissionSchema.extend({
-  patientId: z.string().min(1, "Patient is required"),
-  department: z.string().min(1, "Department is required"),
-  admittingPhysician: z.string().min(1, "Physician is required"),
 });
 
 const medicalRecordFormSchema = insertMedicalRecordSchema.extend({
@@ -73,68 +59,17 @@ const medicalRecordFormSchema = insertMedicalRecordSchema.extend({
   physician: z.string().min(1, "Physician is required"),
 });
 
-type AdmissionTimeFilter = "all" | "1day" | "1week" | "1month" | "quarter" | "yearly";
-
-const timeFilterOptions = [
-  { value: "all" as AdmissionTimeFilter, label: "All Time" },
-  { value: "1day" as AdmissionTimeFilter, label: "1 Day" },
-  { value: "1week" as AdmissionTimeFilter, label: "1 Week" },
-  { value: "1month" as AdmissionTimeFilter, label: "1 Month" },
-  { value: "quarter" as AdmissionTimeFilter, label: "Quarter" },
-  { value: "yearly" as AdmissionTimeFilter, label: "Yearly" },
-];
-
-function getFilteredAdmissions(admissions: Admission[], filter: AdmissionTimeFilter): Admission[] {
-  if (filter === "all") return admissions;
-  
-  const now = new Date();
-  const cutoffDate = new Date();
-  
-  switch (filter) {
-    case "1day":
-      cutoffDate.setDate(now.getDate() - 1);
-      break;
-    case "1week":
-      cutoffDate.setDate(now.getDate() - 7);
-      break;
-    case "1month":
-      cutoffDate.setMonth(now.getMonth() - 1);
-      break;
-    case "quarter":
-      cutoffDate.setMonth(now.getMonth() - 3);
-      break;
-    case "yearly":
-      cutoffDate.setFullYear(now.getFullYear() - 1);
-      break;
-  }
-  
-  return admissions.filter(admission => {
-    const admissionDate = new Date(admission.admissionDate!);
-    return admissionDate >= cutoffDate;
-  });
-}
-
 export default function PatientService() {
   const [activeTab, setActiveTab] = useState("patients");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<ServicePatient | null>(null);
   const [showNewPatientDialog, setShowNewPatientDialog] = useState(false);
-  const [showNewAdmissionDialog, setShowNewAdmissionDialog] = useState(false);
   const [showNewRecordDialog, setShowNewRecordDialog] = useState(false);
   const [showPatientDetailDialog, setShowPatientDetailDialog] = useState(false);
-  const [admissionTimeFilter, setAdmissionTimeFilter] = useState<AdmissionTimeFilter>("all");
   const { toast } = useToast();
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<ServicePatient[]>({
     queryKey: ["/api/patients/service"],
-  });
-
-  const { data: admissions = [], isLoading: admissionsLoading } = useQuery<Admission[]>({
-    queryKey: ["/api/admissions"],
-  });
-
-  const { data: activeAdmissions = [] } = useQuery<Admission[]>({
-    queryKey: ["/api/admissions/active"],
   });
 
   const { data: medicalRecords = [], isLoading: recordsLoading } = useQuery<MedicalRecord[]>({
@@ -155,18 +90,6 @@ export default function PatientService() {
       emergencyPhone: "",
       insuranceProvider: "",
       insuranceNumber: "",
-    },
-  });
-
-  const admissionForm = useForm({
-    resolver: zodResolver(admissionFormSchema),
-    defaultValues: {
-      patientId: "",
-      department: "",
-      roomNumber: "",
-      admittingPhysician: "",
-      primaryDiagnosis: "",
-      notes: "",
     },
   });
 
@@ -196,36 +119,6 @@ export default function PatientService() {
     },
   });
 
-  const createAdmissionMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof admissionFormSchema>) => {
-      return await apiRequest("POST", "/api/admissions", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admissions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admissions/active"] });
-      toast({ title: "Patient Admitted", description: "Admission record created successfully" });
-      setShowNewAdmissionDialog(false);
-      admissionForm.reset();
-    },
-    onError: () => {
-      toast({ title: "Admission Failed", description: "Unable to create admission record", variant: "destructive" });
-    },
-  });
-
-  const dischargeMutation = useMutation({
-    mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
-      return await apiRequest("POST", `/api/admissions/${id}/discharge`, { notes });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admissions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admissions/active"] });
-      toast({ title: "Patient Discharged", description: "Patient has been discharged successfully" });
-    },
-    onError: () => {
-      toast({ title: "Discharge Failed", description: "Unable to discharge patient", variant: "destructive" });
-    },
-  });
-
   const createRecordMutation = useMutation({
     mutationFn: async (data: z.infer<typeof medicalRecordFormSchema>) => {
       return await apiRequest("POST", "/api/medical-records", data);
@@ -246,15 +139,6 @@ export default function PatientService() {
     return patient ? `${patient.firstName} ${patient.lastName}` : "Unknown";
   };
 
-  const getStatusBadge = (status: string) => {
-    const configs: Record<string, { className: string; icon: typeof CheckCircle2 }> = {
-      admitted: { className: "bg-emerald-500 hover:bg-emerald-600", icon: CheckCircle2 },
-      discharged: { className: "bg-slate-500 hover:bg-slate-600", icon: LogOut },
-      transferred: { className: "bg-blue-500 hover:bg-blue-600", icon: Building },
-    };
-    return configs[status] || configs.admitted;
-  };
-
   const getRecordTypeConfig = (type: string) => {
     const configs: Record<string, { className: string; icon: typeof Stethoscope; label: string }> = {
       diagnosis: { className: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300", icon: Stethoscope, label: "Diagnosis" },
@@ -272,7 +156,6 @@ export default function PatientService() {
     patient.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const departments = ["Cardiology", "Orthopedics", "General Medicine", "Pediatrics", "Dermatology", "Neurology", "Gynecology", "Oncology", "ENT", "Psychiatry"];
   const physicians = ["Dr. Anil Kulkarni", "Dr. Snehal Patil", "Dr. Vikram Deshpande", "Dr. Priyanka Joshi", "Dr. Rajesh Bhosale", "Dr. Meena Sharma"];
   const recordTypes = [
     { value: "diagnosis", label: "Diagnosis", icon: Stethoscope },
@@ -333,7 +216,7 @@ export default function PatientService() {
                   Patient Service
                 </h2>
                 <p className="text-slate-500 dark:text-slate-400 mt-0.5">
-                  Comprehensive patient demographics, admissions & medical records management
+                  Comprehensive patient demographics & medical records management
                 </p>
               </div>
             </div>
@@ -348,7 +231,7 @@ export default function PatientService() {
       {/* Main Content */}
       <div className="flex-1 container mx-auto px-4 py-6">
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+        <div className="grid gap-4 md:grid-cols-2 mb-6">
           <Card className="border-l-4 border-l-blue-500" data-testid="card-total-patients">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -359,21 +242,6 @@ export default function PatientService() {
                 </div>
                 <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-xl">
                   <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-emerald-500" data-testid="card-active-admissions">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Active Admissions</p>
-                  <p className="text-3xl font-bold text-slate-900 dark:text-white">{activeAdmissions.length}</p>
-                  <p className="text-xs text-slate-400 mt-1">Currently admitted</p>
-                </div>
-                <div className="bg-emerald-100 dark:bg-emerald-900/50 p-3 rounded-xl">
-                  <BedDouble className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
               </div>
             </CardContent>
@@ -394,25 +262,11 @@ export default function PatientService() {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-amber-500" data-testid="card-total-admissions">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Admissions</p>
-                  <p className="text-3xl font-bold text-slate-900 dark:text-white">{admissions.length}</p>
-                  <p className="text-xs text-slate-400 mt-1">All time</p>
-                </div>
-                <div className="bg-amber-100 dark:bg-amber-900/50 p-3 rounded-xl">
-                  <ClipboardList className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6">
+          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6">
             <TabsTrigger 
               value="patients" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
@@ -420,14 +274,6 @@ export default function PatientService() {
             >
               <Users className="h-4 w-4" />
               Patients
-            </TabsTrigger>
-            <TabsTrigger 
-              value="admissions" 
-              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
-              data-testid="tab-admissions"
-            >
-              <BedDouble className="h-4 w-4" />
-              Admissions
             </TabsTrigger>
             <TabsTrigger 
               value="records" 
@@ -729,273 +575,6 @@ export default function PatientService() {
                         </CardContent>
                       </Card>
                     ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Admissions Tab */}
-          <TabsContent value="admissions" className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between gap-4">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <BedDouble className="h-5 w-5 text-emerald-600" />
-                    Admission Management
-                  </CardTitle>
-                  <CardDescription>Track patient admissions and discharges</CardDescription>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <Select value={admissionTimeFilter} onValueChange={(value) => setAdmissionTimeFilter(value as AdmissionTimeFilter)}>
-                      <SelectTrigger className="w-[130px]" data-testid="select-admission-filter">
-                        <SelectValue placeholder="Filter" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {timeFilterOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Badge variant="secondary" className="text-xs px-2 py-1" data-testid="badge-admission-count">
-                      {getFilteredAdmissions(admissions, admissionTimeFilter).length} admissions
-                    </Badge>
-                  </div>
-                  <Dialog open={showNewAdmissionDialog} onOpenChange={setShowNewAdmissionDialog}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="button-new-admission">
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Admission
-                      </Button>
-                    </DialogTrigger>
-                  <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <BedDouble className="h-5 w-5 text-emerald-600" />
-                        Admit Patient
-                      </DialogTitle>
-                      <DialogDescription>
-                        Create a new admission record for a patient
-                      </DialogDescription>
-                    </DialogHeader>
-                    <Form {...admissionForm}>
-                      <form onSubmit={admissionForm.handleSubmit((data) => createAdmissionMutation.mutate(data))} className="space-y-4">
-                        <FormField
-                          control={admissionForm.control}
-                          name="patientId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Patient *</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger className="h-11" data-testid="select-patient-admission">
-                                    <SelectValue placeholder="Select patient" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {patients.map((p) => (
-                                    <SelectItem key={p.id} value={p.id}>
-                                      {p.firstName} {p.lastName}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={admissionForm.control}
-                            name="department"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Department *</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger className="h-11" data-testid="select-department">
-                                      <SelectValue placeholder="Select department" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {departments.map((dept) => (
-                                      <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={admissionForm.control}
-                            name="roomNumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Room Number</FormLabel>
-                                <FormControl>
-                                  <Input className="h-11" placeholder="e.g., 204A" {...field} data-testid="input-room" />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <FormField
-                          control={admissionForm.control}
-                          name="admittingPhysician"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Admitting Physician *</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger className="h-11" data-testid="select-physician">
-                                    <SelectValue placeholder="Select physician" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {physicians.map((doc) => (
-                                    <SelectItem key={doc} value={doc}>{doc}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={admissionForm.control}
-                          name="primaryDiagnosis"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Primary Diagnosis</FormLabel>
-                              <FormControl>
-                                <Input className="h-11" placeholder="Initial diagnosis..." {...field} data-testid="input-diagnosis" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={admissionForm.control}
-                          name="notes"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Notes</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Additional notes..." {...field} data-testid="input-notes" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <div className="flex justify-end gap-2 pt-4">
-                          <Button type="button" variant="outline" onClick={() => setShowNewAdmissionDialog(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={createAdmissionMutation.isPending} data-testid="button-submit-admission">
-                            {createAdmissionMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                            Admit Patient
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                  </Dialog>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {admissionsLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-                  </div>
-                ) : getFilteredAdmissions(admissions, admissionTimeFilter).length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                    <BedDouble className="h-16 w-16 mb-4" />
-                    <p className="text-lg font-medium text-slate-600 dark:text-slate-300">No Admissions</p>
-                    <p className="text-sm">
-                      {admissionTimeFilter === "all" 
-                        ? "Create a new admission to get started" 
-                        : `No admissions in the selected time range`}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b bg-slate-50 dark:bg-slate-800/50">
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Patient</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Department</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Room</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Physician</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Admission Date</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Discharge Date</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Status</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {getFilteredAdmissions(admissions, admissionTimeFilter).map((admission) => {
-                          const statusConfig = getStatusBadge(admission.status);
-                          const StatusIcon = statusConfig.icon;
-                          return (
-                            <tr 
-                              key={admission.id} 
-                              className="border-b hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
-                              data-testid={`row-admission-${admission.id}`}
-                            >
-                              <td className="p-4 font-medium text-slate-900 dark:text-white">
-                                {getPatientName(admission.patientId)}
-                              </td>
-                              <td className="p-4 text-slate-600 dark:text-slate-300">
-                                <div className="flex items-center gap-2">
-                                  <Hospital className="h-4 w-4 text-slate-400" />
-                                  {admission.department}
-                                </div>
-                              </td>
-                              <td className="p-4 text-slate-600 dark:text-slate-300">
-                                {admission.roomNumber || "—"}
-                              </td>
-                              <td className="p-4 text-slate-600 dark:text-slate-300">
-                                <div className="flex items-center gap-2">
-                                  <Stethoscope className="h-4 w-4 text-slate-400" />
-                                  {admission.admittingPhysician}
-                                </div>
-                              </td>
-                              <td className="p-4 text-sm text-slate-500">
-                                {formatDate(admission.admissionDate)}
-                              </td>
-                              <td className="p-4 text-sm text-slate-500">
-                                {admission.dischargeDate ? formatDate(admission.dischargeDate) : "—"}
-                              </td>
-                              <td className="p-4">
-                                <Badge className={statusConfig.className}>
-                                  <StatusIcon className="h-3 w-3 mr-1" />
-                                  {admission.status}
-                                </Badge>
-                              </td>
-                              <td className="p-4">
-                                {admission.status === "admitted" && (
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => dischargeMutation.mutate({ id: admission.id })}
-                                    disabled={dischargeMutation.isPending}
-                                    data-testid={`button-discharge-${admission.id}`}
-                                  >
-                                    <LogOut className="h-4 w-4 mr-1" />
-                                    Discharge
-                                  </Button>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
                   </div>
                 )}
               </CardContent>
