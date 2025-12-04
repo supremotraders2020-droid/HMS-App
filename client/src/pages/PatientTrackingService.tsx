@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
@@ -26,8 +28,11 @@ import {
   ChevronRight,
   Thermometer,
   Trash2,
-  LogOut
+  LogOut,
+  Check,
+  ChevronsUpDown
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,6 +68,8 @@ export default function PatientTrackingService() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const [admitPatientPopoverOpen, setAdmitPatientPopoverOpen] = useState(false);
+  const [selectedAdmitPatientName, setSelectedAdmitPatientName] = useState<string>("");
   const { toast } = useToast();
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<TrackingPatient[]>({
@@ -103,6 +110,7 @@ export default function PatientTrackingService() {
         description: "Patient has been admitted successfully.",
       });
       setActiveTab("patients");
+      setSelectedAdmitPatientName("");
     },
     onError: () => {
       toast({
@@ -621,18 +629,58 @@ export default function PatientTrackingService() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Patient Name</Label>
-                    <Select name="name" required>
-                      <SelectTrigger data-testid="select-patient-name">
-                        <SelectValue placeholder="Select patient" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[200px] overflow-y-auto">
-                        {servicePatients.map((patient) => (
-                          <SelectItem key={patient.id} value={`${patient.firstName} ${patient.lastName}`}>
-                            {patient.firstName} {patient.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <input type="hidden" name="name" value={selectedAdmitPatientName} />
+                    <Popover open={admitPatientPopoverOpen} onOpenChange={setAdmitPatientPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={admitPatientPopoverOpen}
+                          className={cn(
+                            "w-full justify-between h-10",
+                            !selectedAdmitPatientName && "text-muted-foreground"
+                          )}
+                          data-testid="select-patient-name"
+                        >
+                          {selectedAdmitPatientName || "Select patient"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search patients..." data-testid="input-admit-patient-search" />
+                          <CommandList>
+                            <CommandEmpty>No patient found.</CommandEmpty>
+                            <CommandGroup>
+                              {servicePatients.map((patient) => (
+                                <CommandItem
+                                  key={patient.id}
+                                  value={`${patient.firstName} ${patient.lastName}`}
+                                  onSelect={(value) => {
+                                    setSelectedAdmitPatientName(value);
+                                    setAdmitPatientPopoverOpen(false);
+                                  }}
+                                  data-testid={`admit-patient-option-${patient.id}`}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedAdmitPatientName === `${patient.firstName} ${patient.lastName}` ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span>{patient.firstName} {patient.lastName}</span>
+                                    {patient.phone && (
+                                      <span className="text-xs text-muted-foreground">{patient.phone}</span>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="age">Age</Label>
