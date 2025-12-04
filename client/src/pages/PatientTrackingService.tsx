@@ -88,9 +88,11 @@ export default function PatientTrackingService() {
       name: string;
       age: number;
       gender: string;
+      department: string;
       room: string;
       diagnosis: string;
       doctor: string;
+      notes?: string;
     }) => {
       return await apiRequest("POST", "/api/tracking/patients", data);
     },
@@ -253,13 +255,16 @@ export default function PatientTrackingService() {
   const handleAdmitPatient = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const notes = formData.get("notes") as string;
     admitPatientMutation.mutate({
       name: formData.get("name") as string,
       age: parseInt(formData.get("age") as string),
       gender: formData.get("gender") as string,
+      department: formData.get("department") as string,
       room: formData.get("room") as string,
       diagnosis: formData.get("diagnosis") as string,
       doctor: formData.get("doctor") as string,
+      notes: notes || undefined,
     });
   };
 
@@ -647,6 +652,30 @@ export default function PatientTrackingService() {
                     </Select>
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="department">Department</Label>
+                    <Select name="department" required>
+                      <SelectTrigger data-testid="select-department">
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
+                        <SelectItem value="General Medicine">General Medicine</SelectItem>
+                        <SelectItem value="Cardiology">Cardiology</SelectItem>
+                        <SelectItem value="Orthopedics">Orthopedics</SelectItem>
+                        <SelectItem value="Pediatrics">Pediatrics</SelectItem>
+                        <SelectItem value="Neurology">Neurology</SelectItem>
+                        <SelectItem value="Gynecology">Gynecology</SelectItem>
+                        <SelectItem value="Pulmonology">Pulmonology</SelectItem>
+                        <SelectItem value="Dermatology">Dermatology</SelectItem>
+                        <SelectItem value="Gastroenterology">Gastroenterology</SelectItem>
+                        <SelectItem value="Endocrinology">Endocrinology</SelectItem>
+                        <SelectItem value="Nephrology">Nephrology</SelectItem>
+                        <SelectItem value="Ophthalmology">Ophthalmology</SelectItem>
+                        <SelectItem value="ICU">ICU</SelectItem>
+                        <SelectItem value="Emergency">Emergency</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="room">Room Number</Label>
                     <Input name="room" required placeholder="e.g., 301A, ICU-1" data-testid="input-room" />
                   </div>
@@ -668,6 +697,10 @@ export default function PatientTrackingService() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea name="notes" placeholder="Additional notes (optional)" data-testid="input-notes" />
                   </div>
                 </div>
                 <Button

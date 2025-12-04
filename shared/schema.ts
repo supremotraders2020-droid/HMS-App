@@ -173,11 +173,13 @@ export const trackingPatients = pgTable("tracking_patients", {
   name: text("name").notNull(),
   age: integer("age").notNull(),
   gender: text("gender").notNull(),
+  department: text("department").notNull(),
   room: text("room").notNull(),
   diagnosis: text("diagnosis").notNull(),
   admissionDate: timestamp("admission_date").notNull().defaultNow(),
   status: text("status").notNull().default("admitted"),
   doctor: text("doctor").notNull(),
+  notes: text("notes"),
 });
 
 export const insertTrackingPatientSchema = createInsertSchema(trackingPatients).omit({
