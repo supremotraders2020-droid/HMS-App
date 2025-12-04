@@ -36,9 +36,27 @@ import type { HospitalTeamMember } from "@shared/schema";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
+const roleToTitle: Record<UserRole, string> = {
+  DOCTOR: "Doctor",
+  NURSE: "Nurse",
+  OPD_MANAGER: "OPD Manager",
+  ADMIN: "Administrator",
+  PATIENT: "Patient"
+};
+
+const titleToRole = (title: string): UserRole => {
+  const lowerTitle = title.toLowerCase();
+  if (lowerTitle.includes("doctor") || lowerTitle.includes("dr.")) return "DOCTOR";
+  if (lowerTitle.includes("nurse")) return "NURSE";
+  if (lowerTitle.includes("opd") || lowerTitle.includes("manager")) return "OPD_MANAGER";
+  if (lowerTitle.includes("admin")) return "ADMIN";
+  return "OPD_MANAGER";
+};
+
 export default function UserManagement() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<UserRole | "ALL">("ALL");
   
@@ -50,6 +68,17 @@ export default function UserManagement() {
     department: "",
     specialization: ""
   });
+
+  const [editStaff, setEditStaff] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    role: UserRole;
+    department: string;
+    specialization: string;
+    status: string;
+  } | null>(null);
 
   const { data: staffMembers = [], isLoading } = useQuery<HospitalTeamMember[]>({
     queryKey: ["/api/team-members"],
@@ -92,6 +121,29 @@ export default function UserManagement() {
     }
   });
 
+  const updateStaffMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: Partial<HospitalTeamMember> }) => {
+      const response = await apiRequest("PATCH", `/api/team-members/${data.id}`, data.updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/team-members"] });
+      setEditStaff(null);
+      setIsEditDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Staff member updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update staff member",
+        variant: "destructive"
+      });
+    }
+  });
+
   const deleteStaffMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/team-members/${id}`);
@@ -122,14 +174,6 @@ export default function UserManagement() {
       return;
     }
 
-    const roleToTitle: Record<UserRole, string> = {
-      DOCTOR: "Doctor",
-      NURSE: "Nurse",
-      OPD_MANAGER: "OPD Manager",
-      ADMIN: "Administrator",
-      PATIENT: "Patient"
-    };
-
     addStaffMutation.mutate({
       name: newStaff.name,
       title: roleToTitle[newStaff.role] || newStaff.role,
@@ -140,19 +184,50 @@ export default function UserManagement() {
     });
   };
 
+  const handleEditClick = (member: HospitalTeamMember) => {
+    setEditStaff({
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      phone: member.phone,
+      role: titleToRole(member.title),
+      department: member.department,
+      specialization: member.specialization || "",
+      status: member.status
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateStaff = () => {
+    if (!editStaff) return;
+    
+    if (!editStaff.name || !editStaff.email || !editStaff.role || !editStaff.department || !editStaff.phone) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    updateStaffMutation.mutate({
+      id: editStaff.id,
+      updates: {
+        name: editStaff.name,
+        title: roleToTitle[editStaff.role],
+        department: editStaff.department,
+        specialization: editStaff.specialization || editStaff.department,
+        email: editStaff.email,
+        phone: editStaff.phone,
+        status: editStaff.status
+      }
+    });
+  };
+
   const handleDeleteStaff = (id: string) => {
     if (confirm("Are you sure you want to remove this staff member?")) {
       deleteStaffMutation.mutate(id);
     }
-  };
-
-  const getRoleFromTitle = (title: string): UserRole => {
-    const lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes("doctor") || lowerTitle.includes("dr.")) return "DOCTOR";
-    if (lowerTitle.includes("nurse")) return "NURSE";
-    if (lowerTitle.includes("opd") || lowerTitle.includes("manager")) return "OPD_MANAGER";
-    if (lowerTitle.includes("admin")) return "ADMIN";
-    return "OPD_MANAGER";
   };
 
   const getRoleBadgeVariant = (role: UserRole) => {
@@ -168,13 +243,13 @@ export default function UserManagement() {
   const filteredStaff = staffMembers.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const memberRole = getRoleFromTitle(member.title);
+    const memberRole = titleToRole(member.title);
     const matchesRole = filterRole === "ALL" || memberRole === filterRole;
     return matchesSearch && matchesRole;
   });
 
-  const doctorCount = staffMembers.filter(s => getRoleFromTitle(s.title) === "DOCTOR").length;
-  const nurseCount = staffMembers.filter(s => getRoleFromTitle(s.title) === "NURSE").length;
+  const doctorCount = staffMembers.filter(s => titleToRole(s.title) === "DOCTOR").length;
+  const nurseCount = staffMembers.filter(s => titleToRole(s.title) === "NURSE").length;
   const activeCount = staffMembers.filter(s => s.status === "available").length;
 
   if (isLoading) {
@@ -314,9 +389,141 @@ export default function UserManagement() {
         </Dialog>
       </div>
 
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Staff Member</DialogTitle>
+            <DialogDescription>
+              Update staff member information
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editStaff && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-name">Full Name *</Label>
+                  <Input
+                    id="edit-name"
+                    value={editStaff.name}
+                    onChange={(e) => setEditStaff({...editStaff, name: e.target.value})}
+                    placeholder="Enter full name"
+                    data-testid="input-edit-name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-email">Email *</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editStaff.email}
+                    onChange={(e) => setEditStaff({...editStaff, email: e.target.value})}
+                    placeholder="Enter email"
+                    data-testid="input-edit-email"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-phone">Phone *</Label>
+                  <Input
+                    id="edit-phone"
+                    type="tel"
+                    value={editStaff.phone}
+                    onChange={(e) => setEditStaff({...editStaff, phone: e.target.value})}
+                    placeholder="+91 98765 43210"
+                    data-testid="input-edit-phone"
+                  />
+                </div>
+                <div>
+                  <Label>Role *</Label>
+                  <Select value={editStaff.role} onValueChange={(value) => setEditStaff({...editStaff, role: value as UserRole})}>
+                    <SelectTrigger data-testid="select-edit-role">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DOCTOR">Doctor</SelectItem>
+                      <SelectItem value="NURSE">Nurse</SelectItem>
+                      <SelectItem value="OPD_MANAGER">OPD Manager</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-department">Department *</Label>
+                  <Input
+                    id="edit-department"
+                    value={editStaff.department}
+                    onChange={(e) => setEditStaff({...editStaff, department: e.target.value})}
+                    placeholder="e.g., Cardiology"
+                    data-testid="input-edit-department"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-specialization">Specialization</Label>
+                  <Input
+                    id="edit-specialization"
+                    value={editStaff.specialization}
+                    onChange={(e) => setEditStaff({...editStaff, specialization: e.target.value})}
+                    placeholder="e.g., Heart Surgery"
+                    data-testid="input-edit-specialization"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Status</Label>
+                <Select value={editStaff.status} onValueChange={(value) => setEditStaff({...editStaff, status: value})}>
+                  <SelectTrigger data-testid="select-edit-status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="busy">Busy</SelectItem>
+                    <SelectItem value="offline">Offline</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  onClick={handleUpdateStaff} 
+                  className="flex-1"
+                  disabled={updateStaffMutation.isPending}
+                  data-testid="button-update-staff"
+                >
+                  {updateStaffMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Staff Member"
+                  )}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setEditStaff(null);
+                    setIsEditDialogOpen(false);
+                  }}
+                  data-testid="button-cancel-edit"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -326,7 +533,7 @@ export default function UserManagement() {
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Doctors</CardTitle>
             <Stethoscope className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -338,7 +545,7 @@ export default function UserManagement() {
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Nurses</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -350,7 +557,7 @@ export default function UserManagement() {
         </Card>
         
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Staff</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -402,7 +609,7 @@ export default function UserManagement() {
               </div>
             ) : (
               filteredStaff.map((member) => {
-                const role = getRoleFromTitle(member.title);
+                const role = titleToRole(member.title);
                 return (
                   <div key={member.id} className="flex flex-wrap items-center justify-between gap-2 p-4 border rounded-lg hover-elevate">
                     <div className="flex items-center space-x-4">
@@ -429,7 +636,12 @@ export default function UserManagement() {
                       <Badge variant={member.status === "available" ? "default" : "secondary"}>
                         {member.status === "available" ? "ACTIVE" : member.status?.toUpperCase()}
                       </Badge>
-                      <Button variant="ghost" size="icon" data-testid={`button-edit-${member.id}`}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleEditClick(member)}
+                        data-testid={`button-edit-${member.id}`}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
