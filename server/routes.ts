@@ -165,6 +165,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update inventory item
+  app.patch("/api/inventory/items/:id", async (req, res) => {
+    try {
+      const item = await storage.updateInventoryItem(req.params.id, req.body);
+      if (!item) {
+        return res.status(404).json({ error: "Item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update item" });
+    }
+  });
+
+  // Delete inventory item
+  app.delete("/api/inventory/items/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteInventoryItem(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Item not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete item" });
+    }
+  });
+
   // Get low stock items
   app.get("/api/inventory/low-stock", async (_req, res) => {
     try {
