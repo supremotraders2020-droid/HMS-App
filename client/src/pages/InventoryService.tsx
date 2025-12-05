@@ -195,6 +195,42 @@ export default function InventoryService() {
     return matchesSearch && matchesCategory;
   });
 
+  const filteredReportTransactions = transactions.filter(tx => {
+    if (reportTimeFilter === "all") return true;
+    if (!tx.createdAt) return true;
+    
+    const txDate = new Date(tx.createdAt);
+    const now = new Date();
+    
+    switch (reportTimeFilter) {
+      case "today": {
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        return txDate >= startOfDay;
+      }
+      case "week": {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+        return txDate >= startOfWeek;
+      }
+      case "month": {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        return txDate >= startOfMonth;
+      }
+      case "quarter": {
+        const quarter = Math.floor(now.getMonth() / 3);
+        const startOfQuarter = new Date(now.getFullYear(), quarter * 3, 1);
+        return txDate >= startOfQuarter;
+      }
+      case "year": {
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        return txDate >= startOfYear;
+      }
+      default:
+        return true;
+    }
+  });
+
   const getStockBadge = (current: number, min: number) => {
     if (current === 0) {
       return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Out of Stock</Badge>;
@@ -736,6 +772,33 @@ export default function InventoryService() {
 
         {activeTab === "reports" && (
           <div className="space-y-6">
+            {/* Time Filter */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-sm font-medium mr-2">Filter by:</span>
+                  {[
+                    { value: "all", label: "All Time" },
+                    { value: "today", label: "Today" },
+                    { value: "week", label: "This Week" },
+                    { value: "month", label: "This Month" },
+                    { value: "quarter", label: "This Quarter" },
+                    { value: "year", label: "This Year" },
+                  ].map((filter) => (
+                    <Button
+                      key={filter.value}
+                      variant={reportTimeFilter === filter.value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setReportTimeFilter(filter.value as ReportTimeFilter)}
+                      data-testid={`button-filter-${filter.value}`}
+                    >
+                      {filter.label}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
                 <CardContent className="pt-6">
@@ -752,7 +815,7 @@ export default function InventoryService() {
               <Card>
                 <CardContent className="pt-6">
                   <p className="text-sm text-muted-foreground">Total Transactions</p>
-                  <p className="text-2xl font-bold">{reports?.totalTransactions || 0}</p>
+                  <p className="text-2xl font-bold">{filteredReportTransactions.length}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -762,6 +825,89 @@ export default function InventoryService() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Transaction Summary by Type */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowUpDown className="h-5 w-5" />
+                  Transaction Summary
+                  <Badge variant="outline" className="ml-2">
+                    {reportTimeFilter === "all" ? "All Time" : 
+                     reportTimeFilter === "today" ? "Today" :
+                     reportTimeFilter === "week" ? "This Week" :
+                     reportTimeFilter === "month" ? "This Month" :
+                     reportTimeFilter === "quarter" ? "This Quarter" : "This Year"}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 border rounded-lg bg-red-50 dark:bg-red-900/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ArrowDown className="h-4 w-4 text-red-600" />
+                      <span className="font-medium">Issues</span>
+                    </div>
+                    <p className="text-2xl font-bold text-red-600">
+                      {filteredReportTransactions.filter(tx => tx.type === "ISSUE").length}
+                    </p>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-green-50 dark:bg-green-900/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ArrowUp className="h-4 w-4 text-green-600" />
+                      <span className="font-medium">Returns</span>
+                    </div>
+                    <p className="text-2xl font-bold text-green-600">
+                      {filteredReportTransactions.filter(tx => tx.type === "RETURN").length}
+                    </p>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Trash2 className="h-4 w-4 text-gray-600" />
+                      <span className="font-medium">Disposed</span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-600">
+                      {filteredReportTransactions.filter(tx => tx.type === "DISPOSE").length}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Transactions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Recent Transactions ({filteredReportTransactions.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {filteredReportTransactions.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No transactions for the selected period</p>
+                  ) : (
+                    filteredReportTransactions.slice(0, 20).map((tx) => {
+                      const item = items.find(i => i.id === tx.itemId);
+                      return (
+                        <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            {getTransactionIcon(tx.type)}
+                            <div>
+                              <p className="font-medium">{item?.name || "Unknown Item"}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : "N/A"} - {tx.quantity} {item?.unit || "units"}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge className={getTransactionBadge(tx.type)}>{tx.type}</Badge>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
@@ -773,7 +919,7 @@ export default function InventoryService() {
               <CardContent>
                 <div className="space-y-3">
                   {staff.slice(0, 5).map((s) => {
-                    const staffTx = transactions.filter(tx => tx.staffId === s.id);
+                    const staffTx = filteredReportTransactions.filter(tx => tx.staffId === s.id);
                     return (
                       <div key={s.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
