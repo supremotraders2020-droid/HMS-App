@@ -1150,13 +1150,6 @@ export default function EquipmentServicing() {
                 <Button variant="outline" onClick={() => setDetailModalOpen(false)}>
                   Close
                 </Button>
-                <Button onClick={() => {
-                  setDetailModalOpen(false);
-                  openHistoryModal(selectedEquipment);
-                }}>
-                  <History className="h-4 w-4 mr-2" />
-                  Full History View
-                </Button>
               </DialogFooter>
             </div>
           )}
