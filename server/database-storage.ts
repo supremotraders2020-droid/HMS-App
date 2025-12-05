@@ -173,6 +173,19 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
+  async updateInventoryItem(id: string, item: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined> {
+    const result = await db.update(inventoryItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(inventoryItems.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteInventoryItem(id: string): Promise<boolean> {
+    const result = await db.delete(inventoryItems).where(eq(inventoryItems.id, id)).returning();
+    return result.length > 0;
+  }
+
   // ========== STAFF MEMBERS METHODS ==========
   async getAllStaffMembers(): Promise<StaffMember[]> {
     return await db.select().from(staffMembers);

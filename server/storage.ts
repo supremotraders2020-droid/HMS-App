@@ -26,7 +26,9 @@ export interface IStorage {
   getAllInventoryItems(): Promise<InventoryItem[]>;
   getInventoryItemById(id: string): Promise<InventoryItem | undefined>;
   createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem>;
+  updateInventoryItem(id: string, item: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined>;
   updateInventoryItemStock(id: string, newStock: number): Promise<InventoryItem | undefined>;
+  deleteInventoryItem(id: string): Promise<boolean>;
   getLowStockItems(): Promise<InventoryItem[]>;
   
   // Staff Members
@@ -633,6 +635,25 @@ export class MemStorage implements IStorage {
     return Array.from(this.inventoryItems.values()).filter(
       item => item.currentStock <= item.lowStockThreshold
     );
+  }
+
+  async updateInventoryItem(id: string, item: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined> {
+    const existing = this.inventoryItems.get(id);
+    if (existing) {
+      const updated: InventoryItem = {
+        ...existing,
+        ...item,
+        id: existing.id,
+        updatedAt: new Date(),
+      };
+      this.inventoryItems.set(id, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
+  async deleteInventoryItem(id: string): Promise<boolean> {
+    return this.inventoryItems.delete(id);
   }
 
   // ========== STAFF MEMBERS METHODS ==========
