@@ -87,12 +87,19 @@ export default function InventoryService() {
     },
   });
 
+  const invalidateInventoryQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/inventory/items"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/inventory/items/low-stock"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/inventory/reports"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/inventory/transactions"] });
+  };
+
   const createItemMutation = useMutation({
     mutationFn: async (data: { name: string; category: string; currentStock: number; lowStockThreshold: number; unit: string; cost: string }) => {
       return await apiRequest("POST", "/api/inventory/items", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/items"] });
+      invalidateInventoryQueries();
       toast({
         title: "Item Added",
         description: "Inventory item has been added successfully.",
@@ -113,7 +120,7 @@ export default function InventoryService() {
       return await apiRequest("PATCH", `/api/inventory/items/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/items"] });
+      invalidateInventoryQueries();
       toast({
         title: "Item Updated",
         description: "Inventory item has been updated successfully.",
@@ -135,7 +142,7 @@ export default function InventoryService() {
       return await apiRequest("DELETE", `/api/inventory/items/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/items"] });
+      invalidateInventoryQueries();
       toast({
         title: "Item Deleted",
         description: "Inventory item has been removed successfully.",
