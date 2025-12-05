@@ -40,7 +40,8 @@ import {
   Hash,
   CalendarClock,
   Info,
-  Eye
+  Eye,
+  Building2
 } from "lucide-react";
 
 type ServiceFrequency = "monthly" | "quarterly" | "yearly";
@@ -55,6 +56,9 @@ interface Equipment {
   status: "up-to-date" | "due-soon" | "overdue";
   location: string;
   serviceFrequency?: ServiceFrequency;
+  companyName?: string;
+  contactNumber?: string;
+  emergencyNumber?: string;
 }
 
 interface ServiceHistory {
@@ -76,15 +80,15 @@ interface EmergencyContact {
 }
 
 const MOCK_EQUIPMENT: Equipment[] = [
-  { id: "eq1", name: "X-Ray Machine", model: "GE Definium 656", serialNumber: "XR-2024-001", lastServiceDate: "2024-11-15", nextDueDate: "2025-02-15", status: "up-to-date", location: "Radiology Dept", serviceFrequency: "quarterly" },
-  { id: "eq2", name: "MRI Scanner", model: "Siemens MAGNETOM", serialNumber: "MR-2024-002", lastServiceDate: "2024-10-20", nextDueDate: "2024-12-20", status: "due-soon", location: "Imaging Center", serviceFrequency: "quarterly" },
-  { id: "eq3", name: "CT Scanner", model: "Philips Ingenuity", serialNumber: "CT-2024-003", lastServiceDate: "2024-08-10", nextDueDate: "2024-11-10", status: "overdue", location: "Radiology Dept", serviceFrequency: "quarterly" },
-  { id: "eq4", name: "Ultrasound System", model: "GE LOGIQ E10", serialNumber: "US-2024-004", lastServiceDate: "2024-11-25", nextDueDate: "2025-02-25", status: "up-to-date", location: "OBG Dept", serviceFrequency: "quarterly" },
-  { id: "eq5", name: "ECG Machine", model: "Philips PageWriter", serialNumber: "ECG-2024-005", lastServiceDate: "2024-11-01", nextDueDate: "2025-01-01", status: "due-soon", location: "Cardiology", serviceFrequency: "monthly" },
-  { id: "eq6", name: "Ventilator", model: "Draeger Evita V500", serialNumber: "VT-2024-006", lastServiceDate: "2024-09-15", nextDueDate: "2024-11-15", status: "overdue", location: "ICU", serviceFrequency: "monthly" },
-  { id: "eq7", name: "Defibrillator", model: "Philips HeartStart", serialNumber: "DF-2024-007", lastServiceDate: "2024-11-20", nextDueDate: "2025-02-20", status: "up-to-date", location: "Emergency", serviceFrequency: "quarterly" },
-  { id: "eq8", name: "Anesthesia Machine", model: "GE Aisys CS2", serialNumber: "AN-2024-008", lastServiceDate: "2024-10-05", nextDueDate: "2024-12-05", status: "due-soon", location: "Operation Theater", serviceFrequency: "monthly" },
-  { id: "eq9", name: "Patient Monitor", model: "Philips IntelliVue", serialNumber: "PM-2024-009", lastServiceDate: "2024-11-10", nextDueDate: "2025-01-10", status: "up-to-date", location: "ICU", serviceFrequency: "monthly" },
+  { id: "eq1", name: "X-Ray Machine", model: "GE Definium 656", serialNumber: "XR-2024-001", lastServiceDate: "2024-11-15", nextDueDate: "2025-02-15", status: "up-to-date", location: "Radiology Dept", serviceFrequency: "quarterly", companyName: "GE Healthcare India", contactNumber: "+91 1800 103 4800", emergencyNumber: "+91 98765 11111" },
+  { id: "eq2", name: "MRI Scanner", model: "Siemens MAGNETOM", serialNumber: "MR-2024-002", lastServiceDate: "2024-10-20", nextDueDate: "2024-12-20", status: "due-soon", location: "Imaging Center", serviceFrequency: "quarterly", companyName: "Siemens Healthineers", contactNumber: "+91 1800 209 1800", emergencyNumber: "+91 98765 22222" },
+  { id: "eq3", name: "CT Scanner", model: "Philips Ingenuity", serialNumber: "CT-2024-003", lastServiceDate: "2024-08-10", nextDueDate: "2024-11-10", status: "overdue", location: "Radiology Dept", serviceFrequency: "quarterly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
+  { id: "eq4", name: "Ultrasound System", model: "GE LOGIQ E10", serialNumber: "US-2024-004", lastServiceDate: "2024-11-25", nextDueDate: "2025-02-25", status: "up-to-date", location: "OBG Dept", serviceFrequency: "quarterly", companyName: "GE Healthcare India", contactNumber: "+91 1800 103 4800", emergencyNumber: "+91 98765 11111" },
+  { id: "eq5", name: "ECG Machine", model: "Philips PageWriter", serialNumber: "ECG-2024-005", lastServiceDate: "2024-11-01", nextDueDate: "2025-01-01", status: "due-soon", location: "Cardiology", serviceFrequency: "monthly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
+  { id: "eq6", name: "Ventilator", model: "Draeger Evita V500", serialNumber: "VT-2024-006", lastServiceDate: "2024-09-15", nextDueDate: "2024-11-15", status: "overdue", location: "ICU", serviceFrequency: "monthly", companyName: "Draeger Medical India", contactNumber: "+91 1800 123 4567", emergencyNumber: "+91 98765 44444" },
+  { id: "eq7", name: "Defibrillator", model: "Philips HeartStart", serialNumber: "DF-2024-007", lastServiceDate: "2024-11-20", nextDueDate: "2025-02-20", status: "up-to-date", location: "Emergency", serviceFrequency: "quarterly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
+  { id: "eq8", name: "Anesthesia Machine", model: "GE Aisys CS2", serialNumber: "AN-2024-008", lastServiceDate: "2024-10-05", nextDueDate: "2024-12-05", status: "due-soon", location: "Operation Theater", serviceFrequency: "monthly", companyName: "GE Healthcare India", contactNumber: "+91 1800 103 4800", emergencyNumber: "+91 98765 11111" },
+  { id: "eq9", name: "Patient Monitor", model: "Philips IntelliVue", serialNumber: "PM-2024-009", lastServiceDate: "2024-11-10", nextDueDate: "2025-01-10", status: "up-to-date", location: "ICU", serviceFrequency: "monthly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
 ];
 
 const MOCK_SERVICE_HISTORY: ServiceHistory[] = [
@@ -215,6 +219,9 @@ export default function EquipmentServicing() {
     const location = formData.get("location") as string;
     const lastServiceDate = formData.get("lastServiceDate") as string;
     const manualNextDueDate = formData.get("nextDueDate") as string;
+    const companyName = formData.get("companyName") as string;
+    const contactNumber = formData.get("contactNumber") as string;
+    const emergencyNumber = formData.get("emergencyNumber") as string;
     
     const nextDueDate = calculatedNextDueDate || manualNextDueDate;
 
@@ -237,6 +244,9 @@ export default function EquipmentServicing() {
       nextDueDate,
       status: calculateStatus(nextDueDate),
       serviceFrequency,
+      companyName: companyName || undefined,
+      contactNumber: contactNumber || undefined,
+      emergencyNumber: emergencyNumber || undefined,
     };
 
     setEquipmentList([...equipmentList, newEquipment]);
@@ -944,6 +954,47 @@ export default function EquipmentServicing() {
               </div>
             </div>
             
+            <Separator />
+            
+            <div className="space-y-4">
+              <h4 className="font-medium flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-primary" />
+                Service Provider Details
+              </h4>
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Company Name</Label>
+                <Input
+                  id="companyName"
+                  name="companyName"
+                  placeholder="e.g., GE Healthcare India"
+                  data-testid="input-company-name"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="contactNumber">Contact Number</Label>
+                  <Input
+                    id="contactNumber"
+                    name="contactNumber"
+                    type="tel"
+                    placeholder="+91 1800 xxx xxxx"
+                    data-testid="input-contact-number"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyNumber" className="text-red-600 dark:text-red-400">Emergency Number</Label>
+                  <Input
+                    id="emergencyNumber"
+                    name="emergencyNumber"
+                    type="tel"
+                    placeholder="+91 98765 xxxxx"
+                    className="border-red-200 dark:border-red-900 focus:ring-red-500"
+                    data-testid="input-emergency-number"
+                  />
+                </div>
+              </div>
+            </div>
+            
             <DialogFooter className="flex-col gap-2 sm:flex-row">
               <Button 
                 type="button" 
@@ -1018,6 +1069,38 @@ export default function EquipmentServicing() {
                   </div>
                   <p className="font-medium">{selectedEquipment.nextDueDate}</p>
                 </Card>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h4 className="font-semibold flex items-center gap-2 mb-4">
+                  <Phone className="h-4 w-4 text-primary" />
+                  Service Provider Contact
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="p-3">
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                      <Building2 className="h-4 w-4" />
+                      Company Name
+                    </div>
+                    <p className="font-medium">{selectedEquipment.companyName || "Not specified"}</p>
+                  </Card>
+                  <Card className="p-3">
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                      <Phone className="h-4 w-4" />
+                      Contact Number
+                    </div>
+                    <p className="font-medium">{selectedEquipment.contactNumber || "Not specified"}</p>
+                  </Card>
+                  <Card className="p-3 border-red-200 dark:border-red-900">
+                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm mb-1">
+                      <AlertTriangle className="h-4 w-4" />
+                      Emergency Number
+                    </div>
+                    <p className="font-medium text-red-600 dark:text-red-400">{selectedEquipment.emergencyNumber || "Not specified"}</p>
+                  </Card>
+                </div>
               </div>
               
               <Separator />
