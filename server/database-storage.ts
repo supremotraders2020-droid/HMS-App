@@ -99,6 +99,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async findAndBookScheduleSlot(doctorId: string, date: string, timeSlot: string): Promise<Schedule | undefined> {
+    // First check if there's already an appointment for this slot
+    const existingAppointments = await db.select().from(appointments).where(
+      and(
+        eq(appointments.doctorId, doctorId),
+        eq(appointments.appointmentDate, date),
+        eq(appointments.timeSlot, timeSlot),
+        sql`${appointments.status} NOT IN ('cancelled', 'completed')`
+      )
+    );
+    
+    // If there's already an active appointment, the slot is not available
+    if (existingAppointments.length > 0) {
+      return undefined;
+    }
+    
+    // Check if a schedule entry exists
     const existing = await db.select().from(schedules).where(
       and(
         eq(schedules.doctorId, doctorId),
@@ -107,10 +123,23 @@ export class DatabaseStorage implements IStorage {
       )
     );
     
-    if (existing.length > 0 && !existing[0].isBooked) {
-      return await this.updateScheduleBookedStatus(existing[0].id, true);
+    // If schedule exists and is not booked, mark it as booked
+    if (existing.length > 0) {
+      if (!existing[0].isBooked) {
+        return await this.updateScheduleBookedStatus(existing[0].id, true);
+      }
+      return undefined;
     }
-    return undefined;
+    
+    // If no schedule exists, create one and mark it as booked
+    const newSchedule = await db.insert(schedules).values({
+      doctorId,
+      date,
+      timeSlot,
+      isBooked: true
+    }).returning();
+    
+    return newSchedule[0];
   }
 
   // ========== APPOINTMENT METHODS ==========
