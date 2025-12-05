@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Wrench,
@@ -34,8 +35,15 @@ import {
   Settings,
   Filter,
   ExternalLink,
-  Plus
+  Plus,
+  MapPin,
+  Hash,
+  CalendarClock,
+  Info,
+  Eye
 } from "lucide-react";
+
+type ServiceFrequency = "monthly" | "quarterly" | "yearly";
 
 interface Equipment {
   id: string;
@@ -46,6 +54,7 @@ interface Equipment {
   nextDueDate: string;
   status: "up-to-date" | "due-soon" | "overdue";
   location: string;
+  serviceFrequency?: ServiceFrequency;
 }
 
 interface ServiceHistory {
@@ -67,15 +76,15 @@ interface EmergencyContact {
 }
 
 const MOCK_EQUIPMENT: Equipment[] = [
-  { id: "eq1", name: "X-Ray Machine", model: "GE Definium 656", serialNumber: "XR-2024-001", lastServiceDate: "2024-11-15", nextDueDate: "2025-02-15", status: "up-to-date", location: "Radiology Dept" },
-  { id: "eq2", name: "MRI Scanner", model: "Siemens MAGNETOM", serialNumber: "MR-2024-002", lastServiceDate: "2024-10-20", nextDueDate: "2024-12-20", status: "due-soon", location: "Imaging Center" },
-  { id: "eq3", name: "CT Scanner", model: "Philips Ingenuity", serialNumber: "CT-2024-003", lastServiceDate: "2024-08-10", nextDueDate: "2024-11-10", status: "overdue", location: "Radiology Dept" },
-  { id: "eq4", name: "Ultrasound System", model: "GE LOGIQ E10", serialNumber: "US-2024-004", lastServiceDate: "2024-11-25", nextDueDate: "2025-02-25", status: "up-to-date", location: "OBG Dept" },
-  { id: "eq5", name: "ECG Machine", model: "Philips PageWriter", serialNumber: "ECG-2024-005", lastServiceDate: "2024-11-01", nextDueDate: "2025-01-01", status: "due-soon", location: "Cardiology" },
-  { id: "eq6", name: "Ventilator", model: "Draeger Evita V500", serialNumber: "VT-2024-006", lastServiceDate: "2024-09-15", nextDueDate: "2024-11-15", status: "overdue", location: "ICU" },
-  { id: "eq7", name: "Defibrillator", model: "Philips HeartStart", serialNumber: "DF-2024-007", lastServiceDate: "2024-11-20", nextDueDate: "2025-02-20", status: "up-to-date", location: "Emergency" },
-  { id: "eq8", name: "Anesthesia Machine", model: "GE Aisys CS2", serialNumber: "AN-2024-008", lastServiceDate: "2024-10-05", nextDueDate: "2024-12-05", status: "due-soon", location: "Operation Theater" },
-  { id: "eq9", name: "Patient Monitor", model: "Philips IntelliVue", serialNumber: "PM-2024-009", lastServiceDate: "2024-11-10", nextDueDate: "2025-01-10", status: "up-to-date", location: "ICU" },
+  { id: "eq1", name: "X-Ray Machine", model: "GE Definium 656", serialNumber: "XR-2024-001", lastServiceDate: "2024-11-15", nextDueDate: "2025-02-15", status: "up-to-date", location: "Radiology Dept", serviceFrequency: "quarterly" },
+  { id: "eq2", name: "MRI Scanner", model: "Siemens MAGNETOM", serialNumber: "MR-2024-002", lastServiceDate: "2024-10-20", nextDueDate: "2024-12-20", status: "due-soon", location: "Imaging Center", serviceFrequency: "quarterly" },
+  { id: "eq3", name: "CT Scanner", model: "Philips Ingenuity", serialNumber: "CT-2024-003", lastServiceDate: "2024-08-10", nextDueDate: "2024-11-10", status: "overdue", location: "Radiology Dept", serviceFrequency: "quarterly" },
+  { id: "eq4", name: "Ultrasound System", model: "GE LOGIQ E10", serialNumber: "US-2024-004", lastServiceDate: "2024-11-25", nextDueDate: "2025-02-25", status: "up-to-date", location: "OBG Dept", serviceFrequency: "quarterly" },
+  { id: "eq5", name: "ECG Machine", model: "Philips PageWriter", serialNumber: "ECG-2024-005", lastServiceDate: "2024-11-01", nextDueDate: "2025-01-01", status: "due-soon", location: "Cardiology", serviceFrequency: "monthly" },
+  { id: "eq6", name: "Ventilator", model: "Draeger Evita V500", serialNumber: "VT-2024-006", lastServiceDate: "2024-09-15", nextDueDate: "2024-11-15", status: "overdue", location: "ICU", serviceFrequency: "monthly" },
+  { id: "eq7", name: "Defibrillator", model: "Philips HeartStart", serialNumber: "DF-2024-007", lastServiceDate: "2024-11-20", nextDueDate: "2025-02-20", status: "up-to-date", location: "Emergency", serviceFrequency: "quarterly" },
+  { id: "eq8", name: "Anesthesia Machine", model: "GE Aisys CS2", serialNumber: "AN-2024-008", lastServiceDate: "2024-10-05", nextDueDate: "2024-12-05", status: "due-soon", location: "Operation Theater", serviceFrequency: "monthly" },
+  { id: "eq9", name: "Patient Monitor", model: "Philips IntelliVue", serialNumber: "PM-2024-009", lastServiceDate: "2024-11-10", nextDueDate: "2025-01-10", status: "up-to-date", location: "ICU", serviceFrequency: "monthly" },
 ];
 
 const MOCK_SERVICE_HISTORY: ServiceHistory[] = [
@@ -125,11 +134,15 @@ export default function EquipmentServicing() {
   const [activeTab, setActiveTab] = useState("equipment");
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [contactCategory, setContactCategory] = useState("all");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [equipmentList, setEquipmentList] = useState<Equipment[]>(MOCK_EQUIPMENT);
   const [showAddEquipmentDialog, setShowAddEquipmentDialog] = useState(false);
+  const [serviceFrequency, setServiceFrequency] = useState<ServiceFrequency>("quarterly");
+  const [lastServiceDateInput, setLastServiceDateInput] = useState("");
+  const [calculatedNextDueDate, setCalculatedNextDueDate] = useState("");
   const { toast } = useToast();
 
   const upToDateCount = equipmentList.filter(e => e.status === "up-to-date").length;
@@ -146,6 +159,52 @@ export default function EquipmentServicing() {
     return "up-to-date";
   };
 
+  const calculateNextDueDate = (lastService: string, frequency: ServiceFrequency): string => {
+    if (!lastService) return "";
+    const date = new Date(lastService);
+    switch (frequency) {
+      case "monthly":
+        date.setMonth(date.getMonth() + 1);
+        break;
+      case "quarterly":
+        date.setMonth(date.getMonth() + 3);
+        break;
+      case "yearly":
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+    }
+    return date.toISOString().split('T')[0];
+  };
+
+  const getFrequencyLabel = (frequency?: ServiceFrequency): string => {
+    switch (frequency) {
+      case "monthly": return "Monthly";
+      case "quarterly": return "Quarterly";
+      case "yearly": return "Yearly";
+      default: return "Not Set";
+    }
+  };
+
+  const getFrequencyBadgeColor = (frequency?: ServiceFrequency): string => {
+    switch (frequency) {
+      case "monthly": return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
+      case "quarterly": return "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300";
+      case "yearly": return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
+      default: return "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300";
+    }
+  };
+
+  useEffect(() => {
+    if (lastServiceDateInput && serviceFrequency) {
+      setCalculatedNextDueDate(calculateNextDueDate(lastServiceDateInput, serviceFrequency));
+    }
+  }, [lastServiceDateInput, serviceFrequency]);
+
+  const openDetailModal = (equipment: Equipment) => {
+    setSelectedEquipment(equipment);
+    setDetailModalOpen(true);
+  };
+
   const handleAddEquipment = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -154,12 +213,14 @@ export default function EquipmentServicing() {
     const serialNumber = formData.get("serialNumber") as string;
     const location = formData.get("location") as string;
     const lastServiceDate = formData.get("lastServiceDate") as string;
-    const nextDueDate = formData.get("nextDueDate") as string;
+    const manualNextDueDate = formData.get("nextDueDate") as string;
+    
+    const nextDueDate = calculatedNextDueDate || manualNextDueDate;
 
     if (!name || !manufacturer || !serialNumber || !location || !nextDueDate) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields. Either enter Last Service Date for auto-calculation or manually enter Next Due Date.",
         variant: "destructive",
       });
       return;
@@ -174,13 +235,17 @@ export default function EquipmentServicing() {
       lastServiceDate: lastServiceDate || null,
       nextDueDate,
       status: calculateStatus(nextDueDate),
+      serviceFrequency,
     };
 
     setEquipmentList([...equipmentList, newEquipment]);
     setShowAddEquipmentDialog(false);
+    setLastServiceDateInput("");
+    setCalculatedNextDueDate("");
+    setServiceFrequency("quarterly");
     toast({
       title: "Equipment Added",
-      description: `${name} has been added successfully.`,
+      description: `${name} has been added successfully with ${getFrequencyLabel(serviceFrequency).toLowerCase()} service frequency.`,
     });
   };
 
@@ -378,14 +443,19 @@ export default function EquipmentServicing() {
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {equipmentList.map((equipment) => (
-              <Card key={equipment.id} className="hover-elevate" data-testid={`equipment-card-${equipment.id}`}>
+              <Card key={equipment.id} className="hover-elevate cursor-pointer" onClick={() => openDetailModal(equipment)} data-testid={`equipment-card-${equipment.id}`}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <CardTitle className="text-lg" data-testid={`equipment-name-${equipment.id}`}>{equipment.name}</CardTitle>
                       <CardDescription>{equipment.model}</CardDescription>
                     </div>
-                    {getStatusBadge(equipment.status)}
+                    <div className="flex flex-col items-end gap-1">
+                      {getStatusBadge(equipment.status)}
+                      <Badge className={`text-xs ${getFrequencyBadgeColor(equipment.serviceFrequency)}`}>
+                        {getFrequencyLabel(equipment.serviceFrequency)}
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -413,7 +483,10 @@ export default function EquipmentServicing() {
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => openHistoryModal(equipment)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openHistoryModal(equipment);
+                    }}
                     data-testid={`button-history-${equipment.id}`}
                   >
                     <History className="h-4 w-4 mr-2" />
@@ -479,29 +552,49 @@ export default function EquipmentServicing() {
 
           <Card data-testid="card-upcoming-services">
             <CardHeader>
-              <CardTitle>Upcoming Services This Month</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarClock className="h-5 w-5 text-primary" />
+                Upcoming Services
+              </CardTitle>
+              <CardDescription>Click on any item to view details and service history</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {equipmentList.filter(e => e.status !== "up-to-date").map((equipment) => (
-                  <div 
-                    key={equipment.id} 
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                    data-testid={`upcoming-service-${equipment.id}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`h-3 w-3 rounded-full ${getStatusColor(equipment.status)}`} />
-                      <div>
-                        <p className="font-medium">{equipment.name}</p>
-                        <p className="text-sm text-muted-foreground">{equipment.location}</p>
+                {equipmentList.filter(e => e.status !== "up-to-date").length === 0 ? (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 mx-auto text-green-500/50 mb-3" />
+                    <p className="text-muted-foreground">All equipment is up-to-date!</p>
+                  </div>
+                ) : (
+                  equipmentList.filter(e => e.status !== "up-to-date").map((equipment) => (
+                    <div 
+                      key={equipment.id} 
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover-elevate cursor-pointer transition-all"
+                      onClick={() => openDetailModal(equipment)}
+                      data-testid={`upcoming-service-${equipment.id}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`h-3 w-3 rounded-full ${getStatusColor(equipment.status)}`} />
+                        <div>
+                          <p className="font-medium">{equipment.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-muted-foreground">{equipment.location}</p>
+                            <Badge className={`text-xs ${getFrequencyBadgeColor(equipment.serviceFrequency)}`}>
+                              {getFrequencyLabel(equipment.serviceFrequency)}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="font-medium">{equipment.nextDueDate}</p>
+                          {getStatusBadge(equipment.status)}
+                        </div>
+                        <Eye className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">{equipment.nextDueDate}</p>
-                      {getStatusBadge(equipment.status)}
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -702,7 +795,14 @@ export default function EquipmentServicing() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showAddEquipmentDialog} onOpenChange={setShowAddEquipmentDialog}>
+      <Dialog open={showAddEquipmentDialog} onOpenChange={(open) => {
+        setShowAddEquipmentDialog(open);
+        if (!open) {
+          setLastServiceDateInput("");
+          setCalculatedNextDueDate("");
+          setServiceFrequency("quarterly");
+        }
+      }}>
         <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto" data-testid="dialog-add-equipment">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -734,45 +834,85 @@ export default function EquipmentServicing() {
                 data-testid="input-manufacturer"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="serialNumber">Serial Number *</Label>
-              <Input
-                id="serialNumber"
-                name="serialNumber"
-                placeholder="e.g., XR-2024-001"
-                required
-                data-testid="input-serial-number"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="serialNumber">Serial Number *</Label>
+                <Input
+                  id="serialNumber"
+                  name="serialNumber"
+                  placeholder="e.g., XR-2024-001"
+                  required
+                  data-testid="input-serial-number"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="location">Location *</Label>
+                <Input
+                  id="location"
+                  name="location"
+                  placeholder="e.g., Radiology Dept"
+                  required
+                  data-testid="input-location"
+                />
+              </div>
             </div>
+            
+            <Separator />
+            
             <div className="space-y-2">
-              <Label htmlFor="location">Location *</Label>
-              <Input
-                id="location"
-                name="location"
-                placeholder="e.g., Radiology Dept"
-                required
-                data-testid="input-location"
-              />
+              <Label>Service Frequency *</Label>
+              <Select 
+                value={serviceFrequency} 
+                onValueChange={(value) => setServiceFrequency(value as ServiceFrequency)}
+              >
+                <SelectTrigger data-testid="select-service-frequency">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="quarterly">Quarterly (Every 3 months)</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Next due date will be calculated automatically based on last service date
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastServiceDate">Last Service Date</Label>
-              <Input
-                id="lastServiceDate"
-                name="lastServiceDate"
-                type="date"
-                data-testid="input-last-service-date"
-              />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="lastServiceDate">Last Service Date</Label>
+                <Input
+                  id="lastServiceDate"
+                  name="lastServiceDate"
+                  type="date"
+                  value={lastServiceDateInput}
+                  onChange={(e) => setLastServiceDateInput(e.target.value)}
+                  data-testid="input-last-service-date"
+                />
+                <p className="text-xs text-muted-foreground">Optional - Auto-calculates Next Due Date</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="nextDueDate">Next Due Date *</Label>
+                <Input
+                  id="nextDueDate"
+                  name="nextDueDate"
+                  type="date"
+                  value={calculatedNextDueDate}
+                  onChange={(e) => !lastServiceDateInput && setCalculatedNextDueDate(e.target.value)}
+                  readOnly={!!lastServiceDateInput}
+                  className={lastServiceDateInput ? "bg-muted" : ""}
+                  required={!calculatedNextDueDate}
+                  data-testid="input-next-due-date"
+                />
+                {calculatedNextDueDate && lastServiceDateInput ? (
+                  <p className="text-xs text-green-600 dark:text-green-400">Auto-calculated from frequency</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Enter manually or set Last Service Date</p>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="nextDueDate">Next Due Date *</Label>
-              <Input
-                id="nextDueDate"
-                name="nextDueDate"
-                type="date"
-                required
-                data-testid="input-next-due-date"
-              />
-            </div>
+            
             <DialogFooter className="flex-col gap-2 sm:flex-row">
               <Button 
                 type="button" 
@@ -788,6 +928,127 @@ export default function EquipmentServicing() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-equipment-detail">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-primary" />
+              Equipment Details
+            </DialogTitle>
+            <DialogDescription>
+              Full details and service history for {selectedEquipment?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedEquipment && (
+            <div className="space-y-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold">{selectedEquipment.name}</h3>
+                  <p className="text-muted-foreground">{selectedEquipment.model}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(selectedEquipment.status)}
+                  <Badge className={getFrequencyBadgeColor(selectedEquipment.serviceFrequency)}>
+                    {getFrequencyLabel(selectedEquipment.serviceFrequency)}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="p-3">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                    <Hash className="h-4 w-4" />
+                    Serial Number
+                  </div>
+                  <p className="font-mono font-medium">{selectedEquipment.serialNumber}</p>
+                </Card>
+                <Card className="p-3">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                    <MapPin className="h-4 w-4" />
+                    Location
+                  </div>
+                  <p className="font-medium">{selectedEquipment.location}</p>
+                </Card>
+                <Card className="p-3">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                    <Calendar className="h-4 w-4" />
+                    Last Service
+                  </div>
+                  <p className="font-medium">{selectedEquipment.lastServiceDate || "N/A"}</p>
+                </Card>
+                <Card className="p-3">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                    <CalendarClock className="h-4 w-4" />
+                    Next Due
+                  </div>
+                  <p className="font-medium">{selectedEquipment.nextDueDate}</p>
+                </Card>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h4 className="font-semibold flex items-center gap-2 mb-4">
+                  <History className="h-4 w-4 text-primary" />
+                  Service History
+                </h4>
+                <ScrollArea className="max-h-[250px]">
+                  <div className="space-y-3">
+                    {getEquipmentHistory(selectedEquipment.id).length > 0 ? (
+                      getEquipmentHistory(selectedEquipment.id).map((history) => (
+                        <Card key={history.id} className="p-4" data-testid={`detail-history-${history.id}`}>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">{history.serviceDate}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm">{history.technician}</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                <span className="text-sm text-muted-foreground">{history.description}</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center gap-1 text-lg font-semibold">
+                                <IndianRupee className="h-4 w-4" />
+                                {history.cost.replace("₹", "")}
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <History className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                        <p className="text-muted-foreground">No service history found for this equipment</p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDetailModalOpen(false)}>
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  setDetailModalOpen(false);
+                  openHistoryModal(selectedEquipment);
+                }}>
+                  <History className="h-4 w-4 mr-2" />
+                  Full History View
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
