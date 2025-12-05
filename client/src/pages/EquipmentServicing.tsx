@@ -128,11 +128,61 @@ export default function EquipmentServicing() {
   const [searchQuery, setSearchQuery] = useState("");
   const [contactCategory, setContactCategory] = useState("all");
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [equipmentList, setEquipmentList] = useState<Equipment[]>(MOCK_EQUIPMENT);
+  const [showAddEquipmentDialog, setShowAddEquipmentDialog] = useState(false);
   const { toast } = useToast();
 
-  const upToDateCount = MOCK_EQUIPMENT.filter(e => e.status === "up-to-date").length;
-  const dueSoonCount = MOCK_EQUIPMENT.filter(e => e.status === "due-soon").length;
-  const overdueCount = MOCK_EQUIPMENT.filter(e => e.status === "overdue").length;
+  const upToDateCount = equipmentList.filter(e => e.status === "up-to-date").length;
+  const dueSoonCount = equipmentList.filter(e => e.status === "due-soon").length;
+  const overdueCount = equipmentList.filter(e => e.status === "overdue").length;
+
+  const calculateStatus = (nextDueDate: string): "up-to-date" | "due-soon" | "overdue" => {
+    const today = new Date();
+    const dueDate = new Date(nextDueDate);
+    const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return "overdue";
+    if (diffDays <= 30) return "due-soon";
+    return "up-to-date";
+  };
+
+  const handleAddEquipment = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const manufacturer = formData.get("manufacturer") as string;
+    const serialNumber = formData.get("serialNumber") as string;
+    const location = formData.get("location") as string;
+    const lastServiceDate = formData.get("lastServiceDate") as string;
+    const nextDueDate = formData.get("nextDueDate") as string;
+
+    if (!name || !manufacturer || !serialNumber || !location || !nextDueDate) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newEquipment: Equipment = {
+      id: `eq-${Date.now()}`,
+      name,
+      model: manufacturer,
+      serialNumber,
+      location,
+      lastServiceDate: lastServiceDate || null,
+      nextDueDate,
+      status: calculateStatus(nextDueDate),
+    };
+
+    setEquipmentList([...equipmentList, newEquipment]);
+    setShowAddEquipmentDialog(false);
+    toast({
+      title: "Equipment Added",
+      description: `${name} has been added successfully.`,
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -199,7 +249,7 @@ export default function EquipmentServicing() {
 
   const getServiceEventsForDay = (day: number) => {
     const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return MOCK_EQUIPMENT.filter(e => e.nextDueDate === dateStr);
+    return equipmentList.filter(e => e.nextDueDate === dateStr);
   };
 
   const { daysInMonth, startingDay } = getDaysInMonth(currentMonth);
@@ -282,7 +332,7 @@ export default function EquipmentServicing() {
                 <Wrench className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold" data-testid="text-total-count">{MOCK_EQUIPMENT.length}</div>
+                <div className="text-2xl font-bold" data-testid="text-total-count">{equipmentList.length}</div>
                 <p className="text-xs text-muted-foreground">All registered equipment</p>
               </CardContent>
             </Card>
@@ -318,8 +368,16 @@ export default function EquipmentServicing() {
             </Card>
           </div>
 
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Equipment List</h2>
+            <Button onClick={() => setShowAddEquipmentDialog(true)} data-testid="button-add-equipment">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Equipment
+            </Button>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {MOCK_EQUIPMENT.map((equipment) => (
+            {equipmentList.map((equipment) => (
               <Card key={equipment.id} className="hover-elevate" data-testid={`equipment-card-${equipment.id}`}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
@@ -425,7 +483,7 @@ export default function EquipmentServicing() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {MOCK_EQUIPMENT.filter(e => e.status !== "up-to-date").map((equipment) => (
+                {equipmentList.filter(e => e.status !== "up-to-date").map((equipment) => (
                   <div 
                     key={equipment.id} 
                     className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
@@ -641,6 +699,95 @@ export default function EquipmentServicing() {
               )}
             </div>
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAddEquipmentDialog} onOpenChange={setShowAddEquipmentDialog}>
+        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto" data-testid="dialog-add-equipment">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Add New Equipment
+            </DialogTitle>
+            <DialogDescription>
+              Add a new piece of equipment to the servicing schedule
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddEquipment} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Equipment Name *</Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="e.g., X-Ray Machine"
+                required
+                data-testid="input-equipment-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="manufacturer">Manufacturer / Model *</Label>
+              <Input
+                id="manufacturer"
+                name="manufacturer"
+                placeholder="e.g., GE Definium 656"
+                required
+                data-testid="input-manufacturer"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="serialNumber">Serial Number *</Label>
+              <Input
+                id="serialNumber"
+                name="serialNumber"
+                placeholder="e.g., XR-2024-001"
+                required
+                data-testid="input-serial-number"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="location">Location *</Label>
+              <Input
+                id="location"
+                name="location"
+                placeholder="e.g., Radiology Dept"
+                required
+                data-testid="input-location"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastServiceDate">Last Service Date</Label>
+              <Input
+                id="lastServiceDate"
+                name="lastServiceDate"
+                type="date"
+                data-testid="input-last-service-date"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nextDueDate">Next Due Date *</Label>
+              <Input
+                id="nextDueDate"
+                name="nextDueDate"
+                type="date"
+                required
+                data-testid="input-next-due-date"
+              />
+            </div>
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowAddEquipmentDialog(false)}
+                data-testid="button-cancel-add-equipment"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" data-testid="button-submit-add-equipment">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Equipment
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
