@@ -94,22 +94,22 @@ export default function InventoryService() {
     queryClient.invalidateQueries({ queryKey: ["/api/inventory/transactions"] });
   };
 
-  const createItemMutation = useMutation({
-    mutationFn: async (data: { name: string; category: string; currentStock: number; lowStockThreshold: number; unit: string; cost: string }) => {
-      return await apiRequest("POST", "/api/inventory/items", data);
+  const addStockMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InventoryItem> }) => {
+      return await apiRequest("PATCH", `/api/inventory/items/${id}`, data);
     },
     onSuccess: () => {
       invalidateInventoryQueries();
       toast({
-        title: "Item Added",
-        description: "Inventory item has been added successfully.",
+        title: "Stock Added",
+        description: "Inventory stock has been updated successfully.",
       });
       setShowAddItemDialog(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to Add Item",
-        description: error.message || "Could not add inventory item.",
+        title: "Failed to Add Stock",
+        description: error.message || "Could not update inventory stock.",
         variant: "destructive",
       });
     },
@@ -212,13 +212,25 @@ export default function InventoryService() {
   const handleAddItem = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    createItemMutation.mutate({
-      name: formData.get("name") as string,
-      category: formData.get("category") as string,
-      currentStock: parseInt(formData.get("quantity") as string) || 0,
-      lowStockThreshold: parseInt(formData.get("lowStockThreshold") as string) || 10,
-      unit: formData.get("unit") as string || "units",
-      cost: formData.get("cost") as string || "0",
+    const itemId = formData.get("itemId") as string;
+    const quantityToAdd = parseInt(formData.get("quantity") as string) || 0;
+    
+    const existingItem = items.find(item => item.id === itemId);
+    if (!existingItem) {
+      toast({
+        title: "Error",
+        description: "Please select an item from the list.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const newStock = existingItem.currentStock + quantityToAdd;
+    addStockMutation.mutate({
+      id: itemId,
+      data: {
+        currentStock: newStock,
+      },
     });
   };
 
@@ -734,84 +746,39 @@ export default function InventoryService() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5 text-emerald-600" />
-              Add New Item
+              Add Stock to Item
             </DialogTitle>
             <DialogDescription>
-              Add a new item to the inventory
+              Select an item from the list and add stock quantity
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddItem} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="add-name">Item Name *</Label>
-                <Input
-                  id="add-name"
-                  name="name"
-                  placeholder="Enter item name"
-                  required
-                  data-testid="input-add-item-name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="add-quantity">Quantity *</Label>
-                <Input
-                  id="add-quantity"
-                  name="quantity"
-                  type="number"
-                  min="0"
-                  placeholder="Enter quantity"
-                  required
-                  data-testid="input-add-item-quantity"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="add-category">Category *</Label>
-                <Select name="category" required>
-                  <SelectTrigger data-testid="select-add-item-category">
-                    <SelectValue placeholder="Select category" />
+                <Label>Item *</Label>
+                <Select name="itemId" required>
+                  <SelectTrigger data-testid="select-add-item-name" className="w-full">
+                    <SelectValue placeholder="Select item" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="disposables">Disposables</SelectItem>
-                    <SelectItem value="syringes">Syringes</SelectItem>
-                    <SelectItem value="gloves">Gloves</SelectItem>
-                    <SelectItem value="medicines">Medicines</SelectItem>
-                    <SelectItem value="equipment">Equipment</SelectItem>
+                  <SelectContent className="max-h-[300px]">
+                    {items.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name} ({item.currentStock} available)
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="add-unit">Unit</Label>
+                <Label htmlFor="add-quantity">Quantity to Add *</Label>
                 <Input
-                  id="add-unit"
-                  name="unit"
-                  placeholder="e.g., pieces, pairs, ml"
-                  defaultValue="units"
-                  data-testid="input-add-item-unit"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="add-cost">Cost (Rs.)</Label>
-                <Input
-                  id="add-cost"
-                  name="cost"
+                  id="add-quantity"
+                  name="quantity"
                   type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Enter cost per unit"
-                  defaultValue="0"
-                  data-testid="input-add-item-cost"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="add-lowStockThreshold">Low Stock Threshold</Label>
-                <Input
-                  id="add-lowStockThreshold"
-                  name="lowStockThreshold"
-                  type="number"
-                  min="0"
-                  placeholder="Min stock level"
-                  defaultValue="10"
-                  data-testid="input-add-item-threshold"
+                  min="1"
+                  placeholder="Enter quantity to add"
+                  required
+                  data-testid="input-add-item-quantity"
                 />
               </div>
             </div>
@@ -819,8 +786,8 @@ export default function InventoryService() {
               <Button type="button" variant="outline" onClick={() => setShowAddItemDialog(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={createItemMutation.isPending} data-testid="button-submit-add-item">
-                {createItemMutation.isPending ? "Adding..." : "Add Item"}
+              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={addStockMutation.isPending} data-testid="button-submit-add-item">
+                {addStockMutation.isPending ? "Adding..." : "Add Stock"}
               </Button>
             </DialogFooter>
           </form>
