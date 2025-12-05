@@ -159,6 +159,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: parsed.error.errors });
       }
       const newItem = await storage.createInventoryItem(parsed.data);
+      
+      // Create an ADD transaction when a new item is added
+      if (newItem && parsed.data.currentStock && parsed.data.currentStock > 0) {
+        await storage.createInventoryTransaction({
+          type: "ADD",
+          itemId: newItem.id,
+          quantity: parsed.data.currentStock,
+          notes: `Initial stock added for ${newItem.name}`,
+        });
+      }
+      
       res.status(201).json(newItem);
     } catch (error) {
       res.status(500).json({ error: "Failed to create item" });

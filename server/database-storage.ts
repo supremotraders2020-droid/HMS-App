@@ -244,9 +244,15 @@ export class DatabaseStorage implements IStorage {
       newStock += transaction.quantity;
     } else if (transaction.type === "DISPOSE") {
       newStock -= transaction.quantity;
+    } else if (transaction.type === "ADD") {
+      // For ADD transactions, stock is already set on item creation
+      newStock = item.currentStock;
     }
 
-    await this.updateInventoryItemStock(transaction.itemId, newStock);
+    // Only update stock for non-ADD transactions
+    if (transaction.type !== "ADD") {
+      await this.updateInventoryItemStock(transaction.itemId, newStock);
+    }
 
     const totalCost = (parseFloat(item.cost) * transaction.quantity).toFixed(2);
     const result = await db.insert(inventoryTransactions).values({

@@ -246,8 +246,9 @@ export default function InventoryService() {
       ISSUE: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
       RETURN: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
       DISPOSE: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300",
+      ADD: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
     };
-    return styles[type] || styles.ISSUE;
+    return styles[type] || styles.ADD;
   };
 
   const getTransactionIcon = (type: string) => {
@@ -255,7 +256,18 @@ export default function InventoryService() {
       case "ISSUE": return <ArrowDown className="h-4 w-4 text-red-500" />;
       case "RETURN": return <ArrowUp className="h-4 w-4 text-green-500" />;
       case "DISPOSE": return <Trash2 className="h-4 w-4 text-gray-500" />;
-      default: return <ArrowUpDown className="h-4 w-4" />;
+      case "ADD": return <Plus className="h-4 w-4 text-emerald-500" />;
+      default: return <Plus className="h-4 w-4 text-emerald-500" />;
+    }
+  };
+
+  const getTransactionText = (type: string) => {
+    switch (type) {
+      case "ISSUE": return "Issued";
+      case "RETURN": return "Returned";
+      case "DISPOSE": return "Disposed";
+      case "ADD": return "Added";
+      default: return "Added";
     }
   };
 
@@ -299,14 +311,13 @@ export default function InventoryService() {
     } else {
       const name = formData.get("name") as string;
       const category = formData.get("category") as string;
-      const unit = formData.get("unit") as string || "units";
       const cost = formData.get("cost") as string || "0";
       const lowStockThreshold = parseInt(formData.get("lowStockThreshold") as string) || 10;
       
-      if (!name || !category) {
+      if (!name || !category || !cost || cost === "0") {
         toast({
           title: "Error",
-          description: "Please fill in all required fields.",
+          description: "Please fill in all required fields including cost.",
           variant: "destructive",
         });
         return;
@@ -317,7 +328,7 @@ export default function InventoryService() {
         category,
         currentStock: quantityToAdd,
         lowStockThreshold,
-        unit,
+        unit: "units",
         cost,
       });
     }
@@ -876,12 +887,11 @@ export default function InventoryService() {
                   ) : (
                     filteredReportTransactions.slice(0, 15).map((tx) => {
                       const item = items.find(i => i.id === tx.itemId);
-                      const actionText = tx.type === "ISSUE" ? "Issued" : tx.type === "RETURN" ? "Returned" : "Disposed";
                       return (
                         <div key={tx.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
                           <div className="flex items-center gap-2">
                             {getTransactionIcon(tx.type)}
-                            <span><strong>{actionText}</strong> {tx.quantity} {item?.unit || "units"} of {item?.name || "Unknown"}</span>
+                            <span><strong>{getTransactionText(tx.type)}</strong> {tx.quantity} {item?.unit || "units"} of {item?.name || "Unknown"}</span>
                           </div>
                           <span className="text-muted-foreground">
                             {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : "N/A"}
@@ -1074,29 +1084,17 @@ export default function InventoryService() {
                   </div>
                   <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Quantity x Cost per Unit</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-unit">Unit Type</Label>
-                    <Input
-                      id="new-unit"
-                      name="unit"
-                      placeholder="e.g., Tablets, ml"
-                      defaultValue="units"
-                      data-testid="input-new-item-unit"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-lowStockThreshold">Low Stock Alert</Label>
-                    <Input
-                      id="new-lowStockThreshold"
-                      name="lowStockThreshold"
-                      type="number"
-                      min="0"
-                      placeholder="Min level"
-                      defaultValue="10"
-                      data-testid="input-new-item-threshold"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-lowStockThreshold">Low Stock Alert (Optional)</Label>
+                  <Input
+                    id="new-lowStockThreshold"
+                    name="lowStockThreshold"
+                    type="number"
+                    min="0"
+                    placeholder="Min stock level for alerts"
+                    defaultValue="10"
+                    data-testid="input-new-item-threshold"
+                  />
                 </div>
               </div>
             )}
