@@ -730,10 +730,10 @@ export default function InventoryService() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="staffId">Staff Member</Label>
-                    <Select name="staffId">
+                    <Label htmlFor="staffId">Staff Member *</Label>
+                    <Select name="staffId" required>
                       <SelectTrigger data-testid="select-staff">
-                        <SelectValue placeholder="Select staff (optional)" />
+                        <SelectValue placeholder="Select staff member" />
                       </SelectTrigger>
                       <SelectContent>
                         {staff.map((s) => (
@@ -745,17 +745,21 @@ export default function InventoryService() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="patientId">Patient</Label>
-                    <Select name="patientId">
+                    <Label htmlFor="patientId">Patient *</Label>
+                    <Select name="patientId" required>
                       <SelectTrigger data-testid="select-patient">
-                        <SelectValue placeholder="Select patient (optional)" />
+                        <SelectValue placeholder="Select patient" />
                       </SelectTrigger>
                       <SelectContent>
-                        {patients.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name} ({p.patientId})
-                          </SelectItem>
-                        ))}
+                        {patients.length === 0 ? (
+                          <SelectItem value="no-patients" disabled>No patients available</SelectItem>
+                        ) : (
+                          patients.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name} - {p.patientId}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
