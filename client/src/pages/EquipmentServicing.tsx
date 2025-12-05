@@ -454,7 +454,7 @@ export default function EquipmentServicing() {
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {equipmentList.map((equipment) => (
-              <Card key={equipment.id} className="hover-elevate cursor-pointer" onClick={() => openDetailModal(equipment)} data-testid={`equipment-card-${equipment.id}`}>
+              <Card key={equipment.id} className="hover-elevate" data-testid={`equipment-card-${equipment.id}`}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -494,10 +494,7 @@ export default function EquipmentServicing() {
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openHistoryModal(equipment);
-                    }}
+                    onClick={() => openHistoryModal(equipment)}
                     data-testid={`button-history-${equipment.id}`}
                   >
                     <History className="h-4 w-4 mr-2" />
