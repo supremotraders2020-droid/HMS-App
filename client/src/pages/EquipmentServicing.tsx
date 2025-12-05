@@ -148,6 +148,8 @@ export default function EquipmentServicing() {
   const [lastServiceDateInput, setLastServiceDateInput] = useState("");
   const [calculatedNextDueDate, setCalculatedNextDueDate] = useState("");
   const [upcomingFilter, setUpcomingFilter] = useState<"all" | ServiceFrequency>("all");
+  const [selectedDateServices, setSelectedDateServices] = useState<{date: string, services: Equipment[]}>({ date: "", services: [] });
+  const [showDateServicesDialog, setShowDateServicesDialog] = useState(false);
   const { toast } = useToast();
 
   const upToDateCount = equipmentList.filter(e => e.status === "up-to-date").length;
@@ -330,6 +332,20 @@ export default function EquipmentServicing() {
 
   const { daysInMonth, startingDay } = getDaysInMonth(currentMonth);
 
+  const handleDateClick = (day: number, events: Equipment[]) => {
+    if (events.length > 0) {
+      const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const formattedDate = new Date(dateStr).toLocaleDateString('en-IN', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      setSelectedDateServices({ date: formattedDate, services: events });
+      setShowDateServicesDialog(true);
+    }
+  };
+
   const renderCalendar = () => {
     const days = [];
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -340,24 +356,48 @@ export default function EquipmentServicing() {
 
     for (let day = 1; day <= daysInMonth; day++) {
       const events = getServiceEventsForDay(day);
+      const hasEvents = events.length > 0;
       const hasOverdue = events.some(e => e.status === "overdue");
       const hasDueSoon = events.some(e => e.status === "due-soon");
       const hasUpToDate = events.some(e => e.status === "up-to-date");
 
+      let bgColor = "";
+      let borderColor = "border-border";
+      if (hasOverdue) {
+        bgColor = "bg-red-100 dark:bg-red-950/50";
+        borderColor = "border-red-400 dark:border-red-700";
+      } else if (hasDueSoon) {
+        bgColor = "bg-yellow-100 dark:bg-yellow-950/50";
+        borderColor = "border-yellow-400 dark:border-yellow-700";
+      } else if (hasUpToDate) {
+        bgColor = "bg-green-100 dark:bg-green-950/50";
+        borderColor = "border-green-400 dark:border-green-700";
+      }
+
       days.push(
         <div 
           key={day} 
-          className={`p-2 border rounded-lg min-h-[60px] cursor-pointer hover:bg-muted/50 transition-colors ${
-            events.length > 0 ? "bg-muted/30" : ""
+          className={`p-2 border-2 rounded-lg min-h-[70px] transition-all ${
+            hasEvents 
+              ? `${bgColor} ${borderColor} cursor-pointer hover:scale-105 hover:shadow-md` 
+              : "border-border hover:bg-muted/30"
           }`}
+          onClick={() => handleDateClick(day, events)}
           data-testid={`calendar-day-${day}`}
         >
-          <span className="text-sm font-medium">{day}</span>
-          <div className="flex gap-1 mt-1 flex-wrap">
-            {hasOverdue && <div className="h-2 w-2 rounded-full bg-red-500" />}
-            {hasDueSoon && <div className="h-2 w-2 rounded-full bg-yellow-500" />}
-            {hasUpToDate && <div className="h-2 w-2 rounded-full bg-green-500" />}
-          </div>
+          <span className={`text-sm font-medium ${hasEvents ? "font-bold" : ""}`}>{day}</span>
+          {hasEvents && (
+            <div className="mt-1 space-y-1">
+              <div className="flex gap-1 flex-wrap">
+                {hasOverdue && <div className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />}
+                {hasDueSoon && <div className="h-2.5 w-2.5 rounded-full bg-yellow-500" />}
+                {hasUpToDate && <div className="h-2.5 w-2.5 rounded-full bg-green-500" />}
+              </div>
+              <p className="text-[10px] text-muted-foreground truncate">
+                {events.length} service{events.length > 1 ? "s" : ""}
+              </p>
+            </div>
+          )}
         </div>
       );
     }
@@ -1153,6 +1193,60 @@ export default function EquipmentServicing() {
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDateServicesDialog} onOpenChange={setShowDateServicesDialog}>
+        <DialogContent className="w-[95vw] max-w-lg max-h-[80vh] overflow-y-auto" data-testid="dialog-date-services">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Services Scheduled
+            </DialogTitle>
+            <DialogDescription>
+              {selectedDateServices.date}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            {selectedDateServices.services.map((equipment) => (
+              <Card 
+                key={equipment.id} 
+                className="p-4 cursor-pointer hover-elevate"
+                onClick={() => {
+                  setShowDateServicesDialog(false);
+                  openDetailModal(equipment);
+                }}
+                data-testid={`date-service-${equipment.id}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold">{equipment.name}</h4>
+                      {getStatusBadge(equipment.status)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{equipment.model}</p>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {equipment.location}
+                      </span>
+                      <Badge className={`text-xs ${getFrequencyBadgeColor(equipment.serviceFrequency)}`}>
+                        {getFrequencyLabel(equipment.serviceFrequency)}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Eye className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </Card>
+            ))}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDateServicesDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
