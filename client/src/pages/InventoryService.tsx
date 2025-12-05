@@ -32,6 +32,8 @@ import type { InventoryItem, InventoryTransaction, StaffMember, InventoryPatient
 
 type TabType = "dashboard" | "items" | "transactions" | "issue" | "reports";
 
+type ReportTimeFilter = "all" | "today" | "week" | "month" | "quarter" | "year";
+
 export default function InventoryService() {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,6 +42,8 @@ export default function InventoryService() {
   const [showEditItemDialog, setShowEditItemDialog] = useState(false);
   const [showDeleteItemDialog, setShowDeleteItemDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [addItemMode, setAddItemMode] = useState<"existing" | "new">("existing");
+  const [reportTimeFilter, setReportTimeFilter] = useState<ReportTimeFilter>("all");
   const { toast } = useToast();
 
   const { data: items = [], isLoading: itemsLoading } = useQuery<InventoryItem[]>({
@@ -105,11 +109,34 @@ export default function InventoryService() {
         description: "Inventory stock has been updated successfully.",
       });
       setShowAddItemDialog(false);
+      setAddItemMode("existing");
     },
     onError: (error: Error) => {
       toast({
         title: "Failed to Add Stock",
         description: error.message || "Could not update inventory stock.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createItemMutation = useMutation({
+    mutationFn: async (data: { name: string; category: string; currentStock: number; lowStockThreshold: number; unit: string; cost: string }) => {
+      return await apiRequest("POST", "/api/inventory/items", data);
+    },
+    onSuccess: () => {
+      invalidateInventoryQueries();
+      toast({
+        title: "Item Created",
+        description: "New inventory item has been added successfully.",
+      });
+      setShowAddItemDialog(false);
+      setAddItemMode("existing");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to Create Item",
+        description: error.message || "Could not create inventory item.",
         variant: "destructive",
       });
     },
@@ -212,26 +239,52 @@ export default function InventoryService() {
   const handleAddItem = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const itemId = formData.get("itemId") as string;
     const quantityToAdd = parseInt(formData.get("quantity") as string) || 0;
     
-    const existingItem = items.find(item => item.id === itemId);
-    if (!existingItem) {
-      toast({
-        title: "Error",
-        description: "Please select an item from the list.",
-        variant: "destructive",
+    if (addItemMode === "existing") {
+      const itemId = formData.get("itemId") as string;
+      const existingItem = items.find(item => item.id === itemId);
+      if (!existingItem) {
+        toast({
+          title: "Error",
+          description: "Please select an item from the list.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const newStock = existingItem.currentStock + quantityToAdd;
+      addStockMutation.mutate({
+        id: itemId,
+        data: {
+          currentStock: newStock,
+        },
       });
-      return;
+    } else {
+      const name = formData.get("name") as string;
+      const category = formData.get("category") as string;
+      const unit = formData.get("unit") as string || "units";
+      const cost = formData.get("cost") as string || "0";
+      const lowStockThreshold = parseInt(formData.get("lowStockThreshold") as string) || 10;
+      
+      if (!name || !category) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      createItemMutation.mutate({
+        name,
+        category,
+        currentStock: quantityToAdd,
+        lowStockThreshold,
+        unit,
+        cost,
+      });
     }
-    
-    const newStock = existingItem.currentStock + quantityToAdd;
-    addStockMutation.mutate({
-      id: itemId,
-      data: {
-        currentStock: newStock,
-      },
-    });
   };
 
   const handleEditItem = (e: React.FormEvent<HTMLFormElement>) => {
@@ -741,53 +794,168 @@ export default function InventoryService() {
       </div>
 
       {/* Add Item Dialog */}
-      <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
+      <Dialog open={showAddItemDialog} onOpenChange={(open) => {
+        setShowAddItemDialog(open);
+        if (!open) setAddItemMode("existing");
+      }}>
         <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5 text-emerald-600" />
-              Add Stock to Item
+              {addItemMode === "existing" ? "Add Stock to Item" : "Add New Item"}
             </DialogTitle>
             <DialogDescription>
-              Select an item from the list and add stock quantity
+              {addItemMode === "existing" 
+                ? "Select an item from the list and add stock quantity" 
+                : "Create a new item and add initial stock"}
             </DialogDescription>
           </DialogHeader>
+          
+          {/* Mode Toggle */}
+          <div className="flex gap-2 p-1 bg-muted rounded-lg">
+            <Button
+              type="button"
+              variant={addItemMode === "existing" ? "default" : "ghost"}
+              size="sm"
+              className="flex-1"
+              onClick={() => setAddItemMode("existing")}
+              data-testid="button-mode-existing"
+            >
+              Select Existing
+            </Button>
+            <Button
+              type="button"
+              variant={addItemMode === "new" ? "default" : "ghost"}
+              size="sm"
+              className="flex-1"
+              onClick={() => setAddItemMode("new")}
+              data-testid="button-mode-new"
+            >
+              Add New Item
+            </Button>
+          </div>
+
           <form onSubmit={handleAddItem} className="space-y-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Item *</Label>
-                <Select name="itemId" required>
-                  <SelectTrigger data-testid="select-add-item-name" className="w-full">
-                    <SelectValue placeholder="Select item" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {items.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name} ({item.currentStock} available)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {addItemMode === "existing" ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Item *</Label>
+                  <Select name="itemId" required>
+                    <SelectTrigger data-testid="select-add-item-name" className="w-full">
+                      <SelectValue placeholder="Select item" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {items.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name} ({item.currentStock} available)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="add-quantity">Quantity to Add *</Label>
+                  <Input
+                    id="add-quantity"
+                    name="quantity"
+                    type="number"
+                    min="1"
+                    placeholder="Enter quantity to add"
+                    required
+                    data-testid="input-add-item-quantity"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="add-quantity">Quantity to Add *</Label>
-                <Input
-                  id="add-quantity"
-                  name="quantity"
-                  type="number"
-                  min="1"
-                  placeholder="Enter quantity to add"
-                  required
-                  data-testid="input-add-item-quantity"
-                />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="new-name">Item Name *</Label>
+                  <Input
+                    id="new-name"
+                    name="name"
+                    placeholder="Enter item name"
+                    required
+                    data-testid="input-new-item-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-category">Category *</Label>
+                  <Select name="category" required>
+                    <SelectTrigger data-testid="select-new-item-category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Medicine">Medicine</SelectItem>
+                      <SelectItem value="Medical Supplies">Medical Supplies</SelectItem>
+                      <SelectItem value="Equipment">Equipment</SelectItem>
+                      <SelectItem value="Disposables">Disposables</SelectItem>
+                      <SelectItem value="Syringes">Syringes</SelectItem>
+                      <SelectItem value="Gloves">Gloves</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-quantity">Initial Quantity *</Label>
+                  <Input
+                    id="new-quantity"
+                    name="quantity"
+                    type="number"
+                    min="0"
+                    placeholder="Enter quantity"
+                    required
+                    data-testid="input-new-item-quantity"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-unit">Unit</Label>
+                  <Input
+                    id="new-unit"
+                    name="unit"
+                    placeholder="e.g., Tablets, ml, pieces"
+                    defaultValue="units"
+                    data-testid="input-new-item-unit"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-cost">Cost (Rs.)</Label>
+                  <Input
+                    id="new-cost"
+                    name="cost"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Cost per unit"
+                    defaultValue="0"
+                    data-testid="input-new-item-cost"
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="new-lowStockThreshold">Low Stock Threshold</Label>
+                  <Input
+                    id="new-lowStockThreshold"
+                    name="lowStockThreshold"
+                    type="number"
+                    min="0"
+                    placeholder="Min stock level for alerts"
+                    defaultValue="10"
+                    data-testid="input-new-item-threshold"
+                  />
+                </div>
               </div>
-            </div>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowAddItemDialog(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={addStockMutation.isPending} data-testid="button-submit-add-item">
-                {addStockMutation.isPending ? "Adding..." : "Add Stock"}
+              <Button 
+                type="submit" 
+                className="bg-emerald-600 hover:bg-emerald-700" 
+                disabled={addStockMutation.isPending || createItemMutation.isPending} 
+                data-testid="button-submit-add-item"
+              >
+                {(addStockMutation.isPending || createItemMutation.isPending) 
+                  ? "Adding..." 
+                  : addItemMode === "existing" ? "Add Stock" : "Create Item"}
               </Button>
             </DialogFooter>
           </form>
