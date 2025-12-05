@@ -143,6 +143,7 @@ export default function EquipmentServicing() {
   const [serviceFrequency, setServiceFrequency] = useState<ServiceFrequency>("quarterly");
   const [lastServiceDateInput, setLastServiceDateInput] = useState("");
   const [calculatedNextDueDate, setCalculatedNextDueDate] = useState("");
+  const [upcomingFilter, setUpcomingFilter] = useState<"all" | ServiceFrequency>("all");
   const { toast } = useToast();
 
   const upToDateCount = equipmentList.filter(e => e.status === "up-to-date").length;
@@ -552,21 +553,51 @@ export default function EquipmentServicing() {
 
           <Card data-testid="card-upcoming-services">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarClock className="h-5 w-5 text-primary" />
-                Upcoming Services
-              </CardTitle>
-              <CardDescription>Click on any item to view details and service history</CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarClock className="h-5 w-5 text-primary" />
+                    Upcoming Services
+                  </CardTitle>
+                  <CardDescription>Click on any item to view details and service history</CardDescription>
+                </div>
+                <Select value={upcomingFilter} onValueChange={(value) => setUpcomingFilter(value as "all" | ServiceFrequency)}>
+                  <SelectTrigger className="w-[160px]" data-testid="select-frequency-filter">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Filter by frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Frequencies</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {equipmentList.filter(e => e.status !== "up-to-date").length === 0 ? (
-                  <div className="text-center py-8">
-                    <CheckCircle className="h-12 w-12 mx-auto text-green-500/50 mb-3" />
-                    <p className="text-muted-foreground">All equipment is up-to-date!</p>
-                  </div>
-                ) : (
-                  equipmentList.filter(e => e.status !== "up-to-date").map((equipment) => (
+                {(() => {
+                  const filteredEquipment = equipmentList.filter(e => {
+                    if (e.status === "up-to-date") return false;
+                    if (upcomingFilter === "all") return true;
+                    return e.serviceFrequency === upcomingFilter;
+                  });
+                  
+                  if (filteredEquipment.length === 0) {
+                    return (
+                      <div className="text-center py-8">
+                        <CheckCircle className="h-12 w-12 mx-auto text-green-500/50 mb-3" />
+                        <p className="text-muted-foreground">
+                          {upcomingFilter === "all" 
+                            ? "All equipment is up-to-date!" 
+                            : `No ${getFrequencyLabel(upcomingFilter as ServiceFrequency).toLowerCase()} services pending`}
+                        </p>
+                      </div>
+                    );
+                  }
+                  
+                  return filteredEquipment.map((equipment) => (
                     <div 
                       key={equipment.id} 
                       className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover-elevate cursor-pointer transition-all"
@@ -593,8 +624,8 @@ export default function EquipmentServicing() {
                         <Eye className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
-                  ))
-                )}
+                  ));
+                })()}
               </div>
             </CardContent>
           </Card>
