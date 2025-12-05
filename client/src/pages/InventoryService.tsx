@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Package, 
@@ -23,7 +24,9 @@ import {
   Users,
   ArrowDown,
   ArrowUp,
-  Trash2
+  Trash2,
+  Edit,
+  X
 } from "lucide-react";
 import type { InventoryItem, InventoryTransaction, StaffMember, InventoryPatient } from "@shared/schema";
 
@@ -33,6 +36,10 @@ export default function InventoryService() {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [showAddItemDialog, setShowAddItemDialog] = useState(false);
+  const [showEditItemDialog, setShowEditItemDialog] = useState(false);
+  const [showDeleteItemDialog, setShowDeleteItemDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const { toast } = useToast();
 
   const { data: items = [], isLoading: itemsLoading } = useQuery<InventoryItem[]>({
@@ -75,6 +82,71 @@ export default function InventoryService() {
       toast({
         title: "Transaction Failed",
         description: error.message || "Failed to process transaction. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createItemMutation = useMutation({
+    mutationFn: async (data: { name: string; category: string; currentStock: number; lowStockThreshold: number; unit: string; cost: string }) => {
+      return await apiRequest("POST", "/api/inventory/items", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/items"] });
+      toast({
+        title: "Item Added",
+        description: "Inventory item has been added successfully.",
+      });
+      setShowAddItemDialog(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to Add Item",
+        description: error.message || "Could not add inventory item.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InventoryItem> }) => {
+      return await apiRequest("PATCH", `/api/inventory/items/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/items"] });
+      toast({
+        title: "Item Updated",
+        description: "Inventory item has been updated successfully.",
+      });
+      setShowEditItemDialog(false);
+      setSelectedItem(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to Update Item",
+        description: error.message || "Could not update inventory item.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteItemMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/inventory/items/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/items"] });
+      toast({
+        title: "Item Deleted",
+        description: "Inventory item has been removed successfully.",
+      });
+      setShowDeleteItemDialog(false);
+      setSelectedItem(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to Delete Item",
+        description: error.message || "Could not delete inventory item.",
         variant: "destructive",
       });
     },
@@ -130,6 +202,51 @@ export default function InventoryService() {
     });
   };
 
+  const handleAddItem = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    createItemMutation.mutate({
+      name: formData.get("name") as string,
+      category: formData.get("category") as string,
+      currentStock: parseInt(formData.get("quantity") as string) || 0,
+      lowStockThreshold: parseInt(formData.get("lowStockThreshold") as string) || 10,
+      unit: formData.get("unit") as string || "units",
+      cost: formData.get("cost") as string || "0",
+    });
+  };
+
+  const handleEditItem = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedItem) return;
+    const formData = new FormData(e.currentTarget);
+    updateItemMutation.mutate({
+      id: selectedItem.id,
+      data: {
+        name: formData.get("name") as string,
+        category: formData.get("category") as string,
+        currentStock: parseInt(formData.get("quantity") as string) || 0,
+        lowStockThreshold: parseInt(formData.get("lowStockThreshold") as string) || 10,
+        unit: formData.get("unit") as string || "units",
+        cost: formData.get("cost") as string || "0",
+      },
+    });
+  };
+
+  const handleDeleteItem = () => {
+    if (!selectedItem) return;
+    deleteItemMutation.mutate(selectedItem.id);
+  };
+
+  const openEditDialog = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setShowEditItemDialog(true);
+  };
+
+  const openDeleteDialog = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setShowDeleteItemDialog(true);
+  };
+
   const tabs = [
     { id: "dashboard" as TabType, label: "Dashboard", icon: Warehouse },
     { id: "items" as TabType, label: "Inventory Items", icon: Package },
@@ -168,19 +285,29 @@ export default function InventoryService() {
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-wrap gap-2 mb-6 bg-muted/50 p-1 rounded-lg">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.id}
-              variant={activeTab === tab.id ? "default" : "ghost"}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-2"
-              data-testid={`tab-${tab.id}`}
-            >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
-            </Button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 bg-muted/50 p-1 rounded-lg flex-1">
+            {tabs.map((tab) => (
+              <Button
+                key={tab.id}
+                variant={activeTab === tab.id ? "default" : "ghost"}
+                onClick={() => setActiveTab(tab.id)}
+                className="flex items-center gap-2"
+                data-testid={`tab-${tab.id}`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </Button>
+            ))}
+          </div>
+          <Button
+            onClick={() => setShowAddItemDialog(true)}
+            className="bg-emerald-600 hover:bg-emerald-700"
+            data-testid="button-add-item"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Items
+          </Button>
         </div>
 
         {activeTab === "dashboard" && (
@@ -348,6 +475,25 @@ export default function InventoryService() {
                             <p className="font-medium">Rs. {item.cost}</p>
                           </div>
                           {getStockBadge(item.currentStock, item.lowStockThreshold)}
+                          <div className="flex gap-2">
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => openEditDialog(item)}
+                              data-testid={`button-edit-item-${item.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => openDeleteDialog(item)}
+                              data-testid={`button-delete-item-${item.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -574,6 +720,245 @@ export default function InventoryService() {
           </div>
         )}
       </div>
+
+      {/* Add Item Dialog */}
+      <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
+        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-emerald-600" />
+              Add New Item
+            </DialogTitle>
+            <DialogDescription>
+              Add a new item to the inventory
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddItem} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="add-name">Item Name *</Label>
+                <Input
+                  id="add-name"
+                  name="name"
+                  placeholder="Enter item name"
+                  required
+                  data-testid="input-add-item-name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="add-quantity">Quantity *</Label>
+                <Input
+                  id="add-quantity"
+                  name="quantity"
+                  type="number"
+                  min="0"
+                  placeholder="Enter quantity"
+                  required
+                  data-testid="input-add-item-quantity"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="add-category">Category *</Label>
+                <Select name="category" required>
+                  <SelectTrigger data-testid="select-add-item-category">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="disposables">Disposables</SelectItem>
+                    <SelectItem value="syringes">Syringes</SelectItem>
+                    <SelectItem value="gloves">Gloves</SelectItem>
+                    <SelectItem value="medicines">Medicines</SelectItem>
+                    <SelectItem value="equipment">Equipment</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="add-unit">Unit</Label>
+                <Input
+                  id="add-unit"
+                  name="unit"
+                  placeholder="e.g., pieces, pairs, ml"
+                  defaultValue="units"
+                  data-testid="input-add-item-unit"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="add-cost">Cost (Rs.)</Label>
+                <Input
+                  id="add-cost"
+                  name="cost"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="Enter cost per unit"
+                  defaultValue="0"
+                  data-testid="input-add-item-cost"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="add-lowStockThreshold">Low Stock Threshold</Label>
+                <Input
+                  id="add-lowStockThreshold"
+                  name="lowStockThreshold"
+                  type="number"
+                  min="0"
+                  placeholder="Min stock level"
+                  defaultValue="10"
+                  data-testid="input-add-item-threshold"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAddItemDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={createItemMutation.isPending} data-testid="button-submit-add-item">
+                {createItemMutation.isPending ? "Adding..." : "Add Item"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Item Dialog */}
+      <Dialog open={showEditItemDialog} onOpenChange={setShowEditItemDialog}>
+        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-blue-600" />
+              Edit Item
+            </DialogTitle>
+            <DialogDescription>
+              Update inventory item details
+            </DialogDescription>
+          </DialogHeader>
+          {selectedItem && (
+            <form onSubmit={handleEditItem} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Item Name *</Label>
+                  <Input
+                    id="edit-name"
+                    name="name"
+                    placeholder="Enter item name"
+                    defaultValue={selectedItem.name}
+                    required
+                    data-testid="input-edit-item-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-quantity">Quantity *</Label>
+                  <Input
+                    id="edit-quantity"
+                    name="quantity"
+                    type="number"
+                    min="0"
+                    placeholder="Enter quantity"
+                    defaultValue={selectedItem.currentStock}
+                    required
+                    data-testid="input-edit-item-quantity"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-category">Category *</Label>
+                  <Select name="category" defaultValue={selectedItem.category}>
+                    <SelectTrigger data-testid="select-edit-item-category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="disposables">Disposables</SelectItem>
+                      <SelectItem value="syringes">Syringes</SelectItem>
+                      <SelectItem value="gloves">Gloves</SelectItem>
+                      <SelectItem value="medicines">Medicines</SelectItem>
+                      <SelectItem value="equipment">Equipment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-unit">Unit</Label>
+                  <Input
+                    id="edit-unit"
+                    name="unit"
+                    placeholder="e.g., pieces, pairs, ml"
+                    defaultValue={selectedItem.unit}
+                    data-testid="input-edit-item-unit"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-cost">Cost (Rs.)</Label>
+                  <Input
+                    id="edit-cost"
+                    name="cost"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Enter cost per unit"
+                    defaultValue={selectedItem.cost}
+                    data-testid="input-edit-item-cost"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lowStockThreshold">Low Stock Threshold</Label>
+                  <Input
+                    id="edit-lowStockThreshold"
+                    name="lowStockThreshold"
+                    type="number"
+                    min="0"
+                    placeholder="Min stock level"
+                    defaultValue={selectedItem.lowStockThreshold}
+                    data-testid="input-edit-item-threshold"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowEditItemDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={updateItemMutation.isPending} data-testid="button-submit-edit-item">
+                  {updateItemMutation.isPending ? "Updating..." : "Update Item"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Item Confirmation Dialog */}
+      <Dialog open={showDeleteItemDialog} onOpenChange={setShowDeleteItemDialog}>
+        <DialogContent className="w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Delete Item
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this item? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <p className="font-semibold">{selectedItem.name}</p>
+                <p className="text-sm text-muted-foreground">{selectedItem.category} - {selectedItem.currentStock} {selectedItem.unit}</p>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowDeleteItemDialog(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeleteItem}
+                  disabled={deleteItemMutation.isPending}
+                  data-testid="button-confirm-delete-item"
+                >
+                  {deleteItemMutation.isPending ? "Deleting..." : "Delete Item"}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
