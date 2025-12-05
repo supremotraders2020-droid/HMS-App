@@ -772,135 +772,86 @@ export default function InventoryService() {
 
         {activeTab === "reports" && (
           <div className="space-y-6">
-            {/* Time Filter */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-wrap gap-2 items-center">
-                  <span className="text-sm font-medium mr-2">Filter by:</span>
-                  {[
-                    { value: "all", label: "All Time" },
-                    { value: "today", label: "Today" },
-                    { value: "week", label: "This Week" },
-                    { value: "month", label: "This Month" },
-                    { value: "quarter", label: "This Quarter" },
-                    { value: "year", label: "This Year" },
-                  ].map((filter) => (
-                    <Button
-                      key={filter.value}
-                      variant={reportTimeFilter === filter.value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setReportTimeFilter(filter.value as ReportTimeFilter)}
-                      data-testid={`button-filter-${filter.value}`}
-                    >
-                      {filter.label}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Time Filter - Simplified */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-sm font-medium">Show:</span>
+              {[
+                { value: "all", label: "All Time" },
+                { value: "today", label: "Today" },
+                { value: "week", label: "This Week" },
+                { value: "month", label: "This Month" },
+                { value: "quarter", label: "Quarter" },
+                { value: "year", label: "Year" },
+              ].map((filter) => (
+                <Button
+                  key={filter.value}
+                  variant={reportTimeFilter === filter.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setReportTimeFilter(filter.value as ReportTimeFilter)}
+                  data-testid={`button-filter-${filter.value}`}
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">Total Inventory Value</p>
-                  <p className="text-2xl font-bold">Rs. {reports?.totalValue?.toLocaleString() || 0}</p>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800">
+                <CardContent className="pt-4 pb-4">
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">Total Inventory Value</p>
+                  <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">Rs. {reports?.totalValue?.toLocaleString() || 0}</p>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">Total Items</p>
-                  <p className="text-2xl font-bold">{reports?.totalItems || 0}</p>
+                <CardContent className="pt-4 pb-4">
+                  <p className="text-xs text-muted-foreground">Total Items</p>
+                  <p className="text-xl font-bold">{reports?.totalItems || 0}</p>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">Total Transactions</p>
-                  <p className="text-2xl font-bold">{filteredReportTransactions.length}</p>
+                <CardContent className="pt-4 pb-4">
+                  <p className="text-xs text-muted-foreground">Transactions</p>
+                  <p className="text-xl font-bold">{filteredReportTransactions.length}</p>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">Items Needing Reorder</p>
-                  <p className="text-2xl font-bold text-yellow-600">{reports?.lowStockItems || 0}</p>
+              <Card className={reports?.lowStockItems ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800" : ""}>
+                <CardContent className="pt-4 pb-4">
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400">Low Stock Alerts</p>
+                  <p className="text-xl font-bold text-yellow-700 dark:text-yellow-300">{reports?.lowStockItems || 0}</p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Transaction Summary by Type */}
+            {/* Inventory Items with Cost Breakdown */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ArrowUpDown className="h-5 w-5" />
-                  Transaction Summary
-                  <Badge variant="outline" className="ml-2">
-                    {reportTimeFilter === "all" ? "All Time" : 
-                     reportTimeFilter === "today" ? "Today" :
-                     reportTimeFilter === "week" ? "This Week" :
-                     reportTimeFilter === "month" ? "This Month" :
-                     reportTimeFilter === "quarter" ? "This Quarter" : "This Year"}
-                  </Badge>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Package className="h-5 w-5 text-emerald-600" />
+                  Item Cost Breakdown
                 </CardTitle>
+                <p className="text-sm text-muted-foreground">Each item's value = Quantity x Cost per Unit</p>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-lg bg-red-50 dark:bg-red-900/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <ArrowDown className="h-4 w-4 text-red-600" />
-                      <span className="font-medium">Issues</span>
-                    </div>
-                    <p className="text-2xl font-bold text-red-600">
-                      {filteredReportTransactions.filter(tx => tx.type === "ISSUE").length}
-                    </p>
-                  </div>
-                  <div className="p-4 border rounded-lg bg-green-50 dark:bg-green-900/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <ArrowUp className="h-4 w-4 text-green-600" />
-                      <span className="font-medium">Returns</span>
-                    </div>
-                    <p className="text-2xl font-bold text-green-600">
-                      {filteredReportTransactions.filter(tx => tx.type === "RETURN").length}
-                    </p>
-                  </div>
-                  <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Trash2 className="h-4 w-4 text-gray-600" />
-                      <span className="font-medium">Disposed</span>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-600">
-                      {filteredReportTransactions.filter(tx => tx.type === "DISPOSE").length}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Transactions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Recent Transactions ({filteredReportTransactions.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                  {filteredReportTransactions.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No transactions for the selected period</p>
+                <div className="space-y-2 max-h-[350px] overflow-y-auto">
+                  {items.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No items in inventory</p>
                   ) : (
-                    filteredReportTransactions.slice(0, 20).map((tx) => {
-                      const item = items.find(i => i.id === tx.itemId);
+                    items.map((item) => {
+                      const costPerUnit = Number(item.cost) || 0;
+                      const totalItemValue = item.currentStock * costPerUnit;
                       return (
-                        <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            {getTransactionIcon(tx.type)}
-                            <div>
-                              <p className="font-medium">{item?.name || "Unknown Item"}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : "N/A"} - {tx.quantity} {item?.unit || "units"}
-                              </p>
-                            </div>
+                        <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                          <div className="flex-1">
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {item.currentStock} {item.unit} x Rs. {costPerUnit.toLocaleString()} each
+                            </p>
                           </div>
-                          <Badge className={getTransactionBadge(tx.type)}>{tx.type}</Badge>
+                          <div className="text-right">
+                            <p className="font-bold text-emerald-600 dark:text-emerald-400">Rs. {totalItemValue.toLocaleString()}</p>
+                            <Badge variant="outline" className="text-xs">{item.category}</Badge>
+                          </div>
                         </div>
                       );
                     })
@@ -909,26 +860,61 @@ export default function InventoryService() {
               </CardContent>
             </Card>
 
+            {/* Simple Activity Log */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Staff Activity Summary
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Recent Activity
+                  <Badge variant="outline" className="ml-2">{filteredReportTransactions.length} records</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {filteredReportTransactions.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No activity for selected period</p>
+                  ) : (
+                    filteredReportTransactions.slice(0, 15).map((tx) => {
+                      const item = items.find(i => i.id === tx.itemId);
+                      const actionText = tx.type === "ISSUE" ? "Issued" : tx.type === "RETURN" ? "Returned" : "Disposed";
+                      return (
+                        <div key={tx.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                          <div className="flex items-center gap-2">
+                            {getTransactionIcon(tx.type)}
+                            <span><strong>{actionText}</strong> {tx.quantity} {item?.unit || "units"} of {item?.name || "Unknown"}</span>
+                          </div>
+                          <span className="text-muted-foreground">
+                            {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : "N/A"}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Staff Summary - Simpler */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Staff Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
                   {staff.slice(0, 5).map((s) => {
                     const staffTx = filteredReportTransactions.filter(tx => tx.staffId === s.id);
                     return (
-                      <div key={s.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div key={s.id} className="flex items-center justify-between p-2 border rounded-lg">
                         <div>
-                          <p className="font-medium">{s.name}</p>
-                          <p className="text-sm text-muted-foreground">{s.role} - {s.department}</p>
+                          <p className="font-medium text-sm">{s.name}</p>
+                          <p className="text-xs text-muted-foreground">{s.department}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold">{staffTx.length} transactions</p>
-                        </div>
+                        <Badge variant={staffTx.length > 0 ? "default" : "outline"}>
+                          {staffTx.length} actions
+                        </Badge>
                       </div>
                     );
                   })}
@@ -1013,8 +999,8 @@ export default function InventoryService() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-4">
+                <div className="space-y-2">
                   <Label htmlFor="new-name">Item Name *</Label>
                   <Input
                     id="new-name"
@@ -1040,52 +1026,77 @@ export default function InventoryService() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-quantity">Initial Quantity *</Label>
-                  <Input
-                    id="new-quantity"
-                    name="quantity"
-                    type="number"
-                    min="0"
-                    placeholder="Enter quantity"
-                    required
-                    data-testid="input-new-item-quantity"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-quantity">Quantity *</Label>
+                    <Input
+                      id="new-quantity"
+                      name="quantity"
+                      type="number"
+                      min="1"
+                      placeholder="e.g., 20"
+                      required
+                      onChange={(e) => {
+                        const qty = parseInt(e.target.value) || 0;
+                        const costInput = document.getElementById("new-cost") as HTMLInputElement;
+                        const cost = parseFloat(costInput?.value) || 0;
+                        const totalDisplay = document.getElementById("calculated-total");
+                        if (totalDisplay) totalDisplay.textContent = `Rs. ${(qty * cost).toLocaleString()}`;
+                      }}
+                      data-testid="input-new-item-quantity"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-cost">Cost per Unit (Rs.) *</Label>
+                    <Input
+                      id="new-cost"
+                      name="cost"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="e.g., 50"
+                      required
+                      onChange={(e) => {
+                        const cost = parseFloat(e.target.value) || 0;
+                        const qtyInput = document.getElementById("new-quantity") as HTMLInputElement;
+                        const qty = parseInt(qtyInput?.value) || 0;
+                        const totalDisplay = document.getElementById("calculated-total");
+                        if (totalDisplay) totalDisplay.textContent = `Rs. ${(qty * cost).toLocaleString()}`;
+                      }}
+                      data-testid="input-new-item-cost"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-unit">Unit</Label>
-                  <Input
-                    id="new-unit"
-                    name="unit"
-                    placeholder="e.g., Tablets, ml, pieces"
-                    defaultValue="units"
-                    data-testid="input-new-item-unit"
-                  />
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Total Cost:</span>
+                    <span id="calculated-total" className="text-lg font-bold text-emerald-700 dark:text-emerald-300">Rs. 0</span>
+                  </div>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Quantity x Cost per Unit</p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-cost">Cost (Rs.)</Label>
-                  <Input
-                    id="new-cost"
-                    name="cost"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="Cost per unit"
-                    defaultValue="0"
-                    data-testid="input-new-item-cost"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="new-lowStockThreshold">Low Stock Threshold</Label>
-                  <Input
-                    id="new-lowStockThreshold"
-                    name="lowStockThreshold"
-                    type="number"
-                    min="0"
-                    placeholder="Min stock level for alerts"
-                    defaultValue="10"
-                    data-testid="input-new-item-threshold"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-unit">Unit Type</Label>
+                    <Input
+                      id="new-unit"
+                      name="unit"
+                      placeholder="e.g., Tablets, ml"
+                      defaultValue="units"
+                      data-testid="input-new-item-unit"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-lowStockThreshold">Low Stock Alert</Label>
+                    <Input
+                      id="new-lowStockThreshold"
+                      name="lowStockThreshold"
+                      type="number"
+                      min="0"
+                      placeholder="Min level"
+                      defaultValue="10"
+                      data-testid="input-new-item-threshold"
+                    />
+                  </div>
                 </div>
               </div>
             )}
