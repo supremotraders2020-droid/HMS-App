@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import type { DoctorPatient, Prescription, DoctorSchedule, Appointment } from "@shared/schema";
 import {
   Sidebar,
   SidebarContent,
@@ -66,54 +69,11 @@ import {
 interface DoctorPortalProps {
   doctorName: string;
   hospitalName: string;
+  doctorId?: string;
   onLogout: () => void;
 }
 
-interface Patient {
-  id: string;
-  name: string;
-  age: number;
-  gender: "M" | "F" | "O";
-  phone: string;
-  email: string;
-  address: string;
-  bloodGroup: string;
-  emergencyContact: string;
-  lastVisit: string;
-}
-
-interface Appointment {
-  id: string;
-  patientId: string;
-  patientName: string;
-  date: string;
-  time: string;
-  status: "pending" | "confirmed" | "completed" | "cancelled";
-  complaint: string;
-  notes: string;
-  opd: string;
-}
-
-interface Schedule {
-  id: string;
-  day: string;
-  startTime: string;
-  endTime: string;
-  opd: string;
-  isAvailable: boolean;
-}
-
-interface Prescription {
-  id: string;
-  patientId: string;
-  patientName: string;
-  date: string;
-  diagnosis: string;
-  medicines: string[];
-  instructions: string;
-}
-
-interface Notification {
+interface LocalNotification {
   id: string;
   title: string;
   message: string;
@@ -122,42 +82,7 @@ interface Notification {
   createdAt: string;
 }
 
-const MOCK_PATIENTS: Patient[] = [
-  { id: "p1", name: "Rajesh Kumar", age: 45, gender: "M", phone: "+91 98765 43210", email: "rajesh.k@email.com", address: "Sector 7, Pimpri", bloodGroup: "B+", emergencyContact: "+91 98765 11111", lastVisit: "2024-11-28" },
-  { id: "p2", name: "Priya Sharma", age: 32, gender: "F", phone: "+91 87654 32100", email: "priya.s@email.com", address: "More Vasti, Chikhali", bloodGroup: "O+", emergencyContact: "+91 87654 22222", lastVisit: "2024-11-25" },
-  { id: "p3", name: "Amit Patel", age: 58, gender: "M", phone: "+91 76543 21000", email: "amit.p@email.com", address: "Nair Colony, Chikhali", bloodGroup: "A-", emergencyContact: "+91 76543 33333", lastVisit: "2024-11-20" },
-  { id: "p4", name: "Sunita Deshmukh", age: 41, gender: "F", phone: "+91 65432 10000", email: "sunita.d@email.com", address: "Sane Chowk, Chikhali", bloodGroup: "AB+", emergencyContact: "+91 65432 44444", lastVisit: "2024-11-15" },
-  { id: "p5", name: "Vikram Singh", age: 29, gender: "M", phone: "+91 54321 00000", email: "vikram.s@email.com", address: "Wakad, Pune", bloodGroup: "O-", emergencyContact: "+91 54321 55555", lastVisit: "2024-11-10" },
-];
-
-const MOCK_APPOINTMENTS: Appointment[] = [
-  { id: "a1", patientId: "p1", patientName: "Rajesh Kumar", date: "2024-12-01", time: "09:00", status: "confirmed", complaint: "Chest pain and breathlessness", notes: "ECG required", opd: "Cardiology" },
-  { id: "a2", patientId: "p2", patientName: "Priya Sharma", date: "2024-12-01", time: "09:30", status: "pending", complaint: "Regular checkup", notes: "", opd: "General Medicine" },
-  { id: "a3", patientId: "p3", patientName: "Amit Patel", date: "2024-12-01", time: "10:00", status: "confirmed", complaint: "Diabetes follow-up", notes: "Blood sugar report pending", opd: "Endocrinology" },
-  { id: "a4", patientId: "p4", patientName: "Sunita Deshmukh", date: "2024-12-01", time: "10:30", status: "completed", complaint: "Hypertension monitoring", notes: "BP stable", opd: "Cardiology" },
-  { id: "a5", patientId: "p5", patientName: "Vikram Singh", date: "2024-12-01", time: "11:00", status: "pending", complaint: "Fever and cold", notes: "", opd: "General Medicine" },
-  { id: "a6", patientId: "p1", patientName: "Rajesh Kumar", date: "2024-12-02", time: "14:00", status: "pending", complaint: "Follow-up consultation", notes: "", opd: "Cardiology" },
-];
-
-const MOCK_SCHEDULES: Schedule[] = [
-  { id: "s1", day: "Monday", startTime: "09:00", endTime: "13:00", opd: "Cardiology OPD", isAvailable: true },
-  { id: "s2", day: "Monday", startTime: "14:00", endTime: "17:00", opd: "General OPD", isAvailable: true },
-  { id: "s3", day: "Tuesday", startTime: "09:00", endTime: "13:00", opd: "Cardiology OPD", isAvailable: true },
-  { id: "s4", day: "Wednesday", startTime: "09:00", endTime: "13:00", opd: "Cardiology OPD", isAvailable: true },
-  { id: "s5", day: "Wednesday", startTime: "14:00", endTime: "17:00", opd: "Emergency", isAvailable: true },
-  { id: "s6", day: "Thursday", startTime: "09:00", endTime: "13:00", opd: "Cardiology OPD", isAvailable: true },
-  { id: "s7", day: "Friday", startTime: "09:00", endTime: "13:00", opd: "General OPD", isAvailable: true },
-  { id: "s8", day: "Saturday", startTime: "10:00", endTime: "14:00", opd: "Cardiology OPD", isAvailable: true },
-  { id: "s9", day: "Sunday", startTime: "00:00", endTime: "00:00", opd: "", isAvailable: false },
-];
-
-const MOCK_PRESCRIPTIONS: Prescription[] = [
-  { id: "rx1", patientId: "p1", patientName: "Rajesh Kumar", date: "2024-11-28", diagnosis: "Hypertension Stage 1", medicines: ["Amlodipine 5mg - Once daily", "Aspirin 75mg - Once daily", "Atorvastatin 10mg - At night"], instructions: "Low salt diet. Regular BP monitoring. Follow up after 2 weeks." },
-  { id: "rx2", patientId: "p2", patientName: "Priya Sharma", date: "2024-11-25", diagnosis: "Viral Fever", medicines: ["Paracetamol 500mg - Three times daily", "Vitamin C 500mg - Once daily"], instructions: "Rest and hydration. Revisit if fever persists beyond 3 days." },
-  { id: "rx3", patientId: "p3", patientName: "Amit Patel", date: "2024-11-20", diagnosis: "Type 2 Diabetes Mellitus", medicines: ["Metformin 500mg - Twice daily", "Glimepiride 1mg - Before breakfast"], instructions: "Strict diabetic diet. Regular exercise. Monthly blood sugar check." },
-];
-
-const MOCK_NOTIFICATIONS: Notification[] = [
+const INITIAL_NOTIFICATIONS: LocalNotification[] = [
   { id: "n1", title: "New Appointment", message: "Rajesh Kumar has booked an appointment for Dec 2, 2024", type: "appointment", isRead: false, createdAt: "2024-12-01T08:00:00" },
   { id: "n2", title: "Lab Results Ready", message: "Blood test results for Amit Patel are available", type: "patient", isRead: false, createdAt: "2024-12-01T07:30:00" },
   { id: "n3", title: "Schedule Change", message: "Your Wednesday afternoon slot has been updated", type: "system", isRead: true, createdAt: "2024-11-30T16:00:00" },
@@ -176,20 +101,114 @@ const BLOOD_GROUP_COLORS: Record<string, string> = {
   "AB-": "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
 };
 
-export default function DoctorPortal({ doctorName, hospitalName, onLogout }: DoctorPortalProps) {
+export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc-1", onLogout }: DoctorPortalProps) {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<DoctorPatient | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
-  const [schedules, setSchedules] = useState(MOCK_SCHEDULES);
-  const [editingSchedule, setEditingSchedule] = useState<{day: string; slots: Schedule[]} | null>(null);
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const [editingSchedule, setEditingSchedule] = useState<{day: string; slots: DoctorSchedule[]} | null>(null);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [addPatientDialogOpen, setAddPatientDialogOpen] = useState(false);
+  const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
+  const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const todayAppointments = MOCK_APPOINTMENTS.filter(a => a.date === "2024-12-01");
-  const pendingAppointments = MOCK_APPOINTMENTS.filter(a => a.status === "pending");
+  // Fetch patients from API - default fetcher joins query keys as path segments
+  const { data: patients = [], isLoading: patientsLoading } = useQuery<DoctorPatient[]>({
+    queryKey: ['/api/doctor-patients', doctorId],
+  });
+
+  // Fetch prescriptions from API
+  const { data: prescriptions = [], isLoading: prescriptionsLoading } = useQuery<Prescription[]>({
+    queryKey: ['/api/prescriptions/doctor', doctorId],
+  });
+
+  // Fetch schedules from API
+  const { data: schedules = [], isLoading: schedulesLoading } = useQuery<DoctorSchedule[]>({
+    queryKey: ['/api/doctor-schedules', doctorId],
+  });
+
+  // Fetch appointments from API
+  const { data: allAppointments = [], isLoading: appointmentsLoading } = useQuery<Appointment[]>({
+    queryKey: ['/api/appointments'],
+  });
+
+  // Mutations for CRUD operations
+  const createPatientMutation = useMutation({
+    mutationFn: (patient: Omit<DoctorPatient, 'id' | 'createdAt' | 'updatedAt'>) =>
+      apiRequest('POST', '/api/doctor-patients', patient),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/doctor-patients', doctorId] });
+      toast({ title: "Patient added successfully" });
+      setAddPatientDialogOpen(false);
+    },
+    onError: () => toast({ title: "Failed to add patient", variant: "destructive" }),
+  });
+
+  const createPrescriptionMutation = useMutation({
+    mutationFn: (prescription: Omit<Prescription, 'id' | 'createdAt' | 'updatedAt'>) =>
+      apiRequest('POST', '/api/prescriptions', prescription),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/prescriptions/doctor', doctorId] });
+      toast({ title: "Prescription created successfully" });
+      setAddPrescriptionDialogOpen(false);
+    },
+    onError: () => toast({ title: "Failed to create prescription", variant: "destructive" }),
+  });
+
+  const createScheduleMutation = useMutation({
+    mutationFn: (schedule: Omit<DoctorSchedule, 'id' | 'createdAt' | 'updatedAt'>) =>
+      apiRequest('POST', '/api/doctor-schedules', schedule),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/doctor-schedules', doctorId] });
+      toast({ title: "Schedule added successfully" });
+      setAddScheduleDialogOpen(false);
+    },
+    onError: () => toast({ title: "Failed to add schedule", variant: "destructive" }),
+  });
+
+  const deletePatientMutation = useMutation({
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/doctor-patients/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/doctor-patients', doctorId] });
+      toast({ title: "Patient removed successfully" });
+    },
+    onError: () => toast({ title: "Failed to remove patient", variant: "destructive" }),
+  });
+
+  const deletePrescriptionMutation = useMutation({
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/prescriptions/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/prescriptions/doctor', doctorId] });
+      toast({ title: "Prescription deleted successfully" });
+    },
+    onError: () => toast({ title: "Failed to delete prescription", variant: "destructive" }),
+  });
+
+  const deleteScheduleMutation = useMutation({
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/doctor-schedules/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/doctor-schedules', doctorId] });
+      toast({ title: "Schedule deleted successfully" });
+    },
+    onError: () => toast({ title: "Failed to delete schedule", variant: "destructive" }),
+  });
+
+  const updateScheduleMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<DoctorSchedule> }) =>
+      apiRequest('PATCH', `/api/doctor-schedules/${id}`, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/doctor-schedules', doctorId] });
+      toast({ title: "Schedule updated successfully" });
+    },
+    onError: () => toast({ title: "Failed to update schedule", variant: "destructive" }),
+  });
+
+  const today = new Date().toISOString().split('T')[0];
+  const todayAppointments = allAppointments.filter(a => a.appointmentDate === today);
+  const pendingAppointments = allAppointments.filter(a => a.status === "pending");
   const unreadNotifications = notifications.filter(n => !n.isRead);
 
   const getStatusBadge = (status: string) => {
@@ -220,10 +239,10 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
-  const filteredPatients = MOCK_PATIENTS.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.phone.includes(searchQuery) ||
-    p.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPatients = patients.filter(p => 
+    p.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.patientPhone && p.patientPhone.includes(searchQuery)) ||
+    (p.patientEmail && p.patientEmail.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const sidebarStyle = {
@@ -286,7 +305,7 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-patients-count">{MOCK_PATIENTS.length}</div>
+            <div className="text-2xl font-bold" data-testid="text-patients-count">{patients.length}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
               +12 this week
@@ -300,7 +319,7 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{MOCK_PRESCRIPTIONS.length}</div>
+            <div className="text-2xl font-bold">{prescriptions.length}</div>
             <p className="text-xs text-muted-foreground">Written today</p>
           </CardContent>
         </Card>
@@ -330,11 +349,11 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
                     </div>
                     <div>
                       <p className="font-medium">{apt.patientName}</p>
-                      <p className="text-sm text-muted-foreground">{apt.complaint}</p>
+                      <p className="text-sm text-muted-foreground">{apt.symptoms || "General checkup"}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{apt.time}</p>
+                    <p className="font-medium">{apt.timeSlot}</p>
                     {getStatusBadge(apt.status)}
                   </div>
                 </div>
@@ -449,31 +468,31 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12">
                     <AvatarFallback className="bg-primary/10 text-primary">
-                      {patient.name.split(' ').map(n => n[0]).join('')}
+                      {patient.patientName.split(' ').map((n: string) => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle className="text-lg" data-testid={`patient-name-${patient.id}`}>{patient.name}</CardTitle>
-                    <CardDescription>{patient.age} years, {patient.gender === "M" ? "Male" : patient.gender === "F" ? "Female" : "Other"}</CardDescription>
+                    <CardTitle className="text-lg" data-testid={`patient-name-${patient.id}`}>{patient.patientName}</CardTitle>
+                    <CardDescription>{patient.patientAge || 'N/A'} years, {patient.patientGender === "M" ? "Male" : patient.patientGender === "F" ? "Female" : "Other"}</CardDescription>
                   </div>
                 </div>
-                <Badge className={BLOOD_GROUP_COLORS[patient.bloodGroup] || "bg-gray-100"}>
-                  {patient.bloodGroup}
+                <Badge className={BLOOD_GROUP_COLORS[patient.bloodGroup || ""] || "bg-gray-100"}>
+                  {patient.bloodGroup || "N/A"}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{patient.phone}</span>
+                <span>{patient.patientPhone}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="truncate">{patient.email}</span>
+                <span className="truncate">{patient.patientEmail || "N/A"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="truncate">{patient.address}</span>
+                <span className="truncate">{patient.patientAddress || "N/A"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
@@ -520,7 +539,7 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
         <TabsList data-testid="tabs-appointments">
           <TabsTrigger value="today" data-testid="tab-today">Today ({todayAppointments.length})</TabsTrigger>
           <TabsTrigger value="pending" data-testid="tab-pending">Pending ({pendingAppointments.length})</TabsTrigger>
-          <TabsTrigger value="all" data-testid="tab-all">All ({MOCK_APPOINTMENTS.length})</TabsTrigger>
+          <TabsTrigger value="all" data-testid="tab-all">All ({allAppointments.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="today" className="mt-4">
@@ -535,16 +554,15 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
                       </div>
                       <div>
                         <h4 className="font-semibold" data-testid={`apt-patient-${apt.id}`}>{apt.patientName}</h4>
-                        <p className="text-sm text-muted-foreground">{apt.complaint}</p>
+                        <p className="text-sm text-muted-foreground">{apt.symptoms || "General checkup"}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline">{apt.opd}</Badge>
-                          {apt.notes && <Badge variant="secondary">Has Notes</Badge>}
+                          <Badge variant="outline">Consultation</Badge>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-semibold">{apt.time}</p>
-                      <p className="text-sm text-muted-foreground">{apt.date}</p>
+                      <p className="text-lg font-semibold">{apt.timeSlot}</p>
+                      <p className="text-sm text-muted-foreground">{apt.appointmentDate}</p>
                       <div className="mt-1">{getStatusBadge(apt.status)}</div>
                     </div>
                   </div>
@@ -588,11 +606,11 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
                       </div>
                       <div>
                         <h4 className="font-semibold">{apt.patientName}</h4>
-                        <p className="text-sm text-muted-foreground">{apt.complaint}</p>
+                        <p className="text-sm text-muted-foreground">{apt.symptoms || "General checkup"}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">{apt.date} at {apt.time}</p>
+                      <p className="font-semibold">{apt.appointmentDate} at {apt.timeSlot}</p>
                       {getStatusBadge(apt.status)}
                     </div>
                   </div>
@@ -604,7 +622,7 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
 
         <TabsContent value="all" className="mt-4">
           <div className="space-y-4">
-            {MOCK_APPOINTMENTS.map((apt) => (
+            {allAppointments.map((apt) => (
               <Card key={apt.id} className="hover-elevate" data-testid={`all-apt-${apt.id}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -614,13 +632,13 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
                       </div>
                       <div>
                         <h4 className="font-semibold">{apt.patientName}</h4>
-                        <p className="text-sm text-muted-foreground">{apt.complaint}</p>
-                        <Badge variant="outline" className="mt-1">{apt.opd}</Badge>
+                        <p className="text-sm text-muted-foreground">{apt.symptoms || "General checkup"}</p>
+                        <Badge variant="outline" className="mt-1">Consultation</Badge>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">{apt.date}</p>
-                      <p className="text-sm text-muted-foreground">{apt.time}</p>
+                      <p className="font-semibold">{apt.appointmentDate}</p>
+                      <p className="text-sm text-muted-foreground">{apt.timeSlot}</p>
                       <div className="mt-1">{getStatusBadge(apt.status)}</div>
                     </div>
                   </div>
@@ -635,14 +653,15 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
 
   const openScheduleEditor = (day: string) => {
     const daySlots = schedules.filter(s => s.day === day);
-    setEditingSchedule({ day, slots: daySlots.length > 0 ? daySlots : [{ id: `new-${day}`, day, startTime: "09:00", endTime: "17:00", opd: "General OPD", isAvailable: true }] });
+    setEditingSchedule({ day, slots: daySlots });
     setScheduleDialogOpen(true);
   };
 
   const toggleDayAvailability = (day: string) => {
-    setSchedules(prev => prev.map(s => 
-      s.day === day ? { ...s, isAvailable: !s.isAvailable } : s
-    ));
+    const daySchedules = schedules.filter(s => s.day === day);
+    daySchedules.forEach(schedule => {
+      updateScheduleMutation.mutate({ id: schedule.id, updates: { isAvailable: !schedule.isAvailable } });
+    });
     toast({
       title: "Schedule Updated",
       description: `${day} availability has been toggled`,
@@ -651,9 +670,20 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
 
   const saveScheduleChanges = () => {
     if (editingSchedule) {
-      setSchedules(prev => {
-        const filtered = prev.filter(s => s.day !== editingSchedule.day);
-        return [...filtered, ...editingSchedule.slots];
+      editingSchedule.slots.forEach(slot => {
+        if (slot.id.startsWith('new-')) {
+          createScheduleMutation.mutate({
+            doctorId,
+            day: slot.day,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            slotType: slot.slotType,
+            maxPatients: slot.maxPatients,
+            isAvailable: slot.isAvailable,
+          });
+        } else {
+          updateScheduleMutation.mutate({ id: slot.id, updates: slot });
+        }
       });
       setScheduleDialogOpen(false);
       setEditingSchedule(null);
@@ -664,7 +694,7 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
     }
   };
 
-  const updateSlotTime = (slotId: string, field: "startTime" | "endTime" | "opd", value: string) => {
+  const updateSlotTime = (slotId: string, field: "startTime" | "endTime" | "slotType", value: string) => {
     if (editingSchedule) {
       setEditingSchedule({
         ...editingSchedule,
@@ -677,13 +707,17 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
 
   const addNewSlot = () => {
     if (editingSchedule) {
-      const newSlot: Schedule = {
+      const newSlot: DoctorSchedule = {
         id: `new-${Date.now()}`,
+        doctorId: doctorId,
         day: editingSchedule.day,
         startTime: "14:00",
         endTime: "18:00",
-        opd: "General OPD",
-        isAvailable: true
+        slotType: "OPD",
+        maxPatients: 20,
+        isAvailable: true,
+        createdAt: null,
+        updatedAt: null,
       };
       setEditingSchedule({
         ...editingSchedule,
@@ -765,7 +799,7 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
                         <div className="flex flex-wrap gap-2 mt-1">
                           {daySchedules.filter(s => s.isAvailable).map((slot) => (
                             <Badge key={slot.id} variant="outline">
-                              {slot.startTime} - {slot.endTime} ({slot.opd})
+                              {slot.startTime} - {slot.endTime} ({slot.slotType})
                             </Badge>
                           ))}
                         </div>
@@ -862,8 +896,8 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
                   <div className="space-y-2">
                     <Label>OPD / Department</Label>
                     <Select 
-                      value={slot.opd} 
-                      onValueChange={(v) => updateSlotTime(slot.id, "opd", v)}
+                      value={slot.slotType} 
+                      onValueChange={(v) => updateSlotTime(slot.id, "slotType", v)}
                     >
                       <SelectTrigger data-testid={`select-opd-${idx}`}>
                         <SelectValue />
@@ -915,7 +949,7 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
       </div>
 
       <div className="grid gap-4">
-        {MOCK_PRESCRIPTIONS.map((rx) => (
+        {prescriptions.map((rx) => (
           <Card key={rx.id} className="hover-elevate" data-testid={`prescription-card-${rx.id}`}>
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
@@ -925,7 +959,7 @@ export default function DoctorPortal({ doctorName, hospitalName, onLogout }: Doc
                   </div>
                   <div>
                     <CardTitle className="text-lg">{rx.patientName}</CardTitle>
-                    <CardDescription>{rx.date}</CardDescription>
+                    <CardDescription>{rx.prescriptionDate}</CardDescription>
                   </div>
                 </div>
                 <Button variant="ghost" size="icon">
