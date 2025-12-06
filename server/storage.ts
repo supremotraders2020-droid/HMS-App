@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -204,6 +204,11 @@ export interface IStorage {
   createDoctorPatient(patient: InsertDoctorPatient): Promise<DoctorPatient>;
   updateDoctorPatient(id: string, updates: Partial<InsertDoctorPatient>): Promise<DoctorPatient | undefined>;
   deleteDoctorPatient(id: string): Promise<boolean>;
+  
+  // Doctor Profiles
+  getDoctorProfile(doctorId: string): Promise<DoctorProfile | undefined>;
+  createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile>;
+  updateDoctorProfile(doctorId: string, profile: Partial<InsertDoctorProfile>): Promise<DoctorProfile | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -2095,6 +2100,28 @@ export class MemStorage implements IStorage {
 
   async deleteDoctorPatient(id: string): Promise<boolean> {
     return this.doctorPatientsData.delete(id);
+  }
+
+  // Doctor Profiles stub methods
+  private doctorProfilesData = new Map<string, DoctorProfile>();
+
+  async getDoctorProfile(doctorId: string): Promise<DoctorProfile | undefined> {
+    return Array.from(this.doctorProfilesData.values()).find(p => p.doctorId === doctorId);
+  }
+
+  async createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile> {
+    const id = randomUUID();
+    const newProfile: DoctorProfile = { id, ...profile, createdAt: new Date(), updatedAt: new Date() };
+    this.doctorProfilesData.set(id, newProfile);
+    return newProfile;
+  }
+
+  async updateDoctorProfile(doctorId: string, updates: Partial<InsertDoctorProfile>): Promise<DoctorProfile | undefined> {
+    const existing = Array.from(this.doctorProfilesData.values()).find(p => p.doctorId === doctorId);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.doctorProfilesData.set(existing.id, updated);
+    return updated;
   }
 }
 

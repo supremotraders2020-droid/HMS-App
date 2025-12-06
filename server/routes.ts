@@ -1642,6 +1642,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== DOCTOR PROFILE ROUTES ==========
+  app.get("/api/doctor-profiles/:doctorId", async (req, res) => {
+    try {
+      const profile = await storage.getDoctorProfile(req.params.doctorId);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
+  app.post("/api/doctor-profiles", async (req, res) => {
+    try {
+      const profile = await storage.createDoctorProfile(req.body);
+      res.status(201).json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create profile" });
+    }
+  });
+
+  app.patch("/api/doctor-profiles/:doctorId", async (req, res) => {
+    try {
+      let profile = await storage.getDoctorProfile(req.params.doctorId);
+      if (!profile) {
+        profile = await storage.createDoctorProfile({
+          doctorId: req.params.doctorId,
+          fullName: req.body.fullName || "Doctor",
+          specialty: req.body.specialty || "General",
+          ...req.body
+        });
+      } else {
+        profile = await storage.updateDoctorProfile(req.params.doctorId, req.body);
+      }
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Photo upload endpoint - stores as base64 in database
+  app.post("/api/doctor-profiles/:doctorId/photo", express.raw({ type: 'image/*', limit: '5mb' }), async (req, res) => {
+    try {
+      const contentType = req.headers['content-type'] || 'image/jpeg';
+      const base64Data = Buffer.from(req.body).toString('base64');
+      const photoUrl = `data:${contentType};base64,${base64Data}`;
+      
+      let profile = await storage.getDoctorProfile(req.params.doctorId);
+      if (!profile) {
+        profile = await storage.createDoctorProfile({
+          doctorId: req.params.doctorId,
+          fullName: "Doctor",
+          specialty: "General",
+          photoUrl
+        });
+      } else {
+        profile = await storage.updateDoctorProfile(req.params.doctorId, { photoUrl });
+      }
+      res.json({ success: true, photoUrl });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to upload photo" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

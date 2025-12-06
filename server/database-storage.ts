@@ -9,7 +9,7 @@ import {
   biometricTemplates, biometricVerifications,
   notifications, hospitalTeamMembers, activityLogs,
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
-  prescriptions, doctorSchedules, doctorPatients,
+  prescriptions, doctorSchedules, doctorPatients, doctorProfiles,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -25,7 +25,7 @@ import {
   type EmergencyContact, type InsertEmergencyContact,
   type HospitalSettings, type InsertHospitalSettings,
   type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule,
-  type DoctorPatient, type InsertDoctorPatient
+  type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -1259,6 +1259,25 @@ export class DatabaseStorage implements IStorage {
   async deleteDoctorPatient(id: string): Promise<boolean> {
     const result = await db.delete(doctorPatients).where(eq(doctorPatients.id, id)).returning();
     return result.length > 0;
+  }
+
+  // ========== DOCTOR PROFILE METHODS ==========
+  async getDoctorProfile(doctorId: string): Promise<DoctorProfile | undefined> {
+    const result = await db.select().from(doctorProfiles).where(eq(doctorProfiles.doctorId, doctorId));
+    return result[0];
+  }
+
+  async createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile> {
+    const result = await db.insert(doctorProfiles).values(profile).returning();
+    return result[0];
+  }
+
+  async updateDoctorProfile(doctorId: string, updates: Partial<InsertDoctorProfile>): Promise<DoctorProfile | undefined> {
+    const result = await db.update(doctorProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(doctorProfiles.doctorId, doctorId))
+      .returning();
+    return result[0];
   }
 }
 

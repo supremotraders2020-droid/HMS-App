@@ -52,6 +52,35 @@ export const insertDoctorSchema = createInsertSchema(doctors).omit({ id: true })
 export type InsertDoctor = z.infer<typeof insertDoctorSchema>;
 export type Doctor = typeof doctors.$inferSelect;
 
+// Doctor Profiles table - extended profile information for doctors
+export const doctorProfiles = pgTable("doctor_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  doctorId: varchar("doctor_id").notNull().unique(),
+  fullName: text("full_name").notNull(),
+  specialty: text("specialty").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  qualifications: text("qualifications"),
+  experience: text("experience"),
+  designation: text("designation").default("Consultant"),
+  department: text("department"),
+  photoUrl: text("photo_url"),
+  bio: text("bio"),
+  consultationFee: text("consultation_fee"),
+  hospitalName: text("hospital_name"),
+  hospitalAddress: text("hospital_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDoctorProfileSchema = createInsertSchema(doctorProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDoctorProfile = z.infer<typeof insertDoctorProfileSchema>;
+export type DoctorProfile = typeof doctorProfiles.$inferSelect;
+
 export const schedules = pgTable("schedules", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   doctorId: varchar("doctor_id").notNull(),
