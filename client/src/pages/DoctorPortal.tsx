@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import type { DoctorPatient, Prescription, DoctorSchedule, Appointment } from "@shared/schema";
+import type { DoctorPatient, Prescription, DoctorSchedule, Appointment, DoctorProfile } from "@shared/schema";
 import {
   Sidebar,
   SidebarContent,
@@ -63,7 +63,9 @@ import {
   CalendarDays,
   ChevronRight,
   MoreVertical,
-  Hospital
+  Hospital,
+  Camera,
+  Loader2
 } from "lucide-react";
 
 interface DoctorPortalProps {
@@ -114,6 +116,20 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    fullName: `Dr. ${doctorName}`,
+    specialty: "Cardiology",
+    email: `${doctorName.toLowerCase().replace(' ', '.')}@gravityhospital.com`,
+    phone: "+91 98765 00000",
+    qualifications: "MBBS, MD (Cardiology), DM",
+    experience: "15+ Years",
+    bio: "",
+    department: "Cardiology Department",
+    languages: "English, Hindi, Marathi",
+    consultationFee: "₹500"
+  });
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Fetch patients from API - default fetcher joins query keys as path segments
@@ -135,6 +151,28 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const { data: allAppointments = [], isLoading: appointmentsLoading } = useQuery<Appointment[]>({
     queryKey: ['/api/appointments'],
   });
+
+  // Fetch doctor profile from API
+  const { data: profileData, isLoading: profileLoading } = useQuery<DoctorProfile>({
+    queryKey: ['/api/doctor-profiles', doctorId],
+    retry: false,
+  });
+
+  // Update profile form when data loads
+  const updateProfileFormFromData = (data: DoctorProfile) => {
+    setProfileForm({
+      fullName: data.fullName || `Dr. ${doctorName}`,
+      specialty: data.specialty || "Cardiology",
+      email: data.email || `${doctorName.toLowerCase().replace(' ', '.')}@gravityhospital.com`,
+      phone: data.phone || "+91 98765 00000",
+      qualifications: data.qualifications || "MBBS, MD (Cardiology), DM",
+      experience: data.experience || "15+ Years",
+      bio: data.bio || "",
+      department: data.department || "Cardiology Department",
+      languages: data.languages || "English, Hindi, Marathi",
+      consultationFee: data.consultationFee || "₹500"
+    });
+  };
 
   // Mutations for CRUD operations
   const createPatientMutation = useMutation({
@@ -247,6 +285,41 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     },
     onError: () => toast({ title: "Failed to cancel appointment", variant: "destructive" }),
   });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (updates: Partial<typeof profileForm>) =>
+      apiRequest('PATCH', `/api/doctor-profiles/${doctorId}`, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/doctor-profiles', doctorId] });
+      toast({ title: "Profile updated successfully" });
+    },
+    onError: () => toast({ title: "Failed to update profile", variant: "destructive" }),
+  });
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingPhoto(true);
+    try {
+      const response = await fetch(`/api/doctor-profiles/${doctorId}/photo`, {
+        method: 'POST',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+      if (!response.ok) throw new Error('Upload failed');
+      queryClient.invalidateQueries({ queryKey: ['/api/doctor-profiles', doctorId] });
+      toast({ title: "Photo uploaded successfully" });
+    } catch {
+      toast({ title: "Failed to upload photo", variant: "destructive" });
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleSaveProfile = () => {
+    updateProfileMutation.mutate(profileForm);
+  };
 
   const today = new Date().toISOString().split('T')[0];
   const todayAppointments = allAppointments.filter(a => a.appointmentDate === today);
@@ -510,6 +583,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 bloodGroup: formData.get('bloodGroup') as string || null,
                 patientAddress: formData.get('patientAddress') as string || null,
                 medicalHistory: formData.get('medicalHistory') as string || null,
+                allergies: formData.get('allergies') as string || null,
+                status: "active",
                 lastVisit: new Date().toISOString().split('T')[0],
               });
             }} className="space-y-4">
@@ -1169,15 +1244,18 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
               const medicinesStr = formData.get('medicines') as string;
+              const patientName = formData.get('patientName') as string;
               createPrescriptionMutation.mutate({
                 doctorId,
-                patientId: null,
-                patientName: formData.get('patientName') as string,
+                doctorName: doctorName,
+                patientId: `rx-patient-${Date.now()}`,
+                patientName: patientName,
                 diagnosis: formData.get('diagnosis') as string,
                 medicines: medicinesStr.split(',').map(m => m.trim()).filter(Boolean),
                 instructions: formData.get('instructions') as string || null,
                 prescriptionDate: formData.get('prescriptionDate') as string,
                 followUpDate: formData.get('followUpDate') as string || null,
+                status: 'active',
               });
             }} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -1382,16 +1460,39 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="md:col-span-1" data-testid="card-profile-photo">
           <CardContent className="pt-6 text-center">
-            <Avatar className="h-32 w-32 mx-auto">
-              <AvatarFallback className="text-3xl bg-primary/10 text-primary">
-                {doctorName.split(' ').map(n => n[0]).join('')}
-              </AvatarFallback>
-            </Avatar>
-            <h3 className="text-xl font-semibold mt-4">Dr. {doctorName}</h3>
-            <p className="text-muted-foreground">Cardiologist</p>
+            <div className="relative inline-block">
+              <Avatar className="h-32 w-32 mx-auto">
+                {profileData?.photoUrl ? (
+                  <AvatarImage src={profileData.photoUrl} alt="Profile" />
+                ) : null}
+                <AvatarFallback className="text-3xl bg-primary/10 text-primary">
+                  {doctorName.split(' ').map(n => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+              <input
+                type="file"
+                ref={photoInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoUpload}
+                data-testid="input-photo-upload"
+              />
+            </div>
+            <h3 className="text-xl font-semibold mt-4">{profileForm.fullName}</h3>
+            <p className="text-muted-foreground">{profileForm.specialty}</p>
             <Badge className="mt-2">Senior Consultant</Badge>
-            <Button variant="outline" className="w-full mt-4" data-testid="button-change-photo">
-              Change Photo
+            <Button 
+              variant="outline" 
+              className="w-full mt-4" 
+              onClick={() => photoInputRef.current?.click()}
+              disabled={isUploadingPhoto}
+              data-testid="button-change-photo"
+            >
+              {isUploadingPhoto ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading...</>
+              ) : (
+                <><Camera className="h-4 w-4 mr-2" />Change Photo</>
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -1404,32 +1505,92 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Full Name</Label>
-                <Input defaultValue={`Dr. ${doctorName}`} data-testid="input-full-name" />
+                <Input 
+                  value={profileForm.fullName}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, fullName: e.target.value }))}
+                  data-testid="input-full-name" 
+                />
               </div>
               <div className="space-y-2">
                 <Label>Specialty</Label>
-                <Input defaultValue="Cardiology" data-testid="input-specialty" />
+                <Input 
+                  value={profileForm.specialty}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, specialty: e.target.value }))}
+                  data-testid="input-specialty" 
+                />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input defaultValue={`${doctorName.toLowerCase().replace(' ', '.')}@galaxyhospital.com`} data-testid="input-email" />
+                <Input 
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                  data-testid="input-email" 
+                />
               </div>
               <div className="space-y-2">
                 <Label>Phone</Label>
-                <Input defaultValue="+91 98765 00000" data-testid="input-phone" />
+                <Input 
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
+                  data-testid="input-phone" 
+                />
               </div>
               <div className="space-y-2">
                 <Label>Qualifications</Label>
-                <Input defaultValue="MBBS, MD (Cardiology), DM" data-testid="input-qualifications" />
+                <Input 
+                  value={profileForm.qualifications}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, qualifications: e.target.value }))}
+                  data-testid="input-qualifications" 
+                />
               </div>
               <div className="space-y-2">
                 <Label>Experience</Label>
-                <Input defaultValue="15+ Years" data-testid="input-experience" />
+                <Input 
+                  value={profileForm.experience}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, experience: e.target.value }))}
+                  data-testid="input-experience" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Languages</Label>
+                <Input 
+                  value={profileForm.languages}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, languages: e.target.value }))}
+                  data-testid="input-languages" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Consultation Fee</Label>
+                <Input 
+                  value={profileForm.consultationFee}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, consultationFee: e.target.value }))}
+                  data-testid="input-consultation-fee" 
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Bio</Label>
+                <Textarea 
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, bio: e.target.value }))}
+                  placeholder="Write a brief bio about yourself..."
+                  className="min-h-[100px]"
+                  data-testid="input-bio" 
+                />
               </div>
             </div>
           </CardContent>
           <CardFooter>
-            <Button data-testid="button-save-profile">Save Changes</Button>
+            <Button 
+              onClick={handleSaveProfile}
+              disabled={updateProfileMutation.isPending}
+              data-testid="button-save-profile"
+            >
+              {updateProfileMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
           </CardFooter>
         </Card>
       </div>
@@ -1449,7 +1610,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Department</p>
-              <p className="font-medium">Cardiology Department</p>
+              <Input 
+                value={profileForm.department}
+                onChange={(e) => setProfileForm(prev => ({ ...prev, department: e.target.value }))}
+                data-testid="input-department" 
+              />
             </div>
             <div className="sm:col-span-2">
               <p className="text-sm text-muted-foreground">Address</p>

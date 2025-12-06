@@ -66,6 +66,7 @@ export const doctorProfiles = pgTable("doctor_profiles", {
   department: text("department"),
   photoUrl: text("photo_url"),
   bio: text("bio"),
+  languages: text("languages"),
   consultationFee: text("consultation_fee"),
   hospitalName: text("hospital_name"),
   hospitalAddress: text("hospital_address"),
