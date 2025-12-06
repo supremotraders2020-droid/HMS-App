@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -153,6 +153,10 @@ export interface IStorage {
   updateTeamMember(id: string, member: Partial<InsertHospitalTeamMember>): Promise<HospitalTeamMember | undefined>;
   deleteTeamMember(id: string): Promise<boolean>;
   updateTeamMemberOnCallStatus(id: string, isOnCall: boolean): Promise<HospitalTeamMember | undefined>;
+  
+  // Activity Logs
+  getActivityLogs(limit?: number): Promise<ActivityLog[]>;
+  createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
 }
 
 export class MemStorage implements IStorage {
@@ -1781,6 +1785,32 @@ export class MemStorage implements IStorage {
     member.updatedAt = new Date();
     this.hospitalTeamMembers.set(id, member);
     return member;
+  }
+
+  // ========== ACTIVITY LOG METHODS ==========
+  private activityLogsData: Map<string, ActivityLog> = new Map();
+
+  async getActivityLogs(limit?: number): Promise<ActivityLog[]> {
+    const logs = Array.from(this.activityLogsData.values())
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+    return limit ? logs.slice(0, limit) : logs;
+  }
+
+  async createActivityLog(log: InsertActivityLog): Promise<ActivityLog> {
+    const id = randomUUID();
+    const newLog: ActivityLog = {
+      id,
+      action: log.action,
+      entityType: log.entityType,
+      entityId: log.entityId ?? null,
+      performedBy: log.performedBy,
+      performedByRole: log.performedByRole ?? null,
+      details: log.details ?? null,
+      activityType: log.activityType ?? "info",
+      createdAt: new Date(),
+    };
+    this.activityLogsData.set(id, newLog);
+    return newLog;
   }
 }
 

@@ -7,7 +7,7 @@ import {
   trackingPatients, medications, meals, vitals,
   conversationLogs, servicePatients, admissions, medicalRecords,
   biometricTemplates, biometricVerifications,
-  notifications, hospitalTeamMembers,
+  notifications, hospitalTeamMembers, activityLogs,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -17,7 +17,8 @@ import {
   type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient,
   type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord,
   type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification,
-  type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember
+  type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember,
+  type ActivityLog, type InsertActivityLog
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -962,6 +963,19 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log("Initial data seeded successfully!");
+  }
+
+  // ========== ACTIVITY LOG METHODS ==========
+  async getActivityLogs(limit?: number): Promise<ActivityLog[]> {
+    if (limit) {
+      return await db.select().from(activityLogs).orderBy(desc(activityLogs.createdAt)).limit(limit);
+    }
+    return await db.select().from(activityLogs).orderBy(desc(activityLogs.createdAt));
+  }
+
+  async createActivityLog(log: InsertActivityLog): Promise<ActivityLog> {
+    const result = await db.insert(activityLogs).values(log).returning();
+    return result[0];
   }
 }
 

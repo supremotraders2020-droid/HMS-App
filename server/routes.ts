@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -80,6 +80,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const appointment = await storage.createAppointment(validatedData);
+      
+      // Log activity
+      await storage.createActivityLog({
+        action: `New appointment booked for ${validatedData.patientName}`,
+        entityType: "appointment",
+        entityId: appointment.id,
+        performedBy: "OPD System",
+        performedByRole: "SYSTEM",
+        activityType: "info"
+      });
+      
       res.status(201).json(appointment);
     } catch (error) {
       console.error("Appointment creation error:", error);
@@ -579,6 +590,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: parsed.error.errors });
       }
       const patient = await storage.createServicePatient(parsed.data);
+      
+      // Log activity
+      await storage.createActivityLog({
+        action: `New patient registered: ${parsed.data.firstName} ${parsed.data.lastName}`,
+        entityType: "patient",
+        entityId: patient.id,
+        performedBy: "Registration Desk",
+        performedByRole: "OPD_MANAGER",
+        activityType: "info"
+      });
+      
       res.status(201).json(patient);
     } catch (error) {
       res.status(500).json({ error: "Failed to create patient" });
@@ -664,6 +686,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: parsed.error.errors });
       }
       const admission = await storage.createAdmission(parsed.data);
+      
+      // Log activity
+      await storage.createActivityLog({
+        action: `Patient admitted to ${parsed.data.department} department`,
+        entityType: "admission",
+        entityId: admission.id,
+        performedBy: "Admissions Desk",
+        performedByRole: "OPD_MANAGER",
+        activityType: "urgent"
+      });
+      
       res.status(201).json(admission);
     } catch (error) {
       res.status(500).json({ error: "Failed to create admission" });
@@ -1117,6 +1150,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(member);
     } catch (error) {
       res.status(500).json({ error: "Failed to update team member on-call status" });
+    }
+  });
+
+  // ========== ACTIVITY LOG ROUTES ==========
+
+  // Get activity logs (with optional limit)
+  app.get("/api/activity-logs", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const logs = await storage.getActivityLogs(limit);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch activity logs" });
+    }
+  });
+
+  // Create activity log
+  app.post("/api/activity-logs", async (req, res) => {
+    try {
+      const parsed = insertActivityLogSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const log = await storage.createActivityLog(parsed.data);
+      res.status(201).json(log);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create activity log" });
     }
   });
 

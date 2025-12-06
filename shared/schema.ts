@@ -438,3 +438,24 @@ export const insertHospitalTeamMemberSchema = createInsertSchema(hospitalTeamMem
 });
 export type InsertHospitalTeamMember = z.infer<typeof insertHospitalTeamMemberSchema>;
 export type HospitalTeamMember = typeof hospitalTeamMembers.$inferSelect;
+
+// ========== ACTIVITY LOGS TABLE ==========
+
+export const activityLogs = pgTable("activity_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  action: text("action").notNull(),
+  entityType: text("entity_type").notNull(), // 'patient', 'appointment', 'inventory', 'user', 'medical_record', etc.
+  entityId: text("entity_id"),
+  performedBy: text("performed_by").notNull(),
+  performedByRole: text("performed_by_role"),
+  details: text("details"),
+  activityType: text("activity_type").notNull().default("info"), // 'info', 'success', 'urgent', 'warning'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+export type ActivityLog = typeof activityLogs.$inferSelect;

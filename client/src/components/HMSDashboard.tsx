@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Users, 
   Calendar, 
@@ -13,10 +17,9 @@ import {
   HeartPulse,
   Shield,
   UserCheck,
-  ClipboardCheck,
-  Zap,
   BarChart3
 } from "lucide-react";
+import type { ActivityLog } from "@shared/schema";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -27,6 +30,33 @@ interface HMSDashboardProps {
 }
 
 export default function HMSDashboard({ currentRole, userName, hospitalName }: HMSDashboardProps) {
+  const [showAllActivities, setShowAllActivities] = useState(false);
+
+  // Fetch activity logs from API
+  const { data: activityLogs = [], isLoading: activitiesLoading } = useQuery<ActivityLog[]>({
+    queryKey: ['/api/activity-logs'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Get recent activities (limit 5 for dashboard)
+  const recentActivities = activityLogs.slice(0, 5);
+
+  // Format time ago
+  const formatTimeAgo = (date: Date | string | null) => {
+    if (!date) return "Just now";
+    const now = new Date();
+    const then = new Date(date);
+    const diffMs = now.getTime() - then.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  };
+
   // Mock data for different roles
   const getDashboardData = (role: UserRole) => {
     const commonStats = [
@@ -71,18 +101,12 @@ export default function HMSDashboard({ currentRole, userName, hospitalName }: HM
 
   const dashboardStats = getDashboardData(currentRole);
 
-  const recentActivities = [
-    { time: "2 hours ago", action: "New patient registration", user: "Dr. Smith", type: "info" },
-    { time: "4 hours ago", action: "Emergency admission", user: "Nurse Johnson", type: "urgent" },
-    { time: "6 hours ago", action: "Discharge completed", user: "Dr. Brown", type: "success" },
-    { time: "8 hours ago", action: "Lab results updated", user: "Lab Tech", type: "info" }
-  ];
-
   const getActivityBadgeVariant = (type: string) => {
     switch (type) {
       case "urgent": return "destructive";
       case "success": return "default";
       case "info": return "secondary";
+      case "warning": return "outline";
       default: return "outline";
     }
   };
@@ -92,6 +116,7 @@ export default function HMSDashboard({ currentRole, userName, hospitalName }: HM
       case "urgent": return "bg-red-500";
       case "success": return "bg-green-500";
       case "info": return "bg-blue-500";
+      case "warning": return "bg-yellow-500";
       default: return "bg-gray-400";
     }
   };
@@ -113,6 +138,35 @@ export default function HMSDashboard({ currentRole, userName, hospitalName }: HM
     }
     return "bg-gradient-to-br from-blue-50/60 via-white to-blue-50/30 dark:from-blue-950/20 dark:via-blue-900/10 dark:to-blue-950/5";
   };
+
+  const renderActivityItem = (activity: ActivityLog, index: number, isLast: boolean) => (
+    <div 
+      key={activity.id} 
+      className="flex items-start gap-4 p-3 rounded-lg hover-elevate transition-all duration-200" 
+      data-testid={`activity-${index}`}
+    >
+      <div className="relative">
+        <div className={`w-3 h-3 rounded-full ${getActivityIndicatorColor(activity.activityType)} mt-2`} />
+        {!isLast && (
+          <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-px h-8 bg-border" />
+        )}
+      </div>
+      <div className="flex-1 space-y-1">
+        <p className="text-sm font-medium leading-none text-foreground">
+          {activity.action}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          by <span className="font-medium text-foreground">{activity.performedBy}</span> • {formatTimeAgo(activity.createdAt)}
+        </p>
+      </div>
+      <Badge 
+        variant={getActivityBadgeVariant(activity.activityType)}
+        className="text-xs"
+      >
+        {activity.activityType}
+      </Badge>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-slate-50/50 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-800/50">
@@ -194,215 +248,115 @@ export default function HMSDashboard({ currentRole, userName, hospitalName }: HM
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-          {/* Enhanced Quick Actions */}
-          <Card className="lg:col-span-1 xl:col-span-1 bg-gradient-to-br from-white via-blue-50/30 to-white dark:from-slate-800 dark:via-slate-800/95 dark:to-slate-700/50 border-0 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-medium flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                Quick Actions
-              </CardTitle>
-              <CardDescription>Common tasks for your role</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {currentRole === "DOCTOR" && (
-                <>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 border-blue-200 dark:from-blue-900/20 dark:to-blue-800/20 dark:text-blue-300 dark:border-blue-800" 
-                    variant="outline" 
-                    data-testid="button-new-consultation"
-                  >
-                    <Stethoscope className="h-4 w-4 mr-2" />
-                    Start New Consultation
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-green-50 to-green-100/50 text-green-700 border-green-200 dark:from-green-900/20 dark:to-green-800/20 dark:text-green-300 dark:border-green-800" 
-                    variant="outline" 
-                    data-testid="button-view-appointments"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    View Today's Appointments
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-purple-50 to-purple-100/50 text-purple-700 border-purple-200 dark:from-purple-900/20 dark:to-purple-800/20 dark:text-purple-300 dark:border-purple-800" 
-                    variant="outline" 
-                    data-testid="button-patient-search"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Search Patients
-                  </Button>
-                </>
-              )}
-              {currentRole === "NURSE" && (
-                <>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-pink-50 to-pink-100/50 text-pink-700 border-pink-200 dark:from-pink-900/20 dark:to-pink-800/20 dark:text-pink-300 dark:border-pink-800" 
-                    variant="outline" 
-                    data-testid="button-record-vitals"
-                  >
-                    <HeartPulse className="h-4 w-4 mr-2" />
-                    Record Vitals
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-orange-50 to-orange-100/50 text-orange-700 border-orange-200 dark:from-orange-900/20 dark:to-orange-800/20 dark:text-orange-300 dark:border-orange-800" 
-                    variant="outline" 
-                    data-testid="button-medication-schedule"
-                  >
-                    <Clock className="h-4 w-4 mr-2" />
-                    Medication Schedule
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-teal-50 to-teal-100/50 text-teal-700 border-teal-200 dark:from-teal-900/20 dark:to-teal-800/20 dark:text-teal-300 dark:border-teal-800" 
-                    variant="outline" 
-                    data-testid="button-patient-rounds"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Start Patient Rounds
-                  </Button>
-                </>
-              )}
-              {currentRole === "ADMIN" && (
-                <>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-indigo-50 to-indigo-100/50 text-indigo-700 border-indigo-200 dark:from-indigo-900/20 dark:to-indigo-800/20 dark:text-indigo-300 dark:border-indigo-800" 
-                    variant="outline" 
-                    data-testid="button-user-management"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    User Management
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-violet-50 to-violet-100/50 text-violet-700 border-violet-200 dark:from-violet-900/20 dark:to-violet-800/20 dark:text-violet-300 dark:border-violet-800" 
-                    variant="outline" 
-                    data-testid="button-system-reports"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    System Reports
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-emerald-50 to-emerald-100/50 text-emerald-700 border-emerald-200 dark:from-emerald-900/20 dark:to-emerald-800/20 dark:text-emerald-300 dark:border-emerald-800" 
-                    variant="outline" 
-                    data-testid="button-backup-system"
-                  >
-                    <Shield className="h-4 w-4 mr-2" />
-                    System Backup
-                  </Button>
-                </>
-              )}
-              {currentRole === "OPD_MANAGER" && (
-                <>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-amber-50 to-amber-100/50 text-amber-700 border-amber-200 dark:from-amber-900/20 dark:to-amber-800/20 dark:text-amber-300 dark:border-amber-800" 
-                    variant="outline" 
-                    data-testid="button-manage-queue"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Manage Queue
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-cyan-50 to-cyan-100/50 text-cyan-700 border-cyan-200 dark:from-cyan-900/20 dark:to-cyan-800/20 dark:text-cyan-300 dark:border-cyan-800" 
-                    variant="outline" 
-                    data-testid="button-staff-schedule"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Staff Schedule
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-rose-50 to-rose-100/50 text-rose-700 border-rose-200 dark:from-rose-900/20 dark:to-rose-800/20 dark:text-rose-300 dark:border-rose-800" 
-                    variant="outline" 
-                    data-testid="button-daily-reports"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Daily Reports
-                  </Button>
-                </>
-              )}
-              {currentRole === "PATIENT" && (
-                <>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-sky-50 to-sky-100/50 text-sky-700 border-sky-200 dark:from-sky-900/20 dark:to-sky-800/20 dark:text-sky-300 dark:border-sky-800" 
-                    variant="outline" 
-                    data-testid="button-book-appointment"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Book Appointment
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-lime-50 to-lime-100/50 text-lime-700 border-lime-200 dark:from-lime-900/20 dark:to-lime-800/20 dark:text-lime-300 dark:border-lime-800" 
-                    variant="outline" 
-                    data-testid="button-view-records"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    View Medical Records
-                  </Button>
-                  <Button 
-                    className="w-full justify-start bg-gradient-to-r from-fuchsia-50 to-fuchsia-100/50 text-fuchsia-700 border-fuchsia-200 dark:from-fuchsia-900/20 dark:to-fuchsia-800/20 dark:text-fuchsia-300 dark:border-fuchsia-800" 
-                    variant="outline" 
-                    data-testid="button-test-results"
-                  >
-                    <ClipboardCheck className="h-4 w-4 mr-2" />
-                    Test Results
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Enhanced Recent Activity */}
-          <Card className="lg:col-span-1 xl:col-span-2 bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-800 dark:via-slate-800/95 dark:to-slate-700/50 border-0 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-medium flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary" />
-                Recent Activity
-              </CardTitle>
-              <CardDescription>Latest updates in the system</CardDescription>
-            </CardHeader>
-            <CardContent>
+        {/* Recent Activity - Full Width */}
+        <Card className="bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-800 dark:via-slate-800/95 dark:to-slate-700/50 border-0 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-medium flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription>Latest updates in the system</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {activitiesLoading ? (
               <div className="space-y-4">
-                {recentActivities.map((activity, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-start gap-4 p-3 rounded-lg hover-elevate transition-all duration-200" 
-                    data-testid={`activity-${index}`}
-                  >
-                    <div className="relative">
-                      <div className={`w-3 h-3 rounded-full ${getActivityIndicatorColor(activity.type)} mt-2`} />
-                      {index !== recentActivities.length - 1 && (
-                        <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-px h-8 bg-border" />
-                      )}
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-start gap-4 p-3 animate-pulse">
+                    <div className="w-3 h-3 rounded-full bg-muted mt-2" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-3 bg-muted rounded w-1/2" />
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none text-foreground">
+                    <div className="h-5 bg-muted rounded w-12" />
+                  </div>
+                ))}
+              </div>
+            ) : recentActivities.length > 0 ? (
+              <div className="space-y-4">
+                {recentActivities.map((activity, index) => 
+                  renderActivityItem(activity, index, index === recentActivities.length - 1)
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No recent activity to display</p>
+                <p className="text-sm">Activities will appear here as actions are performed in the system</p>
+              </div>
+            )}
+            <div className="mt-6 pt-4 border-t border-border">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-muted-foreground"
+                onClick={() => setShowAllActivities(true)}
+                data-testid="button-view-all-activity"
+              >
+                <Activity className="h-4 w-4 mr-2" />
+                View All Activity
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* All Activities Dialog */}
+      <Dialog open={showAllActivities} onOpenChange={setShowAllActivities}>
+        <DialogContent className="max-w-2xl max-h-[80vh]" data-testid="dialog-all-activities">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              All System Activity
+            </DialogTitle>
+            <DialogDescription>
+              Complete history of all actions performed in the system
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            {activityLogs.length > 0 ? (
+              <div className="space-y-2">
+                {activityLogs.map((activity, index) => (
+                  <div 
+                    key={activity.id} 
+                    className="flex items-start gap-4 p-3 rounded-lg border bg-card"
+                    data-testid={`all-activity-${index}`}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${getActivityIndicatorColor(activity.activityType)} mt-2 shrink-0`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium leading-none text-foreground truncate">
                         {activity.action}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        by <span className="font-medium text-foreground">{activity.user}</span> • {activity.time}
+                      <p className="text-sm text-muted-foreground mt-1">
+                        by <span className="font-medium">{activity.performedBy}</span>
+                        {activity.performedByRole && (
+                          <span className="text-xs ml-1">({activity.performedByRole})</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatTimeAgo(activity.createdAt)}
+                        {activity.entityType && (
+                          <span className="ml-2 text-primary">• {activity.entityType}</span>
+                        )}
                       </p>
                     </div>
                     <Badge 
-                      variant={getActivityBadgeVariant(activity.type)}
-                      className="text-xs"
+                      variant={getActivityBadgeVariant(activity.activityType)}
+                      className="text-xs shrink-0"
                     >
-                      {activity.type}
+                      {activity.activityType}
                     </Badge>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 pt-4 border-t border-border">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full text-muted-foreground"
-                  data-testid="button-view-all-activity"
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  View All Activity
-                </Button>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No activity logs found</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
