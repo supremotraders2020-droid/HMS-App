@@ -8,6 +8,7 @@ import {
   conversationLogs, servicePatients, admissions, medicalRecords,
   biometricTemplates, biometricVerifications,
   notifications, hospitalTeamMembers, activityLogs,
+  equipment, serviceHistory, emergencyContacts,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -18,7 +19,9 @@ import {
   type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord,
   type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification,
   type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember,
-  type ActivityLog, type InsertActivityLog
+  type ActivityLog, type InsertActivityLog,
+  type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory,
+  type EmergencyContact, type InsertEmergencyContact
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -981,6 +984,142 @@ export class DatabaseStorage implements IStorage {
   async createActivityLog(log: InsertActivityLog): Promise<ActivityLog> {
     const result = await db.insert(activityLogs).values(log).returning();
     return result[0];
+  }
+
+  // ========== EQUIPMENT SERVICING METHODS ==========
+  async getEquipment(): Promise<Equipment[]> {
+    return await db.select().from(equipment).orderBy(desc(equipment.createdAt));
+  }
+
+  async getEquipmentById(id: string): Promise<Equipment | undefined> {
+    const result = await db.select().from(equipment).where(eq(equipment.id, id));
+    return result[0];
+  }
+
+  async createEquipment(equip: InsertEquipment): Promise<Equipment> {
+    const result = await db.insert(equipment).values(equip).returning();
+    return result[0];
+  }
+
+  async updateEquipment(id: string, updates: Partial<InsertEquipment>): Promise<Equipment | undefined> {
+    const result = await db.update(equipment)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(equipment.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteEquipment(id: string): Promise<boolean> {
+    const result = await db.delete(equipment).where(eq(equipment.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Service History Methods
+  async getServiceHistory(equipmentId?: string): Promise<ServiceHistory[]> {
+    if (equipmentId) {
+      return await db.select().from(serviceHistory)
+        .where(eq(serviceHistory.equipmentId, equipmentId))
+        .orderBy(desc(serviceHistory.serviceDate));
+    }
+    return await db.select().from(serviceHistory).orderBy(desc(serviceHistory.serviceDate));
+  }
+
+  async createServiceHistory(history: InsertServiceHistory): Promise<ServiceHistory> {
+    const result = await db.insert(serviceHistory).values(history).returning();
+    return result[0];
+  }
+
+  async deleteServiceHistory(id: string): Promise<boolean> {
+    const result = await db.delete(serviceHistory).where(eq(serviceHistory.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Emergency Contacts Methods
+  async getEmergencyContacts(): Promise<EmergencyContact[]> {
+    return await db.select().from(emergencyContacts).orderBy(emergencyContacts.serviceType);
+  }
+
+  async createEmergencyContact(contact: InsertEmergencyContact): Promise<EmergencyContact> {
+    const result = await db.insert(emergencyContacts).values(contact).returning();
+    return result[0];
+  }
+
+  async updateEmergencyContact(id: string, updates: Partial<InsertEmergencyContact>): Promise<EmergencyContact | undefined> {
+    const result = await db.update(emergencyContacts)
+      .set(updates)
+      .where(eq(emergencyContacts.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteEmergencyContact(id: string): Promise<boolean> {
+    const result = await db.delete(emergencyContacts).where(eq(emergencyContacts.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Seed Equipment Data
+  async seedEquipmentData(): Promise<void> {
+    const existingEquipment = await db.select().from(equipment).limit(1);
+    if (existingEquipment.length > 0) {
+      console.log("Equipment data already exists, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding equipment data...");
+
+    const equipmentData: InsertEquipment[] = [
+      { name: "X-Ray Machine", model: "GE Definium 656", serialNumber: "XR-2024-001", lastServiceDate: "2024-11-15", nextDueDate: "2025-02-15", status: "up-to-date", location: "Radiology Dept", serviceFrequency: "quarterly", companyName: "GE Healthcare India", contactNumber: "+91 1800 103 4800", emergencyNumber: "+91 98765 11111" },
+      { name: "MRI Scanner", model: "Siemens MAGNETOM", serialNumber: "MR-2024-002", lastServiceDate: "2024-10-20", nextDueDate: "2024-12-20", status: "due-soon", location: "Imaging Center", serviceFrequency: "quarterly", companyName: "Siemens Healthineers", contactNumber: "+91 1800 209 1800", emergencyNumber: "+91 98765 22222" },
+      { name: "CT Scanner", model: "Philips Ingenuity", serialNumber: "CT-2024-003", lastServiceDate: "2024-08-10", nextDueDate: "2024-11-10", status: "overdue", location: "Radiology Dept", serviceFrequency: "quarterly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
+      { name: "Ultrasound System", model: "GE LOGIQ E10", serialNumber: "US-2024-004", lastServiceDate: "2024-11-25", nextDueDate: "2025-02-25", status: "up-to-date", location: "OBG Dept", serviceFrequency: "quarterly", companyName: "GE Healthcare India", contactNumber: "+91 1800 103 4800", emergencyNumber: "+91 98765 11111" },
+      { name: "ECG Machine", model: "Philips PageWriter", serialNumber: "ECG-2024-005", lastServiceDate: "2024-11-01", nextDueDate: "2025-01-01", status: "due-soon", location: "Cardiology", serviceFrequency: "monthly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
+      { name: "Ventilator", model: "Draeger Evita V500", serialNumber: "VT-2024-006", lastServiceDate: "2024-09-15", nextDueDate: "2024-11-15", status: "overdue", location: "ICU", serviceFrequency: "monthly", companyName: "Draeger Medical India", contactNumber: "+91 1800 123 4567", emergencyNumber: "+91 98765 44444" },
+      { name: "Defibrillator", model: "Philips HeartStart", serialNumber: "DF-2024-007", lastServiceDate: "2024-11-20", nextDueDate: "2025-02-20", status: "up-to-date", location: "Emergency", serviceFrequency: "quarterly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
+      { name: "Anesthesia Machine", model: "GE Aisys CS2", serialNumber: "AN-2024-008", lastServiceDate: "2024-10-05", nextDueDate: "2024-12-05", status: "due-soon", location: "Operation Theater", serviceFrequency: "monthly", companyName: "GE Healthcare India", contactNumber: "+91 1800 103 4800", emergencyNumber: "+91 98765 11111" },
+      { name: "Patient Monitor", model: "Philips IntelliVue", serialNumber: "PM-2024-009", lastServiceDate: "2024-11-10", nextDueDate: "2025-01-10", status: "up-to-date", location: "ICU", serviceFrequency: "monthly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
+    ];
+
+    for (const equip of equipmentData) {
+      await db.insert(equipment).values(equip);
+    }
+
+    // Seed service history
+    const allEquipment = await this.getEquipment();
+    const serviceHistoryData: InsertServiceHistory[] = [
+      { equipmentId: allEquipment[0]?.id || "", serviceDate: "2024-11-15", technician: "Rajesh Kumar", description: "Annual maintenance, calibration completed, tube replacement", cost: "₹45,000" },
+      { equipmentId: allEquipment[0]?.id || "", serviceDate: "2024-08-10", technician: "Amit Sharma", description: "Quarterly inspection and cleaning", cost: "₹15,000" },
+      { equipmentId: allEquipment[0]?.id || "", serviceDate: "2024-05-05", technician: "Rajesh Kumar", description: "Software update and system optimization", cost: "₹8,000" },
+      { equipmentId: allEquipment[1]?.id || "", serviceDate: "2024-10-20", technician: "Suresh Reddy", description: "Coil replacement and calibration", cost: "₹1,25,000" },
+      { equipmentId: allEquipment[1]?.id || "", serviceDate: "2024-07-15", technician: "Suresh Reddy", description: "Helium refill and system check", cost: "₹85,000" },
+      { equipmentId: allEquipment[2]?.id || "", serviceDate: "2024-08-10", technician: "Vikram Singh", description: "Gantry alignment and detector calibration", cost: "₹55,000" },
+    ];
+
+    for (const history of serviceHistoryData) {
+      if (history.equipmentId) {
+        await db.insert(serviceHistory).values(history);
+      }
+    }
+
+    // Seed emergency contacts
+    const emergencyContactsData: InsertEmergencyContact[] = [
+      { name: "City Ambulance Service", serviceType: "Medical Help", phoneNumber: "+91 102", isPrimary: true, isActive: true },
+      { name: "Hospital Emergency", serviceType: "Medical Help", phoneNumber: "+91 20 1234 5678", isPrimary: true, isActive: true },
+      { name: "Fire Brigade", serviceType: "Fire Service", phoneNumber: "+91 101", isPrimary: true, isActive: true },
+      { name: "Police Control Room", serviceType: "Police", phoneNumber: "+91 100", isPrimary: true, isActive: true },
+      { name: "Sharma Plumbing Works", serviceType: "Plumber", phoneNumber: "+91 98765 12345", isPrimary: true, isActive: true },
+      { name: "Quick Fix Plumbers", serviceType: "Plumber", phoneNumber: "+91 98765 67890", isPrimary: false, isActive: true },
+      { name: "PowerTech Electricals", serviceType: "Electrician", phoneNumber: "+91 97654 32100", isPrimary: true, isActive: true },
+      { name: "City Electricians", serviceType: "Electrician", phoneNumber: "+91 97654 11111", isPrimary: false, isActive: true },
+      { name: "Otis Elevator Service", serviceType: "Lift Service", phoneNumber: "+91 1800 123 4567", isPrimary: true, isActive: true },
+      { name: "TechSupport IT Solutions", serviceType: "IT Support", phoneNumber: "+91 88888 77777", isPrimary: true, isActive: true },
+      { name: "Network Solutions", serviceType: "IT Support", phoneNumber: "+91 88888 66666", isPrimary: false, isActive: true },
+    ];
+
+    for (const contact of emergencyContactsData) {
+      await db.insert(emergencyContacts).values(contact);
+    }
+
+    console.log("Equipment data seeded successfully!");
   }
 }
 

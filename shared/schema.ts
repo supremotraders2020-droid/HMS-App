@@ -459,3 +459,67 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
 });
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 export type ActivityLog = typeof activityLogs.$inferSelect;
+
+// ========== EQUIPMENT SERVICING TABLES ==========
+
+// Equipment table - stores all hospital equipment
+export const equipment = pgTable("equipment", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  model: text("model").notNull(),
+  serialNumber: text("serial_number").notNull().unique(),
+  lastServiceDate: text("last_service_date"),
+  nextDueDate: text("next_due_date").notNull(),
+  status: text("status").notNull().default("up-to-date"), // 'up-to-date', 'due-soon', 'overdue'
+  location: text("location").notNull(),
+  serviceFrequency: text("service_frequency").notNull().default("quarterly"), // 'monthly', 'quarterly', 'yearly'
+  companyName: text("company_name"),
+  contactNumber: text("contact_number"),
+  emergencyNumber: text("emergency_number"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertEquipmentSchema = createInsertSchema(equipment).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertEquipment = z.infer<typeof insertEquipmentSchema>;
+export type Equipment = typeof equipment.$inferSelect;
+
+// Service History table - tracks all service records for equipment
+export const serviceHistory = pgTable("service_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  equipmentId: varchar("equipment_id").notNull(),
+  serviceDate: text("service_date").notNull(),
+  technician: text("technician").notNull(),
+  description: text("description").notNull(),
+  cost: text("cost").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertServiceHistorySchema = createInsertSchema(serviceHistory).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertServiceHistory = z.infer<typeof insertServiceHistorySchema>;
+export type ServiceHistory = typeof serviceHistory.$inferSelect;
+
+// Emergency Contacts table - hospital emergency service contacts
+export const emergencyContacts = pgTable("emergency_contacts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  serviceType: text("service_type").notNull(), // 'Medical Help', 'Fire Service', 'Police', 'Plumber', 'Electrician', 'Lift Service', 'IT Support'
+  phoneNumber: text("phone_number").notNull(),
+  isPrimary: boolean("is_primary").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertEmergencyContactSchema = createInsertSchema(emergencyContacts).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertEmergencyContact = z.infer<typeof insertEmergencyContactSchema>;
+export type EmergencyContact = typeof emergencyContacts.$inferSelect;
