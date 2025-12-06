@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -158,21 +158,23 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     retry: false,
   });
 
-  // Update profile form when data loads
-  const updateProfileFormFromData = (data: DoctorProfile) => {
-    setProfileForm({
-      fullName: data.fullName || `Dr. ${doctorName}`,
-      specialty: data.specialty || "Cardiology",
-      email: data.email || `${doctorName.toLowerCase().replace(' ', '.')}@gravityhospital.com`,
-      phone: data.phone || "+91 98765 00000",
-      qualifications: data.qualifications || "MBBS, MD (Cardiology), DM",
-      experience: data.experience || "15+ Years",
-      bio: data.bio || "",
-      department: data.department || "Cardiology Department",
-      languages: data.languages || "English, Hindi, Marathi",
-      consultationFee: data.consultationFee || "₹500"
-    });
-  };
+  // Sync profile form with API data when it loads
+  useEffect(() => {
+    if (profileData) {
+      setProfileForm({
+        fullName: profileData.fullName || `Dr. ${doctorName}`,
+        specialty: profileData.specialty || "Cardiology",
+        email: profileData.email || `${doctorName.toLowerCase().replace(' ', '.')}@gravityhospital.com`,
+        phone: profileData.phone || "+91 98765 00000",
+        qualifications: profileData.qualifications || "MBBS, MD (Cardiology), DM",
+        experience: profileData.experience || "15+ Years",
+        bio: profileData.bio || "",
+        department: profileData.department || "Cardiology Department",
+        languages: profileData.languages || "English, Hindi, Marathi",
+        consultationFee: profileData.consultationFee || "₹500"
+      });
+    }
+  }, [profileData, doctorName]);
 
   // Mutations for CRUD operations
   const createPatientMutation = useMutation({
