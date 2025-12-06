@@ -176,7 +176,7 @@ export default function EquipmentServicing() {
     return date.toISOString().split('T')[0];
   };
 
-  const getFrequencyLabel = (frequency?: ServiceFrequency): string => {
+  const getFrequencyLabel = (frequency?: string | null): string => {
     switch (frequency) {
       case "monthly": return "Monthly";
       case "quarterly": return "Quarterly";
@@ -185,7 +185,7 @@ export default function EquipmentServicing() {
     }
   };
 
-  const getFrequencyBadgeColor = (frequency?: ServiceFrequency): string => {
+  const getFrequencyBadgeColor = (frequency?: string | null): string => {
     switch (frequency) {
       case "monthly": return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
       case "quarterly": return "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300";
@@ -668,7 +668,7 @@ export default function EquipmentServicing() {
                 <Phone className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{MOCK_EMERGENCY_CONTACTS.length}</div>
+                <div className="text-2xl font-bold">{emergencyContactsList.length}</div>
                 <p className="text-xs text-muted-foreground">All emergency contacts</p>
               </CardContent>
             </Card>
@@ -678,7 +678,7 @@ export default function EquipmentServicing() {
                 <CheckCircle className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{MOCK_EMERGENCY_CONTACTS.filter(c => c.isPrimary).length}</div>
+                <div className="text-2xl font-bold">{emergencyContactsList.filter(c => c.isPrimary).length}</div>
                 <p className="text-xs text-muted-foreground">First responders</p>
               </CardContent>
             </Card>
@@ -688,7 +688,7 @@ export default function EquipmentServicing() {
                 <Settings className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{new Set(MOCK_EMERGENCY_CONTACTS.map(c => c.serviceType)).size}</div>
+                <div className="text-2xl font-bold">{new Set(emergencyContactsList.map(c => c.serviceType)).size}</div>
                 <p className="text-xs text-muted-foreground">Categories covered</p>
               </CardContent>
             </Card>
