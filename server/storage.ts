@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -158,6 +158,24 @@ export interface IStorage {
   // Activity Logs
   getActivityLogs(limit?: number): Promise<ActivityLog[]>;
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
+  
+  // Equipment Servicing
+  getEquipment(): Promise<Equipment[]>;
+  getEquipmentById(id: string): Promise<Equipment | undefined>;
+  createEquipment(equip: InsertEquipment): Promise<Equipment>;
+  updateEquipment(id: string, updates: Partial<InsertEquipment>): Promise<Equipment | undefined>;
+  deleteEquipment(id: string): Promise<boolean>;
+  
+  // Service History
+  getServiceHistory(equipmentId?: string): Promise<ServiceHistory[]>;
+  createServiceHistory(history: InsertServiceHistory): Promise<ServiceHistory>;
+  deleteServiceHistory(id: string): Promise<boolean>;
+  
+  // Emergency Contacts
+  getEmergencyContacts(): Promise<EmergencyContact[]>;
+  createEmergencyContact(contact: InsertEmergencyContact): Promise<EmergencyContact>;
+  updateEmergencyContact(id: string, updates: Partial<InsertEmergencyContact>): Promise<EmergencyContact | undefined>;
+  deleteEmergencyContact(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -1816,6 +1834,111 @@ export class MemStorage implements IStorage {
     };
     this.activityLogsData.set(id, newLog);
     return newLog;
+  }
+
+  // ========== EQUIPMENT SERVICING STUB METHODS ==========
+  private equipmentData: Map<string, Equipment> = new Map();
+  private serviceHistoryData: Map<string, ServiceHistory> = new Map();
+  private emergencyContactsData: Map<string, EmergencyContact> = new Map();
+
+  async getEquipment(): Promise<Equipment[]> {
+    return Array.from(this.equipmentData.values());
+  }
+
+  async getEquipmentById(id: string): Promise<Equipment | undefined> {
+    return this.equipmentData.get(id);
+  }
+
+  async createEquipment(equip: InsertEquipment): Promise<Equipment> {
+    const id = randomUUID();
+    const newEquip: Equipment = {
+      id,
+      name: equip.name,
+      model: equip.model,
+      serialNumber: equip.serialNumber,
+      lastServiceDate: equip.lastServiceDate ?? null,
+      nextDueDate: equip.nextDueDate,
+      status: equip.status ?? "up-to-date",
+      location: equip.location,
+      serviceFrequency: equip.serviceFrequency ?? "quarterly",
+      companyName: equip.companyName ?? null,
+      contactNumber: equip.contactNumber ?? null,
+      emergencyNumber: equip.emergencyNumber ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.equipmentData.set(id, newEquip);
+    return newEquip;
+  }
+
+  async updateEquipment(id: string, updates: Partial<InsertEquipment>): Promise<Equipment | undefined> {
+    const existing = this.equipmentData.get(id);
+    if (!existing) return undefined;
+    const updated: Equipment = { ...existing, ...updates, updatedAt: new Date() };
+    this.equipmentData.set(id, updated);
+    return updated;
+  }
+
+  async deleteEquipment(id: string): Promise<boolean> {
+    return this.equipmentData.delete(id);
+  }
+
+  async getServiceHistory(equipmentId?: string): Promise<ServiceHistory[]> {
+    const history = Array.from(this.serviceHistoryData.values());
+    if (equipmentId) {
+      return history.filter(h => h.equipmentId === equipmentId);
+    }
+    return history;
+  }
+
+  async createServiceHistory(history: InsertServiceHistory): Promise<ServiceHistory> {
+    const id = randomUUID();
+    const newHistory: ServiceHistory = {
+      id,
+      equipmentId: history.equipmentId,
+      serviceDate: history.serviceDate,
+      technician: history.technician,
+      description: history.description,
+      cost: history.cost,
+      createdAt: new Date(),
+    };
+    this.serviceHistoryData.set(id, newHistory);
+    return newHistory;
+  }
+
+  async deleteServiceHistory(id: string): Promise<boolean> {
+    return this.serviceHistoryData.delete(id);
+  }
+
+  async getEmergencyContacts(): Promise<EmergencyContact[]> {
+    return Array.from(this.emergencyContactsData.values());
+  }
+
+  async createEmergencyContact(contact: InsertEmergencyContact): Promise<EmergencyContact> {
+    const id = randomUUID();
+    const newContact: EmergencyContact = {
+      id,
+      name: contact.name,
+      serviceType: contact.serviceType,
+      phoneNumber: contact.phoneNumber,
+      isPrimary: contact.isPrimary ?? false,
+      isActive: contact.isActive ?? true,
+      createdAt: new Date(),
+    };
+    this.emergencyContactsData.set(id, newContact);
+    return newContact;
+  }
+
+  async updateEmergencyContact(id: string, updates: Partial<InsertEmergencyContact>): Promise<EmergencyContact | undefined> {
+    const existing = this.emergencyContactsData.get(id);
+    if (!existing) return undefined;
+    const updated: EmergencyContact = { ...existing, ...updates };
+    this.emergencyContactsData.set(id, updated);
+    return updated;
+  }
+
+  async deleteEmergencyContact(id: string): Promise<boolean> {
+    return this.emergencyContactsData.delete(id);
   }
 }
 

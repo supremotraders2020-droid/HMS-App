@@ -2,12 +2,13 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Seed initial data if database is empty
   await databaseStorage.seedInitialData();
+  await databaseStorage.seedEquipmentData();
   
   // Get all doctors
   app.get("/api/doctors", async (_req, res) => {
@@ -1202,6 +1203,212 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(log);
     } catch (error) {
       res.status(500).json({ error: "Failed to create activity log" });
+    }
+  });
+
+  // ========== EQUIPMENT SERVICING ROUTES ==========
+
+  // Get all equipment
+  app.get("/api/equipment", async (_req, res) => {
+    try {
+      const equipmentList = await storage.getEquipment();
+      res.json(equipmentList);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch equipment" });
+    }
+  });
+
+  // Get equipment by ID
+  app.get("/api/equipment/:id", async (req, res) => {
+    try {
+      const equip = await storage.getEquipmentById(req.params.id);
+      if (!equip) {
+        return res.status(404).json({ error: "Equipment not found" });
+      }
+      res.json(equip);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch equipment" });
+    }
+  });
+
+  // Create new equipment
+  app.post("/api/equipment", async (req, res) => {
+    try {
+      const parsed = insertEquipmentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const equip = await storage.createEquipment(parsed.data);
+      
+      // Log activity
+      await storage.createActivityLog({
+        action: `New equipment added: ${parsed.data.name}`,
+        entityType: "equipment",
+        entityId: equip.id,
+        performedBy: "System",
+        performedByRole: "ADMIN",
+        activityType: "info"
+      });
+      
+      res.status(201).json(equip);
+    } catch (error) {
+      console.error("Equipment creation error:", error);
+      res.status(500).json({ error: "Failed to create equipment" });
+    }
+  });
+
+  // Update equipment
+  app.patch("/api/equipment/:id", async (req, res) => {
+    try {
+      const equip = await storage.updateEquipment(req.params.id, req.body);
+      if (!equip) {
+        return res.status(404).json({ error: "Equipment not found" });
+      }
+      res.json(equip);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update equipment" });
+    }
+  });
+
+  // Delete equipment
+  app.delete("/api/equipment/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteEquipment(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Equipment not found" });
+      }
+      res.json({ success: true, message: "Equipment deleted" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete equipment" });
+    }
+  });
+
+  // ========== SERVICE HISTORY ROUTES ==========
+
+  // Get service history (all or by equipment)
+  app.get("/api/service-history", async (req, res) => {
+    try {
+      const equipmentId = req.query.equipmentId as string | undefined;
+      const history = await storage.getServiceHistory(equipmentId);
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch service history" });
+    }
+  });
+
+  // Create service history
+  app.post("/api/service-history", async (req, res) => {
+    try {
+      const parsed = insertServiceHistorySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const history = await storage.createServiceHistory(parsed.data);
+      
+      // Update equipment's last service date and next due date
+      const equip = await storage.getEquipmentById(parsed.data.equipmentId);
+      if (equip) {
+        const lastServiceDate = parsed.data.serviceDate;
+        let nextDueDate = lastServiceDate;
+        const date = new Date(lastServiceDate);
+        
+        switch (equip.serviceFrequency) {
+          case "monthly":
+            date.setMonth(date.getMonth() + 1);
+            break;
+          case "quarterly":
+            date.setMonth(date.getMonth() + 3);
+            break;
+          case "yearly":
+            date.setFullYear(date.getFullYear() + 1);
+            break;
+        }
+        nextDueDate = date.toISOString().split('T')[0];
+        
+        // Calculate status
+        const today = new Date();
+        const dueDateObj = new Date(nextDueDate);
+        const diffDays = Math.ceil((dueDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        let status = "up-to-date";
+        if (diffDays < 0) status = "overdue";
+        else if (diffDays <= 30) status = "due-soon";
+        
+        await storage.updateEquipment(parsed.data.equipmentId, {
+          lastServiceDate,
+          nextDueDate,
+          status
+        });
+      }
+      
+      res.status(201).json(history);
+    } catch (error) {
+      console.error("Service history creation error:", error);
+      res.status(500).json({ error: "Failed to create service history" });
+    }
+  });
+
+  // Delete service history
+  app.delete("/api/service-history/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteServiceHistory(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Service history not found" });
+      }
+      res.json({ success: true, message: "Service history deleted" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete service history" });
+    }
+  });
+
+  // ========== EMERGENCY CONTACTS ROUTES ==========
+
+  // Get all emergency contacts
+  app.get("/api/emergency-contacts", async (_req, res) => {
+    try {
+      const contacts = await storage.getEmergencyContacts();
+      res.json(contacts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch emergency contacts" });
+    }
+  });
+
+  // Create emergency contact
+  app.post("/api/emergency-contacts", async (req, res) => {
+    try {
+      const parsed = insertEmergencyContactSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const contact = await storage.createEmergencyContact(parsed.data);
+      res.status(201).json(contact);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create emergency contact" });
+    }
+  });
+
+  // Update emergency contact
+  app.patch("/api/emergency-contacts/:id", async (req, res) => {
+    try {
+      const contact = await storage.updateEmergencyContact(req.params.id, req.body);
+      if (!contact) {
+        return res.status(404).json({ error: "Emergency contact not found" });
+      }
+      res.json(contact);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update emergency contact" });
+    }
+  });
+
+  // Delete emergency contact
+  app.delete("/api/emergency-contacts/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteEmergencyContact(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Emergency contact not found" });
+      }
+      res.json({ success: true, message: "Emergency contact deleted" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete emergency contact" });
     }
   });
 
