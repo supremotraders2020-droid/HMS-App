@@ -113,6 +113,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [addPatientDialogOpen, setAddPatientDialogOpen] = useState(false);
   const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
+  const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
   const { toast } = useToast();
 
   // Fetch patients from API - default fetcher joins query keys as path segments
@@ -204,6 +205,47 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       toast({ title: "Schedule updated successfully" });
     },
     onError: () => toast({ title: "Failed to update schedule", variant: "destructive" }),
+  });
+
+  const createAppointmentMutation = useMutation({
+    mutationFn: (appointment: { patientName: string; patientPhone: string; patientEmail?: string; doctorId: string; appointmentDate: string; timeSlot: string; symptoms?: string; status: string }) =>
+      apiRequest('POST', '/api/appointments', appointment),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+      toast({ title: "Appointment created successfully" });
+      setAddAppointmentDialogOpen(false);
+    },
+    onError: () => toast({ title: "Failed to create appointment", variant: "destructive" }),
+  });
+
+  const confirmAppointmentMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiRequest('POST', `/api/appointments/${id}/checkin`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+      toast({ title: "Appointment confirmed successfully" });
+    },
+    onError: () => toast({ title: "Failed to confirm appointment", variant: "destructive" }),
+  });
+
+  const completeAppointmentMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiRequest('PATCH', `/api/appointments/${id}/complete`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+      toast({ title: "Appointment completed successfully" });
+    },
+    onError: () => toast({ title: "Failed to complete appointment", variant: "destructive" }),
+  });
+
+  const cancelAppointmentMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiRequest('PATCH', `/api/appointments/${id}/cancel`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+      toast({ title: "Appointment cancelled" });
+    },
+    onError: () => toast({ title: "Failed to cancel appointment", variant: "destructive" }),
   });
 
   const today = new Date().toISOString().split('T')[0];
@@ -443,10 +485,100 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           <h1 className="text-2xl font-bold" data-testid="text-patients-title">Patient Records</h1>
           <p className="text-muted-foreground">Manage your patient database</p>
         </div>
-        <Button data-testid="button-add-new-patient">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Patient
-        </Button>
+        <Dialog open={addPatientDialogOpen} onOpenChange={setAddPatientDialogOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-add-new-patient">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Patient
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Patient</DialogTitle>
+              <DialogDescription>Enter patient details to add to your records</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              createPatientMutation.mutate({
+                doctorId,
+                patientName: formData.get('patientName') as string,
+                patientPhone: formData.get('patientPhone') as string,
+                patientEmail: formData.get('patientEmail') as string || null,
+                patientAge: parseInt(formData.get('patientAge') as string) || null,
+                patientGender: formData.get('patientGender') as string || null,
+                bloodGroup: formData.get('bloodGroup') as string || null,
+                patientAddress: formData.get('patientAddress') as string || null,
+                medicalHistory: formData.get('medicalHistory') as string || null,
+                lastVisit: new Date().toISOString().split('T')[0],
+              });
+            }} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="patientName">Patient Name *</Label>
+                <Input id="patientName" name="patientName" required data-testid="input-patient-name" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patientPhone">Phone *</Label>
+                <Input id="patientPhone" name="patientPhone" required data-testid="input-patient-phone" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patientEmail">Email</Label>
+                <Input id="patientEmail" name="patientEmail" type="email" data-testid="input-patient-email" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="patientAge">Age</Label>
+                  <Input id="patientAge" name="patientAge" type="number" data-testid="input-patient-age" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="patientGender">Gender</Label>
+                  <Select name="patientGender">
+                    <SelectTrigger data-testid="select-patient-gender">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="M">Male</SelectItem>
+                      <SelectItem value="F">Female</SelectItem>
+                      <SelectItem value="O">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bloodGroup">Blood Group</Label>
+                  <Select name="bloodGroup">
+                    <SelectTrigger data-testid="select-blood-group">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A+">A+</SelectItem>
+                      <SelectItem value="A-">A-</SelectItem>
+                      <SelectItem value="B+">B+</SelectItem>
+                      <SelectItem value="B-">B-</SelectItem>
+                      <SelectItem value="O+">O+</SelectItem>
+                      <SelectItem value="O-">O-</SelectItem>
+                      <SelectItem value="AB+">AB+</SelectItem>
+                      <SelectItem value="AB-">AB-</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patientAddress">Address</Label>
+                <Input id="patientAddress" name="patientAddress" data-testid="input-patient-address" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="medicalHistory">Medical History</Label>
+                <Textarea id="medicalHistory" name="medicalHistory" rows={3} data-testid="input-medical-history" />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setAddPatientDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={createPatientMutation.isPending} data-testid="button-submit-patient">
+                  {createPatientMutation.isPending ? "Adding..." : "Add Patient"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="relative">
@@ -529,10 +661,89 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           <h1 className="text-2xl font-bold" data-testid="text-appointments-title">Appointments</h1>
           <p className="text-muted-foreground">Manage your appointment schedule</p>
         </div>
-        <Button data-testid="button-create-appointment">
-          <Plus className="h-4 w-4 mr-2" />
-          New Appointment
-        </Button>
+        <Dialog open={addAppointmentDialogOpen} onOpenChange={setAddAppointmentDialogOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-create-appointment">
+              <Plus className="h-4 w-4 mr-2" />
+              New Appointment
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Schedule New Appointment</DialogTitle>
+              <DialogDescription>Create a new appointment for a patient</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              createAppointmentMutation.mutate({
+                patientName: formData.get('patientName') as string,
+                patientPhone: formData.get('patientPhone') as string,
+                patientEmail: formData.get('patientEmail') as string || undefined,
+                doctorId,
+                appointmentDate: formData.get('appointmentDate') as string,
+                timeSlot: formData.get('timeSlot') as string,
+                symptoms: formData.get('symptoms') as string || undefined,
+                status: "scheduled",
+              });
+            }} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="aptPatientName">Patient Name *</Label>
+                  <Input id="aptPatientName" name="patientName" required data-testid="input-apt-patient-name" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="aptPatientPhone">Phone *</Label>
+                  <Input id="aptPatientPhone" name="patientPhone" required data-testid="input-apt-patient-phone" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="aptPatientEmail">Email</Label>
+                <Input id="aptPatientEmail" name="patientEmail" type="email" data-testid="input-apt-patient-email" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="appointmentDate">Date *</Label>
+                  <Input id="appointmentDate" name="appointmentDate" type="date" required defaultValue={new Date().toISOString().split('T')[0]} data-testid="input-apt-date" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="timeSlot">Time Slot *</Label>
+                  <Select name="timeSlot" defaultValue="09:00 AM">
+                    <SelectTrigger data-testid="select-time-slot">
+                      <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="09:00 AM">09:00 AM</SelectItem>
+                      <SelectItem value="09:30 AM">09:30 AM</SelectItem>
+                      <SelectItem value="10:00 AM">10:00 AM</SelectItem>
+                      <SelectItem value="10:30 AM">10:30 AM</SelectItem>
+                      <SelectItem value="11:00 AM">11:00 AM</SelectItem>
+                      <SelectItem value="11:30 AM">11:30 AM</SelectItem>
+                      <SelectItem value="12:00 PM">12:00 PM</SelectItem>
+                      <SelectItem value="02:00 PM">02:00 PM</SelectItem>
+                      <SelectItem value="02:30 PM">02:30 PM</SelectItem>
+                      <SelectItem value="03:00 PM">03:00 PM</SelectItem>
+                      <SelectItem value="03:30 PM">03:30 PM</SelectItem>
+                      <SelectItem value="04:00 PM">04:00 PM</SelectItem>
+                      <SelectItem value="04:30 PM">04:30 PM</SelectItem>
+                      <SelectItem value="05:00 PM">05:00 PM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="symptoms">Symptoms / Reason</Label>
+                <Textarea id="symptoms" name="symptoms" placeholder="Describe the symptoms or reason for visit" rows={3} data-testid="input-symptoms" />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setAddAppointmentDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={createAppointmentMutation.isPending} data-testid="button-submit-appointment">
+                  {createAppointmentMutation.isPending ? "Creating..." : "Create Appointment"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs defaultValue="today">
@@ -569,22 +780,22 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 </CardContent>
                 <CardFooter className="gap-2 border-t bg-muted/20">
                   {apt.status === "pending" && (
-                    <Button size="sm" className="flex-1" data-testid={`button-confirm-${apt.id}`}>
+                    <Button size="sm" className="flex-1" onClick={() => confirmAppointmentMutation.mutate(apt.id)} disabled={confirmAppointmentMutation.isPending} data-testid={`button-confirm-${apt.id}`}>
                       <CheckCircle className="h-4 w-4 mr-1" />
-                      Confirm
+                      {confirmAppointmentMutation.isPending ? "..." : "Confirm"}
                     </Button>
                   )}
                   {apt.status === "confirmed" && (
-                    <Button size="sm" className="flex-1" data-testid={`button-complete-${apt.id}`}>
+                    <Button size="sm" className="flex-1" onClick={() => completeAppointmentMutation.mutate(apt.id)} disabled={completeAppointmentMutation.isPending} data-testid={`button-complete-${apt.id}`}>
                       <CheckCircle className="h-4 w-4 mr-1" />
-                      Complete
+                      {completeAppointmentMutation.isPending ? "..." : "Complete"}
                     </Button>
                   )}
                   <Button variant="outline" size="sm" data-testid={`button-view-apt-${apt.id}`}>
                     <Eye className="h-4 w-4 mr-1" />
                     Details
                   </Button>
-                  <Button variant="outline" size="sm" data-testid={`button-prescribe-${apt.id}`}>
+                  <Button variant="outline" size="sm" onClick={() => { setActiveSection("prescriptions"); setAddPrescriptionDialogOpen(true); }} data-testid={`button-prescribe-${apt.id}`}>
                     <FileText className="h-4 w-4 mr-1" />
                     Prescribe
                   </Button>
@@ -942,10 +1153,68 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           <h1 className="text-2xl font-bold" data-testid="text-prescriptions-title">Prescriptions</h1>
           <p className="text-muted-foreground">Manage and create prescriptions</p>
         </div>
-        <Button data-testid="button-new-prescription">
-          <Plus className="h-4 w-4 mr-2" />
-          New Prescription
-        </Button>
+        <Dialog open={addPrescriptionDialogOpen} onOpenChange={setAddPrescriptionDialogOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-new-prescription">
+              <Plus className="h-4 w-4 mr-2" />
+              New Prescription
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>New Prescription</DialogTitle>
+              <DialogDescription>Create a prescription for a patient</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const medicinesStr = formData.get('medicines') as string;
+              createPrescriptionMutation.mutate({
+                doctorId,
+                patientId: null,
+                patientName: formData.get('patientName') as string,
+                diagnosis: formData.get('diagnosis') as string,
+                medicines: medicinesStr.split(',').map(m => m.trim()).filter(Boolean),
+                instructions: formData.get('instructions') as string || null,
+                prescriptionDate: formData.get('prescriptionDate') as string,
+                followUpDate: formData.get('followUpDate') as string || null,
+              });
+            }} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rxPatientName">Patient Name *</Label>
+                  <Input id="rxPatientName" name="patientName" required data-testid="input-rx-patient-name" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="prescriptionDate">Date *</Label>
+                  <Input id="prescriptionDate" name="prescriptionDate" type="date" required defaultValue={new Date().toISOString().split('T')[0]} data-testid="input-prescription-date" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="diagnosis">Diagnosis *</Label>
+                <Input id="diagnosis" name="diagnosis" required data-testid="input-diagnosis" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="medicines">Medicines (comma separated) *</Label>
+                <Textarea id="medicines" name="medicines" placeholder="e.g., Paracetamol 500mg, Amoxicillin 250mg" required rows={3} data-testid="input-medicines" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="instructions">Instructions</Label>
+                <Textarea id="instructions" name="instructions" placeholder="Dosage instructions and special notes" rows={3} data-testid="input-instructions" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="followUpDate">Follow-up Date</Label>
+                <Input id="followUpDate" name="followUpDate" type="date" data-testid="input-followup-date" />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setAddPrescriptionDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={createPrescriptionMutation.isPending} data-testid="button-submit-prescription">
+                  {createPrescriptionMutation.isPending ? "Creating..." : "Create Prescription"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-4">
