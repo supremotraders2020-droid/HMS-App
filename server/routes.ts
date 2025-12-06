@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1447,6 +1447,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to update hospital settings:", error);
       res.status(500).json({ error: "Failed to update hospital settings" });
+    }
+  });
+
+  // ========== PRESCRIPTION ROUTES ==========
+
+  // Get all prescriptions
+  app.get("/api/prescriptions", async (_req, res) => {
+    try {
+      const prescriptions = await storage.getPrescriptions();
+      res.json(prescriptions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch prescriptions" });
+    }
+  });
+
+  // Get prescriptions by doctor
+  app.get("/api/prescriptions/doctor/:doctorId", async (req, res) => {
+    try {
+      const prescriptions = await storage.getPrescriptionsByDoctor(req.params.doctorId);
+      res.json(prescriptions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch doctor prescriptions" });
+    }
+  });
+
+  // Get single prescription
+  app.get("/api/prescriptions/:id", async (req, res) => {
+    try {
+      const prescription = await storage.getPrescription(req.params.id);
+      if (!prescription) {
+        return res.status(404).json({ error: "Prescription not found" });
+      }
+      res.json(prescription);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch prescription" });
+    }
+  });
+
+  // Create prescription
+  app.post("/api/prescriptions", async (req, res) => {
+    try {
+      const parsed = insertPrescriptionSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const prescription = await storage.createPrescription(parsed.data);
+      res.status(201).json(prescription);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create prescription" });
+    }
+  });
+
+  // Update prescription
+  app.patch("/api/prescriptions/:id", async (req, res) => {
+    try {
+      const prescription = await storage.updatePrescription(req.params.id, req.body);
+      if (!prescription) {
+        return res.status(404).json({ error: "Prescription not found" });
+      }
+      res.json(prescription);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update prescription" });
+    }
+  });
+
+  // Delete prescription
+  app.delete("/api/prescriptions/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deletePrescription(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Prescription not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete prescription" });
+    }
+  });
+
+  // ========== DOCTOR SCHEDULE ROUTES ==========
+
+  // Get doctor schedules
+  app.get("/api/doctor-schedules/:doctorId", async (req, res) => {
+    try {
+      const schedules = await storage.getDoctorSchedules(req.params.doctorId);
+      res.json(schedules);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch doctor schedules" });
+    }
+  });
+
+  // Create doctor schedule
+  app.post("/api/doctor-schedules", async (req, res) => {
+    try {
+      const parsed = insertDoctorScheduleSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const schedule = await storage.createDoctorSchedule(parsed.data);
+      res.status(201).json(schedule);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create doctor schedule" });
+    }
+  });
+
+  // Update doctor schedule
+  app.patch("/api/doctor-schedules/:id", async (req, res) => {
+    try {
+      const schedule = await storage.updateDoctorSchedule(req.params.id, req.body);
+      if (!schedule) {
+        return res.status(404).json({ error: "Doctor schedule not found" });
+      }
+      res.json(schedule);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update doctor schedule" });
+    }
+  });
+
+  // Delete doctor schedule
+  app.delete("/api/doctor-schedules/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteDoctorSchedule(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Doctor schedule not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete doctor schedule" });
+    }
+  });
+
+  // ========== DOCTOR PATIENT ROUTES ==========
+
+  // Get doctor patients
+  app.get("/api/doctor-patients/:doctorId", async (req, res) => {
+    try {
+      const patients = await storage.getDoctorPatients(req.params.doctorId);
+      res.json(patients);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch doctor patients" });
+    }
+  });
+
+  // Get single doctor patient
+  app.get("/api/doctor-patients/patient/:id", async (req, res) => {
+    try {
+      const patient = await storage.getDoctorPatient(req.params.id);
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient" });
+    }
+  });
+
+  // Create doctor patient
+  app.post("/api/doctor-patients", async (req, res) => {
+    try {
+      const parsed = insertDoctorPatientSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const patient = await storage.createDoctorPatient(parsed.data);
+      res.status(201).json(patient);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create doctor patient" });
+    }
+  });
+
+  // Update doctor patient
+  app.patch("/api/doctor-patients/:id", async (req, res) => {
+    try {
+      const patient = await storage.updateDoctorPatient(req.params.id, req.body);
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update patient" });
+    }
+  });
+
+  // Delete doctor patient
+  app.delete("/api/doctor-patients/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteDoctorPatient(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete patient" });
     }
   });
 

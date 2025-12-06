@@ -9,6 +9,7 @@ import {
   biometricTemplates, biometricVerifications,
   notifications, hospitalTeamMembers, activityLogs,
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
+  prescriptions, doctorSchedules, doctorPatients,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -22,7 +23,9 @@ import {
   type ActivityLog, type InsertActivityLog,
   type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory,
   type EmergencyContact, type InsertEmergencyContact,
-  type HospitalSettings, type InsertHospitalSettings
+  type HospitalSettings, type InsertHospitalSettings,
+  type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule,
+  type DoctorPatient, type InsertDoctorPatient
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -1168,6 +1171,94 @@ export class DatabaseStorage implements IStorage {
       operationTheaters: "8",
       departments: ["Cardiology", "Neurology", "Orthopedics", "Pediatrics", "Emergency Medicine", "General Surgery", "Radiology", "Pathology"],
     });
+  }
+
+  // ========== PRESCRIPTION METHODS ==========
+  async getPrescriptions(): Promise<Prescription[]> {
+    return await db.select().from(prescriptions).orderBy(desc(prescriptions.createdAt));
+  }
+
+  async getPrescriptionsByDoctor(doctorId: string): Promise<Prescription[]> {
+    return await db.select().from(prescriptions).where(eq(prescriptions.doctorId, doctorId)).orderBy(desc(prescriptions.createdAt));
+  }
+
+  async getPrescription(id: string): Promise<Prescription | undefined> {
+    const result = await db.select().from(prescriptions).where(eq(prescriptions.id, id));
+    return result[0];
+  }
+
+  async createPrescription(prescription: InsertPrescription): Promise<Prescription> {
+    const result = await db.insert(prescriptions).values(prescription).returning();
+    return result[0];
+  }
+
+  async updatePrescription(id: string, updates: Partial<InsertPrescription>): Promise<Prescription | undefined> {
+    const result = await db.update(prescriptions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(prescriptions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePrescription(id: string): Promise<boolean> {
+    const result = await db.delete(prescriptions).where(eq(prescriptions.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== DOCTOR SCHEDULE METHODS ==========
+  async getDoctorSchedules(doctorId: string): Promise<DoctorSchedule[]> {
+    return await db.select().from(doctorSchedules).where(eq(doctorSchedules.doctorId, doctorId));
+  }
+
+  async getDoctorSchedule(id: string): Promise<DoctorSchedule | undefined> {
+    const result = await db.select().from(doctorSchedules).where(eq(doctorSchedules.id, id));
+    return result[0];
+  }
+
+  async createDoctorSchedule(schedule: InsertDoctorSchedule): Promise<DoctorSchedule> {
+    const result = await db.insert(doctorSchedules).values(schedule).returning();
+    return result[0];
+  }
+
+  async updateDoctorSchedule(id: string, updates: Partial<InsertDoctorSchedule>): Promise<DoctorSchedule | undefined> {
+    const result = await db.update(doctorSchedules)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(doctorSchedules.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDoctorSchedule(id: string): Promise<boolean> {
+    const result = await db.delete(doctorSchedules).where(eq(doctorSchedules.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== DOCTOR PATIENT METHODS ==========
+  async getDoctorPatients(doctorId: string): Promise<DoctorPatient[]> {
+    return await db.select().from(doctorPatients).where(eq(doctorPatients.doctorId, doctorId)).orderBy(desc(doctorPatients.createdAt));
+  }
+
+  async getDoctorPatient(id: string): Promise<DoctorPatient | undefined> {
+    const result = await db.select().from(doctorPatients).where(eq(doctorPatients.id, id));
+    return result[0];
+  }
+
+  async createDoctorPatient(patient: InsertDoctorPatient): Promise<DoctorPatient> {
+    const result = await db.insert(doctorPatients).values(patient).returning();
+    return result[0];
+  }
+
+  async updateDoctorPatient(id: string, updates: Partial<InsertDoctorPatient>): Promise<DoctorPatient | undefined> {
+    const result = await db.update(doctorPatients)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(doctorPatients.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDoctorPatient(id: string): Promise<boolean> {
+    const result = await db.delete(doctorPatients).where(eq(doctorPatients.id, id)).returning();
+    return result.length > 0;
   }
 }
 

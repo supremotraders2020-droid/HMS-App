@@ -561,3 +561,79 @@ export const insertHospitalSettingsSchema = createInsertSchema(hospitalSettings)
 });
 export type InsertHospitalSettings = z.infer<typeof insertHospitalSettingsSchema>;
 export type HospitalSettings = typeof hospitalSettings.$inferSelect;
+
+// ========== DOCTOR PORTAL TABLES ==========
+
+// Prescriptions table - doctor-created prescriptions for patients
+export const prescriptions = pgTable("prescriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  doctorId: varchar("doctor_id").notNull(),
+  doctorName: text("doctor_name").notNull(),
+  diagnosis: text("diagnosis").notNull(),
+  medicines: text("medicines").array().notNull(), // Array of medicine strings like "Amlodipine 5mg - Once daily"
+  instructions: text("instructions"),
+  prescriptionDate: text("prescription_date").notNull(),
+  followUpDate: text("follow_up_date"),
+  status: text("status").notNull().default("active"), // 'active', 'completed', 'cancelled'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPrescriptionSchema = createInsertSchema(prescriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPrescription = z.infer<typeof insertPrescriptionSchema>;
+export type Prescription = typeof prescriptions.$inferSelect;
+
+// Doctor Schedules table - weekly availability slots for doctors
+export const doctorSchedules = pgTable("doctor_schedules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  doctorId: varchar("doctor_id").notNull(),
+  day: text("day").notNull(), // 'Monday', 'Tuesday', etc.
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  slotType: text("slot_type").notNull().default("OPD"), // 'OPD', 'Surgery', 'Consultation'
+  maxPatients: integer("max_patients").notNull().default(20),
+  isAvailable: boolean("is_available").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDoctorScheduleSchema = createInsertSchema(doctorSchedules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDoctorSchedule = z.infer<typeof insertDoctorScheduleSchema>;
+export type DoctorSchedule = typeof doctorSchedules.$inferSelect;
+
+// Doctor Patients table - patients assigned to or treated by specific doctors
+export const doctorPatients = pgTable("doctor_patients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  doctorId: varchar("doctor_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientAge: integer("patient_age"),
+  patientGender: text("patient_gender"),
+  patientPhone: text("patient_phone").notNull(),
+  patientEmail: text("patient_email"),
+  patientAddress: text("patient_address"),
+  bloodGroup: text("blood_group"),
+  allergies: text("allergies"),
+  medicalHistory: text("medical_history"),
+  lastVisit: text("last_visit"),
+  status: text("status").notNull().default("active"), // 'active', 'inactive', 'discharged'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDoctorPatientSchema = createInsertSchema(doctorPatients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDoctorPatient = z.infer<typeof insertDoctorPatientSchema>;
+export type DoctorPatient = typeof doctorPatients.$inferSelect;
