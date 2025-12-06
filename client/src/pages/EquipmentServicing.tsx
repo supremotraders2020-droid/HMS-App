@@ -10,6 +10,9 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Wrench,
   Phone,
@@ -41,78 +44,12 @@ import {
   CalendarClock,
   Info,
   Eye,
-  Building2
+  Building2,
+  Loader2
 } from "lucide-react";
+import type { Equipment, ServiceHistory, EmergencyContact } from "@shared/schema";
 
 type ServiceFrequency = "monthly" | "quarterly" | "yearly";
-
-interface Equipment {
-  id: string;
-  name: string;
-  model: string;
-  serialNumber: string;
-  lastServiceDate: string | null;
-  nextDueDate: string;
-  status: "up-to-date" | "due-soon" | "overdue";
-  location: string;
-  serviceFrequency?: ServiceFrequency;
-  companyName?: string;
-  contactNumber?: string;
-  emergencyNumber?: string;
-}
-
-interface ServiceHistory {
-  id: string;
-  equipmentId: string;
-  serviceDate: string;
-  technician: string;
-  description: string;
-  cost: string;
-}
-
-interface EmergencyContact {
-  id: string;
-  name: string;
-  serviceType: string;
-  phoneNumber: string;
-  isPrimary: boolean;
-  isActive: boolean;
-}
-
-const MOCK_EQUIPMENT: Equipment[] = [
-  { id: "eq1", name: "X-Ray Machine", model: "GE Definium 656", serialNumber: "XR-2024-001", lastServiceDate: "2024-11-15", nextDueDate: "2025-02-15", status: "up-to-date", location: "Radiology Dept", serviceFrequency: "quarterly", companyName: "GE Healthcare India", contactNumber: "+91 1800 103 4800", emergencyNumber: "+91 98765 11111" },
-  { id: "eq2", name: "MRI Scanner", model: "Siemens MAGNETOM", serialNumber: "MR-2024-002", lastServiceDate: "2024-10-20", nextDueDate: "2024-12-20", status: "due-soon", location: "Imaging Center", serviceFrequency: "quarterly", companyName: "Siemens Healthineers", contactNumber: "+91 1800 209 1800", emergencyNumber: "+91 98765 22222" },
-  { id: "eq3", name: "CT Scanner", model: "Philips Ingenuity", serialNumber: "CT-2024-003", lastServiceDate: "2024-08-10", nextDueDate: "2024-11-10", status: "overdue", location: "Radiology Dept", serviceFrequency: "quarterly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
-  { id: "eq4", name: "Ultrasound System", model: "GE LOGIQ E10", serialNumber: "US-2024-004", lastServiceDate: "2024-11-25", nextDueDate: "2025-02-25", status: "up-to-date", location: "OBG Dept", serviceFrequency: "quarterly", companyName: "GE Healthcare India", contactNumber: "+91 1800 103 4800", emergencyNumber: "+91 98765 11111" },
-  { id: "eq5", name: "ECG Machine", model: "Philips PageWriter", serialNumber: "ECG-2024-005", lastServiceDate: "2024-11-01", nextDueDate: "2025-01-01", status: "due-soon", location: "Cardiology", serviceFrequency: "monthly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
-  { id: "eq6", name: "Ventilator", model: "Draeger Evita V500", serialNumber: "VT-2024-006", lastServiceDate: "2024-09-15", nextDueDate: "2024-11-15", status: "overdue", location: "ICU", serviceFrequency: "monthly", companyName: "Draeger Medical India", contactNumber: "+91 1800 123 4567", emergencyNumber: "+91 98765 44444" },
-  { id: "eq7", name: "Defibrillator", model: "Philips HeartStart", serialNumber: "DF-2024-007", lastServiceDate: "2024-11-20", nextDueDate: "2025-02-20", status: "up-to-date", location: "Emergency", serviceFrequency: "quarterly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
-  { id: "eq8", name: "Anesthesia Machine", model: "GE Aisys CS2", serialNumber: "AN-2024-008", lastServiceDate: "2024-10-05", nextDueDate: "2024-12-05", status: "due-soon", location: "Operation Theater", serviceFrequency: "monthly", companyName: "GE Healthcare India", contactNumber: "+91 1800 103 4800", emergencyNumber: "+91 98765 11111" },
-  { id: "eq9", name: "Patient Monitor", model: "Philips IntelliVue", serialNumber: "PM-2024-009", lastServiceDate: "2024-11-10", nextDueDate: "2025-01-10", status: "up-to-date", location: "ICU", serviceFrequency: "monthly", companyName: "Philips Healthcare", contactNumber: "+91 1800 102 2929", emergencyNumber: "+91 98765 33333" },
-];
-
-const MOCK_SERVICE_HISTORY: ServiceHistory[] = [
-  { id: "sh1", equipmentId: "eq1", serviceDate: "2024-11-15", technician: "Rajesh Kumar", description: "Annual maintenance, calibration completed, tube replacement", cost: "₹45,000" },
-  { id: "sh2", equipmentId: "eq1", serviceDate: "2024-08-10", technician: "Amit Sharma", description: "Quarterly inspection and cleaning", cost: "₹15,000" },
-  { id: "sh3", equipmentId: "eq1", serviceDate: "2024-05-05", technician: "Rajesh Kumar", description: "Software update and system optimization", cost: "₹8,000" },
-  { id: "sh4", equipmentId: "eq2", serviceDate: "2024-10-20", technician: "Suresh Reddy", description: "Coil replacement and calibration", cost: "₹1,25,000" },
-  { id: "sh5", equipmentId: "eq2", serviceDate: "2024-07-15", technician: "Suresh Reddy", description: "Helium refill and system check", cost: "₹85,000" },
-  { id: "sh6", equipmentId: "eq3", serviceDate: "2024-08-10", technician: "Vikram Singh", description: "Gantry alignment and detector calibration", cost: "₹55,000" },
-];
-
-const MOCK_EMERGENCY_CONTACTS: EmergencyContact[] = [
-  { id: "ec1", name: "City Ambulance Service", serviceType: "Medical Help", phoneNumber: "+91 102", isPrimary: true, isActive: true },
-  { id: "ec2", name: "Hospital Emergency", serviceType: "Medical Help", phoneNumber: "+91 20 1234 5678", isPrimary: true, isActive: true },
-  { id: "ec3", name: "Fire Brigade", serviceType: "Fire Service", phoneNumber: "+91 101", isPrimary: true, isActive: true },
-  { id: "ec4", name: "Police Control Room", serviceType: "Police", phoneNumber: "+91 100", isPrimary: true, isActive: true },
-  { id: "ec5", name: "Sharma Plumbing Works", serviceType: "Plumber", phoneNumber: "+91 98765 12345", isPrimary: true, isActive: true },
-  { id: "ec6", name: "Quick Fix Plumbers", serviceType: "Plumber", phoneNumber: "+91 98765 67890", isPrimary: false, isActive: true },
-  { id: "ec7", name: "PowerTech Electricals", serviceType: "Electrician", phoneNumber: "+91 97654 32100", isPrimary: true, isActive: true },
-  { id: "ec8", name: "City Electricians", serviceType: "Electrician", phoneNumber: "+91 97654 11111", isPrimary: false, isActive: true },
-  { id: "ec9", name: "Otis Elevator Service", serviceType: "Lift Service", phoneNumber: "+91 1800 123 4567", isPrimary: true, isActive: true },
-  { id: "ec10", name: "TechSupport IT Solutions", serviceType: "IT Support", phoneNumber: "+91 88888 77777", isPrimary: true, isActive: true },
-  { id: "ec11", name: "Network Solutions", serviceType: "IT Support", phoneNumber: "+91 88888 66666", isPrimary: false, isActive: true },
-];
 
 const SERVICE_TYPE_ICONS: Record<string, any> = {
   "Medical Help": Heart,
@@ -142,7 +79,6 @@ export default function EquipmentServicing() {
   const [searchQuery, setSearchQuery] = useState("");
   const [contactCategory, setContactCategory] = useState("all");
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [equipmentList, setEquipmentList] = useState<Equipment[]>(MOCK_EQUIPMENT);
   const [showAddEquipmentDialog, setShowAddEquipmentDialog] = useState(false);
   const [serviceFrequency, setServiceFrequency] = useState<ServiceFrequency>("quarterly");
   const [lastServiceDateInput, setLastServiceDateInput] = useState("");
@@ -151,6 +87,63 @@ export default function EquipmentServicing() {
   const [selectedDateServices, setSelectedDateServices] = useState<{date: string, services: Equipment[]}>({ date: "", services: [] });
   const [showDateServicesDialog, setShowDateServicesDialog] = useState(false);
   const { toast } = useToast();
+
+  // Fetch equipment from API
+  const { data: equipmentList = [], isLoading: equipmentLoading, refetch: refetchEquipment } = useQuery<Equipment[]>({
+    queryKey: ["/api/equipment"],
+  });
+
+  // Fetch service history from API
+  const { data: serviceHistoryList = [], isLoading: historyLoading } = useQuery<ServiceHistory[]>({
+    queryKey: ["/api/service-history"],
+  });
+
+  // Fetch emergency contacts from API
+  const { data: emergencyContactsList = [], isLoading: contactsLoading } = useQuery<EmergencyContact[]>({
+    queryKey: ["/api/emergency-contacts"],
+  });
+
+  // Add equipment mutation
+  const addEquipmentMutation = useMutation({
+    mutationFn: async (data: Partial<Equipment>) => {
+      const res = await apiRequest("POST", "/api/equipment", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment"] });
+      setShowAddEquipmentDialog(false);
+      setLastServiceDateInput("");
+      setCalculatedNextDueDate("");
+      setServiceFrequency("quarterly");
+      toast({
+        title: "Equipment Added",
+        description: "Equipment has been added successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add equipment.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add service history mutation
+  const addServiceHistoryMutation = useMutation({
+    mutationFn: async (data: Partial<ServiceHistory>) => {
+      const res = await apiRequest("POST", "/api/service-history", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/service-history"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/equipment"] });
+      toast({
+        title: "Service Record Added",
+        description: "Service history has been recorded.",
+      });
+    },
+  });
 
   const upToDateCount = equipmentList.filter(e => e.status === "up-to-date").length;
   const dueSoonCount = equipmentList.filter(e => e.status === "due-soon").length;
@@ -236,8 +229,7 @@ export default function EquipmentServicing() {
       return;
     }
 
-    const newEquipment: Equipment = {
-      id: `eq-${Date.now()}`,
+    addEquipmentMutation.mutate({
       name,
       model: manufacturer,
       serialNumber,
@@ -246,19 +238,9 @@ export default function EquipmentServicing() {
       nextDueDate,
       status: calculateStatus(nextDueDate),
       serviceFrequency,
-      companyName: companyName || undefined,
-      contactNumber: contactNumber || undefined,
-      emergencyNumber: emergencyNumber || undefined,
-    };
-
-    setEquipmentList([...equipmentList, newEquipment]);
-    setShowAddEquipmentDialog(false);
-    setLastServiceDateInput("");
-    setCalculatedNextDueDate("");
-    setServiceFrequency("quarterly");
-    toast({
-      title: "Equipment Added",
-      description: `${name} has been added successfully with ${getFrequencyLabel(serviceFrequency).toLowerCase()} service frequency.`,
+      companyName: companyName || null,
+      contactNumber: contactNumber || null,
+      emergencyNumber: emergencyNumber || null,
     });
   };
 
@@ -285,7 +267,7 @@ export default function EquipmentServicing() {
   };
 
   const getEquipmentHistory = (equipmentId: string) => {
-    return MOCK_SERVICE_HISTORY.filter(h => h.equipmentId === equipmentId);
+    return serviceHistoryList.filter(h => h.equipmentId === equipmentId);
   };
 
   const openHistoryModal = (equipment: Equipment) => {
@@ -293,7 +275,7 @@ export default function EquipmentServicing() {
     setHistoryModalOpen(true);
   };
 
-  const filteredContacts = MOCK_EMERGENCY_CONTACTS.filter(contact => {
+  const filteredContacts = emergencyContactsList.filter(contact => {
     const matchesSearch = contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.serviceType.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.phoneNumber.includes(searchQuery);
@@ -307,11 +289,11 @@ export default function EquipmentServicing() {
   });
 
   const getContactCategoryCount = (category: string) => {
-    if (category === "all") return MOCK_EMERGENCY_CONTACTS.length;
-    if (category === "medical") return MOCK_EMERGENCY_CONTACTS.filter(c => c.serviceType === "Medical Help").length;
-    if (category === "maintenance") return MOCK_EMERGENCY_CONTACTS.filter(c => ["Plumber", "Electrician", "Lift Service"].includes(c.serviceType)).length;
-    if (category === "security") return MOCK_EMERGENCY_CONTACTS.filter(c => ["Police", "Fire Service"].includes(c.serviceType)).length;
-    if (category === "technical") return MOCK_EMERGENCY_CONTACTS.filter(c => c.serviceType === "IT Support").length;
+    if (category === "all") return emergencyContactsList.length;
+    if (category === "medical") return emergencyContactsList.filter(c => c.serviceType === "Medical Help").length;
+    if (category === "maintenance") return emergencyContactsList.filter(c => ["Plumber", "Electrician", "Lift Service"].includes(c.serviceType)).length;
+    if (category === "security") return emergencyContactsList.filter(c => ["Police", "Fire Service"].includes(c.serviceType)).length;
+    if (category === "technical") return emergencyContactsList.filter(c => c.serviceType === "IT Support").length;
     return 0;
   };
 
