@@ -792,6 +792,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete medical record
+  app.delete("/api/medical-records/:id", async (req, res) => {
+    try {
+      const record = await storage.getMedicalRecordById(req.params.id);
+      if (!record) {
+        return res.status(404).json({ error: "Medical record not found" });
+      }
+      await storage.deleteMedicalRecord(req.params.id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        action: `Medical record deleted: ${record.title}`,
+        entityType: "medical_record",
+        entityId: req.params.id,
+        performedBy: "Admin",
+        performedByRole: "ADMIN",
+        activityType: "info"
+      });
+      
+      res.json({ success: true, message: "Medical record deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete medical record" });
+    }
+  });
+
   // ========== BIOMETRIC SERVICE ROUTES ==========
 
   // Get biometric service stats

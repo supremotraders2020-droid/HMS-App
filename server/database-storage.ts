@@ -581,6 +581,11 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async deleteMedicalRecord(id: string): Promise<boolean> {
+    await db.delete(medicalRecords).where(eq(medicalRecords.id, id));
+    return true;
+  }
+
   // ========== BIOMETRIC SERVICE METHODS ==========
   async getAllBiometricTemplates(): Promise<BiometricTemplate[]> {
     return await db.select().from(biometricTemplates);

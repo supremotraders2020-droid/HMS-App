@@ -45,7 +45,8 @@ import {
   X,
   File,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/schema";
@@ -76,6 +77,9 @@ export default function PatientService() {
   const [showNewPatientDialog, setShowNewPatientDialog] = useState(false);
   const [showNewRecordDialog, setShowNewRecordDialog] = useState(false);
   const [showPatientDetailDialog, setShowPatientDetailDialog] = useState(false);
+  const [showRecordDetailDialog, setShowRecordDetailDialog] = useState(false);
+  const [showDeleteRecordDialog, setShowDeleteRecordDialog] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
   const [uploadedFile, setUploadedFile] = useState<{ name: string; data: string; type: string } | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
@@ -154,6 +158,52 @@ export default function PatientService() {
       toast({ title: "Error", description: "Failed to create medical record", variant: "destructive" });
     },
   });
+
+  const deleteRecordMutation = useMutation({
+    mutationFn: async (recordId: string) => {
+      return await apiRequest("DELETE", `/api/medical-records/${recordId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/medical-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activity-logs"] });
+      toast({ title: "Record Deleted", description: "Medical record has been deleted successfully" });
+      setShowDeleteRecordDialog(false);
+      setSelectedRecord(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete medical record", variant: "destructive" });
+    },
+  });
+
+  const handleViewRecord = (record: MedicalRecord) => {
+    setSelectedRecord(record);
+    setShowRecordDetailDialog(true);
+  };
+
+  const handleDownloadRecord = (record: MedicalRecord) => {
+    if (record.fileData && record.fileName) {
+      const link = document.createElement('a');
+      link.href = record.fileData;
+      link.download = record.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: "Download Started", description: `Downloading ${record.fileName}` });
+    } else {
+      toast({ title: "No File", description: "This record has no attached file to download", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteRecord = (record: MedicalRecord) => {
+    setSelectedRecord(record);
+    setShowDeleteRecordDialog(true);
+  };
+
+  const confirmDeleteRecord = () => {
+    if (selectedRecord) {
+      deleteRecordMutation.mutate(selectedRecord.id);
+    }
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -907,6 +957,36 @@ export default function PatientService() {
                                   <h3 className="font-semibold text-slate-900 dark:text-white">{record.title}</h3>
                                 </div>
                               </div>
+                              <div className="flex items-center gap-1">
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                  onClick={() => handleViewRecord(record)}
+                                  data-testid={`button-view-record-${record.id}`}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                  onClick={() => handleDownloadRecord(record)}
+                                  disabled={!record.fileData}
+                                  data-testid={`button-download-record-${record.id}`}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  onClick={() => handleDeleteRecord(record)}
+                                  data-testid={`button-delete-record-${record.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                             <p className="text-sm text-slate-600 dark:text-slate-300 mb-3 line-clamp-2">
                               {record.description}
@@ -921,9 +1001,17 @@ export default function PatientService() {
                                 {record.physician}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 text-xs text-slate-400 mt-2">
-                              <Clock className="h-3 w-3" />
-                              {formatDate(record.recordDate)}
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-1 text-xs text-slate-400">
+                                <Clock className="h-3 w-3" />
+                                {formatDate(record.recordDate)}
+                              </div>
+                              {record.fileName && (
+                                <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                                  <File className="h-3 w-3" />
+                                  <span className="truncate max-w-[100px]">{record.fileName}</span>
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -1030,6 +1118,151 @@ export default function PatientService() {
                   </div>
                 </>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Record Detail Dialog */}
+      <Dialog open={showRecordDetailDialog} onOpenChange={setShowRecordDetailDialog}>
+        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto" data-testid="dialog-record-detail">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-purple-600" />
+              Medical Record Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedRecord && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-lg ${getRecordTypeConfig(selectedRecord.recordType).className}`}>
+                  {(() => {
+                    const TypeIcon = getRecordTypeConfig(selectedRecord.recordType).icon;
+                    return <TypeIcon className="h-6 w-6" />;
+                  })()}
+                </div>
+                <div>
+                  <Badge variant="outline">{getRecordTypeConfig(selectedRecord.recordType).label}</Badge>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mt-1">{selectedRecord.title}</h3>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-slate-500">Description</p>
+                  <p className="text-slate-900 dark:text-white">{selectedRecord.description}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-slate-500">Patient</p>
+                    <p className="font-medium flex items-center gap-1">
+                      <User className="h-4 w-4 text-slate-400" />
+                      {getPatientName(selectedRecord.patientId)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Physician</p>
+                    <p className="font-medium flex items-center gap-1">
+                      <Stethoscope className="h-4 w-4 text-slate-400" />
+                      {selectedRecord.physician}
+                    </p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-slate-500">Date</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-slate-400" />
+                    {formatDate(selectedRecord.recordDate)}
+                  </p>
+                </div>
+                
+                {selectedRecord.fileName && (
+                  <div>
+                    <p className="text-sm text-slate-500 mb-2">Attached File</p>
+                    <div className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <File className="h-5 w-5 text-green-600" />
+                        <span className="text-sm font-medium truncate max-w-[180px]">{selectedRecord.fileName}</span>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleDownloadRecord(selectedRecord)}
+                        data-testid="button-download-in-dialog"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowRecordDetailDialog(false)}>
+                  Close
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => {
+                    setShowRecordDetailDialog(false);
+                    handleDeleteRecord(selectedRecord);
+                  }}
+                  data-testid="button-delete-from-view"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete Record
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Record Confirmation Dialog */}
+      <Dialog open={showDeleteRecordDialog} onOpenChange={setShowDeleteRecordDialog}>
+        <DialogContent className="max-w-md" data-testid="dialog-delete-record">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Delete Medical Record
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The medical record will be permanently deleted from the system.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedRecord && (
+            <div className="space-y-4">
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-sm text-red-800 dark:text-red-200">
+                  You are about to delete:
+                </p>
+                <p className="font-semibold text-red-900 dark:text-red-100 mt-1">
+                  {selectedRecord.title}
+                </p>
+                <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+                  Patient: {getPatientName(selectedRecord.patientId)}
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowDeleteRecordDialog(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={confirmDeleteRecord}
+                  disabled={deleteRecordMutation.isPending}
+                  data-testid="button-confirm-delete-record"
+                >
+                  {deleteRecordMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Delete Record
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

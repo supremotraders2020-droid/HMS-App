@@ -103,6 +103,7 @@ export interface IStorage {
   getMedicalRecordsByPatient(patientId: string): Promise<MedicalRecord[]>;
   createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
   updateMedicalRecord(id: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord | undefined>;
+  deleteMedicalRecord(id: string): Promise<boolean>;
   
   // Biometric Service
   getAllBiometricTemplates(): Promise<BiometricTemplate[]>;
@@ -1341,6 +1342,10 @@ export class MemStorage implements IStorage {
     const updated: MedicalRecord = { ...existing, ...record };
     this.medicalRecordsData.set(id, updated);
     return updated;
+  }
+
+  async deleteMedicalRecord(id: string): Promise<boolean> {
+    return this.medicalRecordsData.delete(id);
   }
 
   // ========== BIOMETRIC SERVICE METHODS ==========
