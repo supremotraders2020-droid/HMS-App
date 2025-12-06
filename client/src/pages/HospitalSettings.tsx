@@ -1,96 +1,183 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Building2, 
-  MapPin, 
   Phone, 
   Mail, 
   Clock, 
   Users, 
-  Calendar,
   Save,
-  Upload
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { HospitalSettings } from "@shared/schema";
 
-export default function HospitalSettings() {
+export default function HospitalSettingsPage() {
   const { toast } = useToast();
   
+  const { data: settings, isLoading } = useQuery<HospitalSettings>({
+    queryKey: ["/api/hospital-settings"],
+  });
+
   const [hospitalInfo, setHospitalInfo] = useState({
-    name: "Gravity Hospital",
-    address: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062",
-    phone: "+91 20 2745 8900",
-    email: "info@gravityhospital.in",
-    website: "www.gravityhospital.in",
-    establishedYear: "2015",
-    licenseNumber: "MH-PUNE-2015-001234",
-    registrationNumber: "REG-MH-15-001234"
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
+    website: "",
+    establishedYear: "",
+    licenseNumber: "",
+    registrationNumber: ""
   });
 
   const [operationalSettings, setOperationalSettings] = useState({
-    emergencyHours: "24/7",
-    opdHours: "08:00 - 20:00",
-    visitingHours: "10:00 - 12:00, 16:00 - 18:00",
-    maxPatientsPerDay: "200",
-    appointmentSlotDuration: "30",
-    emergencyWaitTime: "15"
+    emergencyHours: "",
+    opdHours: "",
+    visitingHours: "",
+    maxPatientsPerDay: "",
+    appointmentSlotDuration: "",
+    emergencyWaitTime: ""
   });
 
   const [facilityInfo, setFacilityInfo] = useState({
-    totalBeds: "150",
-    icuBeds: "20",
-    emergencyBeds: "15",
-    operationTheaters: "8",
-    departments: [
-      "Cardiology", "Neurology", "Orthopedics", "Pediatrics", 
-      "Emergency Medicine", "General Surgery", "Radiology", "Pathology"
-    ]
+    totalBeds: "",
+    icuBeds: "",
+    emergencyBeds: "",
+    operationTheaters: "",
+    departments: [] as string[]
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setHospitalInfo({
+        name: settings.name || "",
+        address: settings.address || "",
+        phone: settings.phone || "",
+        email: settings.email || "",
+        website: settings.website || "",
+        establishedYear: settings.establishedYear || "",
+        licenseNumber: settings.licenseNumber || "",
+        registrationNumber: settings.registrationNumber || ""
+      });
+      setOperationalSettings({
+        emergencyHours: settings.emergencyHours || "",
+        opdHours: settings.opdHours || "",
+        visitingHours: settings.visitingHours || "",
+        maxPatientsPerDay: settings.maxPatientsPerDay || "",
+        appointmentSlotDuration: settings.appointmentSlotDuration || "",
+        emergencyWaitTime: settings.emergencyWaitTime || ""
+      });
+      setFacilityInfo({
+        totalBeds: settings.totalBeds || "",
+        icuBeds: settings.icuBeds || "",
+        emergencyBeds: settings.emergencyBeds || "",
+        operationTheaters: settings.operationTheaters || "",
+        departments: settings.departments || []
+      });
+    }
+  }, [settings]);
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (updates: Partial<HospitalSettings>) => {
+      if (!settings?.id) throw new Error("Settings not loaded");
+      const res = await apiRequest("PATCH", `/api/hospital-settings/${settings.id}`, updates);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hospital-settings"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save settings",
+        variant: "destructive"
+      });
+    }
   });
 
   const handleSaveHospitalInfo = () => {
-    toast({
-      title: "Success",
-      description: "Hospital information updated successfully",
+    updateSettingsMutation.mutate({
+      name: hospitalInfo.name,
+      address: hospitalInfo.address,
+      phone: hospitalInfo.phone,
+      email: hospitalInfo.email,
+      website: hospitalInfo.website,
+      establishedYear: hospitalInfo.establishedYear,
+      licenseNumber: hospitalInfo.licenseNumber,
+      registrationNumber: hospitalInfo.registrationNumber
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Hospital information saved to database",
+        });
+      }
     });
   };
 
   const handleSaveOperationalSettings = () => {
-    toast({
-      title: "Success", 
-      description: "Operational settings updated successfully",
+    updateSettingsMutation.mutate({
+      emergencyHours: operationalSettings.emergencyHours,
+      opdHours: operationalSettings.opdHours,
+      visitingHours: operationalSettings.visitingHours,
+      maxPatientsPerDay: operationalSettings.maxPatientsPerDay,
+      appointmentSlotDuration: operationalSettings.appointmentSlotDuration,
+      emergencyWaitTime: operationalSettings.emergencyWaitTime
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "Success", 
+          description: "Operational settings saved to database",
+        });
+      }
     });
   };
 
   const handleSaveFacilityInfo = () => {
-    toast({
-      title: "Success",
-      description: "Facility information updated successfully", 
+    updateSettingsMutation.mutate({
+      totalBeds: facilityInfo.totalBeds,
+      icuBeds: facilityInfo.icuBeds,
+      emergencyBeds: facilityInfo.emergencyBeds,
+      operationTheaters: facilityInfo.operationTheaters,
+      departments: facilityInfo.departments
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Facility information saved to database", 
+        });
+      }
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold" data-testid="text-page-title">Hospital Settings</h1>
-          <p className="text-muted-foreground">Manage hospital information and configuration</p>
+          <p className="text-muted-foreground">Manage hospital information and configuration (saved to database)</p>
         </div>
       </div>
 
-      {/* Hospital Basic Information */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -191,14 +278,21 @@ export default function HospitalSettings() {
             </div>
           </div>
 
-          <Button onClick={handleSaveHospitalInfo} data-testid="button-save-hospital-info">
-            <Save className="h-4 w-4 mr-2" />
+          <Button 
+            onClick={handleSaveHospitalInfo} 
+            disabled={updateSettingsMutation.isPending}
+            data-testid="button-save-hospital-info"
+          >
+            {updateSettingsMutation.isPending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
             Save Hospital Information
           </Button>
         </CardContent>
       </Card>
 
-      {/* Operational Settings */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -271,14 +365,21 @@ export default function HospitalSettings() {
             </div>
           </div>
 
-          <Button onClick={handleSaveOperationalSettings} data-testid="button-save-operational">
-            <Save className="h-4 w-4 mr-2" />
+          <Button 
+            onClick={handleSaveOperationalSettings} 
+            disabled={updateSettingsMutation.isPending}
+            data-testid="button-save-operational"
+          >
+            {updateSettingsMutation.isPending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
             Save Operational Settings
           </Button>
         </CardContent>
       </Card>
 
-      {/* Facility Information */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -345,8 +446,16 @@ export default function HospitalSettings() {
             </p>
           </div>
 
-          <Button onClick={handleSaveFacilityInfo} data-testid="button-save-facility">
-            <Save className="h-4 w-4 mr-2" />
+          <Button 
+            onClick={handleSaveFacilityInfo} 
+            disabled={updateSettingsMutation.isPending}
+            data-testid="button-save-facility"
+          >
+            {updateSettingsMutation.isPending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
             Save Facility Information
           </Button>
         </CardContent>

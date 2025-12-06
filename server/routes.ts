@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1409,6 +1409,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, message: "Emergency contact deleted" });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete emergency contact" });
+    }
+  });
+
+  // ========== HOSPITAL SETTINGS ROUTES ==========
+
+  // Get hospital settings (or create default if none exist)
+  app.get("/api/hospital-settings", async (_req, res) => {
+    try {
+      const settings = await storage.getOrCreateHospitalSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Failed to fetch hospital settings:", error);
+      res.status(500).json({ error: "Failed to fetch hospital settings" });
+    }
+  });
+
+  // Update hospital settings
+  app.patch("/api/hospital-settings/:id", async (req, res) => {
+    try {
+      const settings = await storage.updateHospitalSettings(req.params.id, req.body);
+      if (!settings) {
+        return res.status(404).json({ error: "Hospital settings not found" });
+      }
+      
+      // Log activity
+      await storage.createActivityLog({
+        action: "Hospital settings updated",
+        entityType: "hospital_settings",
+        entityId: settings.id,
+        performedBy: "Admin",
+        performedByRole: "ADMIN",
+        activityType: "info"
+      });
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Failed to update hospital settings:", error);
+      res.status(500).json({ error: "Failed to update hospital settings" });
     }
   });
 

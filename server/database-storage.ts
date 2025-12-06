@@ -8,7 +8,7 @@ import {
   conversationLogs, servicePatients, admissions, medicalRecords,
   biometricTemplates, biometricVerifications,
   notifications, hospitalTeamMembers, activityLogs,
-  equipment, serviceHistory, emergencyContacts,
+  equipment, serviceHistory, emergencyContacts, hospitalSettings,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -21,7 +21,8 @@ import {
   type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember,
   type ActivityLog, type InsertActivityLog,
   type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory,
-  type EmergencyContact, type InsertEmergencyContact
+  type EmergencyContact, type InsertEmergencyContact,
+  type HospitalSettings, type InsertHospitalSettings
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -1120,6 +1121,53 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log("Equipment data seeded successfully!");
+  }
+
+  // ========== HOSPITAL SETTINGS METHODS ==========
+  async getHospitalSettings(): Promise<HospitalSettings | undefined> {
+    const result = await db.select().from(hospitalSettings).limit(1);
+    return result[0];
+  }
+
+  async createHospitalSettings(settings: InsertHospitalSettings): Promise<HospitalSettings> {
+    const result = await db.insert(hospitalSettings).values(settings).returning();
+    return result[0];
+  }
+
+  async updateHospitalSettings(id: string, updates: Partial<InsertHospitalSettings>): Promise<HospitalSettings | undefined> {
+    const result = await db.update(hospitalSettings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(hospitalSettings.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getOrCreateHospitalSettings(): Promise<HospitalSettings> {
+    const existing = await this.getHospitalSettings();
+    if (existing) return existing;
+    
+    // Create default settings
+    return await this.createHospitalSettings({
+      name: "Gravity Hospital",
+      address: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062",
+      phone: "+91 20 2745 8900",
+      email: "info@gravityhospital.in",
+      website: "www.gravityhospital.in",
+      establishedYear: "2015",
+      licenseNumber: "MH-PUNE-2015-001234",
+      registrationNumber: "REG-MH-15-001234",
+      emergencyHours: "24/7",
+      opdHours: "08:00 - 20:00",
+      visitingHours: "10:00 - 12:00, 16:00 - 18:00",
+      maxPatientsPerDay: "200",
+      appointmentSlotDuration: "30",
+      emergencyWaitTime: "15",
+      totalBeds: "150",
+      icuBeds: "20",
+      emergencyBeds: "15",
+      operationTheaters: "8",
+      departments: ["Cardiology", "Neurology", "Orthopedics", "Pediatrics", "Emergency Medicine", "General Surgery", "Radiology", "Pathology"],
+    });
   }
 }
 

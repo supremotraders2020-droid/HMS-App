@@ -523,3 +523,41 @@ export const insertEmergencyContactSchema = createInsertSchema(emergencyContacts
 });
 export type InsertEmergencyContact = z.infer<typeof insertEmergencyContactSchema>;
 export type EmergencyContact = typeof emergencyContacts.$inferSelect;
+
+// ========== HOSPITAL SETTINGS TABLE ==========
+
+export const hospitalSettings = pgTable("hospital_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  // Basic Information
+  name: text("name").notNull().default("Gravity Hospital"),
+  address: text("address").notNull().default("sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062"),
+  phone: text("phone").notNull().default("+91 20 2745 8900"),
+  email: text("email").notNull().default("info@gravityhospital.in"),
+  website: text("website").default("www.gravityhospital.in"),
+  establishedYear: text("established_year").default("2015"),
+  licenseNumber: text("license_number").default("MH-PUNE-2015-001234"),
+  registrationNumber: text("registration_number").default("REG-MH-15-001234"),
+  // Operational Settings
+  emergencyHours: text("emergency_hours").default("24/7"),
+  opdHours: text("opd_hours").default("08:00 - 20:00"),
+  visitingHours: text("visiting_hours").default("10:00 - 12:00, 16:00 - 18:00"),
+  maxPatientsPerDay: text("max_patients_per_day").default("200"),
+  appointmentSlotDuration: text("appointment_slot_duration").default("30"),
+  emergencyWaitTime: text("emergency_wait_time").default("15"),
+  // Facility Info
+  totalBeds: text("total_beds").default("150"),
+  icuBeds: text("icu_beds").default("20"),
+  emergencyBeds: text("emergency_beds").default("15"),
+  operationTheaters: text("operation_theaters").default("8"),
+  departments: text("departments").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertHospitalSettingsSchema = createInsertSchema(hospitalSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHospitalSettings = z.infer<typeof insertHospitalSettingsSchema>;
+export type HospitalSettings = typeof hospitalSettings.$inferSelect;

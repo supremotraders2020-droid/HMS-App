@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -176,6 +176,12 @@ export interface IStorage {
   createEmergencyContact(contact: InsertEmergencyContact): Promise<EmergencyContact>;
   updateEmergencyContact(id: string, updates: Partial<InsertEmergencyContact>): Promise<EmergencyContact | undefined>;
   deleteEmergencyContact(id: string): Promise<boolean>;
+  
+  // Hospital Settings
+  getHospitalSettings(): Promise<HospitalSettings | undefined>;
+  createHospitalSettings(settings: InsertHospitalSettings): Promise<HospitalSettings>;
+  updateHospitalSettings(id: string, updates: Partial<InsertHospitalSettings>): Promise<HospitalSettings | undefined>;
+  getOrCreateHospitalSettings(): Promise<HospitalSettings>;
 }
 
 export class MemStorage implements IStorage {
@@ -1939,6 +1945,40 @@ export class MemStorage implements IStorage {
 
   async deleteEmergencyContact(id: string): Promise<boolean> {
     return this.emergencyContactsData.delete(id);
+  }
+
+  // Hospital Settings stub methods
+  private hospitalSettingsData: HospitalSettings | null = null;
+
+  async getHospitalSettings(): Promise<HospitalSettings | undefined> {
+    return this.hospitalSettingsData ?? undefined;
+  }
+
+  async createHospitalSettings(settings: InsertHospitalSettings): Promise<HospitalSettings> {
+    const newSettings: HospitalSettings = {
+      id: randomUUID(),
+      ...settings,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.hospitalSettingsData = newSettings;
+    return newSettings;
+  }
+
+  async updateHospitalSettings(id: string, updates: Partial<InsertHospitalSettings>): Promise<HospitalSettings | undefined> {
+    if (!this.hospitalSettingsData || this.hospitalSettingsData.id !== id) return undefined;
+    this.hospitalSettingsData = { ...this.hospitalSettingsData, ...updates, updatedAt: new Date() };
+    return this.hospitalSettingsData;
+  }
+
+  async getOrCreateHospitalSettings(): Promise<HospitalSettings> {
+    if (this.hospitalSettingsData) return this.hospitalSettingsData;
+    return this.createHospitalSettings({
+      name: "Gravity Hospital",
+      address: "Chikhali, Pimpri-Chinchwad",
+      phone: "+91 20 2745 8900",
+      email: "info@gravityhospital.in",
+    });
   }
 }
 
