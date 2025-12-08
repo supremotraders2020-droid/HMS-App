@@ -1246,16 +1246,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                                 <SelectItem value="Neurology">Neurology</SelectItem>
                                 <SelectItem value="Emergency">Emergency</SelectItem>
                                 <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
-                                <SelectItem value="Pune - Koregaon Park">Pune - Koregaon Park</SelectItem>
-                                <SelectItem value="Pune - Shivaji Nagar">Pune - Shivaji Nagar</SelectItem>
-                                <SelectItem value="Pune - Kothrud">Pune - Kothrud</SelectItem>
-                                <SelectItem value="Pune - Hadapsar">Pune - Hadapsar</SelectItem>
-                                <SelectItem value="Pune - Wakad">Pune - Wakad</SelectItem>
-                                <SelectItem value="Pune - Baner">Pune - Baner</SelectItem>
-                                <SelectItem value="Pune - Aundh">Pune - Aundh</SelectItem>
-                                <SelectItem value="Pune - Viman Nagar">Pune - Viman Nagar</SelectItem>
-                                <SelectItem value="Pune - Hinjewadi">Pune - Hinjewadi</SelectItem>
-                                <SelectItem value="Pune - Deccan">Pune - Deccan</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1371,16 +1361,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                         <SelectItem value="Neurology">Neurology</SelectItem>
                         <SelectItem value="Emergency">Emergency</SelectItem>
                         <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
-                        <SelectItem value="Pune - Koregaon Park">Pune - Koregaon Park</SelectItem>
-                        <SelectItem value="Pune - Shivaji Nagar">Pune - Shivaji Nagar</SelectItem>
-                        <SelectItem value="Pune - Kothrud">Pune - Kothrud</SelectItem>
-                        <SelectItem value="Pune - Hadapsar">Pune - Hadapsar</SelectItem>
-                        <SelectItem value="Pune - Wakad">Pune - Wakad</SelectItem>
-                        <SelectItem value="Pune - Baner">Pune - Baner</SelectItem>
-                        <SelectItem value="Pune - Aundh">Pune - Aundh</SelectItem>
-                        <SelectItem value="Pune - Viman Nagar">Pune - Viman Nagar</SelectItem>
-                        <SelectItem value="Pune - Hinjewadi">Pune - Hinjewadi</SelectItem>
-                        <SelectItem value="Pune - Deccan">Pune - Deccan</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
