@@ -66,6 +66,7 @@ import {
   ClipboardList,
   CalendarDays,
   ChevronRight,
+  ChevronLeft,
   MoreVertical,
   Hospital,
   Camera,
@@ -117,6 +118,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | undefined>(undefined);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
   const [calendarSlotSheetOpen, setCalendarSlotSheetOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({
     fullName: `Dr. ${doctorName}`,
@@ -1006,11 +1008,36 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
       <Card data-testid="card-schedule-calendar">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            Schedule Calendar
-          </CardTitle>
-          <CardDescription>Your weekly availability and monthly view</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                Schedule Calendar
+              </CardTitle>
+              <CardDescription>Your weekly availability and monthly view</CardDescription>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                data-testid="button-prev-month"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-lg font-semibold min-w-[140px] text-center">
+                {format(calendarMonth, "MMMM yyyy")}
+              </span>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                data-testid="button-next-month"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-7 gap-1 text-center border border-border/50 rounded-lg overflow-hidden">
@@ -1036,18 +1063,20 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           
           <CalendarUI
             mode="single"
+            month={calendarMonth}
+            onMonthChange={setCalendarMonth}
             selected={selectedCalendarDate}
             onSelect={handleCalendarDateClick}
             className="w-full p-0"
             classNames={{
               months: "w-full",
               month: "w-full",
-              caption: "flex justify-center items-center py-4 relative",
-              caption_label: "text-lg font-semibold",
-              nav: "flex items-center",
-              nav_button: "h-8 w-8 bg-transparent hover:bg-muted/50 rounded-md p-0 flex items-center justify-center transition-colors absolute",
-              nav_button_previous: "left-2",
-              nav_button_next: "right-2",
+              caption: "hidden",
+              caption_label: "hidden",
+              nav: "hidden",
+              nav_button: "hidden",
+              nav_button_previous: "hidden",
+              nav_button_next: "hidden",
               table: "w-full border-collapse",
               head_row: "hidden",
               head_cell: "hidden",
