@@ -461,8 +461,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const getSchedulesForDate = (date: Date | undefined): DoctorSchedule[] => {
     if (!date) return [];
-    const dayName = getDayNameFromDate(date);
-    return schedules.filter(s => s.day === dayName);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return schedules.filter(s => s.specificDate === dateStr);
   };
 
   const sidebarStyle = {
@@ -958,9 +958,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           createScheduleMutation.mutate({
             doctorId,
             day: slot.day,
+            specificDate: slot.specificDate || null,
             startTime: slot.startTime,
             endTime: slot.endTime,
             slotType: slot.slotType,
+            location: slot.location || null,
             maxPatients: slot.maxPatients,
             isAvailable: slot.isAvailable,
           });
@@ -994,9 +996,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         id: `new-${Date.now()}`,
         doctorId: doctorId,
         day: editingSchedule.day,
+        specificDate: null,
         startTime: "14:00",
         endTime: "18:00",
         slotType: "OPD",
+        location: null,
         maxPatients: 20,
         isAvailable: true,
         createdAt: null,
@@ -1160,12 +1164,15 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 onClick={() => {
                   if (selectedCalendarDate) {
                     const dayName = getDayNameFromDate(selectedCalendarDate);
+                    const dateStr = format(selectedCalendarDate, 'yyyy-MM-dd');
                     createScheduleMutation.mutate({
                       doctorId,
                       day: dayName,
+                      specificDate: dateStr,
                       startTime: "09:00",
                       endTime: "12:00",
                       slotType: "OPD",
+                      location: null,
                       maxPatients: 20,
                       isAvailable: true,
                     });

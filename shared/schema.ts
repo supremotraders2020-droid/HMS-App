@@ -619,14 +619,16 @@ export const insertPrescriptionSchema = createInsertSchema(prescriptions).omit({
 export type InsertPrescription = z.infer<typeof insertPrescriptionSchema>;
 export type Prescription = typeof prescriptions.$inferSelect;
 
-// Doctor Schedules table - weekly availability slots for doctors
+// Doctor Schedules table - date-specific availability slots for doctors
 export const doctorSchedules = pgTable("doctor_schedules", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   doctorId: varchar("doctor_id").notNull(),
-  day: text("day").notNull(), // 'Monday', 'Tuesday', etc.
+  day: text("day").notNull(), // 'Monday', 'Tuesday', etc. (kept for display)
+  specificDate: text("specific_date"), // YYYY-MM-DD format for date-specific slots
   startTime: text("start_time").notNull(),
   endTime: text("end_time").notNull(),
   slotType: text("slot_type").notNull().default("OPD"), // 'OPD', 'Surgery', 'Consultation'
+  location: text("location"), // Pune location for the slot
   maxPatients: integer("max_patients").notNull().default(20),
   isAvailable: boolean("is_available").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
