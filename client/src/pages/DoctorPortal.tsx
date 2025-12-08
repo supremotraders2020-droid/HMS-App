@@ -717,95 +717,10 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const renderAppointments = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div>
           <h1 className="text-2xl font-bold" data-testid="text-appointments-title">Appointments</h1>
           <p className="text-muted-foreground">Manage your appointment schedule</p>
         </div>
-        <Dialog open={addAppointmentDialogOpen} onOpenChange={setAddAppointmentDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-appointment">
-              <Plus className="h-4 w-4 mr-2" />
-              New Appointment
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Schedule New Appointment</DialogTitle>
-              <DialogDescription>Create a new appointment for a patient</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              createAppointmentMutation.mutate({
-                patientName: formData.get('patientName') as string,
-                patientPhone: formData.get('patientPhone') as string,
-                patientEmail: formData.get('patientEmail') as string || undefined,
-                doctorId,
-                appointmentDate: formData.get('appointmentDate') as string,
-                timeSlot: formData.get('timeSlot') as string,
-                symptoms: formData.get('symptoms') as string || undefined,
-                status: "scheduled",
-              });
-            }} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="aptPatientName">Patient Name *</Label>
-                  <Input id="aptPatientName" name="patientName" required data-testid="input-apt-patient-name" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="aptPatientPhone">Phone *</Label>
-                  <Input id="aptPatientPhone" name="patientPhone" required data-testid="input-apt-patient-phone" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="aptPatientEmail">Email</Label>
-                <Input id="aptPatientEmail" name="patientEmail" type="email" data-testid="input-apt-patient-email" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="appointmentDate">Date *</Label>
-                  <Input id="appointmentDate" name="appointmentDate" type="date" required defaultValue={new Date().toISOString().split('T')[0]} data-testid="input-apt-date" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="timeSlot">Time Slot *</Label>
-                  <Select name="timeSlot" defaultValue="09:00 AM">
-                    <SelectTrigger data-testid="select-time-slot">
-                      <SelectValue placeholder="Select time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="09:00 AM">09:00 AM</SelectItem>
-                      <SelectItem value="09:30 AM">09:30 AM</SelectItem>
-                      <SelectItem value="10:00 AM">10:00 AM</SelectItem>
-                      <SelectItem value="10:30 AM">10:30 AM</SelectItem>
-                      <SelectItem value="11:00 AM">11:00 AM</SelectItem>
-                      <SelectItem value="11:30 AM">11:30 AM</SelectItem>
-                      <SelectItem value="12:00 PM">12:00 PM</SelectItem>
-                      <SelectItem value="02:00 PM">02:00 PM</SelectItem>
-                      <SelectItem value="02:30 PM">02:30 PM</SelectItem>
-                      <SelectItem value="03:00 PM">03:00 PM</SelectItem>
-                      <SelectItem value="03:30 PM">03:30 PM</SelectItem>
-                      <SelectItem value="04:00 PM">04:00 PM</SelectItem>
-                      <SelectItem value="04:30 PM">04:30 PM</SelectItem>
-                      <SelectItem value="05:00 PM">05:00 PM</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="symptoms">Symptoms / Reason</Label>
-                <Textarea id="symptoms" name="symptoms" placeholder="Describe the symptoms or reason for visit" rows={3} data-testid="input-symptoms" />
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setAddAppointmentDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={createAppointmentMutation.isPending} data-testid="button-submit-appointment">
-                  {createAppointmentMutation.isPending ? "Creating..." : "Create Appointment"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
 
       <Tabs defaultValue="today">
         <TabsList data-testid="tabs-appointments">
