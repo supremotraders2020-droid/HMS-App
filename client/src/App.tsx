@@ -29,6 +29,7 @@ import EquipmentServicing from "@/pages/EquipmentServicing";
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
 interface User {
+  id: string;
   username: string;
   name: string;
   role: UserRole;
@@ -198,10 +199,32 @@ function AppContent() {
     { id: "1", name: "Gravity Hospital", location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062", status: "ACTIVE" }
   ];
 
-  const handleLogin = (username: string, role: UserRole) => {
+  const handleLogin = async (username: string, role: UserRole) => {
     const galaxyHospital = hospitals[0]; // Gravity Hospital
     setCurrentHospital(galaxyHospital);
+    
+    // Try to fetch user from database to get real ID
+    try {
+      const response = await fetch(`/api/users/by-username/${username}`);
+      if (response.ok) {
+        const user = await response.json();
+        setCurrentUser({
+          id: user.id,
+          username: user.username,
+          name: user.name || getDisplayName(username, role),
+          role: user.role || role,
+          tenantId: galaxyHospital.id,
+          hospitalName: galaxyHospital.name
+        });
+        return;
+      }
+    } catch (error) {
+      console.log("Could not fetch user from database, using local auth");
+    }
+    
+    // Fallback to local auth with generated ID
     setCurrentUser({
+      id: crypto.randomUUID(),
       username,
       name: getDisplayName(username, role),
       role,
@@ -269,6 +292,7 @@ function AppContent() {
         <ThemeProvider>
           <TooltipProvider>
             <DoctorPortal 
+              doctorId={currentUser.id}
               doctorName={currentUser.name.replace("Dr. ", "")}
               hospitalName={currentUser.hospitalName}
               onLogout={handleLogout}

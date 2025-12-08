@@ -11,6 +11,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await databaseStorage.seedInitialData();
   await databaseStorage.seedEquipmentData();
   
+  // Get user by username
+  app.get("/api/users/by-username/:username", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.params.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user" });
+    }
+  });
+
   // Get all doctors
   app.get("/api/doctors", async (_req, res) => {
     try {
