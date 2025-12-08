@@ -1116,8 +1116,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             }}
             modifiers={{
               hasSlots: (date) => {
-                const dayName = getDayNameFromDate(date);
-                return schedules.some(s => s.day === dayName && s.isAvailable);
+                const dateStr = format(date, 'yyyy-MM-dd');
+                return schedules.some(s => s.specificDate === dateStr && s.isAvailable);
               }
             }}
             modifiersStyles={{
@@ -1125,8 +1125,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             }}
             components={{
               DayContent: ({ date }) => {
-                const dayName = getDayNameFromDate(date);
-                const daySlots = schedules.filter(s => s.day === dayName && s.isAvailable);
+                const dateStr = format(date, 'yyyy-MM-dd');
+                const daySlots = schedules.filter(s => s.specificDate === dateStr && s.isAvailable);
                 const hasSlots = daySlots.length > 0;
                 return (
                   <div className="flex flex-col gap-1">
