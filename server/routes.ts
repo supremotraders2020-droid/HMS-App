@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
+import { notificationService } from "./notification-service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Seed initial data if database is empty
@@ -91,6 +92,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         performedByRole: "SYSTEM",
         activityType: "info"
       });
+
+      // Send real-time notification to doctor
+      notificationService.notifyAppointmentCreated(
+        appointment.id,
+        validatedData.doctorId,
+        validatedData.patientName,
+        validatedData.appointmentDate,
+        validatedData.timeSlot
+      ).catch(err => console.error("Notification error:", err));
       
       res.status(201).json(appointment);
     } catch (error) {
@@ -1493,6 +1503,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: parsed.error.errors });
       }
       const prescription = await storage.createPrescription(parsed.data);
+
+      // Send notification to patient about new prescription
+      if (parsed.data.patientId && parsed.data.patientName && parsed.data.doctorName) {
+        notificationService.notifyPrescriptionCreated(
+          prescription.id,
+          parsed.data.patientId,
+          parsed.data.patientName,
+          parsed.data.doctorName
+        ).catch(err => console.error("Notification error:", err));
+      }
+
       res.status(201).json(prescription);
     } catch (error) {
       res.status(500).json({ error: "Failed to create prescription" });
@@ -1677,6 +1698,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         profile = await storage.updateDoctorProfile(req.params.doctorId, req.body);
       }
+
+      // Send notification about profile update
+      notificationService.notifyProfileUpdated(
+        req.params.doctorId,
+        "DOCTOR",
+        "doctor"
+      ).catch(err => console.error("Notification error:", err));
+
       res.json(profile);
     } catch (error) {
       res.status(500).json({ error: "Failed to update profile" });
@@ -1805,6 +1834,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+
+  // Initialize WebSocket notification service
+  notificationService.initialize(httpServer);
 
   return httpServer;
 }
