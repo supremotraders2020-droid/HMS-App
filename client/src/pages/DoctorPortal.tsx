@@ -1065,134 +1065,164 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       </Card>
 
       <Sheet open={calendarSlotSheetOpen} onOpenChange={setCalendarSlotSheetOpen}>
-        <SheetContent data-testid="sheet-day-slots">
+        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto" data-testid="sheet-day-slots">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5 text-primary" />
               {selectedCalendarDate ? format(selectedCalendarDate, "EEEE, MMMM d, yyyy") : "Select a Date"}
             </SheetTitle>
             <SheetDescription>
-              {selectedCalendarDate ? `Slots for ${getDayNameFromDate(selectedCalendarDate)}` : "Click a date to view slots"}
+              Manage time slots for this day
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
-            {getSchedulesForDate(selectedCalendarDate).length > 0 ? (
-              getSchedulesForDate(selectedCalendarDate).map((slot) => (
-                <Card 
-                  key={slot.id} 
-                  className={`hover-elevate ${!slot.isAvailable ? 'opacity-60' : ''}`} 
-                  data-testid={`sheet-slot-${slot.id}`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${slot.isAvailable ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                          <Clock className={`h-5 w-5 ${slot.isAvailable ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} />
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium">Time Slots</h4>
+              <Button 
+                size="sm"
+                onClick={() => {
+                  if (selectedCalendarDate) {
+                    const dayName = getDayNameFromDate(selectedCalendarDate);
+                    createScheduleMutation.mutate({
+                      doctorId,
+                      day: dayName,
+                      startTime: "09:00",
+                      endTime: "12:00",
+                      slotType: "OPD",
+                      maxPatients: 20,
+                      isAvailable: true,
+                    });
+                  }
+                }}
+                data-testid="button-add-slot-sheet"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Slot
+              </Button>
+            </div>
+            
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              <div className="space-y-4 pr-4">
+                {getSchedulesForDate(selectedCalendarDate).length > 0 ? (
+                  getSchedulesForDate(selectedCalendarDate).map((slot) => (
+                    <Card 
+                      key={slot.id} 
+                      className={`${!slot.isAvailable ? 'opacity-60 border-dashed' : ''}`} 
+                      data-testid={`sheet-slot-${slot.id}`}
+                    >
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={slot.isAvailable}
+                              onCheckedChange={(checked) => {
+                                updateScheduleMutation.mutate({ 
+                                  id: slot.id, 
+                                  updates: { isAvailable: checked } 
+                                });
+                              }}
+                              data-testid={`switch-slot-${slot.id}`}
+                            />
+                            <span className="text-sm">{slot.isAvailable ? 'Available' : 'Unavailable'}</span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => deleteScheduleMutation.mutate(slot.id)}
+                            data-testid={`button-delete-slot-${slot.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
-                        <div>
-                          <p className="font-semibold">{slot.startTime} - {slot.endTime}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline">{slot.slotType}</Badge>
-                            {!slot.isAvailable && (
-                              <Badge variant="secondary" className="text-muted-foreground">Unavailable</Badge>
-                            )}
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Start Time</Label>
+                            <Select 
+                              value={slot.startTime} 
+                              onValueChange={(v) => updateScheduleMutation.mutate({ id: slot.id, updates: { startTime: v }})}
+                            >
+                              <SelectTrigger data-testid={`select-start-${slot.id}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"].map(t => (
+                                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">End Time</Label>
+                            <Select 
+                              value={slot.endTime} 
+                              onValueChange={(v) => updateScheduleMutation.mutate({ id: slot.id, updates: { endTime: v }})}
+                            >
+                              <SelectTrigger data-testid={`select-end-${slot.id}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {["07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"].map(t => (
+                                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Max: {slot.maxPatients} patients</p>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="mt-1"
-                          onClick={() => {
-                            setCalendarSlotSheetOpen(false);
-                            if (selectedCalendarDate) {
-                              openScheduleEditor(getDayNameFromDate(selectedCalendarDate));
-                            }
-                          }}
-                          data-testid={`button-edit-slot-${slot.id}`}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-lg font-medium">No slots available</p>
-                <p className="text-muted-foreground mb-4">This day has no scheduled availability</p>
-                <Button 
-                  onClick={() => {
-                    setCalendarSlotSheetOpen(false);
-                    if (selectedCalendarDate) {
-                      openScheduleEditor(getDayNameFromDate(selectedCalendarDate));
-                    }
-                  }}
-                  data-testid="button-add-slot-from-sheet"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Availability
-                </Button>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Department</Label>
+                            <Select 
+                              value={slot.slotType} 
+                              onValueChange={(v) => updateScheduleMutation.mutate({ id: slot.id, updates: { slotType: v }})}
+                            >
+                              <SelectTrigger data-testid={`select-dept-${slot.id}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="OPD">OPD</SelectItem>
+                                <SelectItem value="Cardiology OPD">Cardiology OPD</SelectItem>
+                                <SelectItem value="General OPD">General OPD</SelectItem>
+                                <SelectItem value="Emergency">Emergency</SelectItem>
+                                <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
+                                <SelectItem value="Endocrinology">Endocrinology</SelectItem>
+                                <SelectItem value="Neurology">Neurology</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Max Patients</Label>
+                            <Select 
+                              value={String(slot.maxPatients)} 
+                              onValueChange={(v) => updateScheduleMutation.mutate({ id: slot.id, updates: { maxPatients: parseInt(v) }})}
+                            >
+                              <SelectTrigger data-testid={`select-max-${slot.id}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[5, 10, 15, 20, 25, 30, 40, 50].map(n => (
+                                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-lg font-medium">No slots for this day</p>
+                    <p className="text-muted-foreground mb-4">Click "Add Slot" above to create availability</p>
+                  </div>
+                )}
               </div>
-            )}
+            </ScrollArea>
           </div>
         </SheetContent>
       </Sheet>
-
-      <div className="grid gap-4">
-        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => {
-          const daySchedules = schedules.filter(s => s.day === day);
-          const isAvailable = daySchedules.some(s => s.isAvailable);
-          
-          return (
-            <Card key={day} className={!isAvailable ? "opacity-60" : ""} data-testid={`schedule-${day.toLowerCase()}`}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${isAvailable ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                      <CalendarDays className={`h-6 w-6 ${isAvailable ? 'text-green-600' : 'text-gray-400'}`} />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">{day}</h4>
-                      {isAvailable ? (
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {daySchedules.filter(s => s.isAvailable).map((slot) => (
-                            <Badge key={slot.id} variant="outline">
-                              {slot.startTime} - {slot.endTime} ({slot.slotType})
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Not Available</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch 
-                      checked={isAvailable} 
-                      onCheckedChange={() => toggleDayAvailability(day)}
-                      data-testid={`switch-${day.toLowerCase()}`} 
-                    />
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => openScheduleEditor(day)}
-                      data-testid={`button-edit-${day.toLowerCase()}`}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
 
       <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
         <DialogContent className="max-w-lg" data-testid="dialog-edit-schedule">
