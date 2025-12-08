@@ -998,7 +998,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-schedules-title">Weekly Schedule</h1>
-          <p className="text-muted-foreground">Manage your OPD timings and availability - 10 Pune Location</p>
         </div>
         <Button onClick={() => openScheduleEditor("Monday")} data-testid="button-add-slot">
           <Plus className="h-4 w-4 mr-2" />
