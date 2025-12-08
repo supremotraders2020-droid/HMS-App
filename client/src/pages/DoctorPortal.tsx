@@ -577,24 +577,31 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {notifications.slice(0, 4).map((notif) => (
-                <div 
-                  key={notif.id} 
-                  className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer hover-elevate ${notif.isRead ? 'bg-muted/30' : 'bg-primary/5 border border-primary/20'}`}
-                  onClick={() => openNotificationDetail(notif)}
-                  data-testid={`notification-item-${notif.id}`}
-                >
-                  {getNotificationIcon(notif.type)}
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${!notif.isRead ? 'text-primary' : ''}`}>{notif.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{notif.message}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {!notif.isRead && <div className="h-2 w-2 rounded-full bg-primary" />}
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
+              {notifications.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No notifications yet</p>
                 </div>
-              ))}
+              ) : (
+                notifications.slice(0, 4).map((notif) => (
+                  <div 
+                    key={notif.id} 
+                    className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer hover-elevate ${notif.isRead ? 'bg-muted/30' : 'bg-primary/5 border border-primary/20'}`}
+                    onClick={() => openNotificationDetail(notif)}
+                    data-testid={`notification-item-${notif.id}`}
+                  >
+                    {getNotificationIcon(notif.type)}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium ${!notif.isRead ? 'text-primary' : ''}`}>{notif.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{notif.message}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {!notif.isRead && <div className="h-2 w-2 rounded-full bg-primary" />}
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
           <CardFooter>
