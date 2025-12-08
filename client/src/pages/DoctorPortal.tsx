@@ -996,7 +996,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-schedules-title">Weekly Schedule</h1>
-          <p className="text-muted-foreground">Manage your OPD timings and availability</p>
+          <p className="text-muted-foreground">Manage your OPD timings and availability - 10 Pune Location</p>
         </div>
         <Button onClick={() => openScheduleEditor("Monday")} data-testid="button-add-slot">
           <Plus className="h-4 w-4 mr-2" />
@@ -1049,10 +1049,10 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               nav_button_previous: "left-2",
               nav_button_next: "right-2",
               table: "w-full border-collapse",
-              head_row: "hidden",
-              head_cell: "hidden",
-              row: "grid grid-cols-7",
-              cell: "relative min-h-[90px] p-3 text-left align-top hover:bg-muted/30 transition-colors cursor-pointer border-t border-border/20",
+              head_row: "grid grid-cols-7 w-full",
+              head_cell: "flex-1 text-center py-2 font-medium text-sm",
+              row: "grid grid-cols-7 w-full",
+              cell: "relative min-h-[90px] p-3 text-left align-top hover:bg-muted/30 transition-colors cursor-pointer border-t border-border/20 flex-1",
               day: "font-medium text-base",
               day_selected: "text-primary font-bold",
               day_today: "text-primary font-bold",
@@ -1078,12 +1078,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                   <div className="flex flex-col gap-1">
                     <span className={hasSlots ? "text-green-600 dark:text-green-400 font-semibold" : ""}>{date.getDate()}</span>
                     {hasSlots && (
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-amber-500" />
-                        <span className="text-xs text-muted-foreground">
-                          {daySlots.length} slot{daySlots.length > 1 ? 's' : ''}
-                        </span>
-                      </div>
+                      <span className="text-xs text-amber-500">
+                        {daySlots.length} slot{daySlots.length > 1 ? 's' : ''}
+                      </span>
                     )}
                   </div>
                 );
@@ -1176,7 +1173,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"].map(t => (
+                                {["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM"].map(t => (
                                   <SelectItem key={t} value={t}>{t}</SelectItem>
                                 ))}
                               </SelectContent>
@@ -1192,7 +1189,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {["07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"].map(t => (
+                                {["07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM"].map(t => (
                                   <SelectItem key={t} value={t}>{t}</SelectItem>
                                 ))}
                               </SelectContent>
@@ -1211,13 +1208,22 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="OPD">OPD</SelectItem>
-                                <SelectItem value="Cardiology OPD">Cardiology OPD</SelectItem>
                                 <SelectItem value="General OPD">General OPD</SelectItem>
-                                <SelectItem value="Emergency">Emergency</SelectItem>
-                                <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
+                                <SelectItem value="Cardiology OPD">Cardiology OPD</SelectItem>
                                 <SelectItem value="Endocrinology">Endocrinology</SelectItem>
                                 <SelectItem value="Neurology">Neurology</SelectItem>
+                                <SelectItem value="Emergency">Emergency</SelectItem>
+                                <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
+                                <SelectItem value="Pune - Koregaon Park">Pune - Koregaon Park</SelectItem>
+                                <SelectItem value="Pune - Shivaji Nagar">Pune - Shivaji Nagar</SelectItem>
+                                <SelectItem value="Pune - Kothrud">Pune - Kothrud</SelectItem>
+                                <SelectItem value="Pune - Hadapsar">Pune - Hadapsar</SelectItem>
+                                <SelectItem value="Pune - Wakad">Pune - Wakad</SelectItem>
+                                <SelectItem value="Pune - Baner">Pune - Baner</SelectItem>
+                                <SelectItem value="Pune - Aundh">Pune - Aundh</SelectItem>
+                                <SelectItem value="Pune - Viman Nagar">Pune - Viman Nagar</SelectItem>
+                                <SelectItem value="Pune - Hinjewadi">Pune - Hinjewadi</SelectItem>
+                                <SelectItem value="Pune - Deccan">Pune - Deccan</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1294,7 +1300,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"].map(t => (
+                          {["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM"].map(t => (
                             <SelectItem key={t} value={t}>{t}</SelectItem>
                           ))}
                         </SelectContent>
@@ -1310,7 +1316,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {["07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"].map(t => (
+                          {["07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM"].map(t => (
                             <SelectItem key={t} value={t}>{t}</SelectItem>
                           ))}
                         </SelectContent>
@@ -1327,12 +1333,22 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Cardiology OPD">Cardiology OPD</SelectItem>
                         <SelectItem value="General OPD">General OPD</SelectItem>
-                        <SelectItem value="Emergency">Emergency</SelectItem>
-                        <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
+                        <SelectItem value="Cardiology OPD">Cardiology OPD</SelectItem>
                         <SelectItem value="Endocrinology">Endocrinology</SelectItem>
                         <SelectItem value="Neurology">Neurology</SelectItem>
+                        <SelectItem value="Emergency">Emergency</SelectItem>
+                        <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
+                        <SelectItem value="Pune - Koregaon Park">Pune - Koregaon Park</SelectItem>
+                        <SelectItem value="Pune - Shivaji Nagar">Pune - Shivaji Nagar</SelectItem>
+                        <SelectItem value="Pune - Kothrud">Pune - Kothrud</SelectItem>
+                        <SelectItem value="Pune - Hadapsar">Pune - Hadapsar</SelectItem>
+                        <SelectItem value="Pune - Wakad">Pune - Wakad</SelectItem>
+                        <SelectItem value="Pune - Baner">Pune - Baner</SelectItem>
+                        <SelectItem value="Pune - Aundh">Pune - Aundh</SelectItem>
+                        <SelectItem value="Pune - Viman Nagar">Pune - Viman Nagar</SelectItem>
+                        <SelectItem value="Pune - Hinjewadi">Pune - Hinjewadi</SelectItem>
+                        <SelectItem value="Pune - Deccan">Pune - Deccan</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
