@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
+import { notificationService } from "./notification-service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Seed initial data if database is empty
@@ -91,6 +92,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         performedByRole: "SYSTEM",
         activityType: "info"
       });
+
+      // Send real-time notification to doctor
+      notificationService.notifyAppointmentCreated(
+        appointment.id,
+        validatedData.doctorId,
+        validatedData.patientName,
+        validatedData.appointmentDate,
+        validatedData.timeSlot
+      ).catch(err => console.error("Notification error:", err));
       
       res.status(201).json(appointment);
     } catch (error) {
@@ -1493,6 +1503,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: parsed.error.errors });
       }
       const prescription = await storage.createPrescription(parsed.data);
+
+      // Send notification to patient about new prescription
+      if (parsed.data.patientId && parsed.data.patientName && parsed.data.doctorName) {
+        notificationService.notifyPrescriptionCreated(
+          prescription.id,
+          parsed.data.patientId,
+          parsed.data.patientName,
+          parsed.data.doctorName
+        ).catch(err => console.error("Notification error:", err));
+      }
+
       res.status(201).json(prescription);
     } catch (error) {
       res.status(500).json({ error: "Failed to create prescription" });
@@ -1677,6 +1698,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         profile = await storage.updateDoctorProfile(req.params.doctorId, req.body);
       }
+
+      // Send notification about profile update
+      notificationService.notifyProfileUpdated(
+        req.params.doctorId,
+        "DOCTOR",
+        "doctor"
+      ).catch(err => console.error("Notification error:", err));
+
       res.json(profile);
     } catch (error) {
       res.status(500).json({ error: "Failed to update profile" });
@@ -1721,7 +1750,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =========================================
+  // USER NOTIFICATIONS (Role-based real-time notifications)
+  // =========================================
+
+  // Get notifications for a user
+  app.get("/api/user-notifications/:userId", async (req, res) => {
+    try {
+      const notifications = await storage.getUserNotifications(req.params.userId);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // Get notifications by role (for admin dashboards)
+  app.get("/api/user-notifications/role/:role", async (req, res) => {
+    try {
+      const notifications = await storage.getUserNotificationsByRole(req.params.role);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notifications by role" });
+    }
+  });
+
+  // Get single notification
+  app.get("/api/user-notifications/notification/:id", async (req, res) => {
+    try {
+      const notification = await storage.getUserNotification(req.params.id);
+      if (!notification) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+      res.json(notification);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notification" });
+    }
+  });
+
+  // Create notification (used internally or by admin)
+  app.post("/api/user-notifications", async (req, res) => {
+    try {
+      const notification = await storage.createUserNotification(req.body);
+      res.json(notification);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create notification" });
+    }
+  });
+
+  // Mark notification as read
+  app.patch("/api/user-notifications/:id/read", async (req, res) => {
+    try {
+      const notification = await storage.markUserNotificationRead(req.params.id);
+      if (!notification) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+      res.json(notification);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
+  // Mark all notifications as read for a user
+  app.patch("/api/user-notifications/:userId/read-all", async (req, res) => {
+    try {
+      await storage.markAllUserNotificationsRead(req.params.userId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark all notifications as read" });
+    }
+  });
+
+  // Delete notification
+  app.delete("/api/user-notifications/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteUserNotification(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete notification" });
+    }
+  });
+
   const httpServer = createServer(app);
+
+  // Initialize WebSocket notification service
+  notificationService.initialize(httpServer);
 
   return httpServer;
 }

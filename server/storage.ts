@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type UserNotification, type InsertUserNotification } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -209,6 +209,15 @@ export interface IStorage {
   getDoctorProfile(doctorId: string): Promise<DoctorProfile | undefined>;
   createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile>;
   updateDoctorProfile(doctorId: string, profile: Partial<InsertDoctorProfile>): Promise<DoctorProfile | undefined>;
+  
+  // User Notifications (role-based notifications for Doctor, Patient, Admin, etc.)
+  getUserNotifications(userId: string): Promise<UserNotification[]>;
+  getUserNotificationsByRole(userRole: string): Promise<UserNotification[]>;
+  getUserNotification(id: string): Promise<UserNotification | undefined>;
+  createUserNotification(notification: InsertUserNotification): Promise<UserNotification>;
+  markUserNotificationRead(id: string): Promise<UserNotification | undefined>;
+  markAllUserNotificationsRead(userId: string): Promise<void>;
+  deleteUserNotification(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -2122,6 +2131,52 @@ export class MemStorage implements IStorage {
     const updated = { ...existing, ...updates, updatedAt: new Date() };
     this.doctorProfilesData.set(existing.id, updated);
     return updated;
+  }
+
+  // User Notifications stub methods
+  private userNotificationsData = new Map<string, UserNotification>();
+
+  async getUserNotifications(userId: string): Promise<UserNotification[]> {
+    return Array.from(this.userNotificationsData.values())
+      .filter(n => n.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getUserNotificationsByRole(userRole: string): Promise<UserNotification[]> {
+    return Array.from(this.userNotificationsData.values())
+      .filter(n => n.userRole === userRole)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getUserNotification(id: string): Promise<UserNotification | undefined> {
+    return this.userNotificationsData.get(id);
+  }
+
+  async createUserNotification(notification: InsertUserNotification): Promise<UserNotification> {
+    const id = randomUUID();
+    const newNotification: UserNotification = { id, ...notification, isRead: false, createdAt: new Date() };
+    this.userNotificationsData.set(id, newNotification);
+    return newNotification;
+  }
+
+  async markUserNotificationRead(id: string): Promise<UserNotification | undefined> {
+    const existing = this.userNotificationsData.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, isRead: true };
+    this.userNotificationsData.set(id, updated);
+    return updated;
+  }
+
+  async markAllUserNotificationsRead(userId: string): Promise<void> {
+    for (const [id, notification] of this.userNotificationsData) {
+      if (notification.userId === userId) {
+        this.userNotificationsData.set(id, { ...notification, isRead: true });
+      }
+    }
+  }
+
+  async deleteUserNotification(id: string): Promise<boolean> {
+    return this.userNotificationsData.delete(id);
   }
 }
 
