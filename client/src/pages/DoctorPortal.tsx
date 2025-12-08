@@ -1044,12 +1044,31 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           </CardTitle>
           <CardDescription>Click on any date to view available slots</CardDescription>
         </CardHeader>
-        <CardContent className="flex justify-center">
+        <CardContent>
           <CalendarUI
             mode="single"
             selected={selectedCalendarDate}
             onSelect={handleCalendarDateClick}
-            className="rounded-md border"
+            className="w-full rounded-md border p-4"
+            classNames={{
+              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full",
+              month: "space-y-4 w-full",
+              caption: "flex justify-center pt-1 relative items-center text-lg font-semibold",
+              caption_label: "text-lg font-semibold",
+              nav: "space-x-1 flex items-center",
+              nav_button: "h-9 w-9 bg-transparent p-0 opacity-50 hover:opacity-100",
+              table: "w-full border-collapse",
+              head_row: "flex w-full",
+              head_cell: "text-muted-foreground rounded-md flex-1 font-medium text-base py-2",
+              row: "flex w-full mt-2",
+              cell: "flex-1 text-center text-base p-0 relative focus-within:relative focus-within:z-20",
+              day: "h-12 w-full p-0 font-normal hover:bg-accent hover:text-accent-foreground rounded-md transition-colors cursor-pointer flex items-center justify-center",
+              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+              day_today: "bg-accent text-accent-foreground font-bold",
+              day_outside: "text-muted-foreground opacity-50",
+              day_disabled: "text-muted-foreground opacity-50",
+              day_hidden: "invisible",
+            }}
             modifiers={{
               hasSlots: (date) => {
                 const dayName = getDayNameFromDate(date);
@@ -1057,7 +1076,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               }
             }}
             modifiersStyles={{
-              hasSlots: { backgroundColor: 'hsl(var(--primary) / 0.1)' }
+              hasSlots: { backgroundColor: 'hsl(142 76% 36% / 0.2)', borderRadius: '6px' }
             }}
             data-testid="monthly-calendar"
           />
