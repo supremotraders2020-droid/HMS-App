@@ -23,7 +23,21 @@ export function useNotifications({ userId, userRole, enabled = true }: UseNotifi
     mutationFn: async (notificationId: string) => {
       await apiRequest("PATCH", `/api/user-notifications/${notificationId}/read`);
     },
-    onSuccess: () => {
+    onMutate: async (notificationId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/user-notifications", userId] });
+      const previousData = queryClient.getQueryData<UserNotification[]>(["/api/user-notifications", userId]);
+      queryClient.setQueryData<UserNotification[]>(
+        ["/api/user-notifications", userId],
+        (old) => old?.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
+      );
+      return { previousData };
+    },
+    onError: (_err, _notificationId, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(["/api/user-notifications", userId], context.previousData);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user-notifications", userId] });
     },
   });
@@ -32,7 +46,21 @@ export function useNotifications({ userId, userRole, enabled = true }: UseNotifi
     mutationFn: async () => {
       await apiRequest("PATCH", `/api/user-notifications/${userId}/read-all`);
     },
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["/api/user-notifications", userId] });
+      const previousData = queryClient.getQueryData<UserNotification[]>(["/api/user-notifications", userId]);
+      queryClient.setQueryData<UserNotification[]>(
+        ["/api/user-notifications", userId],
+        (old) => old?.map(n => ({ ...n, isRead: true }))
+      );
+      return { previousData };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(["/api/user-notifications", userId], context.previousData);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user-notifications", userId] });
     },
   });

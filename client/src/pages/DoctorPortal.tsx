@@ -66,7 +66,9 @@ import {
   MoreVertical,
   Hospital,
   Camera,
-  Loader2
+  Loader2,
+  ArrowLeft,
+  ExternalLink
 } from "lucide-react";
 
 interface DoctorPortalProps {
@@ -105,6 +107,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   } = useNotifications({ userId: doctorId, userRole: "DOCTOR" });
   const [editingSchedule, setEditingSchedule] = useState<{day: string; slots: DoctorSchedule[]} | null>(null);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
+  const [notificationDetailOpen, setNotificationDetailOpen] = useState(false);
   const [addPatientDialogOpen, setAddPatientDialogOpen] = useState(false);
   const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
@@ -361,7 +365,54 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       case "profile": return <User className="h-4 w-4 text-indigo-500" />;
       case "admission": return <Hospital className="h-4 w-4 text-teal-500" />;
       case "system": return <Settings className="h-4 w-4 text-purple-500" />;
+      case "report": return <FileText className="h-4 w-4 text-amber-500" />;
       default: return <Bell className="h-4 w-4" />;
+    }
+  };
+
+  const getNotificationIconLarge = (type: string) => {
+    switch (type) {
+      case "appointment": return <Calendar className="h-6 w-6 text-blue-500" />;
+      case "patient": return <User className="h-6 w-6 text-green-500" />;
+      case "prescription": return <Pill className="h-6 w-6 text-orange-500" />;
+      case "schedule": return <CalendarDays className="h-6 w-6 text-purple-500" />;
+      case "profile": return <User className="h-6 w-6 text-indigo-500" />;
+      case "admission": return <Hospital className="h-6 w-6 text-teal-500" />;
+      case "system": return <Settings className="h-6 w-6 text-purple-500" />;
+      case "report": return <FileText className="h-6 w-6 text-amber-500" />;
+      default: return <Bell className="h-6 w-6" />;
+    }
+  };
+
+  const openNotificationDetail = (notif: UserNotification) => {
+    const updatedNotif = { ...notif, isRead: true };
+    setSelectedNotification(updatedNotif);
+    setNotificationDetailOpen(true);
+    if (!notif.isRead) {
+      markNotificationRead(notif.id);
+    }
+  };
+
+  const getNotificationTypeLabel = (type: string) => {
+    switch (type) {
+      case "appointment": return "Appointment";
+      case "patient": return "Patient";
+      case "prescription": return "Prescription";
+      case "schedule": return "Schedule Change";
+      case "profile": return "Profile Update";
+      case "admission": return "Admission";
+      case "system": return "System Update";
+      case "report": return "Report";
+      default: return "Notification";
+    }
+  };
+
+  const parseMetadata = (metadata: string | null): Record<string, unknown> => {
+    if (!metadata) return {};
+    try {
+      return JSON.parse(metadata);
+    } catch {
+      return {};
     }
   };
 
@@ -504,8 +555,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               {notifications.slice(0, 4).map((notif) => (
                 <div 
                   key={notif.id} 
-                  className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer ${notif.isRead ? 'bg-muted/30' : 'bg-primary/5 border border-primary/20'}`}
-                  onClick={() => markNotificationRead(notif.id)}
+                  className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer hover-elevate ${notif.isRead ? 'bg-muted/30' : 'bg-primary/5 border border-primary/20'}`}
+                  onClick={() => openNotificationDetail(notif)}
                   data-testid={`notification-item-${notif.id}`}
                 >
                   {getNotificationIcon(notif.type)}
@@ -513,7 +564,10 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     <p className={`text-sm font-medium ${!notif.isRead ? 'text-primary' : ''}`}>{notif.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{notif.message}</p>
                   </div>
-                  {!notif.isRead && <div className="h-2 w-2 rounded-full bg-primary" />}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {!notif.isRead && <div className="h-2 w-2 rounded-full bg-primary" />}
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -1248,100 +1302,228 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     </div>
   );
 
-  const renderNotifications = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="text-notifications-title">Notifications</h1>
-          <p className="text-muted-foreground">Stay updated with latest alerts</p>
-        </div>
-        <Button variant="outline" onClick={() => markAllNotificationsRead()} data-testid="button-mark-all-read">
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Mark All Read
-        </Button>
-      </div>
+  const renderNotifications = () => {
+    const getNotificationBgColor = (type: string) => {
+      switch (type) {
+        case 'appointment': return 'bg-blue-100 dark:bg-blue-900';
+        case 'patient': return 'bg-green-100 dark:bg-green-900';
+        case 'prescription': return 'bg-orange-100 dark:bg-orange-900';
+        case 'schedule': return 'bg-purple-100 dark:bg-purple-900';
+        case 'admission': return 'bg-teal-100 dark:bg-teal-900';
+        case 'report': return 'bg-amber-100 dark:bg-amber-900';
+        default: return 'bg-purple-100 dark:bg-purple-900';
+      }
+    };
 
-      <Tabs defaultValue="all">
-        <TabsList data-testid="tabs-notifications">
-          <TabsTrigger value="all" data-testid="tab-notif-all">All ({notifications.length})</TabsTrigger>
-          <TabsTrigger value="unread" data-testid="tab-notif-unread">Unread ({unreadNotifications.length})</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" className="mt-4">
-          <div className="space-y-3">
-            {notifications.map((notif) => (
-              <Card 
-                key={notif.id} 
-                className={`hover-elevate cursor-pointer ${!notif.isRead ? 'border-primary/50' : ''}`}
-                onClick={() => markNotificationRead(notif.id)}
-                data-testid={`notif-card-${notif.id}`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      notif.type === 'appointment' ? 'bg-blue-100 dark:bg-blue-900' :
-                      notif.type === 'patient' ? 'bg-green-100 dark:bg-green-900' :
-                      'bg-purple-100 dark:bg-purple-900'
-                    }`}>
-                      {getNotificationIcon(notif.type)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className={`font-medium ${!notif.isRead ? 'text-primary' : ''}`}>{notif.title}</h4>
-                        {!notif.isRead && <div className="h-2 w-2 rounded-full bg-primary" />}
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">{notif.message}</p>
-                      <p className="text-xs text-muted-foreground mt-2">{notif.createdAt ? new Date(notif.createdAt).toLocaleString() : 'Just now'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold" data-testid="text-notifications-title">Notifications</h1>
+            <p className="text-muted-foreground">Stay updated with latest alerts</p>
           </div>
-        </TabsContent>
+          <div className="flex items-center gap-3">
+            {unreadNotificationCount > 0 && (
+              <Badge variant="destructive" className="px-3 py-1" data-testid="badge-unread-count">
+                {unreadNotificationCount} unread
+              </Badge>
+            )}
+            <Button variant="outline" onClick={() => markAllNotificationsRead()} data-testid="button-mark-all-read">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Mark All Read
+            </Button>
+          </div>
+        </div>
 
-        <TabsContent value="unread" className="mt-4">
-          <div className="space-y-3">
-            {unreadNotifications.length > 0 ? (
-              unreadNotifications.map((notif) => (
+        <Tabs defaultValue="all">
+          <TabsList data-testid="tabs-notifications">
+            <TabsTrigger value="all" data-testid="tab-notif-all">All ({notifications.length})</TabsTrigger>
+            <TabsTrigger value="unread" data-testid="tab-notif-unread">Unread ({unreadNotifications.length})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-4">
+            <div className="space-y-3">
+              {notifications.length > 0 ? notifications.map((notif) => (
                 <Card 
                   key={notif.id} 
-                  className="hover-elevate cursor-pointer border-primary/50"
-                  onClick={() => markNotificationRead(notif.id)}
-                  data-testid={`unread-notif-${notif.id}`}
+                  className={`hover-elevate cursor-pointer ${!notif.isRead ? 'border-primary/50' : ''}`}
+                  onClick={() => openNotificationDetail(notif)}
+                  data-testid={`notif-card-${notif.id}`}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        notif.type === 'appointment' ? 'bg-blue-100 dark:bg-blue-900' :
-                        notif.type === 'patient' ? 'bg-green-100 dark:bg-green-900' :
-                        'bg-purple-100 dark:bg-purple-900'
-                      }`}>
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getNotificationBgColor(notif.type)}`}>
                         {getNotificationIcon(notif.type)}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-primary">{notif.title}</h4>
-                          <div className="h-2 w-2 rounded-full bg-primary" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className={`font-medium truncate ${!notif.isRead ? 'text-primary' : ''}`}>{notif.title}</h4>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {!notif.isRead && <div className="h-2 w-2 rounded-full bg-primary" />}
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">{notif.message}</p>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notif.message}</p>
                         <p className="text-xs text-muted-foreground mt-2">{notif.createdAt ? new Date(notif.createdAt).toLocaleString() : 'Just now'}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-3" />
-                <p className="text-muted-foreground">All caught up! No unread notifications.</p>
+              )) : (
+                <div className="text-center py-12">
+                  <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">No notifications yet.</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="unread" className="mt-4">
+            <div className="space-y-3">
+              {unreadNotifications.length > 0 ? (
+                unreadNotifications.map((notif) => (
+                  <Card 
+                    key={notif.id} 
+                    className="hover-elevate cursor-pointer border-primary/50"
+                    onClick={() => openNotificationDetail(notif)}
+                    data-testid={`unread-notif-${notif.id}`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getNotificationBgColor(notif.type)}`}>
+                          {getNotificationIcon(notif.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="font-medium text-primary truncate">{notif.title}</h4>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="h-2 w-2 rounded-full bg-primary" />
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notif.message}</p>
+                          <p className="text-xs text-muted-foreground mt-2">{notif.createdAt ? new Date(notif.createdAt).toLocaleString() : 'Just now'}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                  <p className="text-muted-foreground">All caught up! No unread notifications.</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <Dialog open={notificationDetailOpen} onOpenChange={setNotificationDetailOpen}>
+          <DialogContent className="max-w-lg" data-testid="dialog-notification-detail">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                {selectedNotification && (
+                  <div className={`h-12 w-12 rounded-full flex items-center justify-center ${getNotificationBgColor(selectedNotification.type)}`}>
+                    {getNotificationIconLarge(selectedNotification.type)}
+                  </div>
+                )}
+                <div>
+                  <DialogTitle data-testid="text-notification-detail-title">{selectedNotification?.title}</DialogTitle>
+                  <DialogDescription className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="text-xs">
+                      {selectedNotification ? getNotificationTypeLabel(selectedNotification.type) : ''}
+                    </Badge>
+                    {selectedNotification?.isRead ? (
+                      <Badge variant="secondary" className="text-xs">Read</Badge>
+                    ) : (
+                      <Badge variant="default" className="text-xs">Unread</Badge>
+                    )}
+                  </DialogDescription>
+                </div>
               </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Message</h4>
+                <p className="text-sm" data-testid="text-notification-message">{selectedNotification?.message}</p>
+              </div>
+
+              {selectedNotification?.metadata && Object.keys(parseMetadata(selectedNotification.metadata)).length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Details</h4>
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                    {Object.entries(parseMetadata(selectedNotification.metadata)).map(([key, value]) => (
+                      <div key={key} className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                        <span className="text-sm font-medium">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedNotification?.relatedEntityType && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Related To</h4>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm text-muted-foreground">Type:</span>
+                      <Badge variant="outline" className="capitalize">{selectedNotification.relatedEntityType}</Badge>
+                    </div>
+                    {selectedNotification.relatedEntityId && (
+                      <div className="flex items-center justify-between gap-2 mt-2">
+                        <span className="text-sm text-muted-foreground">Reference:</span>
+                        <span className="text-sm font-mono text-xs">{selectedNotification.relatedEntityId}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Received</span>
+                <span data-testid="text-notification-time">
+                  {selectedNotification?.createdAt 
+                    ? new Date(selectedNotification.createdAt).toLocaleString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : 'Just now'}
+                </span>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  if (selectedNotification) {
+                    deleteNotification(selectedNotification.id);
+                  }
+                  setNotificationDetailOpen(false);
+                  setSelectedNotification(null);
+                }}
+                data-testid="button-delete-notification"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+              <Button onClick={() => setNotificationDetailOpen(false)} data-testid="button-close-notification">
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  };
 
   const renderProfile = () => (
     <div className="space-y-6">
