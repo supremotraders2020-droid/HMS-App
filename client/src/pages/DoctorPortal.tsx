@@ -396,16 +396,10 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const renderDashboard = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div>
           <h1 className="text-2xl font-bold" data-testid="text-welcome">Welcome, Dr. {doctorName}</h1>
           <p className="text-muted-foreground">Here's your overview for today</p>
         </div>
-        <Button onClick={() => setActiveSection("appointments")} data-testid="button-new-appointment">
-          <Plus className="h-4 w-4 mr-2" />
-          New Appointment
-        </Button>
-      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover-elevate" data-testid="stat-today-appointments">
@@ -540,33 +534,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           </CardFooter>
         </Card>
       </div>
-
-      <Card data-testid="card-quick-actions">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common tasks at your fingertips</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2" onClick={() => setActiveSection("patients")} data-testid="button-add-patient">
-              <Users className="h-5 w-5" />
-              <span>Add Patient</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2" onClick={() => setActiveSection("prescriptions")} data-testid="button-write-prescription">
-              <FileText className="h-5 w-5" />
-              <span>Write Prescription</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2" onClick={() => setActiveSection("schedules")} data-testid="button-manage-schedule">
-              <CalendarDays className="h-5 w-5" />
-              <span>Manage Schedule</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2" onClick={() => setActiveSection("appointments")} data-testid="button-view-appointments">
-              <Calendar className="h-5 w-5" />
-              <span>View Appointments</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 
