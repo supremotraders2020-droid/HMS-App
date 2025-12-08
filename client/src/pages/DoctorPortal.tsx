@@ -99,6 +99,19 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [selectedPatient, setSelectedPatient] = useState<DoctorPatient | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
+  
+  // Fetch all doctors to find matching doctor ID for notifications
+  const { data: allDoctors = [] } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ['/api/doctors'],
+  });
+  
+  // Find the doctor's ID from the doctors table by matching name
+  const matchedDoctor = allDoctors.find(d => 
+    d.name.toLowerCase().includes(doctorName.toLowerCase()) || 
+    doctorName.toLowerCase().includes(d.name.replace('Dr. ', '').toLowerCase())
+  );
+  const effectiveDoctorId = matchedDoctor?.id || doctorId;
+  
   // Real-time database notifications with WebSocket support
   const { 
     notifications, 
@@ -108,7 +121,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     markAsRead: markNotificationRead,
     markAllAsRead: markAllNotificationsRead,
     deleteNotification
-  } = useNotifications({ userId: doctorId, userRole: "DOCTOR" });
+  } = useNotifications({ userId: effectiveDoctorId, userRole: "DOCTOR" });
   const [editingSchedule, setEditingSchedule] = useState<{day: string; slots: DoctorSchedule[]} | null>(null);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
