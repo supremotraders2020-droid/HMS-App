@@ -1231,7 +1231,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                         
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <Label className="text-xs">Department</Label>
+                            <Label className="text-xs">Location</Label>
                             <Select 
                               value={slot.slotType} 
                               onValueChange={(v) => updateScheduleMutation.mutate({ id: slot.id, updates: { slotType: v }})}
@@ -1240,12 +1240,16 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="General OPD">General OPD</SelectItem>
-                                <SelectItem value="Cardiology OPD">Cardiology OPD</SelectItem>
-                                <SelectItem value="Endocrinology">Endocrinology</SelectItem>
-                                <SelectItem value="Neurology">Neurology</SelectItem>
-                                <SelectItem value="Emergency">Emergency</SelectItem>
-                                <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
+                                <SelectItem value="Pune - Koregaon Park">Pune - Koregaon Park</SelectItem>
+                                <SelectItem value="Pune - Shivaji Nagar">Pune - Shivaji Nagar</SelectItem>
+                                <SelectItem value="Pune - Kothrud">Pune - Kothrud</SelectItem>
+                                <SelectItem value="Pune - Hadapsar">Pune - Hadapsar</SelectItem>
+                                <SelectItem value="Pune - Wakad">Pune - Wakad</SelectItem>
+                                <SelectItem value="Pune - Baner">Pune - Baner</SelectItem>
+                                <SelectItem value="Pune - Aundh">Pune - Aundh</SelectItem>
+                                <SelectItem value="Pune - Viman Nagar">Pune - Viman Nagar</SelectItem>
+                                <SelectItem value="Pune - Hinjewadi">Pune - Hinjewadi</SelectItem>
+                                <SelectItem value="Pune - Deccan">Pune - Deccan</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1346,7 +1350,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>OPD / Department</Label>
+                    <Label>Location</Label>
                     <Select 
                       value={slot.slotType} 
                       onValueChange={(v) => updateSlotTime(slot.id, "slotType", v)}
@@ -1355,12 +1359,16 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="General OPD">General OPD</SelectItem>
-                        <SelectItem value="Cardiology OPD">Cardiology OPD</SelectItem>
-                        <SelectItem value="Endocrinology">Endocrinology</SelectItem>
-                        <SelectItem value="Neurology">Neurology</SelectItem>
-                        <SelectItem value="Emergency">Emergency</SelectItem>
-                        <SelectItem value="ICU Rounds">ICU Rounds</SelectItem>
+                        <SelectItem value="Pune - Koregaon Park">Pune - Koregaon Park</SelectItem>
+                        <SelectItem value="Pune - Shivaji Nagar">Pune - Shivaji Nagar</SelectItem>
+                        <SelectItem value="Pune - Kothrud">Pune - Kothrud</SelectItem>
+                        <SelectItem value="Pune - Hadapsar">Pune - Hadapsar</SelectItem>
+                        <SelectItem value="Pune - Wakad">Pune - Wakad</SelectItem>
+                        <SelectItem value="Pune - Baner">Pune - Baner</SelectItem>
+                        <SelectItem value="Pune - Aundh">Pune - Aundh</SelectItem>
+                        <SelectItem value="Pune - Viman Nagar">Pune - Viman Nagar</SelectItem>
+                        <SelectItem value="Pune - Hinjewadi">Pune - Hinjewadi</SelectItem>
+                        <SelectItem value="Pune - Deccan">Pune - Deccan</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
