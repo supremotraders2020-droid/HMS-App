@@ -105,11 +105,16 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     queryKey: ['/api/doctors'],
   });
   
-  // Find the doctor's ID from the doctors table by matching name
-  const matchedDoctor = allDoctors.find(d => 
-    d.name.toLowerCase().includes(doctorName.toLowerCase()) || 
-    doctorName.toLowerCase().includes(d.name.replace('Dr. ', '').toLowerCase())
-  );
+  // Find the doctor's ID from the doctors table - check multiple ways:
+  // 1. Check if doctorId directly matches a doctor ID
+  // 2. Try to match by name
+  // 3. Fall back to first doctor for demo purposes
+  const matchedDoctor = allDoctors.find(d => d.id === doctorId) ||
+    allDoctors.find(d => 
+      d.name.toLowerCase().includes(doctorName.toLowerCase()) || 
+      doctorName.toLowerCase().includes(d.name.replace('Dr. ', '').toLowerCase())
+    ) ||
+    allDoctors[0]; // Fallback to first doctor for demo
   const effectiveDoctorId = matchedDoctor?.id || doctorId;
   
   // Real-time database notifications with WebSocket support
