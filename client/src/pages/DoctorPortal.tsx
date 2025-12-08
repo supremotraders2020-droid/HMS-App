@@ -1004,16 +1004,16 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         </Button>
       </div>
 
-      <Card data-testid="card-weekly-overview">
+      <Card data-testid="card-schedule-calendar">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-primary" />
-            Weekly Overview
+            Schedule Calendar
           </CardTitle>
-          <CardDescription>Your availability across the week</CardDescription>
+          <CardDescription>Your weekly availability and monthly view</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-7 gap-2 text-center mb-4">
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-7 gap-2 text-center">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, idx) => {
               const fullDay = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][idx];
               const daySlots = schedules.filter(s => s.day === fullDay && s.isAvailable);
@@ -1021,30 +1021,20 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               return (
                 <div 
                   key={day}
-                  className={`p-2 rounded-lg cursor-pointer transition-colors ${hasSlots ? 'bg-green-100 dark:bg-green-900/50 hover:bg-green-200 dark:hover:bg-green-800' : 'bg-muted hover:bg-muted/80'}`}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${hasSlots ? 'bg-green-100 dark:bg-green-900/50 hover:bg-green-200 dark:hover:bg-green-800' : 'bg-muted hover:bg-muted/80'}`}
                   onClick={() => openScheduleEditor(fullDay)}
                   data-testid={`overview-${day.toLowerCase()}`}
                 >
-                  <p className="font-medium text-sm">{day}</p>
-                  <p className={`text-xs ${hasSlots ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground'}`}>
+                  <p className="font-medium">{day}</p>
+                  <p className={`text-sm ${hasSlots ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground'}`}>
                     {hasSlots ? `${daySlots.length} slot${daySlots.length > 1 ? 's' : ''}` : 'Off'}
                   </p>
                 </div>
               );
             })}
           </div>
-        </CardContent>
-      </Card>
-
-      <Card data-testid="card-full-calendar">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5 text-primary" />
-            Monthly Calendar
-          </CardTitle>
-          <CardDescription>Click on any date to view available slots</CardDescription>
-        </CardHeader>
-        <CardContent>
+          
+          <Separator />
           <CalendarUI
             mode="single"
             selected={selectedCalendarDate}
