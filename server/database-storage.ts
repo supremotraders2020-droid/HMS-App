@@ -9,7 +9,7 @@ import {
   biometricTemplates, biometricVerifications,
   notifications, hospitalTeamMembers, activityLogs,
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
-  prescriptions, doctorSchedules, doctorPatients, doctorProfiles,
+  prescriptions, doctorSchedules, doctorPatients, doctorProfiles, userNotifications,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -25,7 +25,8 @@ import {
   type EmergencyContact, type InsertEmergencyContact,
   type HospitalSettings, type InsertHospitalSettings,
   type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule,
-  type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile
+  type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile,
+  type UserNotification, type InsertUserNotification
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -1278,6 +1279,48 @@ export class DatabaseStorage implements IStorage {
       .where(eq(doctorProfiles.doctorId, doctorId))
       .returning();
     return result[0];
+  }
+
+  // ========== USER NOTIFICATION METHODS ==========
+  async getUserNotifications(userId: string): Promise<UserNotification[]> {
+    return await db.select().from(userNotifications)
+      .where(eq(userNotifications.userId, userId))
+      .orderBy(desc(userNotifications.createdAt));
+  }
+
+  async getUserNotificationsByRole(userRole: string): Promise<UserNotification[]> {
+    return await db.select().from(userNotifications)
+      .where(eq(userNotifications.userRole, userRole))
+      .orderBy(desc(userNotifications.createdAt));
+  }
+
+  async getUserNotification(id: string): Promise<UserNotification | undefined> {
+    const result = await db.select().from(userNotifications).where(eq(userNotifications.id, id));
+    return result[0];
+  }
+
+  async createUserNotification(notification: InsertUserNotification): Promise<UserNotification> {
+    const result = await db.insert(userNotifications).values(notification).returning();
+    return result[0];
+  }
+
+  async markUserNotificationRead(id: string): Promise<UserNotification | undefined> {
+    const result = await db.update(userNotifications)
+      .set({ isRead: true })
+      .where(eq(userNotifications.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async markAllUserNotificationsRead(userId: string): Promise<void> {
+    await db.update(userNotifications)
+      .set({ isRead: true })
+      .where(eq(userNotifications.userId, userId));
+  }
+
+  async deleteUserNotification(id: string): Promise<boolean> {
+    const result = await db.delete(userNotifications).where(eq(userNotifications.id, id)).returning();
+    return result.length > 0;
   }
 }
 
