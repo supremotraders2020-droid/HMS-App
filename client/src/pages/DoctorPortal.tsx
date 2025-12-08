@@ -1039,24 +1039,24 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             mode="single"
             selected={selectedCalendarDate}
             onSelect={handleCalendarDateClick}
-            className="w-full rounded-md border p-4"
+            className="w-full p-0"
             classNames={{
-              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full",
-              month: "space-y-4 w-full",
-              caption: "flex justify-center pt-1 relative items-center text-lg font-semibold",
-              caption_label: "text-lg font-semibold",
-              nav: "space-x-1 flex items-center",
-              nav_button: "h-9 w-9 bg-transparent p-0 opacity-50 hover:opacity-100",
+              months: "w-full",
+              month: "w-full space-y-4",
+              caption: "flex justify-between items-center px-2 py-3",
+              caption_label: "text-base font-semibold",
+              nav: "flex items-center gap-1",
+              nav_button: "h-8 w-8 bg-muted hover:bg-muted/80 rounded-md p-0 flex items-center justify-center",
               table: "w-full border-collapse",
-              head_row: "flex w-full",
-              head_cell: "text-muted-foreground rounded-md flex-1 font-medium text-base py-2",
-              row: "flex w-full mt-2",
-              cell: "flex-1 text-center text-base p-0 relative focus-within:relative focus-within:z-20",
-              day: "h-12 w-full p-0 font-normal hover:bg-accent hover:text-accent-foreground rounded-md transition-colors cursor-pointer flex items-center justify-center",
-              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-              day_today: "bg-accent text-accent-foreground font-bold",
-              day_outside: "text-muted-foreground opacity-50",
-              day_disabled: "text-muted-foreground opacity-50",
+              head_row: "grid grid-cols-7 border-b border-border",
+              head_cell: "text-muted-foreground font-medium text-sm py-3 text-center",
+              row: "grid grid-cols-7",
+              cell: "relative border-r border-b border-border last:border-r-0 min-h-[80px] p-2 text-left align-top",
+              day: "absolute top-2 left-2 font-normal text-sm hover:text-primary cursor-pointer",
+              day_selected: "text-primary font-bold",
+              day_today: "text-primary font-bold",
+              day_outside: "text-muted-foreground/40",
+              day_disabled: "text-muted-foreground/40",
               day_hidden: "invisible",
             }}
             modifiers={{
@@ -1066,7 +1066,25 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               }
             }}
             modifiersStyles={{
-              hasSlots: { backgroundColor: 'hsl(142 76% 36% / 0.2)', borderRadius: '6px' }
+              hasSlots: { color: 'hsl(142 76% 36%)', fontWeight: 'bold' }
+            }}
+            components={{
+              DayContent: ({ date }) => {
+                const dayName = getDayNameFromDate(date);
+                const daySlots = schedules.filter(s => s.day === dayName && s.isAvailable);
+                return (
+                  <div className="w-full h-full">
+                    <span>{date.getDate()}</span>
+                    {daySlots.length > 0 && (
+                      <div className="mt-1">
+                        <span className="text-xs text-green-600 dark:text-green-400">
+                          {daySlots.length} slot{daySlots.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
             }}
             data-testid="monthly-calendar"
           />
