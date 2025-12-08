@@ -16,7 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import type { DoctorPatient, Prescription, DoctorSchedule, Appointment, DoctorProfile } from "@shared/schema";
+import { useNotifications } from "@/hooks/use-notifications";
+import type { DoctorPatient, Prescription, DoctorSchedule, Appointment, DoctorProfile, UserNotification } from "@shared/schema";
 import {
   Sidebar,
   SidebarContent,
@@ -75,23 +76,6 @@ interface DoctorPortalProps {
   onLogout: () => void;
 }
 
-interface LocalNotification {
-  id: string;
-  title: string;
-  message: string;
-  type: "appointment" | "patient" | "system";
-  isRead: boolean;
-  createdAt: string;
-}
-
-const INITIAL_NOTIFICATIONS: LocalNotification[] = [
-  { id: "n1", title: "New Appointment", message: "Rajesh Kumar has booked an appointment for Dec 2, 2024", type: "appointment", isRead: false, createdAt: "2024-12-01T08:00:00" },
-  { id: "n2", title: "Lab Results Ready", message: "Blood test results for Amit Patel are available", type: "patient", isRead: false, createdAt: "2024-12-01T07:30:00" },
-  { id: "n3", title: "Schedule Change", message: "Your Wednesday afternoon slot has been updated", type: "system", isRead: true, createdAt: "2024-11-30T16:00:00" },
-  { id: "n4", title: "Appointment Cancelled", message: "Sunita Deshmukh cancelled her appointment for Dec 5", type: "appointment", isRead: true, createdAt: "2024-11-30T14:00:00" },
-  { id: "n5", title: "System Update", message: "New prescription templates are now available", type: "system", isRead: true, createdAt: "2024-11-29T10:00:00" },
-];
-
 const BLOOD_GROUP_COLORS: Record<string, string> = {
   "A+": "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   "A-": "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
@@ -109,7 +93,16 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [selectedPatient, setSelectedPatient] = useState<DoctorPatient | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  // Real-time database notifications with WebSocket support
+  const { 
+    notifications, 
+    unreadNotifications, 
+    unreadCount: unreadNotificationCount, 
+    isLoading: notificationsLoading,
+    markAsRead: markNotificationRead,
+    markAllAsRead: markAllNotificationsRead,
+    deleteNotification
+  } = useNotifications({ userId: doctorId, userRole: "DOCTOR" });
   const [editingSchedule, setEditingSchedule] = useState<{day: string; slots: DoctorSchedule[]} | null>(null);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [addPatientDialogOpen, setAddPatientDialogOpen] = useState(false);
@@ -343,7 +336,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const today = new Date().toISOString().split('T')[0];
   const todayAppointments = allAppointments.filter(a => a.appointmentDate === today);
   const pendingAppointments = allAppointments.filter(a => a.status === "pending");
-  const unreadNotifications = notifications.filter(n => !n.isRead);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -364,13 +356,13 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     switch (type) {
       case "appointment": return <Calendar className="h-4 w-4 text-blue-500" />;
       case "patient": return <User className="h-4 w-4 text-green-500" />;
+      case "prescription": return <Pill className="h-4 w-4 text-orange-500" />;
+      case "schedule": return <CalendarDays className="h-4 w-4 text-purple-500" />;
+      case "profile": return <User className="h-4 w-4 text-indigo-500" />;
+      case "admission": return <Hospital className="h-4 w-4 text-teal-500" />;
       case "system": return <Settings className="h-4 w-4 text-purple-500" />;
       default: return <Bell className="h-4 w-4" />;
     }
-  };
-
-  const markNotificationRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
   const filteredPatients = patients.filter(p => 
@@ -1263,7 +1255,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           <h1 className="text-2xl font-bold" data-testid="text-notifications-title">Notifications</h1>
           <p className="text-muted-foreground">Stay updated with latest alerts</p>
         </div>
-        <Button variant="outline" onClick={() => setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))} data-testid="button-mark-all-read">
+        <Button variant="outline" onClick={() => markAllNotificationsRead()} data-testid="button-mark-all-read">
           <CheckCircle className="h-4 w-4 mr-2" />
           Mark All Read
         </Button>
@@ -1299,7 +1291,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                         {!notif.isRead && <div className="h-2 w-2 rounded-full bg-primary" />}
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">{notif.message}</p>
-                      <p className="text-xs text-muted-foreground mt-2">{new Date(notif.createdAt).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground mt-2">{notif.createdAt ? new Date(notif.createdAt).toLocaleString() : 'Just now'}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -1333,7 +1325,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                           <div className="h-2 w-2 rounded-full bg-primary" />
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">{notif.message}</p>
-                        <p className="text-xs text-muted-foreground mt-2">{new Date(notif.createdAt).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground mt-2">{notif.createdAt ? new Date(notif.createdAt).toLocaleString() : 'Just now'}</p>
                       </div>
                     </div>
                   </CardContent>
