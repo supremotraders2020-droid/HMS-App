@@ -1012,21 +1012,21 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           </CardTitle>
           <CardDescription>Your weekly availability and monthly view</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-7 gap-2 text-center">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, idx) => {
-              const fullDay = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][idx];
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-7 gap-1 text-center border border-border/50 rounded-lg overflow-hidden">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => {
+              const fullDay = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][idx];
               const daySlots = schedules.filter(s => s.day === fullDay && s.isAvailable);
               const hasSlots = daySlots.length > 0;
               return (
                 <div 
                   key={day}
-                  className={`p-3 rounded-lg cursor-pointer transition-colors ${hasSlots ? 'bg-green-100 dark:bg-green-900/50 hover:bg-green-200 dark:hover:bg-green-800' : 'bg-muted hover:bg-muted/80'}`}
+                  className={`py-3 px-2 cursor-pointer transition-all ${hasSlots ? 'bg-green-600/20 dark:bg-green-700/30 hover:bg-green-600/30 dark:hover:bg-green-700/40' : 'bg-muted/30 hover:bg-muted/50'} ${idx > 0 ? 'border-l border-border/30' : ''}`}
                   onClick={() => openScheduleEditor(fullDay)}
                   data-testid={`overview-${day.toLowerCase()}`}
                 >
-                  <p className="font-medium">{day}</p>
-                  <p className={`text-sm ${hasSlots ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground'}`}>
+                  <p className="font-medium text-sm">{day}</p>
+                  <p className={`text-xs mt-0.5 ${hasSlots ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground'}`}>
                     {hasSlots ? `${daySlots.length} slot${daySlots.length > 1 ? 's' : ''}` : 'Off'}
                   </p>
                 </div>
@@ -1034,7 +1034,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             })}
           </div>
           
-          <Separator />
           <CalendarUI
             mode="single"
             selected={selectedCalendarDate}
@@ -1042,21 +1041,21 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             className="w-full p-0"
             classNames={{
               months: "w-full",
-              month: "w-full space-y-4",
-              caption: "flex justify-between items-center px-2 py-3",
-              caption_label: "text-base font-semibold",
-              nav: "flex items-center gap-1",
-              nav_button: "h-8 w-8 bg-muted hover:bg-muted/80 rounded-md p-0 flex items-center justify-center",
-              table: "w-full border-collapse",
-              head_row: "grid grid-cols-7 border-b border-border",
-              head_cell: "text-muted-foreground font-medium text-sm py-3 text-center",
+              month: "w-full",
+              caption: "flex justify-center items-center py-4 relative",
+              caption_label: "text-lg font-semibold",
+              nav: "absolute right-0 flex items-center gap-1",
+              nav_button: "h-8 w-8 bg-muted/50 hover:bg-muted rounded-md p-0 flex items-center justify-center transition-colors",
+              table: "w-full border-collapse border border-border/50 rounded-lg overflow-hidden",
+              head_row: "hidden",
+              head_cell: "hidden",
               row: "grid grid-cols-7",
-              cell: "relative border-r border-b border-border last:border-r-0 min-h-[80px] p-2 text-left align-top",
-              day: "absolute top-2 left-2 font-normal text-sm hover:text-primary cursor-pointer",
+              cell: "relative border-r border-b border-border/30 last:border-r-0 min-h-[90px] p-3 text-left align-top hover:bg-muted/30 transition-colors cursor-pointer",
+              day: "font-medium text-base",
               day_selected: "text-primary font-bold",
               day_today: "text-primary font-bold",
-              day_outside: "text-muted-foreground/40",
-              day_disabled: "text-muted-foreground/40",
+              day_outside: "text-muted-foreground/30",
+              day_disabled: "text-muted-foreground/30",
               day_hidden: "invisible",
             }}
             modifiers={{
@@ -1066,18 +1065,20 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               }
             }}
             modifiersStyles={{
-              hasSlots: { color: 'hsl(142 76% 36%)', fontWeight: 'bold' }
+              hasSlots: { }
             }}
             components={{
               DayContent: ({ date }) => {
                 const dayName = getDayNameFromDate(date);
                 const daySlots = schedules.filter(s => s.day === dayName && s.isAvailable);
+                const hasSlots = daySlots.length > 0;
                 return (
-                  <div className="w-full h-full">
-                    <span>{date.getDate()}</span>
-                    {daySlots.length > 0 && (
-                      <div className="mt-1">
-                        <span className="text-xs text-green-600 dark:text-green-400">
+                  <div className="flex flex-col gap-1">
+                    <span className={hasSlots ? "text-green-600 dark:text-green-400 font-semibold" : ""}>{date.getDate()}</span>
+                    {hasSlots && (
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-amber-500" />
+                        <span className="text-xs text-muted-foreground">
                           {daySlots.length} slot{daySlots.length > 1 ? 's' : ''}
                         </span>
                       </div>
