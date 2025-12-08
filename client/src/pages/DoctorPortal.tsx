@@ -1012,28 +1012,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           </CardTitle>
           <CardDescription>Your weekly availability and monthly view</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-7 gap-1 text-center border border-border/50 rounded-lg overflow-hidden">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => {
-              const fullDay = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][idx];
-              const daySlots = schedules.filter(s => s.day === fullDay && s.isAvailable);
-              const hasSlots = daySlots.length > 0;
-              return (
-                <div 
-                  key={day}
-                  className={`py-3 px-2 cursor-pointer transition-all ${hasSlots ? 'bg-green-600/20 dark:bg-green-700/30 hover:bg-green-600/30 dark:hover:bg-green-700/40' : 'bg-muted/30 hover:bg-muted/50'} ${idx > 0 ? 'border-l border-border/30' : ''}`}
-                  onClick={() => openScheduleEditor(fullDay)}
-                  data-testid={`overview-${day.toLowerCase()}`}
-                >
-                  <p className="font-medium text-sm">{day}</p>
-                  <p className={`text-xs mt-0.5 ${hasSlots ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground'}`}>
-                    {hasSlots ? `${daySlots.length} slot${daySlots.length > 1 ? 's' : ''}` : 'Off'}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-          
+        <CardContent className="space-y-0 p-0">
           <CalendarUI
             mode="single"
             selected={selectedCalendarDate}
@@ -1042,18 +1021,18 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             classNames={{
               months: "w-full",
               month: "w-full",
-              caption: "flex justify-center items-center py-4 relative",
-              caption_label: "text-lg font-semibold",
+              caption: "flex justify-center items-center py-3 px-4 relative bg-muted/30",
+              caption_label: "text-base font-semibold",
               nav: "flex items-center",
-              nav_button: "h-8 w-8 bg-transparent hover:bg-muted/50 rounded-md p-0 flex items-center justify-center transition-colors absolute",
+              nav_button: "h-7 w-7 bg-transparent hover:bg-muted rounded p-0 flex items-center justify-center transition-colors absolute opacity-70 hover:opacity-100",
               nav_button_previous: "left-2",
               nav_button_next: "right-2",
               table: "w-full border-collapse",
-              head_row: "hidden",
-              head_cell: "hidden",
+              head_row: "grid grid-cols-7",
+              head_cell: "text-muted-foreground font-medium text-sm py-3 text-center border-b border-border/30",
               row: "grid grid-cols-7",
-              cell: "relative min-h-[90px] p-3 text-left align-top hover:bg-muted/30 transition-colors cursor-pointer border-t border-border/20",
-              day: "font-medium text-base",
+              cell: "relative min-h-[80px] p-3 text-left align-top hover:bg-muted/20 transition-colors cursor-pointer",
+              day: "font-medium text-sm",
               day_selected: "text-primary font-bold",
               day_today: "text-primary font-bold",
               day_outside: "text-muted-foreground/30",
@@ -1075,15 +1054,12 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 const daySlots = schedules.filter(s => s.day === dayName && s.isAvailable);
                 const hasSlots = daySlots.length > 0;
                 return (
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col">
                     <span className={hasSlots ? "text-green-600 dark:text-green-400 font-semibold" : ""}>{date.getDate()}</span>
                     {hasSlots && (
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-amber-500" />
-                        <span className="text-xs text-muted-foreground">
-                          {daySlots.length} slot{daySlots.length > 1 ? 's' : ''}
-                        </span>
-                      </div>
+                      <span className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        {daySlots.length} slot{daySlots.length > 1 ? 's' : ''}
+                      </span>
                     )}
                   </div>
                 );
