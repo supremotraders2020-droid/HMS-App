@@ -129,6 +129,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     consultationFee: "₹500"
   });
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -316,6 +317,22 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       toast({ title: "Failed to upload photo", variant: "destructive" });
     } finally {
       setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    setIsDeletingPhoto(true);
+    try {
+      const response = await fetch(`/api/doctor-profiles/${doctorId}/photo`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Delete failed');
+      queryClient.invalidateQueries({ queryKey: ['/api/doctor-profiles', doctorId] });
+      toast({ title: "Photo deleted successfully" });
+    } catch {
+      toast({ title: "Failed to delete photo", variant: "destructive" });
+    } finally {
+      setIsDeletingPhoto(false);
     }
   };
 
@@ -1483,19 +1500,36 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             <h3 className="text-xl font-semibold mt-4">{profileForm.fullName}</h3>
             <p className="text-muted-foreground">{profileForm.specialty}</p>
             <Badge className="mt-2">Senior Consultant</Badge>
-            <Button 
-              variant="outline" 
-              className="w-full mt-4" 
-              onClick={() => photoInputRef.current?.click()}
-              disabled={isUploadingPhoto}
-              data-testid="button-change-photo"
-            >
-              {isUploadingPhoto ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading...</>
-              ) : (
-                <><Camera className="h-4 w-4 mr-2" />Change Photo</>
+            <div className="flex gap-2 w-full mt-4">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={isUploadingPhoto || isDeletingPhoto}
+                data-testid="button-change-photo"
+              >
+                {isUploadingPhoto ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading...</>
+                ) : (
+                  <><Camera className="h-4 w-4 mr-2" />{profileData?.photoUrl ? "Change" : "Add Photo"}</>
+                )}
+              </Button>
+              {profileData?.photoUrl && (
+                <Button 
+                  variant="outline" 
+                  className="text-red-500 hover:text-red-600"
+                  onClick={handleDeletePhoto}
+                  disabled={isDeletingPhoto || isUploadingPhoto}
+                  data-testid="button-delete-photo"
+                >
+                  {isDeletingPhoto ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </Button>
               )}
-            </Button>
+            </div>
           </CardContent>
         </Card>
 

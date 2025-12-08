@@ -1707,6 +1707,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete photo endpoint - removes photo from profile
+  app.delete("/api/doctor-profiles/:doctorId/photo", async (req, res) => {
+    try {
+      const profile = await storage.getDoctorProfile(req.params.doctorId);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      const updated = await storage.updateDoctorProfile(req.params.doctorId, { photoUrl: null });
+      res.json({ success: true, profile: updated });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete photo" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
