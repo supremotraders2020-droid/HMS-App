@@ -995,10 +995,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const renderSchedules = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="text-schedules-title">Weekly Schedule</h1>
-        </div>
+      <div className="flex items-center justify-end">
         <Button onClick={() => openScheduleEditor("Monday")} data-testid="button-add-slot">
           <Plus className="h-4 w-4 mr-2" />
           Add Time Slot
