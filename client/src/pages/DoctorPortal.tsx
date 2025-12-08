@@ -131,7 +131,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
   const [notificationDetailOpen, setNotificationDetailOpen] = useState(false);
-  const [addPatientDialogOpen, setAddPatientDialogOpen] = useState(false);
   const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
@@ -200,17 +199,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   }, [profileData, doctorName]);
 
   // Mutations for CRUD operations
-  const createPatientMutation = useMutation({
-    mutationFn: (patient: Omit<DoctorPatient, 'id' | 'createdAt' | 'updatedAt'>) =>
-      apiRequest('POST', '/api/doctor-patients', patient),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/doctor-patients', doctorId] });
-      toast({ title: "Patient added successfully" });
-      setAddPatientDialogOpen(false);
-    },
-    onError: () => toast({ title: "Failed to add patient", variant: "destructive" }),
-  });
-
   const createPrescriptionMutation = useMutation({
     mutationFn: (prescription: Omit<Prescription, 'id' | 'createdAt' | 'updatedAt'>) =>
       apiRequest('POST', '/api/prescriptions', prescription),
@@ -635,107 +623,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const renderPatients = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="text-patients-title">Patient Records</h1>
-          <p className="text-muted-foreground">Manage your patient database</p>
-        </div>
-        <Dialog open={addPatientDialogOpen} onOpenChange={setAddPatientDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-new-patient">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Patient
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Patient</DialogTitle>
-              <DialogDescription>Enter patient details to add to your records</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              createPatientMutation.mutate({
-                doctorId,
-                patientName: formData.get('patientName') as string,
-                patientPhone: formData.get('patientPhone') as string,
-                patientEmail: formData.get('patientEmail') as string || null,
-                patientAge: parseInt(formData.get('patientAge') as string) || null,
-                patientGender: formData.get('patientGender') as string || null,
-                bloodGroup: formData.get('bloodGroup') as string || null,
-                patientAddress: formData.get('patientAddress') as string || null,
-                medicalHistory: formData.get('medicalHistory') as string || null,
-                allergies: formData.get('allergies') as string || null,
-                status: "active",
-                lastVisit: new Date().toISOString().split('T')[0],
-              });
-            }} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="patientName">Patient Name *</Label>
-                <Input id="patientName" name="patientName" required data-testid="input-patient-name" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="patientPhone">Phone *</Label>
-                <Input id="patientPhone" name="patientPhone" required data-testid="input-patient-phone" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="patientEmail">Email</Label>
-                <Input id="patientEmail" name="patientEmail" type="email" data-testid="input-patient-email" />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="patientAge">Age</Label>
-                  <Input id="patientAge" name="patientAge" type="number" data-testid="input-patient-age" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="patientGender">Gender</Label>
-                  <Select name="patientGender">
-                    <SelectTrigger data-testid="select-patient-gender">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="M">Male</SelectItem>
-                      <SelectItem value="F">Female</SelectItem>
-                      <SelectItem value="O">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bloodGroup">Blood Group</Label>
-                  <Select name="bloodGroup">
-                    <SelectTrigger data-testid="select-blood-group">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A+">A+</SelectItem>
-                      <SelectItem value="A-">A-</SelectItem>
-                      <SelectItem value="B+">B+</SelectItem>
-                      <SelectItem value="B-">B-</SelectItem>
-                      <SelectItem value="O+">O+</SelectItem>
-                      <SelectItem value="O-">O-</SelectItem>
-                      <SelectItem value="AB+">AB+</SelectItem>
-                      <SelectItem value="AB-">AB-</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="patientAddress">Address</Label>
-                <Input id="patientAddress" name="patientAddress" data-testid="input-patient-address" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="medicalHistory">Medical History</Label>
-                <Textarea id="medicalHistory" name="medicalHistory" rows={3} data-testid="input-medical-history" />
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setAddPatientDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={createPatientMutation.isPending} data-testid="button-submit-patient">
-                  {createPatientMutation.isPending ? "Adding..." : "Add Patient"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-2xl font-bold" data-testid="text-patients-title">Patient Records</h1>
+        <p className="text-muted-foreground">Manage your patient database</p>
       </div>
 
       <div className="relative">
