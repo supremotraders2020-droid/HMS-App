@@ -2132,6 +2132,52 @@ export class MemStorage implements IStorage {
     this.doctorProfilesData.set(existing.id, updated);
     return updated;
   }
+
+  // User Notifications stub methods
+  private userNotificationsData = new Map<string, UserNotification>();
+
+  async getUserNotifications(userId: string): Promise<UserNotification[]> {
+    return Array.from(this.userNotificationsData.values())
+      .filter(n => n.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getUserNotificationsByRole(userRole: string): Promise<UserNotification[]> {
+    return Array.from(this.userNotificationsData.values())
+      .filter(n => n.userRole === userRole)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getUserNotification(id: string): Promise<UserNotification | undefined> {
+    return this.userNotificationsData.get(id);
+  }
+
+  async createUserNotification(notification: InsertUserNotification): Promise<UserNotification> {
+    const id = randomUUID();
+    const newNotification: UserNotification = { id, ...notification, isRead: false, createdAt: new Date() };
+    this.userNotificationsData.set(id, newNotification);
+    return newNotification;
+  }
+
+  async markUserNotificationRead(id: string): Promise<UserNotification | undefined> {
+    const existing = this.userNotificationsData.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, isRead: true };
+    this.userNotificationsData.set(id, updated);
+    return updated;
+  }
+
+  async markAllUserNotificationsRead(userId: string): Promise<void> {
+    for (const [id, notification] of this.userNotificationsData) {
+      if (notification.userId === userId) {
+        this.userNotificationsData.set(id, { ...notification, isRead: true });
+      }
+    }
+  }
+
+  async deleteUserNotification(id: string): Promise<boolean> {
+    return this.userNotificationsData.delete(id);
+  }
 }
 
 import { databaseStorage } from "./database-storage";
