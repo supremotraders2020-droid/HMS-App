@@ -15,6 +15,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { format, getDay } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import type { DoctorPatient, Prescription, DoctorSchedule, Appointment, DoctorProfile, UserNotification } from "@shared/schema";
@@ -35,7 +38,7 @@ import {
 import ThemeToggle from "@/components/ThemeToggle";
 import { 
   LayoutDashboard,
-  Calendar,
+  Calendar as CalendarIcon,
   Users,
   FileText,
   Bell,
@@ -113,6 +116,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | undefined>(undefined);
+  const [calendarSlotSheetOpen, setCalendarSlotSheetOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({
     fullName: `Dr. ${doctorName}`,
     specialty: "Cardiology",
@@ -358,7 +363,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "appointment": return <Calendar className="h-4 w-4 text-blue-500" />;
+      case "appointment": return <CalendarIcon className="h-4 w-4 text-blue-500" />;
       case "patient": return <User className="h-4 w-4 text-green-500" />;
       case "prescription": return <Pill className="h-4 w-4 text-orange-500" />;
       case "schedule": return <CalendarDays className="h-4 w-4 text-purple-500" />;
@@ -372,7 +377,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const getNotificationIconLarge = (type: string) => {
     switch (type) {
-      case "appointment": return <Calendar className="h-6 w-6 text-blue-500" />;
+      case "appointment": return <CalendarIcon className="h-6 w-6 text-blue-500" />;
       case "patient": return <User className="h-6 w-6 text-green-500" />;
       case "prescription": return <Pill className="h-6 w-6 text-orange-500" />;
       case "schedule": return <CalendarDays className="h-6 w-6 text-purple-500" />;
@@ -422,6 +427,24 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     (p.patientEmail && p.patientEmail.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const getDayNameFromDate = (date: Date): string => {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    return days[getDay(date)];
+  };
+
+  const handleCalendarDateClick = (date: Date | undefined) => {
+    if (date) {
+      setSelectedCalendarDate(date);
+      setCalendarSlotSheetOpen(true);
+    }
+  };
+
+  const getSchedulesForDate = (date: Date | undefined): DoctorSchedule[] => {
+    if (!date) return [];
+    const dayName = getDayNameFromDate(date);
+    return schedules.filter(s => s.day === dayName);
+  };
+
   const sidebarStyle = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
@@ -429,7 +452,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const menuItems = [
     { id: "dashboard", title: "Dashboard", icon: LayoutDashboard },
-    { id: "appointments", title: "Appointments", icon: Calendar },
+    { id: "appointments", title: "Appointments", icon: CalendarIcon },
     { id: "schedules", title: "Schedules", icon: CalendarDays },
     { id: "patients", title: "Patients", icon: Users },
     { id: "prescriptions", title: "Prescriptions", icon: FileText },
@@ -448,7 +471,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         <Card className="hover-elevate" data-testid="stat-today-appointments">
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today's Appointments</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" data-testid="text-today-count">{todayAppointments.length}</div>
@@ -500,7 +523,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         <Card data-testid="card-today-schedule">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
+              <CalendarIcon className="h-5 w-5 text-primary" />
               Today's Appointments
             </CardTitle>
             <CardDescription>Your scheduled appointments for today</CardDescription>
@@ -1012,6 +1035,114 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           </div>
         </CardContent>
       </Card>
+
+      <Card data-testid="card-full-calendar">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5 text-primary" />
+            Monthly Calendar
+          </CardTitle>
+          <CardDescription>Click on any date to view available slots</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center">
+          <CalendarUI
+            mode="single"
+            selected={selectedCalendarDate}
+            onSelect={handleCalendarDateClick}
+            className="rounded-md border"
+            modifiers={{
+              hasSlots: (date) => {
+                const dayName = getDayNameFromDate(date);
+                return schedules.some(s => s.day === dayName && s.isAvailable);
+              }
+            }}
+            modifiersStyles={{
+              hasSlots: { backgroundColor: 'hsl(var(--primary) / 0.1)' }
+            }}
+            data-testid="monthly-calendar"
+          />
+        </CardContent>
+      </Card>
+
+      <Sheet open={calendarSlotSheetOpen} onOpenChange={setCalendarSlotSheetOpen}>
+        <SheetContent data-testid="sheet-day-slots">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              {selectedCalendarDate ? format(selectedCalendarDate, "EEEE, MMMM d, yyyy") : "Select a Date"}
+            </SheetTitle>
+            <SheetDescription>
+              {selectedCalendarDate ? `Slots for ${getDayNameFromDate(selectedCalendarDate)}` : "Click a date to view slots"}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {getSchedulesForDate(selectedCalendarDate).length > 0 ? (
+              getSchedulesForDate(selectedCalendarDate).map((slot) => (
+                <Card 
+                  key={slot.id} 
+                  className={`hover-elevate ${!slot.isAvailable ? 'opacity-60' : ''}`} 
+                  data-testid={`sheet-slot-${slot.id}`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${slot.isAvailable ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                          <Clock className={`h-5 w-5 ${slot.isAvailable ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{slot.startTime} - {slot.endTime}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline">{slot.slotType}</Badge>
+                            {!slot.isAvailable && (
+                              <Badge variant="secondary" className="text-muted-foreground">Unavailable</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Max: {slot.maxPatients} patients</p>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="mt-1"
+                          onClick={() => {
+                            setCalendarSlotSheetOpen(false);
+                            if (selectedCalendarDate) {
+                              openScheduleEditor(getDayNameFromDate(selectedCalendarDate));
+                            }
+                          }}
+                          data-testid={`button-edit-slot-${slot.id}`}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-medium">No slots available</p>
+                <p className="text-muted-foreground mb-4">This day has no scheduled availability</p>
+                <Button 
+                  onClick={() => {
+                    setCalendarSlotSheetOpen(false);
+                    if (selectedCalendarDate) {
+                      openScheduleEditor(getDayNameFromDate(selectedCalendarDate));
+                    }
+                  }}
+                  data-testid="button-add-slot-from-sheet"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Availability
+                </Button>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <div className="grid gap-4">
         {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => {
