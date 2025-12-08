@@ -667,26 +667,3 @@ export const insertDoctorPatientSchema = createInsertSchema(doctorPatients).omit
 });
 export type InsertDoctorPatient = z.infer<typeof insertDoctorPatientSchema>;
 export type DoctorPatient = typeof doctorPatients.$inferSelect;
-
-// ========== USER NOTIFICATIONS TABLE ==========
-// User-specific notifications for all roles (Doctor, Patient, Admin, OPD Manager, Nurse)
-export const userNotifications = pgTable("user_notifications", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
-  userRole: text("user_role").notNull(), // DOCTOR, PATIENT, ADMIN, OPD_MANAGER, NURSE
-  type: text("type").notNull(), // appointment, prescription, schedule, profile, system, report
-  title: text("title").notNull(),
-  message: text("message").notNull(),
-  relatedEntityId: varchar("related_entity_id"),
-  relatedEntityType: text("related_entity_type"), // appointments, prescriptions, schedules, profiles
-  isRead: boolean("is_read").notNull().default(false),
-  metadata: text("metadata"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const insertUserNotificationSchema = createInsertSchema(userNotifications).omit({
-  id: true,
-  createdAt: true,
-});
-export type InsertUserNotification = z.infer<typeof insertUserNotificationSchema>;
-export type UserNotification = typeof userNotifications.$inferSelect;
