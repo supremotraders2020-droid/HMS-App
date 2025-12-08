@@ -83,7 +83,9 @@ export default function EquipmentServicing() {
   const [serviceFrequency, setServiceFrequency] = useState<ServiceFrequency>("quarterly");
   const [lastServiceDateInput, setLastServiceDateInput] = useState("");
   const [calculatedNextDueDate, setCalculatedNextDueDate] = useState("");
-  const [upcomingFilter, setUpcomingFilter] = useState<"all" | ServiceFrequency>("all");
+  const [upcomingFilter, setUpcomingFilter] = useState<"all" | "custom" | ServiceFrequency>("all");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
   const [selectedDateServices, setSelectedDateServices] = useState<{date: string, services: Equipment[]}>({ date: "", services: [] });
   const [showDateServicesDialog, setShowDateServicesDialog] = useState(false);
   const { toast } = useToast();
@@ -590,7 +592,7 @@ export default function EquipmentServicing() {
                   </CardTitle>
                   <CardDescription>Click on any item to view details and service history</CardDescription>
                 </div>
-                <Select value={upcomingFilter} onValueChange={(value) => setUpcomingFilter(value as "all" | ServiceFrequency)}>
+                <Select value={upcomingFilter} onValueChange={(value) => setUpcomingFilter(value as "all" | "custom" | ServiceFrequency)}>
                   <SelectTrigger className="w-[160px]" data-testid="select-frequency-filter">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Filter by frequency" />
@@ -600,9 +602,36 @@ export default function EquipmentServicing() {
                     <SelectItem value="monthly">Monthly</SelectItem>
                     <SelectItem value="quarterly">Quarterly</SelectItem>
                     <SelectItem value="yearly">Yearly</SelectItem>
+                    <SelectItem value="custom">Custom Range</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {upcomingFilter === "custom" && (
+                <div className="flex flex-wrap items-center gap-3 mt-3">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="customStartDate" className="text-sm whitespace-nowrap">Start Date:</Label>
+                    <Input
+                      id="customStartDate"
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="w-[160px]"
+                      data-testid="input-custom-start-date"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="customEndDate" className="text-sm whitespace-nowrap">End Date:</Label>
+                    <Input
+                      id="customEndDate"
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="w-[160px]"
+                      data-testid="input-custom-end-date"
+                    />
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -610,6 +639,20 @@ export default function EquipmentServicing() {
                   const filteredEquipment = equipmentList.filter(e => {
                     if (e.status === "up-to-date") return false;
                     if (upcomingFilter === "all") return true;
+                    if (upcomingFilter === "custom") {
+                      if (!e.nextDueDate) return false;
+                      const dueDate = new Date(e.nextDueDate);
+                      const start = customStartDate ? new Date(customStartDate) : null;
+                      const end = customEndDate ? new Date(customEndDate) : null;
+                      if (start && end) {
+                        return dueDate >= start && dueDate <= end;
+                      } else if (start) {
+                        return dueDate >= start;
+                      } else if (end) {
+                        return dueDate <= end;
+                      }
+                      return true;
+                    }
                     return e.serviceFrequency === upcomingFilter;
                   });
                   
@@ -620,6 +663,8 @@ export default function EquipmentServicing() {
                         <p className="text-muted-foreground">
                           {upcomingFilter === "all" 
                             ? "All equipment is up-to-date!" 
+                            : upcomingFilter === "custom"
+                            ? "No services found in the selected date range"
                             : `No ${getFrequencyLabel(upcomingFilter as ServiceFrequency).toLowerCase()} services pending`}
                         </p>
                       </div>
