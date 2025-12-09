@@ -275,6 +275,7 @@ function AppContent() {
         <ThemeProvider>
           <TooltipProvider>
             <PatientPortal 
+              patientId={currentUser.id}
               patientName={currentUser.name}
               onLogout={handleLogout}
             />

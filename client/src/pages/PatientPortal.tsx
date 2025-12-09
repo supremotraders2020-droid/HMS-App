@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ import {
 } from "lucide-react";
 
 interface PatientPortalProps {
+  patientId: string;
   patientName: string;
   onLogout: () => void;
 }
@@ -99,7 +101,24 @@ const MOCK_TEAM = [
   { id: "6", name: "Dr. Vikram Singh", specialty: "General Medicine", qualification: "MD Medicine", experience: 20, rating: 4.9, available: true },
 ];
 
-export default function PatientPortal({ patientName, onLogout }: PatientPortalProps) {
+interface PatientProfile {
+  id?: string;
+  patientId: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  dateOfBirth: string | null;
+  bloodType: string | null;
+  gender: string | null;
+  emergencyContactName: string | null;
+  emergencyContactRelation: string | null;
+  emergencyContactPhone: string | null;
+  allergies: string | null;
+  chronicConditions: string | null;
+  address: string | null;
+}
+
+export default function PatientPortal({ patientId, patientName, onLogout }: PatientPortalProps) {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -110,8 +129,66 @@ export default function PatientPortal({ patientName, onLogout }: PatientPortalPr
   const [chatInput, setChatInput] = useState("");
   const { toast } = useToast();
 
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
+    fullName: patientName,
+    email: "patient@email.com",
+    phone: "+91 98765 43210",
+    dateOfBirth: "1990-05-15",
+    bloodType: "o_positive",
+    gender: "male",
+    emergencyContactName: "John Doe",
+    emergencyContactRelation: "Spouse",
+    emergencyContactPhone: "+91 98765 43211",
+    allergies: "Penicillin, Shellfish",
+    chronicConditions: "Hypertension (controlled)"
+  });
+
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
+  });
+
+  // Fetch patient profile from API
+  const { data: profileData } = useQuery<PatientProfile>({
+    queryKey: ['/api/patient-profiles', patientId],
+    retry: false,
+  });
+
+  // Sync profile form with API data when it loads
+  useEffect(() => {
+    if (profileData) {
+      setProfileForm({
+        fullName: profileData.fullName || patientName,
+        email: profileData.email || "patient@email.com",
+        phone: profileData.phone || "+91 98765 43210",
+        dateOfBirth: profileData.dateOfBirth || "1990-05-15",
+        bloodType: profileData.bloodType || "o_positive",
+        gender: profileData.gender || "male",
+        emergencyContactName: profileData.emergencyContactName || "John Doe",
+        emergencyContactRelation: profileData.emergencyContactRelation || "Spouse",
+        emergencyContactPhone: profileData.emergencyContactPhone || "+91 98765 43211",
+        allergies: profileData.allergies || "",
+        chronicConditions: profileData.chronicConditions || ""
+      });
+    }
+  }, [profileData, patientName]);
+
+  // Save profile mutation
+  const saveProfileMutation = useMutation({
+    mutationFn: async (profile: typeof profileForm) => {
+      const response = await apiRequest('PUT', `/api/patient-profiles/${patientId}`, {
+        patientId,
+        ...profile
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/patient-profiles', patientId] });
+      toast({ title: "Profile Updated", description: "Your profile has been saved successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save profile", variant: "destructive" });
+    }
   });
 
   const { data: appointments = [] } = useQuery<Appointment[]>({
@@ -879,23 +956,44 @@ export default function PatientPortal({ patientName, onLogout }: PatientPortalPr
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Full Name</Label>
-                    <Input defaultValue={patientName} data-testid="input-profile-name" />
+                    <Input 
+                      value={profileForm.fullName} 
+                      onChange={(e) => setProfileForm({...profileForm, fullName: e.target.value})}
+                      data-testid="input-profile-name" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Email</Label>
-                    <Input type="email" defaultValue="patient@email.com" data-testid="input-profile-email" />
+                    <Input 
+                      type="email" 
+                      value={profileForm.email} 
+                      onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
+                      data-testid="input-profile-email" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Phone Number</Label>
-                    <Input defaultValue="+91 98765 43210" data-testid="input-profile-phone" />
+                    <Input 
+                      value={profileForm.phone} 
+                      onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                      data-testid="input-profile-phone" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Date of Birth</Label>
-                    <Input type="date" defaultValue="1990-05-15" data-testid="input-profile-dob" />
+                    <Input 
+                      type="date" 
+                      value={profileForm.dateOfBirth} 
+                      onChange={(e) => setProfileForm({...profileForm, dateOfBirth: e.target.value})}
+                      data-testid="input-profile-dob" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Blood Type</Label>
-                    <Select defaultValue="o_positive">
+                    <Select 
+                      value={profileForm.bloodType} 
+                      onValueChange={(value) => setProfileForm({...profileForm, bloodType: value})}
+                    >
                       <SelectTrigger data-testid="select-blood-type">
                         <SelectValue />
                       </SelectTrigger>
@@ -913,7 +1011,10 @@ export default function PatientPortal({ patientName, onLogout }: PatientPortalPr
                   </div>
                   <div className="space-y-2">
                     <Label>Gender</Label>
-                    <Select defaultValue="male">
+                    <Select 
+                      value={profileForm.gender} 
+                      onValueChange={(value) => setProfileForm({...profileForm, gender: value})}
+                    >
                       <SelectTrigger data-testid="select-gender">
                         <SelectValue />
                       </SelectTrigger>
@@ -933,15 +1034,27 @@ export default function PatientPortal({ patientName, onLogout }: PatientPortalPr
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-2">
                       <Label>Name</Label>
-                      <Input defaultValue="John Doe" data-testid="input-emergency-name" />
+                      <Input 
+                        value={profileForm.emergencyContactName} 
+                        onChange={(e) => setProfileForm({...profileForm, emergencyContactName: e.target.value})}
+                        data-testid="input-emergency-name" 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Relation</Label>
-                      <Input defaultValue="Spouse" data-testid="input-emergency-relation" />
+                      <Input 
+                        value={profileForm.emergencyContactRelation} 
+                        onChange={(e) => setProfileForm({...profileForm, emergencyContactRelation: e.target.value})}
+                        data-testid="input-emergency-relation" 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Phone</Label>
-                      <Input defaultValue="+91 98765 43211" data-testid="input-emergency-phone" />
+                      <Input 
+                        value={profileForm.emergencyContactPhone} 
+                        onChange={(e) => setProfileForm({...profileForm, emergencyContactPhone: e.target.value})}
+                        data-testid="input-emergency-phone" 
+                      />
                     </div>
                   </div>
                 </div>
@@ -955,7 +1068,8 @@ export default function PatientPortal({ patientName, onLogout }: PatientPortalPr
                       <Label>Known Allergies</Label>
                       <Textarea 
                         placeholder="List any known allergies..."
-                        defaultValue="Penicillin, Shellfish"
+                        value={profileForm.allergies}
+                        onChange={(e) => setProfileForm({...profileForm, allergies: e.target.value})}
                         data-testid="input-allergies"
                       />
                     </div>
@@ -963,7 +1077,8 @@ export default function PatientPortal({ patientName, onLogout }: PatientPortalPr
                       <Label>Chronic Conditions</Label>
                       <Textarea 
                         placeholder="List any chronic conditions..."
-                        defaultValue="Hypertension (controlled)"
+                        value={profileForm.chronicConditions}
+                        onChange={(e) => setProfileForm({...profileForm, chronicConditions: e.target.value})}
                         data-testid="input-conditions"
                       />
                     </div>
@@ -973,10 +1088,11 @@ export default function PatientPortal({ patientName, onLogout }: PatientPortalPr
               <CardFooter>
                 <Button 
                   className="w-full"
-                  onClick={() => toast({ title: "Profile Updated", description: "Your profile has been saved successfully" })}
+                  onClick={() => saveProfileMutation.mutate(profileForm)}
+                  disabled={saveProfileMutation.isPending}
                   data-testid="button-save-profile"
                 >
-                  Save Changes
+                  {saveProfileMutation.isPending ? "Saving..." : "Save Changes"}
                 </Button>
               </CardFooter>
             </Card>
