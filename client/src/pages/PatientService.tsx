@@ -83,6 +83,7 @@ export default function PatientService() {
   const [uploadedFile, setUploadedFile] = useState<{ name: string; data: string; type: string } | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
+  const [useCustomPatientId, setUseCustomPatientId] = useState(false);
   const { toast } = useToast();
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<ServicePatient[]>({
@@ -719,64 +720,90 @@ export default function PatientService() {
                           name="patientId"
                           render={({ field }) => (
                             <FormItem className="flex flex-col">
-                              <FormLabel>Patient *</FormLabel>
-                              <Popover open={patientPopoverOpen} onOpenChange={setPatientPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant="outline"
-                                      role="combobox"
-                                      aria-expanded={patientPopoverOpen}
-                                      className={cn(
-                                        "h-11 w-full justify-between",
-                                        !field.value && "text-muted-foreground"
-                                      )}
-                                      data-testid="select-patient-record"
-                                    >
-                                      {field.value
-                                        ? patients.find((p) => p.id === field.value)
-                                            ? `${patients.find((p) => p.id === field.value)?.firstName} ${patients.find((p) => p.id === field.value)?.lastName}`
-                                            : "Select patient"
-                                        : "Select patient"}
-                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[400px] p-0" align="start">
-                                  <Command>
-                                    <CommandInput placeholder="Search patients..." data-testid="input-patient-search" />
-                                    <CommandList>
-                                      <CommandEmpty>No patient found.</CommandEmpty>
-                                      <CommandGroup>
-                                        {patients.map((p) => (
-                                          <CommandItem
-                                            key={p.id}
-                                            value={`${p.firstName} ${p.lastName}`}
-                                            onSelect={() => {
-                                              field.onChange(p.id);
-                                              setPatientPopoverOpen(false);
-                                            }}
-                                            data-testid={`patient-option-${p.id}`}
-                                          >
-                                            <Check
-                                              className={cn(
-                                                "mr-2 h-4 w-4",
-                                                field.value === p.id ? "opacity-100" : "opacity-0"
-                                              )}
-                                            />
-                                            <div className="flex flex-col">
-                                              <span>{p.firstName} {p.lastName}</span>
-                                              {p.phone && (
-                                                <span className="text-xs text-muted-foreground">{p.phone}</span>
-                                              )}
-                                            </div>
-                                          </CommandItem>
-                                        ))}
-                                      </CommandGroup>
-                                    </CommandList>
-                                  </Command>
-                                </PopoverContent>
-                              </Popover>
+                              <div className="flex items-center justify-between">
+                                <FormLabel>Patient *</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setUseCustomPatientId(!useCustomPatientId);
+                                    field.onChange("");
+                                  }}
+                                  className="text-xs"
+                                >
+                                  {useCustomPatientId ? "Select from list" : "Enter username"}
+                                </Button>
+                              </div>
+                              {useCustomPatientId ? (
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter patient username (e.g., john_doe)"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    className="h-11"
+                                    data-testid="input-patient-username"
+                                  />
+                                </FormControl>
+                              ) : (
+                                <Popover open={patientPopoverOpen} onOpenChange={setPatientPopoverOpen}>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={patientPopoverOpen}
+                                        className={cn(
+                                          "h-11 w-full justify-between",
+                                          !field.value && "text-muted-foreground"
+                                        )}
+                                        data-testid="select-patient-record"
+                                      >
+                                        {field.value
+                                          ? patients.find((p) => p.id === field.value)
+                                              ? `${patients.find((p) => p.id === field.value)?.firstName} ${patients.find((p) => p.id === field.value)?.lastName}`
+                                              : field.value
+                                          : "Select patient"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-[400px] p-0" align="start">
+                                    <Command>
+                                      <CommandInput placeholder="Search patients..." data-testid="input-patient-search" />
+                                      <CommandList>
+                                        <CommandEmpty>No patient found.</CommandEmpty>
+                                        <CommandGroup>
+                                          {patients.map((p) => (
+                                            <CommandItem
+                                              key={p.id}
+                                              value={`${p.firstName} ${p.lastName}`}
+                                              onSelect={() => {
+                                                field.onChange(p.id);
+                                                setPatientPopoverOpen(false);
+                                              }}
+                                              data-testid={`patient-option-${p.id}`}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  field.value === p.id ? "opacity-100" : "opacity-0"
+                                                )}
+                                              />
+                                              <div className="flex flex-col">
+                                                <span>{p.firstName} {p.lastName}</span>
+                                                {p.phone && (
+                                                  <span className="text-xs text-muted-foreground">{p.phone}</span>
+                                                )}
+                                              </div>
+                                            </CommandItem>
+                                          ))}
+                                        </CommandGroup>
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
+                              )}
                               <FormMessage />
                             </FormItem>
                           )}
