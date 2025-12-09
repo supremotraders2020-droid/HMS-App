@@ -79,22 +79,6 @@ const DEPARTMENTS = [
   { id: "general", name: "General Medicine", icon: Stethoscope, color: "text-teal-500" },
 ];
 
-const MOCK_HEALTH_RECORDS = [
-  { id: "1", type: "lab_report", title: "Complete Blood Count (CBC)", date: "2024-11-28", doctor: "Dr. Priya Sharma", department: "Pathology", status: "completed" },
-  { id: "2", type: "prescription", title: "Medication Prescription", date: "2024-11-25", doctor: "Dr. Rajesh Kumar", department: "Cardiology", status: "active" },
-  { id: "3", type: "diagnostic", title: "Chest X-Ray Report", date: "2024-11-20", doctor: "Dr. Kavita Joshi", department: "Radiology", status: "completed" },
-  { id: "4", type: "vaccination", title: "COVID-19 Booster", date: "2024-10-15", doctor: "Dr. Anjali Patel", department: "General Medicine", status: "completed" },
-  { id: "5", type: "lab_report", title: "Lipid Profile", date: "2024-10-10", doctor: "Dr. Priya Sharma", department: "Pathology", status: "completed" },
-];
-
-const MOCK_NOTIFICATIONS = [
-  { id: "1", type: "appointment", title: "Appointment Reminder", message: "Your appointment with Dr. Rajesh Kumar is tomorrow at 10:00 AM", time: "2 hours ago", read: false },
-  { id: "2", type: "lab_result", title: "Lab Results Ready", message: "Your CBC test results are now available. Click to view.", time: "1 day ago", read: false },
-  { id: "3", type: "payment", title: "Payment Due", message: "Outstanding balance of ₹2,500 for consultation on Nov 25", time: "3 days ago", read: true },
-  { id: "4", type: "general", title: "Health Tip", message: "Stay hydrated! Drink at least 8 glasses of water daily.", time: "1 week ago", read: true },
-];
-
-
 const LOCATIONS = [
   { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park" },
   { id: "hinjewadi", name: "Gravity Hospital - Hinjewadi" },
