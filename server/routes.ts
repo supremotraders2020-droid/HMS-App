@@ -1765,6 +1765,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // =========================================
+  // PATIENT PROFILES
+  // =========================================
+  app.get("/api/patient-profiles/:patientId", async (req, res) => {
+    try {
+      const profile = await storage.getPatientProfile(req.params.patientId);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
+  app.post("/api/patient-profiles", async (req, res) => {
+    try {
+      const profile = await storage.createPatientProfile(req.body);
+      res.status(201).json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create profile" });
+    }
+  });
+
+  app.put("/api/patient-profiles/:patientId", async (req, res) => {
+    try {
+      const profile = await storage.upsertPatientProfile({
+        patientId: req.params.patientId,
+        fullName: req.body.fullName,
+        ...req.body
+      });
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save profile" });
+    }
+  });
+
+  // =========================================
   // USER NOTIFICATIONS (Role-based real-time notifications)
   // =========================================
 
