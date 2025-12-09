@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
@@ -223,7 +224,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       setEditPrescriptionDialogOpen(false);
       setSelectedPrescription(null);
     },
-    onError: () => toast({ title: "Failed to update prescription", variant: "destructive" }),
   });
 
   const createScheduleMutation = useMutation({
@@ -1439,9 +1439,27 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     <CardDescription>{rx.prescriptionDate}</CardDescription>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" data-testid={`button-rx-menu-${rx.id}`}>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete this prescription for ${rx.patientName}?`)) {
+                          deletePrescriptionMutation.mutate(rx.id);
+                        }
+                      }}
+                      data-testid={`button-delete-rx-${rx.id}`}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
