@@ -10,11 +10,12 @@ import { Stethoscope, UserPlus, LogIn } from "lucide-react";
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
 interface AuthFormsProps {
-  onLogin?: (username: string, role: UserRole) => void;
+  onLogin?: (username: string, password: string, role: UserRole) => void;
   onRegister?: (userData: any) => void;
+  loginError?: string | null;
 }
 
-export default function AuthForms({ onLogin, onRegister }: AuthFormsProps) {
+export default function AuthForms({ onLogin, onRegister, loginError }: AuthFormsProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     username: "",
@@ -36,11 +37,9 @@ export default function AuthForms({ onLogin, onRegister }: AuthFormsProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin && onLogin) {
-      onLogin(formData.username, formData.role);
-      console.log("Login attempted:", formData);
+      onLogin(formData.username, formData.password, formData.role);
     } else if (!isLogin && onRegister) {
       onRegister(formData);
-      console.log("Registration attempted:", formData);
     }
   };
 
@@ -65,6 +64,11 @@ export default function AuthForms({ onLogin, onRegister }: AuthFormsProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {loginError && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md text-sm" data-testid="login-error">
+              {loginError}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="grid grid-cols-2 gap-4">

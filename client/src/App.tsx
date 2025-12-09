@@ -199,13 +199,21 @@ function AppContent() {
     { id: "1", name: "Gravity Hospital", location: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062", status: "ACTIVE" }
   ];
 
-  const handleLogin = async (username: string, role: UserRole) => {
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const handleLogin = async (username: string, password: string, role: UserRole) => {
     const galaxyHospital = hospitals[0]; // Gravity Hospital
     setCurrentHospital(galaxyHospital);
+    setLoginError(null);
     
-    // Try to fetch user from database to get real ID
+    // Try to authenticate with password validation
     try {
-      const response = await fetch(`/api/users/by-username/${username}`);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, role })
+      });
+      
       if (response.ok) {
         const user = await response.json();
         setCurrentUser({
@@ -217,12 +225,16 @@ function AppContent() {
           hospitalName: galaxyHospital.name
         });
         return;
+      } else {
+        const errorData = await response.json();
+        setLoginError(errorData.error || "Login failed");
+        return;
       }
     } catch (error) {
-      console.log("Could not fetch user from database, using local auth");
+      console.log("Could not connect to server, using local auth");
     }
     
-    // Fallback to local auth with generated ID
+    // Fallback to local auth with generated ID (only if server unreachable)
     setCurrentUser({
       id: crypto.randomUUID(),
       username,
@@ -260,7 +272,7 @@ function AppContent() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <TooltipProvider>
-            <AuthForms onLogin={handleLogin} />
+            <AuthForms onLogin={handleLogin} loginError={loginError} />
             <Toaster />
           </TooltipProvider>
         </ThemeProvider>

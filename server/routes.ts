@@ -11,6 +11,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await databaseStorage.seedInitialData();
   await databaseStorage.seedEquipmentData();
   
+  // Login endpoint with password validation
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password, role } = req.body;
+      
+      if (!username || !password || !role) {
+        return res.status(400).json({ error: "Username, password, and role are required" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid username or password" });
+      }
+      
+      // Validate password
+      if (user.password !== password) {
+        return res.status(401).json({ error: "Invalid username or password" });
+      }
+      
+      // Validate role matches
+      if (user.role !== role) {
+        return res.status(401).json({ error: `This account is registered as ${user.role}, not ${role}` });
+      }
+      
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
   // Get user by username
   app.get("/api/users/by-username/:username", async (req, res) => {
     try {
