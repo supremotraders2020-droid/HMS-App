@@ -26,13 +26,23 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
     lastName: ""
   });
 
-  const roles: { value: UserRole; label: string; description: string }[] = [
+  // All roles available for login
+  const allRoles: { value: UserRole; label: string; description: string }[] = [
     { value: "ADMIN", label: "Administrator", description: "Full system access" },
     { value: "DOCTOR", label: "Doctor", description: "Patient care & diagnosis" },
     { value: "NURSE", label: "Nurse", description: "Patient care & monitoring" },
     { value: "OPD_MANAGER", label: "OPD Manager", description: "Outpatient department" },
     { value: "PATIENT", label: "Patient", description: "Personal health records" }
   ];
+  
+  // Only PATIENT role is allowed for self-registration
+  // Staff accounts must be created by administrators
+  const registrationRoles: { value: UserRole; label: string; description: string }[] = [
+    { value: "PATIENT", label: "Patient", description: "Personal health records" }
+  ];
+  
+  // Use appropriate roles based on form mode
+  const roles = isLogin ? allRoles : registrationRoles;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

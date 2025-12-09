@@ -1,6 +1,9 @@
 import { db } from "./db";
 import { eq, desc, and, lt, sql } from "drizzle-orm";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
+import bcrypt from "bcrypt";
+
+const SALT_ROUNDS = 10;
 import {
   users, doctors, schedules, appointments,
   inventoryItems, staffMembers, inventoryPatients, inventoryTransactions,
@@ -63,6 +66,11 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     const result = await db.insert(users).values(user).returning();
+    return result[0];
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email));
     return result[0];
   }
 
@@ -925,7 +933,8 @@ export class DatabaseStorage implements IStorage {
     ];
 
     for (const user of demoUsers) {
-      await db.insert(users).values(user);
+      const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS);
+      await db.insert(users).values({ ...user, password: hashedPassword });
     }
 
     // Seed doctors for OPD

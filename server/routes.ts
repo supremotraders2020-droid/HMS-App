@@ -1,17 +1,75 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
+
+const SALT_ROUNDS = 10;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Seed initial data if database is empty
   await databaseStorage.seedInitialData();
   await databaseStorage.seedEquipmentData();
   
-  // Login endpoint - fetch user by username, use database name
+  // Registration endpoint - create new user with hashed password
+  // Public registration is limited to PATIENT role only for security
+  // Staff accounts (ADMIN, DOCTOR, NURSE, OPD_MANAGER) must be created by existing admins
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { username, password, firstName, lastName, email } = req.body;
+      
+      // Validate required fields (role is not required - always PATIENT for self-registration)
+      if (!username || !password) {
+        return res.status(400).json({ error: "Username and password are required" });
+      }
+      
+      // Validate password strength
+      if (password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters long" });
+      }
+      
+      // Check if username already exists
+      const existingUser = await databaseStorage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(409).json({ error: "Username already exists. Please choose a different username." });
+      }
+      
+      // Check if email already exists
+      if (email) {
+        const existingEmail = await databaseStorage.getUserByEmail(email);
+        if (existingEmail) {
+          return res.status(409).json({ error: "Email already registered. Please use a different email or sign in." });
+        }
+      }
+      
+      // Hash password securely
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      
+      // Create full name from first and last name
+      const fullName = `${firstName || ''} ${lastName || ''}`.trim() || username;
+      
+      // Create user in database
+      const newUser = await databaseStorage.createUser({
+        username,
+        password: hashedPassword,
+        role: "PATIENT", // Always set to PATIENT for self-registration
+        name: fullName,
+        email: email || null,
+      });
+      
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = newUser;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ error: "Registration failed. Please try again." });
+    }
+  });
+
+  // Login endpoint - fetch user by username, verify hashed password
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password, role } = req.body;
@@ -20,35 +78,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Username and role are required" });
       }
       
-      // Try to find user in database
-      const user = await storage.getUserByUsername(username);
-      
-      if (user) {
-        // User exists in database - use their data
-        // For demo, validate password if provided
-        if (password && user.password && user.password !== password) {
-          return res.status(401).json({ error: "Invalid password" });
-        }
-        
-        // Validate role matches
-        if (user.role !== role) {
-          return res.status(401).json({ error: `This account is registered as ${user.role}. Please select the correct role.` });
-        }
-        
-        const { password: _, ...userWithoutPassword } = user;
-        res.json(userWithoutPassword);
-      } else {
-        // User not in database - create a temporary session user
-        // This allows login without pre-registration for demo purposes
-        const tempUser = {
-          id: `temp-${Date.now()}`,
-          username,
-          role,
-          name: username,
-          email: `${username}@demo.com`
-        };
-        res.json(tempUser);
+      if (!password) {
+        return res.status(400).json({ error: "Password is required" });
       }
+      
+      // Find user in database
+      const user = await databaseStorage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(401).json({ error: "Invalid username or password. Please check your credentials or create an account." });
+      }
+      
+      // Verify password using bcrypt
+      const passwordValid = await bcrypt.compare(password, user.password);
+      if (!passwordValid) {
+        return res.status(401).json({ error: "Invalid username or password. Please check your credentials." });
+      }
+      
+      // Validate role matches
+      if (user.role !== role) {
+        return res.status(401).json({ error: `This account is registered as ${user.role}. Please select the correct role.` });
+      }
+      
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Login failed" });

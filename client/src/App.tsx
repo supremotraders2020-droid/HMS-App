@@ -200,6 +200,50 @@ function AppContent() {
   ];
 
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  const handleRegister = async (userData: { 
+    username: string; 
+    password: string; 
+    role: UserRole;
+    firstName: string;
+    lastName: string;
+    email: string;
+    department?: string;
+  }) => {
+    setLoginError(null);
+    setIsRegistering(true);
+    
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Registration successful - auto login with the new user
+        const galaxyHospital = hospitals[0];
+        setCurrentUser({
+          id: data.id,
+          username: data.username,
+          name: data.name || `${userData.firstName} ${userData.lastName}`,
+          role: data.role,
+          tenantId: galaxyHospital.id,
+          hospitalName: galaxyHospital.name
+        });
+      } else {
+        setLoginError(data.error || "Registration failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      setLoginError("Unable to connect to server. Please try again.");
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
   const handleLogin = async (username: string, password: string, role: UserRole) => {
     const galaxyHospital = hospitals[0]; // Gravity Hospital
@@ -231,18 +275,9 @@ function AppContent() {
         return;
       }
     } catch (error) {
-      console.log("Could not connect to server, using local auth");
+      console.error("Login error:", error);
+      setLoginError("Unable to connect to server. Please try again.");
     }
-    
-    // Fallback to local auth with generated ID (only if server unreachable)
-    setCurrentUser({
-      id: crypto.randomUUID(),
-      username,
-      name: getDisplayName(username, role),
-      role,
-      tenantId: galaxyHospital.id,
-      hospitalName: galaxyHospital.name
-    });
   };
 
   const getDisplayName = (username: string, role: UserRole) => {
@@ -272,7 +307,7 @@ function AppContent() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <TooltipProvider>
-            <AuthForms onLogin={handleLogin} loginError={loginError} />
+            <AuthForms onLogin={handleLogin} onRegister={handleRegister} loginError={loginError} />
             <Toaster />
           </TooltipProvider>
         </ThemeProvider>
