@@ -65,6 +65,7 @@ import {
 interface PatientPortalProps {
   patientId: string;
   patientName: string;
+  username: string;
   onLogout: () => void;
 }
 
@@ -118,7 +119,7 @@ interface PatientProfile {
   address: string | null;
 }
 
-export default function PatientPortal({ patientId, patientName, onLogout }: PatientPortalProps) {
+export default function PatientPortal({ patientId, patientName, username, onLogout }: PatientPortalProps) {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -148,9 +149,9 @@ export default function PatientPortal({ patientId, patientName, onLogout }: Pati
     queryKey: ["/api/doctors"],
   });
 
-  // Fetch patient profile from API
+  // Fetch patient profile from API using username (stable identifier)
   const { data: profileData } = useQuery<PatientProfile>({
-    queryKey: ['/api/patient-profiles', patientId],
+    queryKey: ['/api/patient-profiles', username],
     retry: false,
   });
 
@@ -173,17 +174,17 @@ export default function PatientPortal({ patientId, patientName, onLogout }: Pati
     }
   }, [profileData, patientName]);
 
-  // Save profile mutation
+  // Save profile mutation using username (stable identifier)
   const saveProfileMutation = useMutation({
     mutationFn: async (profile: typeof profileForm) => {
-      const response = await apiRequest('PUT', `/api/patient-profiles/${patientId}`, {
-        patientId,
+      const response = await apiRequest('PUT', `/api/patient-profiles/${username}`, {
+        patientId: username,
         ...profile
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/patient-profiles', patientId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/patient-profiles', username] });
       toast({ title: "Profile Updated", description: "Your profile has been saved successfully" });
     },
     onError: () => {

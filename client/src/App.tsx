@@ -277,6 +277,7 @@ function AppContent() {
             <PatientPortal 
               patientId={currentUser.id}
               patientName={currentUser.name}
+              username={currentUser.username}
               onLogout={handleLogout}
             />
             <Toaster />
