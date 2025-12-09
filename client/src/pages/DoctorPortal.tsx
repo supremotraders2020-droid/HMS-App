@@ -781,6 +781,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       <div>
                         <h4 className="font-semibold">{apt.patientName}</h4>
                         <p className="text-sm text-muted-foreground">{apt.symptoms || "General checkup"}</p>
+                        <Badge variant="outline" className="mt-1">Consultation</Badge>
                       </div>
                     </div>
                     <div className="text-right">
@@ -789,6 +790,20 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     </div>
                   </div>
                 </CardContent>
+                <CardFooter className="gap-2 border-t bg-muted/20">
+                  <Button size="sm" className="flex-1" onClick={() => confirmAppointmentMutation.mutate(apt.id)} disabled={confirmAppointmentMutation.isPending}>
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    {confirmAppointmentMutation.isPending ? "..." : "Confirm"}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => { setSelectedAppointment(apt); setAppointmentDetailsOpen(true); }}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    Details
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => { setActiveSection("prescriptions"); setAddPrescriptionDialogOpen(true); }}>
+                    <FileText className="h-4 w-4 mr-1" />
+                    Prescribe
+                  </Button>
+                </CardFooter>
               </Card>
             ))}
           </div>
@@ -817,6 +832,16 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     </div>
                   </div>
                 </CardContent>
+                <CardFooter className="gap-2 border-t bg-muted/20">
+                  <Button variant="outline" size="sm" onClick={() => { setSelectedAppointment(apt); setAppointmentDetailsOpen(true); }}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    Details
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => { setActiveSection("prescriptions"); setAddPrescriptionDialogOpen(true); }}>
+                    <FileText className="h-4 w-4 mr-1" />
+                    Prescribe
+                  </Button>
+                </CardFooter>
               </Card>
             ))}
           </div>
