@@ -99,20 +99,31 @@ class NotificationService {
     return created;
   }
 
-  async notifyAppointmentCreated(appointmentId: string, doctorId: string, patientName: string, appointmentDate: string, appointmentTime: string) {
+  async notifyAppointmentCreated(
+    appointmentId: string, 
+    doctorId: string, 
+    patientName: string, 
+    appointmentDate: string, 
+    appointmentTime: string,
+    department?: string,
+    location?: string
+  ) {
+    const locationInfo = location ? ` at ${location}` : '';
+    const deptInfo = department ? ` (${department})` : '';
+    
     await this.createAndPushNotification({
       userId: doctorId,
       userRole: "DOCTOR",
       type: "appointment",
       title: "New Appointment Booked",
-      message: `${patientName} has booked an appointment for ${appointmentDate} at ${appointmentTime}`,
+      message: `${patientName} has booked an appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo}`,
       relatedEntityType: "appointment",
       relatedEntityId: appointmentId,
       isRead: false,
-      metadata: JSON.stringify({ appointmentDate, appointmentTime, patientName })
+      metadata: JSON.stringify({ appointmentDate, appointmentTime, patientName, department, location })
     });
 
-    this.broadcast({ type: "admin_notification", event: "appointment_created", appointmentId }, "ADMIN");
+    this.broadcast({ type: "admin_notification", event: "appointment_created", appointmentId, department, location }, "ADMIN");
   }
 
   async notifyAppointmentUpdated(appointmentId: string, doctorId: string, patientName: string, status: string, appointmentDate: string) {

@@ -102,6 +102,19 @@ const MOCK_TEAM = [
   { id: "6", name: "Dr. Vikram Singh", specialty: "General Medicine", qualification: "MD Medicine", experience: 20, rating: 4.9, available: true },
 ];
 
+const LOCATIONS = [
+  { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park" },
+  { id: "hinjewadi", name: "Gravity Hospital - Hinjewadi" },
+  { id: "kothrud", name: "Gravity Hospital - Kothrud" },
+  { id: "wakad", name: "Gravity Hospital - Wakad" },
+  { id: "viman_nagar", name: "Gravity Hospital - Viman Nagar" },
+  { id: "baner", name: "Gravity Hospital - Baner" },
+  { id: "aundh", name: "Gravity Hospital - Aundh" },
+  { id: "kalyani_nagar", name: "Gravity Hospital - Kalyani Nagar" },
+  { id: "pimpri", name: "Gravity Hospital - Pimpri" },
+  { id: "chikhali", name: "Gravity Hospital - Chikhali (Main)" },
+];
+
 interface PatientProfile {
   id?: string;
   patientId: string;
@@ -124,6 +137,9 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedSlot, setSelectedSlot] = useState<string>("");
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
+  const [symptoms, setSymptoms] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "bot"; content: string }>>([
     { role: "bot", content: "Hello! I'm your healthcare assistant. How can I help you today?" }
   ]);
@@ -189,6 +205,46 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to save profile", variant: "destructive" });
+    }
+  });
+
+  // Book appointment mutation
+  const bookAppointmentMutation = useMutation({
+    mutationFn: async (appointmentData: {
+      doctorId: string;
+      patientName: string;
+      patientPhone: string;
+      appointmentDate: string;
+      timeSlot: string;
+      department: string;
+      location: string;
+      reason: string;
+    }) => {
+      const response = await apiRequest('POST', '/api/appointments', {
+        ...appointmentData,
+        symptoms: appointmentData.reason,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+      toast({ 
+        title: "Appointment Booked!", 
+        description: `Your appointment has been scheduled. You will receive a confirmation.`
+      });
+      setSelectedDoctor(null);
+      setSelectedDate("");
+      setSelectedSlot("");
+      setSelectedLocation("");
+      setSelectedDepartment("");
+      setSymptoms("");
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Booking Failed", 
+        description: error?.message || "Failed to book appointment. Please try again.", 
+        variant: "destructive" 
+      });
     }
   });
 
@@ -646,6 +702,34 @@ Description: ${record.description}
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
+                      <Label>Department</Label>
+                      <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                        <SelectTrigger data-testid="select-department">
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DEPARTMENTS.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Location</Label>
+                      <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                        <SelectTrigger data-testid="select-location">
+                          <SelectValue placeholder="Select location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LOCATIONS.map((loc) => (
+                            <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
                       <Label>Preferred Date</Label>
                       <Input 
                         type="date" 
@@ -675,25 +759,31 @@ Description: ${record.description}
                   <Textarea 
                     placeholder="Describe your symptoms or reason for visit (optional)"
                     className="min-h-[80px]"
+                    value={symptoms}
+                    onChange={(e) => setSymptoms(e.target.value)}
                     data-testid="input-symptoms"
                   />
                 </CardContent>
                 <CardFooter>
                   <Button 
                     className="w-full" 
-                    disabled={!selectedDate || !selectedSlot}
+                    disabled={!selectedDate || !selectedSlot || !selectedLocation || !selectedDepartment || bookAppointmentMutation.isPending}
                     onClick={() => {
-                      toast({ 
-                        title: "Appointment Booked!", 
-                        description: `Your appointment has been scheduled for ${selectedDate} at ${selectedSlot}`
+                      const doctor = doctors.find(d => d.id === selectedDoctor) || MOCK_TEAM.find(d => d.id === selectedDoctor);
+                      bookAppointmentMutation.mutate({
+                        doctorId: selectedDoctor,
+                        patientName: patientName,
+                        patientPhone: profileForm.phone || "+91 98765 43210",
+                        appointmentDate: selectedDate,
+                        timeSlot: selectedSlot,
+                        department: selectedDepartment,
+                        location: selectedLocation,
+                        reason: symptoms || "General consultation"
                       });
-                      setSelectedDoctor(null);
-                      setSelectedDate("");
-                      setSelectedSlot("");
                     }}
                     data-testid="button-confirm-booking"
                   >
-                    Confirm Booking
+                    {bookAppointmentMutation.isPending ? "Booking..." : "Confirm Booking"}
                     <CheckCircle className="h-4 w-4 ml-2" />
                   </Button>
                 </CardFooter>

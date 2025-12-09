@@ -131,6 +131,8 @@ export const appointments = pgTable("appointments", {
   doctorId: varchar("doctor_id").notNull(),
   appointmentDate: text("appointment_date").notNull(),
   timeSlot: text("time_slot").notNull(),
+  department: text("department"),
+  location: text("location"),
   symptoms: text("symptoms"),
   status: text("status").notNull().default("scheduled"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

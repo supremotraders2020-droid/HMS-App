@@ -157,7 +157,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validatedData.doctorId,
         validatedData.patientName,
         validatedData.appointmentDate,
-        validatedData.timeSlot
+        validatedData.timeSlot,
+        validatedData.department || undefined,
+        validatedData.location || undefined
       ).catch(err => console.error("Notification error:", err));
       
       res.status(201).json(appointment);
