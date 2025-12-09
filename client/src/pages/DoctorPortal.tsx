@@ -134,6 +134,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
+  const [appointmentDetailsOpen, setAppointmentDetailsOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | undefined>(undefined);
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
   const [calendarSlotSheetOpen, setCalendarSlotSheetOpen] = useState(false);
@@ -753,7 +754,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       {completeAppointmentMutation.isPending ? "..." : "Complete"}
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" data-testid={`button-view-apt-${apt.id}`}>
+                  <Button variant="outline" size="sm" onClick={() => { setSelectedAppointment(apt); setAppointmentDetailsOpen(true); }} data-testid={`button-view-apt-${apt.id}`}>
                     <Eye className="h-4 w-4 mr-1" />
                     Details
                   </Button>
@@ -1658,6 +1659,81 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 Delete
               </Button>
               <Button onClick={() => setNotificationDetailOpen(false)} data-testid="button-close-notification">
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={appointmentDetailsOpen} onOpenChange={setAppointmentDetailsOpen}>
+          <DialogContent className="max-w-lg" data-testid="dialog-appointment-details">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CalendarDays className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <DialogTitle data-testid="text-apt-detail-title">Appointment Details</DialogTitle>
+                  <DialogDescription>
+                    {selectedAppointment?.patientName}
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            
+            {selectedAppointment && (
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Patient Name</h4>
+                    <p className="text-sm font-medium" data-testid="apt-detail-patient">{selectedAppointment.patientName}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Status</h4>
+                    <Badge variant={selectedAppointment.status === 'confirmed' ? 'default' : selectedAppointment.status === 'completed' ? 'secondary' : 'outline'}>
+                      {selectedAppointment.status}
+                    </Badge>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Date</h4>
+                    <p className="text-sm" data-testid="apt-detail-date">{selectedAppointment.appointmentDate}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Time</h4>
+                    <p className="text-sm" data-testid="apt-detail-time">{selectedAppointment.timeSlot}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Department</h4>
+                    <p className="text-sm" data-testid="apt-detail-department">{selectedAppointment.department || 'General'}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Location</h4>
+                    <p className="text-sm" data-testid="apt-detail-location">{selectedAppointment.location || 'Main Hospital'}</p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Symptoms / Reason</h4>
+                  <p className="text-sm bg-muted/50 rounded-lg p-3" data-testid="apt-detail-symptoms">
+                    {selectedAppointment.symptoms || 'General consultation'}
+                  </p>
+                </div>
+
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button onClick={() => setAppointmentDetailsOpen(false)} data-testid="button-close-apt-details">
                 Close
               </Button>
             </DialogFooter>
