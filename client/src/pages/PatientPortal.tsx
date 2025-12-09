@@ -94,14 +94,6 @@ const MOCK_NOTIFICATIONS = [
   { id: "4", type: "general", title: "Health Tip", message: "Stay hydrated! Drink at least 8 glasses of water daily.", time: "1 week ago", read: true },
 ];
 
-const MOCK_TEAM = [
-  { id: "1", name: "Dr. Priya Sharma", specialty: "Cardiology", qualification: "MD, DM Cardiology", experience: 15, rating: 4.9, available: true },
-  { id: "2", name: "Dr. Rajesh Kumar", specialty: "Neurology", qualification: "MD, DM Neurology", experience: 12, rating: 4.8, available: true },
-  { id: "3", name: "Dr. Anjali Patel", specialty: "Pediatrics", qualification: "MD Pediatrics", experience: 10, rating: 4.9, available: false },
-  { id: "4", name: "Dr. Suresh Reddy", specialty: "Orthopedics", qualification: "MS Orthopedics", experience: 18, rating: 4.7, available: true },
-  { id: "5", name: "Dr. Meera Gupta", specialty: "Dermatology", qualification: "MD Dermatology", experience: 8, rating: 4.8, available: true },
-  { id: "6", name: "Dr. Vikram Singh", specialty: "General Medicine", qualification: "MD Medicine", experience: 20, rating: 4.9, available: true },
-];
 
 const LOCATIONS = [
   { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park" },
@@ -660,46 +652,52 @@ Description: ${record.description}
 
             <div>
               <h3 className="text-lg font-semibold mb-4">Available Doctors</h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {(doctors.length > 0 ? doctors : MOCK_TEAM).map((doctor: any) => (
-                  <Card 
-                    key={doctor.id} 
-                    className={`cursor-pointer transition-all ${selectedDoctor === doctor.id ? "ring-2 ring-primary" : "hover-elevate"}`}
-                    onClick={() => setSelectedDoctor(doctor.id)}
-                    data-testid={`doctor-card-${doctor.id}`}
-                  >
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="h-16 w-16">
-                          <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                            {doctor.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h4 className="font-semibold" data-testid={`doctor-name-${doctor.id}`}>{doctor.name}</h4>
-                          <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
-                          <p className="text-xs text-muted-foreground">{doctor.qualification}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-sm font-medium">{doctor.rating}</span>
+              {doctors.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">No doctors available. Please check back later.</p>
+                </Card>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {doctors.map((doctor: any) => (
+                    <Card 
+                      key={doctor.id} 
+                      className={`cursor-pointer transition-all ${selectedDoctor === doctor.id ? "ring-2 ring-primary" : "hover-elevate"}`}
+                      onClick={() => setSelectedDoctor(doctor.id)}
+                      data-testid={`doctor-card-${doctor.id}`}
+                    >
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <Avatar className="h-14 w-14 border-2 border-primary/20">
+                            <AvatarFallback className="bg-primary/10 text-primary text-base font-semibold">
+                              {doctor.avatarInitials || doctor.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold truncate" data-testid={`doctor-name-${doctor.id}`}>{doctor.name}</h4>
+                            <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
+                            <p className="text-xs text-muted-foreground truncate">{doctor.qualification}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span className="text-sm font-medium text-yellow-500">{doctor.rating}</span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {doctor.experience} yrs exp
+                              </span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                              {doctor.experience} yrs exp
-                            </span>
                           </div>
                         </div>
-                      </div>
-                      <div className="mt-4 flex items-center justify-between">
-                        <Badge variant={doctor.available !== false ? "default" : "secondary"}>
-                          {doctor.available !== false ? "Available" : "Busy"}
-                        </Badge>
-                        <span className="text-sm font-medium">₹500</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        <div className="mt-4 flex items-center justify-between">
+                          <Badge variant="outline" className="text-xs">
+                            Available
+                          </Badge>
+                          <span className="text-sm font-semibold">₹500</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
 
             {selectedDoctor && (
@@ -778,7 +776,7 @@ Description: ${record.description}
                     className="w-full" 
                     disabled={!selectedDate || !selectedSlot || !selectedLocation || !selectedDepartment || bookAppointmentMutation.isPending}
                     onClick={() => {
-                      const doctor = doctors.find(d => d.id === selectedDoctor) || MOCK_TEAM.find(d => d.id === selectedDoctor);
+                      const doctor = doctors.find(d => d.id === selectedDoctor);
                       bookAppointmentMutation.mutate({
                         doctorId: selectedDoctor,
                         patientId: username,
@@ -1135,31 +1133,42 @@ Description: ${record.description}
               <p className="text-muted-foreground">Meet our experienced healthcare professionals</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {MOCK_TEAM.map((doctor) => (
-                <Card key={doctor.id} className="hover-elevate" data-testid={`team-card-${doctor.id}`}>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <Avatar className="h-20 w-20 mx-auto mb-4">
-                        <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                          {doctor.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <h4 className="font-semibold text-lg" data-testid={`team-name-${doctor.id}`}>{doctor.name}</h4>
-                      <p className="text-primary font-medium">{doctor.specialty}</p>
-                      <p className="text-sm text-muted-foreground">{doctor.qualification}</p>
-                      
-                      <div className="flex items-center justify-center gap-4 mt-4">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">{doctor.rating}</span>
+            {doctors.length === 0 ? (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">No doctors available. Please check back later.</p>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {doctors.map((doctor: any) => (
+                  <Card key={doctor.id} className="hover-elevate" data-testid={`team-card-${doctor.id}`}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-4">
+                        <Avatar className="h-14 w-14 border-2 border-primary/20">
+                          <AvatarFallback className="bg-primary/10 text-primary text-base font-semibold">
+                            {doctor.avatarInitials || doctor.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold" data-testid={`team-name-${doctor.id}`}>{doctor.name}</h4>
+                          <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
+                          <p className="text-xs text-muted-foreground truncate">{doctor.qualification}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center gap-1">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-sm font-medium text-yellow-500">{doctor.rating}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {doctor.experience} yrs exp
+                            </span>
+                          </div>
                         </div>
-                        <Separator orientation="vertical" className="h-4" />
-                        <span className="text-sm text-muted-foreground">
-                          {doctor.experience} years
-                        </span>
                       </div>
-                      
+                      <div className="mt-4 flex items-center justify-between">
+                        <Badge variant="outline" className="text-xs">
+                          Available
+                        </Badge>
+                        <span className="text-sm font-semibold">₹500</span>
+                      </div>
                       <Button 
                         className="w-full mt-4" 
                         onClick={() => {
@@ -1170,11 +1179,11 @@ Description: ${record.description}
                       >
                         Book Appointment
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         );
 
