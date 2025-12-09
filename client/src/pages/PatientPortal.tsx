@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -144,6 +145,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     { role: "bot", content: "Hello! I'm your healthcare assistant. How can I help you today?" }
   ]);
   const [chatInput, setChatInput] = useState("");
+  const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
   const { toast } = useToast();
 
   // Profile form state
@@ -989,6 +991,15 @@ Description: ${record.description}
         );
 
       case "notifications":
+        const parseMetadata = (metadata: string | null) => {
+          if (!metadata) return {};
+          try {
+            return JSON.parse(metadata);
+          } catch {
+            return {};
+          }
+        };
+
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -1012,7 +1023,8 @@ Description: ${record.description}
                 userNotifications.map((notification) => (
                   <Card 
                     key={notification.id} 
-                    className={`hover-elevate ${!notification.isRead ? "border-primary bg-primary/5" : ""}`}
+                    className={`hover-elevate cursor-pointer ${!notification.isRead ? "border-primary bg-primary/5" : ""}`}
+                    onClick={() => setSelectedNotification(notification)}
                     data-testid={`notification-card-${notification.id}`}
                   >
                     <CardContent className="p-4">
@@ -1043,6 +1055,75 @@ Description: ${record.description}
                 ))
               )}
             </div>
+
+            <Dialog open={!!selectedNotification} onOpenChange={() => setSelectedNotification(null)}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    {selectedNotification && getNotificationIcon(selectedNotification.type || "general")}
+                    {selectedNotification?.title}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {selectedNotification?.createdAt 
+                      ? format(new Date(selectedNotification.createdAt), 'PPpp') 
+                      : 'Just now'}
+                  </DialogDescription>
+                </DialogHeader>
+                {selectedNotification && (
+                  <div className="space-y-4">
+                    <p className="text-muted-foreground">{selectedNotification.message}</p>
+                    
+                    {selectedNotification.type === "appointment" && selectedNotification.metadata && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">Appointment Details</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm">
+                          {(() => {
+                            const meta = parseMetadata(selectedNotification.metadata);
+                            return (
+                              <>
+                                {meta.appointmentDate && (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Date:</span>
+                                    <span className="font-medium">{meta.appointmentDate}</span>
+                                  </div>
+                                )}
+                                {meta.appointmentTime && (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Time:</span>
+                                    <span className="font-medium">{meta.appointmentTime}</span>
+                                  </div>
+                                )}
+                                {meta.department && (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Department:</span>
+                                    <span className="font-medium">{meta.department}</span>
+                                  </div>
+                                )}
+                                {meta.location && (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Location:</span>
+                                    <span className="font-medium">{meta.location}</span>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+                    )}
+                    
+                    <Button 
+                      className="w-full" 
+                      onClick={() => setSelectedNotification(null)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         );
 
