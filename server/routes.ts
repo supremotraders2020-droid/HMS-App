@@ -11,33 +11,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await databaseStorage.seedInitialData();
   await databaseStorage.seedEquipmentData();
   
-  // Login endpoint with password validation
+  // Login endpoint - fetch user by username, use database name
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password, role } = req.body;
       
-      if (!username || !password || !role) {
-        return res.status(400).json({ error: "Username, password, and role are required" });
+      if (!username || !role) {
+        return res.status(400).json({ error: "Username and role are required" });
       }
       
+      // Try to find user in database
       const user = await storage.getUserByUsername(username);
-      if (!user) {
-        return res.status(401).json({ error: "Invalid username or password" });
-      }
       
-      // Validate password
-      if (user.password !== password) {
-        return res.status(401).json({ error: "Invalid username or password" });
+      if (user) {
+        // User exists in database - use their data
+        // For demo, validate password if provided
+        if (password && user.password && user.password !== password) {
+          return res.status(401).json({ error: "Invalid password" });
+        }
+        
+        // Validate role matches
+        if (user.role !== role) {
+          return res.status(401).json({ error: `This account is registered as ${user.role}. Please select the correct role.` });
+        }
+        
+        const { password: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      } else {
+        // User not in database - create a temporary session user
+        // This allows login without pre-registration for demo purposes
+        const tempUser = {
+          id: `temp-${Date.now()}`,
+          username,
+          role,
+          name: username,
+          email: `${username}@demo.com`
+        };
+        res.json(tempUser);
       }
-      
-      // Validate role matches
-      if (user.role !== role) {
-        return res.status(401).json({ error: `This account is registered as ${user.role}, not ${role}` });
-      }
-      
-      const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
     } catch (error) {
+      console.error("Login error:", error);
       res.status(500).json({ error: "Login failed" });
     }
   });
