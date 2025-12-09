@@ -133,6 +133,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
   const [notificationDetailOpen, setNotificationDetailOpen] = useState(false);
   const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
+  const [patientSearchQuery, setPatientSearchQuery] = useState("");
+  const [selectedPatientForRx, setSelectedPatientForRx] = useState<string>("");
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
   const [appointmentDetailsOpen, setAppointmentDetailsOpen] = useState(false);
@@ -211,6 +214,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       queryClient.invalidateQueries({ queryKey: ['/api/prescriptions/doctor', doctorId] });
       toast({ title: "Prescription created successfully" });
       setAddPrescriptionDialogOpen(false);
+      setPatientSearchQuery("");
+      setSelectedPatientForRx("");
+      setShowPatientDropdown(false);
     },
     onError: () => toast({ title: "Failed to create prescription", variant: "destructive" }),
   });
@@ -1358,7 +1364,14 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           <h1 className="text-2xl font-bold" data-testid="text-prescriptions-title">Prescriptions</h1>
           <p className="text-muted-foreground">Manage and create prescriptions</p>
         </div>
-        <Dialog open={addPrescriptionDialogOpen} onOpenChange={setAddPrescriptionDialogOpen}>
+        <Dialog open={addPrescriptionDialogOpen} onOpenChange={(open) => {
+          setAddPrescriptionDialogOpen(open);
+          if (!open) {
+            setPatientSearchQuery("");
+            setSelectedPatientForRx("");
+            setShowPatientDropdown(false);
+          }
+        }}>
           <DialogTrigger asChild>
             <Button data-testid="button-new-prescription">
               <Plus className="h-4 w-4 mr-2" />
@@ -1391,7 +1404,100 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="rxPatientName">Patient Name *</Label>
-                  <Input id="rxPatientName" name="patientName" required data-testid="input-rx-patient-name" />
+                  <div className="relative">
+                    <Input 
+                      id="rxPatientName" 
+                      name="patientName" 
+                      required 
+                      value={selectedPatientForRx || patientSearchQuery}
+                      onChange={(e) => {
+                        setPatientSearchQuery(e.target.value);
+                        setSelectedPatientForRx("");
+                        setShowPatientDropdown(true);
+                      }}
+                      onFocus={() => setShowPatientDropdown(true)}
+                      onBlur={(e) => {
+                        setTimeout(() => {
+                          if (!e.currentTarget.contains(document.activeElement)) {
+                            setShowPatientDropdown(false);
+                          }
+                        }, 150);
+                      }}
+                      placeholder="Type to search patients..."
+                      autoComplete="off"
+                      data-testid="input-rx-patient-name" 
+                    />
+                    <input type="hidden" name="patientNameHidden" value={selectedPatientForRx || patientSearchQuery} />
+                    {showPatientDropdown && (
+                      <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {patients.length > 0 && (
+                          <div className="p-2 border-b">
+                            <p className="text-xs font-medium text-muted-foreground px-2 py-1">Recent Patients</p>
+                            {patients
+                              .filter(p => 
+                                !patientSearchQuery || 
+                                p.patientName.toLowerCase().includes(patientSearchQuery.toLowerCase())
+                              )
+                              .slice(0, 5)
+                              .map((patient) => (
+                                <button
+                                  key={patient.id}
+                                  type="button"
+                                  className="w-full px-3 py-2 text-left hover-elevate rounded-md flex items-center gap-2"
+                                  onClick={() => {
+                                    setSelectedPatientForRx(patient.patientName);
+                                    setPatientSearchQuery("");
+                                    setShowPatientDropdown(false);
+                                  }}
+                                  data-testid={`patient-option-${patient.id}`}
+                                >
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback className="text-xs">{patient.patientName.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="text-sm font-medium">{patient.patientName}</p>
+                                    <p className="text-xs text-muted-foreground">{patient.patientGender || 'Patient'}</p>
+                                  </div>
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                        {patientSearchQuery && !patients.some(p => p.patientName.toLowerCase() === patientSearchQuery.toLowerCase()) && (
+                          <button
+                            type="button"
+                            className="w-full px-3 py-2 text-left hover-elevate flex items-center gap-2"
+                            onClick={() => {
+                              setSelectedPatientForRx(patientSearchQuery);
+                              setShowPatientDropdown(false);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 text-primary" />
+                            <span>Add "{patientSearchQuery}" as new patient</span>
+                          </button>
+                        )}
+                        {patients.length > 5 && (
+                          <div className="p-2 border-t">
+                            <button
+                              type="button"
+                              className="w-full px-3 py-2 text-left hover-elevate rounded-md text-sm text-primary flex items-center gap-2"
+                              onClick={() => {
+                                setActiveSection("patients");
+                                setAddPrescriptionDialogOpen(false);
+                              }}
+                            >
+                              <Users className="h-4 w-4" />
+                              See all {patients.length} patients
+                            </button>
+                          </div>
+                        )}
+                        {patients.length === 0 && !patientSearchQuery && (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            No patients found. Type a name to add a new patient.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="prescriptionDate">Date *</Label>
@@ -1415,7 +1521,12 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 <Input id="followUpDate" name="followUpDate" type="date" data-testid="input-followup-date" />
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setAddPrescriptionDialogOpen(false)}>Cancel</Button>
+                <Button type="button" variant="outline" onClick={() => {
+                  setAddPrescriptionDialogOpen(false);
+                  setPatientSearchQuery("");
+                  setSelectedPatientForRx("");
+                  setShowPatientDropdown(false);
+                }}>Cancel</Button>
                 <Button type="submit" disabled={createPrescriptionMutation.isPending} data-testid="button-submit-prescription">
                   {createPrescriptionMutation.isPending ? "Creating..." : "Create Prescription"}
                 </Button>
