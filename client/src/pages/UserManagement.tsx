@@ -65,8 +65,8 @@ export default function UserManagement() {
     email: "",
     phone: "",
     role: "" as UserRole,
-    department: "",
-    specialization: ""
+    username: "",
+    password: ""
   });
 
   const [editStaff, setEditStaff] = useState<{
@@ -88,10 +88,10 @@ export default function UserManagement() {
     mutationFn: async (staffData: {
       name: string;
       title: string;
-      department: string;
-      specialization: string;
       email: string;
       phone: string;
+      username: string;
+      password: string;
     }) => {
       const response = await apiRequest("POST", "/api/team-members", staffData);
       return response.json();
@@ -103,13 +103,13 @@ export default function UserManagement() {
         email: "",
         phone: "",
         role: "" as UserRole,
-        department: "",
-        specialization: ""
+        username: "",
+        password: ""
       });
       setIsAddDialogOpen(false);
       toast({
         title: "Success",
-        description: "Staff member added successfully",
+        description: "Staff member added successfully. They can now login with their username and password.",
       });
     },
     onError: (error: Error) => {
@@ -165,7 +165,7 @@ export default function UserManagement() {
   });
 
   const handleAddStaff = () => {
-    if (!newStaff.name || !newStaff.email || !newStaff.role || !newStaff.department || !newStaff.phone) {
+    if (!newStaff.name || !newStaff.email || !newStaff.role || !newStaff.username || !newStaff.password || !newStaff.phone) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -174,13 +174,22 @@ export default function UserManagement() {
       return;
     }
 
+    if (newStaff.password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive"
+      });
+      return;
+    }
+
     addStaffMutation.mutate({
       name: newStaff.name,
       title: roleToTitle[newStaff.role] || newStaff.role,
-      department: newStaff.department,
-      specialization: newStaff.specialization || newStaff.department,
       email: newStaff.email,
-      phone: newStaff.phone
+      phone: newStaff.phone,
+      username: newStaff.username,
+      password: newStaff.password
     });
   };
 
@@ -339,23 +348,24 @@ export default function UserManagement() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="department">Department *</Label>
+                  <Label htmlFor="username">Username *</Label>
                   <Input
-                    id="department"
-                    value={newStaff.department}
-                    onChange={(e) => setNewStaff({...newStaff, department: e.target.value})}
-                    placeholder="e.g., Cardiology"
-                    data-testid="input-staff-department"
+                    id="username"
+                    value={newStaff.username}
+                    onChange={(e) => setNewStaff({...newStaff, username: e.target.value})}
+                    placeholder="Enter username"
+                    data-testid="input-staff-username"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="specialization">Specialization</Label>
+                  <Label htmlFor="password">Password *</Label>
                   <Input
-                    id="specialization"
-                    value={newStaff.specialization}
-                    onChange={(e) => setNewStaff({...newStaff, specialization: e.target.value})}
-                    placeholder="e.g., Heart Surgery"
-                    data-testid="input-staff-specialization"
+                    id="password"
+                    type="password"
+                    value={newStaff.password}
+                    onChange={(e) => setNewStaff({...newStaff, password: e.target.value})}
+                    placeholder="Min 6 characters"
+                    data-testid="input-staff-password"
                   />
                 </div>
               </div>

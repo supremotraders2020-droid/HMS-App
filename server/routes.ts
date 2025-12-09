@@ -1247,16 +1247,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create team member
+  // Create team member with user account for login
   app.post("/api/team-members", async (req, res) => {
     try {
-      const parsed = insertHospitalTeamMemberSchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({ error: parsed.error.errors });
+      const { name, title, email, phone, username, password } = req.body;
+      
+      // Validate required fields
+      if (!name || !title || !email || !phone || !username || !password) {
+        return res.status(400).json({ error: "All fields are required: name, title, email, phone, username, password" });
       }
-      const member = await storage.createTeamMember(parsed.data);
+      
+      // Validate password strength
+      if (password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+      
+      // Check if username already exists
+      const existingUser = await databaseStorage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+      
+      // Check if email already exists
+      const existingEmail = await databaseStorage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ error: "Email already registered" });
+      }
+      
+      // Determine role from title
+      let role: "ADMIN" | "DOCTOR" | "NURSE" | "OPD_MANAGER" = "OPD_MANAGER";
+      const lowerTitle = title.toLowerCase();
+      if (lowerTitle.includes("doctor") || lowerTitle.includes("dr.")) role = "DOCTOR";
+      else if (lowerTitle.includes("nurse")) role = "NURSE";
+      else if (lowerTitle.includes("admin")) role = "ADMIN";
+      else if (lowerTitle.includes("opd") || lowerTitle.includes("manager")) role = "OPD_MANAGER";
+      
+      // Hash password with bcrypt
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      
+      // Create user account for login
+      await databaseStorage.createUser({
+        username,
+        password: hashedPassword,
+        role,
+        name,
+        email
+      });
+      
+      // Create team member
+      const memberData = {
+        name,
+        title,
+        department: role, // Use role as department
+        specialization: title,
+        email,
+        phone,
+        status: "available" as const,
+        avatar: name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+      };
+      
+      const member = await storage.createTeamMember(memberData);
       res.status(201).json(member);
     } catch (error) {
+      console.error("Error creating team member:", error);
       res.status(500).json({ error: "Failed to create team member" });
     }
   });
