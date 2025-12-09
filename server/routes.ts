@@ -1650,6 +1650,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get prescriptions by patient name
+  app.get("/api/prescriptions/patient/:patientName", async (req, res) => {
+    try {
+      const prescriptions = await storage.getPrescriptionsByPatient(decodeURIComponent(req.params.patientName));
+      res.json(prescriptions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient prescriptions" });
+    }
+  });
+
   // Get single prescription
   app.get("/api/prescriptions/:id", async (req, res) => {
     try {

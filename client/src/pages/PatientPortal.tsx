@@ -27,7 +27,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format, formatDistanceToNow } from "date-fns";
-import type { Doctor, Appointment, MedicalRecord, UserNotification } from "@shared/schema";
+import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription } from "@shared/schema";
 import { 
   Home,
   Calendar,
@@ -241,6 +241,12 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   const { data: userNotifications = [] } = useQuery<UserNotification[]>({
     queryKey: [`/api/user-notifications/${username}`],
     refetchInterval: 3000, // Real-time sync every 3 seconds
+  });
+
+  // Fetch prescriptions for this patient
+  const { data: patientPrescriptions = [] } = useQuery<Prescription[]>({
+    queryKey: ['/api/prescriptions/patient', encodeURIComponent(patientName)],
+    refetchInterval: 3000, // Real-time sync
   });
 
   // Filter records for this patient (by username)
@@ -813,60 +819,185 @@ Description: ${record.description}
               </div>
             </div>
 
-            <div className="grid gap-4">
-              {patientRecords.length > 0 ? patientRecords.map((record) => (
-                <Card key={record.id} className="hover-elevate" data-testid={`record-card-${record.id}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
-                        {getRecordIcon(record.recordType)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold" data-testid={`record-title-${record.id}`}>{record.title}</h4>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{record.physician}</span>
-                          <span className="hidden sm:inline">-</span>
-                          <span className="hidden sm:inline">{record.recordType}</span>
+            {/* Prescriptions Section */}
+            {patientPrescriptions.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Pill className="h-5 w-5 text-green-500" />
+                  My Prescriptions ({patientPrescriptions.length})
+                </h3>
+                <div className="grid gap-4">
+                  {patientPrescriptions.map((rx) => (
+                    <Card key={rx.id} className="hover-elevate" data-testid={`prescription-card-${rx.id}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
+                            <FileText className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <h4 className="font-semibold" data-testid={`rx-diagnosis-${rx.id}`}>{rx.diagnosis}</h4>
+                              <Badge variant={rx.status === 'active' ? 'default' : 'secondary'}>
+                                {rx.status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Prescribed by {rx.doctorName} on {rx.prescriptionDate}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {rx.medicines.map((med, idx) => (
+                                <Badge key={idx} variant="secondary" className="font-normal">
+                                  <Pill className="h-3 w-3 mr-1" />
+                                  {med}
+                                </Badge>
+                              ))}
+                            </div>
+                            {rx.instructions && (
+                              <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+                                <strong>Instructions:</strong> {rx.instructions}
+                              </p>
+                            )}
+                            {rx.followUpDate && (
+                              <p className="text-sm text-primary">
+                                <strong>Follow-up:</strong> {rx.followUpDate}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              onClick={() => {
+                                const printContent = `
+                                  <html>
+                                    <head>
+                                      <title>Prescription - ${rx.patientName}</title>
+                                      <style>
+                                        body { font-family: Arial, sans-serif; padding: 40px; }
+                                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+                                        .hospital { font-size: 24px; font-weight: bold; color: #1a56db; }
+                                        .section { margin: 20px 0; }
+                                        .label { font-weight: bold; color: #666; }
+                                        .value { margin-top: 5px; }
+                                        .medicines { display: flex; gap: 10px; flex-wrap: wrap; }
+                                        .medicine { background: #e5e7eb; padding: 5px 10px; border-radius: 5px; }
+                                        .footer { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; }
+                                      </style>
+                                    </head>
+                                    <body>
+                                      <div class="header">
+                                        <div class="hospital">Gravity Hospital</div>
+                                        <div>Medical Prescription</div>
+                                      </div>
+                                      <div class="section">
+                                        <div class="label">Patient Name</div>
+                                        <div class="value">${rx.patientName}</div>
+                                      </div>
+                                      <div class="section">
+                                        <div class="label">Date</div>
+                                        <div class="value">${rx.prescriptionDate}</div>
+                                      </div>
+                                      <div class="section">
+                                        <div class="label">Diagnosis</div>
+                                        <div class="value">${rx.diagnosis}</div>
+                                      </div>
+                                      <div class="section">
+                                        <div class="label">Medicines</div>
+                                        <div class="medicines">${rx.medicines.map(m => `<span class="medicine">${m}</span>`).join('')}</div>
+                                      </div>
+                                      <div class="section">
+                                        <div class="label">Instructions</div>
+                                        <div class="value">${rx.instructions || 'N/A'}</div>
+                                      </div>
+                                      ${rx.followUpDate ? `<div class="section"><div class="label">Follow-up Date</div><div class="value">${rx.followUpDate}</div></div>` : ''}
+                                      <div class="footer">
+                                        <div>Prescribed by: ${rx.doctorName}</div>
+                                        <div>Gravity Hospital - Pimpri-Chinchwad</div>
+                                      </div>
+                                    </body>
+                                  </html>
+                                `;
+                                const printWindow = window.open('', '_blank');
+                                if (printWindow) {
+                                  printWindow.document.write(printContent);
+                                  printWindow.document.close();
+                                  printWindow.print();
+                                }
+                              }}
+                              data-testid={`button-print-rx-${rx.id}`}
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Medical Records Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-500" />
+                Medical Documents ({patientRecords.length})
+              </h3>
+              <div className="grid gap-4">
+                {patientRecords.length > 0 ? patientRecords.map((record) => (
+                  <Card key={record.id} className="hover-elevate" data-testid={`record-card-${record.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
+                          {getRecordIcon(record.recordType)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold" data-testid={`record-title-${record.id}`}>{record.title}</h4>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{record.physician}</span>
+                            <span className="hidden sm:inline">-</span>
+                            <span className="hidden sm:inline">{record.recordType}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">
+                            {record.recordDate ? format(new Date(record.recordDate), 'yyyy-MM-dd') : 'N/A'}
+                          </p>
+                          <Badge variant={record.fileData ? "default" : "secondary"} className="mt-1">
+                            {record.fileData ? "Has File" : "No File"}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => handleViewRecord(record)}
+                            data-testid={`button-view-${record.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => handleDownloadRecord(record)}
+                            data-testid={`button-download-${record.id}`}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">
-                          {record.recordDate ? format(new Date(record.recordDate), 'yyyy-MM-dd') : 'N/A'}
-                        </p>
-                        <Badge variant={record.fileData ? "default" : "secondary"} className="mt-1">
-                          {record.fileData ? "Has File" : "No File"}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          onClick={() => handleViewRecord(record)}
-                          data-testid={`button-view-${record.id}`}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          onClick={() => handleDownloadRecord(record)}
-                          data-testid={`button-download-${record.id}`}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )) : (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                    <p className="text-muted-foreground">No health records found</p>
-                    <p className="text-sm text-muted-foreground mt-1">Your medical records will appear here once uploaded by your healthcare provider</p>
-                  </CardContent>
-                </Card>
-              )}
+                    </CardContent>
+                  </Card>
+                )) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">No medical documents found</p>
+                      <p className="text-sm text-muted-foreground mt-1">Your medical documents will appear here once uploaded by your healthcare provider</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </div>
         );

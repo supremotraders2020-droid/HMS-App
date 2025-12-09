@@ -135,6 +135,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
   const [appointmentDetailsOpen, setAppointmentDetailsOpen] = useState(false);
+  const [viewPrescriptionDialogOpen, setViewPrescriptionDialogOpen] = useState(false);
+  const [editPrescriptionDialogOpen, setEditPrescriptionDialogOpen] = useState(false);
+  const [editingPrescription, setEditingPrescription] = useState<{diagnosis: string; medicines: string[]; instructions: string}>({diagnosis: "", medicines: [], instructions: ""});
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | undefined>(undefined);
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
   const [calendarSlotSheetOpen, setCalendarSlotSheetOpen] = useState(false);
@@ -209,6 +212,18 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       setAddPrescriptionDialogOpen(false);
     },
     onError: () => toast({ title: "Failed to create prescription", variant: "destructive" }),
+  });
+
+  const updatePrescriptionMutation = useMutation({
+    mutationFn: (data: { id: string; prescription: Partial<Prescription> }) =>
+      apiRequest('PATCH', `/api/prescriptions/${data.id}`, data.prescription),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/prescriptions/doctor', doctorId] });
+      toast({ title: "Prescription updated successfully" });
+      setEditPrescriptionDialogOpen(false);
+      setSelectedPrescription(null);
+    },
+    onError: () => toast({ title: "Failed to update prescription", variant: "destructive" }),
   });
 
   const createScheduleMutation = useMutation({
@@ -1451,15 +1466,82 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               </div>
             </CardContent>
             <CardFooter className="gap-2 border-t bg-muted/20">
-              <Button variant="outline" size="sm" data-testid={`button-view-rx-${rx.id}`}>
+              <Button variant="outline" size="sm" onClick={() => {
+                setSelectedPrescription(rx);
+                setViewPrescriptionDialogOpen(true);
+              }} data-testid={`button-view-rx-${rx.id}`}>
                 <Eye className="h-4 w-4 mr-1" />
                 View
               </Button>
-              <Button variant="outline" size="sm" data-testid={`button-print-rx-${rx.id}`}>
+              <Button variant="outline" size="sm" onClick={() => {
+                const printContent = `
+                  <html>
+                    <head>
+                      <title>Prescription - ${rx.patientName}</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; padding: 40px; }
+                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+                        .hospital { font-size: 24px; font-weight: bold; color: #1a56db; }
+                        .section { margin: 20px 0; }
+                        .label { font-weight: bold; color: #666; }
+                        .value { margin-top: 5px; }
+                        .medicines { display: flex; gap: 10px; flex-wrap: wrap; }
+                        .medicine { background: #e5e7eb; padding: 5px 10px; border-radius: 5px; }
+                        .footer { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="header">
+                        <div class="hospital">Gravity Hospital</div>
+                        <div>Medical Prescription</div>
+                      </div>
+                      <div class="section">
+                        <div class="label">Patient Name</div>
+                        <div class="value">${rx.patientName}</div>
+                      </div>
+                      <div class="section">
+                        <div class="label">Date</div>
+                        <div class="value">${rx.prescriptionDate}</div>
+                      </div>
+                      <div class="section">
+                        <div class="label">Diagnosis</div>
+                        <div class="value">${rx.diagnosis}</div>
+                      </div>
+                      <div class="section">
+                        <div class="label">Medicines</div>
+                        <div class="medicines">${rx.medicines.map(m => `<span class="medicine">${m}</span>`).join('')}</div>
+                      </div>
+                      <div class="section">
+                        <div class="label">Instructions</div>
+                        <div class="value">${rx.instructions || 'N/A'}</div>
+                      </div>
+                      ${rx.followUpDate ? `<div class="section"><div class="label">Follow-up Date</div><div class="value">${rx.followUpDate}</div></div>` : ''}
+                      <div class="footer">
+                        <div>Prescribed by: Dr. ${doctorName}</div>
+                        <div>Gravity Hospital - Pimpri-Chinchwad</div>
+                      </div>
+                    </body>
+                  </html>
+                `;
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                  printWindow.document.write(printContent);
+                  printWindow.document.close();
+                  printWindow.print();
+                }
+              }} data-testid={`button-print-rx-${rx.id}`}>
                 <FileText className="h-4 w-4 mr-1" />
                 Print
               </Button>
-              <Button variant="outline" size="sm" data-testid={`button-edit-rx-${rx.id}`}>
+              <Button variant="outline" size="sm" onClick={() => {
+                setSelectedPrescription(rx);
+                setEditingPrescription({
+                  diagnosis: rx.diagnosis,
+                  medicines: rx.medicines,
+                  instructions: rx.instructions || ""
+                });
+                setEditPrescriptionDialogOpen(true);
+              }} data-testid={`button-edit-rx-${rx.id}`}>
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Button>
@@ -2070,6 +2152,145 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               Close
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Prescription Dialog */}
+      <Dialog open={viewPrescriptionDialogOpen} onOpenChange={setViewPrescriptionDialogOpen}>
+        <DialogContent className="max-w-lg" data-testid="dialog-view-prescription">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                <FileText className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <DialogTitle data-testid="text-view-rx-title">Prescription Details</DialogTitle>
+                <DialogDescription>
+                  {selectedPrescription?.patientName} - {selectedPrescription?.prescriptionDate}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          {selectedPrescription && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Patient Name</h4>
+                  <p className="text-sm font-medium" data-testid="view-rx-patient">{selectedPrescription.patientName}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Status</h4>
+                  <Badge variant={selectedPrescription.status === 'active' ? 'default' : 'secondary'}>
+                    {selectedPrescription.status}
+                  </Badge>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Diagnosis</h4>
+                <p className="text-sm bg-muted/50 rounded-lg p-3" data-testid="view-rx-diagnosis">{selectedPrescription.diagnosis}</p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Medicines</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedPrescription.medicines.map((med, idx) => (
+                    <Badge key={idx} variant="secondary" className="font-normal">
+                      <Pill className="h-3 w-3 mr-1" />
+                      {med}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Instructions</h4>
+                <p className="text-sm bg-muted/50 rounded-lg p-3" data-testid="view-rx-instructions">{selectedPrescription.instructions || 'No special instructions'}</p>
+              </div>
+
+              {selectedPrescription.followUpDate && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Follow-up Date</h4>
+                  <p className="text-sm" data-testid="view-rx-followup">{selectedPrescription.followUpDate}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewPrescriptionDialogOpen(false)} data-testid="button-close-view-rx">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Prescription Dialog */}
+      <Dialog open={editPrescriptionDialogOpen} onOpenChange={setEditPrescriptionDialogOpen}>
+        <DialogContent className="max-w-lg" data-testid="dialog-edit-prescription">
+          <DialogHeader>
+            <DialogTitle data-testid="text-edit-rx-title">Edit Prescription</DialogTitle>
+            <DialogDescription>
+              Update prescription for {selectedPrescription?.patientName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (selectedPrescription) {
+              updatePrescriptionMutation.mutate({
+                id: selectedPrescription.id,
+                prescription: {
+                  diagnosis: editingPrescription.diagnosis,
+                  medicines: editingPrescription.medicines,
+                  instructions: editingPrescription.instructions || null,
+                }
+              });
+            }
+          }} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="editDiagnosis">Diagnosis</Label>
+              <Input 
+                id="editDiagnosis" 
+                value={editingPrescription.diagnosis}
+                onChange={(e) => setEditingPrescription(prev => ({...prev, diagnosis: e.target.value}))}
+                required 
+                data-testid="input-edit-diagnosis" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editMedicines">Medicines (comma separated)</Label>
+              <Textarea 
+                id="editMedicines" 
+                value={editingPrescription.medicines.join(', ')}
+                onChange={(e) => setEditingPrescription(prev => ({
+                  ...prev, 
+                  medicines: e.target.value.split(',').map(m => m.trim()).filter(Boolean)
+                }))}
+                rows={3} 
+                data-testid="input-edit-medicines" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editInstructions">Instructions</Label>
+              <Textarea 
+                id="editInstructions" 
+                value={editingPrescription.instructions}
+                onChange={(e) => setEditingPrescription(prev => ({...prev, instructions: e.target.value}))}
+                rows={3} 
+                data-testid="input-edit-instructions" 
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditPrescriptionDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={updatePrescriptionMutation.isPending} data-testid="button-save-rx">
+                {updatePrescriptionMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </SidebarProvider>

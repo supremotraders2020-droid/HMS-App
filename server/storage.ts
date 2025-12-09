@@ -186,6 +186,7 @@ export interface IStorage {
   // Prescriptions
   getPrescriptions(): Promise<Prescription[]>;
   getPrescriptionsByDoctor(doctorId: string): Promise<Prescription[]>;
+  getPrescriptionsByPatient(patientName: string): Promise<Prescription[]>;
   getPrescription(id: string): Promise<Prescription | undefined>;
   createPrescription(prescription: InsertPrescription): Promise<Prescription>;
   updatePrescription(id: string, updates: Partial<InsertPrescription>): Promise<Prescription | undefined>;
@@ -2032,6 +2033,10 @@ export class MemStorage implements IStorage {
 
   async getPrescriptionsByDoctor(doctorId: string): Promise<Prescription[]> {
     return Array.from(this.prescriptionsData.values()).filter(p => p.doctorId === doctorId);
+  }
+
+  async getPrescriptionsByPatient(patientName: string): Promise<Prescription[]> {
+    return Array.from(this.prescriptionsData.values()).filter(p => p.patientName === patientName);
   }
 
   async getPrescription(id: string): Promise<Prescription | undefined> {
