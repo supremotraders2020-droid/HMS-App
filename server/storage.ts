@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type UserNotification, type InsertUserNotification } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -209,6 +209,12 @@ export interface IStorage {
   getDoctorProfile(doctorId: string): Promise<DoctorProfile | undefined>;
   createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile>;
   updateDoctorProfile(doctorId: string, profile: Partial<InsertDoctorProfile>): Promise<DoctorProfile | undefined>;
+  
+  // Patient Profiles
+  getPatientProfile(patientId: string): Promise<PatientProfile | undefined>;
+  createPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile>;
+  updatePatientProfile(patientId: string, profile: Partial<InsertPatientProfile>): Promise<PatientProfile | undefined>;
+  upsertPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile>;
   
   // User Notifications (role-based notifications for Doctor, Patient, Admin, etc.)
   getUserNotifications(userId: string): Promise<UserNotification[]>;
@@ -2131,6 +2137,36 @@ export class MemStorage implements IStorage {
     const updated = { ...existing, ...updates, updatedAt: new Date() };
     this.doctorProfilesData.set(existing.id, updated);
     return updated;
+  }
+
+  // Patient Profiles stub methods
+  private patientProfilesData = new Map<string, PatientProfile>();
+
+  async getPatientProfile(patientId: string): Promise<PatientProfile | undefined> {
+    return Array.from(this.patientProfilesData.values()).find(p => p.patientId === patientId);
+  }
+
+  async createPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile> {
+    const id = randomUUID();
+    const newProfile: PatientProfile = { id, ...profile, createdAt: new Date(), updatedAt: new Date() };
+    this.patientProfilesData.set(id, newProfile);
+    return newProfile;
+  }
+
+  async updatePatientProfile(patientId: string, updates: Partial<InsertPatientProfile>): Promise<PatientProfile | undefined> {
+    const existing = Array.from(this.patientProfilesData.values()).find(p => p.patientId === patientId);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.patientProfilesData.set(existing.id, updated);
+    return updated;
+  }
+
+  async upsertPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile> {
+    const existing = await this.getPatientProfile(profile.patientId);
+    if (existing) {
+      return (await this.updatePatientProfile(profile.patientId, profile))!;
+    }
+    return this.createPatientProfile(profile);
   }
 
   // User Notifications stub methods

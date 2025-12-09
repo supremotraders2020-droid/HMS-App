@@ -9,7 +9,7 @@ import {
   biometricTemplates, biometricVerifications,
   notifications, hospitalTeamMembers, activityLogs,
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
-  prescriptions, doctorSchedules, doctorPatients, doctorProfiles, userNotifications,
+  prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -26,6 +26,7 @@ import {
   type HospitalSettings, type InsertHospitalSettings,
   type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule,
   type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile,
+  type PatientProfile, type InsertPatientProfile,
   type UserNotification, type InsertUserNotification
 } from "@shared/schema";
 import type { IStorage } from "./storage";
@@ -1279,6 +1280,33 @@ export class DatabaseStorage implements IStorage {
       .where(eq(doctorProfiles.doctorId, doctorId))
       .returning();
     return result[0];
+  }
+
+  // ========== PATIENT PROFILE METHODS ==========
+  async getPatientProfile(patientId: string): Promise<PatientProfile | undefined> {
+    const result = await db.select().from(patientProfiles).where(eq(patientProfiles.patientId, patientId));
+    return result[0];
+  }
+
+  async createPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile> {
+    const result = await db.insert(patientProfiles).values(profile).returning();
+    return result[0];
+  }
+
+  async updatePatientProfile(patientId: string, updates: Partial<InsertPatientProfile>): Promise<PatientProfile | undefined> {
+    const result = await db.update(patientProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(patientProfiles.patientId, patientId))
+      .returning();
+    return result[0];
+  }
+
+  async upsertPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile> {
+    const existing = await this.getPatientProfile(profile.patientId);
+    if (existing) {
+      return (await this.updatePatientProfile(profile.patientId, profile))!;
+    }
+    return this.createPatientProfile(profile);
   }
 
   // ========== USER NOTIFICATION METHODS ==========
