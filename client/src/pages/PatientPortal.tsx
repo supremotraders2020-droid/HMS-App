@@ -26,7 +26,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format } from "date-fns";
-import type { Doctor, Appointment } from "@shared/schema";
+import type { Doctor, Appointment, MedicalRecord } from "@shared/schema";
 import { 
   Home,
   Calendar,
@@ -196,8 +196,93 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     queryKey: ["/api/appointments"],
   });
 
+  // Fetch medical records with real-time sync (refetch every 3 seconds)
+  const { data: medicalRecords = [] } = useQuery<MedicalRecord[]>({
+    queryKey: ["/api/medical-records"],
+    refetchInterval: 3000, // Real-time sync every 3 seconds
+  });
+
+  // Filter records for this patient (by username)
+  const patientRecords = medicalRecords.filter(r => 
+    r.patientId === username || r.patientId === patientId || r.patientId === patientName
+  );
+
   const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
   const unreadNotifications = MOCK_NOTIFICATIONS.filter(n => !n.read).length;
+
+  // Handle view medical record
+  const handleViewRecord = (record: MedicalRecord) => {
+    if (record.fileData) {
+      // Open file in new tab
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head><title>${record.title}</title></head>
+            <body style="margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; background:#1a1a1a;">
+              ${record.fileType?.startsWith('image/') 
+                ? `<img src="${record.fileData}" style="max-width:100%; max-height:100vh;" />`
+                : record.fileType === 'application/pdf'
+                  ? `<iframe src="${record.fileData}" style="width:100%; height:100vh; border:none;"></iframe>`
+                  : `<div style="color:white; font-size:18px; padding:40px;">
+                      <h2>${record.title}</h2>
+                      <p><strong>Type:</strong> ${record.recordType}</p>
+                      <p><strong>Physician:</strong> ${record.physician}</p>
+                      <p><strong>Description:</strong> ${record.description}</p>
+                      <p><strong>Date:</strong> ${record.recordDate ? format(new Date(record.recordDate), 'PPP') : 'N/A'}</p>
+                    </div>`
+              }
+            </body>
+          </html>
+        `);
+      }
+    } else {
+      // Show record details in toast if no file
+      toast({
+        title: record.title,
+        description: `${record.description} - By ${record.physician}`,
+      });
+    }
+  };
+
+  // Handle download medical record
+  const handleDownloadRecord = (record: MedicalRecord) => {
+    if (record.fileData && record.fileName) {
+      // Create download link
+      const link = document.createElement('a');
+      link.href = record.fileData;
+      link.download = record.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({
+        title: "Download Started",
+        description: `Downloading ${record.fileName}`,
+      });
+    } else {
+      // No file to download, generate a text summary
+      const content = `
+Medical Record: ${record.title}
+Type: ${record.recordType}
+Physician: ${record.physician}
+Date: ${record.recordDate ? format(new Date(record.recordDate), 'PPP') : 'N/A'}
+Description: ${record.description}
+      `.trim();
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${record.title.replace(/\s+/g, '_')}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast({
+        title: "Download Started",
+        description: `Downloading summary for ${record.title}`,
+      });
+    }
+  };
 
   const handleSendMessage = () => {
     if (!chatInput.trim()) return;
@@ -354,7 +439,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-records">{MOCK_HEALTH_RECORDS.length}</div>
+                  <div className="text-2xl font-bold" data-testid="text-records">{patientRecords.length}</div>
                   <p className="text-xs text-muted-foreground">Medical documents</p>
                 </CardContent>
               </Card>
@@ -415,18 +500,27 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {MOCK_HEALTH_RECORDS.slice(0, 3).map((record) => (
+                  {patientRecords.length > 0 ? patientRecords.slice(0, 3).map((record) => (
                     <div key={record.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50" data-testid={`record-item-${record.id}`}>
-                      {getRecordIcon(record.type)}
+                      {getRecordIcon(record.recordType)}
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{record.title}</p>
-                        <p className="text-xs text-muted-foreground">{record.date}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {record.recordDate ? format(new Date(record.recordDate), 'yyyy-MM-dd') : 'N/A'}
+                        </p>
                       </div>
-                      <Button size="icon" variant="ghost" data-testid={`button-view-record-${record.id}`}>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => handleViewRecord(record)}
+                        data-testid={`button-view-record-${record.id}`}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-muted-foreground text-center py-4">No health records yet</p>
+                  )}
                   <Button 
                     variant="outline" 
                     className="w-full mt-2"
@@ -638,39 +732,59 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
             </div>
 
             <div className="grid gap-4">
-              {MOCK_HEALTH_RECORDS.map((record) => (
+              {patientRecords.length > 0 ? patientRecords.map((record) => (
                 <Card key={record.id} className="hover-elevate" data-testid={`record-card-${record.id}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
-                        {getRecordIcon(record.type)}
+                        {getRecordIcon(record.recordType)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold" data-testid={`record-title-${record.id}`}>{record.title}</h4>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{record.doctor}</span>
+                          <span>{record.physician}</span>
                           <span className="hidden sm:inline">-</span>
-                          <span className="hidden sm:inline">{record.department}</span>
+                          <span className="hidden sm:inline">{record.recordType}</span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium">{record.date}</p>
-                        <Badge variant={record.status === "active" ? "default" : "secondary"} className="mt-1">
-                          {record.status}
+                        <p className="text-sm font-medium">
+                          {record.recordDate ? format(new Date(record.recordDate), 'yyyy-MM-dd') : 'N/A'}
+                        </p>
+                        <Badge variant={record.fileData ? "default" : "secondary"} className="mt-1">
+                          {record.fileData ? "Has File" : "No File"}
                         </Badge>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="icon" variant="ghost" data-testid={`button-view-${record.id}`}>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => handleViewRecord(record)}
+                          data-testid={`button-view-${record.id}`}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" data-testid={`button-download-${record.id}`}>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => handleDownloadRecord(record)}
+                          data-testid={`button-download-${record.id}`}
+                        >
                           <Download className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              )) : (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground">No health records found</p>
+                    <p className="text-sm text-muted-foreground mt-1">Your medical records will appear here once uploaded by your healthcare provider</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         );
