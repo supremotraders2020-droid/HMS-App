@@ -25,8 +25,8 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { format } from "date-fns";
-import type { Doctor, Appointment, MedicalRecord } from "@shared/schema";
+import { format, formatDistanceToNow } from "date-fns";
+import type { Doctor, Appointment, MedicalRecord, UserNotification } from "@shared/schema";
 import { 
   Home,
   Calendar,
@@ -212,6 +212,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   const bookAppointmentMutation = useMutation({
     mutationFn: async (appointmentData: {
       doctorId: string;
+      patientId: string;
       patientName: string;
       patientPhone: string;
       appointmentDate: string;
@@ -258,13 +259,19 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     refetchInterval: 3000, // Real-time sync every 3 seconds
   });
 
+  // Fetch real notifications for this patient with real-time sync
+  const { data: userNotifications = [] } = useQuery<UserNotification[]>({
+    queryKey: [`/api/user-notifications/${username}`],
+    refetchInterval: 3000, // Real-time sync every 3 seconds
+  });
+
   // Filter records for this patient (by username)
   const patientRecords = medicalRecords.filter(r => 
     r.patientId === username || r.patientId === patientId || r.patientId === patientName
   );
 
   const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
-  const unreadNotifications = MOCK_NOTIFICATIONS.filter(n => !n.read).length;
+  const unreadNotifications = userNotifications.filter(n => !n.isRead).length;
 
   // Handle view medical record
   const handleViewRecord = (record: MedicalRecord) => {
@@ -772,6 +779,7 @@ Description: ${record.description}
                       const doctor = doctors.find(d => d.id === selectedDoctor) || MOCK_TEAM.find(d => d.id === selectedDoctor);
                       bookAppointmentMutation.mutate({
                         doctorId: selectedDoctor,
+                        patientId: username,
                         patientName: patientName,
                         patientPhone: profileForm.phone || "+91 98765 43210",
                         appointmentDate: selectedDate,
@@ -994,36 +1002,46 @@ Description: ${record.description}
             </div>
 
             <div className="space-y-3">
-              {MOCK_NOTIFICATIONS.map((notification) => (
-                <Card 
-                  key={notification.id} 
-                  className={`hover-elevate ${!notification.read ? "border-primary bg-primary/5" : ""}`}
-                  data-testid={`notification-card-${notification.id}`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        !notification.read ? "bg-primary/10" : "bg-muted"
-                      }`}>
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold" data-testid={`notification-title-${notification.id}`}>{notification.title}</h4>
-                          {!notification.read && (
-                            <span className="h-2 w-2 rounded-full bg-primary" />
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
-                        <p className="text-xs text-muted-foreground mt-2">{notification.time}</p>
-                      </div>
-                      <Button size="sm" variant="ghost" data-testid={`button-notification-action-${notification.id}`}>
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
+              {userNotifications.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No notifications yet</p>
+                  <p className="text-sm text-muted-foreground mt-2">Book an appointment to receive updates</p>
                 </Card>
-              ))}
+              ) : (
+                userNotifications.map((notification) => (
+                  <Card 
+                    key={notification.id} 
+                    className={`hover-elevate ${!notification.isRead ? "border-primary bg-primary/5" : ""}`}
+                    data-testid={`notification-card-${notification.id}`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                          !notification.isRead ? "bg-primary/10" : "bg-muted"
+                        }`}>
+                          {getNotificationIcon(notification.type || "general")}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold" data-testid={`notification-title-${notification.id}`}>{notification.title}</h4>
+                            {!notification.isRead && (
+                              <span className="h-2 w-2 rounded-full bg-primary" />
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {notification.createdAt ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true }) : 'Just now'}
+                          </p>
+                        </div>
+                        <Button size="sm" variant="ghost" data-testid={`button-notification-action-${notification.id}`}>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         );

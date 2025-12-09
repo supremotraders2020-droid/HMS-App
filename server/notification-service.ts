@@ -106,11 +106,13 @@ class NotificationService {
     appointmentDate: string, 
     appointmentTime: string,
     department?: string,
-    location?: string
+    location?: string,
+    patientId?: string
   ) {
     const locationInfo = location ? ` at ${location}` : '';
     const deptInfo = department ? ` (${department})` : '';
     
+    // Notify the doctor
     await this.createAndPushNotification({
       userId: doctorId,
       userRole: "DOCTOR",
@@ -122,6 +124,21 @@ class NotificationService {
       isRead: false,
       metadata: JSON.stringify({ appointmentDate, appointmentTime, patientName, department, location })
     });
+
+    // Notify the patient (confirmation)
+    if (patientId) {
+      await this.createAndPushNotification({
+        userId: patientId,
+        userRole: "PATIENT",
+        type: "appointment",
+        title: "Appointment Confirmed",
+        message: `Your appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo} has been confirmed`,
+        relatedEntityType: "appointment",
+        relatedEntityId: appointmentId,
+        isRead: false,
+        metadata: JSON.stringify({ appointmentDate, appointmentTime, department, location })
+      });
+    }
 
     this.broadcast({ type: "admin_notification", event: "appointment_created", appointmentId, department, location }, "ADMIN");
   }

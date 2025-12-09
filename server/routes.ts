@@ -151,7 +151,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activityType: "info"
       });
 
-      // Send real-time notification to doctor
+      // Send real-time notification to doctor and patient
+      const patientId = req.body.patientId || req.body.patientName; // Use patientId if provided, fallback to patientName
       notificationService.notifyAppointmentCreated(
         appointment.id,
         validatedData.doctorId,
@@ -159,7 +160,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validatedData.appointmentDate,
         validatedData.timeSlot,
         validatedData.department || undefined,
-        validatedData.location || undefined
+        validatedData.location || undefined,
+        patientId
       ).catch(err => console.error("Notification error:", err));
       
       res.status(201).json(appointment);
