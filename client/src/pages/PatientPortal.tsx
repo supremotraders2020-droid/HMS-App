@@ -660,12 +660,20 @@ Description: ${record.description}
               {DEPARTMENTS.map((dept) => (
                 <Card 
                   key={dept.id} 
-                  className="cursor-pointer hover-elevate text-center"
-                  onClick={() => toast({ title: "Department Selected", description: `Showing doctors in ${dept.name}` })}
+                  className={`cursor-pointer text-center transition-all ${selectedDepartment === dept.name ? "ring-2 ring-primary bg-primary/5" : "hover-elevate"}`}
+                  onClick={() => {
+                    if (selectedDepartment === dept.name) {
+                      setSelectedDepartment("");
+                      setSelectedDoctor(null);
+                    } else {
+                      setSelectedDepartment(dept.name);
+                      setSelectedDoctor(null);
+                    }
+                  }}
                   data-testid={`dept-${dept.id}`}
                 >
                   <CardContent className="pt-6">
-                    <div className={`h-12 w-12 mx-auto rounded-xl bg-muted flex items-center justify-center mb-3`}>
+                    <div className={`h-12 w-12 mx-auto rounded-xl ${selectedDepartment === dept.name ? "bg-primary/20" : "bg-muted"} flex items-center justify-center mb-3`}>
                       <dept.icon className={`h-6 w-6 ${dept.color}`} />
                     </div>
                     <p className="font-medium text-sm">{dept.name}</p>
@@ -677,14 +685,34 @@ Description: ${record.description}
             <Separator />
 
             <div>
-              <h3 className="text-lg font-semibold mb-4">Available Doctors</h3>
-              {doctors.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <p className="text-muted-foreground">No doctors available. Please check back later.</p>
-                </Card>
-              ) : (
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  {selectedDepartment ? `${selectedDepartment} Doctors` : "Available Doctors"}
+                </h3>
+                {selectedDepartment && (
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedDepartment(""); setSelectedDoctor(null); }}>
+                    Show All
+                  </Button>
+                )}
+              </div>
+              {(() => {
+                const filteredDoctors = selectedDepartment 
+                  ? doctors.filter((d: any) => d.specialty?.toLowerCase().includes(selectedDepartment.toLowerCase()) || selectedDepartment.toLowerCase().includes(d.specialty?.toLowerCase()))
+                  : doctors;
+                
+                if (filteredDoctors.length === 0) {
+                  return (
+                    <Card className="p-8 text-center">
+                      <p className="text-muted-foreground">
+                        {selectedDepartment ? `No doctors available in ${selectedDepartment}. Try selecting a different department.` : "No doctors available. Please check back later."}
+                      </p>
+                    </Card>
+                  );
+                }
+                
+                return (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {doctors.map((doctor: any) => (
+                  {filteredDoctors.map((doctor: any) => (
                     <Card 
                       key={doctor.id} 
                       className={`cursor-pointer transition-all ${selectedDoctor === doctor.id ? "ring-2 ring-primary" : "hover-elevate"}`}
@@ -723,29 +751,27 @@ Description: ${record.description}
                     </Card>
                   ))}
                 </div>
-              )}
+                );
+              })()}
             </div>
 
-            {selectedDoctor && (
+            {selectedDoctor && (() => {
+              const doctorData = doctors.find(d => d.id === selectedDoctor);
+              const doctorDepartment = doctorData?.specialty || selectedDepartment || "General Medicine";
+              
+              return (
               <Card className="border-primary" data-testid="card-booking-form">
                 <CardHeader>
                   <CardTitle>Select Date & Time</CardTitle>
-                  <CardDescription>Choose your preferred appointment slot</CardDescription>
+                  <CardDescription>Choose your preferred appointment slot for {doctorData?.name}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Department</Label>
-                      <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                        <SelectTrigger data-testid="select-department">
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DEPARTMENTS.map((dept) => (
-                            <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center h-9 px-3 border rounded-md bg-muted/50">
+                        <span className="text-sm" data-testid="text-department">{doctorDepartment}</span>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label>Location</Label>
@@ -801,9 +827,8 @@ Description: ${record.description}
                 <CardFooter>
                   <Button 
                     className="w-full" 
-                    disabled={!selectedDate || !selectedSlot || !selectedLocation || !selectedDepartment || bookAppointmentMutation.isPending}
+                    disabled={!selectedDate || !selectedSlot || !selectedLocation || bookAppointmentMutation.isPending}
                     onClick={() => {
-                      const doctor = doctors.find(d => d.id === selectedDoctor);
                       bookAppointmentMutation.mutate({
                         doctorId: selectedDoctor,
                         patientId: username,
@@ -811,7 +836,7 @@ Description: ${record.description}
                         patientPhone: profileForm.phone || "+91 98765 43210",
                         appointmentDate: selectedDate,
                         timeSlot: selectedSlot,
-                        department: selectedDepartment,
+                        department: doctorDepartment,
                         location: selectedLocation,
                         reason: symptoms || "General consultation"
                       });
@@ -823,7 +848,8 @@ Description: ${record.description}
                   </Button>
                 </CardFooter>
               </Card>
-            )}
+              );
+            })()}
           </div>
         );
 
