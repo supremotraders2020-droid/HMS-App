@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { UserPlus, LogIn } from "lucide-react";
-import hospitalLogo from "@assets/TRANSPARENT_BG_(1)_1765345771350.png";
+import hospitalLogo from "@assets/LOGO_HORIZONTAL_1765344713941.png";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -66,7 +66,7 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
             <img 
               src={hospitalLogo} 
               alt="Gravity Hospital" 
-              className="w-full max-w-xs object-contain"
+              className="h-16 w-auto object-contain"
               data-testid="img-hospital-logo"
             />
           </div>

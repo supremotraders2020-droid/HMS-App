@@ -62,7 +62,7 @@ import {
   ArrowRight,
   Sparkles
 } from "lucide-react";
-import hospitalLogo from "@assets/TRANSPARENT_BG_(1)_1765345771350.png";
+import hospitalLogo from "@assets/LOGO_HORIZONTAL_1765344713941.png";
 
 interface PatientPortalProps {
   patientId: string;
