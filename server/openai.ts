@@ -5,11 +5,11 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL
 });
 
-const HOSPITAL_CONTEXT = `You are a helpful AI assistant for Gravity Hospital in Chikhali, Pimpri-Chinchwad, Maharashtra, India.
+const HOSPITAL_CONTEXT = `You are a helpful AI assistant for Gravity Hospital in Nigdi, Pimpri-Chinchwad, Maharashtra, India.
 
 Hospital Information:
 - Name: Gravity Hospital
-- Location: Chikhali, Pimpri-Chinchwad, Maharashtra 411057
+- Location: Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062
 - Contact: +91 20 1234 5678
 - Emergency: +91 20 9876 5432
 - Operating Hours: 24/7 for emergencies, OPD: 9 AM - 9 PM
@@ -112,7 +112,7 @@ function getFallbackResponse(query: string, category: string): { response: strin
   
   if (category === "contact") {
     return {
-      response: "Gravity Hospital\n\nAddress: Chikhali, Pimpri-Chinchwad, Maharashtra 411057\n\nContact Numbers:\n• General Enquiry: +91 20 1234 5678\n• Emergency: +91 20 9876 5432\n• Appointments: +91 20 1234 5679\n\nOPD Hours: 9 AM - 9 PM (Monday - Saturday)\nEmergency: 24/7",
+      response: "Gravity Hospital\n\nAddress: Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062\n\nContact Numbers:\n• General Enquiry: +91 20 1234 5678\n• Emergency: +91 20 9876 5432\n• Appointments: +91 20 1234 5679\n\nOPD Hours: 9 AM - 9 PM (Monday - Saturday)\nEmergency: 24/7",
       category
     };
   }

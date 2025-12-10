@@ -293,7 +293,7 @@ export default function PatientService() {
                 </h1>
                 <p className="text-blue-100 text-sm flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
-                  Chikhali, Pimpri-Chinchwad
+                  Nigdi, Pimpri-Chinchwad
                 </p>
               </div>
             </div>
@@ -1316,8 +1316,8 @@ export default function PatientService() {
                 Address
               </h4>
               <p className="text-slate-400 text-sm" data-testid="text-footer-address">
-                Sane Chowk, Nair Colony, More Vasti,<br />
-                Chikhali, Pimpri-Chinchwad,<br />
+                Gat No, 167, Sahyog Nager,<br />
+                Triveni Nagar, Nigdi, Pimpri-Chinchwad,<br />
                 Maharashtra 411062
               </p>
             </div>

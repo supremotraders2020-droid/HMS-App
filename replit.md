@@ -2,7 +2,7 @@
 
 ## Overview
 
-HMS Core is a comprehensive healthcare management system configured for **Gravity Hospital** at Gat No, 167, Sahyog Nager, Triveni Nagar, Chowk, Pimpri-Chinchwad, Maharashtra 411062. The system provides role-based access control for different healthcare professionals (Administrators, Doctors, Nurses, OPD Managers, and Patients) with specialized dashboards and workflows for each role. Built with a focus on clinical clarity, professional trust, and efficient healthcare workflows, the system follows Material Design 3 principles adapted for healthcare industry requirements.
+HMS Core is a comprehensive healthcare management system configured for **Gravity Hospital** at Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062. The system provides role-based access control for different healthcare professionals (Administrators, Doctors, Nurses, OPD Managers, and Patients) with specialized dashboards and workflows for each role. Built with a focus on clinical clarity, professional trust, and efficient healthcare workflows, the system follows Material Design 3 principles adapted for healthcare industry requirements.
 
 ## User Preferences
 

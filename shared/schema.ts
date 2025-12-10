@@ -591,7 +591,7 @@ export const hospitalSettings = pgTable("hospital_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   // Basic Information
   name: text("name").notNull().default("Gravity Hospital"),
-  address: text("address").notNull().default("sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062"),
+  address: text("address").notNull().default("Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062"),
   phone: text("phone").notNull().default("+91 20 2745 8900"),
   email: text("email").notNull().default("info@gravityhospital.in"),
   website: text("website").default("www.gravityhospital.in"),

@@ -1164,7 +1164,7 @@ export class DatabaseStorage implements IStorage {
     // Create default settings
     return await this.createHospitalSettings({
       name: "Gravity Hospital",
-      address: "sane chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062",
+      address: "Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062",
       phone: "+91 20 2745 8900",
       email: "info@gravityhospital.in",
       website: "www.gravityhospital.in",

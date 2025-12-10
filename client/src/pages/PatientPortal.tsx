@@ -92,7 +92,7 @@ const LOCATIONS = [
   { id: "aundh", name: "Gravity Hospital - Aundh" },
   { id: "kalyani_nagar", name: "Gravity Hospital - Kalyani Nagar" },
   { id: "pimpri", name: "Gravity Hospital - Pimpri" },
-  { id: "chikhali", name: "Gravity Hospital - Chikhali (Main)" },
+  { id: "nigdi", name: "Gravity Hospital - Nigdi (Main)" },
 ];
 
 interface PatientProfile {
@@ -1618,7 +1618,7 @@ Description: ${record.description}
                   {navigationItems.find(n => n.id === activeSection)?.label || "Dashboard"}
                 </h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">
-                  Gravity Hospital, Chikhali
+                  Gravity Hospital, Nigdi
                 </p>
               </div>
             </div>

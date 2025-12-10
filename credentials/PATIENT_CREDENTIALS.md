@@ -1,7 +1,7 @@
 # Patient Credentials
 
 ## Gravity Hospital
-**Location:** Gat No, 167, Sahyog Nager, Triveni Nagar, Chowk, Pimpri-Chinchwad, Maharashtra 411062
+**Location:** Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062
 
 ---
 

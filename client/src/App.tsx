@@ -202,7 +202,7 @@ function AppContent() {
   const [currentHospital, setCurrentHospital] = useState<Hospital>({
     id: "1",
     name: "Gravity Hospital", 
-    location: "Gat No, 167, Sahyog Nager, Triveni Nagar, Chowk, Pimpri-Chinchwad, Maharashtra 411062",
+    location: "Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062",
     status: "ACTIVE"
   });
   const [, setLocation] = useLocation();

@@ -2107,7 +2107,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             </div>
             <div className="sm:col-span-2">
               <p className="text-sm text-muted-foreground">Address</p>
-              <p className="font-medium">Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062</p>
+              <p className="font-medium">Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062</p>
             </div>
           </div>
         </CardContent>

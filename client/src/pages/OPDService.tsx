@@ -640,8 +640,8 @@ export default function OPDService() {
                 <h3 className="font-semibold">Address</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                Sane Chowk, Nair Colony,<br />
-                More Vasti, Chikhali,<br />
+                Gat No, 167, Sahyog Nager,<br />
+                Triveni Nagar, Nigdi,<br />
                 Pimpri-Chinchwad,<br />
                 Maharashtra 411062
               </p>
