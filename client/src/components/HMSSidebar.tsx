@@ -112,6 +112,17 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
     }
   };
 
+  const getRoleGradient = (role: UserRole) => {
+    switch (role) {
+      case "ADMIN": return "from-violet-500/20 via-purple-500/10 to-fuchsia-500/5";
+      case "DOCTOR": return "from-cyan-500/20 via-blue-500/10 to-sky-500/5";
+      case "NURSE": return "from-emerald-500/20 via-green-500/10 to-teal-500/5";
+      case "OPD_MANAGER": return "from-amber-500/20 via-orange-500/10 to-yellow-500/5";
+      case "PATIENT": return "from-teal-500/20 via-cyan-500/10 to-sky-500/5";
+      default: return "from-slate-500/20 via-gray-500/10 to-zinc-500/5";
+    }
+  };
+
   const handleMenuClick = (url: string, external?: boolean, externalUrl?: string) => {
     console.log(`Navigating to: ${url}`);
     if (external && externalUrl) {
@@ -122,24 +133,26 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader className="py-3 px-2">
+    <Sidebar className="bg-gradient-sidebar border-r border-sidebar-border/50">
+      <SidebarHeader className="py-4 px-3">
+        <div className="relative">
           <img 
             src={hospitalLogo} 
             alt="Gravity Hospital" 
-            className="w-full max-w-[210px] h-[56px] object-contain"
+            className="w-full max-w-[210px] h-[56px] object-contain transition-transform duration-300 hover:scale-105"
             data-testid="img-sidebar-logo"
           />
+        </div>
         {currentUser && (
-          <div className="mt-4 p-3 bg-card rounded-lg">
+          <div className={`mt-4 p-3 bg-gradient-to-br ${getRoleGradient(currentRole)} rounded-xl border border-white/40 dark:border-slate-700/40 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium" data-testid="text-username">
+                <p className="text-sm font-semibold text-foreground" data-testid="text-username">
                   {currentUser.name}
                 </p>
                 <Badge 
                   variant={getRoleBadgeVariant(currentRole)} 
-                  className="text-xs mt-1"
+                  className="text-xs mt-1.5 shadow-sm"
                   data-testid="badge-role"
                 >
                   {currentRole.replace("_", " ")}
@@ -263,11 +276,11 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       <SidebarFooter className="p-4">
         <Button
           variant="outline"
-          className="w-full"
+          className="w-full group bg-gradient-to-r from-rose-50/80 to-red-50/80 hover:from-rose-100 hover:to-red-100 dark:from-rose-950/30 dark:to-red-950/30 dark:hover:from-rose-900/40 dark:hover:to-red-900/40 border-rose-200/50 dark:border-rose-800/30 text-rose-700 dark:text-rose-400 transition-all duration-300 hover:shadow-md"
           onClick={onLogout}
           data-testid="button-logout"
         >
-          <LogOut className="h-4 w-4 mr-2" />
+          <LogOut className="h-4 w-4 mr-2 transition-transform duration-300 group-hover:-translate-x-0.5" />
           Sign Out
         </Button>
       </SidebarFooter>
