@@ -943,6 +943,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== PATIENT CONSENT ROUTES ==========
+
+  // Get all patient consents
+  app.get("/api/patient-consents", async (_req, res) => {
+    try {
+      const consents = await databaseStorage.getAllPatientConsents();
+      res.json(consents);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient consents" });
+    }
+  });
+
+  // Get patient consents by patient ID
+  app.get("/api/patient-consents/patient/:patientId", async (req, res) => {
+    try {
+      const consents = await databaseStorage.getPatientConsentsByPatientId(req.params.patientId);
+      res.json(consents);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient consents" });
+    }
+  });
+
+  // Get single patient consent by ID
+  app.get("/api/patient-consents/:id", async (req, res) => {
+    try {
+      const consent = await databaseStorage.getPatientConsentById(req.params.id);
+      if (!consent) {
+        return res.status(404).json({ error: "Patient consent not found" });
+      }
+      res.json(consent);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient consent" });
+    }
+  });
+
+  // Create patient consent (upload PDF)
+  app.post("/api/patient-consents", async (req, res) => {
+    try {
+      const { patientId, consentType, title, description, fileName, fileData, fileType, uploadedBy } = req.body;
+      
+      if (!patientId || !consentType || !title || !fileName || !fileData || !fileType) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const consent = await databaseStorage.createPatientConsent({
+        patientId,
+        consentType,
+        title,
+        description: description || "",
+        fileName,
+        fileData,
+        fileType,
+        uploadedBy: uploadedBy || "Admin",
+        status: "active",
+      });
+
+      // Log activity
+      await storage.createActivityLog({
+        action: `Patient consent uploaded: ${title}`,
+        entityType: "patient_consent",
+        entityId: consent.id,
+        performedBy: uploadedBy || "Admin",
+        performedByRole: "ADMIN",
+        activityType: "info"
+      });
+
+      res.status(201).json(consent);
+    } catch (error) {
+      console.error("Failed to create patient consent:", error);
+      res.status(500).json({ error: "Failed to create patient consent" });
+    }
+  });
+
+  // Delete patient consent
+  app.delete("/api/patient-consents/:id", async (req, res) => {
+    try {
+      const consent = await databaseStorage.getPatientConsentById(req.params.id);
+      if (!consent) {
+        return res.status(404).json({ error: "Patient consent not found" });
+      }
+      
+      await databaseStorage.deletePatientConsent(req.params.id);
+      
+      // Log activity
+      await storage.createActivityLog({
+        action: `Patient consent deleted: ${consent.title}`,
+        entityType: "patient_consent",
+        entityId: req.params.id,
+        performedBy: "Admin",
+        performedByRole: "ADMIN",
+        activityType: "info"
+      });
+      
+      res.json({ success: true, message: "Patient consent deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete patient consent" });
+    }
+  });
+
   // ========== BIOMETRIC SERVICE ROUTES ==========
 
   // Get biometric service stats
