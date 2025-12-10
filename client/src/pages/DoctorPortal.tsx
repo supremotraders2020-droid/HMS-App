@@ -459,6 +459,22 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     (p.patientEmail && p.patientEmail.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  // Derive unique patients from appointments booked with this doctor
+  const appointmentPatients = (() => {
+    const patientMap = new Map<string, {name: string; phone: string; id?: string}>();
+    doctorAppointments.forEach(apt => {
+      const key = apt.patientName.toLowerCase().trim();
+      if (!patientMap.has(key)) {
+        patientMap.set(key, {
+          name: apt.patientName,
+          phone: apt.patientPhone || "",
+          id: apt.patientId || undefined
+        });
+      }
+    });
+    return Array.from(patientMap.values());
+  })();
+
   const getDayNameFromDate = (date: Date): string => {
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     return days[getDay(date)];
@@ -1446,42 +1462,42 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     <input type="hidden" name="patientNameHidden" value={selectedPatientForRx || patientSearchQuery} />
                     {showPatientDropdown && (
                       <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {patients.length > 0 && (
-                          <div className="p-2 border-b">
-                            <p className="text-xs font-medium text-muted-foreground px-2 py-1">Recent Patients</p>
-                            {patients
+                        {appointmentPatients.length > 0 && (
+                          <div className="p-2">
+                            <p className="text-xs font-medium text-muted-foreground px-2 py-1">Patients with Appointments</p>
+                            {appointmentPatients
                               .filter(p => 
                                 !patientSearchQuery || 
-                                p.patientName.toLowerCase().includes(patientSearchQuery.toLowerCase())
+                                p.name.toLowerCase().includes(patientSearchQuery.toLowerCase())
                               )
-                              .slice(0, 5)
-                              .map((patient) => (
+                              .slice(0, 10)
+                              .map((patient, index) => (
                                 <button
-                                  key={patient.id}
+                                  key={patient.id || `apt-patient-${index}`}
                                   type="button"
                                   className="w-full px-3 py-2 text-left hover-elevate rounded-md flex items-center gap-2"
                                   onClick={() => {
-                                    setSelectedPatientForRx(patient.patientName);
+                                    setSelectedPatientForRx(patient.name);
                                     setPatientSearchQuery("");
                                     setShowPatientDropdown(false);
                                   }}
-                                  data-testid={`patient-option-${patient.id}`}
+                                  data-testid={`patient-option-${index}`}
                                 >
                                   <Avatar className="h-8 w-8">
-                                    <AvatarFallback className="text-xs">{patient.patientName.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                                    <AvatarFallback className="text-xs">{patient.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                                   </Avatar>
                                   <div>
-                                    <p className="text-sm font-medium">{patient.patientName}</p>
-                                    <p className="text-xs text-muted-foreground">{patient.patientGender || 'Patient'}</p>
+                                    <p className="text-sm font-medium">{patient.name}</p>
+                                    {patient.phone && <p className="text-xs text-muted-foreground">{patient.phone}</p>}
                                   </div>
                                 </button>
                               ))}
                           </div>
                         )}
-                        {patientSearchQuery && !patients.some(p => p.patientName.toLowerCase() === patientSearchQuery.toLowerCase()) && (
+                        {patientSearchQuery && !appointmentPatients.some(p => p.name.toLowerCase() === patientSearchQuery.toLowerCase()) && (
                           <button
                             type="button"
-                            className="w-full px-3 py-2 text-left hover-elevate flex items-center gap-2"
+                            className="w-full px-3 py-2 text-left hover-elevate flex items-center gap-2 border-t"
                             onClick={() => {
                               setSelectedPatientForRx(patientSearchQuery);
                               setShowPatientDropdown(false);
@@ -1491,24 +1507,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                             <span>Add "{patientSearchQuery}" as new patient</span>
                           </button>
                         )}
-                        {patients.length > 5 && (
-                          <div className="p-2 border-t">
-                            <button
-                              type="button"
-                              className="w-full px-3 py-2 text-left hover-elevate rounded-md text-sm text-primary flex items-center gap-2"
-                              onClick={() => {
-                                setActiveSection("patients");
-                                setAddPrescriptionDialogOpen(false);
-                              }}
-                            >
-                              <Users className="h-4 w-4" />
-                              See all {patients.length} patients
-                            </button>
-                          </div>
-                        )}
-                        {patients.length === 0 && !patientSearchQuery && (
+                        {appointmentPatients.length === 0 && !patientSearchQuery && (
                           <div className="p-4 text-center text-sm text-muted-foreground">
-                            No patients found. Type a name to add a new patient.
+                            No patients with appointments found. Type a name to add a new patient.
                           </div>
                         )}
                       </div>
