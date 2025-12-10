@@ -888,8 +888,44 @@ export class DatabaseStorage implements IStorage {
     return { totalSent, pendingCount, byChannel, byCategory };
   }
 
+  // ========== ENSURE ESSENTIAL ACCOUNTS ==========
+  async ensureEssentialAccounts(): Promise<void> {
+    const essentialAccounts = [
+      { username: "admin", password: "123456", role: "ADMIN" as const, name: "Administrator", email: "admin@gravityhospital.in" },
+      { username: "patient", password: "123456", role: "PATIENT" as const, name: "Test Patient", email: "patient@gravityhospital.in" },
+      { username: "dr.anil.kulkarni", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Anil Kulkarni", email: "dr.anil.kulkarni@gravityhospital.in" },
+      { username: "dr.snehal.patil", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Snehal Patil", email: "dr.snehal.patil@gravityhospital.in" },
+      { username: "dr.vikram.deshpande", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Vikram Deshpande", email: "dr.vikram.deshpande@gravityhospital.in" },
+      { username: "dr.priyanka.joshi", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Priyanka Joshi", email: "dr.priyanka.joshi@gravityhospital.in" },
+      { username: "dr.rajesh.bhosale", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Rajesh Bhosale", email: "dr.rajesh.bhosale@gravityhospital.in" },
+      { username: "dr.meena.sharma", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Meena Sharma", email: "dr.meena.sharma@gravityhospital.in" },
+      { username: "dr.sunil.gaikwad", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Sunil Gaikwad", email: "dr.sunil.gaikwad@gravityhospital.in" },
+      { username: "dr.kavita.deshmukh", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Kavita Deshmukh", email: "dr.kavita.deshmukh@gravityhospital.in" },
+      { username: "dr.amit.jadhav", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Amit Jadhav", email: "dr.amit.jadhav@gravityhospital.in" },
+      { username: "dr.sunita.pawar", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Sunita Pawar", email: "dr.sunita.pawar@gravityhospital.in" },
+    ];
+
+    for (const account of essentialAccounts) {
+      const existingUser = await this.getUserByUsername(account.username);
+      if (!existingUser) {
+        const hashedPassword = await bcrypt.hash(account.password, SALT_ROUNDS);
+        await db.insert(users).values({
+          username: account.username,
+          password: hashedPassword,
+          role: account.role,
+          name: account.name,
+          email: account.email,
+        });
+        console.log(`Created essential account: ${account.username}`);
+      }
+    }
+  }
+
   // ========== SEED DATA METHOD ==========
   async seedInitialData(): Promise<void> {
+    // Always ensure essential accounts exist (admin, patient)
+    await this.ensureEssentialAccounts();
+    
     // Check if data already exists
     const existingUsers = await db.select().from(users).limit(1);
     if (existingUsers.length > 0) {
