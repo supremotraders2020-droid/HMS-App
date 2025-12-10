@@ -793,3 +793,125 @@ export const insertMedicineSchema = createInsertSchema(medicines).omit({
 });
 export type InsertMedicine = z.infer<typeof insertMedicineSchema>;
 export type Medicine = typeof medicines.$inferSelect;
+
+// ========== OXYGEN TRACKING TABLES ==========
+// Cylinder types and status enums
+export const cylinderTypeEnum = pgEnum("cylinder_type", ["B-type", "D-type", "Jumbo"]);
+export const cylinderStatusEnum = pgEnum("cylinder_status", ["full", "in_use", "empty", "for_refilling", "for_testing"]);
+
+// Oxygen Cylinders Stock Register
+export const oxygenCylinders = pgTable("oxygen_cylinders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  cylinderCode: text("cylinder_code").notNull().unique(), // QR/Barcode
+  cylinderType: text("cylinder_type").notNull(), // B-type, D-type, Jumbo
+  capacity: decimal("capacity", { precision: 10, scale: 2 }).notNull(), // in liters
+  filledPressure: decimal("filled_pressure", { precision: 10, scale: 2 }), // psi when filled
+  currentPressure: decimal("current_pressure", { precision: 10, scale: 2 }), // current psi
+  status: text("status").notNull().default("full"), // full, in_use, empty, for_refilling, for_testing
+  vendor: text("vendor"),
+  purityCertificateDate: text("purity_certificate_date"),
+  hydrostaticTestDate: text("hydrostatic_test_date"), // Every 3-5 years
+  nextTestDueDate: text("next_test_due_date"),
+  location: text("location"), // Ward/Department
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOxygenCylinderSchema = createInsertSchema(oxygenCylinders).omit({
+  id: true,
+  lastUpdated: true,
+  createdAt: true,
+});
+export type InsertOxygenCylinder = z.infer<typeof insertOxygenCylinderSchema>;
+export type OxygenCylinder = typeof oxygenCylinders.$inferSelect;
+
+// Cylinder Movement Register (Issue/Return Log)
+export const cylinderMovements = pgTable("cylinder_movements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  cylinderId: varchar("cylinder_id").notNull(),
+  cylinderCode: text("cylinder_code").notNull(),
+  movementType: text("movement_type").notNull(), // ISSUE, RETURN
+  department: text("department").notNull(),
+  startPressure: decimal("start_pressure", { precision: 10, scale: 2 }),
+  endPressure: decimal("end_pressure", { precision: 10, scale: 2 }),
+  issuedBy: text("issued_by"),
+  receivedBy: text("received_by"),
+  acknowledgedBy: text("acknowledged_by"),
+  notes: text("notes"),
+  movementDate: timestamp("movement_date").defaultNow(),
+});
+
+export const insertCylinderMovementSchema = createInsertSchema(cylinderMovements).omit({
+  id: true,
+  movementDate: true,
+});
+export type InsertCylinderMovement = z.infer<typeof insertCylinderMovementSchema>;
+export type CylinderMovement = typeof cylinderMovements.$inferSelect;
+
+// Patient-wise Oxygen Consumption Register
+export const oxygenConsumption = pgTable("oxygen_consumption", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id"),
+  patientName: text("patient_name").notNull(),
+  department: text("department").notNull(),
+  cylinderId: varchar("cylinder_id"),
+  cylinderCode: text("cylinder_code"),
+  flowRate: decimal("flow_rate", { precision: 10, scale: 2 }).notNull(), // LPM (liters per minute)
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  totalHours: decimal("total_hours", { precision: 10, scale: 2 }),
+  totalConsumption: decimal("total_consumption", { precision: 10, scale: 2 }), // LPM × hours
+  recordedBy: text("recorded_by"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOxygenConsumptionSchema = createInsertSchema(oxygenConsumption).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertOxygenConsumption = z.infer<typeof insertOxygenConsumptionSchema>;
+export type OxygenConsumption = typeof oxygenConsumption.$inferSelect;
+
+// LMO (Liquid Medical Oxygen) Tank Daily Dip Register
+export const lmoReadings = pgTable("lmo_readings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tankId: text("tank_id").notNull().default("MAIN"),
+  readingDate: text("reading_date").notNull(),
+  readingTime: text("reading_time").notNull(),
+  levelPercentage: decimal("level_percentage", { precision: 5, scale: 2 }).notNull(),
+  volumeLiters: decimal("volume_liters", { precision: 10, scale: 2 }),
+  pressure: decimal("pressure", { precision: 10, scale: 2 }),
+  temperature: decimal("temperature", { precision: 5, scale: 2 }),
+  recordedBy: text("recorded_by"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertLmoReadingSchema = createInsertSchema(lmoReadings).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertLmoReading = z.infer<typeof insertLmoReadingSchema>;
+export type LmoReading = typeof lmoReadings.$inferSelect;
+
+// Oxygen Alerts
+export const oxygenAlerts = pgTable("oxygen_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  alertType: text("alert_type").notNull(), // LOW_STOCK, OVERCONSUMPTION, PENDING_RETURN, TEST_DUE, LEAKAGE
+  severity: text("severity").notNull().default("warning"), // info, warning, critical
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  relatedCylinderId: varchar("related_cylinder_id"),
+  isResolved: boolean("is_resolved").notNull().default(false),
+  resolvedBy: text("resolved_by"),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOxygenAlertSchema = createInsertSchema(oxygenAlerts).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertOxygenAlert = z.infer<typeof insertOxygenAlertSchema>;
+export type OxygenAlert = typeof oxygenAlerts.$inferSelect;

@@ -1,0 +1,193 @@
+✅ 3. DOCUMENTS REQUIRED FOR OXYGEN TRACKING
+A. Mandatory Registers (NABH Compliant)
+
+Oxygen Cylinder Stock Register
+
+Oxygen Cylinder Movement Register (Issue/Return Log)
+
+Oxygen Consumption Register (Per Patient / Per Dept.)
+
+LMO Daily Dip Register
+
+Preventive Maintenance Log for Oxygen Plant / Manifold
+
+Vendor Supply Invoice File
+
+Purity Certificate Record File
+
+Cylinder Test Certificate Log (Hydrostatic Test every 3–5 yrs)
+
+✅ 4. MANPOWER REQUIRED
+
+Biomedical Engineer – responsible for maintenance & calibration
+
+Manifold Technician / Gas Operator – handles cylinders & pressure
+
+Store Incharge – updates stock & consumption register
+
+Nursing Staff – patient-wise oxygen usage entry
+
+Admin / Quality Team – ensures NABH compliance
+
+✅ 5. DIGITAL OXYGEN TRACKING SYSTEM (HOSPITAL ERP)
+
+You can track oxygen digitally with an ERP or custom software.
+
+A. Digital Data Required
+
+Cylinder Barcode or QR Code
+
+Cylinder type (B-type / D-type)
+
+Filled pressure (pre-filled by vendor)
+
+Pressure when issued
+
+Pressure when returned
+
+Patient-wise oxygen flow rate & total hours
+
+Automatic LMO tank reading (daily at fixed time)
+
+Alerts for:
+
+Low cylinder stock
+
+Overconsumption
+
+Pending cylinder returns
+
+Upcoming cylinder testing date
+
+✅ 6. COMPLETE DAILY WORKFLOW FOR OXYGEN TRACKING
+Step-by-step (Admin + Manifold + Nursing)
+Step 1 – Receive Oxygen
+
+Vendor delivers filled cylinders / refills LMO tank
+
+Check:
+
+Pressure
+
+Purity certificate
+
+Cylinder test date
+
+Update Stock Register & Digital System
+
+Step 2 – Issue Oxygen Cylinders to Wards
+
+Scan QR code (if digital)
+
+Note:
+
+Start pressure
+
+Department name
+
+Time & date
+
+Nurse acknowledges receipt
+
+Step 3 – Patient-Level Oxygen Tracking by Nurses
+
+Enter flow rate (LPM)
+
+Start time & stop time
+
+Calculate total LPM × hours
+
+Update digital system or manual register
+
+Step 4 – Return of Empty Cylinders
+
+Manifold staff receives empty cylinder
+
+Record remaining pressure
+
+Mark cylinder as:
+
+Empty
+
+For Refilling
+
+For Testing (if due)
+
+Step 5 – LMO Tank Tracking
+
+Daily dip reading at same time
+
+Record in:
+
+LMO Dip Register
+
+Digital Log
+
+Compare with consumption to ensure no leakage
+
+Step 6 – Daily Admin Review
+
+Admin checks:
+
+Total oxygen consumed
+
+Stock left
+
+Expected days of oxygen availability
+
+Any leakage or abnormal usage
+
+Comparison with patient census
+
+✅ 7. NABH REQUIREMENTS FOR OXYGEN (SUMMARY)
+
+NABH Standards (Chapter FMS):
+
+Maintain cylinder & supply records
+
+Purity certificate available for each batch
+
+Preventive maintenance schedule for manifold & pipelines
+
+Alarm systems must be functional
+
+Staff must be trained in:
+
+Cylinder handling
+
+Fire safety
+
+Emergency shutdown
+
+Daily checklist for:
+
+Pressure
+
+Leakage
+
+Functionality of zone valves
+
+Emergency backup oxygen must always be available
+
+✅ 8. What You Need to Start for Your Hospital (Short List)
+Essential
+
+O2 Cylinders / LMO tank
+
+Manifold system
+
+Pressure gauges, flowmeters
+
+Stock registers (manual or digital)
+
+Oxygen consumption tracking sheets
+
+QR/Barcode labels
+
+Digital tracking software
+
+Manifold technician
+
+Biomedical engineer
+
+NABH checklists
