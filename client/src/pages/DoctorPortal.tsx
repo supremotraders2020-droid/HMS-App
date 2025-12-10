@@ -75,7 +75,7 @@ import {
   ArrowLeft,
   ExternalLink
 } from "lucide-react";
-import hospitalLogo from "@assets/LOGO_HORIZONTAL_1765344713941.png";
+import hospitalLogo from "@assets/TRANSPARENT_BG_(1)_1765345771350.png";
 
 interface DoctorPortalProps {
   doctorName: string;
@@ -2119,7 +2119,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               <img 
                 src={hospitalLogo} 
                 alt="Gravity Hospital" 
-                className="h-16 w-auto object-contain"
+                className="w-full object-contain"
                 data-testid="img-doctor-portal-logo"
               />
             </div>

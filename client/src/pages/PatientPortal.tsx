@@ -62,7 +62,7 @@ import {
   ArrowRight,
   Sparkles
 } from "lucide-react";
-import hospitalLogo from "@assets/LOGO_HORIZONTAL_1765344713941.png";
+import hospitalLogo from "@assets/TRANSPARENT_BG_(1)_1765345771350.png";
 
 interface PatientPortalProps {
   patientId: string;
@@ -390,7 +390,7 @@ Description: ${record.description}
             <img 
               src={hospitalLogo} 
               alt="Gravity Hospital" 
-              className="h-16 w-auto object-contain group-data-[collapsible=icon]:h-10"
+              className="w-full object-contain group-data-[collapsible=icon]:w-10"
               data-testid="img-patient-portal-logo"
             />
           </div>
