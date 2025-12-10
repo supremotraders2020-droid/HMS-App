@@ -125,6 +125,7 @@ export type Schedule = typeof schedules.$inferSelect;
 export const appointments = pgTable("appointments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   appointmentId: text("appointment_id").notNull().unique(),
+  patientId: varchar("patient_id"), // Patient's username/login identifier for notifications
   patientName: text("patient_name").notNull(),
   patientPhone: text("patient_phone").notNull(),
   patientEmail: text("patient_email"),

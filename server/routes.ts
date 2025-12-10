@@ -2053,5 +2053,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize WebSocket notification service
   notificationService.initialize(httpServer);
 
+  // Start appointment reminder scheduler
+  notificationService.startReminderScheduler();
+
   return httpServer;
 }

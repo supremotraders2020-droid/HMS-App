@@ -1,7 +1,7 @@
 import { WebSocket, WebSocketServer } from "ws";
 import type { Server } from "http";
 import { storage } from "./storage";
-import type { InsertUserNotification, UserNotification } from "@shared/schema";
+import type { InsertUserNotification, UserNotification, Appointment, Doctor } from "@shared/schema";
 
 interface WebSocketClient extends WebSocket {
   userId?: string;
@@ -11,6 +11,8 @@ interface WebSocketClient extends WebSocket {
 class NotificationService {
   private wss: WebSocketServer | null = null;
   private clients: Map<string, WebSocketClient[]> = new Map();
+  private reminderInterval: NodeJS.Timeout | null = null;
+  private doctorsCache: Map<string, Doctor> = new Map();
 
   initialize(server: Server) {
     this.wss = new WebSocketServer({ server, path: "/ws/notifications" });
@@ -255,6 +257,150 @@ class NotificationService {
       isRead: false,
       metadata: null
     });
+  }
+
+  // ========== APPOINTMENT REMINDER SCHEDULER ==========
+  
+  startReminderScheduler() {
+    // Run every 5 minutes
+    const INTERVAL_MS = 5 * 60 * 1000;
+    
+    console.log("Starting appointment reminder scheduler (every 5 minutes)");
+    
+    // Run immediately on start
+    this.checkAndSendReminders();
+    
+    // Then run periodically
+    this.reminderInterval = setInterval(() => {
+      this.checkAndSendReminders();
+    }, INTERVAL_MS);
+  }
+
+  stopReminderScheduler() {
+    if (this.reminderInterval) {
+      clearInterval(this.reminderInterval);
+      this.reminderInterval = null;
+      console.log("Appointment reminder scheduler stopped");
+    }
+  }
+
+  private async checkAndSendReminders() {
+    try {
+      const appointments = await storage.getAppointments();
+      const now = new Date();
+      
+      // Refresh doctors cache
+      const doctors = await storage.getDoctors();
+      this.doctorsCache.clear();
+      doctors.forEach(doc => this.doctorsCache.set(doc.id, doc));
+
+      for (const appointment of appointments) {
+        // Skip cancelled or completed appointments
+        if (appointment.status === "cancelled" || appointment.status === "completed") {
+          continue;
+        }
+
+        // Parse appointment date and time
+        const appointmentDateTime = this.parseAppointmentDateTime(appointment.appointmentDate, appointment.timeSlot);
+        if (!appointmentDateTime) continue;
+
+        const hoursUntil = (appointmentDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+        // Check for 24-hour reminder (between 23 and 25 hours before)
+        if (hoursUntil >= 23 && hoursUntil <= 25) {
+          await this.sendReminderIfNeeded(appointment, "24h");
+        }
+        
+        // Check for 1-hour reminder (between 0.5 and 1.5 hours before)
+        if (hoursUntil >= 0.5 && hoursUntil <= 1.5) {
+          await this.sendReminderIfNeeded(appointment, "1h");
+        }
+      }
+    } catch (error) {
+      console.error("Error in reminder scheduler:", error);
+    }
+  }
+
+  private parseAppointmentDateTime(dateStr: string, timeSlot: string): Date | null {
+    try {
+      // dateStr format: "2025-12-11" or similar
+      // timeSlot format: "09:00", "14:30", etc.
+      const [hours, minutes] = timeSlot.split(":").map(Number);
+      const date = new Date(dateStr);
+      date.setHours(hours, minutes, 0, 0);
+      return date;
+    } catch {
+      return null;
+    }
+  }
+
+  private async sendReminderIfNeeded(appointment: Appointment, reminderType: "24h" | "1h") {
+    // Use patientId (username) if available, fallback to patientName for legacy appointments
+    const patientUserId = appointment.patientId || appointment.patientName;
+    const reminderKey = `reminder::${appointment.id}::${reminderType}`;
+    
+    // Check if reminder was already sent by looking for existing notification with this metadata
+    const existingNotifications = await storage.getUserNotifications(patientUserId);
+    const alreadySent = existingNotifications.some(n => {
+      try {
+        const metadata = n.metadata ? JSON.parse(n.metadata) : {};
+        return metadata.reminderKey === reminderKey;
+      } catch {
+        return false;
+      }
+    });
+
+    if (alreadySent) {
+      return; // Already sent this reminder
+    }
+
+    // Get doctor details
+    const doctor = this.doctorsCache.get(appointment.doctorId);
+    const doctorName = doctor?.name || "Your Doctor";
+    
+    // Format reminder message
+    const timeLabel = reminderType === "24h" ? "tomorrow" : "in 1 hour";
+    const formattedTime = this.formatTimeSlot(appointment.timeSlot);
+    const department = appointment.department || "OPD";
+    const location = appointment.location || "Gravity Hospital";
+
+    const title = reminderType === "24h" 
+      ? "Appointment Reminder - Tomorrow" 
+      : "Appointment Reminder - Starting Soon";
+    
+    const message = `Your appointment with Dr. ${doctorName} is ${timeLabel}.\n` +
+      `Time: ${formattedTime}\n` +
+      `Department: ${department}\n` +
+      `Location: ${location}`;
+
+    await this.createAndPushNotification({
+      userId: patientUserId, // Use patientId (username) for proper notification delivery
+      userRole: "PATIENT",
+      type: "appointment",
+      title,
+      message,
+      relatedEntityType: "appointment",
+      relatedEntityId: appointment.id,
+      isRead: false,
+      metadata: JSON.stringify({
+        reminderKey,
+        reminderType,
+        doctorName,
+        appointmentDate: appointment.appointmentDate,
+        appointmentTime: appointment.timeSlot,
+        department,
+        location
+      })
+    });
+
+    console.log(`Sent ${reminderType} reminder for appointment ${appointment.id} to ${patientUserId}`);
+  }
+
+  private formatTimeSlot(timeSlot: string): string {
+    const [hours, minutes] = timeSlot.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
   }
 }
 
