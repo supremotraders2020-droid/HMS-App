@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,11 +22,22 @@ import {
   Search,
   Star,
   Mail,
-  Globe
+  Globe,
+  Pill,
+  Upload,
+  FileText,
+  Loader2,
+  Building2,
+  IndianRupee,
+  Package,
+  Tag,
+  Trash2
 } from "lucide-react";
-import type { Doctor, Appointment, Schedule } from "@shared/schema";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import type { Doctor, Appointment, Schedule, Medicine } from "@shared/schema";
 
-type TabType = "schedules" | "book" | "appointments" | "checkin" | "team";
+type TabType = "schedules" | "book" | "appointments" | "checkin" | "team" | "medicines";
 
 export default function OPDService() {
   const [activeTab, setActiveTab] = useState<TabType>("schedules");
@@ -34,6 +45,12 @@ export default function OPDService() {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [medicineSearch, setMedicineSearch] = useState("");
+  const [medicineCategory, setMedicineCategory] = useState<string>("all");
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
+  const [showMedicineDetail, setShowMedicineDetail] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
@@ -47,6 +64,18 @@ export default function OPDService() {
   const { data: schedules = [] } = useQuery<Schedule[]>({
     queryKey: ["/api/doctors", selectedDoctor, "schedules", selectedDate],
     enabled: !!selectedDoctor && !!selectedDate,
+  });
+
+  // Medicines query with search support
+  const { data: medicines = [], isLoading: medicinesLoading } = useQuery<Medicine[]>({
+    queryKey: ["/api/medicines", medicineSearch],
+    queryFn: async () => {
+      const searchParam = medicineSearch.trim() ? `?search=${encodeURIComponent(medicineSearch.trim())}` : "";
+      const response = await fetch(`/api/medicines${searchParam}`);
+      if (!response.ok) throw new Error("Failed to fetch medicines");
+      return response.json();
+    },
+    enabled: activeTab === "medicines",
   });
 
   const bookAppointmentMutation = useMutation({
@@ -134,7 +163,79 @@ export default function OPDService() {
     { id: "appointments" as TabType, label: "Appointments", icon: ClipboardList },
     { id: "checkin" as TabType, label: "Check-in", icon: UserCheck },
     { id: "team" as TabType, label: "Our Team", icon: Users },
+    { id: "medicines" as TabType, label: "Medicines", icon: Pill },
   ];
+
+  // Get unique medicine categories for filtering
+  const medicineCategories = Array.from(new Set(medicines.map(m => m.category))).sort();
+
+  // Filter medicines by category
+  const filteredMedicines = medicineCategory === "all" 
+    ? medicines 
+    : medicines.filter(m => m.category === medicineCategory);
+
+  // Handle CSV import
+  const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      toast({
+        title: "Invalid File",
+        description: "Please upload a CSV file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      const headers = lines[0].split(',').map(h => h.trim());
+      
+      const medicineData = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        return {
+          brandName: values[0] || "",
+          genericName: values[1] || "",
+          strength: values[2] || "",
+          dosageForm: values[3] || "",
+          companyName: values[4] || "",
+          mrp: values[5] || "0",
+          packSize: values[6] || "",
+          uses: values[7] || "",
+          category: values[8] || "General",
+        };
+      }).filter(m => m.brandName && m.genericName);
+
+      const response = await apiRequest("POST", "/api/medicines/import", { medicines: medicineData });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/medicines"] });
+      toast({
+        title: "Import Successful",
+        description: `Successfully imported ${medicineData.length} medicines`,
+      });
+    } catch (error) {
+      console.error("Import error:", error);
+      toast({
+        title: "Import Failed",
+        description: "Failed to import medicines from CSV",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // Handle view medicine details
+  const handleViewMedicine = (medicine: Medicine) => {
+    setSelectedMedicine(medicine);
+    setShowMedicineDetail(true);
+  };
 
   const handleBookAppointment = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -183,7 +284,7 @@ export default function OPDService() {
       {/* Navigation Tabs */}
       <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 py-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 py-2">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
@@ -622,7 +723,245 @@ export default function OPDService() {
             </div>
           </div>
         )}
+
+        {/* Medicines Tab */}
+        {activeTab === "medicines" && (
+          <div className="space-y-6">
+            {/* Header Card */}
+            <Card className="bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10">
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-600 rounded-lg">
+                      <Pill className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold">Medicine Database</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Search and browse Indian medicines ({medicines.length} medicines)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept=".csv"
+                      ref={fileInputRef}
+                      onChange={handleCSVImport}
+                      className="hidden"
+                      data-testid="input-csv-upload"
+                    />
+                    <Button 
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isImporting}
+                      data-testid="button-import-csv"
+                    >
+                      {isImporting ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      {isImporting ? "Importing..." : "Import CSV"}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Search and Filters */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by brand name, generic name, company, category or uses..."
+                      value={medicineSearch}
+                      onChange={(e) => setMedicineSearch(e.target.value)}
+                      className="pl-10"
+                      data-testid="input-medicine-search"
+                    />
+                  </div>
+                  <div className="w-full md:w-48">
+                    <Select value={medicineCategory} onValueChange={setMedicineCategory}>
+                      <SelectTrigger data-testid="select-medicine-category">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {medicineCategories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Medicines Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Medicines List ({filteredMedicines.length} results)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {medicinesLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="ml-2">Loading medicines...</span>
+                  </div>
+                ) : filteredMedicines.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Pill className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground">
+                      {medicines.length === 0 
+                        ? "No medicines in database. Import a CSV to get started."
+                        : "No medicines match your search criteria."
+                      }
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Brand Name</TableHead>
+                          <TableHead>Generic Name</TableHead>
+                          <TableHead>Strength</TableHead>
+                          <TableHead>Dosage Form</TableHead>
+                          <TableHead>Company</TableHead>
+                          <TableHead className="text-right">MRP (INR)</TableHead>
+                          <TableHead>Pack Size</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredMedicines.slice(0, 100).map((medicine) => (
+                          <TableRow 
+                            key={medicine.id} 
+                            className="cursor-pointer hover:bg-muted/50"
+                            data-testid={`row-medicine-${medicine.id}`}
+                          >
+                            <TableCell className="font-medium">{medicine.brandName}</TableCell>
+                            <TableCell>{medicine.genericName}</TableCell>
+                            <TableCell>{medicine.strength}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{medicine.dosageForm}</Badge>
+                            </TableCell>
+                            <TableCell className="max-w-[150px] truncate">{medicine.companyName}</TableCell>
+                            <TableCell className="text-right font-medium">
+                              <span className="flex items-center justify-end gap-1">
+                                <IndianRupee className="h-3 w-3" />
+                                {medicine.mrp}
+                              </span>
+                            </TableCell>
+                            <TableCell>{medicine.packSize}</TableCell>
+                            <TableCell>
+                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                {medicine.category}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleViewMedicine(medicine)}
+                                data-testid={`button-view-medicine-${medicine.id}`}
+                              >
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {filteredMedicines.length > 100 && (
+                      <div className="text-center py-4 text-sm text-muted-foreground">
+                        Showing first 100 of {filteredMedicines.length} results. Use search to narrow down.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
+
+      {/* Medicine Detail Dialog */}
+      <Dialog open={showMedicineDetail} onOpenChange={setShowMedicineDetail}>
+        <DialogContent className="max-w-2xl" data-testid="dialog-medicine-detail">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pill className="h-5 w-5 text-green-600" />
+              Medicine Details
+            </DialogTitle>
+            <DialogDescription>
+              Complete information about this medicine
+            </DialogDescription>
+          </DialogHeader>
+          {selectedMedicine && (
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                  <Pill className="h-8 w-8 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold">{selectedMedicine.brandName}</h3>
+                  <p className="text-muted-foreground">{selectedMedicine.genericName}</p>
+                  <Badge className="mt-2 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                    {selectedMedicine.category}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Package className="h-4 w-4" />
+                    Strength & Form
+                  </div>
+                  <p className="font-medium">{selectedMedicine.strength} - {selectedMedicine.dosageForm}</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <IndianRupee className="h-4 w-4" />
+                    MRP & Pack Size
+                  </div>
+                  <p className="font-medium">Rs. {selectedMedicine.mrp} / {selectedMedicine.packSize}</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <Building2 className="h-4 w-4" />
+                  Manufacturer
+                </div>
+                <p className="font-medium">{selectedMedicine.companyName}</p>
+              </div>
+
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 mb-1">
+                  <Tag className="h-4 w-4" />
+                  Uses
+                </div>
+                <p className="text-blue-800 dark:text-blue-200">{selectedMedicine.uses}</p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setShowMedicineDetail(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-t mt-12">
