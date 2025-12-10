@@ -18,7 +18,12 @@ import {
   HeartPulse,
   Shield,
   UserCheck,
-  BarChart3
+  BarChart3,
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  Building2
 } from "lucide-react";
 import type { ActivityLog, Appointment } from "@shared/schema";
 
@@ -219,6 +224,48 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
           </div>
         </div>
 
+        {/* OPD Info Section - Only for OPD Manager */}
+        {currentRole === "OPD_MANAGER" && (
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-950/20 dark:via-amber-950/20 dark:to-yellow-950/20">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-orange-500 rounded-xl">
+                    <Building2 className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold">OPD - Outpatient Department</h2>
+                    <p className="text-muted-foreground text-sm">Gravity Hospital • OPD Wing</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex items-center gap-2 bg-white/60 dark:bg-slate-800/60 p-3 rounded-lg">
+                    <MapPin className="h-4 w-4 text-orange-600" />
+                    <div className="text-sm">
+                      <p className="text-muted-foreground">Address</p>
+                      <p className="font-medium text-xs">Gat No 167, Sahyog Nagar, Nigdi</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/60 dark:bg-slate-800/60 p-3 rounded-lg">
+                    <Phone className="h-4 w-4 text-orange-600" />
+                    <div className="text-sm">
+                      <p className="text-muted-foreground">Contact</p>
+                      <p className="font-medium">+91 20 1234 5679</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/60 dark:bg-slate-800/60 p-3 rounded-lg">
+                    <Clock className="h-4 w-4 text-orange-600" />
+                    <div className="text-sm">
+                      <p className="text-muted-foreground">Hours</p>
+                      <p className="font-medium">Mon-Sat: 8AM-8PM</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Enhanced Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {dashboardStats.map((stat, index) => (
@@ -316,6 +363,74 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
             </div>
           </CardContent>
         </Card>
+
+        {/* Hospital Footer - Only for OPD Manager */}
+        {currentRole === "OPD_MANAGER" && (
+          <footer className="bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-800 dark:via-slate-800/95 dark:to-slate-800 rounded-lg border mt-8">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-2">
+                  <Building2 className="h-6 w-6 text-primary" />
+                  <h2 className="text-xl font-bold">Gravity Hospital</h2>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">Healthcare Excellence</p>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold text-sm">Address</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Gat No, 167, Sahyog Nager,<br />
+                    Triveni Nagar, Nigdi,<br />
+                    Pimpri-Chinchwad,<br />
+                    Maharashtra 411062
+                  </p>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Phone className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold text-sm">Contact</h3>
+                  </div>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>Main: +91 20 1234 5678</p>
+                    <p>Emergency: +91 20 1234 5680</p>
+                    <p>OPD: +91 20 1234 5679</p>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold text-sm">Timings</h3>
+                  </div>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>24/7 Emergency</p>
+                    <p>OPD: Mon-Sat 8AM-8PM</p>
+                    <p>Sun: 9AM-1PM</p>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold text-sm">Online</h3>
+                  </div>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>info@gravityhospital.com</p>
+                    <p>opd@gravityhospital.com</p>
+                    <div className="flex items-center gap-1">
+                      <Globe className="h-3 w-3" />
+                      <span>www.gravityhospital.com</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t mt-6 pt-4 text-center text-xs text-muted-foreground">
+                <p>&copy; 2024 Gravity Hospital. All rights reserved.</p>
+              </div>
+            </div>
+          </footer>
+        )}
       </div>
 
       {/* All Activities Dialog */}
