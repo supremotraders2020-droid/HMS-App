@@ -406,6 +406,28 @@ export const insertMedicalRecordSchema = createInsertSchema(medicalRecords).omit
 export type InsertMedicalRecord = z.infer<typeof insertMedicalRecordSchema>;
 export type MedicalRecord = typeof medicalRecords.$inferSelect;
 
+// Patient Consent Forms table
+export const patientConsents = pgTable("patient_consents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  consentType: text("consent_type").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  fileName: text("file_name").notNull(),
+  fileData: text("file_data").notNull(),
+  fileType: text("file_type").notNull(),
+  uploadedBy: text("uploaded_by"),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  status: text("status").notNull().default("active"),
+});
+
+export const insertPatientConsentSchema = createInsertSchema(patientConsents).omit({
+  id: true,
+  uploadedAt: true,
+});
+export type InsertPatientConsent = z.infer<typeof insertPatientConsentSchema>;
+export type PatientConsent = typeof patientConsents.$inferSelect;
+
 // ========== BIOMETRIC SERVICE TABLES ==========
 
 // Biometric Templates table - stores encrypted biometric data
