@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useNotifications } from "@/hooks/use-notifications";
 import { 
@@ -288,13 +289,12 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
           </Card>
         )}
 
-        {/* Enhanced Stats Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Enhanced Stats Grid with Loading State */}
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {dashboardStats.map((stat, index) => (
             <Card 
               key={index} 
-              className={`group overflow-visible border shadow-md hover:shadow-xl transition-all duration-500 ease-out hover:-translate-y-1 ${getStatCardGradient(stat.urgent, index)} animate-fade-in-up`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              className={`group overflow-visible border shadow-md hover:shadow-xl transition-all duration-500 ease-out hover:-translate-y-1 glass-card ${getStatCardGradient(stat.urgent, index)} stagger-item`}
               data-testid={`card-stat-${index}`}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
@@ -334,7 +334,7 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
         </div>
 
         {/* Recent Activity - Full Width */}
-        <Card className="bg-gradient-to-br from-white via-slate-50/20 to-cyan-50/20 dark:from-slate-800 dark:via-slate-800/98 dark:to-cyan-950/20 border border-slate-200/60 dark:border-slate-700/60 shadow-xl animate-fade-in-up animation-delay-400">
+        <Card className="glass-card border border-slate-200/60 dark:border-slate-700/60 shadow-xl stagger-item">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-semibold flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-lg shadow-cyan-500/30">

@@ -1,59 +1,92 @@
 import { createContext, useContext, useEffect, useState } from "react"
 
-type Theme = "dark" | "light" | "system"
+type Mode = "dark" | "light" | "system"
+type ColorTheme = "clinical-teal" | "sunrise-amber" | "midnight-indigo" | "rose-garden" | "forest-green"
 
 type ThemeProviderProps = {
   children: React.ReactNode
-  defaultTheme?: Theme
+  defaultMode?: Mode
+  defaultColorTheme?: ColorTheme
   storageKey?: string
 }
 
 type ThemeProviderState = {
-  theme: Theme
-  setTheme: (theme: Theme) => void
+  mode: Mode
+  colorTheme: ColorTheme
+  setMode: (mode: Mode) => void
+  setColorTheme: (colorTheme: ColorTheme) => void
+  isDark: boolean
 }
 
 const initialState: ThemeProviderState = {
-  theme: "system",
-  setTheme: () => null,
+  mode: "system",
+  colorTheme: "clinical-teal",
+  setMode: () => null,
+  setColorTheme: () => null,
+  isDark: false,
 }
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
+export const colorThemes: { id: ColorTheme; name: string; preview: string }[] = [
+  { id: "clinical-teal", name: "Clinical Teal", preview: "from-teal-500 to-cyan-500" },
+  { id: "sunrise-amber", name: "Sunrise Amber", preview: "from-amber-500 to-orange-500" },
+  { id: "midnight-indigo", name: "Midnight Indigo", preview: "from-indigo-500 to-purple-500" },
+  { id: "rose-garden", name: "Rose Garden", preview: "from-rose-500 to-pink-500" },
+  { id: "forest-green", name: "Forest Green", preview: "from-emerald-500 to-green-500" },
+]
+
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
-  storageKey = "vite-ui-theme",
+  defaultMode = "system",
+  defaultColorTheme = "clinical-teal",
+  storageKey = "hms-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+  const [mode, setModeState] = useState<Mode>(
+    () => (localStorage.getItem(`${storageKey}-mode`) as Mode) || defaultMode
   )
+  const [colorTheme, setColorThemeState] = useState<ColorTheme>(
+    () => (localStorage.getItem(`${storageKey}-color`) as ColorTheme) || defaultColorTheme
+  )
+  const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
     const root = window.document.documentElement
 
     root.classList.remove("light", "dark")
+    colorThemes.forEach(t => root.removeAttribute(`data-theme`))
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-
-      root.classList.add(systemTheme)
-      return
+    let resolvedMode: "light" | "dark" = "light"
+    if (mode === "system") {
+      resolvedMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    } else {
+      resolvedMode = mode
     }
 
-    root.classList.add(theme)
-  }, [theme])
+    root.classList.add(resolvedMode)
+    root.setAttribute("data-theme", colorTheme)
+    setIsDark(resolvedMode === "dark")
+  }, [mode, colorTheme])
+
+  const setMode = (newMode: Mode) => {
+    localStorage.setItem(`${storageKey}-mode`, newMode)
+    setModeState(newMode)
+  }
+
+  const setColorTheme = (newColorTheme: ColorTheme) => {
+    localStorage.setItem(`${storageKey}-color`, newColorTheme)
+    setColorThemeState(newColorTheme)
+  }
 
   const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
-    },
+    mode,
+    colorTheme,
+    setMode,
+    setColorTheme,
+    isDark,
+    theme: mode,
+    setTheme: setMode,
   }
 
   return (

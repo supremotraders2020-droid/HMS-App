@@ -133,7 +133,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
   };
 
   return (
-    <Sidebar className="bg-gradient-sidebar border-r border-sidebar-border/50">
+    <Sidebar className="glass-sidebar">
       <SidebarHeader className="py-4 px-3">
         <div className="relative">
           <img 

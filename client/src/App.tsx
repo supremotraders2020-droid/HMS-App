@@ -10,7 +10,7 @@ import AuthForms from "@/components/AuthForms";
 import HMSSidebar from "@/components/HMSSidebar";
 import HMSDashboard from "@/components/HMSDashboard";
 import PatientCard from "@/components/PatientCard";
-import ThemeToggle from "@/components/ThemeToggle";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 import NotFound from "@/pages/not-found";
 import UserManagement from "@/pages/UserManagement";
 import HospitalSettings from "@/pages/HospitalSettings";
@@ -391,16 +391,16 @@ function AppContent() {
                 onLogout={handleLogout}
               />
               <div className="flex flex-col flex-1">
-                <header className="flex items-center justify-between p-4 border-b bg-background">
+                <header className="flex items-center justify-between p-4 border-b glass-panel sticky top-0 z-40">
                   <div className="flex items-center space-x-4">
-                    <SidebarTrigger data-testid="button-sidebar-toggle" />
+                    <SidebarTrigger data-testid="button-sidebar-toggle" className="glass-button" />
                     <div className="flex flex-col">
-                      <span className="text-lg font-semibold">Gravity Hospital</span>
+                      <span className="text-lg font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Gravity Hospital</span>
                       <span className="text-xs text-muted-foreground">HMS Core System</span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <ThemeToggle />
+                  <div className="flex items-center space-x-3">
+                    <ThemeSwitcher />
                   </div>
                 </header>
                 <main className="flex-1 overflow-auto p-6">
