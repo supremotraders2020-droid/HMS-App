@@ -1,7 +1,7 @@
 # Patient Credentials
 
 ## Gravity Hospital
-**Location:** Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062 (Pune)
+**Location:** Gat No, 167, Sahyog Nager, Triveni Nagar, Chowk, Pimpri-Chinchwad, Maharashtra 411062
 
 ---
 
