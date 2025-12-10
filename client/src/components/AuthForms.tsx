@@ -62,11 +62,11 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center justify-center mb-2">
             <img 
               src={hospitalLogo} 
               alt="Gravity Hospital" 
-              className="h-16 w-auto object-contain"
+              className="w-full max-w-[280px] h-auto object-contain"
               data-testid="img-hospital-logo"
             />
           </div>

@@ -123,15 +123,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center">
+      <SidebarHeader className="p-2">
           <img 
             src={hospitalLogo} 
             alt="Gravity Hospital" 
-            className="w-full object-contain"
+            className="w-full h-auto object-contain"
             data-testid="img-sidebar-logo"
           />
-        </div>
         {currentUser && (
           <div className="mt-4 p-3 bg-card rounded-lg">
             <div className="flex items-center justify-between">

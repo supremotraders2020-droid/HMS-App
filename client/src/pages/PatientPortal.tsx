@@ -385,15 +385,13 @@ Description: ${record.description}
   function PatientSidebar() {
     return (
       <Sidebar collapsible="icon">
-        <SidebarHeader className="p-4 border-b">
-          <div className="flex items-center">
+        <SidebarHeader className="p-2 border-b">
             <img 
               src={hospitalLogo} 
               alt="Gravity Hospital" 
-              className="w-full object-contain group-data-[collapsible=icon]:w-10"
+              className="w-full h-auto object-contain group-data-[collapsible=icon]:w-10"
               data-testid="img-patient-portal-logo"
             />
-          </div>
         </SidebarHeader>
 
         <SidebarContent>

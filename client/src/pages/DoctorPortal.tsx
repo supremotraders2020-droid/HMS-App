@@ -2114,15 +2114,13 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     <SidebarProvider style={sidebarStyle as React.CSSProperties}>
       <div className="flex h-screen w-full">
         <Sidebar>
-          <SidebarHeader className="p-4">
-            <div className="flex items-center">
+          <SidebarHeader className="p-2">
               <img 
                 src={hospitalLogo} 
                 alt="Gravity Hospital" 
-                className="w-full object-contain"
+                className="w-full h-auto object-contain"
                 data-testid="img-doctor-portal-logo"
               />
-            </div>
           </SidebarHeader>
 
           <SidebarContent>
