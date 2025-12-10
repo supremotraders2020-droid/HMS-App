@@ -146,20 +146,39 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
 
   const getRoleColor = (role: UserRole) => {
     switch (role) {
-      case "ADMIN": return "from-purple-500/20 to-purple-600/10";
-      case "DOCTOR": return "from-blue-500/20 to-blue-600/10";
-      case "NURSE": return "from-green-500/20 to-green-600/10";
-      case "OPD_MANAGER": return "from-orange-500/20 to-orange-600/10";
-      case "PATIENT": return "from-teal-500/20 to-teal-600/10";
-      default: return "from-gray-500/20 to-gray-600/10";
+      case "ADMIN": return "from-violet-500/25 to-purple-600/15";
+      case "DOCTOR": return "from-cyan-500/25 to-blue-600/15";
+      case "NURSE": return "from-emerald-500/25 to-green-600/15";
+      case "OPD_MANAGER": return "from-amber-500/25 to-orange-600/15";
+      case "PATIENT": return "from-teal-500/25 to-cyan-600/15";
+      default: return "from-slate-500/25 to-gray-600/15";
     }
   };
 
-  const getStatCardGradient = (urgent: boolean) => {
+  const getStatCardGradient = (urgent: boolean, index: number) => {
     if (urgent) {
-      return "bg-gradient-to-br from-red-50/80 via-white to-red-50/30 dark:from-red-950/20 dark:via-red-900/10 dark:to-red-950/5";
+      return "bg-gradient-to-br from-red-50/90 via-rose-50/60 to-orange-50/40 dark:from-red-950/30 dark:via-rose-900/20 dark:to-red-950/10 border-red-200/50 dark:border-red-800/30";
     }
-    return "bg-gradient-to-br from-blue-50/60 via-white to-blue-50/30 dark:from-blue-950/20 dark:via-blue-900/10 dark:to-blue-950/5";
+    const gradients = [
+      "bg-gradient-to-br from-cyan-50/80 via-teal-50/50 to-blue-50/40 dark:from-cyan-950/30 dark:via-teal-900/20 dark:to-cyan-950/10 border-cyan-200/50 dark:border-cyan-800/30",
+      "bg-gradient-to-br from-emerald-50/80 via-green-50/50 to-teal-50/40 dark:from-emerald-950/30 dark:via-green-900/20 dark:to-emerald-950/10 border-emerald-200/50 dark:border-emerald-800/30",
+      "bg-gradient-to-br from-violet-50/80 via-purple-50/50 to-indigo-50/40 dark:from-violet-950/30 dark:via-purple-900/20 dark:to-violet-950/10 border-violet-200/50 dark:border-violet-800/30",
+      "bg-gradient-to-br from-amber-50/80 via-orange-50/50 to-yellow-50/40 dark:from-amber-950/30 dark:via-orange-900/20 dark:to-amber-950/10 border-amber-200/50 dark:border-amber-800/30"
+    ];
+    return gradients[index % gradients.length];
+  };
+
+  const getStatIconColors = (index: number, urgent: boolean) => {
+    if (urgent) {
+      return "bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/30";
+    }
+    const colors = [
+      "bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-lg shadow-cyan-500/30",
+      "bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/30",
+      "bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30",
+      "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30"
+    ];
+    return colors[index % colors.length];
   };
 
   const renderActivityItem = (activity: ActivityLog, index: number, isLast: boolean) => (
@@ -192,21 +211,21 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-slate-50/50 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-800/50">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50/40 via-white to-teal-50/30 dark:from-slate-900 dark:via-slate-900/98 dark:to-cyan-950/20">
       <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
         {/* Welcome Header with Enhanced Styling */}
-        <div className="relative">
-          <div className={`absolute inset-0 bg-gradient-to-r ${getRoleColor(currentRole)} rounded-lg opacity-30`} />
-          <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-lg p-6 md:p-8 shadow-lg">
+        <div className="relative animate-fade-in-up">
+          <div className={`absolute inset-0 bg-gradient-to-r ${getRoleColor(currentRole)} rounded-xl opacity-40 blur-sm`} />
+          <div className="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-white/60 dark:border-slate-700/60 rounded-xl p-6 md:p-8 shadow-xl shadow-primary/5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-2">
-                <h1 className="text-2xl md:text-3xl font-semibold text-foreground flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-gradient-to-r ${getRoleColor(currentRole)}`}>
-                    {currentRole === "DOCTOR" && <Stethoscope className="h-6 w-6" />}
-                    {currentRole === "NURSE" && <HeartPulse className="h-6 w-6" />}
-                    {currentRole === "ADMIN" && <Shield className="h-6 w-6" />}
-                    {currentRole === "OPD_MANAGER" && <BarChart3 className="h-6 w-6" />}
-                    {currentRole === "PATIENT" && <UserCheck className="h-6 w-6" />}
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${getRoleColor(currentRole)} shadow-lg transition-transform duration-300 hover:scale-110`}>
+                    {currentRole === "DOCTOR" && <Stethoscope className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />}
+                    {currentRole === "NURSE" && <HeartPulse className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />}
+                    {currentRole === "ADMIN" && <Shield className="h-6 w-6 text-violet-600 dark:text-violet-400" />}
+                    {currentRole === "OPD_MANAGER" && <BarChart3 className="h-6 w-6 text-amber-600 dark:text-amber-400" />}
+                    {currentRole === "PATIENT" && <UserCheck className="h-6 w-6 text-teal-600 dark:text-teal-400" />}
                   </div>
                   Welcome back, {userName}
                 </h1>
@@ -214,9 +233,12 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
                   {hospitalName} • {currentRole.replace("_", " ")} Dashboard
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <div className="flex items-center gap-3 px-4 py-2 bg-emerald-50/80 dark:bg-emerald-900/30 rounded-full border border-emerald-200/50 dark:border-emerald-700/50">
+                <div className="relative flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  </span>
                   System Online
                 </div>
               </div>
@@ -271,42 +293,40 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
           {dashboardStats.map((stat, index) => (
             <Card 
               key={index} 
-              className={`hover-elevate transition-all duration-300 border-0 shadow-sm hover:shadow-lg ${getStatCardGradient(stat.urgent)}`}
+              className={`group overflow-visible border shadow-md hover:shadow-xl transition-all duration-500 ease-out hover:-translate-y-1 ${getStatCardGradient(stat.urgent, index)} animate-fade-in-up`}
+              style={{ animationDelay: `${index * 100}ms` }}
               data-testid={`card-stat-${index}`}
             >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <div className={`p-2 rounded-lg ${stat.urgent 
-                  ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' 
-                  : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                }`}>
+                <div className={`p-2.5 rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${getStatIconColors(index, stat.urgent)}`}>
                   <stat.icon className="h-4 w-4" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl md:text-3xl font-bold text-foreground mb-1" data-testid={`text-stat-value-${index}`}>
+                <div className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight" data-testid={`text-stat-value-${index}`}>
                   {stat.value}
                 </div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  {stat.change.startsWith('+') ? (
-                    <TrendingUp className="h-3 w-3 text-green-600" />
-                  ) : stat.change.startsWith('-') ? (
-                    <TrendingUp className="h-3 w-3 text-red-600 rotate-180" />
-                  ) : (
-                    <TrendingUp className="h-3 w-3 text-gray-400" />
-                  )}
-                  <span className={
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${
                     stat.change.startsWith('+') 
-                      ? 'text-green-600 font-medium' 
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' 
                       : stat.change.startsWith('-') 
-                      ? 'text-red-600 font-medium' 
-                      : 'text-muted-foreground'
-                  }>
+                      ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400' 
+                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                  }`}>
+                    {stat.change.startsWith('+') ? (
+                      <TrendingUp className="h-3 w-3" />
+                    ) : stat.change.startsWith('-') ? (
+                      <TrendingUp className="h-3 w-3 rotate-180" />
+                    ) : (
+                      <TrendingUp className="h-3 w-3" />
+                    )}
                     {stat.change}
                   </span>
-                  from last week
+                  <span className="text-muted-foreground/70">from last week</span>
                 </p>
               </CardContent>
             </Card>
@@ -314,10 +334,12 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
         </div>
 
         {/* Recent Activity - Full Width */}
-        <Card className="bg-gradient-to-br from-white via-slate-50/30 to-white dark:from-slate-800 dark:via-slate-800/95 dark:to-slate-700/50 border-0 shadow-lg">
+        <Card className="bg-gradient-to-br from-white via-slate-50/20 to-cyan-50/20 dark:from-slate-800 dark:via-slate-800/98 dark:to-cyan-950/20 border border-slate-200/60 dark:border-slate-700/60 shadow-xl animate-fade-in-up animation-delay-400">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-medium flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg font-semibold flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-lg shadow-cyan-500/30">
+                <Activity className="h-5 w-5" />
+              </div>
               Recent Activity
             </CardTitle>
             <CardDescription>Latest updates in the system</CardDescription>

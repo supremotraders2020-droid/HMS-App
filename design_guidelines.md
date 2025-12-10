@@ -1,144 +1,147 @@
-# HMS Core - Design Guidelines
+# Gravity Hospital Management System - Design Guidelines
 
 ## Design Approach
-**System-Based Approach**: Material Design 3 with healthcare industry adaptations. This enterprise healthcare system prioritizes usability, accessibility, and professional trust over visual flair.
+**Reference-Based Approach**: Drawing inspiration from modern healthcare platforms like One Medical, Zocdoc, and healthcare-focused SaaS products. Combining Material Design 3 principles with vibrant, animation-rich interfaces that maintain medical professionalism while feeling contemporary and engaging.
 
 ## Core Design Principles
-- **Clinical Clarity**: Information hierarchy that supports medical decision-making
-- **Professional Trust**: Conservative design that instills confidence in healthcare professionals
-- **Efficient Workflows**: Minimal cognitive load for users managing critical patient data
-- **Accessibility First**: WCAG 2.1 AA compliance for diverse healthcare workers
+- **Vibrant Professionalism**: Modern, energetic design that maintains healthcare credibility
+- **Fluid Interactions**: Smooth animations that enhance usability without distraction
+- **Dynamic Clarity**: Information hierarchy enhanced through motion and visual depth
+- **Adaptive Experience**: Seamless dark/light mode transitions with consistent interactions
 
 ## Color Palette
 
-### Primary Colors
-- **Primary**: 210 100% 50% (Medical blue - trust and professionalism)
-- **Primary Container**: 210 100% 95% (Light blue backgrounds)
-
-### Semantic Colors
-- **Success**: 142 71% 45% (Medical green for positive statuses)
-- **Warning**: 38 92% 50% (Amber for caution states)
-- **Error**: 0 84% 60% (Medical red for critical alerts)
-- **Info**: 210 100% 70% (Lighter blue for informational states)
-
-### Neutral Colors
-- **Surface**: 0 0% 98% (Light mode primary background)
-- **Surface Variant**: 210 20% 96% (Card backgrounds)
-- **Outline**: 210 25% 84% (Borders and dividers)
+### Light Mode
+- **Primary**: `hsl(195, 85%, 45%)` - Vibrant teal (medical trust with energy)
+- **Primary Hover**: `hsl(195, 85%, 38%)` - Deeper teal for interactions
+- **Accent**: `hsl(160, 75%, 50%)` - Energetic mint green
+- **Secondary**: `hsl(210, 90%, 55%)` - Calming sky blue
+- **Surface**: `hsl(0, 0%, 99%)` - Near-white base
+- **Surface Elevated**: `hsl(195, 40%, 98%)` - Subtle blue-tinted cards
+- **Border**: `hsl(195, 25%, 88%)` - Soft blue borders
 
 ### Dark Mode
-- **Surface**: 210 15% 8% (Dark primary background)
-- **Surface Variant**: 210 15% 12% (Dark card backgrounds)
-- **Primary**: 210 100% 80% (Adjusted for dark contrast)
+- **Primary**: `hsl(195, 75%, 55%)` - Brighter teal for contrast
+- **Primary Hover**: `hsl(195, 75%, 48%)` - Interaction state
+- **Accent**: `hsl(160, 65%, 55%)` - Adjusted mint green
+- **Surface**: `hsl(210, 20%, 10%)` - Rich dark blue-black
+- **Surface Elevated**: `hsl(210, 18%, 14%)` - Elevated card surfaces
+- **Border**: `hsl(210, 15%, 20%)` - Subtle borders
+
+### Semantic Colors
+- **Success**: `hsl(142, 70%, 48%)` / Dark: `hsl(142, 65%, 55%)`
+- **Warning**: `hsl(38, 90%, 52%)` / Dark: `hsl(38, 85%, 58%)`
+- **Error**: `hsl(0, 75%, 58%)` / Dark: `hsl(0, 70%, 62%)`
+- **Info**: `hsl(210, 85%, 60%)` / Dark: `hsl(210, 80%, 65%)`
 
 ## Typography
-**Primary Font**: Inter (Google Fonts)
-- **Display**: Inter 600 (32px) - Page titles
-- **Headline**: Inter 500 (24px) - Section headers
-- **Body**: Inter 400 (16px) - Primary content
-- **Caption**: Inter 400 (14px) - Supporting text
-- **Label**: Inter 500 (14px) - Form labels and buttons
+**Primary Font**: Inter (Google Fonts CDN)
+- **Hero**: Inter 700, 48px/56px - Landing page headlines
+- **Display**: Inter 600, 32px/40px - Dashboard titles
+- **Headline**: Inter 600, 24px/32px - Section headers
+- **Subheading**: Inter 500, 18px/28px - Card headers
+- **Body**: Inter 400, 16px/24px - Primary content
+- **Small**: Inter 400, 14px/20px - Supporting text
+- **Label**: Inter 500, 14px/20px - Form labels, buttons
 
 ## Layout System
-**Spacing Units**: Tailwind 2, 4, 6, 8, 12, 16 units
-- **Tight spacing**: p-2, m-2 (8px) - Form elements
-- **Standard spacing**: p-4, m-4 (16px) - Card padding
-- **Section spacing**: p-6, m-6 (24px) - Page sections
-- **Large spacing**: p-8, m-8 (32px) - Major layout divisions
+**Spacing**: Tailwind units 3, 4, 6, 8, 12, 16, 20, 24
+- **Component padding**: p-4, p-6 (cards, inputs)
+- **Section spacing**: py-12, py-16, py-20 (page sections)
+- **Grid gaps**: gap-4, gap-6, gap-8 (responsive grids)
+- **Element margins**: mb-3, mb-4, mb-6 (vertical rhythm)
+
+## Visual Effects & Animations
+
+### Gradient Foundations
+**Light Mode Cards**: `bg-gradient-to-br from-white via-blue-50/30 to-teal-50/20`
+**Dark Mode Cards**: `bg-gradient-to-br from-surface-elevated via-surface-elevated to-primary/5`
+**Hero Gradient**: `bg-gradient-to-br from-primary/10 via-white to-accent/10` (Light) / `from-primary/20 via-surface to-accent/10` (Dark)
+**Stat Card Accents**: `bg-gradient-to-r from-primary/15 via-primary/8 to-transparent`
+
+### Shadows & Elevation
+- **Cards Default**: `shadow-sm` (subtle depth)
+- **Cards Hover**: `shadow-lg shadow-primary/10` (elevated with colored glow)
+- **Modals**: `shadow-2xl shadow-black/20` (strong elevation)
+- **Floating Elements**: `shadow-xl shadow-primary/15` (navigation, sticky headers)
+
+### Micro-Interactions
+**Card Hover**: Scale 1.02, shadow elevation, subtle border glow (0.3s ease-out)
+**Button Press**: Scale 0.98, increased shadow depth (0.15s ease-in-out)
+**Icon Hover**: Rotation 5-10deg or scale 1.1 (0.2s ease)
+**Stat Counters**: Count-up animation on load with ease-out timing
+**Form Focus**: Border glow with primary color, scale 1.01 (0.2s ease)
+**Status Badges**: Subtle pulse animation for active/critical states
+**Navigation Items**: Smooth background fill and icon shift (0.25s ease)
+
+### Page Transitions
+- **Route Changes**: Fade + subtle slide (0.3s)
+- **Modal Open**: Scale from 0.95 to 1 with fade (0.25s ease-out)
+- **Drawer Slide**: Transform X/Y with backdrop fade (0.3s ease-in-out)
+- **Toast Notifications**: Slide + fade from top-right (0.3s spring)
 
 ## Component Library
 
 ### Navigation
-- **Sidebar Navigation**: Persistent left navigation with role-based menu items
-- **Top Bar**: Hospital/tenant selector, user profile, notifications
-- **Breadcrumbs**: Essential for deep navigation hierarchies
+- **Sidebar**: Gradient background with frosted glass effect, animated hover states for items, active state with accent bar and background fill
+- **Top Bar**: Elevated with subtle shadow, hospital selector with dropdown animation, notification badge with pulse
+- **Breadcrumbs**: Animated chevrons on hover, underline transitions
 
 ### Data Display
-- **Patient Cards**: Compact cards with critical info (ID, name, status)
-- **Data Tables**: Sortable, filterable tables with pagination
-- **Status Indicators**: Color-coded badges for patient/appointment status
-- **Charts**: Clean, medical-grade data visualizations
+- **Patient Cards**: Gradient background, status indicator with subtle pulse, hover lift effect with shadow glow
+- **Stat Cards**: Large animated counter, gradient accent bar, icon with background glow, hover scale animation
+- **Data Tables**: Striped rows with hover highlight, sortable headers with animated arrows, pagination with smooth transitions
+- **Charts**: Animated bar/line reveals on load, interactive hover tooltips with smooth appearance
 
 ### Forms
-- **Input Fields**: Material Design 3 outlined inputs
-- **Role Selectors**: Dropdown with clear role descriptions
-- **Tenant Switcher**: Prominent hospital/clinic selector
-- **Validation**: Real-time validation with clear error messaging
+- **Inputs**: Outlined style with focus glow, floating labels with smooth transitions, validation states with animated icons
+- **Dropdowns**: Smooth expand animation, hover highlight on options, selected state with checkmark animation
+- **Date Pickers**: Calendar slide-in animation, date hover effects, smooth range selection
+- **Buttons**: Primary with gradient background, hover scale and shadow lift, press scale-down effect, loading spinner with smooth rotation
 
 ### Overlays
-- **Modal Dialogs**: Patient detail views, confirmation dialogs
-- **Drawer Panels**: Quick actions, additional patient information
-- **Toast Notifications**: System alerts, success confirmations
+- **Modals**: Scale-in animation with backdrop blur, close button hover rotation, content fade-in stagger
+- **Drawers**: Slide from edge with smooth easing, overlay backdrop with fade
+- **Toasts**: Slide + fade entry, progress bar animation, dismiss swipe gesture
 
-## Dashboard-Specific Design Enhancements
+## Dashboard Layouts
 
-### Medical Gradients & Visual Elements
-- **Primary Gradient**: `bg-gradient-to-br from-blue-50 via-white to-blue-50/50` (Light mode)
-- **Card Gradients**: `bg-gradient-to-r from-white to-blue-50/30` for stat cards
-- **Accent Gradients**: `bg-gradient-to-r from-primary/10 via-primary/5 to-transparent`
-- **Emergency Gradients**: `bg-gradient-to-r from-destructive/10 to-destructive/5` for urgent items
-- **Success Gradients**: `bg-gradient-to-r from-green-50 to-emerald-50/30` for positive metrics
+### Responsive Grid System
+- **Mobile**: Single column, compact spacing (p-4, gap-4)
+- **Tablet** (md:): 2-column stats (grid-cols-2), stacked sections
+- **Desktop** (lg:): 4-column stats (grid-cols-4), 2-column sections
+- **Large** (xl:): Expanded spacing (p-6, gap-6), 3-column sections
 
-### Enhanced Visual Hierarchy
-- **Stat Cards**: Elevated cards with subtle shadows and gradient backgrounds
-- **Icon Styling**: Medical icons with proper sizing (h-5 w-5 for stats, h-4 w-4 for actions)
-- **Typography Scale**: 
-  - Dashboard title: `text-2xl md:text-3xl font-semibold`
-  - Section headers: `text-lg font-medium`
-  - Stat values: `text-2xl md:text-3xl font-bold`
-  - Supporting text: `text-sm text-muted-foreground`
+### Key Dashboard Sections
+- **Hero Stats Grid**: 4 animated stat cards with gradients, icons, trend indicators
+- **Activity Timeline**: Left border design with role-colored indicators, relative timestamps, animated entry
+- **Quick Actions**: Icon buttons with hover lift, gradient backgrounds on hover
+- **Patient Overview**: Card grid with hover effects, status badges with pulse, priority sorting
+- **Appointment Calendar**: Interactive date cells, hover highlights, booked slot animations
 
-### Responsive Breakpoints (Mobile-First)
-- **Mobile**: `base` - Single column layout, compact spacing
-- **Tablet**: `md:` (768px+) - 2-column grid for stats, stacked sections
-- **Desktop**: `lg:` (1024px+) - 4-column stats grid, side-by-side sections
-- **Large Desktop**: `xl:` (1280px+) - Expanded spacing and larger components
+## Images
 
-### Dashboard Layout Patterns
-- **Stats Grid**: `grid gap-4 md:grid-cols-2 lg:grid-cols-4`
-- **Section Grid**: `grid gap-6 md:grid-cols-2 xl:grid-cols-3`
-- **Container Spacing**: `space-y-6` for main sections, `space-y-4` for subsections
-- **Card Padding**: `p-6` on desktop, `p-4` on mobile
-- **Icon Spacing**: `mr-2` for inline icons, `mb-2` for stacked layouts
+### Dashboard
+- **Header Background**: Abstract medical pattern (microscopic cells, DNA strands, or heartbeat waves) with gradient overlay, placed as full-width background behind stats section
+- **Empty States**: Medical illustrations (clipboard with checkmark, calendar with appointments, patient records) - friendly line-art style
 
-### Medical-Themed Visual Elements
-- **Status Indicators**: Colored dots with proper medical semantics
-  - Critical/Emergency: `bg-red-500`
-  - Warning/Attention: `bg-amber-500`
-  - Normal/Success: `bg-green-500`
-  - Info/Pending: `bg-blue-500`
-- **Activity Timeline**: Left border indicators with role-based colors
-- **Hover Effects**: Subtle elevation with `hover-elevate` utility
-- **Focus States**: Enhanced focus rings for accessibility
-- **Loading States**: Medical-themed skeleton components
+### Landing/Marketing Pages
+- **Hero Image**: Modern hospital interior or diverse medical team collaboration - full-bleed with gradient overlay and blurred button backgrounds
+- **Feature Section**: 3-4 spot illustrations showing system features (patient management, scheduling, analytics)
+- **Testimonial Section**: Hospital administrator and staff photos in authentic healthcare settings
 
-### Dashboard Card Styling
-- **Stat Cards**: 
-  - Background: `bg-gradient-to-br from-card via-card/95 to-card/90`
-  - Border: Subtle with `border-card-border/50`
-  - Shadow: `shadow-sm hover:shadow-md` transition
-  - Icon container: Subtle background with role-appropriate colors
-- **Quick Actions**: 
-  - Button styling: `variant="outline"` with medical icons
-  - Hover states: Subtle background changes
-  - Loading states: Disabled appearance with spinner
-- **Activity Feed**:
-  - Timeline design with connecting lines
-  - Badge indicators for activity types
-  - Relative timestamps with proper spacing
+## Accessibility
+- **Color Contrast**: Minimum 4.5:1 for all text, 3:1 for UI components
+- **Focus Indicators**: Prominent 2px ring with primary color, offset for visibility
+- **Motion**: Respect `prefers-reduced-motion` - disable animations when enabled
+- **Keyboard**: All interactive elements accessible, logical tab order, skip links
+- **Screen Readers**: Semantic HTML, ARIA labels for icons/dynamic content, live regions for updates
 
-## Healthcare-Specific Considerations
-- **Patient Privacy**: Subtle indicators when viewing sensitive data
-- **Emergency States**: Clear visual hierarchy for urgent patient needs
-- **Multi-Role Context**: Visual cues for current role/permissions
-- **Tenant Isolation**: Clear indicators of current hospital context
-- **Audit Trail**: Subtle but visible activity logging indicators
+## Dark Mode Strategy
+- Automatic detection via system preference with manual toggle
+- Smooth color transitions (0.3s ease) on mode switch
+- Adjusted shadow intensities (lighter in dark mode)
+- Enhanced glow effects for dark backgrounds
+- Consistent interaction patterns across modes
 
-## Accessibility Features
-- **High Contrast**: All text meets 4.5:1 contrast ratio minimum
-- **Focus Management**: Clear focus indicators for keyboard navigation
-- **Screen Reader**: Semantic HTML with appropriate ARIA labels
-- **Color Independence**: Status never conveyed by color alone
-- **Responsive Design**: Mobile-friendly for healthcare workers on tablets
-
-This design system prioritizes the critical nature of healthcare data while maintaining the efficiency healthcare professionals need in their daily workflows.
+This design system creates a vibrant, professional healthcare platform that feels modern and engaging while maintaining the trust and clarity essential for medical applications.
