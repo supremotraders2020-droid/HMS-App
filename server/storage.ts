@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -225,6 +225,14 @@ export interface IStorage {
   markUserNotificationRead(id: string): Promise<UserNotification | undefined>;
   markAllUserNotificationsRead(userId: string): Promise<void>;
   deleteUserNotification(id: string): Promise<boolean>;
+  
+  // Consent Forms
+  getConsentForms(): Promise<ConsentForm[]>;
+  getConsentForm(id: string): Promise<ConsentForm | undefined>;
+  getConsentFormsByCategory(category: string): Promise<ConsentForm[]>;
+  createConsentForm(form: InsertConsentForm): Promise<ConsentForm>;
+  updateConsentForm(id: string, updates: Partial<InsertConsentForm>): Promise<ConsentForm | undefined>;
+  deleteConsentForm(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -2218,6 +2226,43 @@ export class MemStorage implements IStorage {
 
   async deleteUserNotification(id: string): Promise<boolean> {
     return this.userNotificationsData.delete(id);
+  }
+
+  // Consent Forms stub methods
+  private consentFormsData = new Map<string, ConsentForm>();
+
+  async getConsentForms(): Promise<ConsentForm[]> {
+    return Array.from(this.consentFormsData.values())
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
+  async getConsentForm(id: string): Promise<ConsentForm | undefined> {
+    return this.consentFormsData.get(id);
+  }
+
+  async getConsentFormsByCategory(category: string): Promise<ConsentForm[]> {
+    return Array.from(this.consentFormsData.values())
+      .filter(f => f.category === category)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
+  async createConsentForm(form: InsertConsentForm): Promise<ConsentForm> {
+    const id = randomUUID();
+    const newForm: ConsentForm = { id, ...form, createdAt: new Date(), updatedAt: new Date() };
+    this.consentFormsData.set(id, newForm);
+    return newForm;
+  }
+
+  async updateConsentForm(id: string, updates: Partial<InsertConsentForm>): Promise<ConsentForm | undefined> {
+    const existing = this.consentFormsData.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.consentFormsData.set(id, updated);
+    return updated;
+  }
+
+  async deleteConsentForm(id: string): Promise<boolean> {
+    return this.consentFormsData.delete(id);
   }
 }
 

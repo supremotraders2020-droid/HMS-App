@@ -30,7 +30,8 @@ import {
   Coffee,
   MessageCircle,
   Bell,
-  Wrench
+  Wrench,
+  FileCheck
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 
@@ -63,7 +64,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Hospitality Service", url: "/hospitality-service", icon: Coffee, roles: ["ADMIN", "NURSE", "OPD_MANAGER"] },
       { title: "Equipment Servicing", url: "/equipment-servicing", icon: Wrench, roles: ["ADMIN", "NURSE", "OPD_MANAGER"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
-      { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"] }
+      { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"] },
+      { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] }
     ];
 
     // Filter services based on user role

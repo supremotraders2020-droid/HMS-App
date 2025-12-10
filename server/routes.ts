@@ -2048,6 +2048,183 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== CONSENT FORMS ROUTES ==========
+  
+  // Helper function to verify admin access
+  const verifyAdminAccess = async (req: express.Request, res: express.Response): Promise<boolean> => {
+    const userId = req.headers['x-user-id'] as string;
+    const userRole = req.headers['x-user-role'] as string;
+    
+    if (!userId || !userRole) {
+      res.status(401).json({ error: "Authentication required" });
+      return false;
+    }
+    
+    if (userRole !== 'ADMIN') {
+      res.status(403).json({ error: "Access denied. Admin privileges required." });
+      return false;
+    }
+    
+    // Verify user exists and is admin
+    const user = await storage.getUser(userId);
+    if (!user || user.role !== 'ADMIN') {
+      res.status(403).json({ error: "Access denied. Invalid user or insufficient privileges." });
+      return false;
+    }
+    
+    return true;
+  };
+  
+  // Get all consent forms (Admin only)
+  app.get("/api/consent-forms", async (req, res) => {
+    try {
+      if (!(await verifyAdminAccess(req, res))) return;
+      
+      const forms = await storage.getConsentForms();
+      // Return forms without the large file data for listing
+      const formsWithoutData = forms.map(form => ({
+        ...form,
+        fileData: undefined, // Don't send file data in list view
+        hasFile: !!form.fileData
+      }));
+      res.json(formsWithoutData);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch consent forms" });
+    }
+  });
+
+  // Get consent forms by category (Admin only)
+  app.get("/api/consent-forms/category/:category", async (req, res) => {
+    try {
+      if (!(await verifyAdminAccess(req, res))) return;
+      
+      const forms = await storage.getConsentFormsByCategory(req.params.category);
+      const formsWithoutData = forms.map(form => ({
+        ...form,
+        fileData: undefined,
+        hasFile: !!form.fileData
+      }));
+      res.json(formsWithoutData);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch consent forms by category" });
+    }
+  });
+
+  // Get single consent form (Admin only)
+  app.get("/api/consent-forms/:id", async (req, res) => {
+    try {
+      if (!(await verifyAdminAccess(req, res))) return;
+      
+      const form = await storage.getConsentForm(req.params.id);
+      if (!form) {
+        return res.status(404).json({ error: "Consent form not found" });
+      }
+      res.json(form);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch consent form" });
+    }
+  });
+
+  // Download consent form file (Admin only)
+  app.get("/api/consent-forms/:id/download", async (req, res) => {
+    try {
+      if (!(await verifyAdminAccess(req, res))) return;
+      
+      const form = await storage.getConsentForm(req.params.id);
+      if (!form) {
+        return res.status(404).json({ error: "Consent form not found" });
+      }
+      
+      // Decode base64 and send as file
+      const fileBuffer = Buffer.from(form.fileData, 'base64');
+      res.setHeader('Content-Type', form.mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${form.fileName}"`);
+      res.setHeader('Content-Length', fileBuffer.length);
+      res.send(fileBuffer);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to download consent form" });
+    }
+  });
+
+  // Create consent form (Admin only, with validation)
+  app.post("/api/consent-forms", async (req, res) => {
+    try {
+      if (!(await verifyAdminAccess(req, res))) return;
+      
+      const { name, description, category, fileName, fileData, fileSize, mimeType, uploadedBy } = req.body;
+      
+      // Validation
+      if (!name || !fileName || !fileData || !uploadedBy) {
+        return res.status(400).json({ error: "Name, fileName, fileData, and uploadedBy are required" });
+      }
+      
+      // Validate file type (must be PDF)
+      const allowedMimeTypes = ['application/pdf'];
+      const effectiveMimeType = mimeType || 'application/pdf';
+      if (!allowedMimeTypes.includes(effectiveMimeType)) {
+        return res.status(400).json({ error: "Only PDF files are allowed" });
+      }
+      
+      // Validate file size (max 10MB when base64 encoded)
+      const maxBase64Size = 10 * 1024 * 1024 * 1.37; // ~13.7MB base64 for 10MB file
+      if (fileData.length > maxBase64Size) {
+        return res.status(400).json({ error: "File size must be less than 10MB" });
+      }
+      
+      // Validate file name ends with .pdf
+      if (!fileName.toLowerCase().endsWith('.pdf')) {
+        return res.status(400).json({ error: "File must be a PDF document" });
+      }
+
+      const form = await storage.createConsentForm({
+        name,
+        description: description || null,
+        category: category || "general",
+        fileName,
+        fileData,
+        fileSize: fileSize || 0,
+        mimeType: effectiveMimeType,
+        uploadedBy,
+        isActive: true
+      });
+      
+      res.status(201).json({ ...form, fileData: undefined });
+    } catch (error) {
+      console.error("Failed to create consent form:", error);
+      res.status(500).json({ error: "Failed to create consent form" });
+    }
+  });
+
+  // Update consent form (Admin only)
+  app.patch("/api/consent-forms/:id", async (req, res) => {
+    try {
+      if (!(await verifyAdminAccess(req, res))) return;
+      
+      const form = await storage.updateConsentForm(req.params.id, req.body);
+      if (!form) {
+        return res.status(404).json({ error: "Consent form not found" });
+      }
+      res.json({ ...form, fileData: undefined });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update consent form" });
+    }
+  });
+
+  // Delete consent form (Admin only)
+  app.delete("/api/consent-forms/:id", async (req, res) => {
+    try {
+      if (!(await verifyAdminAccess(req, res))) return;
+      
+      const deleted = await storage.deleteConsentForm(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Consent form not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete consent form" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service

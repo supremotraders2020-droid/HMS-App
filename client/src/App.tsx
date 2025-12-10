@@ -25,6 +25,7 @@ import NotificationService from "@/pages/NotificationService";
 import PatientPortal from "@/pages/PatientPortal";
 import DoctorPortal from "@/pages/DoctorPortal";
 import EquipmentServicing from "@/pages/EquipmentServicing";
+import ConsentForms from "@/pages/ConsentForms";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -164,6 +165,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
       </Route>
       <Route path="/equipment-servicing">
         <EquipmentServicing />
+      </Route>
+      <Route path="/consent-forms">
+        {currentUser.role === "ADMIN" ? (
+          <ConsentForms currentUser={currentUser} />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators can access consent forms.</p>
+          </div>
+        )}
       </Route>
 
       {/* Other Routes */}

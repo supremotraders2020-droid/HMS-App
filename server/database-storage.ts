@@ -12,7 +12,7 @@ import {
   biometricTemplates, biometricVerifications,
   notifications, hospitalTeamMembers, activityLogs,
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
-  prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications,
+  prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -30,7 +30,8 @@ import {
   type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule,
   type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile,
   type PatientProfile, type InsertPatientProfile,
-  type UserNotification, type InsertUserNotification
+  type UserNotification, type InsertUserNotification,
+  type ConsentForm, type InsertConsentForm
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -1361,6 +1362,40 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUserNotification(id: string): Promise<boolean> {
     const result = await db.delete(userNotifications).where(eq(userNotifications.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== CONSENT FORM METHODS ==========
+  async getConsentForms(): Promise<ConsentForm[]> {
+    return await db.select().from(consentForms).orderBy(desc(consentForms.createdAt));
+  }
+
+  async getConsentForm(id: string): Promise<ConsentForm | undefined> {
+    const result = await db.select().from(consentForms).where(eq(consentForms.id, id));
+    return result[0];
+  }
+
+  async getConsentFormsByCategory(category: string): Promise<ConsentForm[]> {
+    return await db.select().from(consentForms)
+      .where(eq(consentForms.category, category))
+      .orderBy(desc(consentForms.createdAt));
+  }
+
+  async createConsentForm(form: InsertConsentForm): Promise<ConsentForm> {
+    const result = await db.insert(consentForms).values(form).returning();
+    return result[0];
+  }
+
+  async updateConsentForm(id: string, updates: Partial<InsertConsentForm>): Promise<ConsentForm | undefined> {
+    const result = await db.update(consentForms)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(consentForms.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteConsentForm(id: string): Promise<boolean> {
+    const result = await db.delete(consentForms).where(eq(consentForms.id, id)).returning();
     return result.length > 0;
   }
 }

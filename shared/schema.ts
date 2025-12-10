@@ -723,3 +723,28 @@ export const insertUserNotificationSchema = createInsertSchema(userNotifications
 });
 export type InsertUserNotification = z.infer<typeof insertUserNotificationSchema>;
 export type UserNotification = typeof userNotifications.$inferSelect;
+
+// ========== CONSENT FORMS TABLE ==========
+// Storage for hospital consent form PDFs that admin can upload, download, and print
+export const consentForms = pgTable("consent_forms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull().default("general"), // general, surgery, treatment, admission, discharge
+  fileName: text("file_name").notNull(),
+  fileData: text("file_data").notNull(), // Base64 encoded PDF
+  fileSize: integer("file_size").notNull(),
+  mimeType: text("mime_type").notNull().default("application/pdf"),
+  uploadedBy: varchar("uploaded_by").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertConsentFormSchema = createInsertSchema(consentForms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertConsentForm = z.infer<typeof insertConsentFormSchema>;
+export type ConsentForm = typeof consentForms.$inferSelect;
