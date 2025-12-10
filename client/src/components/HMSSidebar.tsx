@@ -196,59 +196,65 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Support Services</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {getMenuItems(currentRole).filter(item => 
-                ['Inventory Service', 'Equipment Servicing', 'Chatbot Service', 'Notification Service'].includes(item.title)
-              ).map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild
-                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => handleMenuClick(item.url)}
+        {/* Support Services - Hidden for OPD_MANAGER */}
+        {currentRole !== "OPD_MANAGER" && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Support Services</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {getMenuItems(currentRole).filter(item => 
+                  ['Inventory Service', 'Equipment Servicing', 'Chatbot Service', 'Notification Service'].includes(item.title)
+                ).map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild
+                      data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                     >
-                      <item.icon className="h-4 w-4 mr-2" />
-                      <span>{item.title}</span>
-                    </Button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => handleMenuClick(item.url)}
+                      >
+                        <item.icon className="h-4 w-4 mr-2" />
+                        <span>{item.title}</span>
+                      </Button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {getMenuItems(currentRole).filter(item => 
-                !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Equipment Servicing', 'Chatbot Service', 'Notification Service'].includes(item.title)
-              ).map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild
-                    data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => handleMenuClick(item.url)}
+        {/* Management - Hidden for OPD_MANAGER */}
+        {currentRole !== "OPD_MANAGER" && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Management</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {getMenuItems(currentRole).filter(item => 
+                  !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Equipment Servicing', 'Chatbot Service', 'Notification Service'].includes(item.title)
+                ).map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild
+                      data-testid={`link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                     >
-                      <item.icon className="h-4 w-4 mr-2" />
-                      <span>{item.title}</span>
-                    </Button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => handleMenuClick(item.url)}
+                      >
+                        <item.icon className="h-4 w-4 mr-2" />
+                        <span>{item.title}</span>
+                      </Button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
       </SidebarContent>
 
