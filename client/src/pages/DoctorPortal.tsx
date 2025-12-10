@@ -1417,12 +1417,10 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                         setShowPatientDropdown(true);
                       }}
                       onFocus={() => setShowPatientDropdown(true)}
-                      onBlur={(e) => {
+                      onBlur={() => {
                         setTimeout(() => {
-                          if (!e.currentTarget.contains(document.activeElement)) {
-                            setShowPatientDropdown(false);
-                          }
-                        }, 150);
+                          setShowPatientDropdown(false);
+                        }, 200);
                       }}
                       placeholder="Type to search patients..."
                       autoComplete="off"
