@@ -226,8 +226,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           </SidebarGroup>
         )}
 
-        {/* Management - Hidden for OPD_MANAGER */}
-        {currentRole !== "OPD_MANAGER" && (
+        {/* Management - Hidden for OPD_MANAGER and NURSE */}
+        {currentRole !== "OPD_MANAGER" && currentRole !== "NURSE" && (
           <SidebarGroup>
             <SidebarGroupLabel>Management</SidebarGroupLabel>
             <SidebarGroupContent>
