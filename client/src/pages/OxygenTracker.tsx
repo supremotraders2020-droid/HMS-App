@@ -60,7 +60,7 @@ export default function OxygenTracker() {
   const activeAlerts = alerts.filter(a => !a.isResolved);
 
   const createCylinderMutation = useMutation({
-    mutationFn: (data: Partial<OxygenCylinder>) => apiRequest('/api/oxygen/cylinders', { method: 'POST', body: JSON.stringify(data) }),
+    mutationFn: (data: Partial<OxygenCylinder>) => apiRequest('POST', '/api/oxygen/cylinders', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/oxygen/cylinders'] });
       setShowAddCylinder(false);
@@ -70,7 +70,7 @@ export default function OxygenTracker() {
   });
 
   const createMovementMutation = useMutation({
-    mutationFn: (data: Partial<CylinderMovement>) => apiRequest('/api/oxygen/movements', { method: 'POST', body: JSON.stringify(data) }),
+    mutationFn: (data: Partial<CylinderMovement>) => apiRequest('POST', '/api/oxygen/movements', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/oxygen/cylinders'] });
       queryClient.invalidateQueries({ queryKey: ['/api/oxygen/movements'] });
@@ -82,7 +82,7 @@ export default function OxygenTracker() {
   });
 
   const createConsumptionMutation = useMutation({
-    mutationFn: (data: Partial<OxygenConsumption>) => apiRequest('/api/oxygen/consumption', { method: 'POST', body: JSON.stringify(data) }),
+    mutationFn: (data: Partial<OxygenConsumption>) => apiRequest('POST', '/api/oxygen/consumption', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/oxygen/consumption'] });
       setShowAddConsumption(false);
@@ -92,7 +92,7 @@ export default function OxygenTracker() {
   });
 
   const createLmoReadingMutation = useMutation({
-    mutationFn: (data: Partial<LmoReading>) => apiRequest('/api/oxygen/lmo', { method: 'POST', body: JSON.stringify(data) }),
+    mutationFn: (data: Partial<LmoReading>) => apiRequest('POST', '/api/oxygen/lmo', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/oxygen/lmo'] });
       queryClient.invalidateQueries({ queryKey: ['/api/oxygen/alerts'] });
@@ -103,7 +103,7 @@ export default function OxygenTracker() {
   });
 
   const resolveAlertMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/api/oxygen/alerts/${id}/resolve`, { method: 'PATCH', body: JSON.stringify({ resolvedBy: 'Admin' }) }),
+    mutationFn: (id: string) => apiRequest('PATCH', `/api/oxygen/alerts/${id}/resolve`, { resolvedBy: 'Admin' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/oxygen/alerts'] });
       toast({ title: "Alert resolved" });

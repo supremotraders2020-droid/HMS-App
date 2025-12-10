@@ -30,7 +30,8 @@ import {
   MessageCircle,
   Bell,
   Wrench,
-  FileCheck
+  FileCheck,
+  Cylinder
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 
@@ -62,6 +63,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Patient Tracking", url: "/patient-tracking", icon: MapPin, roles: ["ADMIN", "DOCTOR", "NURSE"] },
       { title: "Biometric Service", url: "/biometric-service", icon: Fingerprint, roles: ["ADMIN", "NURSE", "DOCTOR"] },
       { title: "Equipment Servicing", url: "/equipment-servicing", icon: Wrench, roles: ["ADMIN", "NURSE"] },
+      { title: "Oxygen Tracker", url: "/oxygen-tracker", icon: Cylinder, roles: ["ADMIN", "NURSE"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
       { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "PATIENT"] },
       { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] }
@@ -203,7 +205,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
             <SidebarGroupContent>
               <SidebarMenu>
                 {getMenuItems(currentRole).filter(item => 
-                  ['Inventory Service', 'Equipment Servicing', 'Chatbot Service', 'Notification Service'].includes(item.title)
+                  ['Inventory Service', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service'].includes(item.title)
                 ).map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
@@ -233,7 +235,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
             <SidebarGroupContent>
               <SidebarMenu>
                 {getMenuItems(currentRole).filter(item => 
-                  !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Equipment Servicing', 'Chatbot Service', 'Notification Service'].includes(item.title)
+                  !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service'].includes(item.title)
                 ).map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 

@@ -26,6 +26,7 @@ import PatientPortal from "@/pages/PatientPortal";
 import DoctorPortal from "@/pages/DoctorPortal";
 import EquipmentServicing from "@/pages/EquipmentServicing";
 import ConsentForms from "@/pages/ConsentForms";
+import OxygenTracker from "@/pages/OxygenTracker";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -160,6 +161,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
       </Route>
       <Route path="/equipment-servicing">
         <EquipmentServicing />
+      </Route>
+      <Route path="/oxygen-tracker">
+        {(currentUser.role === "ADMIN" || currentUser.role === "NURSE") ? (
+          <OxygenTracker />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators and nurses can access oxygen tracking.</p>
+          </div>
+        )}
       </Route>
       <Route path="/consent-forms">
         {currentUser.role === "ADMIN" ? (
