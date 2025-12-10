@@ -385,11 +385,11 @@ Description: ${record.description}
   function PatientSidebar() {
     return (
       <Sidebar collapsible="icon">
-        <SidebarHeader className="p-2 border-b">
+        <SidebarHeader className="py-3 px-2 border-b">
             <img 
               src={hospitalLogo} 
               alt="Gravity Hospital" 
-              className="w-full h-auto object-contain group-data-[collapsible=icon]:w-10"
+              className="w-full max-w-[210px] h-[56px] object-contain group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10"
               data-testid="img-patient-portal-logo"
             />
         </SidebarHeader>
