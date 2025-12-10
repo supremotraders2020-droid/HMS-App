@@ -2119,7 +2119,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               <img 
                 src={hospitalLogo} 
                 alt="Gravity Hospital" 
-                className="h-12 w-auto object-contain"
+                className="h-16 w-auto object-contain"
                 data-testid="img-doctor-portal-logo"
               />
             </div>

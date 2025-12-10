@@ -66,7 +66,7 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
             <img 
               src={hospitalLogo} 
               alt="Gravity Hospital" 
-              className="h-20 w-auto object-contain"
+              className="h-32 w-auto object-contain"
               data-testid="img-hospital-logo"
             />
           </div>

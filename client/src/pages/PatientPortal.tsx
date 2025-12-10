@@ -390,7 +390,7 @@ Description: ${record.description}
             <img 
               src={hospitalLogo} 
               alt="Gravity Hospital" 
-              className="h-12 w-auto object-contain group-data-[collapsible=icon]:h-8"
+              className="h-16 w-auto object-contain group-data-[collapsible=icon]:h-10"
               data-testid="img-patient-portal-logo"
             />
           </div>

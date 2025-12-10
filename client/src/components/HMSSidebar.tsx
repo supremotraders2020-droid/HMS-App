@@ -128,7 +128,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           <img 
             src={hospitalLogo} 
             alt="Gravity Hospital" 
-            className="h-12 w-auto object-contain"
+            className="h-16 w-auto object-contain"
             data-testid="img-sidebar-logo"
           />
         </div>
