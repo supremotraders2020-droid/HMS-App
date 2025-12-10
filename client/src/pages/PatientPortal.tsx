@@ -258,6 +258,36 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
   const unreadNotifications = userNotifications.filter(n => !n.isRead).length;
 
+  const allTimeSlots = [
+    { value: "09:00", label: "09:00 AM" },
+    { value: "09:30", label: "09:30 AM" },
+    { value: "10:00", label: "10:00 AM" },
+    { value: "10:30", label: "10:30 AM" },
+    { value: "11:00", label: "11:00 AM" },
+    { value: "11:30", label: "11:30 AM" },
+    { value: "14:00", label: "02:00 PM" },
+    { value: "14:30", label: "02:30 PM" },
+    { value: "15:00", label: "03:00 PM" },
+    { value: "15:30", label: "03:30 PM" },
+    { value: "16:00", label: "04:00 PM" },
+    { value: "16:30", label: "04:30 PM" },
+  ];
+
+  const getAvailableSlots = () => {
+    if (!selectedDoctor || !selectedDate) return allTimeSlots;
+    const bookedSlots = appointments
+      .filter(a => 
+        a.doctorId === selectedDoctor && 
+        a.appointmentDate === selectedDate &&
+        a.status !== "cancelled" && 
+        a.status !== "completed"
+      )
+      .map(a => a.timeSlot);
+    return allTimeSlots.filter(slot => !bookedSlots.includes(slot.value));
+  };
+
+  const availableSlots = getAvailableSlots();
+
   // Handle view medical record
   const handleViewRecord = (record: MedicalRecord) => {
     if (record.fileData) {
@@ -729,7 +759,7 @@ Description: ${record.description}
                       <Input 
                         type="date" 
                         value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
+                        onChange={(e) => { setSelectedDate(e.target.value); setSelectedSlot(""); }}
                         min={new Date().toISOString().split("T")[0]}
                         data-testid="input-appointment-date"
                       />
@@ -738,15 +768,16 @@ Description: ${record.description}
                       <Label>Available Slots</Label>
                       <Select value={selectedSlot} onValueChange={setSelectedSlot}>
                         <SelectTrigger data-testid="select-time-slot">
-                          <SelectValue placeholder="Select time slot" />
+                          <SelectValue placeholder={availableSlots.length === 0 ? "No slots available" : "Select time slot"} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="09:00">09:00 AM</SelectItem>
-                          <SelectItem value="10:00">10:00 AM</SelectItem>
-                          <SelectItem value="11:00">11:00 AM</SelectItem>
-                          <SelectItem value="14:00">02:00 PM</SelectItem>
-                          <SelectItem value="15:00">03:00 PM</SelectItem>
-                          <SelectItem value="16:00">04:00 PM</SelectItem>
+                          {availableSlots.length === 0 ? (
+                            <SelectItem value="" disabled>No available slots for this date</SelectItem>
+                          ) : (
+                            availableSlots.map(slot => (
+                              <SelectItem key={slot.value} value={slot.value}>{slot.label}</SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
