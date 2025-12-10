@@ -893,6 +893,7 @@ export class DatabaseStorage implements IStorage {
     const essentialAccounts = [
       { username: "admin", password: "123456", role: "ADMIN" as const, name: "Administrator", email: "admin@gravityhospital.in" },
       { username: "patient", password: "123456", role: "PATIENT" as const, name: "Test Patient", email: "patient@gravityhospital.in" },
+      { username: "doctor", password: "123456", role: "DOCTOR" as const, name: "Doctor", email: "doctor@gravityhospital.in" },
       { username: "dr.anil.kulkarni", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Anil Kulkarni", email: "dr.anil.kulkarni@gravityhospital.in" },
       { username: "dr.snehal.patil", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Snehal Patil", email: "dr.snehal.patil@gravityhospital.in" },
       { username: "dr.vikram.deshpande", password: "Doctor@123", role: "DOCTOR" as const, name: "Dr. Vikram Deshpande", email: "dr.vikram.deshpande@gravityhospital.in" },
