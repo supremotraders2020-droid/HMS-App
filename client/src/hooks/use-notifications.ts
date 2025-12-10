@@ -97,37 +97,49 @@ export function useNotifications({ userId, userRole, enabled = true }: UseNotifi
             queryClient.invalidateQueries({ queryKey: ["/api/user-notifications", userId] });
             
             // If it's an appointment notification, also refresh appointments and schedules
+            // Use predicate-based invalidation to catch all appointment-related queries regardless of parameters
             if (data.notification?.type === "appointment") {
-              queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
-              queryClient.invalidateQueries({ queryKey: ["/api/doctors"] });
-              // Refresh specific doctor schedules if doctorId is available
-              const metadata = data.notification?.metadata;
-              if (metadata) {
-                try {
-                  const parsed = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
-                  if (parsed.doctorId) {
-                    queryClient.invalidateQueries({ queryKey: ["/api/doctors", parsed.doctorId, "schedules"] });
-                  }
-                } catch {}
-              }
+              queryClient.invalidateQueries({ 
+                predicate: (query) => {
+                  const key = query.queryKey;
+                  return Array.isArray(key) && (
+                    (typeof key[0] === 'string' && key[0].includes('/api/appointments')) ||
+                    (typeof key[0] === 'string' && key[0].includes('/api/doctors'))
+                  );
+                }
+              });
             }
           }
           
           // Handle admin broadcast notifications for real-time updates
           if (data.type === "admin_notification") {
             if (data.event === "appointment_created" || data.event === "appointment_updated") {
-              queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
-              queryClient.invalidateQueries({ queryKey: ["/api/doctors"] });
-              queryClient.invalidateQueries({ queryKey: ["/api/activity-logs"] });
+              // Invalidate all appointment and doctor queries using predicate
+              queryClient.invalidateQueries({ 
+                predicate: (query) => {
+                  const key = query.queryKey;
+                  return Array.isArray(key) && typeof key[0] === 'string' && (
+                    key[0].includes('/api/appointments') ||
+                    key[0].includes('/api/doctors') ||
+                    key[0].includes('/api/activity-logs')
+                  );
+                }
+              });
             }
           }
           
           // Handle appointment update broadcasts to doctors
           if (data.type === "appointment_update") {
-            queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
-            if (data.doctorId) {
-              queryClient.invalidateQueries({ queryKey: ["/api/doctors", data.doctorId, "schedules"] });
-            }
+            // Invalidate all appointment and schedule queries
+            queryClient.invalidateQueries({ 
+              predicate: (query) => {
+                const key = query.queryKey;
+                return Array.isArray(key) && typeof key[0] === 'string' && (
+                  key[0].includes('/api/appointments') ||
+                  key[0].includes('/api/doctors')
+                );
+              }
+            });
           }
         } catch (e) {
           console.error("WebSocket message parse error:", e);
