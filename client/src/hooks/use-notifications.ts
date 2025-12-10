@@ -93,7 +93,41 @@ export function useNotifications({ userId, userRole, enabled = true }: UseNotifi
         try {
           const data = JSON.parse(event.data);
           if (data.type === "notification") {
+            // Refresh notifications
             queryClient.invalidateQueries({ queryKey: ["/api/user-notifications", userId] });
+            
+            // If it's an appointment notification, also refresh appointments and schedules
+            if (data.notification?.type === "appointment") {
+              queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/doctors"] });
+              // Refresh specific doctor schedules if doctorId is available
+              const metadata = data.notification?.metadata;
+              if (metadata) {
+                try {
+                  const parsed = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+                  if (parsed.doctorId) {
+                    queryClient.invalidateQueries({ queryKey: ["/api/doctors", parsed.doctorId, "schedules"] });
+                  }
+                } catch {}
+              }
+            }
+          }
+          
+          // Handle admin broadcast notifications for real-time updates
+          if (data.type === "admin_notification") {
+            if (data.event === "appointment_created" || data.event === "appointment_updated") {
+              queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/doctors"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/activity-logs"] });
+            }
+          }
+          
+          // Handle appointment update broadcasts to doctors
+          if (data.type === "appointment_update") {
+            queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+            if (data.doctorId) {
+              queryClient.invalidateQueries({ queryKey: ["/api/doctors", data.doctorId, "schedules"] });
+            }
           }
         } catch (e) {
           console.error("WebSocket message parse error:", e);

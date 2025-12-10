@@ -142,7 +142,19 @@ class NotificationService {
       });
     }
 
+    // Broadcast to all admins
     this.broadcast({ type: "admin_notification", event: "appointment_created", appointmentId, department, location }, "ADMIN");
+    
+    // Broadcast appointment update to the specific doctor for real-time schedule sync
+    this.sendToUser(doctorId, {
+      type: "appointment_update",
+      event: "created",
+      appointmentId,
+      doctorId,
+      appointmentDate,
+      appointmentTime,
+      patientName
+    });
   }
 
   async notifyAppointmentUpdated(appointmentId: string, doctorId: string, patientName: string, status: string, appointmentDate: string) {

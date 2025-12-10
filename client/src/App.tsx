@@ -77,6 +77,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           currentRole={currentUser.role}
           userName={currentUser.name}
           hospitalName={currentUser.hospitalName}
+          userId={currentUser.id}
         />
       </Route>
       <Route path="/dashboard">
@@ -84,6 +85,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           currentRole={currentUser.role}
           userName={currentUser.name}
           hospitalName={currentUser.hospitalName}
+          userId={currentUser.id}
         />
       </Route>
       <Route path="/users">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
+import { useNotifications } from "@/hooks/use-notifications";
 import { 
   Users, 
   Calendar, 
@@ -19,7 +20,7 @@ import {
   UserCheck,
   BarChart3
 } from "lucide-react";
-import type { ActivityLog } from "@shared/schema";
+import type { ActivityLog, Appointment } from "@shared/schema";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -27,16 +28,33 @@ interface HMSDashboardProps {
   currentRole: UserRole;
   userName: string;
   hospitalName: string;
+  userId: string;
 }
 
-export default function HMSDashboard({ currentRole, userName, hospitalName }: HMSDashboardProps) {
+export default function HMSDashboard({ currentRole, userName, hospitalName, userId }: HMSDashboardProps) {
   const [showAllActivities, setShowAllActivities] = useState(false);
+
+  // Initialize WebSocket connection for real-time updates
+  useNotifications({ 
+    userId, 
+    userRole: currentRole,
+    enabled: !!userId 
+  });
 
   // Fetch activity logs from API
   const { data: activityLogs = [], isLoading: activitiesLoading } = useQuery<ActivityLog[]>({
     queryKey: ['/api/activity-logs'],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
+
+  // Fetch appointments for real-time display (updated via WebSocket)
+  const { data: appointments = [] } = useQuery<Appointment[]>({
+    queryKey: ['/api/appointments'],
+  });
+
+  // Get today's appointments count
+  const today = new Date().toISOString().split('T')[0];
+  const todayAppointments = appointments.filter(apt => apt.appointmentDate === today);
 
   // Get recent activities (limit 5 for dashboard)
   const recentActivities = activityLogs.slice(0, 5);
@@ -57,11 +75,11 @@ export default function HMSDashboard({ currentRole, userName, hospitalName }: HM
     return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   };
 
-  // Mock data for different roles
+  // Dashboard data with real appointment counts
   const getDashboardData = (role: UserRole) => {
     const commonStats = [
-      { title: "Active Patients", value: "1,234", change: "+12%", icon: Users, urgent: false },
-      { title: "Today's Appointments", value: "89", change: "+5%", icon: Calendar, urgent: false }
+      { title: "Active Patients", value: appointments.length.toString(), change: "+12%", icon: Users, urgent: false },
+      { title: "Today's Appointments", value: todayAppointments.length.toString(), change: "Live", icon: Calendar, urgent: false }
     ];
 
     const roleSpecificStats: Record<UserRole, any[]> = {
