@@ -50,8 +50,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/schema";
-import type { ServicePatient, MedicalRecord } from "@shared/schema";
+import type { ServicePatient, MedicalRecord, PatientConsent } from "@shared/schema";
 import { z } from "zod";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Printer, FileCheck } from "lucide-react";
 
 const patientFormSchema = insertServicePatientSchema.extend({
   firstName: z.string().min(1, "First name is required"),
@@ -84,6 +86,18 @@ export default function PatientService() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
   const [useCustomPatientId, setUseCustomPatientId] = useState(false);
+  const [consentSearchQuery, setConsentSearchQuery] = useState("");
+  const [showNewConsentDialog, setShowNewConsentDialog] = useState(false);
+  const [showConsentDetailDialog, setShowConsentDetailDialog] = useState(false);
+  const [showDeleteConsentDialog, setShowDeleteConsentDialog] = useState(false);
+  const [selectedConsent, setSelectedConsent] = useState<PatientConsent | null>(null);
+  const [consentFile, setConsentFile] = useState<{ name: string; data: string; type: string } | null>(null);
+  const [consentFileError, setConsentFileError] = useState<string | null>(null);
+  const [consentPatientPopoverOpen, setConsentPatientPopoverOpen] = useState(false);
+  const [consentPatientId, setConsentPatientId] = useState("");
+  const [consentTitle, setConsentTitle] = useState("");
+  const [consentDescription, setConsentDescription] = useState("");
+  const [consentType, setConsentType] = useState("");
   const { toast } = useToast();
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<ServicePatient[]>({
@@ -92,6 +106,10 @@ export default function PatientService() {
 
   const { data: medicalRecords = [], isLoading: recordsLoading } = useQuery<MedicalRecord[]>({
     queryKey: ["/api/medical-records"],
+  });
+
+  const { data: patientConsents = [], isLoading: consentsLoading } = useQuery<PatientConsent[]>({
+    queryKey: ["/api/patient-consents"],
   });
 
   const patientForm = useForm({
@@ -175,6 +193,138 @@ export default function PatientService() {
       toast({ title: "Error", description: "Failed to delete medical record", variant: "destructive" });
     },
   });
+
+  // Consent form mutations
+  const createConsentMutation = useMutation({
+    mutationFn: async () => {
+      if (!consentFile || !consentPatientId || !consentTitle || !consentType) {
+        throw new Error("Missing required fields");
+      }
+      const payload = {
+        patientId: consentPatientId,
+        consentType: consentType,
+        title: consentTitle,
+        description: consentDescription,
+        fileName: consentFile.name,
+        fileData: consentFile.data,
+        fileType: consentFile.type,
+        uploadedBy: "Admin",
+      };
+      return await apiRequest("POST", "/api/patient-consents", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/patient-consents"] });
+      toast({ title: "Consent Form Uploaded", description: "Patient consent form has been uploaded successfully" });
+      setShowNewConsentDialog(false);
+      resetConsentForm();
+    },
+    onError: () => {
+      toast({ title: "Upload Failed", description: "Failed to upload consent form", variant: "destructive" });
+    },
+  });
+
+  const deleteConsentMutation = useMutation({
+    mutationFn: async (consentId: string) => {
+      return await apiRequest("DELETE", `/api/patient-consents/${consentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/patient-consents"] });
+      toast({ title: "Consent Deleted", description: "Patient consent form has been deleted successfully" });
+      setShowDeleteConsentDialog(false);
+      setSelectedConsent(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete consent form", variant: "destructive" });
+    },
+  });
+
+  const resetConsentForm = () => {
+    setConsentPatientId("");
+    setConsentTitle("");
+    setConsentDescription("");
+    setConsentType("");
+    setConsentFile(null);
+    setConsentFileError(null);
+  };
+
+  const handleConsentFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setConsentFileError("Only PDF files are allowed");
+      setConsentFile(null);
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setConsentFileError("File size exceeds 2MB limit");
+      setConsentFile(null);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Data = reader.result as string;
+      setConsentFile({
+        name: file.name,
+        data: base64Data,
+        type: file.type,
+      });
+      setConsentFileError(null);
+    };
+    reader.onerror = () => {
+      setConsentFileError("Failed to read file");
+      setConsentFile(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleViewConsent = (consent: PatientConsent) => {
+    setSelectedConsent(consent);
+    setShowConsentDetailDialog(true);
+  };
+
+  const handleDownloadConsent = (consent: PatientConsent) => {
+    if (consent.fileData && consent.fileName) {
+      const link = document.createElement('a');
+      link.href = consent.fileData;
+      link.download = consent.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: "Download Started", description: `Downloading ${consent.fileName}` });
+    }
+  };
+
+  const handlePrintConsent = (consent: PatientConsent) => {
+    if (consent.fileData) {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head><title>${consent.title}</title></head>
+            <body style="margin:0;padding:0;">
+              <embed src="${consent.fileData}" type="application/pdf" width="100%" height="100%" />
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        setTimeout(() => printWindow.print(), 500);
+      }
+    }
+  };
+
+  const handleDeleteConsent = (consent: PatientConsent) => {
+    setSelectedConsent(consent);
+    setShowDeleteConsentDialog(true);
+  };
+
+  const confirmDeleteConsent = () => {
+    if (selectedConsent) {
+      deleteConsentMutation.mutate(selectedConsent.id);
+    }
+  };
 
   const handleViewRecord = (record: MedicalRecord) => {
     setSelectedRecord(record);
@@ -370,7 +520,7 @@ export default function PatientService() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6">
             <TabsTrigger 
               value="patients" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
@@ -386,6 +536,14 @@ export default function PatientService() {
             >
               <FileText className="h-4 w-4" />
               Medical Records
+            </TabsTrigger>
+            <TabsTrigger 
+              value="consents" 
+              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
+              data-testid="tab-consents"
+            >
+              <FileCheck className="h-4 w-4" />
+              Consent Forms
             </TabsTrigger>
           </TabsList>
 
@@ -1049,6 +1207,315 @@ export default function PatientService() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Consent Forms Tab */}
+          <TabsContent value="consents" className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <FileCheck className="h-5 w-5 text-green-600" />
+                    Patient Consent Forms
+                  </CardTitle>
+                  <CardDescription>Upload and manage patient consent forms (PDF)</CardDescription>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      placeholder="Search consent forms..."
+                      value={consentSearchQuery}
+                      onChange={(e) => setConsentSearchQuery(e.target.value)}
+                      className="pl-9 w-64"
+                      data-testid="input-search-consents"
+                    />
+                  </div>
+                  <Dialog open={showNewConsentDialog} onOpenChange={(open) => {
+                    setShowNewConsentDialog(open);
+                    if (!open) resetConsentForm();
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-green-600 hover:bg-green-700" data-testid="button-new-consent">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Consent
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Upload className="h-5 w-5 text-green-600" />
+                          Upload Patient Consent Form
+                        </DialogTitle>
+                        <DialogDescription>
+                          Upload a signed consent form (PDF only, max 2MB)
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        {/* Patient Selection */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Patient *</label>
+                          <Popover open={consentPatientPopoverOpen} onOpenChange={setConsentPatientPopoverOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className="w-full justify-between"
+                                data-testid="select-consent-patient"
+                              >
+                                {consentPatientId
+                                  ? patients.find((p) => p.id === consentPatientId)
+                                    ? `${patients.find((p) => p.id === consentPatientId)?.firstName} ${patients.find((p) => p.id === consentPatientId)?.lastName}`
+                                    : "Patient not found"
+                                  : "Select patient..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0">
+                              <Command>
+                                <CommandInput placeholder="Search patients..." />
+                                <CommandList>
+                                  <CommandEmpty>No patient found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {patients.map((patient) => (
+                                      <CommandItem
+                                        key={patient.id}
+                                        value={`${patient.firstName} ${patient.lastName}`}
+                                        onSelect={() => {
+                                          setConsentPatientId(patient.id);
+                                          setConsentPatientPopoverOpen(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            consentPatientId === patient.id ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                        {patient.firstName} {patient.lastName}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+
+                        {/* Consent Type */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Consent Type *</label>
+                          <Select value={consentType} onValueChange={setConsentType}>
+                            <SelectTrigger data-testid="select-consent-type">
+                              <SelectValue placeholder="Select consent type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="general">General Consent</SelectItem>
+                              <SelectItem value="surgery">Surgery Consent</SelectItem>
+                              <SelectItem value="treatment">Treatment Consent</SelectItem>
+                              <SelectItem value="admission">Admission Consent</SelectItem>
+                              <SelectItem value="discharge">Discharge Consent</SelectItem>
+                              <SelectItem value="hipaa">HIPAA Authorization</SelectItem>
+                              <SelectItem value="research">Research Consent</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Title */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Title *</label>
+                          <Input
+                            placeholder="e.g., Surgical Procedure Consent"
+                            value={consentTitle}
+                            onChange={(e) => setConsentTitle(e.target.value)}
+                            data-testid="input-consent-title"
+                          />
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Description</label>
+                          <Textarea
+                            placeholder="Brief description of the consent form..."
+                            value={consentDescription}
+                            onChange={(e) => setConsentDescription(e.target.value)}
+                            className="resize-none"
+                            rows={3}
+                            data-testid="input-consent-description"
+                          />
+                        </div>
+
+                        {/* File Upload */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">PDF File *</label>
+                          <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center">
+                            {consentFile ? (
+                              <div className="flex items-center justify-center gap-3">
+                                <File className="h-8 w-8 text-green-600" />
+                                <div className="text-left">
+                                  <p className="font-medium text-slate-900 dark:text-white">{consentFile.name}</p>
+                                  <p className="text-sm text-slate-500">Ready to upload</p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setConsentFile(null)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div>
+                                <Upload className="h-10 w-10 text-slate-400 mx-auto mb-3" />
+                                <p className="text-sm text-slate-500 mb-2">
+                                  Drag and drop or click to upload
+                                </p>
+                                <input
+                                  type="file"
+                                  accept="application/pdf"
+                                  onChange={handleConsentFileUpload}
+                                  className="hidden"
+                                  id="consent-file-upload"
+                                  data-testid="input-consent-file"
+                                />
+                                <label htmlFor="consent-file-upload">
+                                  <Button type="button" variant="outline" size="sm" asChild>
+                                    <span>Select PDF File</span>
+                                  </Button>
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                          {consentFileError && (
+                            <p className="text-sm text-red-500">{consentFileError}</p>
+                          )}
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowNewConsentDialog(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={() => createConsentMutation.mutate()}
+                            disabled={!consentPatientId || !consentType || !consentTitle || !consentFile || createConsentMutation.isPending}
+                            className="bg-green-600 hover:bg-green-700"
+                            data-testid="button-submit-consent"
+                          >
+                            {createConsentMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            Upload Consent
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {consentsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+                  </div>
+                ) : patientConsents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileCheck className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No consent forms</h3>
+                    <p className="text-slate-500 dark:text-slate-400">Upload patient consent forms to get started</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {patientConsents
+                      .filter(consent => 
+                        consent.title.toLowerCase().includes(consentSearchQuery.toLowerCase()) ||
+                        consent.consentType.toLowerCase().includes(consentSearchQuery.toLowerCase()) ||
+                        getPatientName(consent.patientId).toLowerCase().includes(consentSearchQuery.toLowerCase())
+                      )
+                      .map((consent) => (
+                        <Card 
+                          key={consent.id} 
+                          className="hover-elevate cursor-pointer transition-all"
+                          data-testid={`card-consent-${consent.id}`}
+                        >
+                          <CardContent className="pt-6">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/50">
+                                  <FileCheck className="h-4 w-4 text-green-600" />
+                                </div>
+                                <div>
+                                  <Badge variant="outline" className="mb-1 capitalize">{consent.consentType}</Badge>
+                                  <h3 className="font-semibold text-slate-900 dark:text-white line-clamp-1">{consent.title}</h3>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                  onClick={() => handleViewConsent(consent)}
+                                  data-testid={`button-view-consent-${consent.id}`}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                  onClick={() => handleDownloadConsent(consent)}
+                                  data-testid={`button-download-consent-${consent.id}`}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                                  onClick={() => handlePrintConsent(consent)}
+                                  data-testid={`button-print-consent-${consent.id}`}
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  onClick={() => handleDeleteConsent(consent)}
+                                  data-testid={`button-delete-consent-${consent.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            {consent.description && (
+                              <p className="text-sm text-slate-600 dark:text-slate-300 mb-3 line-clamp-2">
+                                {consent.description}
+                              </p>
+                            )}
+                            <div className="flex items-center justify-between text-sm text-slate-500">
+                              <div className="flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                {getPatientName(consent.patientId)}
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-slate-400">
+                                <Clock className="h-3 w-3" />
+                                {consent.uploadedAt ? new Date(consent.uploadedAt).toLocaleDateString() : "N/A"}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 mt-2">
+                              <File className="h-3 w-3" />
+                              <span className="truncate max-w-[150px]">{consent.fileName}</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -1288,6 +1755,168 @@ export default function PatientService() {
                 >
                   {deleteRecordMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Delete Record
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Consent Detail Dialog */}
+      <Dialog open={showConsentDetailDialog} onOpenChange={setShowConsentDetailDialog}>
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-consent-detail">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileCheck className="h-5 w-5 text-green-600" />
+              Consent Form Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedConsent && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/50">
+                  <FileCheck className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <Badge variant="outline" className="capitalize">{selectedConsent.consentType}</Badge>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mt-1">{selectedConsent.title}</h3>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-3">
+                {selectedConsent.description && (
+                  <div>
+                    <p className="text-sm text-slate-500">Description</p>
+                    <p className="text-slate-900 dark:text-white">{selectedConsent.description}</p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-slate-500">Patient</p>
+                    <p className="font-medium flex items-center gap-1">
+                      <User className="h-4 w-4 text-slate-400" />
+                      {getPatientName(selectedConsent.patientId)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Uploaded By</p>
+                    <p className="font-medium">{selectedConsent.uploadedBy || "Admin"}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-slate-500">Upload Date</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-slate-400" />
+                    {selectedConsent.uploadedAt ? new Date(selectedConsent.uploadedAt).toLocaleString() : "N/A"}
+                  </p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-slate-500 mb-2">PDF File</p>
+                  <div className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <File className="h-5 w-5 text-green-600" />
+                      <span className="text-sm font-medium truncate max-w-[200px]">{selectedConsent.fileName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleDownloadConsent(selectedConsent)}
+                        data-testid="button-download-consent-dialog"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handlePrintConsent(selectedConsent)}
+                        data-testid="button-print-consent-dialog"
+                      >
+                        <Printer className="h-4 w-4 mr-1" />
+                        Print
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PDF Preview */}
+                <div>
+                  <p className="text-sm text-slate-500 mb-2">Preview</p>
+                  <div className="border rounded-lg overflow-hidden h-[400px]">
+                    <iframe
+                      src={selectedConsent.fileData}
+                      className="w-full h-full"
+                      title="PDF Preview"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowConsentDetailDialog(false)}>
+                  Close
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => {
+                    setShowConsentDetailDialog(false);
+                    handleDeleteConsent(selectedConsent);
+                  }}
+                  data-testid="button-delete-consent-from-view"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete Consent
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Consent Confirmation Dialog */}
+      <Dialog open={showDeleteConsentDialog} onOpenChange={setShowDeleteConsentDialog}>
+        <DialogContent className="max-w-md" data-testid="dialog-delete-consent">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Delete Consent Form
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The consent form will be permanently deleted from the system.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedConsent && (
+            <div className="space-y-4">
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-sm text-red-800 dark:text-red-200">
+                  You are about to delete:
+                </p>
+                <p className="font-semibold text-red-900 dark:text-red-100 mt-1">
+                  {selectedConsent.title}
+                </p>
+                <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+                  Patient: {getPatientName(selectedConsent.patientId)}
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowDeleteConsentDialog(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={confirmDeleteConsent}
+                  disabled={deleteConsentMutation.isPending}
+                  data-testid="button-confirm-delete-consent"
+                >
+                  {deleteConsentMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Delete Consent
                 </Button>
               </div>
             </div>
