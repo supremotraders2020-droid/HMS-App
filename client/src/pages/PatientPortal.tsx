@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/use-notifications";
 import { 
   Sidebar,
   SidebarContent,
@@ -239,10 +240,16 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     refetchInterval: 3000, // Real-time sync every 3 seconds
   });
 
-  // Fetch real notifications for this patient with real-time sync
-  const { data: userNotifications = [] } = useQuery<UserNotification[]>({
-    queryKey: [`/api/user-notifications/${username}`],
-    refetchInterval: 3000, // Real-time sync every 3 seconds
+  // Fetch real notifications for this patient with real-time sync using the notifications hook
+  const { 
+    notifications: userNotifications, 
+    markAsRead, 
+    markAllAsRead,
+    unreadCount 
+  } = useNotifications({
+    userId: username,
+    userRole: "patient",
+    enabled: true
   });
 
   // Fetch prescriptions for this patient
@@ -257,7 +264,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   );
 
   const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
-  const unreadNotifications = userNotifications.filter(n => !n.isRead).length;
+  const unreadNotifications = unreadCount;
 
   const allTimeSlots = [
     { value: "09:00", label: "09:00 AM" },
@@ -1150,7 +1157,12 @@ Description: ${record.description}
                 <h2 className="text-2xl font-bold" data-testid="text-notifications-title">Notifications</h2>
                 <p className="text-muted-foreground">Stay updated with your health alerts</p>
               </div>
-              <Button variant="outline" size="sm" data-testid="button-mark-all-read">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                data-testid="button-mark-all-read"
+                onClick={() => markAllAsRead()}
+              >
                 Mark all as read
               </Button>
             </div>
@@ -1167,7 +1179,12 @@ Description: ${record.description}
                   <Card 
                     key={notification.id} 
                     className={`hover-elevate cursor-pointer ${!notification.isRead ? "border-primary bg-primary/5" : ""}`}
-                    onClick={() => setSelectedNotification(notification)}
+                    onClick={() => {
+                      setSelectedNotification(notification);
+                      if (!notification.isRead) {
+                        markAsRead(notification.id);
+                      }
+                    }}
                     data-testid={`notification-card-${notification.id}`}
                   >
                     <CardContent className="p-4">
