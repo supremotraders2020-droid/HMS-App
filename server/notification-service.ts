@@ -306,13 +306,13 @@ class NotificationService {
 
         const hoursUntil = (appointmentDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-        // Check for 24-hour reminder (between 23 and 25 hours before)
-        if (hoursUntil >= 23 && hoursUntil <= 25) {
+        // Check for day-before reminder (appointment is tomorrow, between 12 and 48 hours)
+        if (hoursUntil >= 12 && hoursUntil <= 48) {
           await this.sendReminderIfNeeded(appointment, "24h");
         }
         
-        // Check for 1-hour reminder (between 0.5 and 1.5 hours before)
-        if (hoursUntil >= 0.5 && hoursUntil <= 1.5) {
+        // Check for 1-hour reminder (between 0.5 and 2 hours before)
+        if (hoursUntil >= 0.5 && hoursUntil <= 2) {
           await this.sendReminderIfNeeded(appointment, "1h");
         }
       }
