@@ -165,18 +165,20 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild data-testid="link-dashboard">
                   <Button
                     variant="ghost"
-                    className="w-full justify-start"
+                    className="w-full justify-start group relative overflow-visible bg-gradient-to-r from-cyan-50/80 to-teal-50/60 hover:from-cyan-100 hover:to-teal-100 dark:from-cyan-900/30 dark:to-teal-900/20 dark:hover:from-cyan-800/40 dark:hover:to-teal-800/30 border border-cyan-200/50 dark:border-cyan-700/30 rounded-xl transition-all duration-300 hover:shadow-md hover:shadow-cyan-500/10 hover:-translate-y-0.5"
                     onClick={() => handleMenuClick("/dashboard")}
                   >
-                    <Home className="h-4 w-4 mr-2" />
-                    <span>Dashboard</span>
+                    <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-600 text-white mr-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm">
+                      <Home className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="font-medium">Dashboard</span>
                   </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -185,12 +187,12 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Core Services</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Core Services</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {getMenuItems(currentRole).filter(item => 
                 ['OPD Service', 'Patient Service', 'Patient Tracking', 'Biometric Service'].includes(item.title)
-              ).map((item) => (
+              ).map((item, index) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild
@@ -198,11 +200,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                   >
                     <Button
                       variant="ghost"
-                      className="w-full justify-start"
+                      className="w-full justify-start group relative overflow-visible hover:bg-gradient-to-r hover:from-emerald-50/80 hover:to-teal-50/60 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/20 rounded-xl transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5 hover:border-emerald-200/50 dark:hover:border-emerald-700/30"
                       onClick={() => handleMenuClick(item.url)}
                     >
-                      <item.icon className="h-4 w-4 mr-2" />
-                      <span>{item.title}</span>
+                      <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-800/50 dark:to-teal-800/40 text-emerald-600 dark:text-emerald-400 mr-3 transition-all duration-300 group-hover:from-emerald-500 group-hover:to-teal-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md group-hover:shadow-emerald-500/20">
+                        <item.icon className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="font-medium transition-colors duration-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400">{item.title}</span>
                     </Button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -214,12 +218,12 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
         {/* Support Services - Hidden for OPD_MANAGER */}
         {currentRole !== "OPD_MANAGER" && (
           <SidebarGroup>
-            <SidebarGroupLabel>Support Services</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Support Services</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-1">
                 {getMenuItems(currentRole).filter(item => 
                   ['Inventory Service', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service'].includes(item.title)
-                ).map((item) => (
+                ).map((item, index) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
                       asChild
@@ -227,11 +231,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                     >
                       <Button
                         variant="ghost"
-                        className="w-full justify-start"
+                        className="w-full justify-start group relative overflow-visible hover:bg-gradient-to-r hover:from-violet-50/80 hover:to-purple-50/60 dark:hover:from-violet-900/30 dark:hover:to-purple-900/20 rounded-xl transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5 hover:border-violet-200/50 dark:hover:border-violet-700/30"
                         onClick={() => handleMenuClick(item.url)}
                       >
-                        <item.icon className="h-4 w-4 mr-2" />
-                        <span>{item.title}</span>
+                        <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-800/50 dark:to-purple-800/40 text-violet-600 dark:text-violet-400 mr-3 transition-all duration-300 group-hover:from-violet-500 group-hover:to-purple-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md group-hover:shadow-violet-500/20">
+                          <item.icon className="h-3.5 w-3.5" />
+                        </div>
+                        <span className="font-medium transition-colors duration-200 group-hover:text-violet-700 dark:group-hover:text-violet-400">{item.title}</span>
                       </Button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -244,12 +250,12 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
         {/* Management - Hidden for OPD_MANAGER and NURSE */}
         {currentRole !== "OPD_MANAGER" && currentRole !== "NURSE" && (
           <SidebarGroup>
-            <SidebarGroupLabel>Management</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Management</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-1">
                 {getMenuItems(currentRole).filter(item => 
                   !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service'].includes(item.title)
-                ).map((item) => (
+                ).map((item, index) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
                       asChild
@@ -257,11 +263,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                     >
                       <Button
                         variant="ghost"
-                        className="w-full justify-start"
+                        className="w-full justify-start group relative overflow-visible hover:bg-gradient-to-r hover:from-amber-50/80 hover:to-orange-50/60 dark:hover:from-amber-900/30 dark:hover:to-orange-900/20 rounded-xl transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5 hover:border-amber-200/50 dark:hover:border-amber-700/30"
                         onClick={() => handleMenuClick(item.url)}
                       >
-                        <item.icon className="h-4 w-4 mr-2" />
-                        <span>{item.title}</span>
+                        <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-800/50 dark:to-orange-800/40 text-amber-600 dark:text-amber-400 mr-3 transition-all duration-300 group-hover:from-amber-500 group-hover:to-orange-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md group-hover:shadow-amber-500/20">
+                          <item.icon className="h-3.5 w-3.5" />
+                        </div>
+                        <span className="font-medium transition-colors duration-200 group-hover:text-amber-700 dark:group-hover:text-amber-400">{item.title}</span>
                       </Button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
