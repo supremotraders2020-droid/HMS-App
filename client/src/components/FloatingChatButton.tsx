@@ -27,7 +27,7 @@ export default function FloatingChatButton({ onNavigate }: FloatingChatButtonPro
             <div className="bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-medium px-4 py-2 rounded-xl shadow-lg shadow-violet-500/30">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />
-                AI Health Assistant
+                GRAVITY HOSPITAL AI ASSISTANCE
               </div>
               <div className="absolute bottom-0 right-6 transform translate-y-1/2 rotate-45 w-3 h-3 bg-purple-600"></div>
             </div>

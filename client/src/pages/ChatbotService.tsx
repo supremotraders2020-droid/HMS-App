@@ -153,8 +153,8 @@ export default function ChatbotService() {
             <Bot className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">AI Chatbot Service</h1>
-            <p className="text-muted-foreground">Intelligent assistant for hospital queries</p>
+            <h1 className="text-2xl font-bold text-foreground">GRAVITY HOSPITAL AI ASSISTANCE</h1>
+            <p className="text-muted-foreground">Your intelligent healthcare assistant</p>
           </div>
         </div>
       </div>
@@ -182,10 +182,12 @@ export default function ChatbotService() {
         <TabsContent value="chat">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <Card className="lg:col-span-3">
-              <CardHeader className="border-b">
+              <CardHeader className="border-b bg-gradient-to-r from-violet-50/80 to-purple-50/60 dark:from-violet-900/20 dark:to-purple-900/15">
                 <CardTitle className="flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-primary" />
-                  Hospital AI Assistant
+                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                    <Bot className="h-5 w-5" />
+                  </div>
+                  GRAVITY HOSPITAL AI ASSISTANCE
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
