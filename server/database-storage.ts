@@ -13,7 +13,7 @@ import {
   notifications, hospitalTeamMembers, activityLogs,
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
   prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
-  patientConsents, medicines,
+  patientConsents, medicines, oxygenCylinders, cylinderMovements, oxygenConsumption, lmoReadings, oxygenAlerts,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -34,7 +34,12 @@ import {
   type UserNotification, type InsertUserNotification,
   type ConsentForm, type InsertConsentForm,
   type PatientConsent, type InsertPatientConsent,
-  type Medicine, type InsertMedicine
+  type Medicine, type InsertMedicine,
+  type OxygenCylinder, type InsertOxygenCylinder,
+  type CylinderMovement, type InsertCylinderMovement,
+  type OxygenConsumption, type InsertOxygenConsumption,
+  type LmoReading, type InsertLmoReading,
+  type OxygenAlert, type InsertOxygenAlert
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -1513,6 +1518,131 @@ export class DatabaseStorage implements IStorage {
   async deleteAllMedicines(): Promise<boolean> {
     await db.delete(medicines);
     return true;
+  }
+
+  // ========== OXYGEN CYLINDER METHODS ==========
+  async getOxygenCylinders(): Promise<OxygenCylinder[]> {
+    return await db.select().from(oxygenCylinders).orderBy(desc(oxygenCylinders.createdAt));
+  }
+
+  async getOxygenCylinder(id: string): Promise<OxygenCylinder | undefined> {
+    const result = await db.select().from(oxygenCylinders).where(eq(oxygenCylinders.id, id));
+    return result[0];
+  }
+
+  async getOxygenCylinderByCode(code: string): Promise<OxygenCylinder | undefined> {
+    const result = await db.select().from(oxygenCylinders).where(eq(oxygenCylinders.cylinderCode, code));
+    return result[0];
+  }
+
+  async getOxygenCylindersByStatus(status: string): Promise<OxygenCylinder[]> {
+    return await db.select().from(oxygenCylinders)
+      .where(eq(oxygenCylinders.status, status))
+      .orderBy(desc(oxygenCylinders.createdAt));
+  }
+
+  async createOxygenCylinder(cylinder: InsertOxygenCylinder): Promise<OxygenCylinder> {
+    const result = await db.insert(oxygenCylinders).values(cylinder).returning();
+    return result[0];
+  }
+
+  async updateOxygenCylinder(id: string, updates: Partial<InsertOxygenCylinder>): Promise<OxygenCylinder | undefined> {
+    const result = await db.update(oxygenCylinders)
+      .set({ ...updates, lastUpdated: new Date() })
+      .where(eq(oxygenCylinders.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteOxygenCylinder(id: string): Promise<boolean> {
+    const result = await db.delete(oxygenCylinders).where(eq(oxygenCylinders.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== CYLINDER MOVEMENT METHODS ==========
+  async getCylinderMovements(): Promise<CylinderMovement[]> {
+    return await db.select().from(cylinderMovements).orderBy(desc(cylinderMovements.movementDate));
+  }
+
+  async getCylinderMovementsByCylinder(cylinderId: string): Promise<CylinderMovement[]> {
+    return await db.select().from(cylinderMovements)
+      .where(eq(cylinderMovements.cylinderId, cylinderId))
+      .orderBy(desc(cylinderMovements.movementDate));
+  }
+
+  async createCylinderMovement(movement: InsertCylinderMovement): Promise<CylinderMovement> {
+    const result = await db.insert(cylinderMovements).values(movement).returning();
+    return result[0];
+  }
+
+  // ========== OXYGEN CONSUMPTION METHODS ==========
+  async getOxygenConsumptionRecords(): Promise<OxygenConsumption[]> {
+    return await db.select().from(oxygenConsumption).orderBy(desc(oxygenConsumption.createdAt));
+  }
+
+  async getOxygenConsumptionByPatient(patientId: string): Promise<OxygenConsumption[]> {
+    return await db.select().from(oxygenConsumption)
+      .where(eq(oxygenConsumption.patientId, patientId))
+      .orderBy(desc(oxygenConsumption.createdAt));
+  }
+
+  async getOxygenConsumptionByDepartment(department: string): Promise<OxygenConsumption[]> {
+    return await db.select().from(oxygenConsumption)
+      .where(eq(oxygenConsumption.department, department))
+      .orderBy(desc(oxygenConsumption.createdAt));
+  }
+
+  async createOxygenConsumption(consumption: InsertOxygenConsumption): Promise<OxygenConsumption> {
+    const result = await db.insert(oxygenConsumption).values(consumption).returning();
+    return result[0];
+  }
+
+  async updateOxygenConsumption(id: string, updates: Partial<InsertOxygenConsumption>): Promise<OxygenConsumption | undefined> {
+    const result = await db.update(oxygenConsumption)
+      .set(updates)
+      .where(eq(oxygenConsumption.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // ========== LMO READING METHODS ==========
+  async getLmoReadings(): Promise<LmoReading[]> {
+    return await db.select().from(lmoReadings).orderBy(desc(lmoReadings.createdAt));
+  }
+
+  async getLmoReadingsByDate(date: string): Promise<LmoReading[]> {
+    return await db.select().from(lmoReadings)
+      .where(eq(lmoReadings.readingDate, date))
+      .orderBy(desc(lmoReadings.createdAt));
+  }
+
+  async createLmoReading(reading: InsertLmoReading): Promise<LmoReading> {
+    const result = await db.insert(lmoReadings).values(reading).returning();
+    return result[0];
+  }
+
+  // ========== OXYGEN ALERTS METHODS ==========
+  async getOxygenAlerts(): Promise<OxygenAlert[]> {
+    return await db.select().from(oxygenAlerts).orderBy(desc(oxygenAlerts.createdAt));
+  }
+
+  async getActiveOxygenAlerts(): Promise<OxygenAlert[]> {
+    return await db.select().from(oxygenAlerts)
+      .where(eq(oxygenAlerts.isResolved, false))
+      .orderBy(desc(oxygenAlerts.createdAt));
+  }
+
+  async createOxygenAlert(alert: InsertOxygenAlert): Promise<OxygenAlert> {
+    const result = await db.insert(oxygenAlerts).values(alert).returning();
+    return result[0];
+  }
+
+  async resolveOxygenAlert(id: string, resolvedBy: string): Promise<OxygenAlert | undefined> {
+    const result = await db.update(oxygenAlerts)
+      .set({ isResolved: true, resolvedBy, resolvedAt: new Date() })
+      .where(eq(oxygenAlerts.id, id))
+      .returning();
+    return result[0];
   }
 }
 

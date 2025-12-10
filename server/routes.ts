@@ -2413,6 +2413,238 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== OXYGEN TRACKING API ==========
+
+  // Get all oxygen cylinders
+  app.get("/api/oxygen/cylinders", async (req, res) => {
+    try {
+      const { status } = req.query;
+      let cylinders;
+      if (status && typeof status === 'string') {
+        cylinders = await databaseStorage.getOxygenCylindersByStatus(status);
+      } else {
+        cylinders = await databaseStorage.getOxygenCylinders();
+      }
+      res.json(cylinders);
+    } catch (error) {
+      console.error("Failed to fetch oxygen cylinders:", error);
+      res.status(500).json({ error: "Failed to fetch oxygen cylinders" });
+    }
+  });
+
+  // Get single cylinder by ID
+  app.get("/api/oxygen/cylinders/:id", async (req, res) => {
+    try {
+      const cylinder = await databaseStorage.getOxygenCylinder(req.params.id);
+      if (!cylinder) {
+        return res.status(404).json({ error: "Cylinder not found" });
+      }
+      res.json(cylinder);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch cylinder" });
+    }
+  });
+
+  // Create new cylinder
+  app.post("/api/oxygen/cylinders", async (req, res) => {
+    try {
+      const cylinder = await databaseStorage.createOxygenCylinder(req.body);
+      res.status(201).json(cylinder);
+    } catch (error) {
+      console.error("Failed to create cylinder:", error);
+      res.status(500).json({ error: "Failed to create cylinder" });
+    }
+  });
+
+  // Update cylinder
+  app.patch("/api/oxygen/cylinders/:id", async (req, res) => {
+    try {
+      const cylinder = await databaseStorage.updateOxygenCylinder(req.params.id, req.body);
+      if (!cylinder) {
+        return res.status(404).json({ error: "Cylinder not found" });
+      }
+      res.json(cylinder);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update cylinder" });
+    }
+  });
+
+  // Delete cylinder
+  app.delete("/api/oxygen/cylinders/:id", async (req, res) => {
+    try {
+      const deleted = await databaseStorage.deleteOxygenCylinder(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Cylinder not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete cylinder" });
+    }
+  });
+
+  // Get cylinder movements
+  app.get("/api/oxygen/movements", async (req, res) => {
+    try {
+      const { cylinderId } = req.query;
+      let movements;
+      if (cylinderId && typeof cylinderId === 'string') {
+        movements = await databaseStorage.getCylinderMovementsByCylinder(cylinderId);
+      } else {
+        movements = await databaseStorage.getCylinderMovements();
+      }
+      res.json(movements);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch movements" });
+    }
+  });
+
+  // Create cylinder movement (issue/return)
+  app.post("/api/oxygen/movements", async (req, res) => {
+    try {
+      const movement = await databaseStorage.createCylinderMovement(req.body);
+      // Update cylinder status based on movement type
+      if (req.body.movementType === 'ISSUE') {
+        await databaseStorage.updateOxygenCylinder(req.body.cylinderId, { 
+          status: 'in_use', 
+          location: req.body.department,
+          currentPressure: req.body.startPressure 
+        });
+      } else if (req.body.movementType === 'RETURN') {
+        const remainingPressure = parseFloat(req.body.endPressure || '0');
+        const status = remainingPressure < 50 ? 'empty' : 'full';
+        await databaseStorage.updateOxygenCylinder(req.body.cylinderId, { 
+          status, 
+          location: 'Storage',
+          currentPressure: req.body.endPressure 
+        });
+      }
+      res.status(201).json(movement);
+    } catch (error) {
+      console.error("Failed to create movement:", error);
+      res.status(500).json({ error: "Failed to create movement" });
+    }
+  });
+
+  // Get oxygen consumption records
+  app.get("/api/oxygen/consumption", async (req, res) => {
+    try {
+      const { patientId, department } = req.query;
+      let records;
+      if (patientId && typeof patientId === 'string') {
+        records = await databaseStorage.getOxygenConsumptionByPatient(patientId);
+      } else if (department && typeof department === 'string') {
+        records = await databaseStorage.getOxygenConsumptionByDepartment(department);
+      } else {
+        records = await databaseStorage.getOxygenConsumptionRecords();
+      }
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch consumption records" });
+    }
+  });
+
+  // Create consumption record
+  app.post("/api/oxygen/consumption", async (req, res) => {
+    try {
+      const record = await databaseStorage.createOxygenConsumption(req.body);
+      res.status(201).json(record);
+    } catch (error) {
+      console.error("Failed to create consumption record:", error);
+      res.status(500).json({ error: "Failed to create consumption record" });
+    }
+  });
+
+  // Update consumption record (end session)
+  app.patch("/api/oxygen/consumption/:id", async (req, res) => {
+    try {
+      const record = await databaseStorage.updateOxygenConsumption(req.params.id, req.body);
+      if (!record) {
+        return res.status(404).json({ error: "Record not found" });
+      }
+      res.json(record);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update consumption record" });
+    }
+  });
+
+  // Get LMO readings
+  app.get("/api/oxygen/lmo", async (req, res) => {
+    try {
+      const { date } = req.query;
+      let readings;
+      if (date && typeof date === 'string') {
+        readings = await databaseStorage.getLmoReadingsByDate(date);
+      } else {
+        readings = await databaseStorage.getLmoReadings();
+      }
+      res.json(readings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch LMO readings" });
+    }
+  });
+
+  // Create LMO reading
+  app.post("/api/oxygen/lmo", async (req, res) => {
+    try {
+      const reading = await databaseStorage.createLmoReading(req.body);
+      // Check for low level alert
+      const levelPercentage = parseFloat(req.body.levelPercentage || '100');
+      if (levelPercentage < 20) {
+        await databaseStorage.createOxygenAlert({
+          alertType: 'LOW_STOCK',
+          severity: levelPercentage < 10 ? 'critical' : 'warning',
+          title: 'Low LMO Tank Level',
+          message: `LMO tank level is at ${levelPercentage}%. Please arrange for refill.`,
+          isResolved: false
+        });
+      }
+      res.status(201).json(reading);
+    } catch (error) {
+      console.error("Failed to create LMO reading:", error);
+      res.status(500).json({ error: "Failed to create LMO reading" });
+    }
+  });
+
+  // Get oxygen alerts
+  app.get("/api/oxygen/alerts", async (req, res) => {
+    try {
+      const { active } = req.query;
+      let alerts;
+      if (active === 'true') {
+        alerts = await databaseStorage.getActiveOxygenAlerts();
+      } else {
+        alerts = await databaseStorage.getOxygenAlerts();
+      }
+      res.json(alerts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch alerts" });
+    }
+  });
+
+  // Create oxygen alert
+  app.post("/api/oxygen/alerts", async (req, res) => {
+    try {
+      const alert = await databaseStorage.createOxygenAlert(req.body);
+      res.status(201).json(alert);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create alert" });
+    }
+  });
+
+  // Resolve oxygen alert
+  app.patch("/api/oxygen/alerts/:id/resolve", async (req, res) => {
+    try {
+      const { resolvedBy } = req.body;
+      const alert = await databaseStorage.resolveOxygenAlert(req.params.id, resolvedBy || 'System');
+      if (!alert) {
+        return res.status(404).json({ error: "Alert not found" });
+      }
+      res.json(alert);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to resolve alert" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
