@@ -32,7 +32,7 @@ import {
   Bell,
   Wrench
 } from "lucide-react";
-import hospitalLogo from "@assets/LOGO_HORIZONTAL_1765344713941.png";
+import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
