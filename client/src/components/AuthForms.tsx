@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Stethoscope, UserPlus, LogIn } from "lucide-react";
+import { UserPlus, LogIn } from "lucide-react";
+import hospitalLogo from "@assets/TRANSPARENT_BG_1765343618536.png";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -62,8 +63,12 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex items-center justify-center mb-4">
-            <Stethoscope className="h-8 w-8 text-primary mr-2" />
-            <span className="text-2xl font-semibold">HMS Core</span>
+            <img 
+              src={hospitalLogo} 
+              alt="Gravity Hospital" 
+              className="h-16 w-auto object-contain"
+              data-testid="img-hospital-logo"
+            />
           </div>
           <CardTitle className="text-2xl">{isLogin ? "Sign In" : "Create Account"}</CardTitle>
           <CardDescription>
