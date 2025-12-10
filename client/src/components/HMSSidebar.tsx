@@ -114,12 +114,12 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
 
   const getRoleGradient = (role: UserRole) => {
     switch (role) {
-      case "ADMIN": return "from-violet-500/20 via-purple-500/10 to-fuchsia-500/5";
-      case "DOCTOR": return "from-cyan-500/20 via-blue-500/10 to-sky-500/5";
-      case "NURSE": return "from-emerald-500/20 via-green-500/10 to-teal-500/5";
-      case "OPD_MANAGER": return "from-amber-500/20 via-orange-500/10 to-yellow-500/5";
-      case "PATIENT": return "from-teal-500/20 via-cyan-500/10 to-sky-500/5";
-      default: return "from-slate-500/20 via-gray-500/10 to-zinc-500/5";
+      case "ADMIN": return "from-violet-100 via-purple-50 to-fuchsia-50 dark:from-violet-900/40 dark:via-purple-800/30 dark:to-fuchsia-900/20";
+      case "DOCTOR": return "from-cyan-100 via-blue-50 to-sky-50 dark:from-cyan-900/40 dark:via-blue-800/30 dark:to-sky-900/20";
+      case "NURSE": return "from-emerald-100 via-green-50 to-teal-50 dark:from-emerald-900/40 dark:via-green-800/30 dark:to-teal-900/20";
+      case "OPD_MANAGER": return "from-amber-100 via-orange-50 to-yellow-50 dark:from-amber-900/40 dark:via-orange-800/30 dark:to-yellow-900/20";
+      case "PATIENT": return "from-teal-100 via-cyan-50 to-sky-50 dark:from-teal-900/40 dark:via-cyan-800/30 dark:to-sky-900/20";
+      default: return "from-slate-100 via-gray-50 to-zinc-50 dark:from-slate-800/40 dark:via-gray-700/30 dark:to-zinc-800/20";
     }
   };
 

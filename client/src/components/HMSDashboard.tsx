@@ -157,13 +157,13 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
 
   const getStatCardGradient = (urgent: boolean, index: number) => {
     if (urgent) {
-      return "bg-gradient-to-br from-red-50/90 via-rose-50/60 to-orange-50/40 dark:from-red-950/30 dark:via-rose-900/20 dark:to-red-950/10 border-red-200/50 dark:border-red-800/30";
+      return "bg-gradient-to-br from-red-50 via-rose-50/80 to-orange-50/60 dark:from-red-950/40 dark:via-rose-900/30 dark:to-red-950/20 border-red-300 dark:border-red-700";
     }
     const gradients = [
-      "bg-gradient-to-br from-cyan-50/80 via-teal-50/50 to-blue-50/40 dark:from-cyan-950/30 dark:via-teal-900/20 dark:to-cyan-950/10 border-cyan-200/50 dark:border-cyan-800/30",
-      "bg-gradient-to-br from-emerald-50/80 via-green-50/50 to-teal-50/40 dark:from-emerald-950/30 dark:via-green-900/20 dark:to-emerald-950/10 border-emerald-200/50 dark:border-emerald-800/30",
-      "bg-gradient-to-br from-violet-50/80 via-purple-50/50 to-indigo-50/40 dark:from-violet-950/30 dark:via-purple-900/20 dark:to-violet-950/10 border-violet-200/50 dark:border-violet-800/30",
-      "bg-gradient-to-br from-amber-50/80 via-orange-50/50 to-yellow-50/40 dark:from-amber-950/30 dark:via-orange-900/20 dark:to-amber-950/10 border-amber-200/50 dark:border-amber-800/30"
+      "bg-gradient-to-br from-cyan-50 via-teal-50/80 to-blue-50/60 dark:from-cyan-950/40 dark:via-teal-900/30 dark:to-cyan-950/20 border-cyan-300 dark:border-cyan-700",
+      "bg-gradient-to-br from-emerald-50 via-green-50/80 to-teal-50/60 dark:from-emerald-950/40 dark:via-green-900/30 dark:to-emerald-950/20 border-emerald-300 dark:border-emerald-700",
+      "bg-gradient-to-br from-violet-50 via-purple-50/80 to-indigo-50/60 dark:from-violet-950/40 dark:via-purple-900/30 dark:to-violet-950/20 border-violet-300 dark:border-violet-700",
+      "bg-gradient-to-br from-amber-50 via-orange-50/80 to-yellow-50/60 dark:from-amber-950/40 dark:via-orange-900/30 dark:to-amber-950/20 border-amber-300 dark:border-amber-700"
     ];
     return gradients[index % gradients.length];
   };
