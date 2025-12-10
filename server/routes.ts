@@ -2324,6 +2324,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== MEDICINES DATABASE API ==========
+  
+  // Get all medicines with optional search
+  app.get("/api/medicines", async (req, res) => {
+    try {
+      const { search, category } = req.query;
+      
+      let medicineList;
+      if (search && typeof search === 'string' && search.trim()) {
+        medicineList = await databaseStorage.searchMedicines(search.trim());
+      } else if (category && typeof category === 'string') {
+        medicineList = await databaseStorage.getMedicinesByCategory(category);
+      } else {
+        medicineList = await databaseStorage.getAllMedicines();
+      }
+      
+      res.json(medicineList);
+    } catch (error) {
+      console.error("Failed to fetch medicines:", error);
+      res.status(500).json({ error: "Failed to fetch medicines" });
+    }
+  });
+
+  // Get single medicine by ID
+  app.get("/api/medicines/:id", async (req, res) => {
+    try {
+      const medicine = await databaseStorage.getMedicine(req.params.id);
+      if (!medicine) {
+        return res.status(404).json({ error: "Medicine not found" });
+      }
+      res.json(medicine);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch medicine" });
+    }
+  });
+
+  // Import medicines from CSV (bulk import)
+  app.post("/api/medicines/import", async (req, res) => {
+    try {
+      const { medicines: medicineData } = req.body;
+      
+      if (!Array.isArray(medicineData) || medicineData.length === 0) {
+        return res.status(400).json({ error: "No medicine data provided" });
+      }
+
+      // Process in batches of 100 to avoid memory issues
+      const batchSize = 100;
+      let imported = 0;
+      
+      for (let i = 0; i < medicineData.length; i += batchSize) {
+        const batch = medicineData.slice(i, i + batchSize);
+        await databaseStorage.createMedicinesBulk(batch);
+        imported += batch.length;
+      }
+
+      res.status(201).json({ 
+        success: true, 
+        imported,
+        message: `Successfully imported ${imported} medicines`
+      });
+    } catch (error) {
+      console.error("Failed to import medicines:", error);
+      res.status(500).json({ error: "Failed to import medicines" });
+    }
+  });
+
+  // Delete all medicines (for re-import)
+  app.delete("/api/medicines/all", async (req, res) => {
+    try {
+      await databaseStorage.deleteAllMedicines();
+      res.json({ success: true, message: "All medicines deleted" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete medicines" });
+    }
+  });
+
+  // Delete single medicine
+  app.delete("/api/medicines/:id", async (req, res) => {
+    try {
+      const deleted = await databaseStorage.deleteMedicine(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Medicine not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete medicine" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service

@@ -13,7 +13,7 @@ import {
   notifications, hospitalTeamMembers, activityLogs,
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
   prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
-  patientConsents,
+  patientConsents, medicines,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -33,7 +33,8 @@ import {
   type PatientProfile, type InsertPatientProfile,
   type UserNotification, type InsertUserNotification,
   type ConsentForm, type InsertConsentForm,
-  type PatientConsent, type InsertPatientConsent
+  type PatientConsent, type InsertPatientConsent,
+  type Medicine, type InsertMedicine
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -1462,6 +1463,56 @@ export class DatabaseStorage implements IStorage {
   async deleteConsentForm(id: string): Promise<boolean> {
     const result = await db.delete(consentForms).where(eq(consentForms.id, id)).returning();
     return result.length > 0;
+  }
+
+  // ========== MEDICINES DATABASE METHODS ==========
+  async getAllMedicines(): Promise<Medicine[]> {
+    return await db.select().from(medicines).orderBy(medicines.brandName);
+  }
+
+  async getMedicine(id: string): Promise<Medicine | undefined> {
+    const result = await db.select().from(medicines).where(eq(medicines.id, id));
+    return result[0];
+  }
+
+  async getMedicinesByCategory(category: string): Promise<Medicine[]> {
+    return await db.select().from(medicines)
+      .where(eq(medicines.category, category))
+      .orderBy(medicines.brandName);
+  }
+
+  async searchMedicines(query: string): Promise<Medicine[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    return await db.select().from(medicines)
+      .where(
+        sql`LOWER(${medicines.brandName}) LIKE ${searchTerm} OR 
+            LOWER(${medicines.genericName}) LIKE ${searchTerm} OR 
+            LOWER(${medicines.companyName}) LIKE ${searchTerm} OR 
+            LOWER(${medicines.category}) LIKE ${searchTerm} OR
+            LOWER(${medicines.uses}) LIKE ${searchTerm}`
+      )
+      .orderBy(medicines.brandName);
+  }
+
+  async createMedicine(medicine: InsertMedicine): Promise<Medicine> {
+    const result = await db.insert(medicines).values(medicine).returning();
+    return result[0];
+  }
+
+  async createMedicinesBulk(medicineList: InsertMedicine[]): Promise<Medicine[]> {
+    if (medicineList.length === 0) return [];
+    const result = await db.insert(medicines).values(medicineList).returning();
+    return result;
+  }
+
+  async deleteMedicine(id: string): Promise<boolean> {
+    const result = await db.delete(medicines).where(eq(medicines.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteAllMedicines(): Promise<boolean> {
+    await db.delete(medicines);
+    return true;
   }
 }
 

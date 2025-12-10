@@ -770,3 +770,26 @@ export const insertConsentFormSchema = createInsertSchema(consentForms).omit({
 });
 export type InsertConsentForm = z.infer<typeof insertConsentFormSchema>;
 export type ConsentForm = typeof consentForms.$inferSelect;
+
+// ========== MEDICINES DATABASE TABLE ==========
+// OPD Medicine database for searchable medicine inventory
+export const medicines = pgTable("medicines", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  brandName: text("brand_name").notNull(),
+  genericName: text("generic_name").notNull(),
+  strength: text("strength").notNull(),
+  dosageForm: text("dosage_form").notNull(),
+  companyName: text("company_name").notNull(),
+  mrp: decimal("mrp", { precision: 10, scale: 2 }).notNull(),
+  packSize: text("pack_size").notNull(),
+  uses: text("uses").notNull(),
+  category: text("category").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertMedicineSchema = createInsertSchema(medicines).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertMedicine = z.infer<typeof insertMedicineSchema>;
+export type Medicine = typeof medicines.$inferSelect;
