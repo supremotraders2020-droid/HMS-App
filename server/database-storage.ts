@@ -13,6 +13,7 @@ import {
   notifications, hospitalTeamMembers, activityLogs,
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
   prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
+  patientConsents,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -31,7 +32,8 @@ import {
   type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile,
   type PatientProfile, type InsertPatientProfile,
   type UserNotification, type InsertUserNotification,
-  type ConsentForm, type InsertConsentForm
+  type ConsentForm, type InsertConsentForm,
+  type PatientConsent, type InsertPatientConsent
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -601,6 +603,32 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMedicalRecord(id: string): Promise<boolean> {
     await db.delete(medicalRecords).where(eq(medicalRecords.id, id));
+    return true;
+  }
+
+  // ========== PATIENT CONSENT METHODS ==========
+  async getAllPatientConsents(): Promise<PatientConsent[]> {
+    return await db.select().from(patientConsents).orderBy(desc(patientConsents.uploadedAt));
+  }
+
+  async getPatientConsentsByPatientId(patientId: string): Promise<PatientConsent[]> {
+    return await db.select().from(patientConsents)
+      .where(eq(patientConsents.patientId, patientId))
+      .orderBy(desc(patientConsents.uploadedAt));
+  }
+
+  async getPatientConsentById(id: string): Promise<PatientConsent | undefined> {
+    const result = await db.select().from(patientConsents).where(eq(patientConsents.id, id));
+    return result[0];
+  }
+
+  async createPatientConsent(consent: InsertPatientConsent): Promise<PatientConsent> {
+    const result = await db.insert(patientConsents).values(consent).returning();
+    return result[0];
+  }
+
+  async deletePatientConsent(id: string): Promise<boolean> {
+    await db.delete(patientConsents).where(eq(patientConsents.id, id));
     return true;
   }
 
