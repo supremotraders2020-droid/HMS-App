@@ -27,6 +27,7 @@ import DoctorPortal from "@/pages/DoctorPortal";
 import EquipmentServicing from "@/pages/EquipmentServicing";
 import ConsentForms from "@/pages/ConsentForms";
 import OxygenTracker from "@/pages/OxygenTracker";
+import FloatingChatButton from "@/components/FloatingChatButton";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -406,6 +407,7 @@ function AppContent() {
                   <Router currentUser={currentUser} currentPath="/" />
                 </main>
               </div>
+              <FloatingChatButton onNavigate={(path) => setLocation(path)} />
             </div>
           </SidebarProvider>
           <Toaster />
