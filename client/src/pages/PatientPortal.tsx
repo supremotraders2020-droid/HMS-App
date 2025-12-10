@@ -63,6 +63,7 @@ import {
   Sparkles
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface PatientPortalProps {
   patientId: string;
@@ -1591,6 +1592,7 @@ Description: ${record.description}
                   <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
                 )}
               </Button>
+              <ThemeToggle />
             </div>
           </header>
 
