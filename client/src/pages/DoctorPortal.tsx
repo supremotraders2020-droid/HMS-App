@@ -75,7 +75,7 @@ import {
   ArrowLeft,
   ExternalLink
 } from "lucide-react";
-import hospitalLogo from "@assets/TRANSPARENT_BG_1765343618536.png";
+import hospitalLogo from "@assets/LOGO_HORIZONTAL_1765344713941.png";
 
 interface DoctorPortalProps {
   doctorName: string;
@@ -2115,17 +2115,13 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       <div className="flex h-screen w-full">
         <Sidebar>
           <SidebarHeader className="p-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center">
               <img 
                 src={hospitalLogo} 
                 alt="Gravity Hospital" 
-                className="h-10 w-auto object-contain"
+                className="h-12 w-auto object-contain"
                 data-testid="img-doctor-portal-logo"
               />
-              <div className="flex flex-col">
-                <span className="font-semibold text-sm">Doctor Portal</span>
-                <span className="text-xs text-muted-foreground truncate max-w-[120px]">{hospitalName}</span>
-              </div>
             </div>
           </SidebarHeader>
 

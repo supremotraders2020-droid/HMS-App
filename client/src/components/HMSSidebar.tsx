@@ -32,7 +32,7 @@ import {
   Bell,
   Wrench
 } from "lucide-react";
-import hospitalLogo from "@assets/TRANSPARENT_BG_1765343618536.png";
+import hospitalLogo from "@assets/LOGO_HORIZONTAL_1765344713941.png";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -124,19 +124,13 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center">
           <img 
             src={hospitalLogo} 
             alt="Gravity Hospital" 
-            className="h-10 w-auto object-contain"
+            className="h-12 w-auto object-contain"
             data-testid="img-sidebar-logo"
           />
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold">HMS Core</span>
-            <span className="text-xs text-muted-foreground truncate max-w-[120px]">
-              {currentUser?.hospitalName || "Hospital System"}
-            </span>
-          </div>
         </div>
         {currentUser && (
           <div className="mt-4 p-3 bg-card rounded-lg">

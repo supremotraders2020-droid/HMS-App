@@ -62,7 +62,7 @@ import {
   ArrowRight,
   Sparkles
 } from "lucide-react";
-import hospitalLogo from "@assets/TRANSPARENT_BG_1765343618536.png";
+import hospitalLogo from "@assets/LOGO_HORIZONTAL_1765344713941.png";
 
 interface PatientPortalProps {
   patientId: string;
@@ -386,17 +386,13 @@ Description: ${record.description}
     return (
       <Sidebar collapsible="icon">
         <SidebarHeader className="p-4 border-b">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <img 
               src={hospitalLogo} 
               alt="Gravity Hospital" 
-              className="h-10 w-auto object-contain group-data-[collapsible=icon]:h-8"
+              className="h-12 w-auto object-contain group-data-[collapsible=icon]:h-8"
               data-testid="img-patient-portal-logo"
             />
-            <div className="group-data-[collapsible=icon]:hidden">
-              <h2 className="font-bold text-sm">Gravity Hospital</h2>
-              <p className="text-xs text-muted-foreground">Patient Portal</p>
-            </div>
           </div>
         </SidebarHeader>
 
