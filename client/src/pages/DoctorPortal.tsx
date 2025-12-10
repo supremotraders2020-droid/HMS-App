@@ -374,8 +374,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   };
 
   const today = new Date().toISOString().split('T')[0];
-  const todayAppointments = allAppointments.filter(a => a.appointmentDate === today);
-  const pendingAppointments = allAppointments.filter(a => a.status === "pending");
+  const doctorAppointments = allAppointments.filter(a => a.doctorId === effectiveDoctorId);
+  const todayAppointments = doctorAppointments.filter(a => a.appointmentDate === today);
+  const pendingAppointments = doctorAppointments.filter(a => a.status === "pending" || a.status === "scheduled");
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -735,7 +736,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         <TabsList data-testid="tabs-appointments">
           <TabsTrigger value="today" data-testid="tab-today">Today ({todayAppointments.length})</TabsTrigger>
           <TabsTrigger value="pending" data-testid="tab-pending">Pending ({pendingAppointments.length})</TabsTrigger>
-          <TabsTrigger value="all" data-testid="tab-all">All ({allAppointments.length})</TabsTrigger>
+          <TabsTrigger value="all" data-testid="tab-all">All ({doctorAppointments.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="today" className="mt-4">
@@ -784,6 +785,12 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     <FileText className="h-4 w-4 mr-1" />
                     Prescribe
                   </Button>
+                  {apt.status !== "cancelled" && apt.status !== "completed" && (
+                    <Button variant="destructive" size="sm" onClick={() => cancelAppointmentMutation.mutate(apt.id)} disabled={cancelAppointmentMutation.isPending} data-testid={`button-cancel-${apt.id}`}>
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Cancel
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             ))}
@@ -825,6 +832,10 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     <FileText className="h-4 w-4 mr-1" />
                     Prescribe
                   </Button>
+                  <Button variant="destructive" size="sm" onClick={() => cancelAppointmentMutation.mutate(apt.id)} disabled={cancelAppointmentMutation.isPending}>
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Cancel
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
@@ -833,7 +844,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
         <TabsContent value="all" className="mt-4">
           <div className="space-y-4">
-            {allAppointments.map((apt) => (
+            {doctorAppointments.map((apt) => (
               <Card key={apt.id} className="hover-elevate" data-testid={`all-apt-${apt.id}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -863,6 +874,12 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     <FileText className="h-4 w-4 mr-1" />
                     Prescribe
                   </Button>
+                  {apt.status !== "cancelled" && apt.status !== "completed" && (
+                    <Button variant="destructive" size="sm" onClick={() => cancelAppointmentMutation.mutate(apt.id)} disabled={cancelAppointmentMutation.isPending}>
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Cancel
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             ))}
