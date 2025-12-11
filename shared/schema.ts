@@ -1184,3 +1184,46 @@ export const insertDoctorOathConfirmationSchema = createInsertSchema(doctorOathC
 });
 export type InsertDoctorOathConfirmation = z.infer<typeof insertDoctorOathConfirmationSchema>;
 export type DoctorOathConfirmation = typeof doctorOathConfirmations.$inferSelect;
+
+// Consent Type Enum for categorizing consent templates
+export const consentTypeEnum = pgEnum("consent_type", [
+  "MEDICO_LEGAL",
+  "OPERATION_THEATRE",
+  "LOW_PROGNOSIS",
+  "EMERGENCY_PROCEDURE",
+  "PATIENT_SHIFTING",
+  "VALUABLES_DECLARATION",
+  "TREATMENT_DENIAL",
+  "DNR",
+  "HIV_TEST",
+  "HBSAG_TEST",
+  "ANAESTHESIA",
+  "SURGERY",
+  "TUBAL_LIGATION",
+  "BLOOD_TRANSFUSION",
+  "DAMA"
+]);
+
+// Consent Templates Table - Reusable consent form templates
+export const consentTemplates = pgTable("consent_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  consentType: text("consent_type").notNull(),
+  description: text("description"),
+  category: text("category").notNull().default("General"),
+  pdfPath: text("pdf_path").notNull(),
+  version: text("version").notNull().default("1.0"),
+  isActive: boolean("is_active").notNull().default(true),
+  isBilingual: boolean("is_bilingual").notNull().default(false),
+  languages: text("languages").default("English"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertConsentTemplateSchema = createInsertSchema(consentTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertConsentTemplate = z.infer<typeof insertConsentTemplateSchema>;
+export type ConsentTemplate = typeof consentTemplates.$inferSelect;
