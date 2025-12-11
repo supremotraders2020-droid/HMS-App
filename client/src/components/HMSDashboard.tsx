@@ -26,7 +26,7 @@ import {
   Globe,
   Building2
 } from "lucide-react";
-import type { ActivityLog, Appointment } from "@shared/schema";
+import type { ActivityLog, Appointment, ServicePatient } from "@shared/schema";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -58,12 +58,57 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
     queryKey: ['/api/appointments'],
   });
 
+  // For NURSE: fetch assigned patients to filter activity logs
+  const { data: assignedPatients = [] } = useQuery<ServicePatient[]>({
+    queryKey: currentRole === "NURSE" && userId 
+      ? ["/api/patients/assigned", userId]
+      : ["/api/patients/service"],
+    enabled: currentRole === "NURSE",
+  });
+
+  // Get assigned patient names for NURSE filtering
+  const nursePatientNames = currentRole === "NURSE"
+    ? assignedPatients.map(p => `${p.firstName} ${p.lastName}`.toLowerCase())
+    : [];
+
   // Get today's appointments count
   const today = new Date().toISOString().split('T')[0];
   const todayAppointments = appointments.filter(apt => apt.appointmentDate === today);
 
+  // Filter activity logs based on user role
+  const filteredActivityLogs = activityLogs.filter(activity => {
+    // NURSE: only show activity related to their assigned patients
+    // Hide consent-related activity (only ADMIN should see consent activity)
+    if (currentRole === "NURSE") {
+      // Hide consent-related activities from NURSE
+      if (activity.entityType === "consent" || 
+          activity.action.toLowerCase().includes("consent")) {
+        return false;
+      }
+      // Only show patient-related activity for assigned patients
+      if (activity.entityType === "patient") {
+        return nursePatientNames.some(name => 
+          activity.action.toLowerCase().includes(name)
+        );
+      }
+      // Show general hospital activities (appointments, system, etc.)
+      return true;
+    }
+    
+    // Non-ADMIN users: hide consent-related activities
+    if (currentRole !== "ADMIN") {
+      if (activity.entityType === "consent" || 
+          activity.action.toLowerCase().includes("consent")) {
+        return false;
+      }
+    }
+    
+    // ADMIN sees everything
+    return true;
+  });
+
   // Get recent activities (limit 5 for dashboard)
-  const recentActivities = activityLogs.slice(0, 5);
+  const recentActivities = filteredActivityLogs.slice(0, 5);
 
   // Format time ago
   const formatTimeAgo = (date: Date | string | null) => {
@@ -468,9 +513,9 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] pr-4">
-            {activityLogs.length > 0 ? (
+            {filteredActivityLogs.length > 0 ? (
               <div className="space-y-2">
-                {activityLogs.map((activity, index) => (
+                {filteredActivityLogs.map((activity, index) => (
                   <div 
                     key={activity.id} 
                     className="flex items-start gap-4 p-3 rounded-lg border bg-card"
