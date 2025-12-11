@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
 
@@ -616,6 +616,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(vitals);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch vitals" });
+    }
+  });
+
+  // Add doctor visit to patient
+  app.post("/api/tracking/patients/:id/doctor-visits", async (req, res) => {
+    try {
+      const parsed = insertDoctorVisitSchema.safeParse({ ...req.body, patientId: req.params.id });
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      const visit = await storage.createDoctorVisit(parsed.data);
+      res.status(201).json(visit);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add doctor visit" });
+    }
+  });
+
+  // Get doctor visits for patient
+  app.get("/api/tracking/patients/:id/doctor-visits", async (req, res) => {
+    try {
+      const visits = await storage.getDoctorVisitsByPatient(req.params.id);
+      res.json(visits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch doctor visits" });
     }
   });
 
