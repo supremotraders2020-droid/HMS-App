@@ -48,7 +48,8 @@ import {
   type BmwVendor, type InsertBmwVendor,
   type BmwStorageRoom, type InsertBmwStorageRoom,
   type BmwIncident, type InsertBmwIncident,
-  type BmwReport, type InsertBmwReport
+  type BmwReport, type InsertBmwReport,
+  doctorVisits, type DoctorVisit, type InsertDoctorVisit
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -2121,6 +2122,18 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log("BMW demo data seeded successfully!");
+  }
+
+  // ========== DOCTOR VISIT METHODS ==========
+  async getDoctorVisitsByPatient(patientId: string): Promise<DoctorVisit[]> {
+    return await db.select().from(doctorVisits)
+      .where(eq(doctorVisits.patientId, patientId))
+      .orderBy(desc(doctorVisits.createdAt));
+  }
+
+  async createDoctorVisit(visit: InsertDoctorVisit): Promise<DoctorVisit> {
+    const result = await db.insert(doctorVisits).values(visit).returning();
+    return result[0];
   }
 }
 
