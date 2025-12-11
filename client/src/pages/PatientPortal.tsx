@@ -61,7 +61,9 @@ import {
   Search,
   Filter,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  MapPin,
+  ExternalLink
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -83,16 +85,16 @@ const DEPARTMENTS = [
 ];
 
 const LOCATIONS = [
-  { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park" },
-  { id: "hinjewadi", name: "Gravity Hospital - Hinjewadi" },
-  { id: "kothrud", name: "Gravity Hospital - Kothrud" },
-  { id: "wakad", name: "Gravity Hospital - Wakad" },
-  { id: "viman_nagar", name: "Gravity Hospital - Viman Nagar" },
-  { id: "baner", name: "Gravity Hospital - Baner" },
-  { id: "aundh", name: "Gravity Hospital - Aundh" },
-  { id: "kalyani_nagar", name: "Gravity Hospital - Kalyani Nagar" },
-  { id: "pimpri", name: "Gravity Hospital - Pimpri" },
-  { id: "nigdi", name: "Gravity Hospital - Nigdi (Main)" },
+  { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park", address: "Koregaon Park, Pune, Maharashtra 411001", mapUrl: "https://www.google.com/maps/search/?api=1&query=Koregaon+Park+Pune" },
+  { id: "hinjewadi", name: "Gravity Hospital - Hinjewadi", address: "Hinjewadi, Pune, Maharashtra 411057", mapUrl: "https://www.google.com/maps/search/?api=1&query=Hinjewadi+Pune" },
+  { id: "kothrud", name: "Gravity Hospital - Kothrud", address: "Kothrud, Pune, Maharashtra 411038", mapUrl: "https://www.google.com/maps/search/?api=1&query=Kothrud+Pune" },
+  { id: "wakad", name: "Gravity Hospital - Wakad", address: "Wakad, Pimpri-Chinchwad, Maharashtra 411057", mapUrl: "https://www.google.com/maps/search/?api=1&query=Wakad+Pune" },
+  { id: "viman_nagar", name: "Gravity Hospital - Viman Nagar", address: "Viman Nagar, Pune, Maharashtra 411014", mapUrl: "https://www.google.com/maps/search/?api=1&query=Viman+Nagar+Pune" },
+  { id: "baner", name: "Gravity Hospital - Baner", address: "Baner, Pune, Maharashtra 411045", mapUrl: "https://www.google.com/maps/search/?api=1&query=Baner+Pune" },
+  { id: "aundh", name: "Gravity Hospital - Aundh", address: "Aundh, Pune, Maharashtra 411007", mapUrl: "https://www.google.com/maps/search/?api=1&query=Aundh+Pune" },
+  { id: "kalyani_nagar", name: "Gravity Hospital - Kalyani Nagar", address: "Kalyani Nagar, Pune, Maharashtra 411006", mapUrl: "https://www.google.com/maps/search/?api=1&query=Kalyani+Nagar+Pune" },
+  { id: "pimpri", name: "Gravity Hospital - Pimpri", address: "Pimpri, Pimpri-Chinchwad, Maharashtra 411017", mapUrl: "https://www.google.com/maps/search/?api=1&query=Pimpri+Pune" },
+  { id: "nigdi", name: "Gravity Hospital - Nigdi (Main)", address: "Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062", mapUrl: "https://www.google.com/maps/search/?api=1&query=Gravity+Hospital+Nigdi+Pune" },
 ];
 
 interface PatientProfile {
@@ -548,21 +550,40 @@ Description: ${record.description}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {upcomingAppointments.length > 0 ? (
-                    upcomingAppointments.slice(0, 3).map((apt) => (
-                      <div key={apt.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50" data-testid={`appointment-item-${apt.id}`}>
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Stethoscope className="h-6 w-6 text-primary" />
+                    upcomingAppointments.slice(0, 3).map((apt) => {
+                      const locationData = LOCATIONS.find(l => l.name === (apt as any).location) || LOCATIONS[9];
+                      return (
+                        <div key={apt.id} className="p-3 rounded-lg bg-muted/50 space-y-2" data-testid={`appointment-item-${apt.id}`}>
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Stethoscope className="h-6 w-6 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium">Doctor Consultation</p>
+                              <p className="text-sm text-muted-foreground">Doctor ID: {apt.doctorId}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium">{apt.appointmentDate}</p>
+                              <p className="text-sm text-muted-foreground">{apt.timeSlot}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pl-16">
+                            <span className="text-sm text-muted-foreground">{locationData.name}</span>
+                            <a 
+                              href={locationData.mapUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-primary hover:underline"
+                              data-testid={`link-apt-map-${apt.id}`}
+                            >
+                              <MapPin className="h-3 w-3" />
+                              <span>Map</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="font-medium">Doctor Consultation</p>
-                          <p className="text-sm text-muted-foreground">Doctor ID: {apt.doctorId}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">{apt.appointmentDate}</p>
-                          <p className="text-sm text-muted-foreground">{apt.timeSlot}</p>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="text-center py-8">
                       <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
@@ -781,10 +802,34 @@ Description: ${record.description}
                         </SelectTrigger>
                         <SelectContent>
                           {LOCATIONS.map((loc) => (
-                            <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
+                            <SelectItem key={loc.id} value={loc.name}>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                <span>{loc.name}</span>
+                              </div>
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {selectedLocation && (() => {
+                        const loc = LOCATIONS.find(l => l.name === selectedLocation);
+                        return loc ? (
+                          <div className="mt-2 p-2 bg-muted/50 rounded-md text-sm">
+                            <p className="text-muted-foreground">{loc.address}</p>
+                            <a 
+                              href={loc.mapUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-primary hover:underline mt-1"
+                              data-testid="link-location-preview"
+                            >
+                              <MapPin className="h-3 w-3" />
+                              <span>View on Google Maps</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -1287,12 +1332,30 @@ Description: ${record.description}
                                     <span className="font-medium">{meta.department}</span>
                                   </div>
                                 )}
-                                {meta.location && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Location:</span>
-                                    <span className="font-medium">{meta.location}</span>
-                                  </div>
-                                )}
+                                {meta.location && (() => {
+                                  const locationData = LOCATIONS.find(l => l.name === meta.location || l.id === meta.location);
+                                  return (
+                                    <div className="space-y-2">
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Location:</span>
+                                        <span className="font-medium">{meta.location}</span>
+                                      </div>
+                                      {locationData && (
+                                        <a 
+                                          href={locationData.mapUrl} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-2 text-primary hover:underline"
+                                          data-testid="link-location-map"
+                                        >
+                                          <MapPin className="h-4 w-4" />
+                                          <span>View on Google Maps</span>
+                                          <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </>
                             );
                           })()}

@@ -31,11 +31,26 @@ import {
   IndianRupee,
   Package,
   Tag,
-  Trash2
+  Trash2,
+  ExternalLink
 } from "lucide-react";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type { Doctor, Appointment, Schedule, Medicine } from "@shared/schema";
+
+const OPD_LOCATIONS = [
+  { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park", address: "Koregaon Park, Pune, Maharashtra 411001", mapUrl: "https://www.google.com/maps/search/?api=1&query=Koregaon+Park+Pune" },
+  { id: "hinjewadi", name: "Gravity Hospital - Hinjewadi", address: "Hinjewadi, Pune, Maharashtra 411057", mapUrl: "https://www.google.com/maps/search/?api=1&query=Hinjewadi+Pune" },
+  { id: "kothrud", name: "Gravity Hospital - Kothrud", address: "Kothrud, Pune, Maharashtra 411038", mapUrl: "https://www.google.com/maps/search/?api=1&query=Kothrud+Pune" },
+  { id: "wakad", name: "Gravity Hospital - Wakad", address: "Wakad, Pimpri-Chinchwad, Maharashtra 411057", mapUrl: "https://www.google.com/maps/search/?api=1&query=Wakad+Pune" },
+  { id: "viman_nagar", name: "Gravity Hospital - Viman Nagar", address: "Viman Nagar, Pune, Maharashtra 411014", mapUrl: "https://www.google.com/maps/search/?api=1&query=Viman+Nagar+Pune" },
+  { id: "baner", name: "Gravity Hospital - Baner", address: "Baner, Pune, Maharashtra 411045", mapUrl: "https://www.google.com/maps/search/?api=1&query=Baner+Pune" },
+  { id: "aundh", name: "Gravity Hospital - Aundh", address: "Aundh, Pune, Maharashtra 411007", mapUrl: "https://www.google.com/maps/search/?api=1&query=Aundh+Pune" },
+  { id: "kalyani_nagar", name: "Gravity Hospital - Kalyani Nagar", address: "Kalyani Nagar, Pune, Maharashtra 411006", mapUrl: "https://www.google.com/maps/search/?api=1&query=Kalyani+Nagar+Pune" },
+  { id: "pimpri", name: "Gravity Hospital - Pimpri", address: "Pimpri, Pimpri-Chinchwad, Maharashtra 411017", mapUrl: "https://www.google.com/maps/search/?api=1&query=Pimpri+Pune" },
+  { id: "nigdi", name: "Gravity Hospital - Nigdi (Main)", address: "Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062", mapUrl: "https://www.google.com/maps/search/?api=1&query=Gravity+Hospital+Nigdi+Pune" },
+];
 
 type TabType = "schedules" | "book" | "appointments" | "checkin" | "team" | "medicines";
 
@@ -471,6 +486,24 @@ export default function OPDService() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="location">OPD Location</Label>
+                    <Select name="location" required>
+                      <SelectTrigger data-testid="select-opd-location">
+                        <SelectValue placeholder="Select OPD location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {OPD_LOCATIONS.map((loc) => (
+                          <SelectItem key={loc.id} value={loc.name}>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <span>{loc.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="symptoms">Symptoms / Reason for Visit</Label>
@@ -570,6 +603,27 @@ export default function OPDService() {
                             <span className="line-clamp-2">{apt.symptoms}</span>
                           </div>
                         )}
+                        {(() => {
+                          const locationData = OPD_LOCATIONS.find(l => l.name === (apt as any).location || l.id === (apt as any).location) || OPD_LOCATIONS[9];
+                          return (
+                            <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                <span className="font-medium">{locationData.name}</span>
+                              </div>
+                              <a 
+                                href={locationData.mapUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-primary hover:underline mt-1 ml-6"
+                                data-testid={`link-map-${apt.id}`}
+                              >
+                                <span>View on Google Maps</span>
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          );
+                        })()}
                       </div>
                       {apt.status === "scheduled" && (
                         <div className="flex gap-2 mt-4 pt-4 border-t">
