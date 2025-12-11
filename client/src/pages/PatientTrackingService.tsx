@@ -88,6 +88,11 @@ export default function PatientTrackingService() {
     enabled: !!selectedPatientId,
   });
 
+  const { data: doctorVisits = [] } = useQuery<DoctorVisit[]>({
+    queryKey: ["/api/tracking/patients", selectedDoctorVisitPatientId, "doctor-visits"],
+    enabled: !!selectedDoctorVisitPatientId,
+  });
+
   const admitPatientMutation = useMutation({
     mutationFn: async (data: {
       name: string;
@@ -218,13 +223,13 @@ export default function PatientTrackingService() {
     }) => {
       return await apiRequest("POST", `/api/tracking/patients/${data.patientId}/doctor-visits`, data);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients", variables.patientId, "doctor-visits"] });
       toast({
         title: "Doctor Visit Scheduled",
         description: "Doctor visit has been scheduled successfully.",
       });
-      setSelectedDoctorVisitPatientId("");
     },
     onError: () => {
       toast({
@@ -1169,6 +1174,7 @@ export default function PatientTrackingService() {
         )}
 
         {activeTab === "doctor_visits" && (
+          <>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1258,6 +1264,46 @@ export default function PatientTrackingService() {
               </form>
             </CardContent>
           </Card>
+
+          {selectedDoctorVisitPatientId && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Previous Visits
+                  {(() => {
+                    const p = patients.find(p => p.id === selectedDoctorVisitPatientId);
+                    return p ? ` - ${p.name}` : "";
+                  })()}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {doctorVisits.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No previous visits recorded for this patient.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {doctorVisits.map((visit) => (
+                      <div key={visit.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg" data-testid={`doctor-visit-${visit.id}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/10 rounded-full">
+                            <Stethoscope className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{visit.visitDate} at {visit.visitTime}</p>
+                            {visit.notes && <p className="text-sm text-muted-foreground">{visit.notes}</p>}
+                          </div>
+                        </div>
+                        <Badge variant={visit.status === "completed" ? "default" : visit.status === "cancelled" ? "destructive" : "secondary"}>
+                          {visit.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          </>
         )}
       </div>
     </div>
