@@ -181,8 +181,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Notifications Section - Hidden from NURSE role */}
-        {currentRole !== "NURSE" && (
+        {/* Notifications Section - Hidden from ADMIN and NURSE roles */}
+        {currentRole !== "NURSE" && currentRole !== "ADMIN" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Notifications</SidebarGroupLabel>
             <SidebarGroupContent>
