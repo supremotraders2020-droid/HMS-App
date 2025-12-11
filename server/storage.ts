@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -72,6 +72,10 @@ export interface IStorage {
   // Vitals
   getVitalsByPatient(patientId: string): Promise<Vitals[]>;
   createVitals(vitals: InsertVitals): Promise<Vitals>;
+  
+  // Doctor Visits
+  getDoctorVisitsByPatient(patientId: string): Promise<DoctorVisit[]>;
+  createDoctorVisit(visit: InsertDoctorVisit): Promise<DoctorVisit>;
   
   // Patient Tracking History
   getPatientTrackingHistory(patientId: string): Promise<any>;
@@ -264,6 +268,7 @@ export class MemStorage implements IStorage {
   private medications: Map<string, Medication>;
   private meals: Map<string, Meal>;
   private vitalsRecords: Map<string, Vitals>;
+  private doctorVisits: Map<string, DoctorVisit>;
   
   // Chatbot data stores
   private conversationLogs: Map<string, ConversationLog>;
@@ -300,6 +305,7 @@ export class MemStorage implements IStorage {
     this.medications = new Map();
     this.meals = new Map();
     this.vitalsRecords = new Map();
+    this.doctorVisits = new Map();
     
     // Chatbot initialization
     this.conversationLogs = new Map();
@@ -1150,6 +1156,30 @@ export class MemStorage implements IStorage {
     };
     this.vitalsRecords.set(id, vitalsRecord);
     return vitalsRecord;
+  }
+
+  // ========== DOCTOR VISITS METHODS ==========
+  async getDoctorVisitsByPatient(patientId: string): Promise<DoctorVisit[]> {
+    return Array.from(this.doctorVisits.values()).filter(
+      v => v.patientId === patientId
+    ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async createDoctorVisit(visit: InsertDoctorVisit): Promise<DoctorVisit> {
+    const id = randomUUID();
+    const doctorVisit: DoctorVisit = {
+      id,
+      patientId: visit.patientId,
+      visitDate: visit.visitDate,
+      visitTime: visit.visitTime,
+      doctorName: visit.doctorName ?? null,
+      notes: visit.notes ?? null,
+      status: visit.status ?? "scheduled",
+      createdAt: new Date(),
+      createdBy: visit.createdBy,
+    };
+    this.doctorVisits.set(id, doctorVisit);
+    return doctorVisit;
   }
 
   // ========== PATIENT TRACKING HISTORY ==========
