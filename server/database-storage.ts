@@ -14,6 +14,7 @@ import {
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
   prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
   patientConsents, medicines, oxygenCylinders, cylinderMovements, oxygenConsumption, lmoReadings, oxygenAlerts,
+  bmwBags, bmwMovements, bmwPickups, bmwDisposals, bmwVendors, bmwStorageRooms, bmwIncidents, bmwReports,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -39,7 +40,15 @@ import {
   type CylinderMovement, type InsertCylinderMovement,
   type OxygenConsumption, type InsertOxygenConsumption,
   type LmoReading, type InsertLmoReading,
-  type OxygenAlert, type InsertOxygenAlert
+  type OxygenAlert, type InsertOxygenAlert,
+  type BmwBag, type InsertBmwBag,
+  type BmwMovement, type InsertBmwMovement,
+  type BmwPickup, type InsertBmwPickup,
+  type BmwDisposal, type InsertBmwDisposal,
+  type BmwVendor, type InsertBmwVendor,
+  type BmwStorageRoom, type InsertBmwStorageRoom,
+  type BmwIncident, type InsertBmwIncident,
+  type BmwReport, type InsertBmwReport
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -1642,6 +1651,184 @@ export class DatabaseStorage implements IStorage {
       .set({ isResolved: true, resolvedBy, resolvedAt: new Date() })
       .where(eq(oxygenAlerts.id, id))
       .returning();
+    return result[0];
+  }
+
+  // ========== BIOMEDICAL WASTE MANAGEMENT (BMW) METHODS ==========
+
+  async getBmwBags(filters?: { status?: string; category?: string; department?: string }): Promise<BmwBag[]> {
+    let query = db.select().from(bmwBags).orderBy(desc(bmwBags.createdAt));
+    
+    if (filters?.status) {
+      query = query.where(eq(bmwBags.status, filters.status)) as any;
+    }
+    if (filters?.category) {
+      query = query.where(eq(bmwBags.category, filters.category)) as any;
+    }
+    if (filters?.department) {
+      query = query.where(eq(bmwBags.department, filters.department)) as any;
+    }
+    
+    return await query;
+  }
+
+  async getBmwBag(id: string): Promise<BmwBag | undefined> {
+    const result = await db.select().from(bmwBags).where(eq(bmwBags.id, id));
+    return result[0];
+  }
+
+  async createBmwBag(bag: InsertBmwBag): Promise<BmwBag> {
+    const result = await db.insert(bmwBags).values(bag).returning();
+    return result[0];
+  }
+
+  async updateBmwBag(id: string, updates: Partial<InsertBmwBag>): Promise<BmwBag | undefined> {
+    const result = await db.update(bmwBags)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(bmwBags.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getBmwStats(): Promise<{
+    totalBags: number;
+    pendingPickup: number;
+    disposedToday: number;
+    totalWeightKg: number;
+    yellowBags: number;
+    redBags: number;
+    whiteBags: number;
+    blueBags: number;
+    storageAlerts: number;
+  }> {
+    const allBags = await db.select().from(bmwBags);
+    const today = new Date().toISOString().split('T')[0];
+    
+    const pendingBags = allBags.filter(b => b.status !== "DISPOSED");
+    const disposedToday = allBags.filter(b => 
+      b.status === "DISPOSED" && 
+      b.disposedAt && 
+      new Date(b.disposedAt).toISOString().split('T')[0] === today
+    );
+    
+    // Check for storage alerts (bags in storage past 48 hours)
+    const now = new Date();
+    const storageAlerts = allBags.filter(b => 
+      b.status === "STORED" && 
+      b.storageDeadline && 
+      new Date(b.storageDeadline) < now
+    ).length;
+    
+    return {
+      totalBags: allBags.length,
+      pendingPickup: pendingBags.length,
+      disposedToday: disposedToday.length,
+      totalWeightKg: allBags.reduce((sum, b) => sum + parseFloat(b.approxWeight || "0"), 0),
+      yellowBags: allBags.filter(b => b.category === "YELLOW").length,
+      redBags: allBags.filter(b => b.category === "RED").length,
+      whiteBags: allBags.filter(b => b.category === "WHITE").length,
+      blueBags: allBags.filter(b => b.category === "BLUE").length,
+      storageAlerts
+    };
+  }
+
+  async getBmwMovements(bagId?: string): Promise<BmwMovement[]> {
+    if (bagId) {
+      return await db.select().from(bmwMovements)
+        .where(eq(bmwMovements.bagId, bagId))
+        .orderBy(desc(bmwMovements.timestamp));
+    }
+    return await db.select().from(bmwMovements).orderBy(desc(bmwMovements.timestamp));
+  }
+
+  async createBmwMovement(movement: InsertBmwMovement): Promise<BmwMovement> {
+    const result = await db.insert(bmwMovements).values(movement).returning();
+    return result[0];
+  }
+
+  async getBmwStorageRooms(): Promise<BmwStorageRoom[]> {
+    return await db.select().from(bmwStorageRooms).orderBy(bmwStorageRooms.name);
+  }
+
+  async createBmwStorageRoom(room: InsertBmwStorageRoom): Promise<BmwStorageRoom> {
+    const result = await db.insert(bmwStorageRooms).values(room).returning();
+    return result[0];
+  }
+
+  async updateBmwStorageRoom(id: string, updates: Partial<InsertBmwStorageRoom>): Promise<BmwStorageRoom | undefined> {
+    const result = await db.update(bmwStorageRooms)
+      .set(updates)
+      .where(eq(bmwStorageRooms.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getBmwVendors(): Promise<BmwVendor[]> {
+    return await db.select().from(bmwVendors).orderBy(bmwVendors.name);
+  }
+
+  async createBmwVendor(vendor: InsertBmwVendor): Promise<BmwVendor> {
+    const result = await db.insert(bmwVendors).values(vendor).returning();
+    return result[0];
+  }
+
+  async updateBmwVendor(id: string, updates: Partial<InsertBmwVendor>): Promise<BmwVendor | undefined> {
+    const result = await db.update(bmwVendors)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(bmwVendors.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getBmwPickups(): Promise<BmwPickup[]> {
+    return await db.select().from(bmwPickups).orderBy(desc(bmwPickups.createdAt));
+  }
+
+  async createBmwPickup(pickup: InsertBmwPickup): Promise<BmwPickup> {
+    const result = await db.insert(bmwPickups).values(pickup).returning();
+    return result[0];
+  }
+
+  async updateBmwPickup(id: string, updates: Partial<InsertBmwPickup>): Promise<BmwPickup | undefined> {
+    const result = await db.update(bmwPickups)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(bmwPickups.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getBmwDisposals(): Promise<BmwDisposal[]> {
+    return await db.select().from(bmwDisposals).orderBy(desc(bmwDisposals.createdAt));
+  }
+
+  async createBmwDisposal(disposal: InsertBmwDisposal): Promise<BmwDisposal> {
+    const result = await db.insert(bmwDisposals).values(disposal).returning();
+    return result[0];
+  }
+
+  async getBmwIncidents(): Promise<BmwIncident[]> {
+    return await db.select().from(bmwIncidents).orderBy(desc(bmwIncidents.reportedAt));
+  }
+
+  async createBmwIncident(incident: InsertBmwIncident): Promise<BmwIncident> {
+    const result = await db.insert(bmwIncidents).values(incident).returning();
+    return result[0];
+  }
+
+  async updateBmwIncident(id: string, updates: Partial<InsertBmwIncident>): Promise<BmwIncident | undefined> {
+    const result = await db.update(bmwIncidents)
+      .set(updates)
+      .where(eq(bmwIncidents.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getBmwReports(): Promise<BmwReport[]> {
+    return await db.select().from(bmwReports).orderBy(desc(bmwReports.createdAt));
+  }
+
+  async createBmwReport(report: InsertBmwReport): Promise<BmwReport> {
+    const result = await db.insert(bmwReports).values(report).returning();
     return result[0];
   }
 }

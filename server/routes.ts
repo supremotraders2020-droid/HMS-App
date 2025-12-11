@@ -2645,6 +2645,272 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== BIOMEDICAL WASTE MANAGEMENT (BMW) ROUTES ==========
+
+  // Generate unique barcode for BMW bag
+  const generateBMWBarcode = () => {
+    const prefix = "BMW";
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${prefix}-${timestamp}-${random}`;
+  };
+
+  // Generate pickup ID
+  const generatePickupId = () => {
+    const prefix = "PU";
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${prefix}-${date}-${random}`;
+  };
+
+  // Get all BMW bags
+  app.get("/api/bmw/bags", async (req, res) => {
+    try {
+      const { status, category, department } = req.query;
+      const bags = await databaseStorage.getBmwBags({ 
+        status: status as string, 
+        category: category as string, 
+        department: department as string 
+      });
+      res.json(bags);
+    } catch (error) {
+      console.error("Failed to fetch BMW bags:", error);
+      res.status(500).json({ error: "Failed to fetch BMW bags" });
+    }
+  });
+
+  // Create BMW bag with auto-generated barcode
+  app.post("/api/bmw/bags", async (req, res) => {
+    try {
+      const barcode = generateBMWBarcode();
+      const now = new Date();
+      const storageDeadline = new Date(now.getTime() + 48 * 60 * 60 * 1000); // 48 hours from now
+      
+      const bag = await databaseStorage.createBmwBag({
+        barcode,
+        category: req.body.category,
+        department: req.body.department,
+        approxWeight: req.body.approxWeight,
+        status: "GENERATED",
+        generatedBy: req.body.generatedBy || "System",
+        generatedByRole: req.body.generatedByRole || "ADMIN",
+        storageDeadline,
+        notes: req.body.notes
+      });
+
+      // Create movement record
+      await databaseStorage.createBmwMovement({
+        bagId: bag.id,
+        action: "CREATED",
+        performedBy: req.body.generatedBy || "System",
+        performedByRole: req.body.generatedByRole || "ADMIN",
+        location: req.body.department,
+        weight: req.body.approxWeight,
+        notes: "Bag generated"
+      });
+
+      res.status(201).json(bag);
+    } catch (error) {
+      console.error("Failed to create BMW bag:", error);
+      res.status(500).json({ error: "Failed to create BMW bag" });
+    }
+  });
+
+  // Update BMW bag status
+  app.patch("/api/bmw/bags/:id", async (req, res) => {
+    try {
+      const bag = await databaseStorage.updateBmwBag(req.params.id, req.body);
+      if (!bag) {
+        return res.status(404).json({ error: "Bag not found" });
+      }
+      res.json(bag);
+    } catch (error) {
+      console.error("Failed to update BMW bag:", error);
+      res.status(500).json({ error: "Failed to update BMW bag" });
+    }
+  });
+
+  // Get BMW statistics
+  app.get("/api/bmw/stats", async (req, res) => {
+    try {
+      const stats = await databaseStorage.getBmwStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Failed to fetch BMW stats:", error);
+      res.status(500).json({ error: "Failed to fetch BMW stats" });
+    }
+  });
+
+  // Get BMW movements
+  app.get("/api/bmw/movements", async (req, res) => {
+    try {
+      const { bagId } = req.query;
+      const movements = await databaseStorage.getBmwMovements(bagId as string);
+      res.json(movements);
+    } catch (error) {
+      console.error("Failed to fetch BMW movements:", error);
+      res.status(500).json({ error: "Failed to fetch BMW movements" });
+    }
+  });
+
+  // Create BMW movement
+  app.post("/api/bmw/movements", async (req, res) => {
+    try {
+      const movement = await databaseStorage.createBmwMovement(req.body);
+      res.status(201).json(movement);
+    } catch (error) {
+      console.error("Failed to create BMW movement:", error);
+      res.status(500).json({ error: "Failed to create BMW movement" });
+    }
+  });
+
+  // Get all storage rooms
+  app.get("/api/bmw/storage-rooms", async (req, res) => {
+    try {
+      const rooms = await databaseStorage.getBmwStorageRooms();
+      res.json(rooms);
+    } catch (error) {
+      console.error("Failed to fetch storage rooms:", error);
+      res.status(500).json({ error: "Failed to fetch storage rooms" });
+    }
+  });
+
+  // Create storage room
+  app.post("/api/bmw/storage-rooms", async (req, res) => {
+    try {
+      const room = await databaseStorage.createBmwStorageRoom(req.body);
+      res.status(201).json(room);
+    } catch (error) {
+      console.error("Failed to create storage room:", error);
+      res.status(500).json({ error: "Failed to create storage room" });
+    }
+  });
+
+  // Get all vendors
+  app.get("/api/bmw/vendors", async (req, res) => {
+    try {
+      const vendors = await databaseStorage.getBmwVendors();
+      res.json(vendors);
+    } catch (error) {
+      console.error("Failed to fetch vendors:", error);
+      res.status(500).json({ error: "Failed to fetch vendors" });
+    }
+  });
+
+  // Create vendor
+  app.post("/api/bmw/vendors", async (req, res) => {
+    try {
+      const vendorId = `VND-${Date.now().toString(36).toUpperCase()}`;
+      const vendor = await databaseStorage.createBmwVendor({
+        ...req.body,
+        vendorId
+      });
+      res.status(201).json(vendor);
+    } catch (error) {
+      console.error("Failed to create vendor:", error);
+      res.status(500).json({ error: "Failed to create vendor" });
+    }
+  });
+
+  // Get all pickups
+  app.get("/api/bmw/pickups", async (req, res) => {
+    try {
+      const pickups = await databaseStorage.getBmwPickups();
+      res.json(pickups);
+    } catch (error) {
+      console.error("Failed to fetch pickups:", error);
+      res.status(500).json({ error: "Failed to fetch pickups" });
+    }
+  });
+
+  // Create pickup
+  app.post("/api/bmw/pickups", async (req, res) => {
+    try {
+      const pickupId = generatePickupId();
+      const pickup = await databaseStorage.createBmwPickup({
+        ...req.body,
+        pickupId
+      });
+      res.status(201).json(pickup);
+    } catch (error) {
+      console.error("Failed to create pickup:", error);
+      res.status(500).json({ error: "Failed to create pickup" });
+    }
+  });
+
+  // Get all disposals
+  app.get("/api/bmw/disposals", async (req, res) => {
+    try {
+      const disposals = await databaseStorage.getBmwDisposals();
+      res.json(disposals);
+    } catch (error) {
+      console.error("Failed to fetch disposals:", error);
+      res.status(500).json({ error: "Failed to fetch disposals" });
+    }
+  });
+
+  // Create disposal
+  app.post("/api/bmw/disposals", async (req, res) => {
+    try {
+      const disposal = await databaseStorage.createBmwDisposal(req.body);
+      // Update bag status to DISPOSED
+      if (req.body.bagId) {
+        await databaseStorage.updateBmwBag(req.body.bagId, { 
+          status: "DISPOSED",
+          disposedAt: new Date()
+        });
+      }
+      res.status(201).json(disposal);
+    } catch (error) {
+      console.error("Failed to create disposal:", error);
+      res.status(500).json({ error: "Failed to create disposal" });
+    }
+  });
+
+  // Get all incidents
+  app.get("/api/bmw/incidents", async (req, res) => {
+    try {
+      const incidents = await databaseStorage.getBmwIncidents();
+      res.json(incidents);
+    } catch (error) {
+      console.error("Failed to fetch incidents:", error);
+      res.status(500).json({ error: "Failed to fetch incidents" });
+    }
+  });
+
+  // Create incident
+  app.post("/api/bmw/incidents", async (req, res) => {
+    try {
+      const incident = await databaseStorage.createBmwIncident(req.body);
+      res.status(201).json(incident);
+    } catch (error) {
+      console.error("Failed to create incident:", error);
+      res.status(500).json({ error: "Failed to create incident" });
+    }
+  });
+
+  // Get all reports
+  app.get("/api/bmw/reports", async (req, res) => {
+    try {
+      const reports = await databaseStorage.getBmwReports();
+      res.json(reports);
+    } catch (error) {
+      console.error("Failed to fetch reports:", error);
+      res.status(500).json({ error: "Failed to fetch reports" });
+    }
+  });
+
+  // Generate report
+  app.post("/api/bmw/reports", async (req, res) => {
+    try {
+      const report = await databaseStorage.createBmwReport(req.body);
+      res.status(201).json(report);
+    } catch (error) {
+      console.error("Failed to create report:", error);
+      res.status(500).json({ error: "Failed to create report" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
