@@ -82,7 +82,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Oxygen Tracker", url: "/oxygen-tracker", icon: Cylinder, roles: ["ADMIN", "NURSE"] },
       { title: "Biowaste Management", url: "/biowaste-management", icon: Trash2, roles: ["ADMIN"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
-      { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "PATIENT"] },
+      { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "PATIENT"] },
       { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] }
     ];
 
@@ -181,42 +181,44 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Notifications Section */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Notifications</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild data-testid="link-notifications">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start group relative overflow-visible bg-gradient-to-r from-rose-50/80 to-pink-50/60 hover:from-rose-100 hover:to-pink-100 dark:from-rose-900/30 dark:to-pink-900/20 dark:hover:from-rose-800/40 dark:hover:to-pink-800/30 border border-rose-200/50 dark:border-rose-700/30 rounded-xl transition-all duration-300 hover:shadow-md hover:shadow-rose-500/10 hover:-translate-y-0.5"
-                    onClick={() => handleMenuClick("/notification-service")}
-                  >
-                    <div className="p-1.5 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white mr-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm relative">
-                      <Bell className="h-3.5 w-3.5" />
+        {/* Notifications Section - Hidden from NURSE role */}
+        {currentRole !== "NURSE" && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Notifications</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild data-testid="link-notifications">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start group relative overflow-visible bg-gradient-to-r from-rose-50/80 to-pink-50/60 hover:from-rose-100 hover:to-pink-100 dark:from-rose-900/30 dark:to-pink-900/20 dark:hover:from-rose-800/40 dark:hover:to-pink-800/30 border border-rose-200/50 dark:border-rose-700/30 rounded-xl transition-all duration-300 hover:shadow-md hover:shadow-rose-500/10 hover:-translate-y-0.5"
+                      onClick={() => handleMenuClick("/notification-service")}
+                    >
+                      <div className="p-1.5 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white mr-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm relative">
+                        <Bell className="h-3.5 w-3.5" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 border border-white dark:border-slate-800">
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-medium">Notifications</span>
                       {unreadCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 border border-white dark:border-slate-800">
-                          {unreadCount > 9 ? "9+" : unreadCount}
-                        </span>
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-auto text-[10px] px-1.5 py-0 h-4"
+                          data-testid="badge-unread-count"
+                        >
+                          {unreadCount} new
+                        </Badge>
                       )}
-                    </div>
-                    <span className="font-medium">Notifications</span>
-                    {unreadCount > 0 && (
-                      <Badge 
-                        variant="destructive" 
-                        className="ml-auto text-[10px] px-1.5 py-0 h-4"
-                        data-testid="badge-unread-count"
-                      >
-                        {unreadCount} new
-                      </Badge>
-                    )}
-                  </Button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                    </Button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Dashboard</SidebarGroupLabel>
