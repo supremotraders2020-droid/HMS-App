@@ -31,7 +31,8 @@ import {
   Bell,
   Wrench,
   FileCheck,
-  Cylinder
+  Cylinder,
+  Trash2
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 
@@ -64,6 +65,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Biometric Service", url: "/biometric-service", icon: Fingerprint, roles: ["ADMIN", "NURSE", "DOCTOR"] },
       { title: "Equipment Servicing", url: "/equipment-servicing", icon: Wrench, roles: ["ADMIN", "NURSE"] },
       { title: "Oxygen Tracker", url: "/oxygen-tracker", icon: Cylinder, roles: ["ADMIN", "NURSE"] },
+      { title: "Biowaste Management", url: "/biowaste-management", icon: Trash2, roles: ["ADMIN"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
       { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "PATIENT"] },
       { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] }

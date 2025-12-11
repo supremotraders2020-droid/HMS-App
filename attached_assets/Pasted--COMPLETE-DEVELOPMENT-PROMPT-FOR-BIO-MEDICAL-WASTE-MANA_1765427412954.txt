@@ -1,0 +1,261 @@
+✅ 🔥 COMPLETE DEVELOPMENT PROMPT FOR BIO-MEDICAL WASTE MANAGEMENT MODULE
+
+TITLE: “Integrate a fully NABH & CPCB-compliant Biomedical Waste Management Module into the Hospital App.”
+
+1️⃣ OBJECTIVE
+
+Build a fully digital, end-to-end Biowaste Tracking System inside the hospital app that:
+
+Tracks waste from generation → segregation → storage → pickup → disposal
+
+Supports color-coded BMW categories
+
+Uses barcode-based tracking as per CPCB BMW Rules
+
+Generates daily, monthly, and annual reports
+
+Ensures NABH compliance
+
+This module will be used by doctors, nurses, housekeeping, hospital admin, and CBWTF vendor.
+
+2️⃣ CORE FEATURES TO DEVELOP
+A. Waste Generation & Barcode System
+
+Create a "Generate Waste Bag" button.
+
+User selects:
+
+Department (OPD/ICU/OT/Lab/Ward)
+
+Waste Category (Yellow/Red/White/Blue)
+
+Approx weight
+
+System generates:
+
+Unique BMW Bag ID
+
+Auto barcode
+
+Printable barcode sticker
+
+B. Internal Waste Collection Tracking
+
+Staff scans bags with mobile camera/scanner.
+
+System validates the waste category.
+
+Logs:
+
+Bag ID
+
+Weight after collection
+
+Timestamp
+
+Staff name & role
+
+Current location (Ward → Temporary Store)
+
+C. Temporary Storage Room Management
+
+Dashboard showing:
+
+Bags currently in storage
+
+Category-wise weight summary
+
+Bags waiting for CBWTF pickup
+
+48-hour storage limit alerts
+
+Storage temperature/cleaning logs (optional)
+
+D. Vendor Pickup Module (CBWTF)
+
+Vendor logs in and performs:
+
+Scan each bag
+
+Confirm pickup
+
+Enter final weight
+
+Upload pickup slip
+
+Upload disposal evidence (after treatment)
+
+System generates:
+
+Digital Pickup Receipt (DPR)
+
+Auto-sync to CPCB format (if API enabled)
+
+E. Disposal Tracking
+
+Vendor or hospital admin updates:
+
+Treatment method (autoclave/incineration/etc.)
+
+Treatment date/time
+
+Certificate upload
+
+Final disposal status
+
+3️⃣ USER ROLES & PERMISSIONS
+Nurse / Ward Staff
+
+Add waste
+
+Generate barcode
+
+Scan waste before sending to storage
+
+Housekeeping / Waste Handler
+
+Scan & collect
+
+Update weights
+
+Move bags internally
+
+Storage Room Supervisor
+
+Manage storage inventory
+
+Monitor 48-hour rule
+
+Vendor
+
+Pickup
+
+Update final weight
+
+Upload certificates
+
+Admin
+
+Full access
+
+Edit data
+
+Generate reports
+
+Compliance monitoring
+
+4️⃣ DATABASE STRUCTURE (IMPORTANT)
+
+Create these tables:
+
+Table: bmw_bags
+Field	Type	Description
+id	UUID	Unique bag ID
+barcode	String	Auto-generated
+category	Enum(Yellow, Red, White, Blue)	Waste type
+department	String	Location generated
+approx_weight	Float	From nurse
+final_weight	Float	From handler
+status	Enum(Generated, Collected, Stored, PickedUp, Disposed)	
+created_at	Timestamp	When generated
+updated_at	Timestamp	Last update
+Table: bmw_movements
+
+Tracks all steps of bag:
+
+| bag_id | action | by_user | timestamp | location |
+
+Table: bmw_pickups
+
+| pickup_id | vendor_id | date | total_weight | slip_url |
+
+Table: bmw_disposal
+
+| bag_id | method | disposal_date | certificate_file |
+
+5️⃣ WORKFLOW TO IMPLEMENT (END TO END)
+STEP 1 – Nurse Creates Bag
+
+→ Select category
+→ Enter weight
+→ Generate barcode
+→ Scan & seal bag
+→ Bag enters system
+
+STEP 2 – Waste Handler Collects
+
+→ Scan bags from ward
+→ Update weight & trolley movement
+→ Move to storage room
+
+STEP 3 – Storage Room Logs
+
+→ Scan-in bags
+→ Bags become “In Storage”
+→ Countdown timer for 48 hours
+
+STEP 4 – Vendor Pickup
+
+→ Vendor scans bags
+→ Updates final weight
+→ Pickup receipt generated
+
+STEP 5 – Final Disposal
+
+→ Vendor logs treatment
+→ Uploads disposal certificate
+→ Bag status = "Disposed"
+
+STEP 6 – Reports
+
+Admin can generate:
+
+Daily waste generation
+
+Category-wise summary
+
+Department-wise summary
+
+Vendor pickup logs
+
+Storage logs
+
+Annual MPCB BMW report (mandatory)
+
+6️⃣ REPORTS TO BE GENERATED (NABH + CPCB REQUIRED)
+✔ Daily Waste Report
+✔ Category-wise Analysis
+✔ Department-wise Waste Trend
+✔ Barcode Compliance Report
+✔ Vendor Pickup Summary
+✔ Monthly Pollution Control Report
+✔ Annual BMW Report (in MPCB format)
+7️⃣ UI SCREENS TO BUILD
+
+Waste Generation Screen
+
+Barcode Print Screen
+
+Bag Scanning Screen
+
+Storage Room Dashboard
+
+Pickup Dashboard
+
+Disposal Certificate Upload
+
+Admin Analytics Dashboard
+
+User Training & SOP Page
+
+8️⃣ AUTOMATIONS
+
+Auto alerts for 48-hour storage limit
+
+Low stock alert for color-coded bags
+
+Auto email to admin for each pickup
+
+Reminder: "BMW Annual Report" before 31 Jan
+
+Incident reporting (needle-stick / spill) workflow

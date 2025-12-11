@@ -915,3 +915,234 @@ export const insertOxygenAlertSchema = createInsertSchema(oxygenAlerts).omit({
 });
 export type InsertOxygenAlert = z.infer<typeof insertOxygenAlertSchema>;
 export type OxygenAlert = typeof oxygenAlerts.$inferSelect;
+
+// ========== BIOMEDICAL WASTE MANAGEMENT (BMW) TABLES ==========
+
+// BMW Category Enum - Color coded as per CPCB guidelines
+export const bmwCategoryEnum = pgEnum("bmw_category", ["YELLOW", "RED", "WHITE", "BLUE"]);
+
+// BMW Bag Status Enum
+export const bmwStatusEnum = pgEnum("bmw_status", ["GENERATED", "COLLECTED", "STORED", "PICKED_UP", "DISPOSED"]);
+
+// BMW Movement Action Enum
+export const bmwActionEnum = pgEnum("bmw_action", ["CREATED", "COLLECTED", "MOVED_TO_STORAGE", "PICKED_BY_VENDOR", "DISPOSED"]);
+
+// BMW Disposal Method Enum
+export const bmwDisposalMethodEnum = pgEnum("bmw_disposal_method", ["AUTOCLAVE", "INCINERATION", "CHEMICAL_TREATMENT", "SHREDDING", "DEEP_BURIAL"]);
+
+// BMW Bags Table - Core tracking entity
+export const bmwBags = pgTable("bmw_bags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  barcode: text("barcode").notNull().unique(), // Auto-generated unique barcode
+  category: text("category").notNull(), // YELLOW, RED, WHITE, BLUE
+  department: text("department").notNull(), // OPD, ICU, OT, Lab, Ward, etc.
+  approxWeight: decimal("approx_weight", { precision: 10, scale: 2 }).notNull(), // Initial weight in kg
+  finalWeight: decimal("final_weight", { precision: 10, scale: 2 }), // Weight at disposal
+  status: text("status").notNull().default("GENERATED"), // GENERATED, COLLECTED, STORED, PICKED_UP, DISPOSED
+  generatedBy: text("generated_by").notNull(), // User who created the bag
+  generatedByRole: text("generated_by_role").notNull(), // Role of the user
+  collectedBy: text("collected_by"), // Housekeeping staff
+  storageRoomId: text("storage_room_id"), // Temporary storage location
+  storedAt: timestamp("stored_at"), // When moved to storage
+  storageDeadline: timestamp("storage_deadline"), // 48-hour limit
+  vendorId: text("vendor_id"), // CBWTF vendor
+  pickedUpAt: timestamp("picked_up_at"), // When vendor picked up
+  disposedAt: timestamp("disposed_at"), // When finally disposed
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBmwBagSchema = createInsertSchema(bmwBags).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBmwBag = z.infer<typeof insertBmwBagSchema>;
+export type BmwBag = typeof bmwBags.$inferSelect;
+
+// BMW Movements Table - Tracks all bag movements/actions
+export const bmwMovements = pgTable("bmw_movements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bagId: varchar("bag_id").notNull(), // Reference to bmw_bags
+  action: text("action").notNull(), // CREATED, COLLECTED, MOVED_TO_STORAGE, PICKED_BY_VENDOR, DISPOSED
+  performedBy: text("performed_by").notNull(), // User who performed action
+  performedByRole: text("performed_by_role").notNull(), // Role of the user
+  location: text("location").notNull(), // Current location after action
+  weight: decimal("weight", { precision: 10, scale: 2 }), // Weight at this point
+  notes: text("notes"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertBmwMovementSchema = createInsertSchema(bmwMovements).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertBmwMovement = z.infer<typeof insertBmwMovementSchema>;
+export type BmwMovement = typeof bmwMovements.$inferSelect;
+
+// BMW Pickups Table - Vendor pickup records
+export const bmwPickups = pgTable("bmw_pickups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pickupId: text("pickup_id").notNull().unique(), // Auto-generated pickup ID
+  vendorId: text("vendor_id").notNull(), // CBWTF vendor ID
+  vendorName: text("vendor_name").notNull(),
+  pickupDate: text("pickup_date").notNull(),
+  pickupTime: text("pickup_time").notNull(),
+  totalBags: integer("total_bags").notNull().default(0),
+  totalWeight: decimal("total_weight", { precision: 10, scale: 2 }).notNull(),
+  yellowBags: integer("yellow_bags").default(0),
+  redBags: integer("red_bags").default(0),
+  whiteBags: integer("white_bags").default(0),
+  blueBags: integer("blue_bags").default(0),
+  yellowWeight: decimal("yellow_weight", { precision: 10, scale: 2 }).default("0"),
+  redWeight: decimal("red_weight", { precision: 10, scale: 2 }).default("0"),
+  whiteWeight: decimal("white_weight", { precision: 10, scale: 2 }).default("0"),
+  blueWeight: decimal("blue_weight", { precision: 10, scale: 2 }).default("0"),
+  slipUrl: text("slip_url"), // Uploaded pickup slip
+  vehicleNumber: text("vehicle_number"),
+  driverName: text("driver_name"),
+  receivedBy: text("received_by"), // Hospital staff who handed over
+  status: text("status").notNull().default("SCHEDULED"), // SCHEDULED, IN_PROGRESS, COMPLETED
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBmwPickupSchema = createInsertSchema(bmwPickups).omit({
+  id: true,
+  pickupId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBmwPickup = z.infer<typeof insertBmwPickupSchema>;
+export type BmwPickup = typeof bmwPickups.$inferSelect;
+
+// BMW Disposals Table - Final disposal records
+export const bmwDisposals = pgTable("bmw_disposals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bagId: varchar("bag_id").notNull(), // Reference to bmw_bags
+  pickupId: varchar("pickup_id"), // Reference to bmw_pickups
+  method: text("method").notNull(), // AUTOCLAVE, INCINERATION, CHEMICAL_TREATMENT, SHREDDING, DEEP_BURIAL
+  disposalDate: text("disposal_date").notNull(),
+  disposalTime: text("disposal_time"),
+  treatmentFacility: text("treatment_facility"), // CBWTF facility name
+  certificateUrl: text("certificate_url"), // Uploaded disposal certificate
+  verifiedBy: text("verified_by"), // Who verified the disposal
+  status: text("status").notNull().default("PENDING"), // PENDING, TREATED, VERIFIED
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBmwDisposalSchema = createInsertSchema(bmwDisposals).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertBmwDisposal = z.infer<typeof insertBmwDisposalSchema>;
+export type BmwDisposal = typeof bmwDisposals.$inferSelect;
+
+// BMW Vendors Table - CBWTF vendor registry
+export const bmwVendors = pgTable("bmw_vendors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: text("vendor_id").notNull().unique(),
+  name: text("name").notNull(),
+  companyName: text("company_name").notNull(),
+  contactPerson: text("contact_person"),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  address: text("address"),
+  licenseNumber: text("license_number").notNull(), // CPCB/SPCB license
+  licenseExpiry: text("license_expiry"),
+  vehicleNumbers: text("vehicle_numbers"), // Comma-separated
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBmwVendorSchema = createInsertSchema(bmwVendors).omit({
+  id: true,
+  vendorId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBmwVendor = z.infer<typeof insertBmwVendorSchema>;
+export type BmwVendor = typeof bmwVendors.$inferSelect;
+
+// BMW Storage Rooms Table - Temporary storage locations
+export const bmwStorageRooms = pgTable("bmw_storage_rooms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  location: text("location").notNull(),
+  capacity: integer("capacity").notNull().default(100), // Max number of bags
+  currentOccupancy: integer("current_occupancy").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  lastCleanedAt: timestamp("last_cleaned_at"),
+  cleanedBy: text("cleaned_by"),
+  temperature: decimal("temperature", { precision: 5, scale: 2 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBmwStorageRoomSchema = createInsertSchema(bmwStorageRooms).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertBmwStorageRoom = z.infer<typeof insertBmwStorageRoomSchema>;
+export type BmwStorageRoom = typeof bmwStorageRooms.$inferSelect;
+
+// BMW Incidents Table - Needle-stick injuries, spills, etc.
+export const bmwIncidents = pgTable("bmw_incidents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentType: text("incident_type").notNull(), // NEEDLE_STICK, SPILL, EXPOSURE, OTHER
+  severity: text("severity").notNull().default("MINOR"), // MINOR, MODERATE, MAJOR
+  department: text("department").notNull(),
+  location: text("location").notNull(),
+  description: text("description").notNull(),
+  involvedPersonnel: text("involved_personnel"),
+  wasteCategory: text("waste_category"), // Related waste category if applicable
+  bagId: varchar("bag_id"), // Related bag if applicable
+  actionTaken: text("action_taken"),
+  reportedBy: text("reported_by").notNull(),
+  reportedAt: timestamp("reported_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: text("resolved_by"),
+  status: text("status").notNull().default("REPORTED"), // REPORTED, INVESTIGATING, RESOLVED
+  notes: text("notes"),
+});
+
+export const insertBmwIncidentSchema = createInsertSchema(bmwIncidents).omit({
+  id: true,
+  reportedAt: true,
+});
+export type InsertBmwIncident = z.infer<typeof insertBmwIncidentSchema>;
+export type BmwIncident = typeof bmwIncidents.$inferSelect;
+
+// BMW Reports Table - Generated compliance reports
+export const bmwReports = pgTable("bmw_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportType: text("report_type").notNull(), // DAILY, WEEKLY, MONTHLY, ANNUAL, MPCB
+  reportPeriod: text("report_period").notNull(), // Date range or period identifier
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+  totalBagsGenerated: integer("total_bags_generated").default(0),
+  totalWeightKg: decimal("total_weight_kg", { precision: 10, scale: 2 }).default("0"),
+  yellowBags: integer("yellow_bags").default(0),
+  redBags: integer("red_bags").default(0),
+  whiteBags: integer("white_bags").default(0),
+  blueBags: integer("blue_bags").default(0),
+  disposedBags: integer("disposed_bags").default(0),
+  pendingBags: integer("pending_bags").default(0),
+  incidentsCount: integer("incidents_count").default(0),
+  generatedBy: text("generated_by").notNull(),
+  reportData: text("report_data"), // JSON string with detailed data
+  fileUrl: text("file_url"), // Generated PDF/Excel report
+  status: text("status").notNull().default("GENERATED"), // GENERATED, SUBMITTED, APPROVED
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBmwReportSchema = createInsertSchema(bmwReports).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertBmwReport = z.infer<typeof insertBmwReportSchema>;
+export type BmwReport = typeof bmwReports.$inferSelect;
