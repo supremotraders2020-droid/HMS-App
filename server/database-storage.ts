@@ -15,7 +15,7 @@ import {
   prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
   patientConsents, medicines, oxygenCylinders, cylinderMovements, oxygenConsumption, lmoReadings, oxygenAlerts,
   bmwBags, bmwMovements, bmwPickups, bmwDisposals, bmwVendors, bmwStorageRooms, bmwIncidents, bmwReports,
-  doctorOathConfirmations,
+  doctorOathConfirmations, consentTemplates,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -51,7 +51,8 @@ import {
   type BmwIncident, type InsertBmwIncident,
   type BmwReport, type InsertBmwReport,
   doctorVisits, type DoctorVisit, type InsertDoctorVisit,
-  type DoctorOathConfirmation, type InsertDoctorOathConfirmation
+  type DoctorOathConfirmation, type InsertDoctorOathConfirmation,
+  type ConsentTemplate, type InsertConsentTemplate
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -2151,6 +2152,171 @@ export class DatabaseStorage implements IStorage {
   async createDoctorOathConfirmation(confirmation: InsertDoctorOathConfirmation): Promise<DoctorOathConfirmation> {
     const result = await db.insert(doctorOathConfirmations).values(confirmation).returning();
     return result[0];
+  }
+
+  // ========== CONSENT TEMPLATES METHODS ==========
+  async getAllConsentTemplates(): Promise<ConsentTemplate[]> {
+    return await db.select().from(consentTemplates).where(eq(consentTemplates.isActive, true)).orderBy(consentTemplates.category, consentTemplates.title);
+  }
+
+  async getConsentTemplate(id: string): Promise<ConsentTemplate | undefined> {
+    const result = await db.select().from(consentTemplates).where(eq(consentTemplates.id, id));
+    return result[0];
+  }
+
+  async getConsentTemplatesByType(consentType: string): Promise<ConsentTemplate[]> {
+    return await db.select().from(consentTemplates)
+      .where(and(eq(consentTemplates.consentType, consentType), eq(consentTemplates.isActive, true)))
+      .orderBy(consentTemplates.title);
+  }
+
+  async getConsentTemplatesByCategory(category: string): Promise<ConsentTemplate[]> {
+    return await db.select().from(consentTemplates)
+      .where(and(eq(consentTemplates.category, category), eq(consentTemplates.isActive, true)))
+      .orderBy(consentTemplates.title);
+  }
+
+  async createConsentTemplate(template: InsertConsentTemplate): Promise<ConsentTemplate> {
+    const result = await db.insert(consentTemplates).values(template).returning();
+    return result[0];
+  }
+
+  async updateConsentTemplate(id: string, updates: Partial<InsertConsentTemplate>): Promise<ConsentTemplate | undefined> {
+    const result = await db.update(consentTemplates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(consentTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteConsentTemplate(id: string): Promise<boolean> {
+    const result = await db.delete(consentTemplates).where(eq(consentTemplates.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Seed consent templates with PDF files
+  async seedConsentTemplates(): Promise<void> {
+    const existing = await db.select().from(consentTemplates);
+    if (existing.length > 0) {
+      console.log("Consent templates already exist, skipping seed...");
+      return;
+    }
+
+    const templates: InsertConsentTemplate[] = [
+      {
+        title: "Medico-Legal Register (Digital Consent Form)",
+        consentType: "MEDICO_LEGAL",
+        description: "Digital medico-legal form for documenting patient injuries, police information, and medical officer attestation. Must be preserved forever as per legal requirements.",
+        category: "Legal",
+        pdfPath: "/consents/Digital_Medico_Legal_Form_1765472182868.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: false,
+        languages: "English"
+      },
+      {
+        title: "Operation Theatre Register",
+        consentType: "OPERATION_THEATRE",
+        description: "Digital form for recording surgical procedures, operation team details, materials used, anaesthesia information, and post-operative notes.",
+        category: "Surgical",
+        pdfPath: "/consents/Operation_Theatre_Register_1765472182869.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: false,
+        languages: "English"
+      },
+      {
+        title: "Icon Hospital Consent Form (Multiple)",
+        consentType: "LOW_PROGNOSIS",
+        description: "Comprehensive consent form including: Low General Condition/Poor Prognosis, Emergency Procedure, Patient Shifting, Valuables Declaration, Treatment Denial, and DNR consents.",
+        category: "General",
+        pdfPath: "/consents/Icon_Hospital_Consent_Form_1765472182869.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Marathi"
+      },
+      {
+        title: "HIV Test Informed Consent",
+        consentType: "HIV_TEST",
+        description: "Consent form for HIV blood test with information about test results confidentiality, insurance coverage, and patient acknowledgment.",
+        category: "Diagnostic",
+        pdfPath: "/consents/Hiv_Consent_Form_1765472182870.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Marathi"
+      },
+      {
+        title: "HBsAg Test Informed Consent",
+        consentType: "HBSAG_TEST",
+        description: "Consent form for Hepatitis B (HBsAg) blood test with information about test results confidentiality, insurance coverage, and patient acknowledgment.",
+        category: "Diagnostic",
+        pdfPath: "/consents/Hbsag_Consent_Form_1765472182870.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Marathi"
+      },
+      {
+        title: "Informed Consent for Anaesthesia",
+        consentType: "ANAESTHESIA",
+        description: "Consent form explaining types of anaesthesia, associated risks and complications including rare possibilities of allergic reactions, dental injury, and other complications.",
+        category: "Surgical",
+        pdfPath: "/consents/Anaesthesia_Consent_Form_1765472182871.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Marathi"
+      },
+      {
+        title: "Consent for Surgery/Operative Procedure",
+        consentType: "SURGERY",
+        description: "Authorization for surgical/operative procedures including anaesthesia, with acknowledgment of risks, possible complications, and consent for photography/videography for medical purposes.",
+        category: "Surgical",
+        pdfPath: "/consents/Surgery_Consent_Form_1765472182872.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Marathi"
+      },
+      {
+        title: "Tubal Ligation Consent Form",
+        consentType: "TUBAL_LIGATION",
+        description: "Comprehensive consent form for tubal ligation procedure including patient declarations, eligibility criteria, anaesthesia consent, and follow-up requirements.",
+        category: "Surgical",
+        pdfPath: "/consents/Tubal_Ligation_Consent_Form_1765472182872.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Marathi"
+      },
+      {
+        title: "Consent for Blood/Blood Component Transfusion",
+        consentType: "BLOOD_TRANSFUSION",
+        description: "Consent form for blood or blood product transfusion explaining risks associated with refusal including organ damage, heart attack, stroke, and other complications.",
+        category: "Treatment",
+        pdfPath: "/consents/Blood_Transfusion_Consent_Form_1765472182873.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Marathi"
+      },
+      {
+        title: "Discharge Against Medical Advice (DAMA/LAMA)",
+        consentType: "DAMA",
+        description: "Consent form for patients or relatives choosing to discharge against medical advice, acknowledging risks and releasing hospital from liability.",
+        category: "Discharge",
+        pdfPath: "/consents/Discharge_Against_Medical_Advice_Form_1765472182873.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Marathi"
+      }
+    ];
+
+    await db.insert(consentTemplates).values(templates);
+    console.log("Consent templates seeded successfully with 10 forms");
   }
 }
 

@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
+import path from "path";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
@@ -10,10 +11,14 @@ import { notificationService } from "./notification-service";
 const SALT_ROUNDS = 10;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static consent PDF files from server/public/consents
+  app.use('/consents', express.static(path.join(process.cwd(), 'server/public/consents')));
+  
   // Seed initial data if database is empty
   await databaseStorage.seedInitialData();
   await databaseStorage.seedEquipmentData();
   await databaseStorage.seedBmwData();
+  await databaseStorage.seedConsentTemplates();
   
   // Registration endpoint - create new user with hashed password
   // Public registration is limited to PATIENT role only for security
@@ -2407,6 +2412,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete consent form" });
+    }
+  });
+
+  // ========== CONSENT TEMPLATES API ==========
+  // These are pre-defined PDF templates available for download
+  
+  // Get all consent templates (public endpoint for viewing available templates)
+  app.get("/api/consent-templates", async (req, res) => {
+    try {
+      const templates = await databaseStorage.getAllConsentTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Failed to fetch consent templates:", error);
+      res.status(500).json({ error: "Failed to fetch consent templates" });
+    }
+  });
+
+  // Get consent templates by type
+  app.get("/api/consent-templates/type/:type", async (req, res) => {
+    try {
+      const templates = await databaseStorage.getConsentTemplatesByType(req.params.type);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch consent templates by type" });
+    }
+  });
+
+  // Get consent templates by category
+  app.get("/api/consent-templates/category/:category", async (req, res) => {
+    try {
+      const templates = await databaseStorage.getConsentTemplatesByCategory(req.params.category);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch consent templates by category" });
+    }
+  });
+
+  // Get single consent template by ID
+  app.get("/api/consent-templates/:id", async (req, res) => {
+    try {
+      const template = await databaseStorage.getConsentTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Consent template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch consent template" });
     }
   });
 

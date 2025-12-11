@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { 
   FileCheck, 
@@ -22,7 +23,10 @@ import {
   FileText,
   Search,
   Filter,
-  Eye
+  Eye,
+  FolderOpen,
+  Languages,
+  ExternalLink
 } from "lucide-react";
 
 interface User {
@@ -53,6 +57,21 @@ interface ConsentForm {
   updatedAt: string;
 }
 
+interface ConsentTemplate {
+  id: string;
+  title: string;
+  consentType: string;
+  description: string | null;
+  category: string;
+  pdfPath: string;
+  version: string;
+  isActive: boolean;
+  isBilingual: boolean;
+  languages: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const CATEGORIES = [
   { value: "general", label: "General Consent" },
   { value: "surgery", label: "Surgery Consent" },
@@ -62,25 +81,40 @@ const CATEGORIES = [
   { value: "other", label: "Other" }
 ];
 
+const TEMPLATE_CATEGORIES = [
+  { value: "Legal", label: "Legal" },
+  { value: "Surgical", label: "Surgical" },
+  { value: "General", label: "General" },
+  { value: "Diagnostic", label: "Diagnostic" },
+  { value: "Treatment", label: "Treatment" },
+  { value: "Discharge", label: "Discharge" }
+];
+
 export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [templateSearchQuery, setTemplateSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState<string>("all");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formCategory, setFormCategory] = useState("general");
+  const [activeTab, setActiveTab] = useState("templates");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Helper to get auth headers
   const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
     'x-user-id': currentUser.id,
     'x-user-role': currentUser.role,
   });
 
-  const { data: consentForms = [], isLoading } = useQuery<ConsentForm[]>({
+  const { data: consentTemplates = [], isLoading: templatesLoading } = useQuery<ConsentTemplate[]>({
+    queryKey: ['/api/consent-templates'],
+  });
+
+  const { data: consentForms = [], isLoading: formsLoading } = useQuery<ConsentForm[]>({
     queryKey: ['/api/consent-forms'],
     queryFn: async () => {
       const res = await fetch('/api/consent-forms', {
@@ -188,6 +222,31 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
     });
   };
 
+  const handleTemplateView = (template: ConsentTemplate) => {
+    window.open(template.pdfPath, '_blank');
+    toast({ title: "Opening template..." });
+  };
+
+  const handleTemplateDownload = (template: ConsentTemplate) => {
+    const link = document.createElement('a');
+    link.href = template.pdfPath;
+    link.download = template.pdfPath.split('/').pop() || 'consent-form.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({ title: "Download started" });
+  };
+
+  const handleTemplatePrint = (template: ConsentTemplate) => {
+    const printWindow = window.open(template.pdfPath, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+    toast({ title: "Opening print dialog..." });
+  };
+
   const handleDownload = async (form: ConsentForm) => {
     try {
       const response = await fetch(`/api/consent-forms/${form.id}/download`, {
@@ -274,14 +333,46 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   };
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
+    switch (category.toLowerCase()) {
+      case 'surgical': 
       case 'surgery': return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
       case 'treatment': return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
-      case 'admission': return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
+      case 'admission':
+      case 'general': return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
       case 'discharge': return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300';
+      case 'legal': return 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300';
+      case 'diagnostic': return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300';
       default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
     }
   };
+
+  const getConsentTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      'MEDICO_LEGAL': 'Medico-Legal',
+      'OPERATION_THEATRE': 'Operation Theatre',
+      'LOW_PROGNOSIS': 'Multiple Consents',
+      'EMERGENCY_PROCEDURE': 'Emergency',
+      'PATIENT_SHIFTING': 'Patient Shifting',
+      'VALUABLES_DECLARATION': 'Valuables',
+      'TREATMENT_DENIAL': 'Treatment Denial',
+      'DNR': 'Do Not Resuscitate',
+      'HIV_TEST': 'HIV Test',
+      'HBSAG_TEST': 'Hepatitis B Test',
+      'ANAESTHESIA': 'Anaesthesia',
+      'SURGERY': 'Surgery',
+      'TUBAL_LIGATION': 'Tubal Ligation',
+      'BLOOD_TRANSFUSION': 'Blood Transfusion',
+      'DAMA': 'DAMA/LAMA'
+    };
+    return labels[type] || type;
+  };
+
+  const filteredTemplates = consentTemplates.filter(template => {
+    const matchesSearch = template.title.toLowerCase().includes(templateSearchQuery.toLowerCase()) ||
+      (template.description?.toLowerCase().includes(templateSearchQuery.toLowerCase()) ?? false);
+    const matchesCategory = templateCategoryFilter === 'all' || template.category === templateCategoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   const filteredForms = consentForms.filter(form => {
     const matchesSearch = form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -298,7 +389,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
             <FileCheck className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
             <span className="truncate">Consent Forms Management</span>
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Upload, download, and manage hospital consent forms</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Download standard templates or upload custom consent forms</p>
         </div>
         <Button onClick={() => setUploadDialogOpen(true)} className="w-full sm:w-auto" data-testid="button-upload-form">
           <Plus className="h-4 w-4 mr-2" />
@@ -306,123 +397,255 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search consent forms..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-            data-testid="input-search"
-          />
-        </div>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full sm:w-48" data-testid="select-category-filter">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Filter by category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {CATEGORIES.map(cat => (
-              <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="templates" className="flex items-center gap-2" data-testid="tab-templates">
+            <FolderOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Standard Templates</span>
+            <span className="sm:hidden">Templates</span>
+            <Badge variant="secondary" className="ml-1">{consentTemplates.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="uploaded" className="flex items-center gap-2" data-testid="tab-uploaded">
+            <Upload className="h-4 w-4" />
+            <span className="hidden sm:inline">Uploaded Forms</span>
+            <span className="sm:hidden">Uploaded</span>
+            <Badge variant="secondary" className="ml-1">{consentForms.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredForms.map((form) => (
-          <Card key={form.id} className="hover-elevate" data-testid={`consent-form-card-${form.id}`}>
-            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+        <TabsContent value="templates" className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search consent templates..."
+                value={templateSearchQuery}
+                onChange={(e) => setTemplateSearchQuery(e.target.value)}
+                className="pl-10"
+                data-testid="input-search-templates"
+              />
+            </div>
+            <Select value={templateCategoryFilter} onValueChange={setTemplateCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-48" data-testid="select-template-category-filter">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {TEMPLATE_CATEGORIES.map(cat => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredTemplates.map((template) => (
+              <Card key={template.id} className="hover-elevate" data-testid={`template-card-${template.id}`}>
+                <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-sm sm:text-base line-clamp-2" data-testid={`template-title-${template.id}`}>
+                          {template.title}
+                        </CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs flex items-center gap-1 mt-1">
+                          <Badge variant="outline" className="text-[10px] px-1">
+                            {getConsentTypeLabel(template.consentType)}
+                          </Badge>
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" data-testid={`button-template-menu-${template.id}`}>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleTemplateView(template)} data-testid={`button-template-view-${template.id}`}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleTemplateDownload(template)} data-testid={`button-template-download-${template.id}`}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleTemplatePrint(template)} data-testid={`button-template-print-${template.id}`}>
+                          <Printer className="h-4 w-4 mr-2" />
+                          Print
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-sm sm:text-base truncate" data-testid={`form-name-${form.id}`}>
-                      {form.name}
-                    </CardTitle>
-                    <CardDescription className="text-[10px] sm:text-xs truncate">
-                      {form.fileName}
-                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 p-3 sm:p-4 md:p-6 pt-0">
+                  {template.description && (
+                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{template.description}</p>
+                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className={getCategoryColor(template.category)}>
+                      {template.category}
+                    </Badge>
+                    {template.isBilingual && (
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Languages className="h-3 w-3" />
+                        <span className="text-[10px]">{template.languages}</span>
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-[10px]">v{template.version}</Badge>
                   </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" data-testid={`button-menu-${form.id}`}>
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleView(form)} data-testid={`button-view-${form.id}`}>
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDownload(form)} data-testid={`button-download-${form.id}`}>
-                      <Download className="h-4 w-4 mr-2" />
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleTemplateDownload(template)} data-testid={`button-download-template-${template.id}`}>
+                      <Download className="h-4 w-4 mr-1" />
                       Download
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePrint(form)} data-testid={`button-print-${form.id}`}>
-                      <Printer className="h-4 w-4 mr-2" />
-                      Print
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => deleteMutation.mutate(form.id)}
-                      data-testid={`button-delete-${form.id}`}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {form.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">{form.description}</p>
-              )}
-              <div className="flex items-center justify-between">
-                <Badge className={getCategoryColor(form.category)}>
-                  {CATEGORIES.find(c => c.value === form.category)?.label || form.category}
-                </Badge>
-                <span className="text-xs text-muted-foreground">{formatFileSize(form.fileSize)}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Uploaded: {formatDate(form.createdAt)}</span>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => handleDownload(form)}>
-                  <Download className="h-4 w-4 mr-1" />
-                  Download
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => handlePrint(form)}>
-                  <Printer className="h-4 w-4 mr-1" />
-                  Print
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleTemplateView(template)} data-testid={`button-view-template-${template.id}`}>
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Open
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-      {filteredForms.length === 0 && !isLoading && (
-        <Card className="p-12 text-center">
-          <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No consent forms found</h3>
-          <p className="text-muted-foreground mb-4">
-            {searchQuery || categoryFilter !== 'all' 
-              ? "Try adjusting your search or filter"
-              : "Upload your first consent form to get started"}
-          </p>
-          <Button onClick={() => setUploadDialogOpen(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Form
-          </Button>
-        </Card>
-      )}
+          {filteredTemplates.length === 0 && !templatesLoading && (
+            <Card className="p-12 text-center">
+              <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No templates found</h3>
+              <p className="text-muted-foreground">
+                {templateSearchQuery || templateCategoryFilter !== 'all' 
+                  ? "Try adjusting your search or filter"
+                  : "No consent templates are available"}
+              </p>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="uploaded" className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search uploaded forms..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+                data-testid="input-search"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-48" data-testid="select-category-filter">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {CATEGORIES.map(cat => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredForms.map((form) => (
+              <Card key={form.id} className="hover-elevate" data-testid={`consent-form-card-${form.id}`}>
+                <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-sm sm:text-base truncate" data-testid={`form-name-${form.id}`}>
+                          {form.name}
+                        </CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs truncate">
+                          {form.fileName}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" data-testid={`button-menu-${form.id}`}>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleView(form)} data-testid={`button-view-${form.id}`}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownload(form)} data-testid={`button-download-${form.id}`}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handlePrint(form)} data-testid={`button-print-${form.id}`}>
+                          <Printer className="h-4 w-4 mr-2" />
+                          Print
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => deleteMutation.mutate(form.id)}
+                          data-testid={`button-delete-${form.id}`}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 p-3 sm:p-4 md:p-6 pt-0">
+                  {form.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">{form.description}</p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <Badge className={getCategoryColor(form.category)}>
+                      {CATEGORIES.find(c => c.value === form.category)?.label || form.category}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{formatFileSize(form.fileSize)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Uploaded: {formatDate(form.createdAt)}</span>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleDownload(form)}>
+                      <Download className="h-4 w-4 mr-1" />
+                      Download
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handlePrint(form)}>
+                      <Printer className="h-4 w-4 mr-1" />
+                      Print
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {filteredForms.length === 0 && !formsLoading && (
+            <Card className="p-12 text-center">
+              <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No uploaded forms found</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchQuery || categoryFilter !== 'all' 
+                  ? "Try adjusting your search or filter"
+                  : "Upload your first consent form to get started"}
+              </p>
+              <Button onClick={() => setUploadDialogOpen(true)}>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Form
+              </Button>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="sm:max-w-md">

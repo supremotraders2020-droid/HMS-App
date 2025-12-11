@@ -38,7 +38,7 @@ The system comprises several core modules:
 - **Notification Service**: Multi-channel delivery (Push, Email, SMS, WhatsApp) with priority levels.
 - **Biomedical Waste Management (BMW)**: CPCB-compliant tracking of waste bags, categories, storage, pickups, disposal, and compliance reporting.
 - **Oxygen Tracking System**: NABH-compliant cylinder inventory, movement logging, consumption tracking, LMO readings, and alerts.
-- **Consent Forms Management**: Template-based form generation, PDF handling, signature capture, and status tracking.
+- **Consent Forms Management**: Template-based form generation, PDF handling, signature capture, and status tracking. Includes 10 pre-loaded consent templates (Medico-Legal, Operation Theatre, HIV Test, HBsAg Test, Anaesthesia, Surgery, Tubal Ligation, Blood Transfusion, DAMA/LAMA, and General Hospital Consents) with bilingual support (English/Marathi). Templates served as static PDFs from `/consents/*`.
 - **Prescription Management**: Doctor prescription creation, medicine database integration, and history.
 - **Medicine Database**: Searchable database of Indian medicines with dosage and composition.
 
