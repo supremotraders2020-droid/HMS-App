@@ -77,12 +77,15 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
 
   // Filter activity logs based on user role
   const filteredActivityLogs = activityLogs.filter(activity => {
+    // Check if activity is consent-related (entity_type contains "consent")
+    const isConsentActivity = activity.entityType?.toLowerCase().includes("consent") || 
+                              activity.action.toLowerCase().includes("consent");
+    
     // NURSE: only show activity related to their assigned patients
     // Hide consent-related activity (only ADMIN should see consent activity)
     if (currentRole === "NURSE") {
       // Hide consent-related activities from NURSE
-      if (activity.entityType === "consent" || 
-          activity.action.toLowerCase().includes("consent")) {
+      if (isConsentActivity) {
         return false;
       }
       // Only show patient-related activity for assigned patients
@@ -97,8 +100,7 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
     
     // Non-ADMIN users: hide consent-related activities
     if (currentRole !== "ADMIN") {
-      if (activity.entityType === "consent" || 
-          activity.action.toLowerCase().includes("consent")) {
+      if (isConsentActivity) {
         return false;
       }
     }
