@@ -78,7 +78,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Inventory Service", url: "/inventory-service", icon: Package, roles: ["ADMIN", "NURSE"] },
       { title: "Patient Tracking", url: "/patient-tracking", icon: MapPin, roles: ["ADMIN", "DOCTOR", "NURSE"] },
       { title: "Biometric Service", url: "/biometric-service", icon: Fingerprint, roles: ["ADMIN", "NURSE", "DOCTOR"] },
-      { title: "Equipment Servicing", url: "/equipment-servicing", icon: Wrench, roles: ["ADMIN", "NURSE"] },
+      { title: "Equipment Servicing", url: "/equipment-servicing", icon: Wrench, roles: ["ADMIN"] },
       { title: "Oxygen Tracker", url: "/oxygen-tracker", icon: Cylinder, roles: ["ADMIN", "NURSE"] },
       { title: "Biowaste Management", url: "/biowaste-management", icon: Trash2, roles: ["ADMIN"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
