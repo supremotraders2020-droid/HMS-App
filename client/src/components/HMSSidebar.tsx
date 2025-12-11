@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,
   SidebarContent,
@@ -33,24 +32,15 @@ import {
   Wrench,
   FileCheck,
   Cylinder,
-  Trash2,
-  AlertCircle,
-  Info,
-  CheckCircle2,
-  Clock
+  Trash2
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 
-interface UserNotification {
+interface Notification {
   id: string;
-  userId: string;
-  type: string;
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string | Date;
-  priority?: string;
+  isRead?: boolean;
+  status?: string;
 }
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
@@ -66,42 +56,13 @@ interface HMSSidebarProps {
 }
 
 export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLogout }: HMSSidebarProps) {
-  // Fetch user notifications
-  const { data: notifications = [] } = useQuery<UserNotification[]>({
+  // Fetch notifications to get unread count
+  const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-  const recentNotifications = notifications.slice(0, 5);
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case "alert":
-      case "urgent":
-        return <AlertCircle className="h-3 w-3 text-red-500" />;
-      case "success":
-        return <CheckCircle2 className="h-3 w-3 text-green-500" />;
-      case "reminder":
-        return <Clock className="h-3 w-3 text-amber-500" />;
-      default:
-        return <Info className="h-3 w-3 text-blue-500" />;
-    }
-  };
-
-  const formatTimeAgo = (date: string | Date) => {
-    const now = new Date();
-    const notificationDate = new Date(date);
-    const diffMs = now.getTime() - notificationDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
-  };
+  const unreadCount = notifications.filter(n => !n.isRead && n.status !== "sent").length;
 
   // Role-based menu items
   const getMenuItems = (role: UserRole) => {
@@ -222,75 +183,38 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       <SidebarContent>
         {/* Notifications Section */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1 flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Bell className="h-3 w-3" />
-              Notifications
-            </span>
-            {unreadCount > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="text-[10px] px-1.5 py-0 h-4 min-w-[18px] flex items-center justify-center"
-                data-testid="badge-unread-count"
-              >
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </Badge>
-            )}
-          </SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Notifications</SidebarGroupLabel>
           <SidebarGroupContent>
-            <div className="bg-gradient-to-br from-slate-50/80 to-slate-100/60 dark:from-slate-800/50 dark:to-slate-900/40 rounded-xl border border-slate-200/50 dark:border-slate-700/30 p-2 max-h-[180px] overflow-hidden">
-              {recentNotifications.length === 0 ? (
-                <div className="text-center py-3 text-muted-foreground text-xs">
-                  <Bell className="h-5 w-5 mx-auto mb-1 opacity-50" />
-                  <p>No notifications</p>
-                </div>
-              ) : (
-                <ScrollArea className="h-[140px]">
-                  <div className="space-y-1.5">
-                    {recentNotifications.map((notification) => (
-                      <div 
-                        key={notification.id}
-                        className={`p-2 rounded-lg text-xs transition-all duration-200 cursor-pointer hover:bg-white/50 dark:hover:bg-slate-700/50 ${
-                          !notification.isRead 
-                            ? "bg-blue-50/80 dark:bg-blue-900/20 border-l-2 border-l-blue-500" 
-                            : "bg-white/30 dark:bg-slate-800/30"
-                        }`}
-                        onClick={() => handleMenuClick("/notification-service")}
-                        data-testid={`notification-${notification.id}`}
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild data-testid="link-notifications">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start group relative overflow-visible bg-gradient-to-r from-rose-50/80 to-pink-50/60 hover:from-rose-100 hover:to-pink-100 dark:from-rose-900/30 dark:to-pink-900/20 dark:hover:from-rose-800/40 dark:hover:to-pink-800/30 border border-rose-200/50 dark:border-rose-700/30 rounded-xl transition-all duration-300 hover:shadow-md hover:shadow-rose-500/10 hover:-translate-y-0.5"
+                    onClick={() => handleMenuClick("/notification-service")}
+                  >
+                    <div className="p-1.5 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white mr-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm relative">
+                      <Bell className="h-3.5 w-3.5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 border border-white dark:border-slate-800">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-medium">Notifications</span>
+                    {unreadCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="ml-auto text-[10px] px-1.5 py-0 h-4"
+                        data-testid="badge-unread-count"
                       >
-                        <div className="flex items-start gap-2">
-                          <div className="mt-0.5 flex-shrink-0">
-                            {getNotificationIcon(notification.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`font-medium truncate ${!notification.isRead ? "text-foreground" : "text-muted-foreground"}`}>
-                              {notification.title}
-                            </p>
-                            <p className="text-muted-foreground truncate text-[10px] mt-0.5">
-                              {notification.message}
-                            </p>
-                            <p className="text-muted-foreground/60 text-[10px] mt-1">
-                              {formatTimeAgo(notification.createdAt)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-              {notifications.length > 0 && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full mt-2 text-xs h-7 text-primary hover:text-primary/80"
-                  onClick={() => handleMenuClick("/notification-service")}
-                  data-testid="button-view-all-notifications"
-                >
-                  View all notifications
-                </Button>
-              )}
-            </div>
+                        {unreadCount} new
+                      </Badge>
+                    )}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
