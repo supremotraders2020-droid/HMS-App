@@ -1831,6 +1831,297 @@ export class DatabaseStorage implements IStorage {
     const result = await db.insert(bmwReports).values(report).returning();
     return result[0];
   }
+
+  async seedBmwData(): Promise<void> {
+    const existingBags = await db.select().from(bmwBags);
+    if (existingBags.length > 0) {
+      console.log("BMW data already exists, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding BMW demo data...");
+    const now = new Date();
+
+    const vendorData = [
+      {
+        vendorId: "VND-001",
+        name: "BioCare Solutions",
+        companyName: "BioCare Solutions Pvt. Ltd.",
+        contactPerson: "Rajesh Sharma",
+        phone: "+91 9876543210",
+        email: "rajesh@biocaresolutions.in",
+        address: "Plot No. 45, MIDC Industrial Area, Pune, Maharashtra 411018",
+        licenseNumber: "MH/BMW/2024/0123",
+        licenseExpiry: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        vehicleNumbers: "MH-12-AB-1234,MH-12-AB-5678",
+        isActive: true
+      },
+      {
+        vendorId: "VND-002",
+        name: "GreenCycle Waste",
+        companyName: "GreenCycle Waste Management Pvt. Ltd.",
+        contactPerson: "Priya Patel",
+        phone: "+91 9876543211",
+        email: "priya@greencyclewaste.com",
+        address: "Unit 12, Industrial Estate, Pimpri, Maharashtra 411035",
+        licenseNumber: "MH/BMW/2024/0456",
+        licenseExpiry: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        vehicleNumbers: "MH-14-CD-5678",
+        isActive: true
+      }
+    ];
+
+    const createdVendors = [];
+    for (const vendor of vendorData) {
+      const result = await db.insert(bmwVendors).values(vendor).returning();
+      createdVendors.push(result[0]);
+    }
+
+    const storageRoomData = [
+      {
+        name: "BMW Storage Room A",
+        location: "Ground Floor, West Wing",
+        capacity: 50,
+        currentOccupancy: 12,
+        temperature: "25",
+        lastCleanedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+        cleanedBy: "Housekeeping Staff",
+        notes: "Yellow and Red category storage",
+        isActive: true
+      },
+      {
+        name: "BMW Storage Room B",
+        location: "Basement, East Wing",
+        capacity: 30,
+        currentOccupancy: 28,
+        temperature: "22",
+        lastCleanedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+        cleanedBy: "Housekeeping Staff",
+        notes: "White and Blue category storage",
+        isActive: true
+      }
+    ];
+
+    const createdRooms = [];
+    for (const room of storageRoomData) {
+      const result = await db.insert(bmwStorageRooms).values(room).returning();
+      createdRooms.push(result[0]);
+    }
+
+    const departments = ["Emergency", "ICU", "Surgery", "Laboratory", "Radiology", "Pharmacy", "OPD"];
+    const categories: Array<"YELLOW" | "RED" | "WHITE" | "BLUE"> = ["YELLOW", "RED", "WHITE", "BLUE"];
+    const statuses: Array<"GENERATED" | "COLLECTED" | "STORED" | "PICKED_UP" | "DISPOSED"> = ["GENERATED", "COLLECTED", "STORED", "PICKED_UP", "DISPOSED"];
+
+    const bagData = [];
+    for (let i = 0; i < 20; i++) {
+      const category = categories[i % 4];
+      const status = statuses[Math.min(i % 5, 4)];
+      const daysAgo = Math.floor(i / 4);
+      const createdAt = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+      const storageDeadline = new Date(createdAt.getTime() + 48 * 60 * 60 * 1000);
+      
+      bagData.push({
+        barcode: `BMW-${Date.now().toString(36).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
+        category,
+        department: departments[i % departments.length],
+        approxWeight: String((Math.random() * 5 + 0.5).toFixed(2)),
+        status,
+        generatedBy: "Admin User",
+        generatedByRole: "ADMIN",
+        storageDeadline,
+        storageRoomId: status === "STORED" || status === "PICKED_UP" || status === "DISPOSED" 
+          ? createdRooms[category === "YELLOW" || category === "RED" ? 0 : 1].id 
+          : null,
+        disposedAt: status === "DISPOSED" ? new Date(now.getTime() - (daysAgo - 1) * 24 * 60 * 60 * 1000) : null,
+        notes: `Sample ${category} category waste from ${departments[i % departments.length]}`,
+        createdAt,
+        updatedAt: createdAt
+      });
+    }
+
+    const createdBags = [];
+    for (const bag of bagData) {
+      const result = await db.insert(bmwBags).values(bag).returning();
+      createdBags.push(result[0]);
+    }
+
+    for (const bag of createdBags) {
+      await db.insert(bmwMovements).values({
+        bagId: bag.id,
+        action: "CREATED",
+        performedBy: "Admin User",
+        performedByRole: "ADMIN",
+        location: bag.department,
+        weight: bag.approxWeight,
+        notes: "Bag generated",
+        timestamp: bag.createdAt
+      });
+
+      if (bag.status !== "GENERATED") {
+        await db.insert(bmwMovements).values({
+          bagId: bag.id,
+          action: "MOVED_TO_STORAGE",
+          performedBy: "Nurse Staff",
+          performedByRole: "NURSE",
+          location: "Storage Room",
+          weight: bag.approxWeight,
+          notes: "Moved to storage",
+          timestamp: new Date(new Date(bag.createdAt!).getTime() + 2 * 60 * 60 * 1000)
+        });
+      }
+
+      if (bag.status === "PICKED_UP" || bag.status === "DISPOSED") {
+        await db.insert(bmwMovements).values({
+          bagId: bag.id,
+          action: "PICKED_UP",
+          performedBy: "BioCare Driver",
+          performedByRole: "VENDOR",
+          location: "Loading Dock",
+          weight: bag.approxWeight,
+          notes: "Picked up by vendor",
+          timestamp: new Date(new Date(bag.createdAt!).getTime() + 24 * 60 * 60 * 1000)
+        });
+      }
+
+      if (bag.status === "DISPOSED") {
+        await db.insert(bmwMovements).values({
+          bagId: bag.id,
+          action: "DISPOSED",
+          performedBy: "BioCare Facility",
+          performedByRole: "VENDOR",
+          location: "Disposal Facility",
+          weight: bag.approxWeight,
+          notes: "Disposed via incineration",
+          timestamp: bag.disposedAt!
+        });
+      }
+    }
+
+    const pickupData = [
+      {
+        pickupId: "PU-20241210-001",
+        vendorId: createdVendors[0].id,
+        scheduledDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+        actualDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+        status: "COMPLETED" as const,
+        driverName: "Suresh Kumar",
+        vehicleNumber: "MH-12-AB-1234",
+        bagIds: createdBags.filter(b => b.status === "DISPOSED").slice(0, 3).map(b => b.id),
+        totalBags: 3,
+        totalWeight: "8.5",
+        notes: "Regular pickup completed successfully",
+        handoverSignature: "Verified by Admin"
+      },
+      {
+        pickupId: "PU-20241211-001",
+        vendorId: createdVendors[1].id,
+        scheduledDate: new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000),
+        status: "SCHEDULED" as const,
+        driverName: "Ramesh Patil",
+        vehicleNumber: "MH-14-CD-5678",
+        bagIds: createdBags.filter(b => b.status === "STORED").slice(0, 5).map(b => b.id),
+        totalBags: 5,
+        totalWeight: "12.3",
+        notes: "Scheduled for tomorrow morning"
+      }
+    ];
+
+    const createdPickups = [];
+    for (const pickup of pickupData) {
+      const result = await db.insert(bmwPickups).values(pickup).returning();
+      createdPickups.push(result[0]);
+    }
+
+    const disposalData = [
+      {
+        pickupId: createdPickups[0].id,
+        bagId: createdBags.find(b => b.status === "DISPOSED")?.id || createdBags[0].id,
+        disposalMethod: "INCINERATION" as const,
+        disposalDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+        certificateNumber: "CERT-2024-BMW-001",
+        verifiedBy: "BioCare Facility Manager",
+        notes: "High temperature incineration at 1100°C"
+      },
+      {
+        pickupId: createdPickups[0].id,
+        bagId: createdBags.filter(b => b.status === "DISPOSED")[1]?.id || createdBags[1].id,
+        disposalMethod: "AUTOCLAVING" as const,
+        disposalDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+        certificateNumber: "CERT-2024-BMW-002",
+        verifiedBy: "BioCare Facility Manager",
+        notes: "Steam sterilization followed by shredding"
+      }
+    ];
+
+    for (const disposal of disposalData) {
+      await db.insert(bmwDisposals).values(disposal);
+    }
+
+    const incidentData = [
+      {
+        incidentType: "SPILL",
+        severity: "MODERATE",
+        department: "ICU",
+        bagId: createdBags[5]?.id,
+        location: "Corridor B, Ground Floor",
+        description: "Minor spillage during bag transport. Contained and cleaned immediately.",
+        reportedBy: "Nurse Sharma",
+        reportedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+        actionTaken: "Area sanitized with hospital-grade disinfectant. Staff provided with PPE guidelines refresher.",
+        resolvedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
+        resolvedBy: "Infection Control Officer",
+        status: "RESOLVED"
+      }
+    ];
+
+    for (const incident of incidentData) {
+      await db.insert(bmwIncidents).values(incident);
+    }
+
+    const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const reportData = [
+      {
+        reportType: "MONTHLY" as const,
+        reportPeriodStart: new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1),
+        reportPeriodEnd: new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0),
+        totalBagsGenerated: 156,
+        totalWeightKg: "234.5",
+        categoryBreakdown: {
+          YELLOW: { bags: 45, weight: 67.2 },
+          RED: { bags: 38, weight: 52.1 },
+          WHITE: { bags: 42, weight: 71.5 },
+          BLUE: { bags: 31, weight: 43.7 }
+        },
+        complianceStatus: "COMPLIANT" as const,
+        notes: "All waste disposed within 48-hour limit. No incidents reported.",
+        generatedBy: "Admin User",
+        submittedToAuthority: true,
+        submissionDate: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000)
+      },
+      {
+        reportType: "DAILY" as const,
+        reportPeriodStart: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+        reportPeriodEnd: now,
+        totalBagsGenerated: 8,
+        totalWeightKg: "12.3",
+        categoryBreakdown: {
+          YELLOW: { bags: 2, weight: 3.1 },
+          RED: { bags: 2, weight: 2.8 },
+          WHITE: { bags: 2, weight: 3.5 },
+          BLUE: { bags: 2, weight: 2.9 }
+        },
+        complianceStatus: "COMPLIANT" as const,
+        notes: "Daily summary - all operations normal",
+        generatedBy: "System"
+      }
+    ];
+
+    for (const report of reportData) {
+      await db.insert(bmwReports).values(report);
+    }
+
+    console.log("BMW demo data seeded successfully!");
+  }
 }
 
 export const databaseStorage = new DatabaseStorage();

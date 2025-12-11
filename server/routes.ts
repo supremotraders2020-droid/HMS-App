@@ -13,6 +13,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seed initial data if database is empty
   await databaseStorage.seedInitialData();
   await databaseStorage.seedEquipmentData();
+  await databaseStorage.seedBmwData();
   
   // Registration endpoint - create new user with hashed password
   // Public registration is limited to PATIENT role only for security
