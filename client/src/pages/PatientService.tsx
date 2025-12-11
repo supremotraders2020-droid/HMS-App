@@ -72,7 +72,14 @@ const medicalRecordFormSchema = insertMedicalRecordSchema.extend({
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
-export default function PatientService() {
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+
+interface PatientServiceProps {
+  currentRole?: UserRole;
+  currentUserId?: string;
+}
+
+export default function PatientService({ currentRole = "ADMIN", currentUserId }: PatientServiceProps) {
   const [activeTab, setActiveTab] = useState("patients");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<ServicePatient | null>(null);
@@ -100,8 +107,11 @@ export default function PatientService() {
   const [consentType, setConsentType] = useState("");
   const { toast } = useToast();
 
+  // For NURSE: fetch only assigned patients, for others: fetch all patients
   const { data: patients = [], isLoading: patientsLoading } = useQuery<ServicePatient[]>({
-    queryKey: ["/api/patients/service"],
+    queryKey: currentRole === "NURSE" && currentUserId 
+      ? ["/api/patients/assigned", currentUserId]
+      : ["/api/patients/service"],
   });
 
   const { data: medicalRecords = [], isLoading: recordsLoading } = useQuery<MedicalRecord[]>({
@@ -404,7 +414,12 @@ export default function PatientService() {
     return configs[type] || configs.note;
   };
 
-  const filteredPatients = patients.filter((patient) =>
+  // Filter patients - for NURSE role, only show assigned patients
+  const roleFilteredPatients = currentRole === "NURSE" && currentUserId
+    ? patients.filter((patient) => patient.assignedNurseId === currentUserId)
+    : patients;
+
+  const filteredPatients = roleFilteredPatients.filter((patient) =>
     `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
     patient.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     patient.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -520,7 +535,7 @@ export default function PatientService() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6">
+          <TabsList className={`grid w-full ${currentRole === "NURSE" ? "grid-cols-2" : "grid-cols-3"} lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6`}>
             <TabsTrigger 
               value="patients" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
@@ -537,14 +552,16 @@ export default function PatientService() {
               <FileText className="h-4 w-4" />
               Medical Records
             </TabsTrigger>
-            <TabsTrigger 
-              value="consents" 
-              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
-              data-testid="tab-consents"
-            >
-              <FileCheck className="h-4 w-4" />
-              Consent Forms
-            </TabsTrigger>
+            {currentRole !== "NURSE" && (
+              <TabsTrigger 
+                value="consents" 
+                className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
+                data-testid="tab-consents"
+              >
+                <FileCheck className="h-4 w-4" />
+                Consent Forms
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Patients Tab */}

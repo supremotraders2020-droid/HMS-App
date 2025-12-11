@@ -144,7 +144,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         <OPDService />
       </Route>
       <Route path="/patient-service">
-        <PatientService />
+        <PatientService currentRole={currentUser.role} currentUserId={currentUser.id} />
       </Route>
       <Route path="/inventory-service">
         <InventoryService />
@@ -159,7 +159,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         <ChatbotService />
       </Route>
       <Route path="/notification-service">
-        <NotificationService />
+        <NotificationService currentRole={currentUser.role} currentUserId={currentUser.id} />
       </Route>
       <Route path="/equipment-servicing">
         <EquipmentServicing />

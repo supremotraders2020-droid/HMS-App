@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
-import type { Notification, HospitalTeamMember } from "@shared/schema";
+import type { Notification, HospitalTeamMember, ServicePatient } from "@shared/schema";
 import { 
   Bell, 
   Send, 
@@ -97,7 +97,14 @@ function getChannelIcon(channel: string) {
   }
 }
 
-export default function NotificationService() {
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+
+interface NotificationServiceProps {
+  currentRole?: UserRole;
+  currentUserId?: string;
+}
+
+export default function NotificationService({ currentRole = "ADMIN", currentUserId }: NotificationServiceProps) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -124,6 +131,19 @@ export default function NotificationService() {
   const { data: teamMembers = [], isLoading: teamLoading } = useQuery<HospitalTeamMember[]>({
     queryKey: ["/api/team-members"],
   });
+
+  // For NURSE: fetch assigned patients to filter patient-related notifications
+  const { data: assignedPatients = [] } = useQuery<ServicePatient[]>({
+    queryKey: ["/api/patients/service"],
+    enabled: currentRole === "NURSE",
+  });
+
+  // Get patient names for NURSE filtering
+  const nursePatientNames = currentRole === "NURSE" && currentUserId
+    ? assignedPatients
+        .filter(p => p.assignedNurseId === currentUserId)
+        .map(p => `${p.firstName} ${p.lastName}`.toLowerCase())
+    : [];
 
   const { data: stats } = useQuery<{
     totalSent: number;
@@ -231,7 +251,18 @@ export default function NotificationService() {
       n.message.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = !statusFilter || n.status === statusFilter;
     const matchesCategory = !categoryFilter || n.category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
+    
+    // For NURSE: only show notifications that mention their assigned patients
+    // or are general hospital announcements (emergency, hospital_updates)
+    const matchesNursePatients = currentRole !== "NURSE" || 
+      n.category === "emergency" || 
+      n.category === "hospital_updates" ||
+      nursePatientNames.some(patientName => 
+        n.title.toLowerCase().includes(patientName) || 
+        n.message.toLowerCase().includes(patientName)
+      );
+    
+    return matchesSearch && matchesStatus && matchesCategory && matchesNursePatients;
   });
 
   // Filter team members

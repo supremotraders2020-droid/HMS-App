@@ -350,12 +350,14 @@ export const servicePatients = pgTable("service_patients", {
   emergencyPhone: text("emergency_phone"),
   insuranceProvider: text("insurance_provider"),
   insuranceNumber: text("insurance_number"),
+  assignedNurseId: varchar("assigned_nurse_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertServicePatientSchema = createInsertSchema(servicePatients).omit({
   id: true,
   createdAt: true,
+  assignedNurseId: true, // Assigned by admin, not during patient creation
 });
 export type InsertServicePatient = z.infer<typeof insertServicePatientSchema>;
 export type ServicePatient = typeof servicePatients.$inferSelect;

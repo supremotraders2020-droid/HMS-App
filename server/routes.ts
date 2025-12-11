@@ -696,6 +696,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get patients assigned to a specific nurse
+  app.get("/api/patients/assigned/:nurseId", async (req, res) => {
+    try {
+      const patients = await storage.getAllServicePatients();
+      const assignedPatients = patients.filter(p => p.assignedNurseId === req.params.nurseId);
+      res.json(assignedPatients);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch assigned patients" });
+    }
+  });
+
+  // Assign nurse to patient (Admin only)
+  app.patch("/api/patients/service/:id/assign-nurse", async (req, res) => {
+    try {
+      const { nurseId } = req.body;
+      const patient = await storage.updateServicePatient(req.params.id, { assignedNurseId: nurseId } as any);
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to assign nurse to patient" });
+    }
+  });
+
   // Get service patient by ID
   app.get("/api/patients/service/:id", async (req, res) => {
     try {
