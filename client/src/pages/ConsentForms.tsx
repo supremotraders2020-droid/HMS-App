@@ -291,23 +291,23 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   });
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
-            <FileCheck className="h-6 w-6 text-primary" />
-            Consent Forms Management
+    <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
+            <FileCheck className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+            <span className="truncate">Consent Forms Management</span>
           </h1>
-          <p className="text-muted-foreground">Upload, download, and manage hospital consent forms</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Upload, download, and manage hospital consent forms</p>
         </div>
-        <Button onClick={() => setUploadDialogOpen(true)} data-testid="button-upload-form">
+        <Button onClick={() => setUploadDialogOpen(true)} className="w-full sm:w-auto" data-testid="button-upload-form">
           <Plus className="h-4 w-4 mr-2" />
           Upload Form
         </Button>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search consent forms..."
@@ -318,7 +318,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
           />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-48" data-testid="select-category-filter">
+          <SelectTrigger className="w-full sm:w-48" data-testid="select-category-filter">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
@@ -331,20 +331,20 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
         </Select>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {filteredForms.map((form) => (
           <Card key={form.id} className="hover-elevate" data-testid={`consent-form-card-${form.id}`}>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-6 w-6 text-primary" />
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
-                  <div className="min-w-0">
-                    <CardTitle className="text-base truncate" data-testid={`form-name-${form.id}`}>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-sm sm:text-base truncate" data-testid={`form-name-${form.id}`}>
                       {form.name}
                     </CardTitle>
-                    <CardDescription className="text-xs truncate">
+                    <CardDescription className="text-[10px] sm:text-xs truncate">
                       {form.fileName}
                     </CardDescription>
                   </div>

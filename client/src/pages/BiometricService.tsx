@@ -211,30 +211,30 @@ export default function BiometricService() {
     <div className="min-h-screen bg-gradient-to-b from-blue-50/50 to-white dark:from-slate-900 dark:to-slate-950 flex flex-col">
       {/* Hospital Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/10 p-3 rounded-lg">
-                <HeartPulse className="h-8 w-8" />
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="bg-white/10 p-2 sm:p-3 rounded-lg flex-shrink-0">
+                <HeartPulse className="h-5 w-5 sm:h-8 sm:w-8" />
               </div>
-              <div>
-                <h1 className="text-xl font-semibold" data-testid="text-hospital-name">
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-xl font-semibold truncate" data-testid="text-hospital-name">
                   Gravity Hospital
                 </h1>
-                <p className="text-blue-100 text-sm flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  Nigdi, Pimpri-Chinchwad
+                <p className="text-blue-100 text-xs sm:text-sm flex items-center gap-1">
+                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">Nigdi, Pimpri-Chinchwad</span>
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30" data-testid="badge-hipaa">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs" data-testid="badge-hipaa">
                 <ShieldCheck className="h-3 w-3 mr-1" />
-                HIPAA Compliant
+                <span className="hidden sm:inline">HIPAA </span>Compliant
               </Badge>
-              <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30" data-testid="badge-encryption">
+              <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs" data-testid="badge-encryption">
                 <Lock className="h-3 w-3 mr-1" />
-                AES-256 Encrypted
+                <span className="hidden sm:inline">AES-256 </span>Encrypted
               </Badge>
             </div>
           </div>
@@ -243,25 +243,25 @@ export default function BiometricService() {
 
       {/* Page Title Section */}
       <div className="bg-white dark:bg-slate-900 border-b shadow-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-xl">
-                <Fingerprint className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="bg-blue-100 dark:bg-blue-900/50 p-2 sm:p-3 rounded-xl flex-shrink-0">
+                <Fingerprint className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white" data-testid="text-page-title">
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white" data-testid="text-page-title">
                   Biometric Service
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-0.5">
-                  Secure patient identification and verification system
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                  Secure patient identification system
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" data-testid="button-refresh">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" data-testid="button-refresh">
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Data
+                Refresh
               </Button>
             </div>
           </div>
@@ -269,40 +269,44 @@ export default function BiometricService() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 container mx-auto px-4 py-6">
+      <div className="flex-1 container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1">
+          <TabsList className="grid w-full grid-cols-4 gap-1 bg-blue-50 dark:bg-slate-800 p-1">
             <TabsTrigger 
               value="dashboard" 
-              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
+              className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-blue-600 data-[state=active]:text-white px-1 sm:px-3" 
               data-testid="tab-dashboard"
             >
-              <Activity className="h-4 w-4" />
-              Dashboard
+              <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Stats</span>
             </TabsTrigger>
             <TabsTrigger 
               value="store" 
-              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
+              className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-blue-600 data-[state=active]:text-white px-1 sm:px-3" 
               data-testid="tab-store"
             >
-              <UserPlus className="h-4 w-4" />
-              Enroll Patient
+              <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Enroll Patient</span>
+              <span className="sm:hidden">Enroll</span>
             </TabsTrigger>
             <TabsTrigger 
               value="verify" 
-              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
+              className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-blue-600 data-[state=active]:text-white px-1 sm:px-3" 
               data-testid="tab-verify"
             >
-              <Scan className="h-4 w-4" />
-              Verify Identity
+              <Scan className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Verify Identity</span>
+              <span className="sm:hidden">Verify</span>
             </TabsTrigger>
             <TabsTrigger 
               value="logs" 
-              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
+              className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-blue-600 data-[state=active]:text-white px-1 sm:px-3" 
               data-testid="tab-logs"
             >
-              <FileCheck className="h-4 w-4" />
-              Audit Logs
+              <FileCheck className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Audit Logs</span>
+              <span className="sm:hidden">Logs</span>
             </TabsTrigger>
           </TabsList>
 

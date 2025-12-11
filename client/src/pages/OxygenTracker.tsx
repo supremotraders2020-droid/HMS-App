@@ -140,24 +140,24 @@ export default function OxygenTracker() {
   const latestLmoReading = lmoReadings[0];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Cylinder className="h-6 w-6 text-primary" />
-            Oxygen Tracker
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2">
+            <Cylinder className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+            <span className="truncate">Oxygen Tracker</span>
           </h1>
-          <p className="text-muted-foreground">NABH Compliant Oxygen Management System</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">NABH Compliant Oxygen Management System</p>
         </div>
         {activeAlerts.length > 0 && (
-          <Badge variant="destructive" className="flex items-center gap-1">
+          <Badge variant="destructive" className="flex items-center gap-1 w-fit">
             <Bell className="h-4 w-4" />
             {activeAlerts.length} Active Alert{activeAlerts.length > 1 ? 's' : ''}
           </Badge>
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Cylinders</CardTitle>
@@ -211,13 +211,19 @@ export default function OxygenTracker() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="stock" data-testid="tab-stock">Cylinder Stock</TabsTrigger>
-          <TabsTrigger value="movements" data-testid="tab-movements">Issue/Return</TabsTrigger>
-          <TabsTrigger value="consumption" data-testid="tab-consumption">Consumption</TabsTrigger>
-          <TabsTrigger value="lmo" data-testid="tab-lmo">LMO Tank</TabsTrigger>
-          <TabsTrigger value="alerts" data-testid="tab-alerts">
-            Alerts {activeAlerts.length > 0 && <Badge variant="destructive" className="ml-1">{activeAlerts.length}</Badge>}
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 gap-1 h-auto p-1">
+          <TabsTrigger value="stock" className="text-xs sm:text-sm py-2" data-testid="tab-stock">
+            <span className="hidden sm:inline">Cylinder </span>Stock
+          </TabsTrigger>
+          <TabsTrigger value="movements" className="text-xs sm:text-sm py-2" data-testid="tab-movements">
+            <span className="hidden sm:inline">Issue/</span>Return
+          </TabsTrigger>
+          <TabsTrigger value="consumption" className="text-xs sm:text-sm py-2" data-testid="tab-consumption">
+            <span className="hidden sm:inline">Consump</span>tion
+          </TabsTrigger>
+          <TabsTrigger value="lmo" className="text-xs sm:text-sm py-2" data-testid="tab-lmo">LMO</TabsTrigger>
+          <TabsTrigger value="alerts" className="text-xs sm:text-sm py-2" data-testid="tab-alerts">
+            Alerts {activeAlerts.length > 0 && <Badge variant="destructive" className="ml-1 text-[10px]">{activeAlerts.length}</Badge>}
           </TabsTrigger>
         </TabsList>
 

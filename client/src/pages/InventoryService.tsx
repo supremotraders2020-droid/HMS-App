@@ -377,51 +377,52 @@ export default function InventoryService() {
   return (
     <div className="min-h-screen bg-background">
       <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 text-white">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Package className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">Inventory Management System</h1>
-                <div className="flex items-center gap-2 text-white/80 text-sm">
-                  <MapPin className="h-4 w-4" />
-                  <span>Central Store, Gravity Hospital</span>
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Package className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">Inventory Management System</h1>
+                <div className="flex items-center gap-2 text-white/80 text-xs sm:text-sm">
+                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">Central Store, Gravity Hospital</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-lg">
-                <Phone className="h-4 w-4" />
-                <span className="text-sm">Store: +91 20 1234 5682</span>
+            <div className="flex flex-wrap gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg">
+                <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">+91 20 1234 5682</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-lg">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm">24/7 Emergency Supply</span>
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">24/7 Supply</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <div className="flex flex-wrap gap-2 bg-muted/50 p-1 rounded-lg flex-1">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-4 sm:mb-6">
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1 sm:gap-2 bg-muted/50 p-1 rounded-lg w-full sm:w-auto sm:flex-1">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
                 variant={activeTab === tab.id ? "default" : "ghost"}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
                 data-testid={`tab-${tab.id}`}
               >
-                <tab.icon className="h-4 w-4" />
-                {tab.label}
+                <tab.icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
               </Button>
             ))}
           </div>
           <Button
             onClick={() => setShowAddItemDialog(true)}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
             data-testid="button-add-item"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -430,49 +431,49 @@ export default function InventoryService() {
         </div>
 
         {activeTab === "dashboard" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Items</p>
-                      <p className="text-3xl font-bold">{items.length}</p>
+                <CardContent className="p-3 sm:pt-6 sm:p-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Items</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{items.length}</p>
                     </div>
-                    <Package className="h-10 w-10 text-emerald-500" />
+                    <Package className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-emerald-500 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Low Stock Items</p>
-                      <p className="text-3xl font-bold text-yellow-600">{lowStockItems.length}</p>
+                <CardContent className="p-3 sm:pt-6 sm:p-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Low Stock</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600">{lowStockItems.length}</p>
                     </div>
-                    <AlertTriangle className="h-10 w-10 text-yellow-500" />
+                    <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-yellow-500 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Out of Stock</p>
-                      <p className="text-3xl font-bold text-red-600">{items.filter(i => i.currentStock === 0).length}</p>
+                <CardContent className="p-3 sm:pt-6 sm:p-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Out of Stock</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600">{items.filter(i => i.currentStock === 0).length}</p>
                     </div>
-                    <TrendingDown className="h-10 w-10 text-red-500" />
+                    <TrendingDown className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-red-500 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Transactions</p>
-                      <p className="text-3xl font-bold">{transactions.length}</p>
+                <CardContent className="p-3 sm:pt-6 sm:p-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Transactions</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{transactions.length}</p>
                     </div>
-                    <ArrowUpDown className="h-10 w-10 text-blue-500" />
+                    <ArrowUpDown className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-blue-500 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>

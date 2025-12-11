@@ -125,31 +125,31 @@ export default function ChatbotService() {
   ];
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Bot className="h-6 w-6 text-primary" />
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl">
+      <div className="mb-4 md:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+          <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg flex-shrink-0">
+            <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">GRAVITY HOSPITAL AI ASSISTANCE</h1>
-            <p className="text-muted-foreground">Your intelligent healthcare assistant</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">GRAVITY HOSPITAL AI ASSISTANCE</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Your intelligent healthcare assistant</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <Card className="lg:col-span-3">
-          <CardHeader className="border-b bg-gradient-to-r from-violet-50/80 to-purple-50/60 dark:from-violet-900/20 dark:to-purple-900/15">
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white">
-                <Bot className="h-5 w-5" />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+        <Card className="lg:col-span-3 order-1 lg:order-1">
+          <CardHeader className="border-b bg-gradient-to-r from-violet-50/80 to-purple-50/60 dark:from-violet-900/20 dark:to-purple-900/15 p-3 sm:p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+              <div className="p-1 sm:p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white flex-shrink-0">
+                <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              GRAVITY HOSPITAL AI ASSISTANCE
+              <span className="truncate">GRAVITY HOSPITAL AI ASSISTANCE</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-[500px] p-4">
+            <ScrollArea className="h-[350px] sm:h-[400px] md:h-[500px] p-3 sm:p-4">
               <div className="space-y-4">
                 {messages.map((message) => (
                   <div
@@ -201,17 +201,19 @@ export default function ChatbotService() {
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
-            <form onSubmit={handleSendMessage} className="border-t p-4">
+            <form onSubmit={handleSendMessage} className="border-t p-3 sm:p-4">
               <div className="flex gap-2">
                 <Input
                   placeholder="Type your message..."
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   disabled={sendMessageMutation.isPending}
+                  className="text-sm"
                   data-testid="input-chat-message"
                 />
                 <Button 
                   type="submit" 
+                  size="icon"
                   disabled={sendMessageMutation.isPending || !inputMessage.trim()}
                   data-testid="button-send-message"
                 >
@@ -222,18 +224,18 @@ export default function ChatbotService() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6 order-2 lg:order-2">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Quick Questions</CardTitle>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm">Quick Questions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 p-3 pt-0 sm:p-4 sm:pt-0 md:p-6 md:pt-0">
               {quickQuestions.map((question, index) => (
                 <Button
                   key={index}
                   variant="outline"
                   size="sm"
-                  className="w-full text-left justify-start h-auto py-2 text-xs"
+                  className="w-full text-left justify-start h-auto py-2 text-[10px] sm:text-xs whitespace-normal"
                   onClick={() => {
                     setInputMessage(question);
                   }}
@@ -246,18 +248,18 @@ export default function ChatbotService() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Categories</CardTitle>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm">Categories</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {["general", "insurance", "doctor_availability", "services", "contact", "emergency"].map((category) => (
-                <div key={category} className="flex items-center gap-2">
-                  <Badge className={getCategoryBadge(category)}>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0 md:p-6 md:pt-0">
+              <div className="flex flex-wrap gap-2">
+                {["general", "insurance", "doctor_availability", "services", "contact", "emergency"].map((category) => (
+                  <Badge key={category} className={`${getCategoryBadge(category)} text-[10px] sm:text-xs`}>
                     {getCategoryIcon(category)}
                     <span className="ml-1">{formatCategoryName(category)}</span>
                   </Badge>
-                </div>
-              ))}
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
