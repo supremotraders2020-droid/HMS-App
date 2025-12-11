@@ -1,82 +1,98 @@
 # HMS Core - Hospital Management System
 
 ## Overview
-
-HMS Core is a comprehensive healthcare management system configured for **Gravity Hospital** at Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062. The system provides role-based access control for different healthcare professionals (Administrators, Doctors, Nurses, OPD Managers, and Patients) with specialized dashboards and workflows for each role. Built with a focus on clinical clarity, professional trust, and efficient healthcare workflows, the system follows Material Design 3 principles adapted for healthcare industry requirements.
+HMS Core is a comprehensive Hospital Management System designed for Gravity Hospital, offering role-based access for various healthcare professionals (Administrators, Doctors, Nurses, OPD Managers, and Patients). It provides specialized dashboards and workflows tailored to each role, focusing on clinical clarity, professional trust, and efficient healthcare workflows. The system adheres to Material Design 3 principles adapted for the healthcare industry. It includes modules for OPD management, patient services, inventory, patient tracking, biometrics, equipment servicing, chatbot, notifications, biomedical waste management, oxygen tracking, consent forms, prescription management, and a medicine database.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
 ### Frontend Architecture
-The frontend is built using React with TypeScript, implementing a component-based architecture with the following key decisions:
-- **UI Framework**: Radix UI primitives with shadcn/ui components for accessibility and consistency
-- **Styling**: Tailwind CSS with custom design system variables for healthcare-specific color schemes
-- **Routing**: Wouter for lightweight client-side routing
-- **State Management**: TanStack Query for server state management and React hooks for local state
-- **Theme System**: Custom theme provider supporting light/dark modes with healthcare-appropriate color palettes
+The frontend is built with React and TypeScript, utilizing a component-based architecture. Key features include:
+- **UI Framework**: Radix UI primitives with shadcn/ui for accessibility.
+- **Styling**: Tailwind CSS with custom healthcare-specific design variables.
+- **Routing**: Wouter for client-side routing.
+- **State Management**: TanStack Query for server state and React hooks for local state.
+- **Theme System**: Custom provider supporting light/dark modes and multi-theme color systems (Healthcare Blue, Medical Teal, Clinical Green, Warm Coral, Purple, Indigo).
+- **Animations**: Framer Motion for fluid UI animations.
 
 ### Backend Architecture
-The backend follows a Node.js/Express architecture with the following structure:
-- **Server Framework**: Express.js with TypeScript for type safety
-- **Database ORM**: Drizzle ORM providing type-safe database operations
-- **API Design**: RESTful endpoints with /api prefix for clear separation
-- **Storage Layer**: Abstracted storage interface (IStorage) allowing for easy switching between implementations
-- **Development Setup**: Vite integration for hot module replacement and development tooling
+The backend is a Node.js/Express application with TypeScript:
+- **Server Framework**: Express.js for robust API handling.
+- **Database ORM**: Drizzle ORM for type-safe database interactions.
+- **API Design**: RESTful endpoints prefixed with `/api`.
+- **Storage Layer**: Abstracted `IStorage` interface with a PostgreSQL implementation.
+- **Development Setup**: Vite for hot module replacement.
+- **Password Security**: bcrypt hashing with 10 salt rounds.
+
+### Core Modules
+The system comprises several core modules:
+- **OPD Service**: Doctor scheduling, appointment booking, and reminders.
+- **Patient Service**: Demographics, admission, medical records, and insurance.
+- **Inventory Service**: Stock management, alerts, and transaction logging.
+- **Patient Tracking Service**: Real-time patient monitoring, medication, meals, vitals, doctor visit tracking, and activity timelines.
+- **Biometric Service**: Fingerprint/facial recognition, AES-256 encryption, HIPAA compliance.
+- **Equipment Servicing**: Asset inventory, maintenance scheduling, and service history.
+- **Chatbot Service**: OpenAI GPT-powered, context-aware information.
+- **Notification Service**: Multi-channel delivery (Push, Email, SMS, WhatsApp) with priority levels.
+- **Biomedical Waste Management (BMW)**: CPCB-compliant tracking of waste bags, categories, storage, pickups, disposal, and compliance reporting.
+- **Oxygen Tracking System**: NABH-compliant cylinder inventory, movement logging, consumption tracking, LMO readings, and alerts.
+- **Consent Forms Management**: Template-based form generation, PDF handling, signature capture, and status tracking.
+- **Prescription Management**: Doctor prescription creation, medicine database integration, and history.
+- **Medicine Database**: Searchable database of Indian medicines with dosage and composition.
 
 ### Multi-Tenant Design
-The system implements multi-tenancy at the application level:
-- **Hospital Context**: Each hospital operates as a separate tenant with isolated data
-- **Tenant Switching**: UI components support switching between hospital contexts
-- **Role-Based Access**: Each user belongs to a specific hospital and has defined roles within that context
-- **Data Isolation**: Database schema designed to maintain separation between hospital data
+The system supports multi-tenancy at the application level, isolating data for each hospital. Users are assigned to a specific hospital context with role-based access.
 
 ### Authentication and Authorization
-- **Role-Based Access Control**: Five distinct user roles (ADMIN, DOCTOR, PATIENT, NURSE, OPD_MANAGER)
-- **Hierarchical Permissions**: Different dashboard views and feature access based on user roles
-- **Session Management**: Express session handling with secure authentication flows
-- **Multi-Hospital Access**: Users can potentially access multiple hospital contexts
+- **Role-Based Access Control (RBAC)**: Five roles (ADMIN, DOCTOR, PATIENT, NURSE, OPD_MANAGER) with hierarchical permissions.
+- **NURSE Restrictions**: Nurses can only view assigned patients, receive patient-specific notifications, and have no access to Equipment Servicing or Consent Forms.
+- **Session Management**: Express session handling with secure authentication.
 
 ### Design System Integration
-The architecture incorporates a comprehensive design system:
-- **Healthcare-Specific Colors**: Medical blue primary palette with semantic colors for different states
-- **Professional Typography**: Inter font family for clinical clarity
-- **Component Library**: Extensive set of healthcare-optimized UI components
-- **Accessibility**: WCAG 2.1 AA compliance built into component architecture
+A comprehensive design system is integrated, featuring:
+- Healthcare-specific color palettes and semantic colors.
+- Multi-theme support (6 distinct color themes).
+- Professional typography (Inter font family).
+- Extensive, accessible, and responsive UI components optimized for healthcare.
 
 ## External Dependencies
 
 ### Database and ORM
-- **Neon Database**: PostgreSQL-compatible serverless database for scalable healthcare data storage
-- **Drizzle ORM**: Type-safe database operations with schema migration support
-- **Connection Pooling**: @neondatabase/serverless with WebSocket support for efficient connections
+- **Neon Database**: Serverless PostgreSQL-compatible database.
+- **Drizzle ORM**: Type-safe ORM for database operations.
+- **@neondatabase/serverless**: Connection pooling with WebSocket support.
 
 ### UI and Styling
-- **Radix UI**: Comprehensive set of accessible primitive components for form controls, dialogs, and navigation
-- **Tailwind CSS**: Utility-first CSS framework with custom healthcare theme configuration
-- **Lucide React**: Icon library providing medical and healthcare-specific iconography
-- **Class Variance Authority**: Type-safe component variant management
+- **Radix UI**: Accessible primitive UI components.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **Lucide React**: Icon library.
+- **Class Variance Authority**: Type-safe component variant management.
+- **Framer Motion**: Animation library.
 
 ### Development and Build Tools
-- **Vite**: Fast development server and build tool with React plugin support
-- **TypeScript**: Static type checking across frontend and backend
-- **ESBuild**: Fast bundling for production builds
-- **TSX**: TypeScript execution for development server
+- **Vite**: Fast development server and build tool.
+- **TypeScript**: Static type checking.
+- **ESBuild**: Fast production bundling.
+- **TSX**: TypeScript execution for development.
 
 ### Frontend State and Data Management
-- **TanStack Query**: Server state management, caching, and synchronization
-- **React Hook Form**: Form validation and management with healthcare form requirements
-- **Wouter**: Lightweight routing solution for single-page application navigation
-- **Date-fns**: Date manipulation utilities for appointment scheduling and medical records
+- **TanStack Query**: Server state management and caching.
+- **React Hook Form**: Form validation and management.
+- **Wouter**: Lightweight routing.
+- **Date-fns**: Date manipulation utilities.
 
 ### Backend Infrastructure
-- **Express.js**: Web application framework with middleware support
-- **Connect-pg-simple**: PostgreSQL session store for persistent user sessions
-- **WebSocket Support**: Real-time capabilities for critical healthcare notifications
+- **Express.js**: Web application framework.
+- **Connect-pg-simple**: PostgreSQL session store.
+- **WebSocket Support**: Real-time communication.
+- **bcrypt**: Secure password hashing.
 
 ### Validation and Schema Management
-- **Zod**: Runtime type validation for API endpoints and form data
-- **Drizzle-Zod**: Integration between database schema and validation logic
-- **React Hook Form Resolvers**: Zod integration for client-side form validation
+- **Zod**: Runtime type validation.
+- **Drizzle-Zod**: Integration between Drizzle schema and Zod.
+- **React Hook Form Resolvers**: Zod integration for client-side form validation.
+
+### AI Integration
+- **OpenAI API**: For the GPT-powered chatbot service.

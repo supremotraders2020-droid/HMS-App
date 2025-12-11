@@ -12,12 +12,13 @@
 4. [User Roles & Access Control](#user-roles--access-control)
 5. [System Portals](#system-portals)
 6. [Internal Services](#internal-services)
-7. [User & System Interconnections](#user--system-interconnections)
-8. [Database Schema](#database-schema)
-9. [API Endpoints](#api-endpoints)
-10. [Security Features](#security-features)
-11. [Login Credentials](#login-credentials)
-12. [Design System](#design-system)
+7. [New Modules (December 2025)](#new-modules-december-2025)
+8. [User & System Interconnections](#user--system-interconnections)
+9. [Database Schema](#database-schema)
+10. [API Endpoints](#api-endpoints)
+11. [Security Features](#security-features)
+12. [Login Credentials](#login-credentials)
+13. [Design System](#design-system)
 
 ---
 
@@ -32,10 +33,11 @@ HMS Core is a comprehensive Hospital Management System designed specifically for
 | **Hospital** | Gravity Hospital (Single-Tenant) |
 | **User Roles** | 5 distinct roles with specific permissions |
 | **Total Users** | 43 pre-configured accounts |
-| **Internal Services** | 8 fully integrated hospital services |
+| **Internal Services** | 13 fully integrated hospital services |
 | **Portals** | 3 specialized portals (Patient, Doctor, Staff) |
-| **Security** | AES-256 encryption, HIPAA compliance indicators |
-| **Theme** | Light/Dark mode with medical-grade design |
+| **Security** | AES-256 encryption, bcrypt password hashing, HIPAA compliance indicators |
+| **Theme** | Light/Dark mode with 6 color themes |
+| **Responsive** | Fully responsive for mobile, tablet, and desktop |
 
 ---
 
@@ -46,13 +48,13 @@ HMS Core is a comprehensive Hospital Management System designed specifically for
 | Field | Details |
 |-------|---------|
 | **Name** | Gravity Hospital |
-| **Address** | Sane Chowk, Nair Colony, More Vasti |
-| **City** | Chikhali, Pimpri-Chinchwad |
+| **Address** | Gat No, 167, Sahyog Nager, Triveni Nagar |
+| **City** | Nigdi, Pimpri-Chinchwad |
 | **State** | Maharashtra |
 | **PIN Code** | 411062 |
 | **Country** | India |
 | **Status** | Active |
-| **System** | HMS Core v1.0 |
+| **System** | HMS Core v2.0 |
 
 ### Hospital Departments
 
@@ -72,6 +74,21 @@ HMS Core is a comprehensive Hospital Management System designed specifically for
 - Radiology
 - Pathology
 
+### Service Locations (10 Pune Locations)
+
+| Location | Area |
+|----------|------|
+| 1 | Kothrud, Pune |
+| 2 | Wakad, Pune |
+| 3 | Baner, Pune |
+| 4 | Hinjewadi, Pune |
+| 5 | Pimpri, Pune |
+| 6 | Chikhali, Pune |
+| 7 | Aundh, Pune |
+| 8 | Viman Nagar, Pune |
+| 9 | Koregaon Park, Pune |
+| 10 | Hadapsar, Pune |
+
 ---
 
 ## Technical Architecture
@@ -90,6 +107,7 @@ HMS Core is a comprehensive Hospital Management System designed specifically for
 | **React Hook Form** | Form handling |
 | **Zod** | Schema validation |
 | **Lucide React** | Icon library |
+| **Framer Motion** | Animations |
 
 ### Backend Stack
 
@@ -100,6 +118,7 @@ HMS Core is a comprehensive Hospital Management System designed specifically for
 | **TypeScript** | Type-safe development |
 | **Drizzle ORM** | Database operations |
 | **PostgreSQL** | Database (Neon) |
+| **bcrypt** | Password hashing (10 salt rounds) |
 | **OpenAI API** | AI Chatbot integration |
 | **Zod** | Request validation |
 
@@ -124,8 +143,8 @@ HMS Core is a comprehensive Hospital Management System designed specifically for
 │  (Full system access, user management, settings)        │
 ├─────────────────────────────────────────────────────────┤
 │     DOCTOR          │     NURSE      │   OPD_MANAGER   │
-│  (Clinical care,    │  (Patient care,│  (OPD operations,│
-│   prescriptions)    │   tracking)    │   scheduling)    │
+│  (Clinical care,    │  (Assigned     │  (OPD operations,│
+│   prescriptions)    │  patients only)│   scheduling)    │
 ├─────────────────────────────────────────────────────────┤
 │                       PATIENT                           │
 │         (Personal health, appointments)                 │
@@ -140,15 +159,33 @@ HMS Core is a comprehensive Hospital Management System designed specifically for
 | Hospital Settings | ✅ | ❌ | ❌ | ❌ | ❌ |
 | System Settings | ✅ | ❌ | ❌ | ❌ | ❌ |
 | OPD Service | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Patient Service | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Patient Service | ✅ | ✅ | ✅* | ✅ | ❌ |
 | Inventory Service | ✅ | ❌ | ✅ | ✅ | ❌ |
-| Patient Tracking | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Patient Tracking | ✅ | ✅ | ✅* | ✅ | ❌ |
 | Biometric Service | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Notification Service | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Equipment Servicing | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Notification Service | ✅ | ✅ | ✅* | ✅ | ✅ |
+| Equipment Servicing | ✅ | ❌ | ❌ | ✅ | ❌ |
 | Chatbot Service | ✅ | ✅ | ✅ | ❌ | ✅ |
+| BMW Management | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Oxygen Tracking | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Consent Forms | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Medicine Database | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Doctor Portal | ❌ | ✅ | ❌ | ❌ | ❌ |
 | Patient Portal | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+*NURSE restrictions: Only see assigned patients, patient-specific notifications, no Consent Forms access
+
+### NURSE Portal Restrictions (Important)
+
+Nurses have limited access compared to other staff roles:
+
+| Restriction | Description |
+|-------------|-------------|
+| **Patient Access** | Only see patients assigned to them, not all patients |
+| **Notifications** | Only receive notifications related to their assigned patients |
+| **Equipment Servicing** | No access to Equipment Servicing module |
+| **Consent Forms** | No access to Consent Forms tab in Patient Service |
+| **Activity Log** | Only see activities related to their assigned patients |
 
 ### User Counts by Role
 
@@ -186,12 +223,14 @@ Dedicated interface for patients with self-service healthcare management.
 
 - Personal health metrics dashboard
 - Doctor availability and appointment booking
+- Location-based appointment selection (10 Pune locations)
 - Real-time appointment status tracking
 - Medical history access
 - Prescription viewer
 - AI chatbot for health queries
 - Push/Email/SMS notification preferences
 - Emergency contact management
+- Automatic appointment reminders (24h and 1h before)
 
 ### 2. Doctor Portal
 
@@ -212,12 +251,15 @@ Specialized clinical interface for healthcare providers.
 #### Doctor Portal Features
 
 - Daily appointment overview
+- Calendar-based scheduling
 - Patient case history access
 - Schedule editing with slot management
 - Prescription creation and management
+- Medicine database integration
 - Real-time notification center
 - Blood group color-coded patient cards
 - Appointment status management (confirm/complete/cancel)
+- Doctor visit tracking for admitted patients
 
 ### 3. Staff Dashboard (ADMIN, NURSE, OPD_MANAGER)
 
@@ -237,9 +279,11 @@ Comprehensive hospital management interface.
 - Inventory Service
 - Patient Tracking
 - Biometric Service
-- Equipment Servicing
+- Equipment Servicing (Not for NURSE)
 - Chatbot Service
 - Notification Service
+- BMW Management
+- Oxygen Tracking
 
 ---
 
@@ -254,16 +298,19 @@ Outpatient Department management system.
 | Tab | Functionality |
 |-----|---------------|
 | **Schedules** | View doctor schedules by date |
-| **Book Appointment** | New patient appointment booking |
+| **Book Appointment** | New patient appointment booking with location selection |
 | **Appointments** | All appointments with status filters |
 | **Check-In** | Patient arrival confirmation |
 | **Team** | OPD staff directory |
 
 **Key Features:**
 - Real-time slot availability
+- Calendar-based scheduling
+- Location-based appointments (10 Pune locations)
 - Appointment status workflow (Scheduled → Checked-in → Completed)
 - Doctor specialty filtering
 - Patient queue management
+- Automatic reminders (24h and 1h before appointment)
 
 ### 2. Patient Service
 
@@ -274,6 +321,7 @@ Comprehensive patient data management.
 | **Patients** | Patient demographics and profiles |
 | **Admissions** | Hospital admission management |
 | **Medical Records** | Clinical documentation |
+| **Consent Forms** | Patient consent management (Not for NURSE) |
 | **Statistics** | Patient analytics |
 
 **Key Features:**
@@ -282,6 +330,7 @@ Comprehensive patient data management.
 - Emergency contact management
 - Admission workflow (Admit → In-treatment → Discharged)
 - Medical record types (Lab Report, Diagnosis, Prescription, etc.)
+- Consent form management with PDF support
 
 ### 3. Inventory Service
 
@@ -318,7 +367,8 @@ Real-time admitted patient monitoring.
 | **Medications** | Drug administration log |
 | **Meals** | Diet tracking |
 | **Vitals** | Vital signs monitoring |
-| **Timeline** | Patient activity log |
+| **Doctor Visits** | Schedule and track doctor rounds |
+| **Timeline** | Patient activity log (role-based filtering) |
 
 **Vital Signs Tracked:**
 - Temperature
@@ -326,6 +376,16 @@ Real-time admitted patient monitoring.
 - Blood Pressure (Systolic/Diastolic)
 - Respiratory Rate
 - Oxygen Saturation (SpO2)
+
+**Doctor Visit Features:**
+- Schedule doctor rounds
+- Record visit notes
+- Track previous visits with timestamps
+- Database persistence
+
+**Activity Log Filtering:**
+- ADMIN: See all patient activities
+- NURSE: Only see activities for assigned patients
 
 ### 5. Biometric Service
 
@@ -395,6 +455,7 @@ Multi-channel communication system.
 - Emergency Alerts
 - OPD Announcements
 - Disease Alerts
+- Appointment Reminders (Automatic)
 - General
 
 **Priority Levels:**
@@ -403,9 +464,13 @@ Multi-channel communication system.
 - High
 - Critical
 
+**Automatic Reminders:**
+- 24 hours before appointment
+- 1 hour before appointment
+
 ### 8. Equipment Servicing
 
-Medical equipment maintenance tracking.
+Medical equipment maintenance tracking. **Not accessible to NURSE role.**
 
 | Tab | Functionality |
 |-----|---------------|
@@ -423,6 +488,191 @@ Medical equipment maintenance tracking.
 - Up-to-date
 - Due Soon
 - Overdue
+
+---
+
+## New Modules (December 2025)
+
+### 9. Biomedical Waste Management (BMW)
+
+Complete CPCB-compliant waste tracking system for hospital biomedical waste.
+
+| Tab | Functionality |
+|-----|---------------|
+| **Dashboard** | Waste overview and compliance status |
+| **Bag Tracking** | Barcode-based waste bag lifecycle |
+| **Storage Rooms** | Temporary storage monitoring |
+| **Pickups** | Vendor pickup scheduling |
+| **Disposals** | Final disposal records |
+| **Incidents** | Injury/exposure reporting |
+| **Reports** | Compliance reporting |
+| **Vendors** | CBWTF vendor registry |
+
+**Waste Categories (CPCB Color Coded):**
+
+| Color | Category | Waste Type |
+|-------|----------|------------|
+| **Yellow** | Incineration | Anatomical, soiled, chemotherapy waste |
+| **Red** | Autoclaving/Microwaving | Contaminated recyclables, tubing |
+| **White** | Sharps | Needles, syringes, blades |
+| **Blue** | Autoclaving + Shredding | Glassware, metallic sharps |
+
+**Bag Status Workflow:**
+```
+CREATED → FILLED → SEALED → IN_STORAGE → PICKED_UP → DISPOSED
+```
+
+**Key Features:**
+- Barcode-based bag tracking
+- Weight recording (kg)
+- Storage room capacity monitoring
+- Vendor pickup scheduling
+- Disposal method tracking (Incineration, Autoclaving, Deep Burial, etc.)
+- Incident reporting (needle-stick injuries, spills, exposure)
+- Compliance reports (Daily, Weekly, Monthly, Quarterly)
+
+**Database Tables:**
+- `bmwBags` - Core bag tracking
+- `bmwMovements` - Bag movement history
+- `bmwPickups` - Vendor pickup records
+- `bmwDisposals` - Final disposal records
+- `bmwVendors` - CBWTF vendor registry
+- `bmwStorageRooms` - Temporary storage locations
+- `bmwIncidents` - Incident reports
+- `bmwReports` - Compliance reports
+
+### 10. Oxygen Tracking System
+
+NABH-compliant oxygen management for hospital oxygen supply.
+
+| Tab | Functionality |
+|-----|---------------|
+| **Dashboard** | Oxygen inventory overview |
+| **Cylinders** | Cylinder inventory management |
+| **Movements** | Assignment and return logging |
+| **Consumption** | Usage tracking by ward/patient |
+| **LMO Readings** | Liquid Medical Oxygen tank levels |
+| **Alerts** | Low stock and critical notifications |
+
+**Cylinder Tracking:**
+
+| Field | Description |
+|-------|-------------|
+| Serial Number | Unique cylinder identifier |
+| Capacity | Cylinder size (liters) |
+| Status | Full, In-Use, Empty, Under Maintenance |
+| Location | Current ward/department |
+| Last Fill Date | Most recent refill |
+
+**Movement Types:**
+- Issue to Ward
+- Return to Storage
+- Send for Refill
+- Maintenance
+
+**LMO (Liquid Medical Oxygen) Monitoring:**
+- Tank level readings
+- Daily consumption tracking
+- Auto-alerts at threshold levels
+- NABH compliance dashboard
+
+**Alert Types:**
+- Low Stock Warning
+- Critical Level Alert
+- Cylinder Expiry
+- LMO Threshold
+
+**Database Tables:**
+- `oxygenCylinders` - Cylinder inventory
+- `cylinderMovements` - Assignment/return logs
+- `oxygenConsumption` - Usage tracking
+- `lmoReadings` - LMO tank levels
+- `oxygenAlerts` - System alerts
+
+### 11. Consent Forms Management
+
+Digital consent form management with PDF support.
+
+| Tab | Functionality |
+|-----|---------------|
+| **Templates** | Consent form templates |
+| **Patient Consents** | Signed consent records |
+| **Pending** | Consents awaiting signature |
+
+**Consent Types:**
+- General Treatment Consent
+- Surgical Consent
+- Anesthesia Consent
+- Blood Transfusion Consent
+- Procedure-Specific Consent
+- Research Participation Consent
+
+**Features:**
+- Template-based form generation
+- PDF upload/download/print
+- Patient signature capture
+- Version control
+- Expiry tracking
+- Status tracking (Pending, Signed, Expired)
+
+**Workflow:**
+```
+CREATE TEMPLATE → GENERATE FOR PATIENT → PATIENT SIGNS → ARCHIVE
+```
+
+**Database Tables:**
+- `consentForms` - Consent templates
+- `patientConsents` - Patient consent records
+
+### 12. Prescription Management
+
+Comprehensive prescription creation and management.
+
+**Features:**
+- Doctor prescription creation
+- Medicine database integration
+- Dosage and frequency selection
+- Prescription printing/PDF
+- Patient prescription history
+- Digital prescription delivery
+
+**Prescription Fields:**
+- Patient information
+- Medicine name (from database)
+- Dosage
+- Frequency
+- Duration
+- Special instructions
+- Doctor signature
+
+### 13. Medicine Database
+
+Searchable database of Indian medicines for OPD management.
+
+**Features:**
+- 5000+ Indian medicines
+- CSV import functionality for bulk updates
+- Generic name search
+- Brand name search
+- Dosage information
+- Composition details
+- Category filtering
+
+**Search Capabilities:**
+- By generic name
+- By brand name
+- By manufacturer
+- By category
+- By composition
+
+**OPD Manager Access:**
+- Import medicines via CSV
+- Add/Edit medicine entries
+- Manage categories
+- Update pricing
+
+**Database Table:**
+- `medicines` - Medicine database
 
 ---
 
@@ -457,17 +707,7 @@ Medical equipment maintenance tracking.
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-### User Interaction Matrix
-
-| From \ To | Patient | Doctor | Nurse | OPD Manager | Admin |
-|-----------|:-------:|:------:|:-----:|:-----------:|:-----:|
-| **Patient** | - | Books Appointment | - | - | - |
-| **Doctor** | Treats Patient | - | Delegates Care | - | - |
-| **Nurse** | Administers Care | Reports to Doctor | - | Reports Status | - |
-| **OPD Manager** | Schedules | Manages Schedule | Coordinates | - | Reports |
-| **Admin** | Manages Account | Manages Account | Manages Account | Manages Account | - |
-
-### Service Dependencies
+### Extended Service Dependencies
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -486,13 +726,23 @@ Medical equipment maintenance tracking.
 │  │  ┌────────────┐ ┌────────────┐ ┌───────┐│                      │
 │  │  │Medications │ │   Vitals   │ │ Meals ││                      │
 │  │  └────────────┘ └────────────┘ └───────┘│                      │
+│  │  ┌────────────────────────────────────┐ │                      │
+│  │  │         Doctor Visits              │ │                      │
+│  │  └────────────────────────────────────┘ │                      │
 │  └───────────────────┬─────────────────────┘                      │
 │                      │                                             │
-│        ┌─────────────┼─────────────┐                              │
-│        ▼             ▼             ▼                              │
+│    ┌─────────────────┼─────────────────┐                          │
+│    ▼                 ▼                 ▼                          │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐                        │
 │  │INVENTORY │  │BIOMETRIC │  │EQUIPMENT │                        │
 │  │ SERVICE  │  │ SERVICE  │  │SERVICING │                        │
+│  └──────────┘  └──────────┘  └──────────┘                        │
+│                      │                                             │
+│    ┌─────────────────┼─────────────────┐                          │
+│    ▼                 ▼                 ▼                          │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                        │
+│  │   BMW    │  │  OXYGEN  │  │ CONSENT  │                        │
+│  │MANAGEMENT│  │ TRACKING │  │  FORMS   │                        │
 │  └──────────┘  └──────────┘  └──────────┘                        │
 │                      │                                             │
 │                      ▼                                             │
@@ -506,12 +756,22 @@ Medical equipment maintenance tracking.
 ### Appointment Workflow
 
 ```
-Patient Books Appointment
+Patient Books Appointment (with Location Selection)
          │
          ▼
 ┌─────────────────┐
-│ Status: SCHEDULED│
+│ Status: SCHEDULED│◄──── Auto-reminder set (24h & 1h)
 └────────┬────────┘
+         │
+         ▼ (24h before)
+┌─────────────────────────┐
+│ Reminder Notification    │──── Push/Email/SMS/WhatsApp
+└─────────────────────────┘
+         │
+         ▼ (1h before)
+┌─────────────────────────┐
+│ Final Reminder           │──── Push/Email/SMS/WhatsApp
+└─────────────────────────┘
          │
          ▼ (Patient arrives)
 ┌─────────────────┐
@@ -527,47 +787,43 @@ Patient Books Appointment
          │                                    │
          │                                    ▼
          │                            Patient Tracking
-         │                            (Medications, Vitals, Meals)
+         │                            (Medications, Vitals, Meals, Doctor Visits)
          │
          └──► Follow-up Notification ──► Notification Service
 ```
 
-### Patient Admission Flow
+### BMW Waste Lifecycle
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                     PATIENT ADMISSION FLOW                        │
+│                     BMW WASTE LIFECYCLE                          │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                   │
-│  1. REGISTRATION                                                  │
-│     Patient Service → New Patient                                 │
-│     └── Demographics, Emergency Contact, Insurance                │
+│  1. BAG CREATION                                                 │
+│     Generate barcode → Assign category (Yellow/Red/White/Blue)   │
 │                                                                   │
-│  2. BIOMETRIC ENROLLMENT                                         │
-│     Biometric Service → Enroll Patient                           │
-│     └── Fingerprint/Face Registration (AES-256 Encrypted)        │
+│  2. FILLING                                                      │
+│     Status: CREATED → FILLED                                     │
+│     └── Record department, generated by                          │
 │                                                                   │
-│  3. ADMISSION                                                     │
-│     Patient Service → New Admission                              │
-│     └── Room Assignment, Department, Physician                   │
+│  3. SEALING                                                      │
+│     Status: FILLED → SEALED                                      │
+│     └── Record weight (kg), seal timestamp                       │
 │                                                                   │
-│  4. TRACKING BEGINS                                              │
-│     Patient Tracking → Patient Monitored                         │
-│     ├── Vitals recorded every 4 hours                           │
-│     ├── Medications administered per schedule                    │
-│     └── Meals served and tracked                                 │
+│  4. STORAGE                                                      │
+│     Status: SEALED → IN_STORAGE                                  │
+│     └── Assign to storage room, capacity check                   │
 │                                                                   │
-│  5. INVENTORY USAGE                                              │
-│     Inventory Service → Items Issued                             │
-│     └── Medicines, Disposables linked to patient                 │
+│  5. PICKUP                                                       │
+│     Status: IN_STORAGE → PICKED_UP                               │
+│     └── Vendor assigned, vehicle number, pickup manifest         │
 │                                                                   │
-│  6. NOTIFICATIONS                                                │
-│     Notification Service → Family Updates                        │
-│     └── Status updates via Push/SMS/WhatsApp                     │
+│  6. DISPOSAL                                                     │
+│     Status: PICKED_UP → DISPOSED                                 │
+│     └── Disposal method, certificate number, final location      │
 │                                                                   │
-│  7. DISCHARGE                                                     │
-│     Patient Service → Update Admission Status                    │
-│     └── Status changed to "DISCHARGED"                           │
+│  7. COMPLIANCE REPORTING                                         │
+│     └── Daily, Weekly, Monthly, Quarterly reports                │
 │                                                                   │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -592,6 +848,8 @@ Patient Books Appointment
 │  │  schedules │                │      meals      │                 │
 │  ├────────────┤                ├─────────────────┤                 │
 │  │appointments│                │     vitals      │                 │
+│  ├────────────┤                ├─────────────────┤                 │
+│  │prescriptions│               │  doctor_visits  │                 │
 │  └────────────┘                └─────────────────┘                 │
 │                                                                     │
 │  PATIENT SERVICE                INVENTORY TABLES                    │
@@ -601,20 +859,46 @@ Patient Books Appointment
 │  │   admissions    │           │inventory_patients│                │
 │  ├─────────────────┤           ├──────────────────┤                │
 │  │ medical_records │           │  staff_members   │                │
-│  └─────────────────┘           ├──────────────────┤                │
-│                                │inventory_trans   │                │
-│                                └──────────────────┘                │
+│  ├─────────────────┤           ├──────────────────┤                │
+│  │ consent_forms   │           │inventory_trans   │                │
+│  ├─────────────────┤           └──────────────────┘                │
+│  │patient_consents │                                               │
+│  └─────────────────┘                                               │
 │                                                                     │
 │  BIOMETRIC TABLES               NOTIFICATION TABLES                 │
 │  ┌──────────────────┐          ┌───────────────────┐               │
 │  │biometric_templates│          │   notifications   │               │
 │  ├──────────────────┤          ├───────────────────┤               │
-│  │biometric_verify  │          │hospital_team_memb │               │
-│  └──────────────────┘          └───────────────────┘               │
-│                                                                     │
-│  CHATBOT TABLES                                                    │
+│  │biometric_verify  │          │user_notifications │               │
+│  └──────────────────┘          ├───────────────────┤               │
+│                                │hospital_team_memb │               │
+│  CHATBOT TABLES                └───────────────────┘               │
 │  ┌──────────────────┐                                              │
-│  │conversation_logs │                                              │
+│  │conversation_logs │          EQUIPMENT TABLES                    │
+│  └──────────────────┘          ┌───────────────────┐               │
+│                                │    equipment      │               │
+│  MEDICINE TABLES               ├───────────────────┤               │
+│  ┌──────────────────┐          │  service_history  │               │
+│  │    medicines     │          └───────────────────┘               │
+│  └──────────────────┘                                              │
+│                                                                     │
+│  BMW TABLES                     OXYGEN TABLES                       │
+│  ┌──────────────────┐          ┌───────────────────┐               │
+│  │    bmw_bags      │          │ oxygen_cylinders  │               │
+│  ├──────────────────┤          ├───────────────────┤               │
+│  │  bmw_movements   │          │cylinder_movements │               │
+│  ├──────────────────┤          ├───────────────────┤               │
+│  │   bmw_pickups    │          │oxygen_consumption │               │
+│  ├──────────────────┤          ├───────────────────┤               │
+│  │  bmw_disposals   │          │   lmo_readings    │               │
+│  ├──────────────────┤          ├───────────────────┤               │
+│  │   bmw_vendors    │          │  oxygen_alerts    │               │
+│  ├──────────────────┤          └───────────────────┘               │
+│  │bmw_storage_rooms │                                              │
+│  ├──────────────────┤                                              │
+│  │  bmw_incidents   │                                              │
+│  ├──────────────────┤                                              │
+│  │   bmw_reports    │                                              │
 │  └──────────────────┘                                              │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
@@ -624,10 +908,10 @@ Patient Books Appointment
 
 | Table | Purpose | Key Fields |
 |-------|---------|------------|
-| `users` | System authentication | id, username, password |
+| `users` | System authentication | id, username, password (bcrypt hashed) |
 | `doctors` | Doctor profiles | name, specialty, experience, rating |
 | `schedules` | Doctor availability | doctorId, date, timeSlot, isBooked |
-| `appointments` | OPD bookings | patientName, doctorId, date, status |
+| `appointments` | OPD bookings | patientName, doctorId, date, status, location |
 | `service_patients` | Patient demographics | firstName, lastName, DOB, insurance |
 | `admissions` | Hospital stays | patientId, department, roomNumber, status |
 | `medical_records` | Clinical documents | patientId, recordType, description |
@@ -635,13 +919,34 @@ Patient Books Appointment
 | `medications` | Drug administration | patientId, name, dosage, administeredBy |
 | `vitals` | Vital signs | patientId, temperature, heartRate, BP |
 | `meals` | Diet tracking | patientId, mealType, calories |
+| `doctor_visits` | Doctor rounds | patientId, doctorName, visitTime, notes |
+| `prescriptions` | Medical prescriptions | patientId, doctorId, medicines, dosage |
+| `medicines` | Medicine database | genericName, brandName, dosage, composition |
+| `consent_forms` | Consent templates | title, content, version |
+| `patient_consents` | Patient consents | patientId, consentFormId, status, signedAt |
 | `inventory_items` | Hospital supplies | name, category, currentStock |
 | `inventory_transactions` | Stock movements | type, itemId, quantity |
-| `biometric_templates` | Encrypted biometrics | patientId, templateData, quality |
+| `biometric_templates` | Encrypted biometrics | patientId, templateData (AES-256), quality |
 | `biometric_verifications` | Verification logs | patientId, confidenceScore, isMatch |
 | `conversation_logs` | Chatbot history | query, response, category |
 | `notifications` | Hospital messages | title, message, channels, priority |
+| `user_notifications` | User-specific notifications | userId, notificationId, readAt |
 | `hospital_team_members` | Staff directory | name, department, phone, isOnCall |
+| `equipment` | Medical equipment | name, category, status, lastServiceDate |
+| `service_history` | Equipment service logs | equipmentId, serviceDate, technician |
+| `bmw_bags` | Waste bags | barcode, category, status, weight |
+| `bmw_movements` | Bag movements | bagId, action, location, timestamp |
+| `bmw_pickups` | Vendor pickups | vendorId, pickupDate, bagCount |
+| `bmw_disposals` | Disposal records | bagId, method, certificateNumber |
+| `bmw_vendors` | CBWTF vendors | name, license, contactInfo |
+| `bmw_storage_rooms` | Storage locations | name, capacity, currentLoad |
+| `bmw_incidents` | Incident reports | type, description, severity |
+| `bmw_reports` | Compliance reports | reportType, period, data |
+| `oxygen_cylinders` | Cylinder inventory | serialNumber, capacity, status |
+| `cylinder_movements` | Movement logs | cylinderId, action, ward, timestamp |
+| `oxygen_consumption` | Usage tracking | ward, consumedLiters, date |
+| `lmo_readings` | LMO tank levels | tankLevel, readingTime |
+| `oxygen_alerts` | System alerts | alertType, message, severity |
 
 ---
 
@@ -680,6 +985,7 @@ Patient Books Appointment
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/patients/service` | Get all patients |
+| GET | `/api/patients/assigned/:nurseId` | Get patients assigned to nurse |
 | POST | `/api/patients/service` | Create patient |
 | GET | `/api/admissions` | Get all admissions |
 | GET | `/api/admissions/active` | Get active admissions |
@@ -697,6 +1003,8 @@ Patient Books Appointment
 | POST | `/api/tracking/medications` | Log medication |
 | POST | `/api/tracking/meals` | Log meal |
 | POST | `/api/tracking/vitals` | Log vitals |
+| GET | `/api/tracking/doctor-visits/:patientId` | Get doctor visits |
+| POST | `/api/tracking/doctor-visits` | Create doctor visit |
 
 ### Biometric API
 
@@ -727,6 +1035,61 @@ Patient Books Appointment
 | DELETE | `/api/notifications/:id` | Delete notification |
 | GET | `/api/team-members` | Get team directory |
 
+### BMW API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/bmw/bags` | Get all bags |
+| POST | `/api/bmw/bags` | Create bag |
+| PATCH | `/api/bmw/bags/:id` | Update bag status |
+| GET | `/api/bmw/movements` | Get movements |
+| POST | `/api/bmw/movements` | Log movement |
+| GET | `/api/bmw/pickups` | Get pickups |
+| POST | `/api/bmw/pickups` | Schedule pickup |
+| GET | `/api/bmw/disposals` | Get disposals |
+| POST | `/api/bmw/disposals` | Record disposal |
+| GET | `/api/bmw/vendors` | Get vendors |
+| POST | `/api/bmw/vendors` | Add vendor |
+| GET | `/api/bmw/storage-rooms` | Get storage rooms |
+| GET | `/api/bmw/incidents` | Get incidents |
+| POST | `/api/bmw/incidents` | Report incident |
+| GET | `/api/bmw/reports` | Get reports |
+| POST | `/api/bmw/reports` | Generate report |
+
+### Oxygen API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/oxygen/cylinders` | Get all cylinders |
+| POST | `/api/oxygen/cylinders` | Add cylinder |
+| PATCH | `/api/oxygen/cylinders/:id` | Update cylinder |
+| GET | `/api/oxygen/movements` | Get movements |
+| POST | `/api/oxygen/movements` | Log movement |
+| GET | `/api/oxygen/consumption` | Get consumption |
+| POST | `/api/oxygen/consumption` | Record consumption |
+| GET | `/api/oxygen/lmo-readings` | Get LMO readings |
+| POST | `/api/oxygen/lmo-readings` | Add LMO reading |
+| GET | `/api/oxygen/alerts` | Get alerts |
+
+### Consent Forms API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/consent-forms` | Get all templates |
+| POST | `/api/consent-forms` | Create template |
+| GET | `/api/patient-consents` | Get patient consents |
+| POST | `/api/patient-consents` | Create consent record |
+| PATCH | `/api/patient-consents/:id` | Update consent status |
+
+### Medicines API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/medicines` | Get all medicines |
+| GET | `/api/medicines/search` | Search medicines |
+| POST | `/api/medicines` | Add medicine |
+| POST | `/api/medicines/import` | Import CSV |
+
 ---
 
 ## Security Features
@@ -735,10 +1098,11 @@ Patient Books Appointment
 
 | Feature | Implementation |
 |---------|----------------|
-| **Password Hashing** | Secure password storage |
+| **Password Hashing** | bcrypt with 10 salt rounds |
 | **Session Management** | Express sessions with PostgreSQL store |
 | **Role-Based Access** | 5 distinct user roles with permissions |
 | **Route Protection** | Server-side and client-side guards |
+| **NURSE Restrictions** | Server-side enforcement for assigned patients only |
 
 ### Data Protection
 
@@ -754,6 +1118,8 @@ Patient Books Appointment
 | Standard | Status |
 |----------|--------|
 | **HIPAA** | Compliance indicators present |
+| **CPCB** | BMW module follows guidelines |
+| **NABH** | Oxygen tracking compliance |
 | **Data Encryption** | AES-256 for sensitive data |
 | **Audit Logging** | Biometric verification logs |
 | **Access Control** | Role-based permission matrix |
@@ -766,11 +1132,11 @@ Patient Books Appointment
 
 | Role | Username | Password |
 |------|----------|----------|
-| ADMIN | admin.suhas.nair | Admin@123 |
-| DOCTOR | dr.anil.kulkarni | Doctor@123 |
-| PATIENT | rohan.patil | Patient@123 |
+| ADMIN | admin | 123456 |
+| DOCTOR | doctor | 123456 |
+| PATIENT | patient | 123456 |
+| OPD_MANAGER | opd | 123456 |
 | NURSE | nurse.asha.patil | Nurse@123 |
-| OPD_MANAGER | opd.mahesh.patil | OPD@123 |
 
 ### All Administrators (3)
 
@@ -844,12 +1210,22 @@ Patient Books Appointment
 
 ## Design System
 
+### Color Themes (6 Available)
+
+| Theme | Primary Color | Description |
+|-------|---------------|-------------|
+| **Healthcare Blue** | #2563eb | Default medical blue |
+| **Medical Teal** | #0d9488 | Calming teal |
+| **Clinical Green** | #16a34a | Fresh green |
+| **Warm Coral** | #f97316 | Warm orange |
+| **Purple** | #9333ea | Royal purple |
+| **Indigo** | #4f46e5 | Deep indigo |
+
 ### Color Palette
 
 | Color | CSS Variable | Usage |
 |-------|--------------|-------|
-| **Primary Blue** | `--primary` | Headers, buttons, links |
-| **Medical Blue** | `#2563eb` | Hospital branding |
+| **Primary** | `--primary` | Headers, buttons, links |
 | **Success Green** | `--success` | Confirmed, available |
 | **Warning Yellow** | `--warning` | Due soon, pending |
 | **Error Red** | `--destructive` | Critical, overdue |
@@ -869,6 +1245,7 @@ Patient Books Appointment
 - shadcn/ui components
 - Radix UI primitives
 - Lucide React icons
+- Framer Motion animations
 - Custom hospital-themed cards
 - Medical-grade status badges
 
@@ -878,6 +1255,16 @@ Patient Books Appointment
 |------|------------|------|
 | **Light** | White/Gray | Dark Gray/Black |
 | **Dark** | Dark Gray/Black | White/Light Gray |
+
+### Responsive Breakpoints
+
+| Breakpoint | Width | Target |
+|------------|-------|--------|
+| **sm** | 640px | Mobile phones |
+| **md** | 768px | Tablets |
+| **lg** | 1024px | Small laptops |
+| **xl** | 1280px | Desktops |
+| **2xl** | 1536px | Large monitors |
 
 ---
 
@@ -889,10 +1276,10 @@ hms-core/
 │   └── src/
 │       ├── components/          # Reusable UI components
 │       │   ├── ui/              # shadcn components
-│       │   ├── HMSSidebar.tsx   # Main navigation
+│       │   ├── HMSSidebar.tsx   # Main navigation with role-based access
 │       │   ├── HMSDashboard.tsx # Dashboard component
 │       │   ├── AuthForms.tsx    # Login/Register
-│       │   └── ThemeToggle.tsx  # Dark mode toggle
+│       │   └── ThemeToggle.tsx  # Dark mode & theme toggle
 │       ├── pages/               # Route components
 │       │   ├── PatientPortal.tsx
 │       │   ├── DoctorPortal.tsx
@@ -903,20 +1290,28 @@ hms-core/
 │       │   ├── BiometricService.tsx
 │       │   ├── ChatbotService.tsx
 │       │   ├── NotificationService.tsx
-│       │   └── EquipmentServicing.tsx
+│       │   ├── EquipmentServicing.tsx
+│       │   ├── BiowastePage.tsx      # BMW Management
+│       │   ├── OxygenTracker.tsx     # Oxygen Tracking
+│       │   ├── ConsentForms.tsx      # Consent Management
+│       │   ├── UserManagement.tsx
+│       │   ├── HospitalSettings.tsx
+│       │   └── SystemSettings.tsx
 │       ├── hooks/               # Custom hooks
 │       ├── lib/                 # Utilities
 │       └── App.tsx              # Main app with routing
 ├── server/
 │   ├── routes.ts                # API endpoints
-│   ├── storage.ts               # Database operations
+│   ├── storage.ts               # Storage interface & MemStorage
+│   ├── database-storage.ts      # PostgreSQL implementation
+│   ├── db.ts                    # Database connection
 │   └── index.ts                 # Server entry
 ├── shared/
 │   └── schema.ts                # Database schema & types
 ├── credentials/                 # Login credential files
-├── HMS_LOGIN_CREDENTIALS.md     # Quick reference
 ├── PROJECT_DOCUMENTATION.md     # This file
-└── design_guidelines.md         # UI/UX guidelines
+├── design_guidelines.md         # UI/UX guidelines
+└── replit.md                    # Project summary
 ```
 
 ---
@@ -925,7 +1320,8 @@ hms-core/
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0.0 | Dec 2024 | Initial release with all services |
+| 2.0.0 | Dec 2025 | Added BMW, Oxygen Tracking, Consent Forms, Medicine Database, NURSE restrictions |
+| 1.0.0 | Dec 2024 | Initial release with 8 core services |
 
 ---
 
@@ -933,8 +1329,8 @@ hms-core/
 
 **Gravity Hospital IT Department**
 
-- **Address:** Sane Chowk, Nair Colony, More Vasti, Chikhali, Pimpri-Chinchwad, Maharashtra 411062
-- **System:** HMS Core v1.0
+- **Address:** Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062
+- **System:** HMS Core v2.0
 
 ---
 
