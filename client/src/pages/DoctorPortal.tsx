@@ -76,6 +76,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
+import DoctorOathModal from "@/components/DoctorOathModal";
 
 interface DoctorPortalProps {
   doctorName: string;
@@ -101,6 +102,14 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [selectedPatient, setSelectedPatient] = useState<DoctorPatient | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
+  const [oathAccepted, setOathAccepted] = useState(false);
+  
+  const todayDate = format(new Date(), "yyyy-MM-dd");
+  
+  const { data: oathStatus, isLoading: oathLoading } = useQuery<{ accepted: boolean }>({
+    queryKey: ['/api/doctor-oath', doctorId, todayDate],
+    enabled: !!doctorId,
+  });
   
   // Fetch all doctors to find matching doctor ID for notifications
   const { data: allDoctors = [] } = useQuery<{ id: string; name: string }[]>({
@@ -2128,18 +2137,40 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     }
   };
 
+  const hasAcceptedOath = oathStatus?.accepted || oathAccepted;
+  
+  if (oathLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-      <div className="flex h-screen w-full">
-        <Sidebar>
-          <SidebarHeader className="py-3 px-2">
-              <img 
-                src={hospitalLogo} 
-                alt="Gravity Hospital" 
-                className="w-full max-w-[210px] h-[56px] object-contain"
-                data-testid="img-doctor-portal-logo"
-              />
-          </SidebarHeader>
+    <>
+      {!hasAcceptedOath && (
+        <DoctorOathModal
+          doctorId={doctorId}
+          doctorName={doctorName}
+          onOathAccepted={() => setOathAccepted(true)}
+        />
+      )}
+      
+      <SidebarProvider style={sidebarStyle as React.CSSProperties}>
+        <div className={`flex h-screen w-full ${!hasAcceptedOath ? 'pointer-events-none blur-sm' : ''}`}>
+          <Sidebar>
+            <SidebarHeader className="py-3 px-2">
+                <img 
+                  src={hospitalLogo} 
+                  alt="Gravity Hospital" 
+                  className="w-full max-w-[210px] h-[56px] object-contain"
+                  data-testid="img-doctor-portal-logo"
+                />
+            </SidebarHeader>
 
           <SidebarContent>
             <SidebarGroup>
@@ -2436,6 +2467,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           </form>
         </DialogContent>
       </Dialog>
-    </SidebarProvider>
+      </SidebarProvider>
+    </>
   );
 }
