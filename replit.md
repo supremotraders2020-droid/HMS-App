@@ -49,6 +49,7 @@ The system supports multi-tenancy at the application level, isolating data for e
 - **Role-Based Access Control (RBAC)**: Five roles (ADMIN, DOCTOR, PATIENT, NURSE, OPD_MANAGER) with hierarchical permissions.
 - **NURSE Restrictions**: Nurses can only view assigned patients, receive patient-specific notifications, and have no access to Equipment Servicing or Consent Forms.
 - **Session Management**: Express session handling with secure authentication.
+- **Daily Doctor Oath (NMC Physician's Pledge)**: Doctors must accept the NMC Physician's Pledge on first login each day. Blocks access until accepted, with database tracking of doctor_id, date, and timestamp.
 
 ### Design System Integration
 A comprehensive design system is integrated, featuring:
