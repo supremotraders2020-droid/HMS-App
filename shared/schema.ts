@@ -315,6 +315,26 @@ export const insertVitalsSchema = createInsertSchema(vitals).omit({
 export type InsertVitals = z.infer<typeof insertVitalsSchema>;
 export type Vitals = typeof vitals.$inferSelect;
 
+// Doctor Visits table
+export const doctorVisits = pgTable("doctor_visits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  visitDate: text("visit_date").notNull(),
+  visitTime: text("visit_time").notNull(),
+  doctorName: text("doctor_name"),
+  notes: text("notes"),
+  status: text("status").notNull().default("scheduled"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdBy: text("created_by").notNull(),
+});
+
+export const insertDoctorVisitSchema = createInsertSchema(doctorVisits).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDoctorVisit = z.infer<typeof insertDoctorVisitSchema>;
+export type DoctorVisit = typeof doctorVisits.$inferSelect;
+
 // ========== CHATBOT SERVICE TABLES ==========
 
 // Conversation Logs table
