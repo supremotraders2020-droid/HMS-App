@@ -2078,6 +2078,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // =========================================
+  // DOCTOR OATH CONFIRMATIONS (NMC Physician's Pledge)
+  // =========================================
+  app.get("/api/doctor-oath/:doctorId/:date", async (req, res) => {
+    try {
+      const confirmation = await storage.getDoctorOathConfirmation(
+        req.params.doctorId,
+        req.params.date
+      );
+      res.json({ accepted: !!confirmation, confirmation });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check oath status" });
+    }
+  });
+
+  app.post("/api/doctor-oath", async (req, res) => {
+    try {
+      const { doctorId, date } = req.body;
+      
+      const existing = await storage.getDoctorOathConfirmation(doctorId, date);
+      if (existing) {
+        return res.json({ success: true, confirmation: existing, message: "Already confirmed" });
+      }
+      
+      const confirmation = await storage.createDoctorOathConfirmation({
+        doctorId,
+        date,
+        oathAccepted: true
+      });
+      
+      res.status(201).json({ success: true, confirmation });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to record oath confirmation" });
+    }
+  });
+
+  // =========================================
   // PATIENT PROFILES
   // =========================================
   app.get("/api/patient-profiles/:patientId", async (req, res) => {

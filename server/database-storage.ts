@@ -15,6 +15,7 @@ import {
   prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
   patientConsents, medicines, oxygenCylinders, cylinderMovements, oxygenConsumption, lmoReadings, oxygenAlerts,
   bmwBags, bmwMovements, bmwPickups, bmwDisposals, bmwVendors, bmwStorageRooms, bmwIncidents, bmwReports,
+  doctorOathConfirmations,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -49,7 +50,8 @@ import {
   type BmwStorageRoom, type InsertBmwStorageRoom,
   type BmwIncident, type InsertBmwIncident,
   type BmwReport, type InsertBmwReport,
-  doctorVisits, type DoctorVisit, type InsertDoctorVisit
+  doctorVisits, type DoctorVisit, type InsertDoctorVisit,
+  type DoctorOathConfirmation, type InsertDoctorOathConfirmation
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -2133,6 +2135,21 @@ export class DatabaseStorage implements IStorage {
 
   async createDoctorVisit(visit: InsertDoctorVisit): Promise<DoctorVisit> {
     const result = await db.insert(doctorVisits).values(visit).returning();
+    return result[0];
+  }
+
+  // ========== DOCTOR OATH CONFIRMATION METHODS ==========
+  async getDoctorOathConfirmation(doctorId: string, date: string): Promise<DoctorOathConfirmation | undefined> {
+    const result = await db.select().from(doctorOathConfirmations)
+      .where(and(
+        eq(doctorOathConfirmations.doctorId, doctorId),
+        eq(doctorOathConfirmations.date, date)
+      ));
+    return result[0];
+  }
+
+  async createDoctorOathConfirmation(confirmation: InsertDoctorOathConfirmation): Promise<DoctorOathConfirmation> {
+    const result = await db.insert(doctorOathConfirmations).values(confirmation).returning();
     return result[0];
   }
 }

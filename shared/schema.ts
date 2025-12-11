@@ -1168,3 +1168,19 @@ export const insertBmwReportSchema = createInsertSchema(bmwReports).omit({
 });
 export type InsertBmwReport = z.infer<typeof insertBmwReportSchema>;
 export type BmwReport = typeof bmwReports.$inferSelect;
+
+// Doctor Oath Confirmations Table - Daily NMC Physician's Pledge acceptance
+export const doctorOathConfirmations = pgTable("doctor_oath_confirmations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  doctorId: varchar("doctor_id").notNull(),
+  date: text("date").notNull(), // YYYY-MM-DD format for daily tracking
+  oathAccepted: boolean("oath_accepted").notNull().default(true),
+  acceptedAt: timestamp("accepted_at").defaultNow(),
+});
+
+export const insertDoctorOathConfirmationSchema = createInsertSchema(doctorOathConfirmations).omit({
+  id: true,
+  acceptedAt: true,
+});
+export type InsertDoctorOathConfirmation = z.infer<typeof insertDoctorOathConfirmationSchema>;
+export type DoctorOathConfirmation = typeof doctorOathConfirmations.$inferSelect;
