@@ -212,6 +212,7 @@ export interface IStorage {
   
   // Doctor Profiles
   getDoctorProfile(doctorId: string): Promise<DoctorProfile | undefined>;
+  getAllDoctorProfiles(): Promise<DoctorProfile[]>;
   createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile>;
   updateDoctorProfile(doctorId: string, profile: Partial<InsertDoctorProfile>): Promise<DoctorProfile | undefined>;
   
@@ -2172,6 +2173,10 @@ export class MemStorage implements IStorage {
 
   async getDoctorProfile(doctorId: string): Promise<DoctorProfile | undefined> {
     return Array.from(this.doctorProfilesData.values()).find(p => p.doctorId === doctorId);
+  }
+
+  async getAllDoctorProfiles(): Promise<DoctorProfile[]> {
+    return Array.from(this.doctorProfilesData.values());
   }
 
   async createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile> {

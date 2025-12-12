@@ -1346,6 +1346,10 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async getAllDoctorProfiles(): Promise<DoctorProfile[]> {
+    return await db.select().from(doctorProfiles);
+  }
+
   async createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile> {
     const result = await db.insert(doctorProfiles).values(profile).returning();
     return result[0];

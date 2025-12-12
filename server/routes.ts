@@ -128,11 +128,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all doctors
+  // Get all doctors - merge with doctor_profiles when available
   app.get("/api/doctors", async (_req, res) => {
     try {
       const doctors = await storage.getDoctors();
-      res.json(doctors);
+      const allProfiles = await storage.getAllDoctorProfiles();
+      
+      // Helper to normalize name (remove "Dr." prefix, lowercase, trim)
+      const normalizeName = (name: string) => name.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
+      
+      // Helper to find matching profile for a doctor
+      const findMatchingProfile = (doctorName: string) => {
+        const normalizedDoctorName = normalizeName(doctorName);
+        const doctorFirstName = normalizedDoctorName.split(' ')[0];
+        
+        for (const profile of allProfiles) {
+          const normalizedProfileName = normalizeName(profile.fullName);
+          const profileFirstName = normalizedProfileName.split(' ')[0];
+          
+          // Exact match
+          if (normalizedDoctorName === normalizedProfileName) return profile;
+          // Profile name starts with doctor name (e.g., "ajay" matches "ajay patil")
+          if (normalizedProfileName.startsWith(normalizedDoctorName)) return profile;
+          // Doctor name starts with profile first name
+          if (normalizedDoctorName.startsWith(profileFirstName)) return profile;
+          // First names match exactly
+          if (doctorFirstName === profileFirstName) return profile;
+        }
+        return null;
+      };
+      
+      // Merge doctor data with profile data when available
+      const mergedDoctors = doctors.map(doctor => {
+        const profile = findMatchingProfile(doctor.name);
+        
+        if (profile) {
+          // Extract numeric experience from profile (e.g., "10+ Years" -> 10)
+          const expMatch = profile.experience?.match(/(\d+)/);
+          const profileExp = expMatch ? parseInt(expMatch[1]) : doctor.experience;
+          
+          // Extract numeric fee from profile (e.g., "₹500" -> "500")
+          const feeMatch = profile.consultationFee?.match(/(\d+)/);
+          const profileFee = feeMatch ? feeMatch[1] : null;
+          
+          return {
+            ...doctor,
+            name: profile.fullName || doctor.name,
+            specialty: profile.specialty || doctor.specialty,
+            qualification: profile.qualifications || doctor.qualification,
+            experience: profileExp,
+            consultationFee: profileFee
+          };
+        }
+        return doctor;
+      });
+      
+      res.json(mergedDoctors);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch doctors" });
     }
