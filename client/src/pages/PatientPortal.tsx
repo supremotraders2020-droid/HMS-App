@@ -786,7 +786,7 @@ Description: ${record.description}
                           <Badge variant="outline" className="text-xs">
                             Available
                           </Badge>
-                          <span className="text-sm font-semibold">₹500</span>
+                          <span className="text-sm font-semibold">₹{doctor.consultationFee || '500'}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -1438,7 +1438,7 @@ Description: ${record.description}
                         <Badge variant="outline" className="text-xs">
                           Available
                         </Badge>
-                        <span className="text-sm font-semibold">₹500</span>
+                        <span className="text-sm font-semibold">₹{doctor.consultationFee || '500'}</span>
                       </div>
                       <Button 
                         className="w-full mt-4" 
