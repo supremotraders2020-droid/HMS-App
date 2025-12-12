@@ -71,6 +71,7 @@ export default function BiowastePage() {
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [generatedBarcode, setGeneratedBarcode] = useState<string | null>(null);
   const [reportPreview, setReportPreview] = useState<{ type: string; data: any } | null>(null);
+  const [reportFilter, setReportFilter] = useState<string | null>(null);
 
   const form = useForm<BagFormData>({
     resolver: zodResolver(bagFormSchema),
@@ -355,7 +356,12 @@ NABH & CPCB Compliant BMW Tracking System
         bags: filteredBags
       }
     });
+    setReportFilter(reportType);
   };
+
+  const filteredReports = reportFilter 
+    ? reports.filter(r => r.reportType === reportFilter)
+    : reports;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/40 via-white to-emerald-50/30 dark:from-slate-900 dark:via-slate-900/98 dark:to-green-950/20">
@@ -1093,25 +1099,48 @@ NABH & CPCB Compliant BMW Tracking System
 
             <Card className="glass-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileCheck className="h-5 w-5 text-primary" />
-                  Generated Reports
-                </CardTitle>
-                <CardDescription>
-                  Download and review compliance reports
-                </CardDescription>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileCheck className="h-5 w-5 text-primary" />
+                      Generated Reports
+                      {reportFilter && (
+                        <Badge variant="secondary" className="ml-2">
+                          {reportFilter} Only
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription>
+                      Download and review compliance reports
+                    </CardDescription>
+                  </div>
+                  {reportFilter && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setReportFilter(null)}
+                      data-testid="button-clear-filter"
+                    >
+                      Show All
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
-                {reports.length === 0 ? (
+                {filteredReports.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <FileCheck className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium">No Reports Generated</p>
-                    <p className="text-sm">Generate your first compliance report</p>
+                    <p className="text-lg font-medium">
+                      {reportFilter ? `No ${reportFilter} Reports` : "No Reports Generated"}
+                    </p>
+                    <p className="text-sm">
+                      {reportFilter ? `No ${reportFilter.toLowerCase()} reports have been saved yet` : "Generate your first compliance report"}
+                    </p>
                   </div>
                 ) : (
                   <ScrollArea className="h-[400px]">
                     <div className="space-y-3">
-                      {reports.map((report) => (
+                      {filteredReports.map((report) => (
                         <div 
                           key={report.id}
                           className="flex items-center gap-4 p-4 border rounded-lg hover-elevate"
