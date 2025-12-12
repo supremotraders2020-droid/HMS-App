@@ -2737,7 +2737,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create consumption record
   app.post("/api/oxygen/consumption", async (req, res) => {
     try {
-      const record = await databaseStorage.createOxygenConsumption(req.body);
+      const data = {
+        ...req.body,
+        startTime: req.body.startTime ? new Date(req.body.startTime) : new Date(),
+        endTime: req.body.endTime ? new Date(req.body.endTime) : undefined,
+      };
+      const record = await databaseStorage.createOxygenConsumption(data);
       res.status(201).json(record);
     } catch (error) {
       console.error("Failed to create consumption record:", error);
