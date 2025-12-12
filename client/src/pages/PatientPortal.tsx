@@ -604,25 +604,45 @@ Description: ${record.description}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {patientRecords.length > 0 ? patientRecords.slice(0, 3).map((record) => (
-                    <div key={record.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50" data-testid={`record-item-${record.id}`}>
-                      {getRecordIcon(record.recordType)}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{record.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {record.recordDate ? format(new Date(record.recordDate), 'yyyy-MM-dd') : 'N/A'}
-                        </p>
-                      </div>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => handleViewRecord(record)}
-                        data-testid={`button-view-record-${record.id}`}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )) : (
+                  {(patientPrescriptions.length > 0 || patientRecords.length > 0) ? (
+                    <>
+                      {patientPrescriptions.slice(0, 2).map((prescription) => (
+                        <div key={`rx-${prescription.id}`} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50" data-testid={`prescription-item-${prescription.id}`}>
+                          <div className="h-10 w-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <Pill className="h-5 w-5 text-green-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{prescription.diagnosis}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Prescribed by Dr. {prescription.doctorName} on {prescription.prescriptionDate ? format(new Date(prescription.prescriptionDate), 'yyyy-MM-dd') : 'N/A'}
+                            </p>
+                          </div>
+                          <Badge variant={prescription.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                            {prescription.status}
+                          </Badge>
+                        </div>
+                      ))}
+                      {patientRecords.slice(0, 1).map((record) => (
+                        <div key={record.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50" data-testid={`record-item-${record.id}`}>
+                          {getRecordIcon(record.recordType)}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{record.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {record.recordDate ? format(new Date(record.recordDate), 'yyyy-MM-dd') : 'N/A'}
+                            </p>
+                          </div>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => handleViewRecord(record)}
+                            data-testid={`button-view-record-${record.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
                     <p className="text-muted-foreground text-center py-4">No health records yet</p>
                   )}
                   <Button 
