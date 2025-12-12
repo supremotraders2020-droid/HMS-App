@@ -73,7 +73,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
     // Define all services with their access levels
     // OPD_MANAGER only sees: Dashboard, OPD Service, Patient Service
     const services = [
-      { title: "OPD Service", url: "/opd-service", icon: ClipboardList, roles: ["ADMIN", "OPD_MANAGER", "DOCTOR", "NURSE"] },
+      { title: "OPD Service", url: "/opd-service", icon: ClipboardList, roles: ["ADMIN", "OPD_MANAGER", "DOCTOR"] },
       { title: "Patient Service", url: "/patient-service", icon: Users, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"] },
       { title: "Inventory Service", url: "/inventory-service", icon: Package, roles: ["ADMIN", "NURSE"] },
       { title: "Patient Tracking", url: "/patient-tracking", icon: MapPin, roles: ["ADMIN", "DOCTOR", "NURSE"] },
