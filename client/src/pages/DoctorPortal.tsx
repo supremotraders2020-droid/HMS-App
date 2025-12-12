@@ -356,6 +356,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       apiRequest('PATCH', `/api/doctor-profiles/${doctorId}`, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/doctor-profiles', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/doctors'] });
       toast({ title: "Profile updated successfully" });
     },
     onError: () => toast({ title: "Failed to update profile", variant: "destructive" }),
