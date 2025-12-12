@@ -65,6 +65,18 @@ const bagFormSchema = z.object({
 
 type BagFormData = z.infer<typeof bagFormSchema>;
 
+const pickupFormSchema = z.object({
+  vendorId: z.string().min(1, "Vendor is required"),
+  pickupDate: z.string().min(1, "Pickup date is required"),
+  pickupTime: z.string().min(1, "Pickup time is required"),
+  vehicleNumber: z.string().optional(),
+  driverName: z.string().optional(),
+  driverContact: z.string().optional(),
+  notes: z.string().optional()
+});
+
+type PickupFormData = z.infer<typeof pickupFormSchema>;
+
 export default function BiowastePage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
@@ -72,6 +84,7 @@ export default function BiowastePage() {
   const [generatedBarcode, setGeneratedBarcode] = useState<string | null>(null);
   const [reportPreview, setReportPreview] = useState<{ type: string; data: any } | null>(null);
   const [reportFilter, setReportFilter] = useState<string | null>(null);
+  const [isPickupDialogOpen, setIsPickupDialogOpen] = useState(false);
 
   const form = useForm<BagFormData>({
     resolver: zodResolver(bagFormSchema),
@@ -154,6 +167,77 @@ export default function BiowastePage() {
     createBagMutation.mutate(data);
   };
 
+  const pickupForm = useForm<PickupFormData>({
+    resolver: zodResolver(pickupFormSchema),
+    defaultValues: {
+      vendorId: "",
+      pickupDate: new Date().toISOString().split('T')[0],
+      pickupTime: "10:00",
+      vehicleNumber: "",
+      driverName: "",
+      driverContact: "",
+      notes: ""
+    }
+  });
+
+  const pendingBags = bags.filter(b => b.status === "GENERATED" || b.status === "COLLECTED" || b.status === "STORED");
+  const yellowPending = pendingBags.filter(b => b.category === "YELLOW");
+  const redPending = pendingBags.filter(b => b.category === "RED");
+  const whitePending = pendingBags.filter(b => b.category === "WHITE");
+  const bluePending = pendingBags.filter(b => b.category === "BLUE");
+
+  const createPickupMutation = useMutation({
+    mutationFn: async (data: PickupFormData) => {
+      const selectedVendor = vendors.find(v => v.id === data.vendorId);
+      const totalWeight = pendingBags.reduce((sum, bag) => sum + parseFloat(bag.approxWeight || "0"), 0);
+      
+      const res = await apiRequest("POST", "/api/bmw/pickups", {
+        vendorId: data.vendorId,
+        vendorName: selectedVendor?.name || "Unknown Vendor",
+        pickupDate: data.pickupDate,
+        pickupTime: data.pickupTime,
+        totalBags: pendingBags.length,
+        totalWeight: totalWeight.toFixed(2),
+        yellowBags: yellowPending.length,
+        redBags: redPending.length,
+        whiteBags: whitePending.length,
+        blueBags: bluePending.length,
+        yellowWeight: yellowPending.reduce((sum, b) => sum + parseFloat(b.approxWeight || "0"), 0).toFixed(2),
+        redWeight: redPending.reduce((sum, b) => sum + parseFloat(b.approxWeight || "0"), 0).toFixed(2),
+        whiteWeight: whitePending.reduce((sum, b) => sum + parseFloat(b.approxWeight || "0"), 0).toFixed(2),
+        blueWeight: bluePending.reduce((sum, b) => sum + parseFloat(b.approxWeight || "0"), 0).toFixed(2),
+        vehicleNumber: data.vehicleNumber || null,
+        driverName: data.driverName || null,
+        driverContact: data.driverContact || null,
+        status: "SCHEDULED",
+        notes: data.notes || null
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bmw/pickups'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bmw/bags'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bmw/stats'] });
+      setIsPickupDialogOpen(false);
+      pickupForm.reset();
+      toast({
+        title: "Pickup Scheduled",
+        description: "Vendor pickup has been scheduled successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const onSubmitPickup = (data: PickupFormData) => {
+    createPickupMutation.mutate(data);
+  };
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "YELLOW": return "bg-yellow-500 text-black";
@@ -175,7 +259,6 @@ export default function BiowastePage() {
     }
   };
 
-  const pendingBags = bags.filter(b => b.status !== "DISPOSED");
   const storedBags = bags.filter(b => b.status === "STORED");
   const disposedBags = bags.filter(b => b.status === "DISPOSED");
 
@@ -991,7 +1074,11 @@ NABH & CPCB Compliant BMW Tracking System
                   </CardTitle>
                   <CardDescription>Vendor pickup management</CardDescription>
                 </div>
-                <Button className="gap-2">
+                <Button 
+                  className="gap-2"
+                  onClick={() => setIsPickupDialogOpen(true)}
+                  data-testid="button-schedule-pickup"
+                >
                   <Plus className="h-4 w-4" />
                   Schedule Pickup
                 </Button>
@@ -1289,6 +1376,190 @@ NABH & CPCB Compliant BMW Tracking System
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPickupDialogOpen} onOpenChange={setIsPickupDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5 text-primary" />
+              Schedule Vendor Pickup
+            </DialogTitle>
+            <DialogDescription>
+              Schedule a pickup with an authorized CBWTF vendor for collected waste bags.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...pickupForm}>
+            <form onSubmit={pickupForm.handleSubmit(onSubmitPickup)} className="space-y-4">
+              <FormField
+                control={pickupForm.control}
+                name="vendorId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Select Vendor</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-vendor">
+                          <SelectValue placeholder="Choose a vendor" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {vendors.filter(v => v.isActive).map((vendor) => (
+                          <SelectItem key={vendor.id} value={vendor.id}>
+                            {vendor.name} - {vendor.licenseNumber}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={pickupForm.control}
+                  name="pickupDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pickup Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} data-testid="input-pickup-date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={pickupForm.control}
+                  name="pickupTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pickup Time</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} data-testid="input-pickup-time" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={pickupForm.control}
+                name="vehicleNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vehicle Number (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="MH12AB1234" {...field} data-testid="input-vehicle-number" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={pickupForm.control}
+                  name="driverName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Driver Name (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Driver name" {...field} data-testid="input-driver-name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={pickupForm.control}
+                  name="driverContact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Driver Contact (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Phone number" {...field} data-testid="input-driver-contact" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={pickupForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Any special instructions..." 
+                        {...field}
+                        data-testid="input-pickup-notes"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm font-medium mb-2">Pending Waste Summary</p>
+                <div className="grid grid-cols-4 gap-2 text-xs">
+                  <div className="text-center">
+                    <div className="w-4 h-4 rounded bg-yellow-500 mx-auto mb-1" />
+                    <p className="font-medium">{yellowPending.length}</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-4 h-4 rounded bg-red-500 mx-auto mb-1" />
+                    <p className="font-medium">{redPending.length}</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-4 h-4 rounded bg-white border mx-auto mb-1" />
+                    <p className="font-medium">{whitePending.length}</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-4 h-4 rounded bg-blue-500 mx-auto mb-1" />
+                    <p className="font-medium">{bluePending.length}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Total: {pendingBags.length} bags ({pendingBags.reduce((sum, b) => sum + parseFloat(b.approxWeight || "0"), 0).toFixed(2)} kg)
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsPickupDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createPickupMutation.isPending || pendingBags.length === 0}
+                  data-testid="button-confirm-pickup"
+                >
+                  {createPickupMutation.isPending ? (
+                    <>Scheduling...</>
+                  ) : (
+                    <>
+                      <Truck className="h-4 w-4 mr-2" />
+                      Schedule Pickup
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
