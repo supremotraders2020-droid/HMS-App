@@ -545,12 +545,17 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
                         )}
                       </p>
                     </div>
-                    <Badge 
-                      variant={getActivityBadgeVariant(activity.activityType)}
-                      className="text-xs shrink-0"
-                    >
-                      {activity.activityType}
-                    </Badge>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedActivity(activity)}
+                        className="text-xs"
+                        data-testid={`button-all-activity-info-${index}`}
+                      >
+                        info
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
