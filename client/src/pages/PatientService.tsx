@@ -535,7 +535,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full ${currentRole === "NURSE" ? "grid-cols-2" : "grid-cols-3"} lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6`}>
+          <TabsList className={`grid w-full ${currentRole === "NURSE" || currentRole === "OPD_MANAGER" ? "grid-cols-2" : "grid-cols-3"} lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6`}>
             <TabsTrigger 
               value="patients" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
@@ -552,7 +552,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               <FileText className="h-4 w-4" />
               Medical Records
             </TabsTrigger>
-            {currentRole !== "NURSE" && (
+            {currentRole !== "NURSE" && currentRole !== "OPD_MANAGER" && (
               <TabsTrigger 
                 value="consents" 
                 className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
