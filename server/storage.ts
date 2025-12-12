@@ -393,20 +393,8 @@ export class MemStorage implements IStorage {
   }
 
   private initializeDefaultData() {    
-    const defaultDoctors = [
-      { name: "Dr. Priya Sharma", specialty: "Cardiology", qualification: "MD Cardiology, DM", experience: 15, rating: "4.9", availableDays: "Mon-Fri", avatarInitials: "PS" },
-      { name: "Dr. Rajesh Kumar", specialty: "Orthopedics", qualification: "MS Orthopedics", experience: 12, rating: "4.8", availableDays: "Mon-Sat", avatarInitials: "RK" },
-      { name: "Dr. Sneha Patel", specialty: "Dermatology", qualification: "MD Dermatology", experience: 10, rating: "4.7", availableDays: "Tue-Sat", avatarInitials: "SP" },
-      { name: "Dr. Amit Singh", specialty: "General Medicine", qualification: "MBBS, MD", experience: 8, rating: "4.6", availableDays: "Mon-Sat", avatarInitials: "AS" },
-      { name: "Dr. Kavita Joshi", specialty: "Pediatrics", qualification: "MD Pediatrics", experience: 14, rating: "4.9", availableDays: "Mon-Fri", avatarInitials: "KJ" },
-      { name: "Dr. Arjun Mehta", specialty: "Neurology", qualification: "DM Neurology", experience: 18, rating: "4.8", availableDays: "Mon-Sat", avatarInitials: "AM" },
-    ];
-
-    defaultDoctors.forEach(doc => {
-      const id = randomUUID();
-      const doctor: Doctor = { ...doc, id };
-      this.doctors.set(id, doctor);
-    });
+    // Doctors are now added only by admin through User Management
+    // No mock doctor data is initialized - real doctors must be added by admin
 
     const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
     const today = new Date();

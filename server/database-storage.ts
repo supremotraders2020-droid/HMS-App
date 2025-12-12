@@ -1022,25 +1022,8 @@ export class DatabaseStorage implements IStorage {
       await db.insert(users).values({ ...user, password: hashedPassword });
     }
 
-    // Seed doctors for OPD
-    const demoDoctors: InsertDoctor[] = [
-      { name: "Dr. Anil Kulkarni", specialty: "General Medicine", qualification: "MBBS, MD", experience: 15, rating: "4.8", availableDays: "Mon, Wed, Fri", avatarInitials: "AK" },
-      { name: "Dr. Snehal Patil", specialty: "Pediatrics", qualification: "MBBS, DCH", experience: 12, rating: "4.9", availableDays: "Tue, Thu, Sat", avatarInitials: "SP" },
-      { name: "Dr. Rahul Deshmukh", specialty: "Cardiology", qualification: "MBBS, DM Cardiology", experience: 18, rating: "4.7", availableDays: "Mon, Tue, Wed", avatarInitials: "RD" },
-      { name: "Dr. Kavita Joshi", specialty: "Gynecology", qualification: "MBBS, MS OBG", experience: 14, rating: "4.8", availableDays: "Wed, Thu, Fri", avatarInitials: "KJ" },
-      { name: "Dr. Suresh Nair", specialty: "Orthopedics", qualification: "MBBS, MS Ortho", experience: 20, rating: "4.6", availableDays: "Mon, Thu, Sat", avatarInitials: "SN" },
-      { name: "Dr. Priya Sharma", specialty: "Dermatology", qualification: "MBBS, MD Dermatology", experience: 10, rating: "4.9", availableDays: "Tue, Fri, Sat", avatarInitials: "PS" },
-      { name: "Dr. Rajesh Kumar", specialty: "ENT", qualification: "MBBS, MS ENT", experience: 16, rating: "4.5", availableDays: "Mon, Wed, Sat", avatarInitials: "RK" },
-      { name: "Dr. Amit Singh", specialty: "Neurology", qualification: "MBBS, DM Neurology", experience: 22, rating: "4.8", availableDays: "Tue, Thu, Fri", avatarInitials: "AS" },
-      { name: "Dr. Meena Gupta", specialty: "Ophthalmology", qualification: "MBBS, MS Ophthalmology", experience: 13, rating: "4.7", availableDays: "Mon, Wed, Thu", avatarInitials: "MG" },
-      { name: "Dr. Vikram Patel", specialty: "Psychiatry", qualification: "MBBS, MD Psychiatry", experience: 11, rating: "4.6", availableDays: "Tue, Wed, Sat", avatarInitials: "VP" },
-      { name: "Dr. Sunita Reddy", specialty: "Radiology", qualification: "MBBS, MD Radiology", experience: 17, rating: "4.8", availableDays: "Mon, Thu, Fri", avatarInitials: "SR" },
-      { name: "Dr. Ajay Thakur", specialty: "Anesthesiology", qualification: "MBBS, MD Anesthesia", experience: 19, rating: "4.7", availableDays: "All Days", avatarInitials: "AT" },
-    ];
-
-    for (const doctor of demoDoctors) {
-      await db.insert(doctors).values(doctor);
-    }
+    // Doctors are now added only by admin through User Management
+    // No mock doctor data is seeded - real doctors must be added by admin
 
     // Seed sample service patients
     const samplePatients: InsertServicePatient[] = [
