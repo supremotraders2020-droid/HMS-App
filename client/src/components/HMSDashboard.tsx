@@ -39,6 +39,7 @@ interface HMSDashboardProps {
 
 export default function HMSDashboard({ currentRole, userName, hospitalName, userId }: HMSDashboardProps) {
   const [showAllActivities, setShowAllActivities] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<ActivityLog | null>(null);
 
   // Initialize WebSocket connection for real-time updates
   useNotifications({ 
@@ -249,12 +250,15 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
           by <span className="font-medium text-foreground">{activity.performedBy}</span> • {formatTimeAgo(activity.createdAt)}
         </p>
       </div>
-      <Badge 
-        variant={getActivityBadgeVariant(activity.activityType)}
+      <Button 
+        variant="outline"
+        size="sm"
+        onClick={() => setSelectedActivity(activity)}
         className="text-xs"
+        data-testid={`button-activity-info-${index}`}
       >
-        {activity.activityType}
-      </Badge>
+        info
+      </Button>
     </div>
   );
 
@@ -557,6 +561,87 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
               </div>
             )}
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Activity Details Dialog */}
+      <Dialog open={!!selectedActivity} onOpenChange={(open) => !open && setSelectedActivity(null)}>
+        <DialogContent className="max-w-lg" data-testid="dialog-activity-details">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              Activity Details
+            </DialogTitle>
+            <DialogDescription>
+              Full information about this activity
+            </DialogDescription>
+          </DialogHeader>
+          {selectedActivity && (
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className={`w-4 h-4 rounded-full ${getActivityIndicatorColor(selectedActivity.activityType)} mt-1 shrink-0`} />
+                <div className="flex-1">
+                  <h4 className="font-semibold text-foreground">{selectedActivity.action}</h4>
+                  <Badge 
+                    variant={getActivityBadgeVariant(selectedActivity.activityType)}
+                    className="text-xs mt-2"
+                  >
+                    {selectedActivity.activityType}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4 space-y-3">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Performed By</p>
+                    <p className="font-medium text-foreground">{selectedActivity.performedBy}</p>
+                  </div>
+                  {selectedActivity.performedByRole && (
+                    <div>
+                      <p className="text-muted-foreground">Role</p>
+                      <p className="font-medium text-foreground">{selectedActivity.performedByRole}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-muted-foreground">Time</p>
+                    <p className="font-medium text-foreground">{formatTimeAgo(selectedActivity.createdAt)}</p>
+                  </div>
+                  {selectedActivity.entityType && (
+                    <div>
+                      <p className="text-muted-foreground">Entity Type</p>
+                      <p className="font-medium text-foreground">{selectedActivity.entityType}</p>
+                    </div>
+                  )}
+                  {selectedActivity.entityId && (
+                    <div>
+                      <p className="text-muted-foreground">Entity ID</p>
+                      <p className="font-medium text-foreground text-xs break-all">{selectedActivity.entityId}</p>
+                    </div>
+                  )}
+                </div>
+                
+                {selectedActivity.details && (
+                  <div className="mt-4">
+                    <p className="text-muted-foreground text-sm mb-2">Additional Details</p>
+                    <div className="bg-muted/50 rounded-md p-3 text-sm">
+                      <pre className="whitespace-pre-wrap text-foreground font-mono text-xs">
+                        {typeof selectedActivity.details === 'object' 
+                          ? JSON.stringify(selectedActivity.details, null, 2)
+                          : selectedActivity.details}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end pt-2">
+                <Button variant="outline" onClick={() => setSelectedActivity(null)} data-testid="button-close-activity-details">
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
