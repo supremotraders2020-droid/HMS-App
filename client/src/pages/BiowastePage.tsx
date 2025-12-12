@@ -217,8 +217,10 @@ export default function BiowastePage() {
           endDate = startDate;
       }
 
+      const reportPeriod = reportType === "DAILY" ? startDate : `${startDate} to ${endDate}`;
       const res = await apiRequest("POST", "/api/bmw/reports", {
         reportType,
+        reportPeriod,
         startDate,
         endDate,
         generatedBy: "Admin"
