@@ -60,11 +60,25 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<UserRole | "ALL">("ALL");
   
+  const DEPARTMENTS = [
+    { value: "cardiology", label: "Cardiology" },
+    { value: "neurology", label: "Neurology" },
+    { value: "orthopedics", label: "Orthopedics" },
+    { value: "pediatrics", label: "Pediatrics" },
+    { value: "dermatology", label: "Dermatology" },
+    { value: "general", label: "General Medicine" },
+    { value: "emergency", label: "Emergency" },
+    { value: "icu", label: "ICU" },
+    { value: "surgery", label: "Surgery" },
+    { value: "obstetrics", label: "Obstetrics & Gynecology" },
+  ];
+
   const [newStaff, setNewStaff] = useState({
     name: "",
     email: "",
     phone: "",
     role: "" as UserRole,
+    department: "",
     username: "",
     password: ""
   });
@@ -92,6 +106,7 @@ export default function UserManagement() {
       phone: string;
       username: string;
       password: string;
+      department: string;
     }) => {
       const response = await apiRequest("POST", "/api/team-members", staffData);
       return response.json();
@@ -103,6 +118,7 @@ export default function UserManagement() {
         email: "",
         phone: "",
         role: "" as UserRole,
+        department: "",
         username: "",
         password: ""
       });
@@ -174,6 +190,16 @@ export default function UserManagement() {
       return;
     }
 
+    // Require department for Doctor and Nurse roles
+    if ((newStaff.role === "DOCTOR" || newStaff.role === "NURSE") && !newStaff.department) {
+      toast({
+        title: "Error",
+        description: "Please select a department for this role",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (newStaff.password.length < 6) {
       toast({
         title: "Error",
@@ -189,7 +215,8 @@ export default function UserManagement() {
       email: newStaff.email,
       phone: newStaff.phone,
       username: newStaff.username,
-      password: newStaff.password
+      password: newStaff.password,
+      department: newStaff.department || "general"
     });
   };
 
@@ -345,6 +372,23 @@ export default function UserManagement() {
                   </Select>
                 </div>
               </div>
+
+              {/* Department dropdown - shown for Doctor and Nurse roles */}
+              {(newStaff.role === "DOCTOR" || newStaff.role === "NURSE") && (
+                <div>
+                  <Label>Department *</Label>
+                  <Select value={newStaff.department} onValueChange={(value) => setNewStaff({...newStaff, department: value})}>
+                    <SelectTrigger data-testid="select-staff-department">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEPARTMENTS.map((dept) => (
+                        <SelectItem key={dept.value} value={dept.value}>{dept.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
