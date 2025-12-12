@@ -125,7 +125,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   });
   
   // Fetch all doctors to find matching doctor ID for notifications
-  const { data: allDoctors = [] } = useQuery<{ id: string; name: string }[]>({
+  const { data: allDoctors = [] } = useQuery<{ id: string; name: string; specialty: string }[]>({
     queryKey: ['/api/doctors'],
   });
   
@@ -170,13 +170,13 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [calendarSlotSheetOpen, setCalendarSlotSheetOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({
     fullName: `Dr. ${doctorName}`,
-    specialty: "Cardiology",
+    specialty: "",
     email: `${doctorName.toLowerCase().replace(' ', '.')}@gravityhospital.com`,
     phone: "+91 98765 00000",
-    qualifications: "MBBS, MD (Cardiology), DM",
-    experience: "15+ Years",
+    qualifications: "MBBS, MD",
+    experience: "5+ Years",
     bio: "",
-    department: "Cardiology Department",
+    department: "",
     languages: "English, Hindi, Marathi",
     consultationFee: "₹500"
   });
@@ -213,21 +213,28 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   // Sync profile form with API data when it loads
   useEffect(() => {
+    const specialty = matchedDoctor?.specialty || "Specialist";
     if (profileData) {
       setProfileForm({
         fullName: profileData.fullName || `Dr. ${doctorName}`,
-        specialty: profileData.specialty || "Cardiology",
+        specialty: profileData.specialty || specialty,
         email: profileData.email || `${doctorName.toLowerCase().replace(' ', '.')}@gravityhospital.com`,
         phone: profileData.phone || "+91 98765 00000",
-        qualifications: profileData.qualifications || "MBBS, MD (Cardiology), DM",
-        experience: profileData.experience || "15+ Years",
+        qualifications: profileData.qualifications || "MBBS, MD",
+        experience: profileData.experience || "5+ Years",
         bio: profileData.bio || "",
-        department: profileData.department || "Cardiology Department",
+        department: profileData.department || `${specialty} Department`,
         languages: profileData.languages || "English, Hindi, Marathi",
         consultationFee: profileData.consultationFee || "₹500"
       });
+    } else if (matchedDoctor) {
+      setProfileForm(prev => ({
+        ...prev,
+        specialty: specialty,
+        department: `${specialty} Department`
+      }));
     }
-  }, [profileData, doctorName]);
+  }, [profileData, doctorName, matchedDoctor]);
 
   // Mutations for CRUD operations
   const createPrescriptionMutation = useMutation({
@@ -2222,7 +2229,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">Dr. {doctorName}</p>
-                  <p className="text-xs text-muted-foreground">Cardiologist</p>
+                  <p className="text-xs text-muted-foreground">{matchedDoctor?.specialty || 'Specialist'}</p>
                 </div>
               </div>
             </div>
