@@ -679,6 +679,7 @@ export const prescriptions = pgTable("prescriptions", {
   diagnosis: text("diagnosis").notNull(),
   medicines: text("medicines").array().notNull(), // Array of medicine strings like "Amlodipine 5mg - Once daily"
   instructions: text("instructions"),
+  patientRecordId: varchar("patient_record_id"), // Link to medical record uploaded by admin
   prescriptionDate: text("prescription_date").notNull(),
   followUpDate: text("follow_up_date"),
   status: text("status").notNull().default("active"), // 'active', 'completed', 'cancelled'
