@@ -997,12 +997,8 @@ export class DatabaseStorage implements IStorage {
       { username: "doctor3", password: "Doctor@123", role: "DOCTOR", name: "Dr. Rahul Deshmukh", email: "rahul.deshmukh@gravityhospital.com" },
       { username: "doctor4", password: "Doctor@123", role: "DOCTOR", name: "Dr. Kavita Joshi", email: "kavita.joshi@gravityhospital.com" },
       { username: "doctor5", password: "Doctor@123", role: "DOCTOR", name: "Dr. Suresh Nair", email: "suresh.nair@gravityhospital.com" },
-      // Nurses
-      { username: "nurse1", password: "Nurse@123", role: "NURSE", name: "Anita Deshpande", email: "anita.deshpande@gravityhospital.com" },
-      { username: "nurse2", password: "Nurse@123", role: "NURSE", name: "Meera Kulkarni", email: "meera.kulkarni@gravityhospital.com" },
-      { username: "nurse3", password: "Nurse@123", role: "NURSE", name: "Ravi Kumar", email: "ravi.kumar@gravityhospital.com" },
-      { username: "nurse4", password: "Nurse@123", role: "NURSE", name: "Priya Sharma", email: "priya.sharma@gravityhospital.com" },
-      { username: "nurse5", password: "Nurse@123", role: "NURSE", name: "Deepa Nair", email: "deepa.nair@gravityhospital.com" },
+      // Nurses are now added only by admin through User Management
+      // No mock nurse data is seeded - real nurses must be added by admin
       // OPD Managers
       { username: "opd1", password: "OPD@123", role: "OPD_MANAGER", name: "Sachin Tendulkar", email: "sachin.t@gravityhospital.com" },
       { username: "opd2", password: "OPD@123", role: "OPD_MANAGER", name: "Neeta Ambani", email: "neeta.a@gravityhospital.com" },

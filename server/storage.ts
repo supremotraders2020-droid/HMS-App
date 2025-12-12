@@ -359,12 +359,8 @@ export class MemStorage implements IStorage {
       { username: "doctor3", password: "Doctor@123", role: "DOCTOR", name: "Dr. Sneha Patel", email: "dr.patel@gravity.hospital" },
       { username: "doctor4", password: "Doctor@123", role: "DOCTOR", name: "Dr. Amit Singh", email: "dr.singh@gravity.hospital" },
       { username: "doctor5", password: "Doctor@123", role: "DOCTOR", name: "Dr. Kavita Joshi", email: "dr.joshi@gravity.hospital" },
-      // Nurses
-      { username: "nurse1", password: "Nurse@123", role: "NURSE", name: "Anjali Patel", email: "anjali.patel@gravity.hospital" },
-      { username: "nurse2", password: "Nurse@123", role: "NURSE", name: "Rekha Sharma", email: "rekha.sharma@gravity.hospital" },
-      { username: "nurse3", password: "Nurse@123", role: "NURSE", name: "Meena Gupta", email: "meena.gupta@gravity.hospital" },
-      { username: "nurse4", password: "Nurse@123", role: "NURSE", name: "Suman Reddy", email: "suman.reddy@gravity.hospital" },
-      { username: "nurse5", password: "Nurse@123", role: "NURSE", name: "Kavitha Nair", email: "kavitha.nair@gravity.hospital" },
+      // Nurses are now added only by admin through User Management
+      // No mock nurse data is seeded - real nurses must be added by admin
       // OPD Managers
       { username: "opd1", password: "OPD@123", role: "OPD_MANAGER", name: "Rahul Mehta", email: "rahul.mehta@gravity.hospital" },
       { username: "opd2", password: "OPD@123", role: "OPD_MANAGER", name: "Neha Kulkarni", email: "neha.kulkarni@gravity.hospital" },
