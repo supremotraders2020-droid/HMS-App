@@ -50,7 +50,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/schema";
-import type { ServicePatient, MedicalRecord, PatientConsent } from "@shared/schema";
+import type { ServicePatient, MedicalRecord, PatientConsent, Doctor } from "@shared/schema";
 import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Printer, FileCheck } from "lucide-react";
@@ -120,6 +120,10 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
   const { data: patientConsents = [], isLoading: consentsLoading } = useQuery<PatientConsent[]>({
     queryKey: ["/api/patient-consents"],
+  });
+
+  const { data: doctors = [] } = useQuery<Doctor[]>({
+    queryKey: ["/api/doctors"],
   });
 
   const patientForm = useForm({
@@ -425,7 +429,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     patient.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const physicians = ["Dr. Anil Kulkarni", "Dr. Snehal Patil", "Dr. Vikram Deshpande", "Dr. Priyanka Joshi", "Dr. Rajesh Bhosale", "Dr. Meena Sharma"];
+  const physicians = doctors.map(d => d.name.startsWith("Dr.") ? d.name : `Dr. ${d.name}`);
   const recordTypes = [
     { value: "diagnosis", label: "Diagnosis", icon: Stethoscope },
     { value: "treatment", label: "Treatment", icon: Activity },

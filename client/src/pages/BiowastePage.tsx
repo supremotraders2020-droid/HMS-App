@@ -187,6 +187,106 @@ export default function BiowastePage() {
     return { hours, isOverdue: false };
   };
 
+  const generateReportMutation = useMutation({
+    mutationFn: async (reportType: string) => {
+      const now = new Date();
+      let startDate: string, endDate: string;
+      
+      switch (reportType) {
+        case "DAILY":
+          startDate = now.toISOString().split('T')[0];
+          endDate = startDate;
+          break;
+        case "MONTHLY":
+          startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+          endDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+          break;
+        case "MPCB":
+          const startOfQuarter = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+          const endOfQuarter = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3 + 3, 0);
+          startDate = startOfQuarter.toISOString().split('T')[0];
+          endDate = endOfQuarter.toISOString().split('T')[0];
+          break;
+        case "ANNUAL":
+          startDate = `${now.getFullYear()}-01-01`;
+          endDate = `${now.getFullYear()}-12-31`;
+          break;
+        default:
+          startDate = now.toISOString().split('T')[0];
+          endDate = startDate;
+      }
+
+      const res = await apiRequest("POST", "/api/bmw/reports", {
+        reportType,
+        startDate,
+        endDate,
+        generatedBy: "Admin"
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bmw/reports'] });
+      toast({
+        title: "Report Generated",
+        description: `${data.reportType} report generated successfully`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const downloadReport = (report: BmwReport) => {
+    const reportContent = `
+BIOMEDICAL WASTE MANAGEMENT REPORT
+===================================
+Report Type: ${report.reportType}
+Period: ${report.startDate} to ${report.endDate}
+Generated: ${new Date().toLocaleString()}
+
+SUMMARY
+-------
+Total Bags Generated: ${report.totalBagsGenerated}
+Total Weight: ${report.totalWeightKg} kg
+
+CATEGORY BREAKDOWN
+------------------
+Yellow (Infectious): ${report.yellowBags || 0} bags
+Red (Contaminated): ${report.redBags || 0} bags
+White (Sharps): ${report.whiteBags || 0} bags
+Blue (Glassware): ${report.blueBags || 0} bags
+
+COMPLIANCE STATUS
+-----------------
+This report is generated in compliance with CPCB and NABH guidelines.
+All biomedical waste has been segregated, stored, and disposed as per regulations.
+
+---
+Gravity Hospital
+NABH & CPCB Compliant BMW Tracking System
+    `.trim();
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `BMW_${report.reportType}_Report_${report.startDate}_to_${report.endDate}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Report Downloaded",
+      description: `${report.reportType} report downloaded successfully`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/40 via-white to-emerald-50/30 dark:from-slate-900 dark:via-slate-900/98 dark:to-green-950/20">
       <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
@@ -879,22 +979,46 @@ export default function BiowastePage() {
 
           <TabsContent value="reports" className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Button variant="outline" className="h-auto py-6 flex-col gap-2">
+              <Button 
+                variant="outline" 
+                className="h-auto py-6 flex-col gap-2"
+                onClick={() => generateReportMutation.mutate("DAILY")}
+                disabled={generateReportMutation.isPending}
+                data-testid="button-daily-report"
+              >
                 <Calendar className="h-6 w-6 text-blue-500" />
                 <span className="font-medium">Daily Report</span>
                 <span className="text-xs text-muted-foreground">Today's summary</span>
               </Button>
-              <Button variant="outline" className="h-auto py-6 flex-col gap-2">
+              <Button 
+                variant="outline" 
+                className="h-auto py-6 flex-col gap-2"
+                onClick={() => generateReportMutation.mutate("MONTHLY")}
+                disabled={generateReportMutation.isPending}
+                data-testid="button-monthly-report"
+              >
                 <BarChart3 className="h-6 w-6 text-green-500" />
                 <span className="font-medium">Monthly Report</span>
                 <span className="text-xs text-muted-foreground">This month</span>
               </Button>
-              <Button variant="outline" className="h-auto py-6 flex-col gap-2">
+              <Button 
+                variant="outline" 
+                className="h-auto py-6 flex-col gap-2"
+                onClick={() => generateReportMutation.mutate("MPCB")}
+                disabled={generateReportMutation.isPending}
+                data-testid="button-mpcb-report"
+              >
                 <FileCheck className="h-6 w-6 text-purple-500" />
                 <span className="font-medium">MPCB Report</span>
                 <span className="text-xs text-muted-foreground">Compliance format</span>
               </Button>
-              <Button variant="outline" className="h-auto py-6 flex-col gap-2">
+              <Button 
+                variant="outline" 
+                className="h-auto py-6 flex-col gap-2"
+                onClick={() => generateReportMutation.mutate("ANNUAL")}
+                disabled={generateReportMutation.isPending}
+                data-testid="button-annual-report"
+              >
                 <Download className="h-6 w-6 text-amber-500" />
                 <span className="font-medium">Annual Report</span>
                 <span className="text-xs text-muted-foreground">Yearly summary</span>
@@ -939,7 +1063,12 @@ export default function BiowastePage() {
                             <p className="text-sm font-medium">{report.totalBagsGenerated} bags</p>
                             <p className="text-xs text-muted-foreground">{report.totalWeightKg} kg</p>
                           </div>
-                          <Button variant="ghost" size="icon">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => downloadReport(report)}
+                            data-testid={`button-download-report-${report.id}`}
+                          >
                             <Download className="h-4 w-4" />
                           </Button>
                         </div>

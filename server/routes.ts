@@ -954,6 +954,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: parsed.error.errors });
       }
       const record = await storage.createMedicalRecord(parsed.data);
+      
+      // Send notification to the patient (try to find user by email)
+      try {
+        const patient = await storage.getServicePatientById(parsed.data.patientId);
+        if (patient && patient.email) {
+          // Try to find the user by email to send notification
+          const user = await databaseStorage.getUserByEmail(patient.email);
+          if (user) {
+            await storage.createUserNotification({
+              userId: user.username,
+              userRole: "PATIENT",
+              title: "New Medical Record Added",
+              message: `A new ${parsed.data.recordType} record "${parsed.data.title}" has been added to your medical history by ${parsed.data.physician}.`,
+              type: "info",
+              relatedEntityType: "medical_record",
+              relatedEntityId: record.id
+            });
+          }
+        }
+      } catch (notificationError) {
+        console.error("Failed to send notification:", notificationError);
+      }
+      
       res.status(201).json(record);
     } catch (error) {
       res.status(500).json({ error: "Failed to create medical record" });
