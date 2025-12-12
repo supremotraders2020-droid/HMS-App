@@ -70,6 +70,7 @@ export default function BiowastePage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [generatedBarcode, setGeneratedBarcode] = useState<string | null>(null);
+  const [reportPreview, setReportPreview] = useState<{ type: string; data: any } | null>(null);
 
   const form = useForm<BagFormData>({
     resolver: zodResolver(bagFormSchema),
@@ -286,6 +287,73 @@ NABH & CPCB Compliant BMW Tracking System
     toast({
       title: "Report Downloaded",
       description: `${report.reportType} report downloaded successfully`,
+    });
+  };
+
+  const showReportPreview = (reportType: string) => {
+    const now = new Date();
+    let startDate: string, endDate: string, periodLabel: string;
+    
+    switch (reportType) {
+      case "DAILY":
+        startDate = now.toISOString().split('T')[0];
+        endDate = startDate;
+        periodLabel = `Today (${startDate})`;
+        break;
+      case "MONTHLY":
+        startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        endDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+        periodLabel = `${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`;
+        break;
+      case "MPCB":
+        const quarterNames = ["Q1 (Jan-Mar)", "Q2 (Apr-Jun)", "Q3 (Jul-Sep)", "Q4 (Oct-Dec)"];
+        const quarter = Math.floor(now.getMonth() / 3);
+        periodLabel = `${quarterNames[quarter]} ${now.getFullYear()}`;
+        startDate = `${now.getFullYear()}-${String(quarter * 3 + 1).padStart(2, '0')}-01`;
+        endDate = new Date(now.getFullYear(), quarter * 3 + 3, 0).toISOString().split('T')[0];
+        break;
+      case "ANNUAL":
+        startDate = `${now.getFullYear()}-01-01`;
+        endDate = `${now.getFullYear()}-12-31`;
+        periodLabel = `Year ${now.getFullYear()}`;
+        break;
+      default:
+        startDate = now.toISOString().split('T')[0];
+        endDate = startDate;
+        periodLabel = startDate;
+    }
+
+    // Calculate stats from bags data
+    const filteredBags = bags.filter(bag => {
+      const bagDate = bag.createdAt ? new Date(bag.createdAt).toISOString().split('T')[0] : '';
+      return bagDate >= startDate && bagDate <= endDate;
+    });
+
+    const yellowBags = filteredBags.filter(b => b.category === "YELLOW").length;
+    const redBags = filteredBags.filter(b => b.category === "RED").length;
+    const whiteBags = filteredBags.filter(b => b.category === "WHITE").length;
+    const blueBags = filteredBags.filter(b => b.category === "BLUE").length;
+    const totalWeight = filteredBags.reduce((sum, b) => sum + parseFloat(b.approxWeight || "0"), 0);
+    const disposedBags = filteredBags.filter(b => b.status === "DISPOSED").length;
+    const pendingBags = filteredBags.filter(b => b.status !== "DISPOSED").length;
+
+    setReportPreview({
+      type: reportType,
+      data: {
+        periodLabel,
+        startDate,
+        endDate,
+        totalBags: filteredBags.length,
+        yellowBags,
+        redBags,
+        whiteBags,
+        blueBags,
+        totalWeight: totalWeight.toFixed(2),
+        disposedBags,
+        pendingBags,
+        bags: filteredBags
+      }
     });
   };
 
@@ -984,8 +1052,7 @@ NABH & CPCB Compliant BMW Tracking System
               <Button 
                 variant="outline" 
                 className="h-auto py-6 flex-col gap-2"
-                onClick={() => generateReportMutation.mutate("DAILY")}
-                disabled={generateReportMutation.isPending}
+                onClick={() => showReportPreview("DAILY")}
                 data-testid="button-daily-report"
               >
                 <Calendar className="h-6 w-6 text-blue-500" />
@@ -995,8 +1062,7 @@ NABH & CPCB Compliant BMW Tracking System
               <Button 
                 variant="outline" 
                 className="h-auto py-6 flex-col gap-2"
-                onClick={() => generateReportMutation.mutate("MONTHLY")}
-                disabled={generateReportMutation.isPending}
+                onClick={() => showReportPreview("MONTHLY")}
                 data-testid="button-monthly-report"
               >
                 <BarChart3 className="h-6 w-6 text-green-500" />
@@ -1006,8 +1072,7 @@ NABH & CPCB Compliant BMW Tracking System
               <Button 
                 variant="outline" 
                 className="h-auto py-6 flex-col gap-2"
-                onClick={() => generateReportMutation.mutate("MPCB")}
-                disabled={generateReportMutation.isPending}
+                onClick={() => showReportPreview("MPCB")}
                 data-testid="button-mpcb-report"
               >
                 <FileCheck className="h-6 w-6 text-purple-500" />
@@ -1017,8 +1082,7 @@ NABH & CPCB Compliant BMW Tracking System
               <Button 
                 variant="outline" 
                 className="h-auto py-6 flex-col gap-2"
-                onClick={() => generateReportMutation.mutate("ANNUAL")}
-                disabled={generateReportMutation.isPending}
+                onClick={() => showReportPreview("ANNUAL")}
                 data-testid="button-annual-report"
               >
                 <Download className="h-6 w-6 text-amber-500" />
@@ -1083,6 +1147,121 @@ NABH & CPCB Compliant BMW Tracking System
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Report Preview Dialog */}
+      <Dialog open={!!reportPreview} onOpenChange={(open) => !open && setReportPreview(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileCheck className="h-5 w-5 text-primary" />
+              {reportPreview?.type} Report - {reportPreview?.data?.periodLabel}
+            </DialogTitle>
+            <DialogDescription>
+              Biomedical Waste Summary for {reportPreview?.data?.startDate} to {reportPreview?.data?.endDate}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {reportPreview && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-2xl font-bold text-foreground">{reportPreview.data.totalBags}</p>
+                    <p className="text-xs text-muted-foreground">Total Bags</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-2xl font-bold text-foreground">{reportPreview.data.totalWeight} kg</p>
+                    <p className="text-xs text-muted-foreground">Total Weight</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-2xl font-bold text-green-600">{reportPreview.data.disposedBags}</p>
+                    <p className="text-xs text-muted-foreground">Disposed</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <p className="text-2xl font-bold text-amber-600">{reportPreview.data.pendingBags}</p>
+                    <p className="text-xs text-muted-foreground">Pending</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-3 text-foreground">Category Breakdown</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                    <div className="w-4 h-4 rounded bg-yellow-500" />
+                    <div>
+                      <p className="font-medium text-foreground">{reportPreview.data.yellowBags}</p>
+                      <p className="text-xs text-muted-foreground">Yellow</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                    <div className="w-4 h-4 rounded bg-red-500" />
+                    <div>
+                      <p className="font-medium text-foreground">{reportPreview.data.redBags}</p>
+                      <p className="text-xs text-muted-foreground">Red</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-gray-500/10 border border-gray-500/30">
+                    <div className="w-4 h-4 rounded bg-white border border-gray-400" />
+                    <div>
+                      <p className="font-medium text-foreground">{reportPreview.data.whiteBags}</p>
+                      <p className="text-xs text-muted-foreground">White</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                    <div className="w-4 h-4 rounded bg-blue-500" />
+                    <div>
+                      <p className="font-medium text-foreground">{reportPreview.data.blueBags}</p>
+                      <p className="text-xs text-muted-foreground">Blue</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {reportPreview.data.bags.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-3 text-foreground">Waste Bags ({reportPreview.data.bags.length})</h4>
+                  <ScrollArea className="h-[200px]">
+                    <div className="space-y-2">
+                      {reportPreview.data.bags.map((bag: BmwBag) => (
+                        <div key={bag.id} className="flex items-center gap-3 p-2 border rounded-lg">
+                          <Badge className={getCategoryColor(bag.category)}>{bag.category}</Badge>
+                          <span className="text-sm text-foreground">{bag.department}</span>
+                          <span className="text-sm text-muted-foreground">{bag.approxWeight} kg</span>
+                          <span className="text-xs text-muted-foreground ml-auto">{bag.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+
+              <div className="flex justify-between pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    generateReportMutation.mutate(reportPreview.type);
+                    setReportPreview(null);
+                  }}
+                  disabled={generateReportMutation.isPending}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Save to Reports
+                </Button>
+                <Button variant="outline" onClick={() => setReportPreview(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
