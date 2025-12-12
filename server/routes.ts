@@ -1401,10 +1401,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Department to specialty mapping
+  const departmentToSpecialty: Record<string, string> = {
+    cardiology: "Cardiology",
+    neurology: "Neurology",
+    orthopedics: "Orthopedics",
+    pediatrics: "Pediatrics",
+    dermatology: "Dermatology",
+    general: "General Medicine",
+    emergency: "Emergency Medicine",
+    icu: "Intensive Care",
+    surgery: "Surgery",
+    obstetrics: "Obstetrics & Gynecology"
+  };
+
   // Create team member with user account for login
   app.post("/api/team-members", async (req, res) => {
     try {
-      const { name, title, email, phone, username, password } = req.body;
+      const { name, title, email, phone, username, password, department } = req.body;
       
       // Validate required fields
       if (!name || !title || !email || !phone || !username || !password) {
@@ -1448,11 +1462,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email
       });
       
-      // Create team member
+      // If role is DOCTOR, also create an entry in the doctors table for OPD
+      if (role === "DOCTOR") {
+        const specialty = departmentToSpecialty[department] || "General Medicine";
+        const avatarInitials = name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+        
+        await databaseStorage.createDoctor({
+          name,
+          specialty,
+          qualification: "MBBS", // Default qualification
+          experience: 5, // Default experience
+          rating: "4.5", // Default rating
+          availableDays: "Mon, Wed, Fri", // Default available days
+          avatarInitials
+        });
+      }
+      
+      // Create team member with proper department
       const memberData = {
         name,
         title,
-        department: role, // Use role as department
+        department: department || role, // Use provided department or role as fallback
         specialization: title,
         email,
         phone,
