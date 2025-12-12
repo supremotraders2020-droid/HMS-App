@@ -105,8 +105,9 @@ interface NotificationServiceProps {
 }
 
 export default function NotificationService({ currentRole = "ADMIN", currentUserId }: NotificationServiceProps) {
-  // Nurses don't have dashboard - default to notifications tab
-  const [activeTab, setActiveTab] = useState(currentRole === "NURSE" ? "notifications" : "dashboard");
+  // Nurses and OPD Managers don't have dashboard - default to notifications tab
+  const isLimitedView = currentRole === "NURSE" || currentRole === "OPD_MANAGER";
+  const [activeTab, setActiveTab] = useState(isLimitedView ? "notifications" : "dashboard");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -286,12 +287,12 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
         <div>
           <h1 className="text-3xl font-bold tracking-tight" data-testid="text-page-title">Notification Service</h1>
           <p className="text-muted-foreground">
-            {currentRole === "NURSE" 
-              ? "View and send patient-related notifications" 
+            {isLimitedView 
+              ? "View hospital notifications and announcements" 
               : "Multi-channel hospital communication and team management"}
           </p>
         </div>
-        {currentRole !== "NURSE" && (
+        {!isLimitedView && (
           <Button onClick={() => setShowCreateForm(true)} data-testid="button-create-notification">
             <Plus className="h-4 w-4 mr-2" />
             Create Notification
@@ -299,14 +300,90 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
         )}
       </div>
 
+      {/* For limited view (Nurse/OPD), show notifications directly without tabs */}
+      {isLimitedView ? (
+        <div className="space-y-4">
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search notifications..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+                data-testid="input-search-notifications"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-category-filter">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {NOTIFICATION_CATEGORIES.map(cat => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Notifications List */}
+          <div className="space-y-4">
+            {notificationsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              </div>
+            ) : filteredNotifications.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  {searchQuery || categoryFilter
+                    ? "No notifications match your filters."
+                    : "No notifications yet."}
+                </CardContent>
+              </Card>
+            ) : (
+              filteredNotifications.map(notification => (
+                <Card key={notification.id} className="hover-elevate">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold">{notification.title}</span>
+                          <Badge className={getPriorityBadgeClass(notification.priority)}>{notification.priority}</Badge>
+                          <Badge className={getCategoryBadgeClass(notification.category)}>
+                            {NOTIFICATION_CATEGORIES.find(c => c.value === notification.category)?.label}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{notification.message}</p>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            {notification.channels.map(channel => (
+                              <span key={channel} className="inline-flex items-center gap-1">
+                                {getChannelIcon(channel)}
+                              </span>
+                            ))}
+                          </div>
+                          <Separator orientation="vertical" className="h-4" />
+                          <span>
+                            {notification.createdAt && format(new Date(notification.createdAt), "MMM d, yyyy")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+      ) : (
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className={`grid w-full lg:w-auto lg:inline-grid ${currentRole === "NURSE" ? "grid-cols-2" : "grid-cols-3"}`}>
-          {currentRole !== "NURSE" && (
-            <TabsTrigger value="dashboard" className="gap-2" data-testid="tab-dashboard">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
-          )}
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="dashboard" className="gap-2" data-testid="tab-dashboard">
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Dashboard</span>
+          </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2" data-testid="tab-notifications">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
@@ -739,6 +816,7 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
           </div>
         </TabsContent>
       </Tabs>
+      )}
 
       {/* Create Notification Modal */}
       {showCreateForm && (
