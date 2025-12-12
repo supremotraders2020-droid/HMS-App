@@ -36,6 +36,14 @@ export default function OxygenTracker() {
   const [showAddLmoReading, setShowAddLmoReading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  
+  const [consumptionForm, setConsumptionForm] = useState({
+    patientName: "",
+    department: "",
+    flowRate: "",
+    recordedBy: "",
+    notes: ""
+  });
 
   const { data: cylinders = [], isLoading: cylindersLoading } = useQuery<OxygenCylinder[]>({
     queryKey: ['/api/oxygen/cylinders'],
@@ -86,6 +94,7 @@ export default function OxygenTracker() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/oxygen/consumption'] });
       setShowAddConsumption(false);
+      setConsumptionForm({ patientName: "", department: "", flowRate: "", recordedBy: "", notes: "" });
       toast({ title: "Consumption recorded successfully" });
     },
     onError: () => toast({ title: "Failed to record consumption", variant: "destructive" })
@@ -602,23 +611,35 @@ export default function OxygenTracker() {
                     </DialogHeader>
                     <form onSubmit={(e) => {
                       e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
+                      if (!consumptionForm.patientName || !consumptionForm.department || !consumptionForm.flowRate || !consumptionForm.recordedBy) {
+                        toast({ title: "Please fill all required fields", variant: "destructive" });
+                        return;
+                      }
                       createConsumptionMutation.mutate({
-                        patientName: formData.get('patientName') as string,
-                        department: formData.get('department') as string,
-                        flowRate: formData.get('flowRate') as string,
+                        patientName: consumptionForm.patientName,
+                        department: consumptionForm.department,
+                        flowRate: consumptionForm.flowRate,
                         startTime: new Date(),
-                        recordedBy: formData.get('recordedBy') as string,
-                        notes: formData.get('notes') as string,
+                        recordedBy: consumptionForm.recordedBy,
+                        notes: consumptionForm.notes || undefined,
                       });
                     }} className="space-y-4">
                       <div>
                         <Label htmlFor="patientName">Patient Name</Label>
-                        <Input id="patientName" name="patientName" placeholder="Patient name" required />
+                        <Input 
+                          id="patientName" 
+                          value={consumptionForm.patientName}
+                          onChange={(e) => setConsumptionForm(prev => ({ ...prev, patientName: e.target.value }))}
+                          placeholder="Patient name" 
+                          required 
+                        />
                       </div>
                       <div>
                         <Label htmlFor="department">Department</Label>
-                        <Select name="department" required>
+                        <Select 
+                          value={consumptionForm.department}
+                          onValueChange={(value) => setConsumptionForm(prev => ({ ...prev, department: value }))}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select department" />
                           </SelectTrigger>
@@ -631,15 +652,34 @@ export default function OxygenTracker() {
                       </div>
                       <div>
                         <Label htmlFor="flowRate">Flow Rate (LPM)</Label>
-                        <Input id="flowRate" name="flowRate" type="number" step="0.5" placeholder="2" required />
+                        <Input 
+                          id="flowRate" 
+                          type="number" 
+                          step="0.5" 
+                          value={consumptionForm.flowRate}
+                          onChange={(e) => setConsumptionForm(prev => ({ ...prev, flowRate: e.target.value }))}
+                          placeholder="2" 
+                          required 
+                        />
                       </div>
                       <div>
                         <Label htmlFor="recordedBy">Recorded By</Label>
-                        <Input id="recordedBy" name="recordedBy" placeholder="Nurse name" required />
+                        <Input 
+                          id="recordedBy" 
+                          value={consumptionForm.recordedBy}
+                          onChange={(e) => setConsumptionForm(prev => ({ ...prev, recordedBy: e.target.value }))}
+                          placeholder="Nurse name" 
+                          required 
+                        />
                       </div>
                       <div>
                         <Label htmlFor="notes">Notes (Optional)</Label>
-                        <Input id="notes" name="notes" placeholder="Additional notes" />
+                        <Input 
+                          id="notes" 
+                          value={consumptionForm.notes}
+                          onChange={(e) => setConsumptionForm(prev => ({ ...prev, notes: e.target.value }))}
+                          placeholder="Additional notes" 
+                        />
                       </div>
                       <Button type="submit" className="w-full" disabled={createConsumptionMutation.isPending}>
                         {createConsumptionMutation.isPending ? "Recording..." : "Start Recording"}
