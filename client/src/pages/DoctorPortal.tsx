@@ -21,7 +21,7 @@ import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import { format, getDay } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
-import type { DoctorPatient, Prescription, DoctorSchedule, Appointment, DoctorProfile, UserNotification } from "@shared/schema";
+import type { DoctorPatient, Prescription, DoctorSchedule, Appointment, DoctorProfile, UserNotification, MedicalRecord } from "@shared/schema";
 import {
   Sidebar,
   SidebarContent,
@@ -158,6 +158,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [addPrescriptionDialogOpen, setAddPrescriptionDialogOpen] = useState(false);
   const [patientSearchQuery, setPatientSearchQuery] = useState("");
   const [selectedPatientForRx, setSelectedPatientForRx] = useState<string>("");
+  const [selectedPatientRecordId, setSelectedPatientRecordId] = useState<string>("");
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
   const [addScheduleDialogOpen, setAddScheduleDialogOpen] = useState(false);
   const [addAppointmentDialogOpen, setAddAppointmentDialogOpen] = useState(false);
@@ -209,6 +210,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const { data: profileData, isLoading: profileLoading } = useQuery<DoctorProfile>({
     queryKey: ['/api/doctor-profiles', doctorId],
     retry: false,
+  });
+
+  // Fetch all medical records to show patient files in prescription form
+  const { data: allMedicalRecords = [] } = useQuery<MedicalRecord[]>({
+    queryKey: ['/api/medical-records'],
   });
 
   // Sync profile form with API data when it loads
@@ -1433,6 +1439,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           if (!open) {
             setPatientSearchQuery("");
             setSelectedPatientForRx("");
+            setSelectedPatientRecordId("");
             setShowPatientDropdown(false);
           }
         }}>
@@ -1460,6 +1467,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 diagnosis: formData.get('diagnosis') as string,
                 medicines: medicinesStr.split(',').map(m => m.trim()).filter(Boolean),
                 instructions: formData.get('instructions') as string || null,
+                patientRecordId: selectedPatientRecordId || null,
                 prescriptionDate: formData.get('prescriptionDate') as string,
                 followUpDate: formData.get('followUpDate') as string || null,
                 status: 'active',
@@ -1564,6 +1572,26 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 <Textarea id="instructions" name="instructions" placeholder="Dosage instructions and special notes" rows={3} data-testid="input-instructions" />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="patientRecord">Patient Record (optional)</Label>
+                <Select value={selectedPatientRecordId} onValueChange={setSelectedPatientRecordId}>
+                  <SelectTrigger data-testid="select-patient-record">
+                    <SelectValue placeholder="Select patient medical record..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allMedicalRecords.length > 0 ? (
+                      allMedicalRecords.map((record) => (
+                        <SelectItem key={record.id} value={record.id}>
+                          {record.title} - {record.recordType} {record.fileName ? `(${record.fileName})` : ''}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>No medical records available</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Link a medical record/file uploaded by admin</p>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="followUpDate">Follow-up Date</Label>
                 <Input id="followUpDate" name="followUpDate" type="date" data-testid="input-followup-date" />
               </div>
@@ -1572,6 +1600,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                   setAddPrescriptionDialogOpen(false);
                   setPatientSearchQuery("");
                   setSelectedPatientForRx("");
+                  setSelectedPatientRecordId("");
                   setShowPatientDropdown(false);
                 }}>Cancel</Button>
                 <Button type="submit" disabled={createPrescriptionMutation.isPending} data-testid="button-submit-prescription">
@@ -1640,6 +1669,29 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 <p className="text-sm font-medium text-muted-foreground">Instructions</p>
                 <p className="text-sm">{rx.instructions}</p>
               </div>
+              {rx.patientRecordId && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Patient Record</p>
+                  {(() => {
+                    const record = allMedicalRecords.find(r => r.id === rx.patientRecordId);
+                    return record ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="font-normal">
+                          <FileText className="h-3 w-3 mr-1" />
+                          {record.title} - {record.recordType}
+                        </Badge>
+                        {record.fileName && (
+                          <Badge variant="secondary" className="font-normal text-xs">
+                            {record.fileName}
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Record not found</p>
+                    );
+                  })()}
+                </div>
+              )}
             </CardContent>
             <CardFooter className="gap-2 border-t bg-muted/20">
               <Button variant="outline" size="sm" onClick={() => {
