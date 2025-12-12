@@ -105,7 +105,8 @@ interface NotificationServiceProps {
 }
 
 export default function NotificationService({ currentRole = "ADMIN", currentUserId }: NotificationServiceProps) {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  // Nurses don't have dashboard - default to notifications tab
+  const [activeTab, setActiveTab] = useState(currentRole === "NURSE" ? "notifications" : "dashboard");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -284,20 +285,28 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight" data-testid="text-page-title">Notification Service</h1>
-          <p className="text-muted-foreground">Multi-channel hospital communication and team management</p>
+          <p className="text-muted-foreground">
+            {currentRole === "NURSE" 
+              ? "View and send patient-related notifications" 
+              : "Multi-channel hospital communication and team management"}
+          </p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)} data-testid="button-create-notification">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Notification
-        </Button>
+        {currentRole !== "NURSE" && (
+          <Button onClick={() => setShowCreateForm(true)} data-testid="button-create-notification">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Notification
+          </Button>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="dashboard" className="gap-2" data-testid="tab-dashboard">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Dashboard</span>
-          </TabsTrigger>
+        <TabsList className={`grid w-full lg:w-auto lg:inline-grid ${currentRole === "NURSE" ? "grid-cols-2" : "grid-cols-3"}`}>
+          {currentRole !== "NURSE" && (
+            <TabsTrigger value="dashboard" className="gap-2" data-testid="tab-dashboard">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="notifications" className="gap-2" data-testid="tab-notifications">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
@@ -472,6 +481,93 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-4">
+          {/* Inline Compose for Nurses */}
+          {currentRole === "NURSE" && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Send className="h-5 w-5 text-primary" />
+                  Send Quick Notification
+                </CardTitle>
+                <CardDescription>Send a patient-related notification to team members</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="nurse-title">Title *</Label>
+                      <Input
+                        id="nurse-title"
+                        placeholder="Notification title"
+                        value={formData.title}
+                        onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                        data-testid="input-nurse-notification-title"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Priority</Label>
+                      <Select
+                        value={formData.priority}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
+                      >
+                        <SelectTrigger data-testid="select-nurse-priority">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRIORITY_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nurse-message">Message *</Label>
+                    <Textarea
+                      id="nurse-message"
+                      placeholder="Write your notification message..."
+                      value={formData.message}
+                      onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                      rows={3}
+                      data-testid="input-nurse-notification-message"
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { value: "push", label: "Push", icon: <Bell className="h-4 w-4" /> },
+                        { value: "sms", label: "SMS", icon: <MessageSquare className="h-4 w-4" /> },
+                      ].map(channel => (
+                        <label
+                          key={channel.value}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={formData.channels.includes(channel.value)}
+                            onCheckedChange={() => handleChannelToggle(channel.value)}
+                            data-testid={`checkbox-nurse-channel-${channel.value}`}
+                          />
+                          <span className="flex items-center gap-1.5 text-sm">
+                            {channel.icon}
+                            {channel.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <Button 
+                      type="submit" 
+                      disabled={createNotificationMutation.isPending || !formData.title || !formData.message}
+                      data-testid="button-nurse-send-notification"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {createNotificationMutation.isPending ? "Sending..." : "Send Notification"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
