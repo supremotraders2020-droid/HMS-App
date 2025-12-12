@@ -1265,63 +1265,44 @@ export default function PatientTrackingService() {
             </CardContent>
           </Card>
 
-          {selectedDoctorVisitPatientId && (() => {
-            const selectedPatient = patients.find(p => p.id === selectedDoctorVisitPatientId);
-            return selectedPatient ? (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Patient Details - {selectedPatient.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Age</p>
-                      <p className="font-medium">{selectedPatient.age} years</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Gender</p>
-                      <p className="font-medium">{selectedPatient.gender}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Room</p>
-                      <p className="font-medium">{selectedPatient.room}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Department</p>
-                      <p className="font-medium">{selectedPatient.department}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Diagnosis</p>
-                      <p className="font-medium">{selectedPatient.diagnosis}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Assigned Doctor</p>
-                      <p className="font-medium">{selectedPatient.doctor}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Admission Date</p>
-                      <p className="font-medium">{selectedPatient.admissionDate ? new Date(selectedPatient.admissionDate).toLocaleDateString() : 'N/A'}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Status</p>
-                      <Badge variant={selectedPatient.status === "admitted" ? "default" : selectedPatient.status === "discharged" ? "secondary" : "outline"}>
-                        {selectedPatient.status}
-                      </Badge>
-                    </div>
-                    {selectedPatient.notes && (
-                      <div className="space-y-1 md:col-span-3">
-                        <p className="text-sm text-muted-foreground">Notes</p>
-                        <p className="font-medium">{selectedPatient.notes}</p>
+          {selectedDoctorVisitPatientId && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Previous Visits
+                  {(() => {
+                    const p = patients.find(p => p.id === selectedDoctorVisitPatientId);
+                    return p ? ` - ${p.name}` : "";
+                  })()}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {doctorVisits.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No previous visits recorded for this patient.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {doctorVisits.map((visit) => (
+                      <div key={visit.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg" data-testid={`doctor-visit-${visit.id}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/10 rounded-full">
+                            <Stethoscope className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{visit.visitDate} at {visit.visitTime}</p>
+                            {visit.notes && <p className="text-sm text-muted-foreground">{visit.notes}</p>}
+                          </div>
+                        </div>
+                        <Badge variant={visit.status === "completed" ? "default" : visit.status === "cancelled" ? "destructive" : "secondary"}>
+                          {visit.status}
+                        </Badge>
                       </div>
-                    )}
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-            ) : null;
-          })()}
+                )}
+              </CardContent>
+            </Card>
+          )}
           </>
         )}
       </div>
