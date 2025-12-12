@@ -1006,18 +1006,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const record = await storage.createMedicalRecord(parsed.data);
       
-      // Send notification to the patient (try to find user by email)
+      // Get patient info for notifications
+      let patientName = "Patient";
       try {
         const patient = await storage.getServicePatientById(parsed.data.patientId);
-        if (patient && patient.email) {
-          // Try to find the user by email to send notification
-          const user = await databaseStorage.getUserByEmail(patient.email);
-          if (user) {
+        if (patient) {
+          patientName = `${patient.firstName} ${patient.lastName}`;
+          
+          // Send notification to the patient (try to find user by email)
+          if (patient.email) {
+            const patientUser = await databaseStorage.getUserByEmail(patient.email);
+            if (patientUser) {
+              await storage.createUserNotification({
+                userId: patientUser.username,
+                userRole: "PATIENT",
+                title: "New Medical Record Added",
+                message: `A new ${parsed.data.recordType} record "${parsed.data.title}" has been added to your medical history by ${parsed.data.physician}.`,
+                type: "info",
+                relatedEntityType: "medical_record",
+                relatedEntityId: record.id
+              });
+            }
+          }
+        }
+      } catch (notificationError) {
+        console.error("Failed to send patient notification:", notificationError);
+      }
+      
+      // Send notification to the doctor
+      try {
+        const physicianName = parsed.data.physician.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
+        // Find the doctor profile that matches the physician name
+        const allProfiles = await storage.getAllDoctorProfiles();
+        const matchedProfile = allProfiles.find((p: { fullName: string; doctorId: string }) => {
+          const profileName = p.fullName.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
+          return profileName === physicianName || 
+                 profileName.includes(physicianName) || 
+                 physicianName.includes(profileName) ||
+                 profileName.split(' ')[0] === physicianName.split(' ')[0];
+        });
+        
+        if (matchedProfile) {
+          // Get the doctor user by their doctor_id
+          const doctorUser = await storage.getUser(matchedProfile.doctorId);
+          
+          if (doctorUser && doctorUser.role === "DOCTOR") {
             await storage.createUserNotification({
-              userId: user.username,
-              userRole: "PATIENT",
-              title: "New Medical Record Added",
-              message: `A new ${parsed.data.recordType} record "${parsed.data.title}" has been added to your medical history by ${parsed.data.physician}.`,
+              userId: doctorUser.username,
+              userRole: "DOCTOR",
+              title: "Medical Record Assigned",
+              message: `A new ${parsed.data.recordType} record "${parsed.data.title}" for patient ${patientName} has been assigned to you.`,
               type: "info",
               relatedEntityType: "medical_record",
               relatedEntityId: record.id
@@ -1025,7 +1063,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       } catch (notificationError) {
-        console.error("Failed to send notification:", notificationError);
+        console.error("Failed to send doctor notification:", notificationError);
       }
       
       res.status(201).json(record);
