@@ -28,7 +28,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format, formatDistanceToNow } from "date-fns";
-import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription } from "@shared/schema";
+import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient } from "@shared/schema";
 import { 
   Home,
   Calendar,
@@ -148,6 +148,16 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     queryKey: ["/api/doctors"],
   });
 
+  // Fetch service patients to find the one matching this user's email
+  const { data: servicePatients = [] } = useQuery<ServicePatient[]>({
+    queryKey: ["/api/patients/service"],
+  });
+
+  // Fetch user data to get email for matching with service_patients
+  const { data: userData } = useQuery<{ id: string; email: string | null }>({
+    queryKey: ['/api/users/by-username', username],
+  });
+
   // Fetch patient profile from API using username (stable identifier)
   const { data: profileData } = useQuery<PatientProfile>({
     queryKey: ['/api/patient-profiles', username],
@@ -260,9 +270,18 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     refetchInterval: 3000, // Real-time sync
   });
 
-  // Filter records for this patient (by username)
+  // Find the service_patient that matches this user's email (from users table or profile)
+  const userEmail = userData?.email || profileData?.email || profileForm.email;
+  const matchingServicePatient = servicePatients.find(sp => 
+    sp.email && userEmail && sp.email.toLowerCase() === userEmail.toLowerCase()
+  );
+
+  // Filter records for this patient (by username, userId, patientName, or service_patient ID)
   const patientRecords = medicalRecords.filter(r => 
-    r.patientId === username || r.patientId === patientId || r.patientId === patientName
+    r.patientId === username || 
+    r.patientId === patientId || 
+    r.patientId === patientName ||
+    (matchingServicePatient && r.patientId === matchingServicePatient.id)
   );
 
   const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
