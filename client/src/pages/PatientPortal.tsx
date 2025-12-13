@@ -127,6 +127,8 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   ]);
   const [chatInput, setChatInput] = useState("");
   const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
+  const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
+  const [viewRecordDialogOpen, setViewRecordDialogOpen] = useState(false);
   const { toast } = useToast();
 
   // Profile form state
@@ -319,37 +321,8 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
 
   // Handle view medical record
   const handleViewRecord = (record: MedicalRecord) => {
-    if (record.fileData) {
-      // Open file in new tab
-      const newWindow = window.open();
-      if (newWindow) {
-        newWindow.document.write(`
-          <html>
-            <head><title>${record.title}</title></head>
-            <body style="margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; background:#1a1a1a;">
-              ${record.fileType?.startsWith('image/') 
-                ? `<img src="${record.fileData}" style="max-width:100%; max-height:100vh;" />`
-                : record.fileType === 'application/pdf'
-                  ? `<iframe src="${record.fileData}" style="width:100%; height:100vh; border:none;"></iframe>`
-                  : `<div style="color:white; font-size:18px; padding:40px;">
-                      <h2>${record.title}</h2>
-                      <p><strong>Type:</strong> ${record.recordType}</p>
-                      <p><strong>Physician:</strong> ${record.physician}</p>
-                      <p><strong>Description:</strong> ${record.description}</p>
-                      <p><strong>Date:</strong> ${record.recordDate ? format(new Date(record.recordDate), 'PPP') : 'N/A'}</p>
-                    </div>`
-              }
-            </body>
-          </html>
-        `);
-      }
-    } else {
-      // Show record details in toast if no file
-      toast({
-        title: record.title,
-        description: `${record.description} - By ${record.physician}`,
-      });
-    }
+    setSelectedMedicalRecord(record);
+    setViewRecordDialogOpen(true);
   };
 
   // Handle download medical record
@@ -1408,6 +1381,83 @@ Description: ${record.description}
                     >
                       Close
                     </Button>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+
+            {/* Medical Record View Dialog */}
+            <Dialog open={viewRecordDialogOpen} onOpenChange={setViewRecordDialogOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    {selectedMedicalRecord?.title}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {selectedMedicalRecord?.recordType} - {selectedMedicalRecord?.recordDate ? format(new Date(selectedMedicalRecord.recordDate), 'PPP') : 'N/A'}
+                  </DialogDescription>
+                </DialogHeader>
+                {selectedMedicalRecord && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Physician</p>
+                        <p className="font-medium">{selectedMedicalRecord.physician}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Record Type</p>
+                        <p className="font-medium">{selectedMedicalRecord.recordType}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Description</p>
+                      <p className="mt-1">{selectedMedicalRecord.description || 'No description provided'}</p>
+                    </div>
+
+                    {selectedMedicalRecord.fileData && (
+                      <div className="border rounded-lg p-4">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Attached File</p>
+                        {selectedMedicalRecord.fileType?.startsWith('image/') ? (
+                          <img 
+                            src={selectedMedicalRecord.fileData} 
+                            alt={selectedMedicalRecord.title}
+                            className="max-w-full max-h-96 object-contain rounded"
+                          />
+                        ) : selectedMedicalRecord.fileType === 'application/pdf' ? (
+                          <iframe 
+                            src={selectedMedicalRecord.fileData} 
+                            className="w-full h-96 border-0 rounded"
+                            title={selectedMedicalRecord.title}
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-8 w-8 text-muted-foreground" />
+                            <span>{selectedMedicalRecord.fileName || 'Attached file'}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!selectedMedicalRecord.fileData && (
+                      <div className="border rounded-lg p-4 text-center text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>No file attached to this record</p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 justify-end">
+                      {selectedMedicalRecord.fileData && (
+                        <Button variant="outline" onClick={() => handleDownloadRecord(selectedMedicalRecord)}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      )}
+                      <Button onClick={() => setViewRecordDialogOpen(false)}>
+                        Close
+                      </Button>
+                    </div>
                   </div>
                 )}
               </DialogContent>
