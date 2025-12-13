@@ -1119,6 +1119,83 @@ Description: ${record.description}
                 )}
               </div>
             </div>
+
+            {/* Medical Record View Dialog */}
+            <Dialog open={viewRecordDialogOpen} onOpenChange={setViewRecordDialogOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    {selectedMedicalRecord?.title}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {selectedMedicalRecord?.recordType} - {selectedMedicalRecord?.recordDate ? format(new Date(selectedMedicalRecord.recordDate), 'PPP') : 'N/A'}
+                  </DialogDescription>
+                </DialogHeader>
+                {selectedMedicalRecord && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Physician</p>
+                        <p className="font-medium">{selectedMedicalRecord.physician}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Record Type</p>
+                        <p className="font-medium">{selectedMedicalRecord.recordType}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Description</p>
+                      <p className="mt-1">{selectedMedicalRecord.description || 'No description provided'}</p>
+                    </div>
+
+                    {selectedMedicalRecord.fileData && (
+                      <div className="border rounded-lg p-4">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Attached File</p>
+                        {selectedMedicalRecord.fileType?.startsWith('image/') ? (
+                          <img 
+                            src={selectedMedicalRecord.fileData} 
+                            alt={selectedMedicalRecord.title}
+                            className="max-w-full max-h-96 object-contain rounded"
+                          />
+                        ) : selectedMedicalRecord.fileType === 'application/pdf' ? (
+                          <iframe 
+                            src={selectedMedicalRecord.fileData} 
+                            className="w-full h-96 border-0 rounded"
+                            title={selectedMedicalRecord.title}
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-8 w-8 text-muted-foreground" />
+                            <span>{selectedMedicalRecord.fileName || 'Attached file'}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!selectedMedicalRecord.fileData && (
+                      <div className="border rounded-lg p-4 text-center text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>No file attached to this record</p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 justify-end">
+                      {selectedMedicalRecord.fileData && (
+                        <Button variant="outline" onClick={() => handleDownloadRecord(selectedMedicalRecord)}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      )}
+                      <Button onClick={() => setViewRecordDialogOpen(false)}>
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         );
 
