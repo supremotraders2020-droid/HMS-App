@@ -21,7 +21,7 @@ import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import { format, getDay } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
-import type { DoctorPatient, Prescription, DoctorSchedule, Appointment, DoctorProfile, UserNotification, MedicalRecord } from "@shared/schema";
+import type { DoctorPatient, Prescription, DoctorSchedule, Appointment, DoctorProfile, UserNotification, MedicalRecord, ServicePatient } from "@shared/schema";
 import {
   Sidebar,
   SidebarContent,
@@ -215,6 +215,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   // Fetch all medical records to show patient files in prescription form
   const { data: allMedicalRecords = [] } = useQuery<MedicalRecord[]>({
     queryKey: ['/api/medical-records'],
+  });
+
+  // Fetch service patients to display in Patient Records section
+  const { data: servicePatients = [] } = useQuery<ServicePatient[]>({
+    queryKey: ['/api/patients/service'],
   });
 
   // Sync profile form with API data when it loads
@@ -489,7 +494,52 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     }
   };
 
-  const filteredPatients = patients.filter(p => 
+  // Derive patients from medical records assigned to this doctor
+  const patientsFromRecords = (() => {
+    // Get medical records where physician matches this doctor
+    const doctorRecords = allMedicalRecords.filter(record => {
+      const physicianName = record.physician?.toLowerCase().replace(/^dr\.?\s*/i, '').trim() || '';
+      const docName = doctorName.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
+      return physicianName.includes(docName) || docName.includes(physicianName) ||
+             physicianName.split(' ')[0] === docName.split(' ')[0];
+    });
+    
+    // Map to unique patients from service_patients
+    const patientMap = new Map<string, {
+      id: string;
+      patientName: string;
+      patientPhone: string;
+      patientEmail: string;
+      patientAge: string;
+      patientGender: string;
+      bloodGroup: string;
+      patientAddress: string;
+      lastVisit: string;
+      medicalRecords: MedicalRecord[];
+    }>();
+    
+    doctorRecords.forEach(record => {
+      const servicePatient = servicePatients.find(sp => sp.id === record.patientId);
+      if (servicePatient && !patientMap.has(servicePatient.id)) {
+        patientMap.set(servicePatient.id, {
+          id: servicePatient.id,
+          patientName: `${servicePatient.firstName} ${servicePatient.lastName}`,
+          patientPhone: servicePatient.phone || 'N/A',
+          patientEmail: servicePatient.email || 'N/A',
+          patientAge: servicePatient.dateOfBirth ? String(new Date().getFullYear() - new Date(servicePatient.dateOfBirth).getFullYear()) : 'N/A',
+          patientGender: servicePatient.gender || 'O',
+          bloodGroup: servicePatient.bloodType || '',
+          patientAddress: servicePatient.address || 'N/A',
+          lastVisit: record.recordDate ? format(new Date(record.recordDate), 'MMM dd, yyyy') : 'N/A',
+          medicalRecords: doctorRecords.filter(r => r.patientId === servicePatient.id)
+        });
+      }
+    });
+    
+    return Array.from(patientMap.values());
+  })();
+
+  const filteredPatients = patientsFromRecords.filter(p => 
     p.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (p.patientPhone && p.patientPhone.includes(searchQuery)) ||
     (p.patientEmail && p.patientEmail.toLowerCase().includes(searchQuery.toLowerCase()))
