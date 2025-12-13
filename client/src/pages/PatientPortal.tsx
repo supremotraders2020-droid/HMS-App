@@ -28,7 +28,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format, formatDistanceToNow } from "date-fns";
-import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient } from "@shared/schema";
+import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent } from "@shared/schema";
 import { 
   Home,
   Calendar,
@@ -272,6 +272,12 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     refetchInterval: 3000, // Real-time sync
   });
 
+  // Fetch consent forms for this patient
+  const { data: allConsents = [] } = useQuery<PatientConsent[]>({
+    queryKey: ['/api/patient-consents'],
+    refetchInterval: 3000, // Real-time sync
+  });
+
   // Find the service_patient that matches this user's email (from users table or profile)
   const userEmail = userData?.email || profileData?.email || profileForm.email;
   const matchingServicePatient = servicePatients.find(sp => 
@@ -284,6 +290,14 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     r.patientId === patientId || 
     r.patientId === patientName ||
     (matchingServicePatient && r.patientId === matchingServicePatient.id)
+  );
+
+  // Filter consent forms for this patient
+  const patientConsents = allConsents.filter(c => 
+    c.patientId === username || 
+    c.patientId === patientId || 
+    c.patientId === patientName ||
+    (matchingServicePatient && c.patientId === matchingServicePatient.id)
   );
 
   const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
@@ -1114,6 +1128,90 @@ Description: ${record.description}
                       <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                       <p className="text-muted-foreground">No medical documents found</p>
                       <p className="text-sm text-muted-foreground mt-1">Your medical documents will appear here once uploaded by your healthcare provider</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+
+            {/* Consent Forms Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <FileText className="h-5 w-5 text-purple-500" />
+                My Consent Forms ({patientConsents.length})
+              </h3>
+              <div className="grid gap-4">
+                {patientConsents.length > 0 ? patientConsents.map((consent) => (
+                  <Card key={consent.id} className="hover-elevate" data-testid={`consent-card-${consent.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-purple-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-0">
+                              {consent.consentType}
+                            </Badge>
+                          </div>
+                          <h4 className="font-semibold mt-1" data-testid={`consent-title-${consent.id}`}>{consent.title}</h4>
+                          <p className="text-sm text-muted-foreground">{consent.description}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {consent.fileName}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">
+                            {consent.uploadedAt ? format(new Date(consent.uploadedAt), 'MM/dd/yyyy') : 'N/A'}
+                          </p>
+                          <Badge variant={consent.status === 'active' ? 'default' : 'secondary'} className="mt-1">
+                            {consent.status}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => {
+                              if (consent.fileData) {
+                                window.open(consent.fileData, '_blank');
+                              }
+                            }}
+                            data-testid={`button-view-consent-${consent.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => {
+                              if (consent.fileData && consent.fileName) {
+                                const link = document.createElement('a');
+                                link.href = consent.fileData;
+                                link.download = consent.fileName;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                toast({
+                                  title: "Download Started",
+                                  description: `Downloading ${consent.fileName}`,
+                                });
+                              }
+                            }}
+                            data-testid={`button-download-consent-${consent.id}`}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">No consent forms found</p>
+                      <p className="text-sm text-muted-foreground mt-1">Your consent forms will appear here once uploaded by your healthcare provider</p>
                     </CardContent>
                   </Card>
                 )}
