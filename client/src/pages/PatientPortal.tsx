@@ -278,18 +278,36 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     refetchInterval: 3000, // Real-time sync
   });
 
-  // Find the service_patient that matches this user's email (from users table or profile)
+  // Find the service_patient that matches this user's email or name
   const userEmail = userData?.email || profileData?.email || profileForm.email;
-  const matchingServicePatient = servicePatients.find(sp => 
-    sp.email && userEmail && sp.email.toLowerCase() === userEmail.toLowerCase()
-  );
+  const normalizedPatientName = patientName.toLowerCase().trim();
+  
+  // Find all matching service patients (by email or name)
+  const matchingServicePatients = servicePatients.filter(sp => {
+    // Match by email
+    if (sp.email && userEmail && sp.email.toLowerCase() === userEmail.toLowerCase()) {
+      return true;
+    }
+    // Match by name (first + last)
+    const spFullName = `${sp.firstName || ''} ${sp.lastName || ''}`.toLowerCase().trim();
+    if (spFullName && normalizedPatientName && (
+      spFullName === normalizedPatientName ||
+      spFullName.includes(normalizedPatientName) ||
+      normalizedPatientName.includes(spFullName)
+    )) {
+      return true;
+    }
+    return false;
+  });
+  
+  const matchingServicePatientIds = matchingServicePatients.map(sp => sp.id);
 
   // Filter records for this patient (by username, userId, patientName, or service_patient ID)
   const patientRecords = medicalRecords.filter(r => 
     r.patientId === username || 
     r.patientId === patientId || 
     r.patientId === patientName ||
-    (matchingServicePatient && r.patientId === matchingServicePatient.id)
+    matchingServicePatientIds.includes(r.patientId)
   );
 
   // Filter consent forms for this patient
@@ -297,7 +315,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     c.patientId === username || 
     c.patientId === patientId || 
     c.patientId === patientName ||
-    (matchingServicePatient && c.patientId === matchingServicePatient.id)
+    matchingServicePatientIds.includes(c.patientId)
   );
 
   const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
