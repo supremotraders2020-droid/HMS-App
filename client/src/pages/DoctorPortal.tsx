@@ -1467,7 +1467,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 diagnosis: formData.get('diagnosis') as string,
                 medicines: medicinesStr.split(',').map(m => m.trim()).filter(Boolean),
                 instructions: formData.get('instructions') as string || null,
-                patientRecordId: selectedPatientRecordId || null,
                 prescriptionDate: formData.get('prescriptionDate') as string,
                 followUpDate: formData.get('followUpDate') as string || null,
                 status: 'active',
@@ -1570,26 +1569,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               <div className="space-y-2">
                 <Label htmlFor="instructions">Instructions</Label>
                 <Textarea id="instructions" name="instructions" placeholder="Dosage instructions and special notes" rows={3} data-testid="input-instructions" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="patientRecord">Patient Record (optional)</Label>
-                <Select value={selectedPatientRecordId} onValueChange={setSelectedPatientRecordId}>
-                  <SelectTrigger data-testid="select-patient-record">
-                    <SelectValue placeholder="Select patient medical record..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allMedicalRecords.length > 0 ? (
-                      allMedicalRecords.map((record) => (
-                        <SelectItem key={record.id} value={record.id}>
-                          {record.title} - {record.recordType} {record.fileName ? `(${record.fileName})` : ''}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="none" disabled>No medical records available</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">Link a medical record/file uploaded by admin</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="followUpDate">Follow-up Date</Label>
