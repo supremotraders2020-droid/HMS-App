@@ -644,6 +644,308 @@ export async function generatePredictions(): Promise<PredictionResult[]> {
   return predictions;
 }
 
+// ========== INPATIENT ANALYTICS ENGINE ==========
+
+interface PatientHealthAnalysis {
+  patientId: string;
+  patientName: string;
+  room: string;
+  diagnosis: string;
+  daysAdmitted: number;
+  vitalsTrend: 'STABLE' | 'IMPROVING' | 'DECLINING' | 'CRITICAL';
+  mealCompliance: number;
+  medicationAdherence: number;
+  overallHealthScore: number;
+  criticalAlerts: string[];
+  latestVitals: {
+    temperature?: string;
+    heartRate?: number;
+    bloodPressure?: string;
+    oxygenSaturation?: number;
+    recordedAt?: Date;
+  };
+}
+
+interface NurseWorkloadAnalysis {
+  nurseId: string;
+  nurseName: string;
+  patientsAssigned: number;
+  vitalsRecorded: number;
+  mealsServed: number;
+  medicationsGiven: number;
+  efficiencyScore: number;
+  workloadLevel: 'LOW' | 'OPTIMAL' | 'HIGH' | 'OVERLOADED';
+}
+
+interface InventoryUsageAnalysis {
+  itemId: string;
+  itemName: string;
+  category: string;
+  totalIssued: number;
+  totalWasted: number;
+  wastageRate: number;
+  wasteCost: number;
+  currentStock: number;
+  stockStatus: 'ADEQUATE' | 'LOW' | 'CRITICAL' | 'OUT_OF_STOCK';
+}
+
+interface InpatientAnalyticsDashboard {
+  patientAnalysis: PatientHealthAnalysis[];
+  nurseWorkload: NurseWorkloadAnalysis[];
+  inventoryUsage: InventoryUsageAnalysis[];
+  criticalAlerts: { type: string; severity: string; message: string; patientId?: string }[];
+  keyInsights: string[];
+  summary: {
+    totalAdmitted: number;
+    criticalPatients: number;
+    avgMealCompliance: number;
+    avgMedicationAdherence: number;
+    totalWastage: number;
+    wasteCostTotal: number;
+  };
+}
+
+export async function calculateInpatientAnalytics(): Promise<InpatientAnalyticsDashboard> {
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  // Get all admitted patients
+  const admittedPatients = await db.select()
+    .from(trackingPatients)
+    .where(eq(trackingPatients.status, 'admitted'));
+
+  // Get all nurses
+  const nurses = await db.select()
+    .from(users)
+    .where(eq(users.role, 'NURSE'));
+
+  // Get all vitals, meals, medications from last 7 days
+  const allVitals = await db.select().from(vitals)
+    .where(gte(vitals.recordedAt, sevenDaysAgo));
+  
+  const { meals } = await import("@shared/schema");
+  const allMeals = await db.select().from(meals)
+    .where(gte(meals.servedAt, sevenDaysAgo));
+  
+  const allMedications = await db.select().from(medications)
+    .where(gte(medications.administeredAt, sevenDaysAgo));
+
+  // Get inventory transactions
+  const { inventoryTransactions } = await import("@shared/schema");
+  const allTransactions = await db.select().from(inventoryTransactions)
+    .where(gte(inventoryTransactions.createdAt, sevenDaysAgo));
+  
+  const allInventoryItems = await db.select().from(inventoryItems);
+
+  const patientAnalysis: PatientHealthAnalysis[] = [];
+  const criticalAlerts: { type: string; severity: string; message: string; patientId?: string }[] = [];
+  const keyInsights: string[] = [];
+
+  // Analyze each patient
+  for (const patient of admittedPatients) {
+    const patientVitals = allVitals.filter(v => v.patientId === patient.id)
+      .sort((a, b) => b.recordedAt.getTime() - a.recordedAt.getTime());
+    
+    const patientMeals = allMeals.filter(m => m.patientId === patient.id);
+    const patientMeds = allMedications.filter(m => m.patientId === patient.id);
+    
+    const daysAdmitted = Math.ceil((now.getTime() - patient.admissionDate.getTime()) / (24 * 60 * 60 * 1000));
+    
+    // Calculate meal compliance (avg consumption percentage)
+    const mealCompliance = patientMeals.length > 0
+      ? patientMeals.reduce((sum, m) => sum + (m.consumptionPercentage || 100), 0) / patientMeals.length
+      : 100;
+
+    // Calculate medication adherence (expected: 3 meds/day)
+    const expectedMeds = daysAdmitted * 3;
+    const medicationAdherence = expectedMeds > 0 
+      ? Math.min(100, (patientMeds.length / expectedMeds) * 100)
+      : 100;
+
+    // Analyze vitals trend
+    let vitalsTrend: 'STABLE' | 'IMPROVING' | 'DECLINING' | 'CRITICAL' = 'STABLE';
+    const patientAlerts: string[] = [];
+    
+    if (patientVitals.length > 0) {
+      const latest = patientVitals[0];
+      
+      // Check for critical vitals
+      if (latest.oxygenSaturation && latest.oxygenSaturation < 92) {
+        vitalsTrend = 'CRITICAL';
+        patientAlerts.push(`CRITICAL: Low oxygen saturation (${latest.oxygenSaturation}%)`);
+        criticalAlerts.push({ type: 'VITALS', severity: 'CRITICAL', message: `${patient.name}: Low SpO2 (${latest.oxygenSaturation}%)`, patientId: patient.id });
+      }
+      if (latest.heartRate && (latest.heartRate > 100 || latest.heartRate < 50)) {
+        if (vitalsTrend !== 'CRITICAL') vitalsTrend = 'DECLINING';
+        patientAlerts.push(`Abnormal heart rate (${latest.heartRate} bpm)`);
+      }
+      if (latest.bloodPressureSystolic && latest.bloodPressureSystolic > 160) {
+        patientAlerts.push(`High blood pressure (${latest.bloodPressureSystolic}/${latest.bloodPressureDiastolic})`);
+        criticalAlerts.push({ type: 'VITALS', severity: 'HIGH', message: `${patient.name}: Elevated BP`, patientId: patient.id });
+      }
+      if (latest.temperature && parseFloat(latest.temperature) > 100) {
+        patientAlerts.push(`Fever detected (${latest.temperature}°F)`);
+      }
+      
+      // Compare with previous readings
+      if (patientVitals.length >= 2) {
+        const previous = patientVitals[1];
+        if (latest.oxygenSaturation && previous.oxygenSaturation) {
+          if (latest.oxygenSaturation > previous.oxygenSaturation + 2) vitalsTrend = 'IMPROVING';
+          else if (latest.oxygenSaturation < previous.oxygenSaturation - 2 && vitalsTrend !== 'CRITICAL') vitalsTrend = 'DECLINING';
+        }
+      }
+    }
+
+    // Check for poor meal intake
+    if (mealCompliance < 50) {
+      patientAlerts.push(`Poor meal intake (${mealCompliance.toFixed(0)}% consumption)`);
+      criticalAlerts.push({ type: 'NUTRITION', severity: 'MEDIUM', message: `${patient.name}: Poor meal consumption`, patientId: patient.id });
+    }
+
+    // Calculate overall health score
+    const vitalsScore = vitalsTrend === 'CRITICAL' ? 30 : vitalsTrend === 'DECLINING' ? 50 : vitalsTrend === 'IMPROVING' ? 85 : 75;
+    const overallHealthScore = (vitalsScore * 0.4) + (mealCompliance * 0.3) + (medicationAdherence * 0.3);
+
+    const latestVitals = patientVitals[0] || {};
+    patientAnalysis.push({
+      patientId: patient.id,
+      patientName: patient.name,
+      room: patient.room,
+      diagnosis: patient.diagnosis,
+      daysAdmitted,
+      vitalsTrend,
+      mealCompliance: Math.round(mealCompliance * 10) / 10,
+      medicationAdherence: Math.round(medicationAdherence * 10) / 10,
+      overallHealthScore: Math.round(overallHealthScore * 10) / 10,
+      criticalAlerts: patientAlerts,
+      latestVitals: {
+        temperature: latestVitals.temperature || undefined,
+        heartRate: latestVitals.heartRate || undefined,
+        bloodPressure: latestVitals.bloodPressureSystolic ? `${latestVitals.bloodPressureSystolic}/${latestVitals.bloodPressureDiastolic}` : undefined,
+        oxygenSaturation: latestVitals.oxygenSaturation || undefined,
+        recordedAt: latestVitals.recordedAt
+      }
+    });
+  }
+
+  // Analyze nurse workload
+  const nurseWorkload: NurseWorkloadAnalysis[] = [];
+  for (const nurse of nurses) {
+    const nurseVitals = allVitals.filter(v => v.recordedBy === nurse.name || v.recordedBy === nurse.username);
+    const nurseMeals = allMeals.filter(m => m.servedBy === nurse.name || m.servedBy === nurse.username);
+    const nurseMeds = allMedications.filter(m => m.administeredBy === nurse.name || m.administeredBy === nurse.username);
+    
+    const uniquePatients = new Set([
+      ...nurseVitals.map(v => v.patientId),
+      ...nurseMeals.map(m => m.patientId),
+      ...nurseMeds.map(m => m.patientId)
+    ]);
+    
+    const patientsAssigned = uniquePatients.size;
+    const totalActivities = nurseVitals.length + nurseMeals.length + nurseMeds.length;
+    
+    // Efficiency: activities per patient per day (expected ~5 activities/patient/day)
+    const expectedActivities = patientsAssigned * 7 * 5;
+    const efficiencyScore = expectedActivities > 0 
+      ? Math.min(100, (totalActivities / expectedActivities) * 100)
+      : patientsAssigned > 0 ? 50 : 80;
+    
+    let workloadLevel: 'LOW' | 'OPTIMAL' | 'HIGH' | 'OVERLOADED' = 'OPTIMAL';
+    if (patientsAssigned === 0) workloadLevel = 'LOW';
+    else if (patientsAssigned <= 2) workloadLevel = 'OPTIMAL';
+    else if (patientsAssigned <= 4) workloadLevel = 'HIGH';
+    else workloadLevel = 'OVERLOADED';
+
+    nurseWorkload.push({
+      nurseId: nurse.id,
+      nurseName: nurse.name || nurse.username,
+      patientsAssigned,
+      vitalsRecorded: nurseVitals.length,
+      mealsServed: nurseMeals.length,
+      medicationsGiven: nurseMeds.length,
+      efficiencyScore: Math.round(efficiencyScore * 10) / 10,
+      workloadLevel
+    });
+  }
+
+  // Analyze inventory usage and wastage
+  const inventoryUsage: InventoryUsageAnalysis[] = [];
+  let totalWastage = 0;
+  let wasteCostTotal = 0;
+
+  for (const item of allInventoryItems) {
+    const itemTransactions = allTransactions.filter(t => t.itemId === item.id);
+    const issued = itemTransactions.filter(t => t.type === 'ISSUE').reduce((sum, t) => sum + t.quantity, 0);
+    const wasted = itemTransactions.filter(t => t.type === 'DISPOSE').reduce((sum, t) => sum + t.quantity, 0);
+    const wasteCost = wasted * parseFloat(item.cost);
+    
+    totalWastage += wasted;
+    wasteCostTotal += wasteCost;
+    
+    const wastageRate = issued > 0 ? (wasted / (issued + wasted)) * 100 : 0;
+    
+    let stockStatus: 'ADEQUATE' | 'LOW' | 'CRITICAL' | 'OUT_OF_STOCK' = 'ADEQUATE';
+    if (item.currentStock === 0) stockStatus = 'OUT_OF_STOCK';
+    else if (item.currentStock < item.lowStockThreshold / 2) stockStatus = 'CRITICAL';
+    else if (item.currentStock < item.lowStockThreshold) stockStatus = 'LOW';
+
+    if (stockStatus === 'OUT_OF_STOCK' || stockStatus === 'CRITICAL') {
+      criticalAlerts.push({ type: 'INVENTORY', severity: stockStatus === 'OUT_OF_STOCK' ? 'CRITICAL' : 'HIGH', message: `${item.name}: ${stockStatus.replace('_', ' ')}` });
+    }
+
+    if (wastageRate > 10) {
+      criticalAlerts.push({ type: 'WASTAGE', severity: 'MEDIUM', message: `${item.name}: High wastage rate (${wastageRate.toFixed(1)}%)` });
+    }
+
+    inventoryUsage.push({
+      itemId: item.id,
+      itemName: item.name,
+      category: item.category,
+      totalIssued: issued,
+      totalWasted: wasted,
+      wastageRate: Math.round(wastageRate * 10) / 10,
+      wasteCost: Math.round(wasteCost * 100) / 100,
+      currentStock: item.currentStock,
+      stockStatus
+    });
+  }
+
+  // Generate insights
+  const criticalPatients = patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length;
+  const avgMealCompliance = patientAnalysis.length > 0 
+    ? patientAnalysis.reduce((sum, p) => sum + p.mealCompliance, 0) / patientAnalysis.length : 100;
+  const avgMedicationAdherence = patientAnalysis.length > 0
+    ? patientAnalysis.reduce((sum, p) => sum + p.medicationAdherence, 0) / patientAnalysis.length : 100;
+
+  if (criticalPatients > 0) keyInsights.push(`${criticalPatients} patient(s) require immediate attention`);
+  if (avgMealCompliance < 70) keyInsights.push(`Overall meal compliance is low (${avgMealCompliance.toFixed(1)}%)`);
+  if (avgMealCompliance >= 85) keyInsights.push(`Good meal compliance across patients (${avgMealCompliance.toFixed(1)}%)`);
+  if (wasteCostTotal > 500) keyInsights.push(`High inventory wastage cost: ₹${wasteCostTotal.toFixed(2)}`);
+  
+  const overloadedNurses = nurseWorkload.filter(n => n.workloadLevel === 'OVERLOADED').length;
+  if (overloadedNurses > 0) keyInsights.push(`${overloadedNurses} nurse(s) are overloaded - consider redistribution`);
+  
+  const lowStockItems = inventoryUsage.filter(i => i.stockStatus === 'CRITICAL' || i.stockStatus === 'OUT_OF_STOCK').length;
+  if (lowStockItems > 0) keyInsights.push(`${lowStockItems} inventory item(s) need immediate restocking`);
+
+  return {
+    patientAnalysis,
+    nurseWorkload,
+    inventoryUsage,
+    criticalAlerts,
+    keyInsights,
+    summary: {
+      totalAdmitted: admittedPatients.length,
+      criticalPatients,
+      avgMealCompliance: Math.round(avgMealCompliance * 10) / 10,
+      avgMedicationAdherence: Math.round(avgMedicationAdherence * 10) / 10,
+      totalWastage,
+      wasteCostTotal: Math.round(wasteCostTotal * 100) / 100
+    }
+  };
+}
+
 // Export all engine functions
 export const aiEngines = {
   calculateDoctorEfficiency,
@@ -653,5 +955,6 @@ export const aiEngines = {
   calculateComplianceScore,
   calculateResourceUtilization,
   calculateCostEfficiency,
-  generatePredictions
+  generatePredictions,
+  calculateInpatientAnalytics
 };
