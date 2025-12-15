@@ -859,99 +859,77 @@ export default function InpatientAnalytics() {
                 </CardContent>
               </Card>
             ) : (
-              <Accordion type="multiple" defaultValue={['critical', 'declining', 'stable', 'improving']} className="space-y-2">
-                {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length > 0 && (
-                  <AccordionItem value="critical" className="border rounded-lg bg-rose-500/5 border-rose-500/20">
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline" data-testid="accordion-critical">
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-lg bg-rose-500/20">
-                          <AlertTriangle className="h-4 w-4 text-rose-500" />
-                        </div>
-                        <span className="font-semibold text-rose-500">Critical</span>
-                        <Badge variant="destructive" className="text-xs">
-                          {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length}
-                        </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').map((patient) => (
-                          <PatientCard key={patient.patientId} patient={patient} />
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
+              <Tabs defaultValue="all" className="space-y-4">
+                <TabsList className="flex-wrap h-auto gap-1 p-1">
+                  <TabsTrigger value="all" data-testid="subtab-all" className="text-xs">
+                    All ({patientAnalysis.length})
+                  </TabsTrigger>
+                  {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length > 0 && (
+                    <TabsTrigger value="critical" data-testid="subtab-critical" className="text-xs text-rose-500 data-[state=active]:text-rose-500">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Critical ({patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length})
+                    </TabsTrigger>
+                  )}
+                  {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length > 0 && (
+                    <TabsTrigger value="declining" data-testid="subtab-declining" className="text-xs text-amber-500 data-[state=active]:text-amber-500">
+                      <TrendingDown className="h-3 w-3 mr-1" />
+                      Declining ({patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length})
+                    </TabsTrigger>
+                  )}
+                  {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length > 0 && (
+                    <TabsTrigger value="stable" data-testid="subtab-stable" className="text-xs">
+                      <Minus className="h-3 w-3 mr-1" />
+                      Stable ({patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length})
+                    </TabsTrigger>
+                  )}
+                  {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length > 0 && (
+                    <TabsTrigger value="improving" data-testid="subtab-improving" className="text-xs text-emerald-500 data-[state=active]:text-emerald-500">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      Improving ({patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length})
+                    </TabsTrigger>
+                  )}
+                </TabsList>
 
-                {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length > 0 && (
-                  <AccordionItem value="declining" className="border rounded-lg bg-amber-500/5 border-amber-500/20">
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline" data-testid="accordion-declining">
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-lg bg-amber-500/20">
-                          <TrendingDown className="h-4 w-4 text-amber-500" />
-                        </div>
-                        <span className="font-semibold text-amber-500">Declining</span>
-                        <Badge variant="outline" className="text-xs text-amber-600 border-amber-600">
-                          {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length}
-                        </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').map((patient) => (
-                          <PatientCard key={patient.patientId} patient={patient} />
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
+                <TabsContent value="all">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {patientAnalysis.map((patient) => (
+                      <PatientCard key={patient.patientId} patient={patient} />
+                    ))}
+                  </div>
+                </TabsContent>
 
-                {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length > 0 && (
-                  <AccordionItem value="stable" className="border rounded-lg">
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline" data-testid="accordion-stable">
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-lg bg-muted">
-                          <Minus className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <span className="font-semibold">Stable</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length}
-                        </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').map((patient) => (
-                          <PatientCard key={patient.patientId} patient={patient} />
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
+                <TabsContent value="critical">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').map((patient) => (
+                      <PatientCard key={patient.patientId} patient={patient} />
+                    ))}
+                  </div>
+                </TabsContent>
 
-                {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length > 0 && (
-                  <AccordionItem value="improving" className="border rounded-lg bg-emerald-500/5 border-emerald-500/20">
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline" data-testid="accordion-improving">
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-lg bg-emerald-500/20">
-                          <TrendingUp className="h-4 w-4 text-emerald-500" />
-                        </div>
-                        <span className="font-semibold text-emerald-500">Improving</span>
-                        <Badge className="text-xs bg-emerald-500">
-                          {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length}
-                        </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').map((patient) => (
-                          <PatientCard key={patient.patientId} patient={patient} />
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-              </Accordion>
+                <TabsContent value="declining">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').map((patient) => (
+                      <PatientCard key={patient.patientId} patient={patient} />
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="stable">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').map((patient) => (
+                      <PatientCard key={patient.patientId} patient={patient} />
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="improving">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').map((patient) => (
+                      <PatientCard key={patient.patientId} patient={patient} />
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
             )}
           </TabsContent>
 
