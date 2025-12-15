@@ -577,6 +577,7 @@ function InsightDetailDialog({
 export default function InpatientAnalytics() {
   const [alertsTab, setAlertsTab] = useState<'active' | 'resolved'>('active');
   const [selectedInsight, setSelectedInsight] = useState<{ type: InsightType; text: string } | null>(null);
+  const [patientFilter, setPatientFilter] = useState<'ALL' | 'CRITICAL' | 'DECLINING' | 'STABLE' | 'IMPROVING'>('ALL');
 
   const { data, isLoading, refetch, isRefetching } = useQuery<InpatientAnalyticsData>({
     queryKey: ["/api/ai/inpatient-analytics"],
@@ -843,12 +844,75 @@ export default function InpatientAnalytics() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Patient Health Analysis</h2>
-                <p className="text-sm text-muted-foreground">Vitals, meal compliance, and medication adherence</p>
+                <p className="text-sm text-muted-foreground">Click a category to filter patients</p>
               </div>
               <Badge variant="secondary" className="text-xs">
                 {patientAnalysis.length} patients
               </Badge>
             </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <button
+                onClick={() => setPatientFilter('ALL')}
+                className={`p-3 rounded-lg border transition-all text-left ${patientFilter === 'ALL' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'hover-elevate'}`}
+                data-testid="filter-all"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">All</span>
+                </div>
+                <span className="text-2xl font-bold">{patientAnalysis.length}</span>
+              </button>
+              
+              <button
+                onClick={() => setPatientFilter('CRITICAL')}
+                className={`p-3 rounded-lg border transition-all text-left ${patientFilter === 'CRITICAL' ? 'ring-2 ring-rose-500 border-rose-500 bg-rose-500/10' : 'border-rose-500/30 bg-rose-500/5 hover-elevate'}`}
+                data-testid="filter-critical"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertTriangle className="h-4 w-4 text-rose-500" />
+                  <span className="text-sm font-medium text-rose-500">Critical</span>
+                </div>
+                <span className="text-2xl font-bold text-rose-500">{patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length}</span>
+              </button>
+              
+              <button
+                onClick={() => setPatientFilter('DECLINING')}
+                className={`p-3 rounded-lg border transition-all text-left ${patientFilter === 'DECLINING' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-500/10' : 'border-amber-500/30 bg-amber-500/5 hover-elevate'}`}
+                data-testid="filter-declining"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingDown className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-medium text-amber-500">Declining</span>
+                </div>
+                <span className="text-2xl font-bold text-amber-500">{patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length}</span>
+              </button>
+              
+              <button
+                onClick={() => setPatientFilter('STABLE')}
+                className={`p-3 rounded-lg border transition-all text-left ${patientFilter === 'STABLE' ? 'ring-2 ring-muted-foreground border-muted-foreground bg-muted/20' : 'hover-elevate'}`}
+                data-testid="filter-stable"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Minus className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Stable</span>
+                </div>
+                <span className="text-2xl font-bold">{patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length}</span>
+              </button>
+              
+              <button
+                onClick={() => setPatientFilter('IMPROVING')}
+                className={`p-3 rounded-lg border transition-all text-left ${patientFilter === 'IMPROVING' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-500/10' : 'border-emerald-500/30 bg-emerald-500/5 hover-elevate'}`}
+                data-testid="filter-improving"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  <span className="text-sm font-medium text-emerald-500">Improving</span>
+                </div>
+                <span className="text-2xl font-bold text-emerald-500">{patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length}</span>
+              </button>
+            </div>
+
             {patientAnalysis.length === 0 ? (
               <Card>
                 <CardContent className="py-12">
@@ -859,107 +923,42 @@ export default function InpatientAnalytics() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                <Card className="border-rose-500/30 bg-rose-500/5" data-testid="panel-critical">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <AlertTriangle className="h-4 w-4 text-rose-500" />
-                      <span className="text-rose-500">Critical</span>
-                      <Badge variant="destructive" className="text-xs ml-auto">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[400px] pr-2">
-                      <div className="space-y-3">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length === 0 ? (
-                          <p className="text-center text-muted-foreground text-sm py-8">No critical patients</p>
-                        ) : (
-                          patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').map((patient) => (
-                            <PatientCard key={patient.patientId} patient={patient} />
-                          ))
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-amber-500/30 bg-amber-500/5" data-testid="panel-declining">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <TrendingDown className="h-4 w-4 text-amber-500" />
-                      <span className="text-amber-500">Declining</span>
-                      <Badge variant="outline" className="text-xs ml-auto text-amber-600 border-amber-600">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[400px] pr-2">
-                      <div className="space-y-3">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length === 0 ? (
-                          <p className="text-center text-muted-foreground text-sm py-8">No declining patients</p>
-                        ) : (
-                          patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').map((patient) => (
-                            <PatientCard key={patient.patientId} patient={patient} />
-                          ))
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-
-                <Card data-testid="panel-stable">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Minus className="h-4 w-4 text-muted-foreground" />
-                      <span>Stable</span>
-                      <Badge variant="secondary" className="text-xs ml-auto">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[400px] pr-2">
-                      <div className="space-y-3">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length === 0 ? (
-                          <p className="text-center text-muted-foreground text-sm py-8">No stable patients</p>
-                        ) : (
-                          patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').map((patient) => (
-                            <PatientCard key={patient.patientId} patient={patient} />
-                          ))
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-emerald-500/30 bg-emerald-500/5" data-testid="panel-improving">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <TrendingUp className="h-4 w-4 text-emerald-500" />
-                      <span className="text-emerald-500">Improving</span>
-                      <Badge className="text-xs ml-auto bg-emerald-500">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[400px] pr-2">
-                      <div className="space-y-3">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length === 0 ? (
-                          <p className="text-center text-muted-foreground text-sm py-8">No improving patients</p>
-                        ) : (
-                          patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').map((patient) => (
-                            <PatientCard key={patient.patientId} patient={patient} />
-                          ))
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </div>
+              <>
+                {patientFilter !== 'ALL' && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      Showing: {patientFilter.charAt(0) + patientFilter.slice(1).toLowerCase()} patients
+                    </Badge>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setPatientFilter('ALL')}
+                      className="h-6 text-xs"
+                      data-testid="button-clear-filter"
+                    >
+                      Clear filter
+                    </Button>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {patientAnalysis
+                    .filter(p => patientFilter === 'ALL' || p.vitalsTrend === patientFilter)
+                    .map((patient) => (
+                      <PatientCard key={patient.patientId} patient={patient} />
+                    ))
+                  }
+                  {patientAnalysis.filter(p => patientFilter === 'ALL' || p.vitalsTrend === patientFilter).length === 0 && (
+                    <Card className="col-span-full">
+                      <CardContent className="py-8">
+                        <div className="text-center text-muted-foreground">
+                          <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>No {patientFilter.toLowerCase()} patients found</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </>
             )}
           </TabsContent>
 
