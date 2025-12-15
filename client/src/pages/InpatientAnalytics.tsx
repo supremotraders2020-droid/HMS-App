@@ -838,7 +838,7 @@ export default function InpatientAnalytics() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="patients" className="space-y-4">
+          <TabsContent value="patients" className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Patient Health Analysis</h2>
@@ -858,10 +858,82 @@ export default function InpatientAnalytics() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {patientAnalysis.map((patient) => (
-                  <PatientCard key={patient.patientId} patient={patient} />
-                ))}
+              <div className="space-y-6">
+                {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-rose-500/10">
+                        <AlertTriangle className="h-4 w-4 text-rose-500" />
+                      </div>
+                      <h3 className="font-semibold text-rose-500">Critical</h3>
+                      <Badge variant="destructive" className="text-xs">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').map((patient) => (
+                        <PatientCard key={patient.patientId} patient={patient} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-amber-500/10">
+                        <TrendingDown className="h-4 w-4 text-amber-500" />
+                      </div>
+                      <h3 className="font-semibold text-amber-500">Declining</h3>
+                      <Badge variant="outline" className="text-xs text-amber-600 border-amber-600">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').map((patient) => (
+                        <PatientCard key={patient.patientId} patient={patient} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-muted">
+                        <Minus className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <h3 className="font-semibold">Stable</h3>
+                      <Badge variant="secondary" className="text-xs">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').map((patient) => (
+                        <PatientCard key={patient.patientId} patient={patient} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-emerald-500/10">
+                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                      </div>
+                      <h3 className="font-semibold text-emerald-500">Improving</h3>
+                      <Badge className="text-xs bg-emerald-500">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').map((patient) => (
+                        <PatientCard key={patient.patientId} patient={patient} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
