@@ -551,15 +551,15 @@ function InsightDetailDialog({
                     <div className="grid grid-cols-3 gap-4 text-sm mt-2">
                       <div>
                         <p className="text-xs text-muted-foreground">Issued</p>
-                        <p className="font-medium">{item.totalIssued}</p>
+                        <p className="font-medium">{item.totalIssued || 0}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Wasted</p>
-                        <p className="font-medium text-rose-500">{item.totalWasted}</p>
+                        <p className="font-medium text-rose-500">{item.totalWasted || 0}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Cost Impact</p>
-                        <p className="font-medium">₹{item.estimatedCost.toLocaleString()}</p>
+                        <p className="font-medium">₹{(item.estimatedCost || 0).toLocaleString()}</p>
                       </div>
                     </div>
                   </Card>
