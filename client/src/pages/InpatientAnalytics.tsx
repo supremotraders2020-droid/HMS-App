@@ -389,6 +389,8 @@ export default function InpatientAnalytics() {
 
   const { data: resolvedAlerts = [] } = useQuery<ResolvedAlertDB[]>({
     queryKey: ["/api/resolved-alerts"],
+    refetchInterval: 5000,
+    staleTime: 0,
   });
 
   const resolveAlertMutation = useMutation({
