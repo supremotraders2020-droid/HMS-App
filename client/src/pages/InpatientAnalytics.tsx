@@ -207,7 +207,7 @@ export default function InpatientAnalytics() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
               <Activity className="h-6 w-6 text-primary" />
-              Inpatient Analytics
+              Patient Analytics
             </h1>
             <p className="text-muted-foreground">Real-time insights for admitted patients, nurse workload, and inventory usage</p>
           </div>
@@ -457,7 +457,7 @@ export default function InpatientAnalytics() {
                         {inventoryUsage.map((item) => (
                           <tr 
                             key={item.itemId} 
-                            className={`border-b hover:bg-muted/50 ${item.wastageRate > 20 ? 'bg-rose-500/5' : ''}`}
+                            className={`border-b hover:bg-muted/50 ${(item.wastageRate || 0) > 20 ? 'bg-rose-500/5' : ''}`}
                             data-testid={`row-inventory-${item.itemId}`}
                           >
                             <td className="py-3 px-2 font-medium">{item.itemName}</td>
@@ -469,11 +469,11 @@ export default function InpatientAnalytics() {
                               </span>
                             </td>
                             <td className="py-3 px-2 text-right">
-                              <span className={item.wastageRate > 20 ? 'text-rose-500 font-medium' : ''}>
-                                {item.wastageRate.toFixed(1)}%
+                              <span className={(item.wastageRate || 0) > 20 ? 'text-rose-500 font-medium' : ''}>
+                                {(item.wastageRate || 0).toFixed(1)}%
                               </span>
                             </td>
-                            <td className="py-3 px-2 text-right">₹{item.estimatedCost.toFixed(2)}</td>
+                            <td className="py-3 px-2 text-right">₹{(item.estimatedCost || 0).toFixed(2)}</td>
                             <td className="py-3 px-2">
                               <StockStatusBadge status={item.stockStatus} />
                             </td>

@@ -206,13 +206,13 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           </div>
         )}
       </Route>
-      <Route path="/inpatient-analytics">
+      <Route path="/patient-analytics">
         {currentUser.role === "ADMIN" ? (
           <InpatientAnalytics />
         ) : (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
-            <p className="text-muted-foreground">Only administrators can access Inpatient Analytics.</p>
+            <p className="text-muted-foreground">Only administrators can access Patient Analytics.</p>
           </div>
         )}
       </Route>
