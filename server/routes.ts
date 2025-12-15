@@ -7,6 +7,7 @@ import { databaseStorage } from "./database-storage";
 import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
+import { aiEngines } from "./ai-engines";
 
 const SALT_ROUNDS = 10;
 
@@ -3199,6 +3200,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to create report:", error);
       res.status(500).json({ error: "Failed to create report" });
+    }
+  });
+
+  // ========== AI INTELLIGENCE LAYER ROUTES ==========
+
+  // Get Doctor Efficiency metrics
+  app.get("/api/ai/doctor-efficiency", async (req, res) => {
+    try {
+      const { doctorId } = req.query;
+      const metrics = await aiEngines.calculateDoctorEfficiency(doctorId as string | undefined);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Failed to calculate doctor efficiency:", error);
+      res.status(500).json({ error: "Failed to calculate doctor efficiency metrics" });
+    }
+  });
+
+  // Get Nurse Efficiency metrics
+  app.get("/api/ai/nurse-efficiency", async (req, res) => {
+    try {
+      const { nurseId } = req.query;
+      const metrics = await aiEngines.calculateNurseEfficiency(nurseId as string | undefined);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Failed to calculate nurse efficiency:", error);
+      res.status(500).json({ error: "Failed to calculate nurse efficiency metrics" });
+    }
+  });
+
+  // Get OPD Intelligence metrics
+  app.get("/api/ai/opd-intelligence", async (req, res) => {
+    try {
+      const metrics = await aiEngines.calculateOPDIntelligence();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Failed to calculate OPD intelligence:", error);
+      res.status(500).json({ error: "Failed to calculate OPD intelligence metrics" });
+    }
+  });
+
+  // Get Hospital Health Index
+  app.get("/api/ai/hospital-health", async (req, res) => {
+    try {
+      const metrics = await aiEngines.calculateHospitalHealthIndex();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Failed to calculate hospital health index:", error);
+      res.status(500).json({ error: "Failed to calculate hospital health index" });
+    }
+  });
+
+  // Get Predictions
+  app.get("/api/ai/predictions", async (req, res) => {
+    try {
+      const predictions = await aiEngines.generatePredictions();
+      res.json(predictions);
+    } catch (error) {
+      console.error("Failed to generate predictions:", error);
+      res.status(500).json({ error: "Failed to generate predictions" });
+    }
+  });
+
+  // Get All AI Metrics (combined dashboard data)
+  app.get("/api/ai/dashboard", async (req, res) => {
+    try {
+      const [doctorMetrics, nurseMetrics, opdMetrics, healthIndex, predictions] = await Promise.all([
+        aiEngines.calculateDoctorEfficiency(),
+        aiEngines.calculateNurseEfficiency(),
+        aiEngines.calculateOPDIntelligence(),
+        aiEngines.calculateHospitalHealthIndex(),
+        aiEngines.generatePredictions()
+      ]);
+
+      res.json({
+        doctorEfficiency: doctorMetrics,
+        nurseEfficiency: nurseMetrics,
+        opdIntelligence: opdMetrics,
+        hospitalHealth: healthIndex,
+        predictions
+      });
+    } catch (error) {
+      console.error("Failed to fetch AI dashboard:", error);
+      res.status(500).json({ error: "Failed to fetch AI dashboard data" });
     }
   });
 

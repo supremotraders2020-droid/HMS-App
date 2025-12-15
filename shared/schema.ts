@@ -1228,3 +1228,163 @@ export const insertConsentTemplateSchema = createInsertSchema(consentTemplates).
 });
 export type InsertConsentTemplate = z.infer<typeof insertConsentTemplateSchema>;
 export type ConsentTemplate = typeof consentTemplates.$inferSelect;
+
+// ========== AI INTELLIGENCE LAYER TABLES ==========
+
+// AI Engine Types
+export const aiEngineTypeEnum = pgEnum("ai_engine_type", [
+  "DOCTOR_EFFICIENCY",
+  "NURSE_EFFICIENCY", 
+  "OPD_INTELLIGENCE",
+  "HOSPITAL_HEALTH",
+  "COMPLIANCE_RISK",
+  "PREDICTIVE"
+]);
+
+// AI Analytics Snapshots Table - Stores calculated metrics over time
+export const aiAnalyticsSnapshots = pgTable("ai_analytics_snapshots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  engineType: text("engine_type").notNull(), // DOCTOR_EFFICIENCY, NURSE_EFFICIENCY, OPD_INTELLIGENCE, etc.
+  entityId: varchar("entity_id"), // Doctor ID, Nurse ID, Department ID, or null for hospital-wide
+  entityType: text("entity_type"), // doctor, nurse, department, hospital
+  metricName: text("metric_name").notNull(),
+  metricValue: decimal("metric_value", { precision: 10, scale: 2 }).notNull(),
+  metricUnit: text("metric_unit"), // percentage, count, minutes, score
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  calculatedAt: timestamp("calculated_at").defaultNow(),
+});
+
+export const insertAiAnalyticsSnapshotSchema = createInsertSchema(aiAnalyticsSnapshots).omit({
+  id: true,
+  calculatedAt: true,
+});
+export type InsertAiAnalyticsSnapshot = z.infer<typeof insertAiAnalyticsSnapshotSchema>;
+export type AiAnalyticsSnapshot = typeof aiAnalyticsSnapshots.$inferSelect;
+
+// AI Metric Catalog Table - Defines available metrics for each engine
+export const aiMetricCatalog = pgTable("ai_metric_catalog", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  engineType: text("engine_type").notNull(),
+  metricName: text("metric_name").notNull(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  metricUnit: text("metric_unit"),
+  targetValue: decimal("target_value", { precision: 10, scale: 2 }),
+  warningThreshold: decimal("warning_threshold", { precision: 10, scale: 2 }),
+  criticalThreshold: decimal("critical_threshold", { precision: 10, scale: 2 }),
+  isHigherBetter: boolean("is_higher_better").notNull().default(true),
+  weight: decimal("weight", { precision: 5, scale: 2 }).default("1.0"), // For composite scores
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAiMetricCatalogSchema = createInsertSchema(aiMetricCatalog).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertAiMetricCatalog = z.infer<typeof insertAiMetricCatalogSchema>;
+export type AiMetricCatalog = typeof aiMetricCatalog.$inferSelect;
+
+// AI Anomaly Events Table - Tracks detected anomalies and outliers
+export const aiAnomalyEvents = pgTable("ai_anomaly_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  engineType: text("engine_type").notNull(),
+  entityId: varchar("entity_id"),
+  entityType: text("entity_type"),
+  anomalyType: text("anomaly_type").notNull(), // SPIKE, DROP, THRESHOLD_BREACH, PATTERN_BREAK
+  severity: text("severity").notNull().default("MEDIUM"), // LOW, MEDIUM, HIGH, CRITICAL
+  metricName: text("metric_name").notNull(),
+  expectedValue: decimal("expected_value", { precision: 10, scale: 2 }),
+  actualValue: decimal("actual_value", { precision: 10, scale: 2 }).notNull(),
+  deviation: decimal("deviation", { precision: 10, scale: 2 }),
+  description: text("description").notNull(),
+  suggestedAction: text("suggested_action"),
+  isAcknowledged: boolean("is_acknowledged").notNull().default(false),
+  acknowledgedBy: text("acknowledged_by"),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  detectedAt: timestamp("detected_at").defaultNow(),
+});
+
+export const insertAiAnomalyEventSchema = createInsertSchema(aiAnomalyEvents).omit({
+  id: true,
+  detectedAt: true,
+});
+export type InsertAiAnomalyEvent = z.infer<typeof insertAiAnomalyEventSchema>;
+export type AiAnomalyEvent = typeof aiAnomalyEvents.$inferSelect;
+
+// AI Prediction Results Table - Stores forecasts and predictions
+export const aiPredictionResults = pgTable("ai_prediction_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  engineType: text("engine_type").notNull(),
+  predictionType: text("prediction_type").notNull(), // ICU_LOAD, OXYGEN_DEMAND, STOCK_SHORTAGE, STAFF_SHORTAGE
+  entityId: varchar("entity_id"),
+  entityType: text("entity_type"),
+  predictionDate: timestamp("prediction_date").notNull(), // The date being predicted
+  predictedValue: decimal("predicted_value", { precision: 10, scale: 2 }).notNull(),
+  confidenceLevel: decimal("confidence_level", { precision: 5, scale: 2 }), // 0-100%
+  lowerBound: decimal("lower_bound", { precision: 10, scale: 2 }),
+  upperBound: decimal("upper_bound", { precision: 10, scale: 2 }),
+  actualValue: decimal("actual_value", { precision: 10, scale: 2 }), // Filled in later for accuracy tracking
+  modelVersion: text("model_version").default("1.0"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAiPredictionResultSchema = createInsertSchema(aiPredictionResults).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertAiPredictionResult = z.infer<typeof insertAiPredictionResultSchema>;
+export type AiPredictionResult = typeof aiPredictionResults.$inferSelect;
+
+// AI Recommendations Table - Prescriptive outputs and suggestions
+export const aiRecommendations = pgTable("ai_recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  engineType: text("engine_type").notNull(),
+  category: text("category").notNull(), // EFFICIENCY, COMPLIANCE, RESOURCE, COST, SAFETY
+  priority: text("priority").notNull().default("MEDIUM"), // LOW, MEDIUM, HIGH, CRITICAL
+  entityId: varchar("entity_id"),
+  entityType: text("entity_type"),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  expectedImpact: text("expected_impact"), // e.g., "15% reduction in wait time"
+  estimatedSavings: decimal("estimated_savings", { precision: 12, scale: 2 }),
+  implementationDifficulty: text("implementation_difficulty").default("MEDIUM"), // LOW, MEDIUM, HIGH
+  status: text("status").notNull().default("PENDING"), // PENDING, IN_PROGRESS, IMPLEMENTED, DISMISSED
+  implementedBy: text("implemented_by"),
+  implementedAt: timestamp("implemented_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
+export const insertAiRecommendationSchema = createInsertSchema(aiRecommendations).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertAiRecommendation = z.infer<typeof insertAiRecommendationSchema>;
+export type AiRecommendation = typeof aiRecommendations.$inferSelect;
+
+// Hospital Health Index Table - Daily hospital-wide health scores
+export const hospitalHealthIndex = pgTable("hospital_health_index", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: text("date").notNull().unique(), // YYYY-MM-DD format
+  overallScore: decimal("overall_score", { precision: 5, scale: 2 }).notNull(), // 0-100
+  doctorEfficiencyScore: decimal("doctor_efficiency_score", { precision: 5, scale: 2 }),
+  nurseEfficiencyScore: decimal("nurse_efficiency_score", { precision: 5, scale: 2 }),
+  opdScore: decimal("opd_score", { precision: 5, scale: 2 }),
+  complianceScore: decimal("compliance_score", { precision: 5, scale: 2 }),
+  resourceUtilization: decimal("resource_utilization", { precision: 5, scale: 2 }),
+  patientSatisfaction: decimal("patient_satisfaction", { precision: 5, scale: 2 }),
+  costEfficiency: decimal("cost_efficiency", { precision: 5, scale: 2 }),
+  workflowDelayIndex: decimal("workflow_delay_index", { precision: 5, scale: 2 }),
+  trend: text("trend").default("STABLE"), // IMPROVING, STABLE, DECLINING
+  insights: text("insights"), // JSON array of key insights
+  calculatedAt: timestamp("calculated_at").defaultNow(),
+});
+
+export const insertHospitalHealthIndexSchema = createInsertSchema(hospitalHealthIndex).omit({
+  id: true,
+  calculatedAt: true,
+});
+export type InsertHospitalHealthIndex = z.infer<typeof insertHospitalHealthIndexSchema>;
+export type HospitalHealthIndex = typeof hospitalHealthIndex.$inferSelect;
