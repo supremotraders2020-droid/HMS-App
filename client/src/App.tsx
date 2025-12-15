@@ -29,6 +29,7 @@ import ConsentForms from "@/pages/ConsentForms";
 import OxygenTracker from "@/pages/OxygenTracker";
 import BiowastePage from "@/pages/BiowastePage";
 import AIAnalytics from "@/pages/AIAnalytics";
+import InpatientAnalytics from "@/pages/InpatientAnalytics";
 import FloatingChatButton from "@/components/FloatingChatButton";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
@@ -202,6 +203,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only administrators can access AI Analytics.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/inpatient-analytics">
+        {currentUser.role === "ADMIN" ? (
+          <InpatientAnalytics />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators can access Inpatient Analytics.</p>
           </div>
         )}
       </Route>

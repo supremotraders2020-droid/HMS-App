@@ -3262,6 +3262,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get Inpatient Analytics
+  app.get("/api/ai/inpatient-analytics", async (req, res) => {
+    try {
+      const metrics = await aiEngines.calculateInpatientAnalytics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Failed to calculate inpatient analytics:", error);
+      res.status(500).json({ error: "Failed to calculate inpatient analytics" });
+    }
+  });
+
   // Get All AI Metrics (combined dashboard data)
   app.get("/api/ai/dashboard", async (req, res) => {
     try {
