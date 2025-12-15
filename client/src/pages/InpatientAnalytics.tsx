@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -838,7 +839,7 @@ export default function InpatientAnalytics() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="patients" className="space-y-6">
+          <TabsContent value="patients" className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Patient Health Analysis</h2>
@@ -858,83 +859,99 @@ export default function InpatientAnalytics() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-6">
+              <Accordion type="multiple" defaultValue={['critical', 'declining', 'stable', 'improving']} className="space-y-2">
                 {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 rounded-lg bg-rose-500/10">
-                        <AlertTriangle className="h-4 w-4 text-rose-500" />
+                  <AccordionItem value="critical" className="border rounded-lg bg-rose-500/5 border-rose-500/20">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline" data-testid="accordion-critical">
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-lg bg-rose-500/20">
+                          <AlertTriangle className="h-4 w-4 text-rose-500" />
+                        </div>
+                        <span className="font-semibold text-rose-500">Critical</span>
+                        <Badge variant="destructive" className="text-xs">
+                          {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length}
+                        </Badge>
                       </div>
-                      <h3 className="font-semibold text-rose-500">Critical</h3>
-                      <Badge variant="destructive" className="text-xs">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').map((patient) => (
-                        <PatientCard key={patient.patientId} patient={patient} />
-                      ))}
-                    </div>
-                  </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').map((patient) => (
+                          <PatientCard key={patient.patientId} patient={patient} />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 )}
 
                 {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 rounded-lg bg-amber-500/10">
-                        <TrendingDown className="h-4 w-4 text-amber-500" />
+                  <AccordionItem value="declining" className="border rounded-lg bg-amber-500/5 border-amber-500/20">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline" data-testid="accordion-declining">
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-lg bg-amber-500/20">
+                          <TrendingDown className="h-4 w-4 text-amber-500" />
+                        </div>
+                        <span className="font-semibold text-amber-500">Declining</span>
+                        <Badge variant="outline" className="text-xs text-amber-600 border-amber-600">
+                          {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length}
+                        </Badge>
                       </div>
-                      <h3 className="font-semibold text-amber-500">Declining</h3>
-                      <Badge variant="outline" className="text-xs text-amber-600 border-amber-600">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').map((patient) => (
-                        <PatientCard key={patient.patientId} patient={patient} />
-                      ))}
-                    </div>
-                  </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').map((patient) => (
+                          <PatientCard key={patient.patientId} patient={patient} />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 )}
 
                 {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 rounded-lg bg-muted">
-                        <Minus className="h-4 w-4 text-muted-foreground" />
+                  <AccordionItem value="stable" className="border rounded-lg">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline" data-testid="accordion-stable">
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-lg bg-muted">
+                          <Minus className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <span className="font-semibold">Stable</span>
+                        <Badge variant="secondary" className="text-xs">
+                          {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length}
+                        </Badge>
                       </div>
-                      <h3 className="font-semibold">Stable</h3>
-                      <Badge variant="secondary" className="text-xs">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').map((patient) => (
-                        <PatientCard key={patient.patientId} patient={patient} />
-                      ))}
-                    </div>
-                  </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').map((patient) => (
+                          <PatientCard key={patient.patientId} patient={patient} />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 )}
 
                 {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 rounded-lg bg-emerald-500/10">
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  <AccordionItem value="improving" className="border rounded-lg bg-emerald-500/5 border-emerald-500/20">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline" data-testid="accordion-improving">
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                          <TrendingUp className="h-4 w-4 text-emerald-500" />
+                        </div>
+                        <span className="font-semibold text-emerald-500">Improving</span>
+                        <Badge className="text-xs bg-emerald-500">
+                          {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length}
+                        </Badge>
                       </div>
-                      <h3 className="font-semibold text-emerald-500">Improving</h3>
-                      <Badge className="text-xs bg-emerald-500">
-                        {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').map((patient) => (
-                        <PatientCard key={patient.patientId} patient={patient} />
-                      ))}
-                    </div>
-                  </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').map((patient) => (
+                          <PatientCard key={patient.patientId} patient={patient} />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 )}
-              </div>
+              </Accordion>
             )}
           </TabsContent>
 
