@@ -288,26 +288,26 @@ export default function AIAnalytics() {
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="flex w-full mb-4 overflow-x-auto" data-testid="ai-tabs">
-              <TabsTrigger value="overview" className="flex-1 min-w-0" data-testid="tab-overview">
-                <Building2 className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Overview</span>
+            <TabsList className="grid w-full grid-cols-5 gap-1 mb-4 p-1" data-testid="ai-tabs">
+              <TabsTrigger value="overview" className="px-2 md:px-4" data-testid="tab-overview">
+                <Building2 className="h-4 w-4 md:mr-2 shrink-0" />
+                <span className="hidden md:inline truncate">Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="doctors" className="flex-1 min-w-0" data-testid="tab-doctors">
-                <Stethoscope className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Doctors</span>
+              <TabsTrigger value="doctors" className="px-2 md:px-4" data-testid="tab-doctors">
+                <Stethoscope className="h-4 w-4 md:mr-2 shrink-0" />
+                <span className="hidden md:inline truncate">Doctors</span>
               </TabsTrigger>
-              <TabsTrigger value="nurses" className="flex-1 min-w-0" data-testid="tab-nurses">
-                <Heart className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Nurses</span>
+              <TabsTrigger value="nurses" className="px-2 md:px-4" data-testid="tab-nurses">
+                <Heart className="h-4 w-4 md:mr-2 shrink-0" />
+                <span className="hidden md:inline truncate">Nurses</span>
               </TabsTrigger>
-              <TabsTrigger value="opd" className="flex-1 min-w-0" data-testid="tab-opd">
-                <Users className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">OPD</span>
+              <TabsTrigger value="opd" className="px-2 md:px-4" data-testid="tab-opd">
+                <Users className="h-4 w-4 md:mr-2 shrink-0" />
+                <span className="hidden md:inline truncate">OPD</span>
               </TabsTrigger>
-              <TabsTrigger value="predictions" className="flex-1 min-w-0" data-testid="tab-predictions">
-                <LineChart className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Predictions</span>
+              <TabsTrigger value="predictions" className="px-2 md:px-4" data-testid="tab-predictions">
+                <LineChart className="h-4 w-4 md:mr-2 shrink-0" />
+                <span className="hidden md:inline truncate">Predict</span>
               </TabsTrigger>
             </TabsList>
 
