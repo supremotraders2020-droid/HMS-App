@@ -578,6 +578,7 @@ export default function InpatientAnalytics() {
   const [alertsTab, setAlertsTab] = useState<'active' | 'resolved'>('active');
   const [selectedInsight, setSelectedInsight] = useState<{ type: InsightType; text: string } | null>(null);
   const [patientFilter, setPatientFilter] = useState<'ALL' | 'CRITICAL' | 'DECLINING' | 'STABLE' | 'IMPROVING'>('ALL');
+  const [inventoryFilter, setInventoryFilter] = useState<'ALL' | 'ADEQUATE' | 'LOW' | 'CRITICAL' | 'OUT_OF_STOCK'>('ALL');
 
   const { data, isLoading, refetch, isRefetching } = useQuery<InpatientAnalyticsData>({
     queryKey: ["/api/ai/inpatient-analytics"],
@@ -1023,12 +1024,75 @@ export default function InpatientAnalytics() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Inventory Usage & Wastage</h2>
-                <p className="text-sm text-muted-foreground">Track consumption and identify wastage patterns</p>
+                <p className="text-sm text-muted-foreground">Click a category to filter by stock status</p>
               </div>
               <Badge variant="secondary" className="text-xs">
                 {inventoryUsage.length} items
               </Badge>
             </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <button
+                onClick={() => setInventoryFilter('ALL')}
+                className={`p-3 rounded-lg border transition-all text-left ${inventoryFilter === 'ALL' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'hover-elevate'}`}
+                data-testid="filter-inventory-all"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Package className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">All</span>
+                </div>
+                <span className="text-2xl font-bold">{inventoryUsage.length}</span>
+              </button>
+              
+              <button
+                onClick={() => setInventoryFilter('ADEQUATE')}
+                className={`p-3 rounded-lg border transition-all text-left ${inventoryFilter === 'ADEQUATE' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-500/10' : 'border-emerald-500/30 bg-emerald-500/5 hover-elevate'}`}
+                data-testid="filter-inventory-adequate"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <CheckCircle className="h-4 w-4 text-emerald-500" />
+                  <span className="text-sm font-medium text-emerald-500">Adequate</span>
+                </div>
+                <span className="text-2xl font-bold text-emerald-500">{inventoryUsage.filter(i => i.stockStatus === 'ADEQUATE').length}</span>
+              </button>
+              
+              <button
+                onClick={() => setInventoryFilter('LOW')}
+                className={`p-3 rounded-lg border transition-all text-left ${inventoryFilter === 'LOW' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-500/10' : 'border-amber-500/30 bg-amber-500/5 hover-elevate'}`}
+                data-testid="filter-inventory-low"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-medium text-amber-500">Low</span>
+                </div>
+                <span className="text-2xl font-bold text-amber-500">{inventoryUsage.filter(i => i.stockStatus === 'LOW').length}</span>
+              </button>
+              
+              <button
+                onClick={() => setInventoryFilter('CRITICAL')}
+                className={`p-3 rounded-lg border transition-all text-left ${inventoryFilter === 'CRITICAL' ? 'ring-2 ring-rose-500 border-rose-500 bg-rose-500/10' : 'border-rose-500/30 bg-rose-500/5 hover-elevate'}`}
+                data-testid="filter-inventory-critical"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertTriangle className="h-4 w-4 text-rose-500" />
+                  <span className="text-sm font-medium text-rose-500">Critical</span>
+                </div>
+                <span className="text-2xl font-bold text-rose-500">{inventoryUsage.filter(i => i.stockStatus === 'CRITICAL').length}</span>
+              </button>
+              
+              <button
+                onClick={() => setInventoryFilter('OUT_OF_STOCK')}
+                className={`p-3 rounded-lg border transition-all text-left ${inventoryFilter === 'OUT_OF_STOCK' ? 'ring-2 ring-rose-700 border-rose-700 bg-rose-700/10' : 'border-rose-700/30 bg-rose-700/5 hover-elevate'}`}
+                data-testid="filter-inventory-out-of-stock"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Package className="h-4 w-4 text-rose-700" />
+                  <span className="text-sm font-medium text-rose-700">Out of Stock</span>
+                </div>
+                <span className="text-2xl font-bold text-rose-700">{inventoryUsage.filter(i => i.stockStatus === 'OUT_OF_STOCK').length}</span>
+              </button>
+            </div>
+
             {inventoryUsage.length === 0 ? (
               <Card>
                 <CardContent className="py-12">
@@ -1039,52 +1103,80 @@ export default function InpatientAnalytics() {
                 </CardContent>
               </Card>
             ) : (
-              <Card>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b bg-muted/30">
-                          <th className="text-left py-3 px-4 font-medium">Item</th>
-                          <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">Category</th>
-                          <th className="text-right py-3 px-4 font-medium">Issued</th>
-                          <th className="text-right py-3 px-4 font-medium">Wasted</th>
-                          <th className="text-right py-3 px-4 font-medium hidden md:table-cell">Wastage Rate</th>
-                          <th className="text-right py-3 px-4 font-medium hidden lg:table-cell">Cost</th>
-                          <th className="text-left py-3 px-4 font-medium">Stock</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {inventoryUsage.map((item) => (
-                          <tr 
-                            key={item.itemId} 
-                            className={`border-b hover:bg-muted/30 transition-colors ${(item.wastageRate || 0) > 20 ? 'bg-rose-500/5' : ''}`}
-                            data-testid={`row-inventory-${item.itemId}`}
-                          >
-                            <td className="py-3 px-4 font-medium">{item.itemName}</td>
-                            <td className="py-3 px-4 text-muted-foreground hidden sm:table-cell">{item.category}</td>
-                            <td className="py-3 px-4 text-right">{item.totalIssued}</td>
-                            <td className="py-3 px-4 text-right">
-                              <span className={item.totalWasted > 0 ? 'text-rose-500' : ''}>
-                                {item.totalWasted}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right hidden md:table-cell">
-                              <span className={(item.wastageRate || 0) > 20 ? 'text-rose-500 font-medium' : ''}>
-                                {(item.wastageRate || 0).toFixed(1)}%
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right hidden lg:table-cell">₹{(item.estimatedCost || 0).toFixed(2)}</td>
-                            <td className="py-3 px-4">
-                              <StockStatusBadge status={item.stockStatus} />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              <>
+                {inventoryFilter !== 'ALL' && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      Showing: {inventoryFilter === 'OUT_OF_STOCK' ? 'Out of Stock' : inventoryFilter.charAt(0) + inventoryFilter.slice(1).toLowerCase()} items
+                    </Badge>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setInventoryFilter('ALL')}
+                      className="h-6 text-xs"
+                      data-testid="button-clear-inventory-filter"
+                    >
+                      Clear filter
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+                )}
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b bg-muted/30">
+                            <th className="text-left py-3 px-4 font-medium">Item</th>
+                            <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">Category</th>
+                            <th className="text-right py-3 px-4 font-medium">Issued</th>
+                            <th className="text-right py-3 px-4 font-medium">Wasted</th>
+                            <th className="text-right py-3 px-4 font-medium hidden md:table-cell">Wastage Rate</th>
+                            <th className="text-right py-3 px-4 font-medium hidden lg:table-cell">Cost</th>
+                            <th className="text-left py-3 px-4 font-medium">Stock</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {inventoryUsage
+                            .filter(item => inventoryFilter === 'ALL' || item.stockStatus === inventoryFilter)
+                            .map((item) => (
+                              <tr 
+                                key={item.itemId} 
+                                className={`border-b hover:bg-muted/30 transition-colors ${(item.wastageRate || 0) > 20 ? 'bg-rose-500/5' : ''}`}
+                                data-testid={`row-inventory-${item.itemId}`}
+                              >
+                                <td className="py-3 px-4 font-medium">{item.itemName}</td>
+                                <td className="py-3 px-4 text-muted-foreground hidden sm:table-cell">{item.category}</td>
+                                <td className="py-3 px-4 text-right">{item.totalIssued}</td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className={item.totalWasted > 0 ? 'text-rose-500' : ''}>
+                                    {item.totalWasted}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right hidden md:table-cell">
+                                  <span className={(item.wastageRate || 0) > 20 ? 'text-rose-500 font-medium' : ''}>
+                                    {(item.wastageRate || 0).toFixed(1)}%
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right hidden lg:table-cell">₹{(item.estimatedCost || 0).toFixed(2)}</td>
+                                <td className="py-3 px-4">
+                                  <StockStatusBadge status={item.stockStatus} />
+                                </td>
+                              </tr>
+                            ))
+                          }
+                          {inventoryUsage.filter(item => inventoryFilter === 'ALL' || item.stockStatus === inventoryFilter).length === 0 && (
+                            <tr>
+                              <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                                No {inventoryFilter === 'OUT_OF_STOCK' ? 'out of stock' : inventoryFilter.toLowerCase()} items found
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
             )}
           </TabsContent>
         </Tabs>
