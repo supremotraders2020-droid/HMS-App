@@ -119,10 +119,10 @@ function SummaryCard({ title, value, subtitle, icon: Icon, variant }: {
 }) {
   const getVariantStyles = () => {
     switch (variant) {
-      case 'danger': return 'border-rose-500/30 bg-gradient-to-br from-rose-500/10 to-rose-500/5';
-      case 'warning': return 'border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-amber-500/5';
-      case 'success': return 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5';
-      default: return 'bg-gradient-to-br from-primary/5 to-transparent';
+      case 'danger': return 'border-rose-500/40 bg-gradient-to-br from-rose-500/15 via-rose-500/5 to-transparent shadow-rose-500/10 shadow-lg';
+      case 'warning': return 'border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent shadow-amber-500/10 shadow-lg';
+      case 'success': return 'border-emerald-500/40 bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent shadow-emerald-500/10 shadow-lg';
+      default: return 'bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-primary/10 shadow-lg';
     }
   };
 
@@ -135,17 +135,26 @@ function SummaryCard({ title, value, subtitle, icon: Icon, variant }: {
     }
   };
 
+  const getIconBg = () => {
+    switch (variant) {
+      case 'danger': return 'bg-gradient-to-br from-rose-500/20 to-rose-500/10 ring-1 ring-rose-500/30';
+      case 'warning': return 'bg-gradient-to-br from-amber-500/20 to-amber-500/10 ring-1 ring-amber-500/30';
+      case 'success': return 'bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 ring-1 ring-emerald-500/30';
+      default: return 'bg-gradient-to-br from-primary/20 to-primary/10 ring-1 ring-primary/30';
+    }
+  };
+
   return (
-    <Card className={`${getVariantStyles()} transition-all duration-200`} data-testid={`card-summary-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+    <Card className={`${getVariantStyles()} transition-all duration-300 hover:scale-[1.02] hover:shadow-xl`} data-testid={`card-summary-${title.toLowerCase().replace(/\s+/g, '-')}`}>
       <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <div className={`p-2 rounded-full ${variant === 'danger' ? 'bg-rose-500/10' : variant === 'warning' ? 'bg-amber-500/10' : variant === 'success' ? 'bg-emerald-500/10' : 'bg-primary/10'}`}>
-          <Icon className={`h-4 w-4 ${getIconStyles()}`} />
+        <div className={`p-2.5 rounded-xl ${getIconBg()}`}>
+          <Icon className={`h-5 w-5 ${getIconStyles()}`} />
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold">{value}</div>
-        {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+        <div className="text-4xl font-bold tracking-tight">{value}</div>
+        {subtitle && <p className="text-xs text-muted-foreground mt-2 font-medium">{subtitle}</p>}
       </CardContent>
     </Card>
   );
@@ -209,70 +218,98 @@ function getHealthScoreBg(score: number) {
 }
 
 function PatientCard({ patient }: { patient: PatientAnalysis }) {
+  const getTrendBorderColor = () => {
+    switch (patient.vitalsTrend) {
+      case 'CRITICAL': return 'border-l-rose-500';
+      case 'DECLINING': return 'border-l-amber-500';
+      case 'IMPROVING': return 'border-l-emerald-500';
+      default: return 'border-l-muted-foreground/30';
+    }
+  };
+
   return (
-    <Card className="hover-elevate transition-all duration-200" data-testid={`card-patient-${patient.patientId}`}>
+    <Card className={`hover-elevate transition-all duration-300 hover:shadow-lg border-l-4 ${getTrendBorderColor()}`} data-testid={`card-patient-${patient.patientId}`}>
       <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-start justify-between gap-2 mb-4">
           <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getHealthScoreBg(patient.healthScore)}`}>
-              <span className={`text-lg font-bold ${getHealthScoreColor(patient.healthScore)}`}>{patient.healthScore}</span>
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${getHealthScoreBg(patient.healthScore)} ring-2 ring-offset-2 ring-offset-background ${patient.healthScore >= 80 ? 'ring-emerald-500/30' : patient.healthScore >= 60 ? 'ring-amber-500/30' : 'ring-rose-500/30'}`}>
+              <span className={`text-xl font-bold ${getHealthScoreColor(patient.healthScore)}`}>{patient.healthScore}</span>
             </div>
             <div>
               <h3 className="font-semibold text-base">{patient.patientName}</h3>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                 <BedDouble className="h-3 w-3" />
                 <span>Room {patient.roomNumber || 'N/A'}</span>
+                <span className="text-muted-foreground/50">|</span>
+                <Calendar className="h-3 w-3" />
+                <span>Day {patient.daysAdmitted}</span>
               </div>
             </div>
           </div>
           <VitalsTrendBadge trend={patient.vitalsTrend} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Day</span>
-            <span className="font-medium ml-auto">{patient.daysAdmitted}</span>
-          </div>
-          {patient.lastVitals && (
-            <>
-              <div className="flex items-center gap-2 text-sm">
+        {patient.lastVitals && (
+          <div className="grid grid-cols-4 gap-2 mb-4 p-3 rounded-xl bg-muted/30">
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-1">
                 <Heart className="h-4 w-4 text-rose-400" />
-                <span className="text-muted-foreground">BP</span>
-                <span className="font-medium ml-auto">{patient.lastVitals.bp}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Droplets className="h-4 w-4 text-blue-400" />
-                <span className="text-muted-foreground">SpO2</span>
-                <span className="font-medium ml-auto">{patient.lastVitals.spO2}%</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Thermometer className="h-4 w-4 text-amber-400" />
-                <span className="text-muted-foreground">Temp</span>
-                <span className="font-medium ml-auto">{patient.lastVitals.temperature}°F</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <div>
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="flex items-center gap-1 text-muted-foreground">
-                <Utensils className="h-3 w-3" /> Meal Compliance
-              </span>
-              <span className={`font-medium ${patient.mealCompliance < 50 ? 'text-rose-500' : ''}`}>{patient.mealCompliance}%</span>
+              <p className="text-xs text-muted-foreground">BP</p>
+              <p className="font-semibold text-sm">{patient.lastVitals.bp}</p>
             </div>
-            <Progress value={patient.mealCompliance} className="h-1.5" />
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-1">
+                <Activity className="h-4 w-4 text-blue-400" />
+              </div>
+              <p className="text-xs text-muted-foreground">Pulse</p>
+              <p className="font-semibold text-sm">{patient.lastVitals.pulse}</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-1">
+                <Droplets className="h-4 w-4 text-cyan-400" />
+              </div>
+              <p className="text-xs text-muted-foreground">SpO2</p>
+              <p className="font-semibold text-sm">{patient.lastVitals.spO2}%</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-1">
+                <Thermometer className="h-4 w-4 text-amber-400" />
+              </div>
+              <p className="text-xs text-muted-foreground">Temp</p>
+              <p className="font-semibold text-sm">{patient.lastVitals.temperature}°F</p>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div>
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="flex items-center gap-1.5 text-muted-foreground font-medium">
+                <Utensils className="h-3.5 w-3.5" /> Meal Compliance
+              </span>
+              <span className={`font-bold ${patient.mealCompliance < 50 ? 'text-rose-500' : patient.mealCompliance >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}>{patient.mealCompliance}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${patient.mealCompliance < 50 ? 'bg-gradient-to-r from-rose-500 to-rose-400' : patient.mealCompliance >= 80 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-amber-500 to-amber-400'}`}
+                style={{ width: `${patient.mealCompliance}%` }}
+              />
+            </div>
           </div>
           <div>
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="flex items-center gap-1 text-muted-foreground">
-                <Pill className="h-3 w-3" /> Medication Adherence
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="flex items-center gap-1.5 text-muted-foreground font-medium">
+                <Pill className="h-3.5 w-3.5" /> Medication Adherence
               </span>
-              <span className="font-medium">{patient.medicationAdherence}%</span>
+              <span className={`font-bold ${patient.medicationAdherence < 50 ? 'text-rose-500' : patient.medicationAdherence >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}>{patient.medicationAdherence}%</span>
             </div>
-            <Progress value={patient.medicationAdherence} className="h-1.5" />
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${patient.medicationAdherence < 50 ? 'bg-gradient-to-r from-rose-500 to-rose-400' : patient.medicationAdherence >= 80 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-amber-500 to-amber-400'}`}
+                style={{ width: `${patient.medicationAdherence}%` }}
+              />
+            </div>
           </div>
         </div>
       </CardContent>
