@@ -32,7 +32,8 @@ import {
   Wrench,
   FileCheck,
   Cylinder,
-  Trash2
+  Trash2,
+  Brain
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -81,6 +82,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Equipment Servicing", url: "/equipment-servicing", icon: Wrench, roles: ["ADMIN"] },
       { title: "Oxygen Tracker", url: "/oxygen-tracker", icon: Cylinder, roles: ["ADMIN", "NURSE"] },
       { title: "Biowaste Management", url: "/biowaste-management", icon: Trash2, roles: ["ADMIN"] },
+      { title: "AI Analytics", url: "/ai-analytics", icon: Brain, roles: ["ADMIN"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
       { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "PATIENT"] },
       { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] }
