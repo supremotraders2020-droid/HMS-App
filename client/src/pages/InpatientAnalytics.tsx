@@ -859,77 +859,107 @@ export default function InpatientAnalytics() {
                 </CardContent>
               </Card>
             ) : (
-              <Tabs defaultValue="all" className="space-y-4">
-                <TabsList className="flex-wrap h-auto gap-1 p-1">
-                  <TabsTrigger value="all" data-testid="subtab-all" className="text-xs">
-                    All ({patientAnalysis.length})
-                  </TabsTrigger>
-                  {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length > 0 && (
-                    <TabsTrigger value="critical" data-testid="subtab-critical" className="text-xs text-rose-500 data-[state=active]:text-rose-500">
-                      <AlertTriangle className="h-3 w-3 mr-1" />
-                      Critical ({patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length})
-                    </TabsTrigger>
-                  )}
-                  {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length > 0 && (
-                    <TabsTrigger value="declining" data-testid="subtab-declining" className="text-xs text-amber-500 data-[state=active]:text-amber-500">
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                      Declining ({patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length})
-                    </TabsTrigger>
-                  )}
-                  {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length > 0 && (
-                    <TabsTrigger value="stable" data-testid="subtab-stable" className="text-xs">
-                      <Minus className="h-3 w-3 mr-1" />
-                      Stable ({patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length})
-                    </TabsTrigger>
-                  )}
-                  {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length > 0 && (
-                    <TabsTrigger value="improving" data-testid="subtab-improving" className="text-xs text-emerald-500 data-[state=active]:text-emerald-500">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      Improving ({patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length})
-                    </TabsTrigger>
-                  )}
-                </TabsList>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <Card className="border-rose-500/30 bg-rose-500/5" data-testid="panel-critical">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <AlertTriangle className="h-4 w-4 text-rose-500" />
+                      <span className="text-rose-500">Critical</span>
+                      <Badge variant="destructive" className="text-xs ml-auto">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[400px] pr-2">
+                      <div className="space-y-3">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-8">No critical patients</p>
+                        ) : (
+                          patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').map((patient) => (
+                            <PatientCard key={patient.patientId} patient={patient} />
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
 
-                <TabsContent value="all">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {patientAnalysis.map((patient) => (
-                      <PatientCard key={patient.patientId} patient={patient} />
-                    ))}
-                  </div>
-                </TabsContent>
+                <Card className="border-amber-500/30 bg-amber-500/5" data-testid="panel-declining">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <TrendingDown className="h-4 w-4 text-amber-500" />
+                      <span className="text-amber-500">Declining</span>
+                      <Badge variant="outline" className="text-xs ml-auto text-amber-600 border-amber-600">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[400px] pr-2">
+                      <div className="space-y-3">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-8">No declining patients</p>
+                        ) : (
+                          patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').map((patient) => (
+                            <PatientCard key={patient.patientId} patient={patient} />
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
 
-                <TabsContent value="critical">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL').map((patient) => (
-                      <PatientCard key={patient.patientId} patient={patient} />
-                    ))}
-                  </div>
-                </TabsContent>
+                <Card data-testid="panel-stable">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Minus className="h-4 w-4 text-muted-foreground" />
+                      <span>Stable</span>
+                      <Badge variant="secondary" className="text-xs ml-auto">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[400px] pr-2">
+                      <div className="space-y-3">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-8">No stable patients</p>
+                        ) : (
+                          patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').map((patient) => (
+                            <PatientCard key={patient.patientId} patient={patient} />
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
 
-                <TabsContent value="declining">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {patientAnalysis.filter(p => p.vitalsTrend === 'DECLINING').map((patient) => (
-                      <PatientCard key={patient.patientId} patient={patient} />
-                    ))}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="stable">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {patientAnalysis.filter(p => p.vitalsTrend === 'STABLE').map((patient) => (
-                      <PatientCard key={patient.patientId} patient={patient} />
-                    ))}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="improving">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').map((patient) => (
-                      <PatientCard key={patient.patientId} patient={patient} />
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                <Card className="border-emerald-500/30 bg-emerald-500/5" data-testid="panel-improving">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <TrendingUp className="h-4 w-4 text-emerald-500" />
+                      <span className="text-emerald-500">Improving</span>
+                      <Badge className="text-xs ml-auto bg-emerald-500">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[400px] pr-2">
+                      <div className="space-y-3">
+                        {patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-8">No improving patients</p>
+                        ) : (
+                          patientAnalysis.filter(p => p.vitalsTrend === 'IMPROVING').map((patient) => (
+                            <PatientCard key={patient.patientId} patient={patient} />
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </TabsContent>
 
