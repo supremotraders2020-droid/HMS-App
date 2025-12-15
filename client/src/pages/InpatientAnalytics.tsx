@@ -578,6 +578,7 @@ export default function InpatientAnalytics() {
   const [alertsTab, setAlertsTab] = useState<'active' | 'resolved'>('active');
   const [selectedInsight, setSelectedInsight] = useState<{ type: InsightType; text: string } | null>(null);
   const [patientFilter, setPatientFilter] = useState<'ALL' | 'CRITICAL' | 'DECLINING' | 'STABLE' | 'IMPROVING'>('ALL');
+  const [nurseFilter, setNurseFilter] = useState<'ALL' | 'LOW' | 'MODERATE' | 'HIGH' | 'OVERLOADED'>('ALL');
   const [inventoryFilter, setInventoryFilter] = useState<'ALL' | 'ADEQUATE' | 'LOW' | 'CRITICAL' | 'OUT_OF_STOCK'>('ALL');
 
   const { data, isLoading, refetch, isRefetching } = useQuery<InpatientAnalyticsData>({
@@ -967,12 +968,75 @@ export default function InpatientAnalytics() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Nurse Workload Distribution</h2>
-                <p className="text-sm text-muted-foreground">Patient assignments and activity levels</p>
+                <p className="text-sm text-muted-foreground">Click a category to filter by workload level</p>
               </div>
               <Badge variant="secondary" className="text-xs">
                 {nurseWorkload.length} nurses
               </Badge>
             </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <button
+                onClick={() => setNurseFilter('ALL')}
+                className={`p-3 rounded-lg border transition-all text-left ${nurseFilter === 'ALL' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'hover-elevate'}`}
+                data-testid="filter-nurse-all"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <User className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">All</span>
+                </div>
+                <span className="text-2xl font-bold">{nurseWorkload.length}</span>
+              </button>
+              
+              <button
+                onClick={() => setNurseFilter('LOW')}
+                className={`p-3 rounded-lg border transition-all text-left ${nurseFilter === 'LOW' ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-500/10' : 'border-emerald-500/30 bg-emerald-500/5 hover-elevate'}`}
+                data-testid="filter-nurse-low"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <CheckCircle className="h-4 w-4 text-emerald-500" />
+                  <span className="text-sm font-medium text-emerald-500">Low</span>
+                </div>
+                <span className="text-2xl font-bold text-emerald-500">{nurseWorkload.filter(n => n.workloadLevel === 'LOW').length}</span>
+              </button>
+              
+              <button
+                onClick={() => setNurseFilter('MODERATE')}
+                className={`p-3 rounded-lg border transition-all text-left ${nurseFilter === 'MODERATE' ? 'ring-2 ring-muted-foreground border-muted-foreground bg-muted/20' : 'hover-elevate'}`}
+                data-testid="filter-nurse-moderate"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Minus className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Moderate</span>
+                </div>
+                <span className="text-2xl font-bold">{nurseWorkload.filter(n => n.workloadLevel === 'MODERATE').length}</span>
+              </button>
+              
+              <button
+                onClick={() => setNurseFilter('HIGH')}
+                className={`p-3 rounded-lg border transition-all text-left ${nurseFilter === 'HIGH' ? 'ring-2 ring-amber-500 border-amber-500 bg-amber-500/10' : 'border-amber-500/30 bg-amber-500/5 hover-elevate'}`}
+                data-testid="filter-nurse-high"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-medium text-amber-500">High</span>
+                </div>
+                <span className="text-2xl font-bold text-amber-500">{nurseWorkload.filter(n => n.workloadLevel === 'HIGH').length}</span>
+              </button>
+              
+              <button
+                onClick={() => setNurseFilter('OVERLOADED')}
+                className={`p-3 rounded-lg border transition-all text-left ${nurseFilter === 'OVERLOADED' ? 'ring-2 ring-rose-500 border-rose-500 bg-rose-500/10' : 'border-rose-500/30 bg-rose-500/5 hover-elevate'}`}
+                data-testid="filter-nurse-overloaded"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertTriangle className="h-4 w-4 text-rose-500" />
+                  <span className="text-sm font-medium text-rose-500">Overloaded</span>
+                </div>
+                <span className="text-2xl font-bold text-rose-500">{nurseWorkload.filter(n => n.workloadLevel === 'OVERLOADED').length}</span>
+              </button>
+            </div>
+
             {nurseWorkload.length === 0 ? (
               <Card>
                 <CardContent className="py-12">
@@ -983,40 +1047,71 @@ export default function InpatientAnalytics() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {nurseWorkload.map((nurse) => (
-                  <Card key={nurse.nurseId} className="hover-elevate transition-all duration-200" data-testid={`card-nurse-${nurse.nurseId}`}>
-                    <CardContent className="pt-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <User className="h-5 w-5 text-primary" />
+              <>
+                {nurseFilter !== 'ALL' && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      Showing: {nurseFilter.charAt(0) + nurseFilter.slice(1).toLowerCase()} workload nurses
+                    </Badge>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setNurseFilter('ALL')}
+                      className="h-6 text-xs"
+                      data-testid="button-clear-nurse-filter"
+                    >
+                      Clear filter
+                    </Button>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {nurseWorkload
+                    .filter(nurse => nurseFilter === 'ALL' || nurse.workloadLevel === nurseFilter)
+                    .map((nurse) => (
+                      <Card key={nurse.nurseId} className="hover-elevate transition-all duration-200" data-testid={`card-nurse-${nurse.nurseId}`}>
+                        <CardContent className="pt-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <User className="h-5 w-5 text-primary" />
+                              </div>
+                              <h3 className="font-semibold">{nurse.nurseName}</h3>
+                            </div>
+                            <WorkloadBadge level={nurse.workloadLevel} />
                           </div>
-                          <h3 className="font-semibold">{nurse.nurseName}</h3>
-                        </div>
-                        <WorkloadBadge level={nurse.workloadLevel} />
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Patients Assigned</span>
-                          <span className="font-medium">{nurse.patientsAssigned}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Activities</span>
-                          <span className="font-medium">{nurse.activitiesCount}</span>
-                        </div>
-                        <div>
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-muted-foreground">Efficiency</span>
-                            <span className="font-medium">{nurse.efficiencyScore}%</span>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Patients Assigned</span>
+                              <span className="font-medium">{nurse.patientsAssigned}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Activities</span>
+                              <span className="font-medium">{nurse.activitiesCount}</span>
+                            </div>
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-muted-foreground">Efficiency</span>
+                                <span className="font-medium">{nurse.efficiencyScore}%</span>
+                              </div>
+                              <Progress value={nurse.efficiencyScore} className="h-1.5" />
+                            </div>
                           </div>
-                          <Progress value={nurse.efficiencyScore} className="h-1.5" />
+                        </CardContent>
+                      </Card>
+                    ))
+                  }
+                  {nurseWorkload.filter(nurse => nurseFilter === 'ALL' || nurse.workloadLevel === nurseFilter).length === 0 && (
+                    <Card className="col-span-full">
+                      <CardContent className="py-8">
+                        <div className="text-center text-muted-foreground">
+                          <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>No {nurseFilter.toLowerCase()} workload nurses found</p>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </>
             )}
           </TabsContent>
 
