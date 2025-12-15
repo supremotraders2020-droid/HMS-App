@@ -4,6 +4,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -379,8 +380,202 @@ function AlertCard({
   );
 }
 
+type InsightType = 'patients' | 'nurses' | 'inventory' | null;
+
+function parseInsightType(insight: string): InsightType {
+  const lowerInsight = insight.toLowerCase();
+  if (lowerInsight.includes('patient') && (lowerInsight.includes('attention') || lowerInsight.includes('critical'))) {
+    return 'patients';
+  }
+  if (lowerInsight.includes('nurse') && lowerInsight.includes('overload')) {
+    return 'nurses';
+  }
+  if (lowerInsight.includes('inventory') || lowerInsight.includes('restock') || lowerInsight.includes('stock')) {
+    return 'inventory';
+  }
+  return null;
+}
+
+function InsightDetailDialog({
+  open,
+  onOpenChange,
+  insightType,
+  insightText,
+  patientAnalysis,
+  nurseWorkload,
+  inventoryUsage
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  insightType: InsightType;
+  insightText: string;
+  patientAnalysis: PatientAnalysis[];
+  nurseWorkload: NurseWorkload[];
+  inventoryUsage: InventoryUsage[];
+}) {
+  const getCriticalPatients = () => patientAnalysis.filter(p => p.vitalsTrend === 'CRITICAL' || p.healthScore < 60);
+  const getOverloadedNurses = () => nurseWorkload.filter(n => n.workloadLevel === 'OVERLOADED');
+  const getLowStockItems = () => inventoryUsage.filter(i => ['LOW', 'CRITICAL', 'OUT_OF_STOCK'].includes(i.stockStatus));
+
+  const getDialogTitle = () => {
+    switch (insightType) {
+      case 'patients': return 'Critical Patients';
+      case 'nurses': return 'Overloaded Nurses';
+      case 'inventory': return 'Low Stock Inventory';
+      default: return 'Details';
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden" data-testid="dialog-insight-detail">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {insightType === 'patients' && <AlertTriangle className="h-5 w-5 text-rose-500" />}
+            {insightType === 'nurses' && <User className="h-5 w-5 text-amber-500" />}
+            {insightType === 'inventory' && <Package className="h-5 w-5 text-blue-500" />}
+            {getDialogTitle()}
+          </DialogTitle>
+          <DialogDescription>{insightText}</DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="max-h-[60vh] pr-4">
+          {insightType === 'patients' && (
+            <div className="space-y-3">
+              {getCriticalPatients().length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">No critical patients currently</p>
+              ) : (
+                getCriticalPatients().map((patient) => (
+                  <Card key={patient.patientId} className="p-3" data-testid={`dialog-patient-${patient.patientId}`}>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <h4 className="font-semibold">{patient.patientName}</h4>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <BedDouble className="h-3 w-3" /> Room {patient.roomNumber || 'N/A'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${getHealthScoreBg(patient.healthScore)}`}>
+                          Score: {patient.healthScore}
+                        </div>
+                        <VitalsTrendBadge trend={patient.vitalsTrend} />
+                      </div>
+                    </div>
+                    {patient.lastVitals && (
+                      <div className="grid grid-cols-4 gap-2 text-xs mt-2">
+                        <div className="flex items-center gap-1">
+                          <Heart className="h-3 w-3 text-rose-400" />
+                          <span>BP: {patient.lastVitals.bp}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Activity className="h-3 w-3 text-blue-400" />
+                          <span>Pulse: {patient.lastVitals.pulse}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Droplets className="h-3 w-3 text-cyan-400" />
+                          <span>SpO2: {patient.lastVitals.spO2}%</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Thermometer className="h-3 w-3 text-amber-400" />
+                          <span>Temp: {patient.lastVitals.temperature}°F</span>
+                        </div>
+                      </div>
+                    )}
+                    {patient.criticalAlerts.length > 0 && (
+                      <div className="mt-2 pt-2 border-t">
+                        <p className="text-xs text-rose-500 font-medium">Alerts:</p>
+                        <ul className="text-xs text-muted-foreground">
+                          {patient.criticalAlerts.map((alert, i) => (
+                            <li key={i} className="flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3 text-rose-400" /> {alert}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
+
+          {insightType === 'nurses' && (
+            <div className="space-y-3">
+              {getOverloadedNurses().length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">No overloaded nurses currently</p>
+              ) : (
+                getOverloadedNurses().map((nurse) => (
+                  <Card key={nurse.nurseId} className="p-3" data-testid={`dialog-nurse-${nurse.nurseId}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                          <User className="h-5 w-5 text-amber-500" />
+                        </div>
+                        <h4 className="font-semibold">{nurse.nurseName}</h4>
+                      </div>
+                      <WorkloadBadge level={nurse.workloadLevel} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-sm mt-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Patients</p>
+                        <p className="font-medium">{nurse.patientsAssigned}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Activities</p>
+                        <p className="font-medium">{nurse.activitiesCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Efficiency</p>
+                        <p className="font-medium">{nurse.efficiencyScore}%</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
+
+          {insightType === 'inventory' && (
+            <div className="space-y-3">
+              {getLowStockItems().length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">All inventory items are adequately stocked</p>
+              ) : (
+                getLowStockItems().map((item) => (
+                  <Card key={item.itemId} className="p-3" data-testid={`dialog-inventory-${item.itemId}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <h4 className="font-semibold">{item.itemName}</h4>
+                        <p className="text-xs text-muted-foreground">{item.category}</p>
+                      </div>
+                      <StockStatusBadge status={item.stockStatus} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-sm mt-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Issued</p>
+                        <p className="font-medium">{item.totalIssued}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Wasted</p>
+                        <p className="font-medium text-rose-500">{item.totalWasted}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Cost Impact</p>
+                        <p className="font-medium">₹{item.estimatedCost.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function InpatientAnalytics() {
   const [alertsTab, setAlertsTab] = useState<'active' | 'resolved'>('active');
+  const [selectedInsight, setSelectedInsight] = useState<{ type: InsightType; text: string } | null>(null);
 
   const { data, isLoading, refetch, isRefetching } = useQuery<InpatientAnalyticsData>({
     queryKey: ["/api/ai/inpatient-analytics"],
@@ -608,12 +803,23 @@ export default function InpatientAnalytics() {
             </CardHeader>
             <CardContent>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {keyInsights.map((insight, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-muted/30" data-testid={`text-insight-${idx}`}>
-                    <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                    <span>{insight}</span>
-                  </li>
-                ))}
+                {keyInsights.map((insight, idx) => {
+                  const insightType = parseInsightType(insight);
+                  const isClickable = insightType !== null;
+                  return (
+                    <li key={idx}>
+                      <button
+                        onClick={() => isClickable && setSelectedInsight({ type: insightType, text: insight })}
+                        className={`w-full flex items-start gap-2 text-sm p-2 rounded-lg bg-muted/30 text-left transition-all ${isClickable ? 'cursor-pointer hover-elevate' : 'cursor-default'}`}
+                        data-testid={`button-insight-${idx}`}
+                        disabled={!isClickable}
+                      >
+                        <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        <span>{insight}</span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </CardContent>
           </Card>
@@ -786,6 +992,16 @@ export default function InpatientAnalytics() {
             )}
           </TabsContent>
         </Tabs>
+
+        <InsightDetailDialog
+          open={selectedInsight !== null}
+          onOpenChange={(open) => !open && setSelectedInsight(null)}
+          insightType={selectedInsight?.type || null}
+          insightText={selectedInsight?.text || ''}
+          patientAnalysis={patientAnalysis}
+          nurseWorkload={nurseWorkload}
+          inventoryUsage={inventoryUsage}
+        />
       </div>
     </ScrollArea>
   );
