@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate, type ResolvedAlert, type InsertResolvedAlert } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -261,6 +261,11 @@ export interface IStorage {
   createConsentTemplate(template: InsertConsentTemplate): Promise<ConsentTemplate>;
   updateConsentTemplate(id: string, updates: Partial<InsertConsentTemplate>): Promise<ConsentTemplate | undefined>;
   deleteConsentTemplate(id: string): Promise<boolean>;
+  
+  // Resolved Alerts
+  getResolvedAlerts(): Promise<ResolvedAlert[]>;
+  createResolvedAlert(alert: InsertResolvedAlert): Promise<ResolvedAlert>;
+  deleteResolvedAlert(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -2305,6 +2310,25 @@ export class MemStorage implements IStorage {
 
   async deleteConsentForm(id: string): Promise<boolean> {
     return this.consentFormsData.delete(id);
+  }
+
+  // Resolved Alerts stub methods
+  private resolvedAlertsData = new Map<string, ResolvedAlert>();
+
+  async getResolvedAlerts(): Promise<ResolvedAlert[]> {
+    return Array.from(this.resolvedAlertsData.values())
+      .sort((a, b) => new Date(b.resolvedAt || 0).getTime() - new Date(a.resolvedAt || 0).getTime());
+  }
+
+  async createResolvedAlert(alert: InsertResolvedAlert): Promise<ResolvedAlert> {
+    const id = randomUUID();
+    const newAlert: ResolvedAlert = { id, ...alert, resolvedAt: new Date() };
+    this.resolvedAlertsData.set(id, newAlert);
+    return newAlert;
+  }
+
+  async deleteResolvedAlert(id: string): Promise<boolean> {
+    return this.resolvedAlertsData.delete(id);
   }
 }
 

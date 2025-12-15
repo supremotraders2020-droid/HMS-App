@@ -1388,3 +1388,21 @@ export const insertHospitalHealthIndexSchema = createInsertSchema(hospitalHealth
 });
 export type InsertHospitalHealthIndex = z.infer<typeof insertHospitalHealthIndexSchema>;
 export type HospitalHealthIndex = typeof hospitalHealthIndex.$inferSelect;
+
+// Resolved Alerts Table - Track resolved critical alerts across all users
+export const resolvedAlerts = pgTable("resolved_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  alertType: text("alert_type").notNull(),
+  alertSeverity: text("alert_severity").notNull(),
+  alertMessage: text("alert_message").notNull(),
+  patientId: varchar("patient_id"),
+  resolvedBy: varchar("resolved_by"),
+  resolvedAt: timestamp("resolved_at").defaultNow(),
+});
+
+export const insertResolvedAlertSchema = createInsertSchema(resolvedAlerts).omit({
+  id: true,
+  resolvedAt: true,
+});
+export type InsertResolvedAlert = z.infer<typeof insertResolvedAlertSchema>;
+export type ResolvedAlert = typeof resolvedAlerts.$inferSelect;

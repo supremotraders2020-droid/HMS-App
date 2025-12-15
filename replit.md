@@ -227,6 +227,7 @@ Five user roles with hierarchical permissions:
 ```
 
 ## Recent Updates
+- Resolved alerts database persistence: Patient Analytics resolved alerts now persist in database (not localStorage) so all admin users see same alert status
 - BMW report filtering: Click report type buttons to filter Generated Reports list
 - Report preview dialogs with detailed statistics
 - Patient notifications on medical record creation

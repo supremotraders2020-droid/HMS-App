@@ -3273,6 +3273,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get Resolved Alerts
+  app.get("/api/resolved-alerts", async (req, res) => {
+    try {
+      const alerts = await storage.getResolvedAlerts();
+      res.json(alerts);
+    } catch (error) {
+      console.error("Failed to fetch resolved alerts:", error);
+      res.status(500).json({ error: "Failed to fetch resolved alerts" });
+    }
+  });
+
+  // Add Resolved Alert
+  app.post("/api/resolved-alerts", async (req, res) => {
+    try {
+      const { alertType, alertSeverity, alertMessage, patientId } = req.body;
+      if (!alertType || !alertSeverity || !alertMessage) {
+        return res.status(400).json({ error: "Missing required fields: alertType, alertSeverity, alertMessage" });
+      }
+      const userId = (req as any).session?.userId;
+      const alertData = {
+        alertType,
+        alertSeverity,
+        alertMessage,
+        patientId: patientId || null,
+        resolvedBy: userId || null
+      };
+      const alert = await storage.createResolvedAlert(alertData);
+      res.status(201).json(alert);
+    } catch (error) {
+      console.error("Failed to create resolved alert:", error);
+      res.status(500).json({ error: "Failed to create resolved alert" });
+    }
+  });
+
+  // Delete Resolved Alert (unresolve)
+  app.delete("/api/resolved-alerts/:id", async (req, res) => {
+    try {
+      await storage.deleteResolvedAlert(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Failed to delete resolved alert:", error);
+      res.status(500).json({ error: "Failed to delete resolved alert" });
+    }
+  });
+
   // Get All AI Metrics (combined dashboard data)
   app.get("/api/ai/dashboard", async (req, res) => {
     try {

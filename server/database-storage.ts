@@ -15,7 +15,7 @@ import {
   prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
   patientConsents, medicines, oxygenCylinders, cylinderMovements, oxygenConsumption, lmoReadings, oxygenAlerts,
   bmwBags, bmwMovements, bmwPickups, bmwDisposals, bmwVendors, bmwStorageRooms, bmwIncidents, bmwReports,
-  doctorOathConfirmations, consentTemplates,
+  doctorOathConfirmations, consentTemplates, resolvedAlerts,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -52,7 +52,8 @@ import {
   type BmwReport, type InsertBmwReport,
   doctorVisits, type DoctorVisit, type InsertDoctorVisit,
   type DoctorOathConfirmation, type InsertDoctorOathConfirmation,
-  type ConsentTemplate, type InsertConsentTemplate
+  type ConsentTemplate, type InsertConsentTemplate,
+  type ResolvedAlert, type InsertResolvedAlert
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -2300,6 +2301,21 @@ export class DatabaseStorage implements IStorage {
 
     await db.insert(consentTemplates).values(templates);
     console.log("Consent templates seeded successfully with 10 forms");
+  }
+
+  // ========== RESOLVED ALERTS METHODS ==========
+  async getResolvedAlerts(): Promise<ResolvedAlert[]> {
+    return await db.select().from(resolvedAlerts).orderBy(desc(resolvedAlerts.resolvedAt));
+  }
+
+  async createResolvedAlert(alert: InsertResolvedAlert): Promise<ResolvedAlert> {
+    const result = await db.insert(resolvedAlerts).values(alert).returning();
+    return result[0];
+  }
+
+  async deleteResolvedAlert(id: string): Promise<boolean> {
+    const result = await db.delete(resolvedAlerts).where(eq(resolvedAlerts.id, id)).returning();
+    return result.length > 0;
   }
 }
 

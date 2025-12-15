@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,9 +81,14 @@ interface CriticalAlert {
   patientId?: string;
 }
 
-interface ResolvedAlert extends CriticalAlert {
+interface ResolvedAlertDB {
+  id: string;
+  alertType: string;
+  alertSeverity: string;
+  alertMessage: string;
+  patientId?: string | null;
+  resolvedBy?: string | null;
   resolvedAt: string;
-  originalIndex: number;
 }
 
 interface InpatientAnalyticsData {
@@ -101,7 +107,6 @@ interface InpatientAnalyticsData {
   };
 }
 
-const RESOLVED_ALERTS_KEY = 'patient-analytics-resolved-alerts';
 
 function SummaryCard({ title, value, subtitle, icon: Icon, variant }: {
   title: string;
@@ -281,7 +286,7 @@ function AlertCard({
   onUnresolve,
   resolvedAt
 }: { 
-  alert: CriticalAlert | ResolvedAlert; 
+  alert: CriticalAlert | { type: string; severity: string; message: string }; 
   index: number; 
   onResolve?: () => void;
   isResolved?: boolean;
@@ -375,45 +380,51 @@ function AlertCard({
 }
 
 export default function InpatientAnalytics() {
-  const [resolvedAlerts, setResolvedAlerts] = useState<ResolvedAlert[]>([]);
   const [alertsTab, setAlertsTab] = useState<'active' | 'resolved'>('active');
-
-  useEffect(() => {
-    const stored = localStorage.getItem(RESOLVED_ALERTS_KEY);
-    if (stored) {
-      try {
-        setResolvedAlerts(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse resolved alerts from localStorage');
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(RESOLVED_ALERTS_KEY, JSON.stringify(resolvedAlerts));
-  }, [resolvedAlerts]);
 
   const { data, isLoading, refetch, isRefetching } = useQuery<InpatientAnalyticsData>({
     queryKey: ["/api/ai/inpatient-analytics"],
     refetchInterval: 60000,
   });
 
-  const handleResolveAlert = (alert: CriticalAlert, index: number) => {
-    const resolved: ResolvedAlert = {
-      ...alert,
-      resolvedAt: new Date().toISOString(),
-      originalIndex: index
-    };
-    setResolvedAlerts(prev => [...prev, resolved]);
+  const { data: resolvedAlerts = [] } = useQuery<ResolvedAlertDB[]>({
+    queryKey: ["/api/resolved-alerts"],
+  });
+
+  const resolveAlertMutation = useMutation({
+    mutationFn: async (alert: CriticalAlert) => {
+      return apiRequest("POST", "/api/resolved-alerts", {
+        alertType: alert.type,
+        alertSeverity: alert.severity,
+        alertMessage: alert.message,
+        patientId: alert.patientId || null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/resolved-alerts"] });
+    },
+  });
+
+  const unresolveAlertMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/resolved-alerts/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/resolved-alerts"] });
+    },
+  });
+
+  const handleResolveAlert = (alert: CriticalAlert) => {
+    resolveAlertMutation.mutate(alert);
   };
 
-  const handleUnresolveAlert = (index: number) => {
-    setResolvedAlerts(prev => prev.filter((_, i) => i !== index));
+  const handleUnresolveAlert = (id: string) => {
+    unresolveAlertMutation.mutate(id);
   };
 
   const getActiveAlerts = () => {
     if (!data) return [];
-    const resolvedMessages = new Set(resolvedAlerts.map(a => a.message));
+    const resolvedMessages = new Set(resolvedAlerts.map(a => a.alertMessage));
     return data.criticalAlerts.filter(alert => {
       const message = typeof alert === 'string' ? alert : alert.message;
       return !resolvedMessages.has(message);
@@ -552,8 +563,7 @@ export default function InpatientAnalytics() {
                         alert={typeof alert === 'string' ? { type: 'Alert', severity: 'medium', message: alert } : alert}
                         index={idx}
                         onResolve={() => handleResolveAlert(
-                          typeof alert === 'string' ? { type: 'Alert', severity: 'medium', message: alert } : alert,
-                          idx
+                          typeof alert === 'string' ? { type: 'Alert', severity: 'medium', message: alert } : alert
                         )}
                       />
                     ))}
@@ -569,12 +579,12 @@ export default function InpatientAnalytics() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     {resolvedAlerts.map((alert, idx) => (
                       <AlertCard 
-                        key={idx} 
-                        alert={alert}
+                        key={alert.id} 
+                        alert={{ type: alert.alertType, severity: alert.alertSeverity, message: alert.alertMessage }}
                         index={idx}
                         isResolved
                         resolvedAt={alert.resolvedAt}
-                        onUnresolve={() => handleUnresolveAlert(idx)}
+                        onUnresolve={() => handleUnresolveAlert(alert.id)}
                       />
                     ))}
                   </div>
