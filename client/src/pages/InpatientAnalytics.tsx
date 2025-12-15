@@ -64,11 +64,18 @@ interface InventoryUsage {
   stockStatus: 'ADEQUATE' | 'LOW' | 'CRITICAL' | 'OUT_OF_STOCK';
 }
 
+interface CriticalAlert {
+  type: string;
+  severity: string;
+  message: string;
+  patientId?: string;
+}
+
 interface InpatientAnalyticsData {
   patientAnalysis: PatientAnalysis[];
   nurseWorkload: NurseWorkload[];
   inventoryUsage: InventoryUsage[];
-  criticalAlerts: string[];
+  criticalAlerts: CriticalAlert[];
   keyInsights: string[];
   summary: {
     totalAdmitted: number;
@@ -265,7 +272,7 @@ export default function InpatientAnalytics() {
                 {criticalAlerts.map((alert, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-sm" data-testid={`text-alert-${idx}`}>
                     <AlertCircle className="h-4 w-4 text-rose-500 mt-0.5 shrink-0" />
-                    <span>{alert}</span>
+                    <span>{typeof alert === 'string' ? alert : alert.message}</span>
                   </li>
                 ))}
               </ul>
