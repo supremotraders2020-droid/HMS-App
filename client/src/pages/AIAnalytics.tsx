@@ -105,46 +105,71 @@ interface AIDashboardData {
   predictions: PredictionResult[];
 }
 
-function ScoreCard({ title, score, icon: Icon, trend, description }: {
+function ScoreCard({ title, score, icon: Icon, trend, description, gradient }: {
   title: string;
   score: number;
   icon: any;
   trend?: 'up' | 'down' | 'stable';
   description?: string;
+  gradient?: string;
 }) {
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600 dark:text-green-400";
-    if (score >= 60) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
+    if (score >= 80) return "text-emerald-600 dark:text-emerald-400";
+    if (score >= 60) return "text-amber-600 dark:text-amber-400";
+    return "text-rose-600 dark:text-rose-400";
   };
 
-  const getBgColor = (score: number) => {
-    if (score >= 80) return "bg-green-100 dark:bg-green-900/30";
-    if (score >= 60) return "bg-yellow-100 dark:bg-yellow-900/30";
-    return "bg-red-100 dark:bg-red-900/30";
+  const getGradient = (score: number) => {
+    if (gradient) return gradient;
+    if (score >= 80) return "from-emerald-500/20 via-teal-500/10 to-cyan-500/5 dark:from-emerald-500/30 dark:via-teal-500/20 dark:to-cyan-500/10";
+    if (score >= 60) return "from-amber-500/20 via-orange-500/10 to-yellow-500/5 dark:from-amber-500/30 dark:via-orange-500/20 dark:to-yellow-500/10";
+    return "from-rose-500/20 via-red-500/10 to-pink-500/5 dark:from-rose-500/30 dark:via-red-500/20 dark:to-pink-500/10";
+  };
+
+  const getIconBg = (score: number) => {
+    if (score >= 80) return "from-emerald-500 to-teal-600";
+    if (score >= 60) return "from-amber-500 to-orange-600";
+    return "from-rose-500 to-red-600";
+  };
+
+  const getProgressColor = (score: number) => {
+    if (score >= 80) return "[&>div]:bg-gradient-to-r [&>div]:from-emerald-500 [&>div]:to-teal-500";
+    if (score >= 60) return "[&>div]:bg-gradient-to-r [&>div]:from-amber-500 [&>div]:to-orange-500";
+    return "[&>div]:bg-gradient-to-r [&>div]:from-rose-500 [&>div]:to-red-500";
   };
 
   return (
-    <Card className="hover-elevate" data-testid={`score-card-${title.toLowerCase().replace(/\s+/g, '-')}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className={`p-2 rounded-lg ${getBgColor(score)}`}>
-            <Icon className={`h-5 w-5 ${getScoreColor(score)}`} />
+    <Card 
+      className={`hover-elevate overflow-hidden relative bg-gradient-to-br ${getGradient(score)} border-0 shadow-lg hover:shadow-xl transition-all duration-300`}
+      data-testid={`score-card-${title.toLowerCase().replace(/\s+/g, '-')}`}
+    >
+      <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm" />
+      <CardContent className="p-5 relative">
+        <div className="flex items-center justify-between mb-3">
+          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${getIconBg(score)} shadow-lg`}>
+            <Icon className="h-5 w-5 text-white" />
           </div>
           {trend && (
-            <div className="flex items-center gap-1">
-              {trend === 'up' && <TrendingUp className="h-4 w-4 text-green-500" />}
-              {trend === 'down' && <TrendingDown className="h-4 w-4 text-red-500" />}
-              {trend === 'stable' && <Minus className="h-4 w-4 text-muted-foreground" />}
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${
+              trend === 'up' ? 'bg-emerald-100 dark:bg-emerald-900/50' :
+              trend === 'down' ? 'bg-rose-100 dark:bg-rose-900/50' :
+              'bg-slate-100 dark:bg-slate-800'
+            }`}>
+              {trend === 'up' && <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />}
+              {trend === 'down' && <TrendingDown className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />}
+              {trend === 'stable' && <Minus className="h-3.5 w-3.5 text-slate-500" />}
             </div>
           )}
         </div>
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className={`text-2xl font-bold ${getScoreColor(score)}`}>{score.toFixed(1)}</p>
-          {description && <p className="text-xs text-muted-foreground">{description}</p>}
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <div className="flex items-baseline gap-1">
+            <p className={`text-3xl font-bold ${getScoreColor(score)}`}>{score.toFixed(1)}</p>
+            <span className="text-sm text-muted-foreground">/100</span>
+          </div>
+          {description && <p className="text-xs text-muted-foreground/80">{description}</p>}
         </div>
-        <Progress value={score} className="mt-2 h-1.5" />
+        <Progress value={score} className={`mt-3 h-2 bg-slate-200/50 dark:bg-slate-700/50 ${getProgressColor(score)}`} />
       </CardContent>
     </Card>
   );
@@ -162,17 +187,19 @@ function MetricRow({ label, value, unit, target, isHigherBetter = true }: {
     : (isHigherBetter ? value >= 75 : value <= 25);
 
   return (
-    <div className="flex items-center justify-between py-2">
+    <div className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
       <span className="text-sm text-muted-foreground">{label}</span>
       <div className="flex items-center gap-2">
-        <span className={`font-medium ${isGood ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+        <span className={`font-semibold ${isGood ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
           {value.toFixed(1)}{unit}
         </span>
-        {isGood ? (
-          <CheckCircle className="h-4 w-4 text-green-500" />
-        ) : (
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-        )}
+        <div className={`p-1 rounded-full ${isGood ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-amber-100 dark:bg-amber-900/50'}`}>
+          {isGood ? (
+            <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+          ) : (
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -188,10 +215,23 @@ export default function AIAnalytics() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="flex flex-col items-center gap-4">
-          <Brain className="h-12 w-12 animate-pulse text-primary" />
-          <p className="text-muted-foreground">Loading AI Analytics...</p>
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-fuchsia-950/10">
+        <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-2xl border border-white/20">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-purple-600 rounded-full blur-xl opacity-50 animate-pulse" />
+            <div className="relative p-4 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full">
+              <Brain className="h-10 w-10 text-white animate-pulse" />
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="font-semibold text-lg bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">AI Analytics</p>
+            <p className="text-sm text-muted-foreground">Analyzing hospital data...</p>
+          </div>
+          <div className="flex gap-1">
+            <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-fuchsia-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
         </div>
       </div>
     );
@@ -213,51 +253,61 @@ export default function AIAnalytics() {
 
   return (
     <div className="h-full flex flex-col" data-testid="ai-analytics-page">
-      <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Brain className="h-6 w-6 text-primary" />
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-violet-500/20 dark:via-purple-500/15 dark:to-fuchsia-500/10" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-400/20 to-purple-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl blur-lg opacity-50" />
+              <div className="relative p-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow-lg">
+                <Brain className="h-7 w-7 text-white" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+                AI Intelligence Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground">Real-time hospital performance analytics powered by AI</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-semibold">AI Intelligence Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Real-time hospital performance analytics</p>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-violet-200 dark:border-violet-800 hover:border-violet-300 dark:hover:border-violet-700 shadow-sm"
+            data-testid="button-refresh-ai"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          data-testid="button-refresh-ai"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
       </div>
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5 mb-4" data-testid="ai-tabs">
-              <TabsTrigger value="overview" data-testid="tab-overview">
-                <Building2 className="h-4 w-4 mr-2" />
-                Overview
+            <TabsList className="flex w-full mb-4 overflow-x-auto" data-testid="ai-tabs">
+              <TabsTrigger value="overview" className="flex-1 min-w-0" data-testid="tab-overview">
+                <Building2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="doctors" data-testid="tab-doctors">
-                <Stethoscope className="h-4 w-4 mr-2" />
-                Doctors
+              <TabsTrigger value="doctors" className="flex-1 min-w-0" data-testid="tab-doctors">
+                <Stethoscope className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Doctors</span>
               </TabsTrigger>
-              <TabsTrigger value="nurses" data-testid="tab-nurses">
-                <Heart className="h-4 w-4 mr-2" />
-                Nurses
+              <TabsTrigger value="nurses" className="flex-1 min-w-0" data-testid="tab-nurses">
+                <Heart className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Nurses</span>
               </TabsTrigger>
-              <TabsTrigger value="opd" data-testid="tab-opd">
-                <Users className="h-4 w-4 mr-2" />
-                OPD
+              <TabsTrigger value="opd" className="flex-1 min-w-0" data-testid="tab-opd">
+                <Users className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">OPD</span>
               </TabsTrigger>
-              <TabsTrigger value="predictions" data-testid="tab-predictions">
-                <LineChart className="h-4 w-4 mr-2" />
-                Predictions
+              <TabsTrigger value="predictions" className="flex-1 min-w-0" data-testid="tab-predictions">
+                <LineChart className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Predictions</span>
               </TabsTrigger>
             </TabsList>
 
@@ -311,19 +361,23 @@ export default function AIAnalytics() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Card data-testid="card-insights">
-                  <CardHeader className="pb-3">
+                <Card className="overflow-hidden" data-testid="card-insights">
+                  <CardHeader className="pb-3 bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-orange-500/5 dark:from-amber-500/20 dark:via-yellow-500/15 dark:to-orange-500/10">
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <Lightbulb className="h-5 w-5 text-yellow-500" />
+                      <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 shadow-sm">
+                        <Lightbulb className="h-4 w-4 text-white" />
+                      </div>
                       Key Insights
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-4">
                     <div className="space-y-2">
                       {hospitalHealth?.insights?.length ? (
                         hospitalHealth.insights.map((insight, i) => (
-                          <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-muted/50">
-                            <Zap className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                          <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-amber-50/50 to-yellow-50/30 dark:from-amber-900/20 dark:to-yellow-900/10 border border-amber-200/50 dark:border-amber-800/30">
+                            <div className="p-1 rounded-full bg-amber-100 dark:bg-amber-900/50">
+                              <Zap className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                            </div>
                             <span className="text-sm">{insight}</span>
                           </div>
                         ))
@@ -334,19 +388,21 @@ export default function AIAnalytics() {
                   </CardContent>
                 </Card>
 
-                <Card data-testid="card-recommendations">
-                  <CardHeader className="pb-3">
+                <Card className="overflow-hidden" data-testid="card-recommendations">
+                  <CardHeader className="pb-3 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/5 dark:from-blue-500/20 dark:via-indigo-500/15 dark:to-violet-500/10">
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <Target className="h-5 w-5 text-blue-500" />
+                      <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm">
+                        <Target className="h-4 w-4 text-white" />
+                      </div>
                       Recommendations
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-4">
                     <div className="space-y-3">
                       {hospitalHealth?.recommendations?.length ? (
                         hospitalHealth.recommendations.map((rec, i) => (
-                          <div key={i} className="p-3 rounded-lg border">
-                            <div className="flex items-center justify-between mb-1">
+                          <div key={i} className="p-3 rounded-lg bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-800/50 dark:to-blue-900/20 border border-blue-200/50 dark:border-blue-800/30">
+                            <div className="flex items-center justify-between gap-2 mb-1.5">
                               <span className="font-medium text-sm">{rec.title}</span>
                               <Badge variant={rec.priority === 'HIGH' ? 'destructive' : rec.priority === 'MEDIUM' ? 'secondary' : 'outline'}>
                                 {rec.priority}
@@ -569,12 +625,12 @@ export default function AIAnalytics() {
                         <p className="text-sm text-muted-foreground">No department data</p>
                       )}
                     </div>
-                    {opdMetrics?.peakHours?.length > 0 && (
+                    {opdMetrics?.peakHours && opdMetrics.peakHours.length > 0 && (
                       <>
                         <Separator className="my-3" />
                         <div>
                           <p className="text-sm text-muted-foreground mb-2">Peak Hours</p>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             {opdMetrics.peakHours.map((hour, i) => (
                               <Badge key={i} variant="outline">{hour}</Badge>
                             ))}
