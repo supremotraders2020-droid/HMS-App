@@ -203,11 +203,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get doctor schedules
+  // Get doctor schedules (with date as query param or path param)
   app.get("/api/doctors/:id/schedules", async (req, res) => {
     try {
       const { date } = req.query;
       const schedules = await storage.getSchedules(req.params.id, date as string);
+      res.json(schedules);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch schedules" });
+    }
+  });
+
+  // Get doctor schedules (with date as path param)
+  app.get("/api/doctors/:id/schedules/:date", async (req, res) => {
+    try {
+      const schedules = await storage.getSchedules(req.params.id, req.params.date);
       res.json(schedules);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch schedules" });
