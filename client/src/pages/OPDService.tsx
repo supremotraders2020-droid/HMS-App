@@ -57,6 +57,7 @@ type TabType = "schedules" | "book" | "appointments" | "checkin" | "team" | "med
 export default function OPDService() {
   const [activeTab, setActiveTab] = useState<TabType>("schedules");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
+  const [slotFilter, setSlotFilter] = useState<'all' | 'available' | 'booked'>('all');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -369,7 +370,13 @@ export default function OPDService() {
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {schedules.map((slot) => (
+                          {schedules
+                            .filter((slot) => {
+                              if (slotFilter === 'available') return !slot.isBooked;
+                              if (slotFilter === 'booked') return slot.isBooked;
+                              return true;
+                            })
+                            .map((slot) => (
                             <Button
                               key={slot.id}
                               variant={slot.isBooked ? "secondary" : "outline"}
@@ -382,13 +389,27 @@ export default function OPDService() {
                             </Button>
                           ))}
                         </div>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
-                          <span className="flex items-center gap-1">
-                            <div className="w-3 h-3 border rounded" /> Available
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-muted rounded" /> Booked
-                          </span>
+                        <div className="flex items-center gap-4 text-xs pt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSlotFilter(slotFilter === 'available' ? 'all' : 'available')}
+                            className={`flex items-center gap-1 h-auto py-1 px-2 ${slotFilter === 'available' ? 'ring-2 ring-primary bg-primary/10' : ''}`}
+                            data-testid="filter-available"
+                          >
+                            <div className="w-3 h-3 border-2 border-primary rounded" /> 
+                            <span className="text-xs">Available ({schedules.filter((s) => !s.isBooked).length})</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSlotFilter(slotFilter === 'booked' ? 'all' : 'booked')}
+                            className={`flex items-center gap-1 h-auto py-1 px-2 ${slotFilter === 'booked' ? 'ring-2 ring-muted-foreground bg-muted' : ''}`}
+                            data-testid="filter-booked"
+                          >
+                            <div className="w-3 h-3 bg-muted-foreground/50 rounded" /> 
+                            <span className="text-xs">Booked ({schedules.filter((s) => s.isBooked).length})</span>
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
