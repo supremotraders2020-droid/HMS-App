@@ -2092,12 +2092,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update doctor schedule
   app.patch("/api/doctor-schedules/:id", async (req, res) => {
     try {
+      console.log("Updating doctor schedule:", req.params.id, req.body);
       const schedule = await storage.updateDoctorSchedule(req.params.id, req.body);
       if (!schedule) {
         return res.status(404).json({ error: "Doctor schedule not found" });
       }
       res.json(schedule);
     } catch (error) {
+      console.error("Error updating doctor schedule:", error);
       res.status(500).json({ error: "Failed to update doctor schedule" });
     }
   });

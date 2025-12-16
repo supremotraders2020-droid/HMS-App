@@ -528,7 +528,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           patientEmail: servicePatient.email || 'N/A',
           patientAge: servicePatient.dateOfBirth ? String(new Date().getFullYear() - new Date(servicePatient.dateOfBirth).getFullYear()) : 'N/A',
           patientGender: servicePatient.gender || 'O',
-          bloodGroup: servicePatient.bloodType || '',
+          bloodGroup: '',
           patientAddress: servicePatient.address || 'N/A',
           lastVisit: record.recordDate ? format(new Date(record.recordDate), 'MMM dd, yyyy') : 'N/A',
           medicalRecords: doctorRecords.filter(r => r.patientId === servicePatient.id)
@@ -1024,7 +1024,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             isAvailable: slot.isAvailable,
           });
         } else {
-          updateScheduleMutation.mutate({ id: slot.id, updates: slot });
+          // Only send updatable fields, exclude id, createdAt, updatedAt
+          const { id, createdAt, updatedAt, ...updateFields } = slot;
+          updateScheduleMutation.mutate({ id: slot.id, updates: updateFields });
         }
       });
       setScheduleDialogOpen(false);
@@ -1517,6 +1519,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 diagnosis: formData.get('diagnosis') as string,
                 medicines: medicinesStr.split(',').map(m => m.trim()).filter(Boolean),
                 instructions: formData.get('instructions') as string || null,
+                patientRecordId: selectedPatientRecordId || null,
                 prescriptionDate: formData.get('prescriptionDate') as string,
                 followUpDate: formData.get('followUpDate') as string || null,
                 status: 'active',
