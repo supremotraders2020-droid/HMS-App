@@ -2039,11 +2039,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== DOCTOR SCHEDULE ROUTES ==========
 
-  // Get doctor schedules
+  // Get doctor schedules by user ID
   app.get("/api/doctor-schedules/:doctorId", async (req, res) => {
     try {
       const schedules = await storage.getDoctorSchedules(req.params.doctorId);
       res.json(schedules);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch doctor schedules" });
+    }
+  });
+
+  // Get doctor schedules by doctor name (for admin view)
+  // Maps doctors table name to user with matching username and fetches their schedules
+  app.get("/api/doctor-schedules-by-name/:doctorName", async (req, res) => {
+    try {
+      const doctorName = decodeURIComponent(req.params.doctorName);
+      const firstName = doctorName.toLowerCase().split(' ')[0];
+      
+      // Try to find user by matching first name in username
+      let matchingUser = await storage.getUserByUsername(firstName);
+      
+      if (!matchingUser) {
+        // Try with 'dr.' prefix
+        matchingUser = await storage.getUserByUsername(`dr.${firstName}`);
+      }
+      
+      if (matchingUser && matchingUser.role === 'DOCTOR') {
+        const schedules = await storage.getDoctorSchedules(matchingUser.id);
+        res.json(schedules);
+      } else {
+        res.json([]);
+      }
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch doctor schedules" });
     }

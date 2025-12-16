@@ -37,7 +37,7 @@ import {
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import type { Doctor, Appointment, Schedule, Medicine } from "@shared/schema";
+import type { Doctor, Appointment, Schedule, Medicine, DoctorSchedule } from "@shared/schema";
 
 const OPD_LOCATIONS = [
   { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park", address: "Koregaon Park, Pune, Maharashtra 411001", mapUrl: "https://www.google.com/maps/search/?api=1&query=Koregaon+Park+Pune" },
@@ -81,6 +81,14 @@ export default function OPDService() {
     queryKey: ["/api/doctors", selectedDoctor, "schedules", selectedDate],
     enabled: !!selectedDoctor && !!selectedDate,
     staleTime: 0, // Always refetch to get real-time slot availability
+  });
+
+  // Fetch doctor's actual schedule blocks set by the doctor
+  const selectedDoctorObj = doctors.find(d => d.id === selectedDoctor);
+  const { data: doctorScheduleBlocks = [] } = useQuery<DoctorSchedule[]>({
+    queryKey: ["/api/doctor-schedules-by-name", selectedDoctorObj?.name],
+    enabled: !!selectedDoctor && !!selectedDoctorObj?.name,
+    staleTime: 0,
   });
 
   // Medicines query with search support
@@ -362,7 +370,37 @@ export default function OPDService() {
                   </CardHeader>
                   {selectedDoctor === doctor.id && (
                     <CardContent>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
+                        {/* Doctor's Scheduled Time Blocks */}
+                        {doctorScheduleBlocks.length > 0 && (
+                          <div className="space-y-2">
+                            <span className="text-sm font-medium text-muted-foreground">Doctor's Schedule</span>
+                            <div className="grid gap-2">
+                              {doctorScheduleBlocks.map((block) => (
+                                <div 
+                                  key={block.id} 
+                                  className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20"
+                                  data-testid={`schedule-block-${block.id}`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Clock className="h-4 w-4 text-primary" />
+                                    <div>
+                                      <p className="font-medium text-sm">{block.day}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {block.startTime} - {block.endTime}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Badge variant={block.isAvailable ? "default" : "secondary"}>
+                                    {block.location || block.slotType}
+                                  </Badge>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Individual Time Slots */}
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">Available Time Slots</span>
                           <span className="font-medium">
@@ -388,6 +426,9 @@ export default function OPDService() {
                               {slot.timeSlot.substring(0, 5)}
                             </Button>
                           ))}
+                          {schedules.length === 0 && doctorScheduleBlocks.length === 0 && (
+                            <p className="text-sm text-muted-foreground">No slots scheduled for this date</p>
+                          )}
                         </div>
                         <div className="flex items-center gap-4 text-xs pt-2">
                           <Button
