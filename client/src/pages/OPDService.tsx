@@ -79,6 +79,7 @@ export default function OPDService() {
   const { data: schedules = [] } = useQuery<Schedule[]>({
     queryKey: ["/api/doctors", selectedDoctor, "schedules", selectedDate],
     enabled: !!selectedDoctor && !!selectedDate,
+    staleTime: 0, // Always refetch to get real-time slot availability
   });
 
   // Medicines query with search support
