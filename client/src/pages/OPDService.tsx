@@ -111,13 +111,20 @@ export default function OPDService() {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'slot_update') {
-          // Invalidate time slots query to refresh data
+        if (data.type === 'slots.generated' || data.type === 'slot.booked' || data.type === 'slot.cancelled' || data.type === 'slot_update') {
           queryClient.invalidateQueries({ queryKey: ["/api/time-slots"] });
-          toast({
-            title: `Slot ${data.type === 'slot.booked' ? 'Booked' : 'Updated'}`,
-            description: data.patientName ? `Booked by ${data.patientName}` : 'Slot availability changed',
-          });
+          queryClient.invalidateQueries({ queryKey: ["/api/doctor-schedules-by-name"] });
+          if (data.type === 'slots.generated') {
+            toast({
+              title: "Slots Generated",
+              description: `${data.count || 'New'} time slots are now available`,
+            });
+          } else if (data.type === 'slot.booked') {
+            toast({
+              title: "Slot Booked",
+              description: data.patientName ? `Booked by ${data.patientName}` : 'Slot booked',
+            });
+          }
         }
       } catch (e) {
         console.error("WebSocket message parse error:", e);
