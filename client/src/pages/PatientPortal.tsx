@@ -235,9 +235,16 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/time-slots/available'] });
+      // Invalidate the specific time slots query with doctor and date params
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/time-slots/available", variables.doctorId, variables.appointmentDate] 
+      });
+      // Also invalidate all time slots queries as a fallback
+      queryClient.invalidateQueries({ 
+        predicate: (query) => query.queryKey[0] === '/api/time-slots/available'
+      });
       toast({ 
         title: "Appointment Booked!", 
         description: `Your appointment has been scheduled. You will receive a confirmation.`
@@ -314,8 +321,13 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'slot_update') {
-          // Refresh available slots when slot status changes
-          queryClient.invalidateQueries({ queryKey: ["/api/time-slots/available"] });
+          // Refresh all available slots queries when slot status changes
+          queryClient.invalidateQueries({ 
+            predicate: (query) => {
+              const key = query.queryKey;
+              return Array.isArray(key) && key[0] === '/api/time-slots/available';
+            }
+          });
         }
       } catch (e) {
         console.error("WebSocket message parse error:", e);
