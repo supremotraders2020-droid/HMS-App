@@ -82,7 +82,96 @@ export default function BiowastePage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [generatedBarcode, setGeneratedBarcode] = useState<string | null>(null);
+  const [generatedBagDetails, setGeneratedBagDetails] = useState<{category: string; department: string; weight: string} | null>(null);
   const [reportFilter, setReportFilter] = useState<string | null>(null);
+
+  const handlePrintLabel = (barcode: string, details?: {category: string; department: string; weight: string}) => {
+    const categoryInfo = details ? BMW_CATEGORIES.find(c => c.value === details.category) : null;
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>BMW Label - ${barcode}</title>
+          <style>
+            @page { size: 4in 2in; margin: 0; }
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 10px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+            }
+            .label-container {
+              border: 2px solid #333;
+              padding: 15px;
+              width: 350px;
+              text-align: center;
+            }
+            .barcode {
+              font-family: monospace;
+              font-size: 24px;
+              font-weight: bold;
+              letter-spacing: 2px;
+              margin: 15px 0;
+              padding: 10px;
+              background: #f0f0f0;
+              border-radius: 4px;
+            }
+            .category-badge {
+              display: inline-block;
+              padding: 5px 15px;
+              border-radius: 4px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .yellow { background: #eab308; color: #000; }
+            .red { background: #ef4444; color: #fff; }
+            .white { background: #fff; color: #000; border: 2px solid #666; }
+            .blue { background: #3b82f6; color: #fff; }
+            .details { font-size: 12px; color: #666; margin-top: 10px; }
+            .hospital { font-weight: bold; margin-bottom: 5px; }
+            .qr-placeholder {
+              width: 80px;
+              height: 80px;
+              border: 1px solid #ccc;
+              margin: 10px auto;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 10px;
+              color: #999;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="label-container">
+            <div class="hospital">GRAVITY HOSPITAL</div>
+            <div class="category-badge ${details?.category?.toLowerCase() || 'yellow'}">
+              ${categoryInfo?.label?.split(' - ')[0] || 'BIOMEDICAL WASTE'}
+            </div>
+            <div class="qr-placeholder">QR Code</div>
+            <div class="barcode">${barcode}</div>
+            <div class="details">
+              ${details ? `
+                <div>Department: ${details.department}</div>
+                <div>Weight: ${details.weight} kg</div>
+              ` : ''}
+              <div>Generated: ${new Date().toLocaleString()}</div>
+            </div>
+          </div>
+          <script>window.onload = function() { window.print(); window.close(); }</script>
+        </body>
+      </html>
+    `;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+    }
+  };
   const [isPickupDialogOpen, setIsPickupDialogOpen] = useState(false);
 
   const form = useForm<BagFormData>({
@@ -141,12 +230,17 @@ export default function BiowastePage() {
         generatedBy: "Admin",
         generatedByRole: "ADMIN"
       });
-      return res.json();
+      return { ...(await res.json()), formData: data };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/bmw/bags'] });
       queryClient.invalidateQueries({ queryKey: ['/api/bmw/stats'] });
       setGeneratedBarcode(data.barcode);
+      setGeneratedBagDetails({
+        category: data.formData.category,
+        department: data.formData.department,
+        weight: data.formData.approxWeight
+      });
       toast({
         title: "Waste Bag Generated",
         description: `Barcode: ${data.barcode}`,
@@ -423,7 +517,12 @@ NABH & CPCB Compliant BMW Tracking System
                       <p className="text-sm text-muted-foreground mt-2">Barcode generated successfully</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1 gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1 gap-2"
+                        onClick={() => handlePrintLabel(generatedBarcode, generatedBagDetails || undefined)}
+                        data-testid="button-print-label"
+                      >
                         <Printer className="h-4 w-4" />
                         Print Label
                       </Button>
@@ -431,6 +530,7 @@ NABH & CPCB Compliant BMW Tracking System
                         className="flex-1 gap-2"
                         onClick={() => {
                           setGeneratedBarcode(null);
+                          setGeneratedBagDetails(null);
                           setIsGenerateDialogOpen(false);
                         }}
                       >
@@ -813,7 +913,17 @@ NABH & CPCB Compliant BMW Tracking System
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <p className="font-mono font-medium">{bag.barcode}</p>
-                              <Button variant="ghost" size="icon" className="h-6 w-6">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6"
+                                onClick={() => handlePrintLabel(bag.barcode, {
+                                  category: bag.category,
+                                  department: bag.department,
+                                  weight: bag.approxWeight || '0'
+                                })}
+                                data-testid={`button-print-${bag.id}`}
+                              >
                                 <Printer className="h-3 w-3" />
                               </Button>
                             </div>
