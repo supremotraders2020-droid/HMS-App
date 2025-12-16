@@ -2324,12 +2324,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return slots;
   }
 
+  // Helper function to resolve doctor ID (handles both doctors table ID and users table ID)
+  async function resolveDoctorId(doctorId: string): Promise<string> {
+    // First check if this is a doctors table entry and get the corresponding user ID
+    const doctors = await databaseStorage.getDoctors();
+    const doctorEntry = doctors.find(d => d.id === doctorId);
+    
+    if (doctorEntry) {
+      // This is a doctors table ID - need to find the corresponding user
+      // The doctor's name format is "Dr. FirstName LastName" but user might be "dr.firstname" or similar
+      const nameParts = doctorEntry.name.toLowerCase().replace('dr. ', '').split(' ');
+      const firstName = nameParts[0];
+      
+      // Try to find user by username patterns
+      let user = await databaseStorage.getUserByUsername(firstName);
+      if (!user) {
+        user = await databaseStorage.getUserByUsername(`dr.${firstName}`);
+      }
+      if (!user) {
+        // Try full name pattern
+        user = await databaseStorage.getUserByUsername(`dr.${firstName}.${nameParts[1] || ''}`);
+      }
+      
+      if (user && user.role === 'DOCTOR') {
+        return user.id;
+      }
+    }
+    
+    // If not found in doctors table or no user mapping, return original ID
+    return doctorId;
+  }
+
   // Get time slots for a doctor (filtered by date and status)
   app.get("/api/time-slots/:doctorId", async (req, res) => {
     try {
       const { date, status } = req.query;
+      
+      // Resolve the doctor ID (handle both doctors table and users table IDs)
+      const resolvedDoctorId = await resolveDoctorId(req.params.doctorId);
+      
       const slots = await databaseStorage.getDoctorTimeSlots(
-        req.params.doctorId,
+        resolvedDoctorId,
         date as string | undefined,
         status as string | undefined
       );
@@ -2343,8 +2378,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get available time slots for a doctor on a specific date (for patients)
   app.get("/api/time-slots/:doctorId/available/:date", async (req, res) => {
     try {
+      // Resolve the doctor ID (handle both doctors table and users table IDs)
+      const resolvedDoctorId = await resolveDoctorId(req.params.doctorId);
+      
       const slots = await databaseStorage.getAvailableTimeSlots(
-        req.params.doctorId,
+        resolvedDoctorId,
         req.params.date
       );
       res.json(slots);
