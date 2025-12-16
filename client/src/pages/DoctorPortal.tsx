@@ -368,6 +368,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/doctor-profiles', doctorId] });
       queryClient.invalidateQueries({ queryKey: ['/api/doctors'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/by-username'] });
       toast({ title: "Profile updated successfully" });
     },
     onError: () => toast({ title: "Failed to update profile", variant: "destructive" }),

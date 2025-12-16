@@ -2655,6 +2655,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profile = await storage.updateDoctorProfile(req.params.doctorId, req.body);
       }
 
+      // Also update the user's name in the users table
+      if (req.body.fullName) {
+        const user = await databaseStorage.getUser(req.params.doctorId);
+        if (user) {
+          await databaseStorage.updateUser(user.id, { name: req.body.fullName });
+        }
+      }
+
       // Send notification about profile update
       notificationService.notifyProfileUpdated(
         req.params.doctorId,
