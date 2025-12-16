@@ -206,6 +206,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   // Book appointment mutation
   const bookAppointmentMutation = useMutation({
     mutationFn: async (appointmentData: {
+      slotId?: string;
       doctorId: string;
       patientId: string;
       patientName: string;
@@ -216,6 +217,18 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
       location: string;
       reason: string;
     }) => {
+      // If we have a slot ID from the new API, use the transactional booking endpoint
+      if (appointmentData.slotId) {
+        const response = await apiRequest('POST', `/api/time-slots/${appointmentData.slotId}/book`, {
+          patientId: appointmentData.patientId,
+          patientName: appointmentData.patientName,
+          patientPhone: appointmentData.patientPhone,
+          symptoms: appointmentData.reason,
+        });
+        return response.json();
+      }
+      
+      // Fallback to legacy appointment endpoint
       const response = await apiRequest('POST', '/api/appointments', {
         ...appointmentData,
         symptoms: appointmentData.reason,
@@ -224,6 +237,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/time-slots/available'] });
       toast({ 
         title: "Appointment Booked!", 
         description: `Your appointment has been scheduled. You will receive a confirmation.`
@@ -963,13 +977,16 @@ Description: ${record.description}
                     className="w-full" 
                     disabled={!selectedDate || !selectedSlot || !selectedLocation || bookAppointmentMutation.isPending}
                     onClick={() => {
+                      // Find the slot ID from the selected slot value
+                      const selectedSlotData = availableSlots.find(s => s.value === selectedSlot);
                       bookAppointmentMutation.mutate({
-                        doctorId: selectedDoctor,
+                        slotId: selectedSlotData?.slotId, // Use slot ID for transactional booking
+                        doctorId: selectedDoctor?.id || '',
                         patientId: username,
                         patientName: patientName,
                         patientPhone: profileForm.phone || "+91 98765 43210",
                         appointmentDate: selectedDate,
-                        timeSlot: selectedSlot,
+                        timeSlot: selectedSlotData?.label || selectedSlot,
                         department: doctorDepartment,
                         location: selectedLocation,
                         reason: symptoms || "General consultation"
