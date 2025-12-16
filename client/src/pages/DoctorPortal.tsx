@@ -2310,12 +2310,12 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    {doctorName.split(' ').map(n => n[0]).join('')}
+                    {(profileForm.fullName || doctorName).replace(/^Dr\.?\s*/i, '').split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">Dr. {doctorName}</p>
-                  <p className="text-xs text-muted-foreground">{matchedDoctor?.specialty || 'Specialist'}</p>
+                  <p className="text-sm font-medium truncate">{profileForm.fullName || `Dr. ${doctorName}`}</p>
+                  <p className="text-xs text-muted-foreground">{profileForm.specialty || matchedDoctor?.specialty || 'Specialist'}</p>
                 </div>
               </div>
             </div>
