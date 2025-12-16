@@ -453,7 +453,7 @@ export default function OPDService() {
                             .map((slot) => (
                             <div
                               key={slot.id}
-                              className={`relative p-2 rounded-lg border-2 text-center min-w-[100px] ${
+                              className={`relative px-3 py-2 rounded-lg border-2 text-center ${
                                 slot.status === 'booked' 
                                   ? 'bg-muted border-muted-foreground/30' 
                                   : 'border-primary/30 hover:border-primary hover:bg-primary/5'
@@ -461,16 +461,8 @@ export default function OPDService() {
                               data-testid={`slot-${slot.id}`}
                             >
                               <p className="text-sm font-medium">{slot.startTime}</p>
-                              <p className="text-xs text-muted-foreground">to {slot.endTime}</p>
                               {slot.status === 'booked' && (
-                                <Badge variant="secondary" className="mt-1 text-xs">
-                                  {slot.patientName?.split(' ')[0] || 'Booked'}
-                                </Badge>
-                              )}
-                              {slot.status === 'available' && (
-                                <Badge variant="outline" className="mt-1 text-xs text-primary border-primary">
-                                  Available
-                                </Badge>
+                                <p className="text-xs text-muted-foreground">{slot.patientName?.split(' ')[0] || 'Booked'}</p>
                               )}
                             </div>
                           ))}
