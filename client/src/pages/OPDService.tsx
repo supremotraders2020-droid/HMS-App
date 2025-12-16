@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,7 +37,7 @@ import {
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import type { Doctor, Appointment, Schedule, Medicine, DoctorSchedule } from "@shared/schema";
+import type { Doctor, Appointment, Schedule, Medicine, DoctorSchedule, DoctorTimeSlot } from "@shared/schema";
 
 const OPD_LOCATIONS = [
   { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park", address: "Koregaon Park, Pune, Maharashtra 411001", mapUrl: "https://www.google.com/maps/search/?api=1&query=Koregaon+Park+Pune" },
@@ -90,6 +90,42 @@ export default function OPDService() {
     enabled: !!selectedDoctor && !!selectedDoctorObj?.name,
     staleTime: 0,
   });
+
+  // Fetch time slots from the new single-source-of-truth API
+  const { data: timeSlots = [], refetch: refetchTimeSlots } = useQuery<DoctorTimeSlot[]>({
+    queryKey: ["/api/time-slots", selectedDoctor, selectedDate],
+    queryFn: async () => {
+      const response = await fetch(`/api/time-slots/${selectedDoctor}?date=${selectedDate}`);
+      if (!response.ok) throw new Error("Failed to fetch time slots");
+      return response.json();
+    },
+    enabled: !!selectedDoctor && !!selectedDate,
+    staleTime: 0,
+  });
+
+  // WebSocket listener for real-time slot updates
+  useEffect(() => {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/notifications?userId=admin&userRole=ADMIN`);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'slot_update') {
+          // Invalidate time slots query to refresh data
+          queryClient.invalidateQueries({ queryKey: ["/api/time-slots"] });
+          toast({
+            title: `Slot ${data.type === 'slot.booked' ? 'Booked' : 'Updated'}`,
+            description: data.patientName ? `Booked by ${data.patientName}` : 'Slot availability changed',
+          });
+        }
+      } catch (e) {
+        console.error("WebSocket message parse error:", e);
+      }
+    };
+
+    return () => ws.close();
+  }, [toast]);
 
   // Medicines query with search support
   const { data: medicines = [], isLoading: medicinesLoading } = useQuery<Medicine[]>({
@@ -400,33 +436,51 @@ export default function OPDService() {
                           </div>
                         )}
 
-                        {/* Individual Time Slots */}
+                        {/* Individual Time Slots from Database */}
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Available Time Slots</span>
+                          <span className="text-muted-foreground">Time Slots (30-min intervals)</span>
                           <span className="font-medium">
-                            {schedules.filter((s) => !s.isBooked).length} slots
+                            {timeSlots.filter((s) => s.status === 'available').length} available / {timeSlots.length} total
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {schedules
+                          {timeSlots
                             .filter((slot) => {
-                              if (slotFilter === 'available') return !slot.isBooked;
-                              if (slotFilter === 'booked') return slot.isBooked;
+                              if (slotFilter === 'available') return slot.status === 'available';
+                              if (slotFilter === 'booked') return slot.status === 'booked';
                               return true;
                             })
                             .map((slot) => (
-                            <Button
+                            <div
                               key={slot.id}
-                              variant={slot.isBooked ? "secondary" : "outline"}
-                              size="sm"
-                              disabled={slot.isBooked}
-                              className={!slot.isBooked ? "hover:bg-primary hover:text-primary-foreground" : ""}
+                              className={`relative p-2 rounded-lg border-2 text-center min-w-[100px] ${
+                                slot.status === 'booked' 
+                                  ? 'bg-muted border-muted-foreground/30' 
+                                  : 'border-primary/30 hover:border-primary hover:bg-primary/5'
+                              }`}
                               data-testid={`slot-${slot.id}`}
                             >
-                              {slot.timeSlot.substring(0, 5)}
-                            </Button>
+                              <p className="text-sm font-medium">{slot.startTime}</p>
+                              <p className="text-xs text-muted-foreground">to {slot.endTime}</p>
+                              {slot.status === 'booked' && (
+                                <Badge variant="secondary" className="mt-1 text-xs">
+                                  {slot.patientName?.split(' ')[0] || 'Booked'}
+                                </Badge>
+                              )}
+                              {slot.status === 'available' && (
+                                <Badge variant="outline" className="mt-1 text-xs text-primary border-primary">
+                                  Available
+                                </Badge>
+                              )}
+                            </div>
                           ))}
-                          {schedules.length === 0 && doctorScheduleBlocks.length === 0 && (
+                          {timeSlots.length === 0 && doctorScheduleBlocks.length > 0 && (
+                            <div className="w-full text-center py-4">
+                              <p className="text-sm text-muted-foreground mb-2">Doctor has schedule blocks but no individual slots generated yet.</p>
+                              <p className="text-xs text-muted-foreground">Slots will be auto-generated when the doctor sets up specific date schedules.</p>
+                            </div>
+                          )}
+                          {timeSlots.length === 0 && doctorScheduleBlocks.length === 0 && (
                             <p className="text-sm text-muted-foreground">No slots scheduled for this date</p>
                           )}
                         </div>
@@ -439,7 +493,7 @@ export default function OPDService() {
                             data-testid="filter-available"
                           >
                             <div className="w-3 h-3 border-2 border-primary rounded" /> 
-                            <span className="text-xs">Available ({schedules.filter((s) => !s.isBooked).length})</span>
+                            <span className="text-xs">Available ({timeSlots.filter((s) => s.status === 'available').length})</span>
                           </Button>
                           <Button
                             variant="ghost"
@@ -449,7 +503,7 @@ export default function OPDService() {
                             data-testid="filter-booked"
                           >
                             <div className="w-3 h-3 bg-muted-foreground/50 rounded" /> 
-                            <span className="text-xs">Booked ({schedules.filter((s) => s.isBooked).length})</span>
+                            <span className="text-xs">Booked ({timeSlots.filter((s) => s.status === 'booked').length})</span>
                           </Button>
                         </div>
                       </div>

@@ -719,6 +719,36 @@ export const insertDoctorScheduleSchema = createInsertSchema(doctorSchedules).om
 export type InsertDoctorSchedule = z.infer<typeof insertDoctorScheduleSchema>;
 export type DoctorSchedule = typeof doctorSchedules.$inferSelect;
 
+// Doctor Time Slots table - individual 30-minute slots generated from schedules
+// This is the single source of truth for appointment slot availability
+export const doctorTimeSlots = pgTable("doctor_time_slots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  scheduleId: varchar("schedule_id").notNull(), // Reference to doctor_schedules
+  doctorId: varchar("doctor_id").notNull(),
+  doctorName: text("doctor_name").notNull(),
+  slotDate: text("slot_date").notNull(), // YYYY-MM-DD format
+  startTime: text("start_time").notNull(), // HH:MM AM/PM format
+  endTime: text("end_time").notNull(), // HH:MM AM/PM format
+  slotType: text("slot_type").notNull().default("OPD"), // 'OPD', 'Surgery', 'Consultation'
+  location: text("location"),
+  status: text("status").notNull().default("available"), // 'available', 'booked', 'cancelled', 'completed'
+  appointmentId: varchar("appointment_id"), // Link to appointments table when booked
+  patientId: varchar("patient_id"), // For quick lookup of patient's slots
+  patientName: text("patient_name"), // Denormalized for display
+  bookedAt: timestamp("booked_at"), // When the slot was booked
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDoctorTimeSlotSchema = createInsertSchema(doctorTimeSlots).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  bookedAt: true,
+});
+export type InsertDoctorTimeSlot = z.infer<typeof insertDoctorTimeSlotSchema>;
+export type DoctorTimeSlot = typeof doctorTimeSlots.$inferSelect;
+
 // Doctor Patients table - patients assigned to or treated by specific doctors
 export const doctorPatients = pgTable("doctor_patients", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

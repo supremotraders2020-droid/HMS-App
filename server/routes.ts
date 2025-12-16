@@ -4,7 +4,7 @@ import path from "path";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema } from "@shared/schema";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
 import { aiEngines } from "./ai-engines";
@@ -2042,7 +2042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get doctor schedules by user ID
   app.get("/api/doctor-schedules/:doctorId", async (req, res) => {
     try {
-      const schedules = await storage.getDoctorSchedules(req.params.doctorId);
+      const schedules = await databaseStorage.getDoctorSchedules(req.params.doctorId);
       res.json(schedules);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch doctor schedules" });
@@ -2057,15 +2057,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const firstName = doctorName.toLowerCase().split(' ')[0];
       
       // Try to find user by matching first name in username
-      let matchingUser = await storage.getUserByUsername(firstName);
+      let matchingUser = await databaseStorage.getUserByUsername(firstName);
       
       if (!matchingUser) {
         // Try with 'dr.' prefix
-        matchingUser = await storage.getUserByUsername(`dr.${firstName}`);
+        matchingUser = await databaseStorage.getUserByUsername(`dr.${firstName}`);
       }
       
       if (matchingUser && matchingUser.role === 'DOCTOR') {
-        const schedules = await storage.getDoctorSchedules(matchingUser.id);
+        const schedules = await databaseStorage.getDoctorSchedules(matchingUser.id);
         res.json(schedules);
       } else {
         res.json([]);
@@ -2075,28 +2075,170 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create doctor schedule
+  // Create doctor schedule (and auto-generate time slots if specific date)
   app.post("/api/doctor-schedules", async (req, res) => {
     try {
       const parsed = insertDoctorScheduleSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: parsed.error.errors });
       }
-      const schedule = await storage.createDoctorSchedule(parsed.data);
+      const schedule = await databaseStorage.createDoctorSchedule(parsed.data);
+
+      // Auto-generate time slots if schedule has a specific date
+      if (schedule.specificDate && schedule.isAvailable) {
+        try {
+          // Get doctor name from doctors table or use default
+          let doctorName = 'Doctor';
+          const doctors = await databaseStorage.getDoctors();
+          const doctor = doctors.find(d => d.userId === schedule.doctorId);
+          if (doctor) {
+            doctorName = doctor.name;
+          }
+
+          // Utility functions for slot generation (defined inline)
+          const timeToMins = (timeStr: string): number => {
+            const [time, period] = timeStr.split(' ');
+            const [hours, minutes] = time.split(':').map(Number);
+            let totalHours = hours;
+            if (period === 'PM' && hours !== 12) totalHours += 12;
+            if (period === 'AM' && hours === 12) totalHours = 0;
+            return totalHours * 60 + (minutes || 0);
+          };
+
+          const minsToTime = (mins: number): string => {
+            const hours = Math.floor(mins / 60);
+            const minutes = mins % 60;
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+            return `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+          };
+
+          // Generate 30-minute slots
+          const slotsToCreate: InsertDoctorTimeSlot[] = [];
+          const startMins = timeToMins(schedule.startTime);
+          const endMins = timeToMins(schedule.endTime);
+          const slotDuration = 30;
+
+          for (let mins = startMins; mins < endMins; mins += slotDuration) {
+            slotsToCreate.push({
+              scheduleId: schedule.id,
+              doctorId: schedule.doctorId,
+              doctorName,
+              slotDate: schedule.specificDate,
+              startTime: minsToTime(mins),
+              endTime: minsToTime(mins + slotDuration),
+              slotType: schedule.slotType,
+              location: schedule.location,
+              status: 'available',
+              appointmentId: null,
+              patientId: null,
+              patientName: null,
+            });
+          }
+
+          if (slotsToCreate.length > 0) {
+            await databaseStorage.createDoctorTimeSlotsBulk(slotsToCreate);
+            
+            // Broadcast slot update via WebSocket
+            notificationService.broadcastSlotUpdate({
+              type: 'slots.generated',
+              doctorId: schedule.doctorId,
+              date: schedule.specificDate,
+              count: slotsToCreate.length
+            });
+          }
+        } catch (slotError) {
+          console.error("Error auto-generating time slots:", slotError);
+          // Don't fail the schedule creation if slot generation fails
+        }
+      }
+
       res.status(201).json(schedule);
     } catch (error) {
       res.status(500).json({ error: "Failed to create doctor schedule" });
     }
   });
 
-  // Update doctor schedule
+  // Update doctor schedule (and regenerate time slots if schedule changes)
   app.patch("/api/doctor-schedules/:id", async (req, res) => {
     try {
       console.log("Updating doctor schedule:", req.params.id, req.body);
-      const schedule = await storage.updateDoctorSchedule(req.params.id, req.body);
+      const schedule = await databaseStorage.updateDoctorSchedule(req.params.id, req.body);
       if (!schedule) {
         return res.status(404).json({ error: "Doctor schedule not found" });
       }
+
+      // Regenerate time slots if schedule has a specific date and is available
+      if (schedule.specificDate && schedule.isAvailable) {
+        try {
+          // Delete existing slots for this schedule first
+          await databaseStorage.deleteTimeSlotsBySchedule(schedule.id);
+
+          // Get doctor name from doctors table or use default
+          let doctorName = 'Doctor';
+          const doctors = await databaseStorage.getDoctors();
+          const doctor = doctors.find(d => d.userId === schedule.doctorId);
+          if (doctor) {
+            doctorName = doctor.name;
+          }
+
+          // Utility functions for slot generation
+          const timeToMins = (timeStr: string): number => {
+            const [time, period] = timeStr.split(' ');
+            const [hours, minutes] = time.split(':').map(Number);
+            let totalHours = hours;
+            if (period === 'PM' && hours !== 12) totalHours += 12;
+            if (period === 'AM' && hours === 12) totalHours = 0;
+            return totalHours * 60 + (minutes || 0);
+          };
+
+          const minsToTime = (mins: number): string => {
+            const hours = Math.floor(mins / 60);
+            const minutes = mins % 60;
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+            return `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+          };
+
+          // Generate 30-minute slots
+          const slotsToCreate: InsertDoctorTimeSlot[] = [];
+          const startMins = timeToMins(schedule.startTime);
+          const endMins = timeToMins(schedule.endTime);
+          const slotDuration = 30;
+
+          for (let mins = startMins; mins < endMins; mins += slotDuration) {
+            slotsToCreate.push({
+              scheduleId: schedule.id,
+              doctorId: schedule.doctorId,
+              doctorName,
+              slotDate: schedule.specificDate,
+              startTime: minsToTime(mins),
+              endTime: minsToTime(mins + slotDuration),
+              slotType: schedule.slotType,
+              location: schedule.location,
+              status: 'available',
+              appointmentId: null,
+              patientId: null,
+              patientName: null,
+            });
+          }
+
+          if (slotsToCreate.length > 0) {
+            await databaseStorage.createDoctorTimeSlotsBulk(slotsToCreate);
+            
+            // Broadcast slot update via WebSocket
+            notificationService.broadcastSlotUpdate({
+              type: 'slots.regenerated',
+              doctorId: schedule.doctorId,
+              date: schedule.specificDate,
+              count: slotsToCreate.length
+            });
+          }
+        } catch (slotError) {
+          console.error("Error regenerating time slots:", slotError);
+        }
+      }
+
       res.json(schedule);
     } catch (error) {
       console.error("Error updating doctor schedule:", error);
@@ -2104,16 +2246,273 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete doctor schedule
+  // Delete doctor schedule (and associated time slots)
   app.delete("/api/doctor-schedules/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteDoctorSchedule(req.params.id);
+      // Delete associated time slots first
+      try {
+        await databaseStorage.deleteTimeSlotsBySchedule(req.params.id);
+      } catch (slotError) {
+        console.error("Error deleting associated time slots:", slotError);
+      }
+
+      const deleted = await databaseStorage.deleteDoctorSchedule(req.params.id);
       if (!deleted) {
         return res.status(404).json({ error: "Doctor schedule not found" });
       }
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete doctor schedule" });
+    }
+  });
+
+  // ========== DOCTOR TIME SLOTS ROUTES ==========
+  
+  // Utility function to parse time string to minutes
+  function timeToMinutes(timeStr: string): number {
+    const [time, period] = timeStr.split(' ');
+    const [hours, minutes] = time.split(':').map(Number);
+    let totalHours = hours;
+    if (period === 'PM' && hours !== 12) totalHours += 12;
+    if (period === 'AM' && hours === 12) totalHours = 0;
+    return totalHours * 60 + (minutes || 0);
+  }
+
+  // Utility function to convert minutes back to time string
+  function minutesToTime(mins: number): string {
+    const hours = Math.floor(mins / 60);
+    const minutes = mins % 60;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    return `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+  }
+
+  // Generate 30-minute time slots from a schedule
+  function generateTimeSlotsFromSchedule(
+    scheduleId: string,
+    doctorId: string,
+    doctorName: string,
+    slotDate: string,
+    startTime: string,
+    endTime: string,
+    slotType: string,
+    location: string | null
+  ): InsertDoctorTimeSlot[] {
+    const slots: InsertDoctorTimeSlot[] = [];
+    const startMins = timeToMinutes(startTime);
+    const endMins = timeToMinutes(endTime);
+    const slotDuration = 30; // 30-minute slots
+
+    for (let mins = startMins; mins < endMins; mins += slotDuration) {
+      const slotStart = minutesToTime(mins);
+      const slotEnd = minutesToTime(mins + slotDuration);
+      slots.push({
+        scheduleId,
+        doctorId,
+        doctorName,
+        slotDate,
+        startTime: slotStart,
+        endTime: slotEnd,
+        slotType,
+        location,
+        status: 'available',
+        appointmentId: null,
+        patientId: null,
+        patientName: null,
+      });
+    }
+    return slots;
+  }
+
+  // Get time slots for a doctor (filtered by date and status)
+  app.get("/api/time-slots/:doctorId", async (req, res) => {
+    try {
+      const { date, status } = req.query;
+      const slots = await databaseStorage.getDoctorTimeSlots(
+        req.params.doctorId,
+        date as string | undefined,
+        status as string | undefined
+      );
+      res.json(slots);
+    } catch (error) {
+      console.error("Error fetching time slots:", error);
+      res.status(500).json({ error: "Failed to fetch time slots" });
+    }
+  });
+
+  // Get available time slots for a doctor on a specific date (for patients)
+  app.get("/api/time-slots/:doctorId/available/:date", async (req, res) => {
+    try {
+      const slots = await databaseStorage.getAvailableTimeSlots(
+        req.params.doctorId,
+        req.params.date
+      );
+      res.json(slots);
+    } catch (error) {
+      console.error("Error fetching available time slots:", error);
+      res.status(500).json({ error: "Failed to fetch available time slots" });
+    }
+  });
+
+  // Generate time slots from a schedule (usually called when doctor creates/updates schedule)
+  app.post("/api/time-slots/generate/:scheduleId", async (req, res) => {
+    try {
+      const { doctorName } = req.body;
+      const schedule = await databaseStorage.getDoctorSchedule(req.params.scheduleId);
+      
+      if (!schedule) {
+        return res.status(404).json({ error: "Schedule not found" });
+      }
+
+      if (!schedule.specificDate) {
+        return res.status(400).json({ error: "Schedule must have a specific date to generate slots" });
+      }
+
+      // Delete existing slots for this schedule
+      await databaseStorage.deleteTimeSlotsBySchedule(req.params.scheduleId);
+
+      // Generate new slots
+      const slotsToCreate = generateTimeSlotsFromSchedule(
+        schedule.id,
+        schedule.doctorId,
+        doctorName || 'Doctor',
+        schedule.specificDate,
+        schedule.startTime,
+        schedule.endTime,
+        schedule.slotType,
+        schedule.location
+      );
+
+      const createdSlots = await databaseStorage.createDoctorTimeSlotsBulk(slotsToCreate);
+
+      // Broadcast slot update via WebSocket
+      notificationService.broadcastSlotUpdate({
+        type: 'slots.generated',
+        doctorId: schedule.doctorId,
+        date: schedule.specificDate,
+        count: createdSlots.length
+      });
+
+      res.status(201).json(createdSlots);
+    } catch (error) {
+      console.error("Error generating time slots:", error);
+      res.status(500).json({ error: "Failed to generate time slots" });
+    }
+  });
+
+  // Book a time slot (with double-booking prevention)
+  app.post("/api/time-slots/:slotId/book", async (req, res) => {
+    try {
+      const { patientId, patientName, patientPhone, patientEmail, symptoms } = req.body;
+
+      if (!patientId || !patientName) {
+        return res.status(400).json({ error: "Patient ID and name are required" });
+      }
+
+      // Get the slot first to verify it exists
+      const slot = await databaseStorage.getDoctorTimeSlot(req.params.slotId);
+      if (!slot) {
+        return res.status(404).json({ error: "Slot not found" });
+      }
+
+      if (slot.status !== 'available') {
+        return res.status(409).json({ error: "Slot is no longer available" });
+      }
+
+      // Create appointment first
+      const appointmentId = `APT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const appointment = await databaseStorage.createAppointment({
+        appointmentId,
+        patientId,
+        patientName,
+        patientPhone: patientPhone || '',
+        patientEmail,
+        doctorId: slot.doctorId,
+        appointmentDate: slot.slotDate,
+        timeSlot: `${slot.startTime} - ${slot.endTime}`,
+        department: slot.slotType,
+        location: slot.location,
+        symptoms,
+        status: 'scheduled'
+      });
+
+      // Book the slot using transactional locking
+      const bookedSlot = await databaseStorage.bookTimeSlot(
+        req.params.slotId,
+        patientId,
+        patientName,
+        appointment.id
+      );
+
+      if (!bookedSlot) {
+        // Slot was booked by someone else, cancel the appointment we just created
+        await databaseStorage.updateAppointmentStatus(appointment.id, 'cancelled');
+        return res.status(409).json({ error: "Slot was booked by another patient. Please select a different slot." });
+      }
+
+      // Broadcast slot update via WebSocket
+      notificationService.broadcastSlotUpdate({
+        type: 'slot.booked',
+        slotId: bookedSlot.id,
+        doctorId: bookedSlot.doctorId,
+        date: bookedSlot.slotDate,
+        startTime: bookedSlot.startTime,
+        patientName: bookedSlot.patientName
+      });
+
+      res.status(200).json({ slot: bookedSlot, appointment });
+    } catch (error) {
+      console.error("Error booking time slot:", error);
+      res.status(500).json({ error: "Failed to book time slot" });
+    }
+  });
+
+  // Cancel a time slot booking
+  app.post("/api/time-slots/:slotId/cancel", async (req, res) => {
+    try {
+      const slot = await databaseStorage.getDoctorTimeSlot(req.params.slotId);
+      if (!slot) {
+        return res.status(404).json({ error: "Slot not found" });
+      }
+
+      if (slot.status !== 'booked') {
+        return res.status(400).json({ error: "Slot is not booked" });
+      }
+
+      // Cancel the associated appointment
+      if (slot.appointmentId) {
+        await databaseStorage.updateAppointmentStatus(slot.appointmentId, 'cancelled');
+      }
+
+      // Release the slot
+      const cancelledSlot = await databaseStorage.cancelTimeSlot(req.params.slotId);
+
+      // Broadcast slot update via WebSocket
+      notificationService.broadcastSlotUpdate({
+        type: 'slot.cancelled',
+        slotId: cancelledSlot!.id,
+        doctorId: cancelledSlot!.doctorId,
+        date: cancelledSlot!.slotDate,
+        startTime: cancelledSlot!.startTime
+      });
+
+      res.json(cancelledSlot);
+    } catch (error) {
+      console.error("Error cancelling time slot:", error);
+      res.status(500).json({ error: "Failed to cancel time slot" });
+    }
+  });
+
+  // Get a single time slot
+  app.get("/api/time-slots/slot/:slotId", async (req, res) => {
+    try {
+      const slot = await databaseStorage.getDoctorTimeSlot(req.params.slotId);
+      if (!slot) {
+        return res.status(404).json({ error: "Slot not found" });
+      }
+      res.json(slot);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch time slot" });
     }
   });
 

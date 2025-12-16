@@ -15,7 +15,7 @@ import {
   prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
   patientConsents, medicines, oxygenCylinders, cylinderMovements, oxygenConsumption, lmoReadings, oxygenAlerts,
   bmwBags, bmwMovements, bmwPickups, bmwDisposals, bmwVendors, bmwStorageRooms, bmwIncidents, bmwReports,
-  doctorOathConfirmations, consentTemplates, resolvedAlerts,
+  doctorOathConfirmations, consentTemplates, resolvedAlerts, doctorTimeSlots,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -53,7 +53,8 @@ import {
   doctorVisits, type DoctorVisit, type InsertDoctorVisit,
   type DoctorOathConfirmation, type InsertDoctorOathConfirmation,
   type ConsentTemplate, type InsertConsentTemplate,
-  type ResolvedAlert, type InsertResolvedAlert
+  type ResolvedAlert, type InsertResolvedAlert,
+  type DoctorTimeSlot, type InsertDoctorTimeSlot
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -1310,6 +1311,95 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDoctorSchedule(id: string): Promise<boolean> {
     const result = await db.delete(doctorSchedules).where(eq(doctorSchedules.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== DOCTOR TIME SLOTS METHODS ==========
+  async getDoctorTimeSlots(doctorId: string, date?: string, status?: string): Promise<DoctorTimeSlot[]> {
+    let conditions = [eq(doctorTimeSlots.doctorId, doctorId)];
+    if (date) conditions.push(eq(doctorTimeSlots.slotDate, date));
+    if (status) conditions.push(eq(doctorTimeSlots.status, status));
+    return await db.select().from(doctorTimeSlots).where(and(...conditions)).orderBy(doctorTimeSlots.startTime);
+  }
+
+  async getDoctorTimeSlotsBySchedule(scheduleId: string): Promise<DoctorTimeSlot[]> {
+    return await db.select().from(doctorTimeSlots).where(eq(doctorTimeSlots.scheduleId, scheduleId)).orderBy(doctorTimeSlots.startTime);
+  }
+
+  async getDoctorTimeSlot(id: string): Promise<DoctorTimeSlot | undefined> {
+    const result = await db.select().from(doctorTimeSlots).where(eq(doctorTimeSlots.id, id));
+    return result[0];
+  }
+
+  async getAvailableTimeSlots(doctorId: string, date: string): Promise<DoctorTimeSlot[]> {
+    return await db.select().from(doctorTimeSlots)
+      .where(and(
+        eq(doctorTimeSlots.doctorId, doctorId),
+        eq(doctorTimeSlots.slotDate, date),
+        eq(doctorTimeSlots.status, 'available')
+      ))
+      .orderBy(doctorTimeSlots.startTime);
+  }
+
+  async createDoctorTimeSlot(slot: InsertDoctorTimeSlot): Promise<DoctorTimeSlot> {
+    const result = await db.insert(doctorTimeSlots).values(slot).returning();
+    return result[0];
+  }
+
+  async createDoctorTimeSlotsBulk(slots: InsertDoctorTimeSlot[]): Promise<DoctorTimeSlot[]> {
+    if (slots.length === 0) return [];
+    const result = await db.insert(doctorTimeSlots).values(slots).returning();
+    return result;
+  }
+
+  async bookTimeSlot(slotId: string, patientId: string, patientName: string, appointmentId: string): Promise<DoctorTimeSlot | undefined> {
+    // Use transaction with SELECT FOR UPDATE to prevent double booking
+    const result = await db.transaction(async (tx) => {
+      // Lock and check the slot
+      const [slot] = await tx.select().from(doctorTimeSlots)
+        .where(and(eq(doctorTimeSlots.id, slotId), eq(doctorTimeSlots.status, 'available')))
+        .for('update');
+      
+      if (!slot) {
+        return undefined; // Slot not available or doesn't exist
+      }
+
+      // Book the slot
+      const [updated] = await tx.update(doctorTimeSlots)
+        .set({
+          status: 'booked',
+          patientId,
+          patientName,
+          appointmentId,
+          bookedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(doctorTimeSlots.id, slotId))
+        .returning();
+      
+      return updated;
+    });
+    
+    return result;
+  }
+
+  async cancelTimeSlot(slotId: string): Promise<DoctorTimeSlot | undefined> {
+    const result = await db.update(doctorTimeSlots)
+      .set({
+        status: 'available',
+        patientId: null,
+        patientName: null,
+        appointmentId: null,
+        bookedAt: null,
+        updatedAt: new Date()
+      })
+      .where(eq(doctorTimeSlots.id, slotId))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTimeSlotsBySchedule(scheduleId: string): Promise<boolean> {
+    const result = await db.delete(doctorTimeSlots).where(eq(doctorTimeSlots.scheduleId, scheduleId)).returning();
     return result.length > 0;
   }
 

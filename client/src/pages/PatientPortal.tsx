@@ -28,7 +28,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format, formatDistanceToNow } from "date-fns";
-import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent } from "@shared/schema";
+import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent, DoctorTimeSlot } from "@shared/schema";
 import { 
   Home,
   Calendar,
@@ -278,6 +278,39 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     refetchInterval: 3000, // Real-time sync
   });
 
+  // Fetch available time slots from the new API (only available slots for patients)
+  const { data: availableTimeSlots = [] } = useQuery<DoctorTimeSlot[]>({
+    queryKey: ["/api/time-slots/available", selectedDoctor?.id, selectedDate],
+    queryFn: async () => {
+      if (!selectedDoctor?.id || !selectedDate) return [];
+      const response = await fetch(`/api/time-slots/${selectedDoctor.id}/available/${selectedDate}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!selectedDoctor?.id && !!selectedDate,
+    staleTime: 0,
+  });
+
+  // WebSocket listener for real-time slot updates
+  useEffect(() => {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/notifications?userId=${username}&userRole=PATIENT`);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'slot_update') {
+          // Refresh available slots when slot status changes
+          queryClient.invalidateQueries({ queryKey: ["/api/time-slots/available"] });
+        }
+      } catch (e) {
+        console.error("WebSocket message parse error:", e);
+      }
+    };
+
+    return () => ws.close();
+  }, [username]);
+
   // Find the service_patient that matches this user's email or name
   const userEmail = userData?.email || profileData?.email || profileForm.email;
   const normalizedPatientName = patientName.toLowerCase().trim();
@@ -321,7 +354,8 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   const upcomingAppointments = appointments.filter(a => a.status === "scheduled");
   const unreadNotifications = unreadCount;
 
-  const allTimeSlots = [
+  // Static fallback time slots (used when no API slots exist)
+  const fallbackTimeSlots = [
     { value: "09:00", label: "09:00 AM" },
     { value: "09:30", label: "09:30 AM" },
     { value: "10:00", label: "10:00 AM" },
@@ -336,17 +370,28 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     { value: "16:30", label: "04:30 PM" },
   ];
 
+  // Convert API time slots to the format expected by the UI
   const getAvailableSlots = () => {
-    if (!selectedDoctor || !selectedDate) return allTimeSlots;
+    // If we have slots from the new API, use those
+    if (availableTimeSlots.length > 0) {
+      return availableTimeSlots.map(slot => ({
+        value: slot.startTime,
+        label: `${slot.startTime} - ${slot.endTime}`,
+        slotId: slot.id, // Include slot ID for booking
+      }));
+    }
+    
+    // Fallback: filter from static slots based on existing appointments
+    if (!selectedDoctor || !selectedDate) return fallbackTimeSlots;
     const bookedSlots = appointments
       .filter(a => 
-        a.doctorId === selectedDoctor && 
+        a.doctorId === selectedDoctor?.id && 
         a.appointmentDate === selectedDate &&
         a.status !== "cancelled" && 
         a.status !== "completed"
       )
       .map(a => a.timeSlot);
-    return allTimeSlots.filter(slot => !bookedSlots.includes(slot.value));
+    return fallbackTimeSlots.filter(slot => !bookedSlots.includes(slot.value));
   };
 
   const availableSlots = getAvailableSlots();

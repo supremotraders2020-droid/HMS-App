@@ -90,6 +90,33 @@ class NotificationService {
     });
   }
 
+  // Broadcast slot updates to all connected clients for real-time sync
+  broadcastSlotUpdate(slotUpdate: {
+    type: 'slot.booked' | 'slot.cancelled' | 'slots.generated';
+    slotId?: string;
+    doctorId: string;
+    date: string;
+    startTime?: string;
+    patientName?: string | null;
+    count?: number;
+  }) {
+    const message = JSON.stringify({
+      type: 'slot_update',
+      ...slotUpdate
+    });
+    
+    // Broadcast to all connected clients (admin, doctors, patients)
+    this.clients.forEach((clients) => {
+      clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(message);
+        }
+      });
+    });
+    
+    console.log(`Slot update broadcast: ${slotUpdate.type} for doctor ${slotUpdate.doctorId}`);
+  }
+
   async createAndPushNotification(notification: InsertUserNotification): Promise<UserNotification> {
     const created = await storage.createUserNotification(notification);
     
