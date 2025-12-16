@@ -84,6 +84,8 @@ export default function BiowastePage() {
   const [generatedBarcode, setGeneratedBarcode] = useState<string | null>(null);
   const [generatedBagDetails, setGeneratedBagDetails] = useState<{category: string; department: string; weight: string} | null>(null);
   const [reportFilter, setReportFilter] = useState<string | null>(null);
+  const [bagCategoryFilter, setBagCategoryFilter] = useState<string | null>(null);
+  const [bagStatusFilter, setBagStatusFilter] = useState<string | null>(null);
 
   const handlePrintLabel = (barcode: string, details?: {category: string; department: string; weight: string}) => {
     const categoryInfo = details ? BMW_CATEGORIES.find(c => c.value === details.category) : null;
@@ -866,13 +868,58 @@ NABH & CPCB Compliant BMW Tracking System
           <TabsContent value="bags" className="space-y-6">
             <Card className="glass-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  All Waste Bags
-                </CardTitle>
-                <CardDescription>
-                  Complete list of generated biomedical waste bags
-                </CardDescription>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="h-5 w-5 text-primary" />
+                      All Waste Bags
+                    </CardTitle>
+                    <CardDescription>
+                      Complete list of generated biomedical waste bags
+                    </CardDescription>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Select value={bagCategoryFilter || "all"} onValueChange={(v) => setBagCategoryFilter(v === "all" ? null : v)}>
+                      <SelectTrigger className="w-[140px]" data-testid="filter-category">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {BMW_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded ${cat.color}`} />
+                              {cat.value}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={bagStatusFilter || "all"} onValueChange={(v) => setBagStatusFilter(v === "all" ? null : v)}>
+                      <SelectTrigger className="w-[130px]" data-testid="filter-status">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="GENERATED">Generated</SelectItem>
+                        <SelectItem value="COLLECTED">Collected</SelectItem>
+                        <SelectItem value="STORED">In Storage</SelectItem>
+                        <SelectItem value="PICKED_UP">Picked Up</SelectItem>
+                        <SelectItem value="DISPOSED">Disposed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {(bagCategoryFilter || bagStatusFilter) && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => { setBagCategoryFilter(null); setBagStatusFilter(null); }}
+                        data-testid="button-clear-filters"
+                      >
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {bagsLoading ? (
@@ -898,10 +945,33 @@ NABH & CPCB Compliant BMW Tracking System
                       Generate First Bag
                     </Button>
                   </div>
-                ) : (
+                ) : (() => {
+                  const filteredBags = bags.filter(bag => {
+                    if (bagCategoryFilter && bag.category !== bagCategoryFilter) return false;
+                    if (bagStatusFilter && bag.status !== bagStatusFilter) return false;
+                    return true;
+                  });
+                  
+                  if (filteredBags.length === 0) {
+                    return (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Package className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium">No bags match the selected filters</p>
+                        <p className="text-sm mb-4">Try adjusting or clearing your filters</p>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => { setBagCategoryFilter(null); setBagStatusFilter(null); }}
+                        >
+                          Clear Filters
+                        </Button>
+                      </div>
+                    );
+                  }
+                  
+                  return (
                   <ScrollArea className="h-[500px]">
                     <div className="space-y-3">
-                      {bags.map((bag) => (
+                      {filteredBags.map((bag) => (
                         <div 
                           key={bag.id} 
                           className="flex items-center gap-4 p-4 border rounded-lg hover-elevate transition-all"
@@ -947,7 +1017,8 @@ NABH & CPCB Compliant BMW Tracking System
                       ))}
                     </div>
                   </ScrollArea>
-                )}
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
