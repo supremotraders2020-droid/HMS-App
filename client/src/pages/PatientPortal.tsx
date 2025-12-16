@@ -257,9 +257,14 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
       setSymptoms("");
     },
     onError: (error: any) => {
+      const isSlotAlreadyBooked = error?.message?.includes('no longer available') || 
+                                   error?.message?.includes('already booked') ||
+                                   error?.status === 409;
       toast({ 
         title: "Booking Failed", 
-        description: error?.message || "Failed to book appointment. Please try again.", 
+        description: isSlotAlreadyBooked 
+          ? "This slot is already booked, please select another slot." 
+          : (error?.message || "Failed to book appointment. Please try again."), 
         variant: "destructive" 
       });
     }
