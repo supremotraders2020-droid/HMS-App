@@ -196,6 +196,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/patient-profiles', username] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/by-username', username] });
       toast({ title: "Profile Updated", description: "Your profile has been saved successfully" });
     },
     onError: () => {

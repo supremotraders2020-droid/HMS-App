@@ -2773,6 +2773,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fullName: req.body.fullName,
         ...req.body
       });
+      
+      // Also update the user's name in the users table
+      if (req.body.fullName) {
+        const user = await databaseStorage.getUserByUsername(req.params.patientId);
+        if (user) {
+          await databaseStorage.updateUser(user.id, { name: req.body.fullName });
+        }
+      }
+      
       res.json(profile);
     } catch (error) {
       res.status(500).json({ error: "Failed to save profile" });
