@@ -130,8 +130,31 @@ export default function OPDService() {
     });
     
     const available = doctorSlots.filter(s => s.status === 'available').length;
-    const booked = doctorSlots.filter(s => s.status === 'booked').length;
-    const total = doctorSlots.length;
+    const bookedSlots = doctorSlots.filter(s => s.status === 'booked').length;
+    
+    // Also count legacy appointments (booked via /api/appointments without slot system)
+    // These are appointments for the selected date that match the doctor's specialty/department
+    const legacyAppointments = appointments.filter(apt => {
+      if (apt.status === 'cancelled' || apt.status === 'completed') return false;
+      if (apt.appointmentDate !== selectedDate) return false;
+      // Match by department (specialty)
+      const matchesDepartment = apt.department?.toLowerCase() === doctor.specialty?.toLowerCase();
+      // Or match by doctorId (if it was set)
+      const matchesDoctorId = apt.doctorId === doctorId;
+      return matchesDepartment || matchesDoctorId;
+    });
+    
+    // Exclude legacy appointments that are already counted in booked slots
+    const bookedSlotTimes = doctorSlots
+      .filter(s => s.status === 'booked')
+      .map(s => s.startTime);
+    const uniqueLegacyCount = legacyAppointments.filter(apt => {
+      const aptTime = apt.timeSlot?.split(' - ')[0] || apt.timeSlot;
+      return !bookedSlotTimes.includes(aptTime);
+    }).length;
+    
+    const booked = bookedSlots + uniqueLegacyCount;
+    const total = doctorSlots.length + uniqueLegacyCount;
     return { available, booked, total };
   };
 
