@@ -65,6 +65,8 @@ export default function OPDService() {
   const [medicineCategory, setMedicineCategory] = useState<string>("all");
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
   const [showMedicineDetail, setShowMedicineDetail] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<DoctorTimeSlot | null>(null);
+  const [showSlotDetail, setShowSlotDetail] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -532,9 +534,13 @@ export default function OPDService() {
                             .map((slot) => (
                             <div
                               key={slot.id}
-                              className={`relative px-3 py-2 rounded-lg border-2 text-center ${
+                              onClick={() => {
+                                setSelectedSlot(slot);
+                                setShowSlotDetail(true);
+                              }}
+                              className={`relative px-3 py-2 rounded-lg border-2 text-center cursor-pointer transition-all ${
                                 slot.status === 'booked' 
-                                  ? 'bg-muted border-muted-foreground/30' 
+                                  ? 'bg-muted border-muted-foreground/30 hover:bg-muted/80' 
                                   : 'border-primary/30 hover:border-primary hover:bg-primary/5'
                               }`}
                               data-testid={`slot-${slot.id}`}
@@ -1247,6 +1253,66 @@ export default function OPDService() {
           </div>
         </div>
       </footer>
+
+      {/* Slot Detail Dialog */}
+      <Dialog open={showSlotDetail} onOpenChange={setShowSlotDetail}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Slot Details
+            </DialogTitle>
+            <DialogDescription>
+              Time slot information for {selectedSlot?.doctorName}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedSlot && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-muted/50">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Doctor</p>
+                    <p className="font-medium">{selectedSlot.doctorName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Date</p>
+                    <p className="font-medium">{new Date(selectedSlot.slotDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Time</p>
+                    <p className="font-medium text-lg text-primary">{selectedSlot.startTime} - {selectedSlot.endTime}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <Badge variant={selectedSlot.status === 'available' ? 'default' : 'secondary'} className="mt-1">
+                      {selectedSlot.status === 'available' ? 'Available' : 'Booked'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              
+              {selectedSlot.status === 'booked' && selectedSlot.patientName && (
+                <div className="p-4 rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/30">
+                  <p className="text-xs text-muted-foreground mb-2">Booking Details</p>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-orange-600" />
+                    <span className="font-medium">{selectedSlot.patientName}</span>
+                  </div>
+                </div>
+              )}
+
+              {selectedSlot.status === 'available' && (
+                <div className="p-4 rounded-lg border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/30">
+                  <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                    <UserCheck className="h-4 w-4" />
+                    <span className="text-sm font-medium">This slot is available for booking</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
