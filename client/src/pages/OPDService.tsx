@@ -116,8 +116,19 @@ export default function OPDService() {
   });
 
   // Helper to get slot counts for a specific doctor
+  // Note: doctorId in doctors table differs from doctorId in time_slots (user ID)
+  // So we match by doctor name instead
   const getDoctorSlotCounts = (doctorId: string) => {
-    const doctorSlots = allDoctorSlots.filter(s => s.doctorId === doctorId);
+    const doctor = doctors.find(d => d.id === doctorId);
+    if (!doctor) return { available: 0, booked: 0, total: 0 };
+    
+    // Match slots by doctor name (partial match to handle "Dr." prefix variations)
+    const doctorName = doctor.name.replace(/^Dr\.?\s*/i, '').toLowerCase();
+    const doctorSlots = allDoctorSlots.filter(s => {
+      const slotDoctorName = (s.doctorName || '').replace(/^Dr\.?\s*/i, '').toLowerCase();
+      return slotDoctorName.includes(doctorName) || doctorName.includes(slotDoctorName);
+    });
+    
     const available = doctorSlots.filter(s => s.status === 'available').length;
     const booked = doctorSlots.filter(s => s.status === 'booked').length;
     const total = doctorSlots.length;

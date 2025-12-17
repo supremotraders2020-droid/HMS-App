@@ -2087,12 +2087,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Auto-generate time slots if schedule has a specific date
       if (schedule.specificDate && schedule.isAvailable) {
         try {
-          // Get doctor name from doctors table or use default
+          // Get doctor name from users table (schedule.doctorId is the user ID)
           let doctorName = 'Doctor';
-          const doctors = await databaseStorage.getDoctors();
-          const doctor = doctors.find(d => d.userId === schedule.doctorId);
-          if (doctor) {
-            doctorName = doctor.name;
+          const doctorUser = await databaseStorage.getUser(schedule.doctorId);
+          if (doctorUser && doctorUser.name) {
+            doctorName = doctorUser.name;
           }
 
           // Utility functions for slot generation (defined inline)
@@ -2174,12 +2173,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Delete existing slots for this schedule first
           await databaseStorage.deleteTimeSlotsBySchedule(schedule.id);
 
-          // Get doctor name from doctors table or use default
+          // Get doctor name from users table (schedule.doctorId is the user ID)
           let doctorName = 'Doctor';
-          const doctors = await databaseStorage.getDoctors();
-          const doctor = doctors.find(d => d.userId === schedule.doctorId);
-          if (doctor) {
-            doctorName = doctor.name;
+          const doctorUser = await databaseStorage.getUser(schedule.doctorId);
+          if (doctorUser && doctorUser.name) {
+            doctorName = doctorUser.name;
           }
 
           // Utility functions for slot generation
