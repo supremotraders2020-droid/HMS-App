@@ -307,14 +307,14 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
 
   // Fetch available time slots from the new API (only available slots for patients)
   const { data: availableTimeSlots = [] } = useQuery<DoctorTimeSlot[]>({
-    queryKey: ["/api/time-slots/available", selectedDoctor?.id, selectedDate],
+    queryKey: ["/api/time-slots/available", selectedDoctor, selectedDate],
     queryFn: async () => {
-      if (!selectedDoctor?.id || !selectedDate) return [];
-      const response = await fetch(`/api/time-slots/${selectedDoctor.id}/available/${selectedDate}`);
+      if (!selectedDoctor || !selectedDate) return [];
+      const response = await fetch(`/api/time-slots/${selectedDoctor}/available/${selectedDate}`);
       if (!response.ok) return [];
       return response.json();
     },
-    enabled: !!selectedDoctor?.id && !!selectedDate,
+    enabled: !!selectedDoctor && !!selectedDate,
     staleTime: 0,
   });
 
@@ -387,7 +387,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   const unreadNotifications = unreadCount;
 
   // Static fallback time slots (used when no API slots exist)
-  const fallbackTimeSlots = [
+  const fallbackTimeSlots: { value: string; label: string; slotId?: string }[] = [
     { value: "09:00", label: "09:00 AM" },
     { value: "09:30", label: "09:30 AM" },
     { value: "10:00", label: "10:00 AM" },
@@ -417,7 +417,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     if (!selectedDoctor || !selectedDate) return fallbackTimeSlots;
     const bookedSlots = appointments
       .filter(a => 
-        a.doctorId === selectedDoctor?.id && 
+        a.doctorId === selectedDoctor && 
         a.appointmentDate === selectedDate &&
         a.status !== "cancelled" && 
         a.status !== "completed"
@@ -999,7 +999,7 @@ Description: ${record.description}
                       const selectedSlotData = availableSlots.find(s => s.value === selectedSlot);
                       bookAppointmentMutation.mutate({
                         slotId: selectedSlotData?.slotId, // Use slot ID for transactional booking
-                        doctorId: selectedDoctor?.id || '',
+                        doctorId: selectedDoctor || '', // selectedDoctor is already the doctor ID string
                         patientId: username,
                         patientName: patientName,
                         patientPhone: profileForm.phone || "+91 98765 43210",

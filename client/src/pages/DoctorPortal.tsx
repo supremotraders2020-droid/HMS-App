@@ -416,7 +416,15 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   };
 
   const today = new Date().toISOString().split('T')[0];
-  const doctorAppointments = allAppointments.filter(a => a.doctorId === effectiveDoctorId);
+  // Filter appointments by doctorId OR by department matching doctor's specialty (for legacy appointments)
+  const doctorSpecialty = matchedDoctor?.specialty?.toLowerCase() || '';
+  const doctorAppointments = allAppointments.filter(a => {
+    // Match by doctorId if set
+    if (a.doctorId && a.doctorId === effectiveDoctorId) return true;
+    // Match by department if doctorId is not set (legacy appointments)
+    if (!a.doctorId && a.department?.toLowerCase() === doctorSpecialty) return true;
+    return false;
+  });
   const todayAppointments = doctorAppointments.filter(a => a.appointmentDate === today);
   const pendingAppointments = doctorAppointments.filter(a => a.status === "pending" || a.status === "scheduled");
 
