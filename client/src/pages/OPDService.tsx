@@ -117,6 +117,40 @@ export default function OPDService() {
     staleTime: 0,
   });
 
+  // Get legacy appointments for a doctor (booked via old system, not in time_slots table)
+  const getLegacyAppointmentsForDoctor = (doctorId: string): DoctorTimeSlot[] => {
+    const doctor = doctors.find(d => d.id === doctorId);
+    if (!doctor) return [];
+    
+    const legacyAppointments = appointments.filter(apt => {
+      if (apt.status === 'cancelled' || apt.status === 'completed') return false;
+      if (apt.appointmentDate !== selectedDate) return false;
+      const matchesDepartment = apt.department?.toLowerCase() === doctor.specialty?.toLowerCase();
+      const matchesDoctorId = apt.doctorId === doctorId;
+      return matchesDepartment || matchesDoctorId;
+    });
+    
+    // Convert to virtual time slots
+    return legacyAppointments.map(apt => ({
+      id: `legacy-${apt.id}`,
+      scheduleId: `legacy-schedule-${apt.id}`,
+      doctorId: doctorId,
+      doctorName: doctor.name,
+      slotDate: apt.appointmentDate,
+      startTime: apt.timeSlot?.split(' - ')[0] || apt.timeSlot || 'N/A',
+      endTime: apt.timeSlot?.split(' - ')[1] || '',
+      slotType: 'legacy',
+      location: null,
+      status: 'booked' as const,
+      patientId: null,
+      patientName: apt.patientName,
+      appointmentId: apt.id,
+      bookedAt: apt.createdAt ? new Date(apt.createdAt) : null,
+      createdAt: apt.createdAt ? new Date(apt.createdAt) : null,
+      updatedAt: null,
+    }));
+  };
+
   // Helper to get slot counts for a specific doctor
   // Note: doctorId in doctors table differs from doctorId in time_slots (user ID)
   // So we match by doctor name instead
@@ -522,10 +556,36 @@ export default function OPDService() {
                           </div>
                         )}
 
-                        {/* Individual Time Slots from Database */}
+                        {/* Individual Time Slots from Database + Legacy Appointments */}
                         <span className="text-sm text-muted-foreground">Time Slots (30-min intervals)</span>
                         <div className="flex flex-wrap gap-2">
-                          {timeSlots
+                          {(() => {
+                            // Combine real time slots with legacy appointments
+                            const legacySlots = getLegacyAppointmentsForDoctor(doctor.id);
+                            const realSlotTimes = timeSlots.map(s => s.startTime);
+                            // Only add legacy slots that don't overlap with real slots
+                            const uniqueLegacySlots = legacySlots.filter(ls => !realSlotTimes.includes(ls.startTime));
+                            const combinedSlots = [...timeSlots, ...uniqueLegacySlots];
+                            
+                            // Sort by time
+                            combinedSlots.sort((a, b) => {
+                              const timeA = a.startTime.replace(/(\d+):(\d+)\s*(AM|PM)/i, (_, h, m, p) => {
+                                let hour = parseInt(h);
+                                if (p.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+                                if (p.toUpperCase() === 'AM' && hour === 12) hour = 0;
+                                return `${hour.toString().padStart(2, '0')}:${m}`;
+                              });
+                              const timeB = b.startTime.replace(/(\d+):(\d+)\s*(AM|PM)/i, (_, h, m, p) => {
+                                let hour = parseInt(h);
+                                if (p.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+                                if (p.toUpperCase() === 'AM' && hour === 12) hour = 0;
+                                return `${hour.toString().padStart(2, '0')}:${m}`;
+                              });
+                              return timeA.localeCompare(timeB);
+                            });
+                            
+                            return combinedSlots;
+                          })()
                             .filter((slot) => {
                               const currentFilter = slotFilters[doctor.id] || 'all';
                               if (currentFilter === 'available') return slot.status === 'available';
