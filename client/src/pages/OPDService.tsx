@@ -57,7 +57,7 @@ type TabType = "schedules" | "book" | "appointments" | "checkin" | "team" | "med
 export default function OPDService() {
   const [activeTab, setActiveTab] = useState<TabType>("schedules");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
-  const [slotFilter, setSlotFilter] = useState<'all' | 'available' | 'booked'>('all');
+  const [slotFilters, setSlotFilters] = useState<Record<string, 'all' | 'available' | 'booked'>>({});
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -463,17 +463,17 @@ export default function OPDService() {
                       <Badge variant="secondary" className="mt-1">{doctor.specialty}</Badge>
                       <div className="flex items-center gap-3 mt-2 text-xs">
                         <button 
-                          onClick={() => setSlotFilter(slotFilter === 'available' ? 'all' : 'available')}
-                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilter === 'available' ? 'ring-2 ring-green-500 bg-green-500/20' : 'hover:bg-green-500/10'}`}
-                          data-testid="filter-available"
+                          onClick={() => setSlotFilters(prev => ({ ...prev, [doctor.id]: prev[doctor.id] === 'available' ? 'all' : 'available' }))}
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilters[doctor.id] === 'available' ? 'ring-2 ring-green-500 bg-green-500/20' : 'hover:bg-green-500/10'}`}
+                          data-testid={`filter-available-${doctor.id}`}
                         >
                           <div className="w-2 h-2 rounded-full bg-green-500" />
                           <span className="text-green-600 dark:text-green-400 font-medium">{slotCounts.available} available</span>
                         </button>
                         <button 
-                          onClick={() => setSlotFilter(slotFilter === 'booked' ? 'all' : 'booked')}
-                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilter === 'booked' ? 'ring-2 ring-orange-500 bg-orange-500/20' : 'hover:bg-orange-500/10'}`}
-                          data-testid="filter-booked"
+                          onClick={() => setSlotFilters(prev => ({ ...prev, [doctor.id]: prev[doctor.id] === 'booked' ? 'all' : 'booked' }))}
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilters[doctor.id] === 'booked' ? 'ring-2 ring-orange-500 bg-orange-500/20' : 'hover:bg-orange-500/10'}`}
+                          data-testid={`filter-booked-${doctor.id}`}
                         >
                           <div className="w-2 h-2 rounded-full bg-orange-500" />
                           <span className="text-orange-600 dark:text-orange-400 font-medium">{slotCounts.booked} booked</span>
@@ -527,8 +527,9 @@ export default function OPDService() {
                         <div className="flex flex-wrap gap-2">
                           {timeSlots
                             .filter((slot) => {
-                              if (slotFilter === 'available') return slot.status === 'available';
-                              if (slotFilter === 'booked') return slot.status === 'booked';
+                              const currentFilter = slotFilters[doctor.id] || 'all';
+                              if (currentFilter === 'available') return slot.status === 'available';
+                              if (currentFilter === 'booked') return slot.status === 'booked';
                               return true;
                             })
                             .map((slot) => (
