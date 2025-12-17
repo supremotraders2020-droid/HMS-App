@@ -513,12 +513,7 @@ export default function OPDService() {
                         )}
 
                         {/* Individual Time Slots from Database */}
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Time Slots (30-min intervals)</span>
-                          <span className="font-medium">
-                            {timeSlots.filter((s) => s.status === 'available').length} available / {timeSlots.length} total
-                          </span>
-                        </div>
+                        <span className="text-sm text-muted-foreground">Time Slots (30-min intervals)</span>
                         <div className="flex flex-wrap gap-2">
                           {timeSlots.map((slot) => (
                             <div
@@ -545,23 +540,6 @@ export default function OPDService() {
                           {timeSlots.length === 0 && doctorScheduleBlocks.length === 0 && (
                             <p className="text-sm text-muted-foreground">No slots scheduled for this date</p>
                           )}
-                        </div>
-                        <div className="flex items-center justify-between pt-3 border-t mt-2">
-                          <div className="flex items-center gap-4 text-xs">
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                              <span className="text-green-600 dark:text-green-400 font-medium">
-                                {timeSlots.filter((s) => s.status === 'available').length} Available
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                              <span className="text-orange-600 dark:text-orange-400 font-medium">
-                                {timeSlots.filter((s) => s.status === 'booked').length} Booked
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-xs text-muted-foreground">Real-time sync active</span>
                         </div>
                       </div>
                     </CardContent>
