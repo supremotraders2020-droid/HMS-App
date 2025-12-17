@@ -520,13 +520,7 @@ export default function OPDService() {
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {timeSlots
-                            .filter((slot) => {
-                              if (slotFilter === 'available') return slot.status === 'available';
-                              if (slotFilter === 'booked') return slot.status === 'booked';
-                              return true;
-                            })
-                            .map((slot) => (
+                          {timeSlots.map((slot) => (
                             <div
                               key={slot.id}
                               className={`relative px-3 py-2 rounded-lg border-2 text-center ${
@@ -552,27 +546,22 @@ export default function OPDService() {
                             <p className="text-sm text-muted-foreground">No slots scheduled for this date</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-4 text-xs pt-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSlotFilter(slotFilter === 'available' ? 'all' : 'available')}
-                            className={`flex items-center gap-1 h-auto py-1 px-2 ${slotFilter === 'available' ? 'ring-2 ring-primary bg-primary/10' : ''}`}
-                            data-testid="filter-available"
-                          >
-                            <div className="w-3 h-3 border-2 border-primary rounded" /> 
-                            <span className="text-xs">Available ({timeSlots.filter((s) => s.status === 'available').length})</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSlotFilter(slotFilter === 'booked' ? 'all' : 'booked')}
-                            className={`flex items-center gap-1 h-auto py-1 px-2 ${slotFilter === 'booked' ? 'ring-2 ring-muted-foreground bg-muted' : ''}`}
-                            data-testid="filter-booked"
-                          >
-                            <div className="w-3 h-3 bg-muted-foreground/50 rounded" /> 
-                            <span className="text-xs">Booked ({timeSlots.filter((s) => s.status === 'booked').length})</span>
-                          </Button>
+                        <div className="flex items-center justify-between pt-3 border-t mt-2">
+                          <div className="flex items-center gap-4 text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                              <span className="text-green-600 dark:text-green-400 font-medium">
+                                {timeSlots.filter((s) => s.status === 'available').length} Available
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+                              <span className="text-orange-600 dark:text-orange-400 font-medium">
+                                {timeSlots.filter((s) => s.status === 'booked').length} Booked
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-xs text-muted-foreground">Real-time sync active</span>
                         </div>
                       </div>
                     </CardContent>
