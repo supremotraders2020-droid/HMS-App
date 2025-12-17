@@ -460,14 +460,22 @@ export default function OPDService() {
                       <CardTitle className="text-lg">{doctor.name}</CardTitle>
                       <Badge variant="secondary" className="mt-1">{doctor.specialty}</Badge>
                       <div className="flex items-center gap-3 mt-2 text-xs">
-                        <span className="flex items-center gap-1">
+                        <button 
+                          onClick={() => setSlotFilter(slotFilter === 'available' ? 'all' : 'available')}
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilter === 'available' ? 'ring-2 ring-green-500 bg-green-500/20' : 'hover:bg-green-500/10'}`}
+                          data-testid="filter-available"
+                        >
                           <div className="w-2 h-2 rounded-full bg-green-500" />
                           <span className="text-green-600 dark:text-green-400 font-medium">{slotCounts.available} available</span>
-                        </span>
-                        <span className="flex items-center gap-1">
+                        </button>
+                        <button 
+                          onClick={() => setSlotFilter(slotFilter === 'booked' ? 'all' : 'booked')}
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilter === 'booked' ? 'ring-2 ring-orange-500 bg-orange-500/20' : 'hover:bg-orange-500/10'}`}
+                          data-testid="filter-booked"
+                        >
                           <div className="w-2 h-2 rounded-full bg-orange-500" />
                           <span className="text-orange-600 dark:text-orange-400 font-medium">{slotCounts.booked} booked</span>
-                        </span>
+                        </button>
                         <span className="text-muted-foreground">/ {slotCounts.total} total</span>
                       </div>
                     </div>
@@ -515,7 +523,13 @@ export default function OPDService() {
                         {/* Individual Time Slots from Database */}
                         <span className="text-sm text-muted-foreground">Time Slots (30-min intervals)</span>
                         <div className="flex flex-wrap gap-2">
-                          {timeSlots.map((slot) => (
+                          {timeSlots
+                            .filter((slot) => {
+                              if (slotFilter === 'available') return slot.status === 'available';
+                              if (slotFilter === 'booked') return slot.status === 'booked';
+                              return true;
+                            })
+                            .map((slot) => (
                             <div
                               key={slot.id}
                               className={`relative px-3 py-2 rounded-lg border-2 text-center ${
