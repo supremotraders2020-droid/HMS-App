@@ -112,7 +112,18 @@ const BLOOD_GROUP_COLORS: Record<string, string> = {
 export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc-1", onLogout }: DoctorPortalProps) {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPatient, setSelectedPatient] = useState<DoctorPatient | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<{
+    id: string;
+    patientName: string;
+    patientPhone: string;
+    patientEmail: string;
+    patientAge: string;
+    patientGender: string;
+    bloodGroup: string;
+    patientAddress: string;
+    lastVisit: string;
+    medicalRecords?: MedicalRecord[];
+  } | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
   const [oathAccepted, setOathAccepted] = useState(false);
@@ -165,6 +176,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [appointmentDetailsOpen, setAppointmentDetailsOpen] = useState(false);
   const [viewPrescriptionDialogOpen, setViewPrescriptionDialogOpen] = useState(false);
   const [editPrescriptionDialogOpen, setEditPrescriptionDialogOpen] = useState(false);
+  const [viewPatientDialogOpen, setViewPatientDialogOpen] = useState(false);
+  const [editPatientDialogOpen, setEditPatientDialogOpen] = useState(false);
   const [editingPrescription, setEditingPrescription] = useState<{diagnosis: string; medicines: string[]; instructions: string}>({diagnosis: "", medicines: [], instructions: ""});
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | undefined>(undefined);
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
@@ -814,11 +827,23 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               </div>
             </CardContent>
             <CardFooter className="gap-2">
-              <Button variant="outline" size="sm" className="flex-1" data-testid={`button-view-patient-${patient.id}`}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1" 
+                onClick={() => { setSelectedPatient(patient); setViewPatientDialogOpen(true); }}
+                data-testid={`button-view-patient-${patient.id}`}
+              >
                 <Eye className="h-4 w-4 mr-1" />
                 View
               </Button>
-              <Button variant="outline" size="sm" className="flex-1" data-testid={`button-edit-patient-${patient.id}`}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1" 
+                onClick={() => { setSelectedPatient(patient); setEditPatientDialogOpen(true); }}
+                data-testid={`button-edit-patient-${patient.id}`}
+              >
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Button>
@@ -2598,6 +2623,146 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Patient Dialog */}
+      <Dialog open={viewPatientDialogOpen} onOpenChange={setViewPatientDialogOpen}>
+        <DialogContent className="max-w-lg" data-testid="dialog-view-patient">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-14 w-14">
+                <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                  {selectedPatient?.patientName?.split(' ').map((n: string) => n[0]).join('') || 'P'}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <DialogTitle data-testid="text-view-patient-name">{selectedPatient?.patientName}</DialogTitle>
+                <DialogDescription>Patient Details</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          {selectedPatient && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Age</h4>
+                  <p className="text-sm font-medium">{selectedPatient.patientAge || 'N/A'} years</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Gender</h4>
+                  <p className="text-sm font-medium">
+                    {selectedPatient.patientGender === 'M' ? 'Male' : selectedPatient.patientGender === 'F' ? 'Female' : 'Other'}
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{selectedPatient.patientPhone || 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{selectedPatient.patientEmail || 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{selectedPatient.patientAddress || 'N/A'}</span>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Blood Group</h4>
+                  <Badge className={BLOOD_GROUP_COLORS[selectedPatient.bloodGroup || ""] || "bg-gray-100"}>
+                    {selectedPatient.bloodGroup || 'N/A'}
+                  </Badge>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Last Visit</h4>
+                  <p className="text-sm">{selectedPatient.lastVisit || 'N/A'}</p>
+                </div>
+              </div>
+
+              {selectedPatient.medicalRecords && selectedPatient.medicalRecords.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Medical Records ({selectedPatient.medicalRecords.length})</h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {selectedPatient.medicalRecords.map((record) => (
+                        <div key={record.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                          <div>
+                            <p className="text-sm font-medium">{record.title}</p>
+                            <p className="text-xs text-muted-foreground">{record.recordType}</p>
+                          </div>
+                          <Badge variant="outline">{record.recordDate ? format(new Date(record.recordDate), 'MMM dd, yyyy') : 'N/A'}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewPatientDialogOpen(false)} data-testid="button-close-view-patient">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Patient Dialog */}
+      <Dialog open={editPatientDialogOpen} onOpenChange={setEditPatientDialogOpen}>
+        <DialogContent className="max-w-lg" data-testid="dialog-edit-patient">
+          <DialogHeader>
+            <DialogTitle data-testid="text-edit-patient-title">Edit Patient Information</DialogTitle>
+            <DialogDescription>
+              Update information for {selectedPatient?.patientName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editPatientName">Patient Name</Label>
+              <Input id="editPatientName" value={selectedPatient?.patientName || ''} disabled />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="editPatientAge">Age</Label>
+                <Input id="editPatientAge" value={selectedPatient?.patientAge || ''} disabled />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editPatientGender">Gender</Label>
+                <Input id="editPatientGender" value={selectedPatient?.patientGender === 'M' ? 'Male' : selectedPatient?.patientGender === 'F' ? 'Female' : 'Other'} disabled />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editPatientPhone">Phone</Label>
+              <Input id="editPatientPhone" value={selectedPatient?.patientPhone || ''} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editPatientEmail">Email</Label>
+              <Input id="editPatientEmail" value={selectedPatient?.patientEmail || ''} disabled />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Patient information can only be updated through the Patient Service module or by the patient themselves.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPatientDialogOpen(false)} data-testid="button-close-edit-patient">
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       </SidebarProvider>
