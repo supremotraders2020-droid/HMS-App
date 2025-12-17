@@ -159,10 +159,13 @@ export default function OPDService() {
     if (!doctor) return { available: 0, booked: 0, total: 0 };
     
     // Match slots by doctor name (partial match to handle "Dr." prefix variations)
+    // Also filter by selectedDate to ensure date-specific counts
     const doctorName = doctor.name.replace(/^Dr\.?\s*/i, '').toLowerCase();
     const doctorSlots = allDoctorSlots.filter(s => {
       const slotDoctorName = (s.doctorName || '').replace(/^Dr\.?\s*/i, '').toLowerCase();
-      return slotDoctorName.includes(doctorName) || doctorName.includes(slotDoctorName);
+      const nameMatches = slotDoctorName.includes(doctorName) || doctorName.includes(slotDoctorName);
+      const dateMatches = s.slotDate === selectedDate;
+      return nameMatches && dateMatches;
     });
     
     const available = doctorSlots.filter(s => s.status === 'available').length;
