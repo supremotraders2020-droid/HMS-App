@@ -770,7 +770,7 @@ export default function OPDService() {
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Users className="h-4 w-4" />
-                          <span>{doctor?.name || "Unknown Doctor"}</span>
+                          <span>{doctor?.name || (apt.department ? doctors.find(d => d.specialty?.toLowerCase() === apt.department?.toLowerCase())?.name : null) || `Dr. (${apt.department || 'Unknown'})`}</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="h-4 w-4" />
