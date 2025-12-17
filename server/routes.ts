@@ -2355,6 +2355,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return doctorId;
   }
 
+  // Get all time slots for a specific date (for admin dashboard)
+  app.get("/api/time-slots/all", async (req, res) => {
+    try {
+      const { date } = req.query;
+      if (!date) {
+        return res.status(400).json({ error: "Date is required" });
+      }
+      const slots = await databaseStorage.getAllTimeSlotsForDate(date as string);
+      res.json(slots);
+    } catch (error) {
+      console.error("Error fetching all time slots:", error);
+      res.status(500).json({ error: "Failed to fetch time slots" });
+    }
+  });
+
   // Get time slots for a doctor (filtered by date and status)
   app.get("/api/time-slots/:doctorId", async (req, res) => {
     try {

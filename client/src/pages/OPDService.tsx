@@ -103,6 +103,27 @@ export default function OPDService() {
     staleTime: 0,
   });
 
+  // Fetch all doctors' time slots for the selected date (for slot counts on cards)
+  const { data: allDoctorSlots = [] } = useQuery<DoctorTimeSlot[]>({
+    queryKey: ["/api/time-slots/all", selectedDate],
+    queryFn: async () => {
+      const response = await fetch(`/api/time-slots/all?date=${selectedDate}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!selectedDate,
+    staleTime: 0,
+  });
+
+  // Helper to get slot counts for a specific doctor
+  const getDoctorSlotCounts = (doctorId: string) => {
+    const doctorSlots = allDoctorSlots.filter(s => s.doctorId === doctorId);
+    const available = doctorSlots.filter(s => s.status === 'available').length;
+    const booked = doctorSlots.filter(s => s.status === 'booked').length;
+    const total = doctorSlots.length;
+    return { available, booked, total };
+  };
+
   // WebSocket listener for real-time slot updates
   useEffect(() => {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -113,6 +134,7 @@ export default function OPDService() {
         const data = JSON.parse(event.data);
         if (data.type === 'slots.generated' || data.type === 'slot.booked' || data.type === 'slot.cancelled' || data.type === 'slot_update') {
           queryClient.invalidateQueries({ queryKey: ["/api/time-slots"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/time-slots/all"] });
           queryClient.invalidateQueries({ queryKey: ["/api/doctor-schedules-by-name"] });
           if (data.type === 'slots.generated') {
             toast({
@@ -390,7 +412,9 @@ export default function OPDService() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              {doctors.map((doctor) => (
+              {doctors.map((doctor) => {
+                const slotCounts = getDoctorSlotCounts(doctor.id);
+                return (
                 <Card key={doctor.id} className="hover-elevate" data-testid={`card-doctor-${doctor.id}`}>
                   <CardHeader className="flex flex-row items-center gap-4">
                     <Avatar className="h-16 w-16">
@@ -401,14 +425,25 @@ export default function OPDService() {
                     <div className="flex-1">
                       <CardTitle className="text-lg">{doctor.name}</CardTitle>
                       <Badge variant="secondary" className="mt-1">{doctor.specialty}</Badge>
+                      <div className="flex items-center gap-3 mt-2 text-xs">
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-green-500" />
+                          <span className="text-green-600 dark:text-green-400 font-medium">{slotCounts.available} available</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-orange-500" />
+                          <span className="text-orange-600 dark:text-orange-400 font-medium">{slotCounts.booked} booked</span>
+                        </span>
+                        <span className="text-muted-foreground">/ {slotCounts.total} total</span>
+                      </div>
                     </div>
                     <Button
-                      variant="outline"
+                      variant={selectedDoctor === doctor.id ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setSelectedDoctor(doctor.id)}
+                      onClick={() => setSelectedDoctor(selectedDoctor === doctor.id ? "" : doctor.id)}
                       data-testid={`button-view-slots-${doctor.id}`}
                     >
-                      View Slots
+                      {selectedDoctor === doctor.id ? "Hide Slots" : "View Slots"}
                     </Button>
                   </CardHeader>
                   {selectedDoctor === doctor.id && (
@@ -509,7 +544,7 @@ export default function OPDService() {
                     </CardContent>
                   )}
                 </Card>
-              ))}
+              );})}
             </div>
           </div>
         )}

@@ -1346,6 +1346,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(doctorTimeSlots.startTime);
   }
 
+  async getAllTimeSlotsForDate(date: string): Promise<DoctorTimeSlot[]> {
+    return await db.select().from(doctorTimeSlots)
+      .where(eq(doctorTimeSlots.slotDate, date))
+      .orderBy(doctorTimeSlots.startTime);
+  }
+
   async createDoctorTimeSlot(slot: InsertDoctorTimeSlot): Promise<DoctorTimeSlot> {
     const result = await db.insert(doctorTimeSlots).values(slot).returning();
     return result[0];
