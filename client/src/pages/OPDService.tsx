@@ -168,31 +168,42 @@ export default function OPDService() {
       return nameMatches && dateMatches;
     });
     
-    const available = doctorSlots.filter(s => s.status === 'available').length;
-    const bookedSlots = doctorSlots.filter(s => s.status === 'booked').length;
-    
     // Also count legacy appointments (booked via /api/appointments without slot system)
-    // These are appointments for the selected date that match the doctor's specialty/department
     const legacyAppointments = appointments.filter(apt => {
       if (apt.status === 'cancelled' || apt.status === 'completed') return false;
       if (apt.appointmentDate !== selectedDate) return false;
-      // Match by department (specialty)
       const matchesDepartment = apt.department?.toLowerCase() === doctor.specialty?.toLowerCase();
-      // Or match by doctorId (if it was set)
       const matchesDoctorId = apt.doctorId === doctorId;
       return matchesDepartment || matchesDoctorId;
     });
     
-    // Exclude legacy appointments that are already counted in booked slots
-    const bookedSlotTimes = doctorSlots
-      .filter(s => s.status === 'booked')
-      .map(s => s.startTime);
+    // Create a set of legacy appointment times for quick lookup
+    const legacyTimes = new Set(legacyAppointments.map(apt => apt.timeSlot?.split(' - ')[0] || apt.timeSlot));
+    
+    // Count slots considering legacy overlaps:
+    // - A slot is "booked" if it's marked booked OR if there's a legacy appointment at that time
+    // - A slot is "available" only if it's marked available AND no legacy appointment exists
+    let available = 0;
+    let booked = 0;
+    
+    for (const slot of doctorSlots) {
+      if (slot.status === 'booked') {
+        booked++;
+      } else if (legacyTimes.has(slot.startTime)) {
+        booked++; // Real slot is available but legacy appointment exists
+      } else {
+        available++;
+      }
+    }
+    
+    // Add legacy appointments that don't have corresponding real slots
+    const realSlotTimes = new Set(doctorSlots.map(s => s.startTime));
     const uniqueLegacyCount = legacyAppointments.filter(apt => {
       const aptTime = apt.timeSlot?.split(' - ')[0] || apt.timeSlot;
-      return !bookedSlotTimes.includes(aptTime);
+      return !realSlotTimes.has(aptTime);
     }).length;
     
-    const booked = bookedSlots + uniqueLegacyCount;
+    booked += uniqueLegacyCount;
     const total = doctorSlots.length + uniqueLegacyCount;
     return { available, booked, total };
   };
@@ -565,10 +576,29 @@ export default function OPDService() {
                           {(() => {
                             // Combine real time slots with legacy appointments
                             const legacySlots = getLegacyAppointmentsForDoctor(doctor.id);
+                            
+                            // Create a map of legacy slot times for quick lookup
+                            const legacyTimeMap = new Map(legacySlots.map(ls => [ls.startTime, ls]));
+                            
+                            // Merge: If a real slot overlaps with a legacy appointment, mark real slot as booked
+                            const mergedRealSlots = timeSlots.map(slot => {
+                              const legacyMatch = legacyTimeMap.get(slot.startTime);
+                              if (legacyMatch && slot.status === 'available') {
+                                // Override the real slot with legacy booking info
+                                return {
+                                  ...slot,
+                                  status: 'booked' as const,
+                                  patientName: legacyMatch.patientName,
+                                  appointmentId: legacyMatch.appointmentId,
+                                };
+                              }
+                              return slot;
+                            });
+                            
+                            // Only add legacy slots that don't have a corresponding real slot
                             const realSlotTimes = timeSlots.map(s => s.startTime);
-                            // Only add legacy slots that don't overlap with real slots
                             const uniqueLegacySlots = legacySlots.filter(ls => !realSlotTimes.includes(ls.startTime));
-                            const combinedSlots = [...timeSlots, ...uniqueLegacySlots];
+                            const combinedSlots = [...mergedRealSlots, ...uniqueLegacySlots];
                             
                             // Sort by time
                             combinedSlots.sort((a, b) => {
