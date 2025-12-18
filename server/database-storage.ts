@@ -12,7 +12,7 @@ import {
   biometricTemplates, biometricVerifications,
   notifications, hospitalTeamMembers, activityLogs,
   equipment, serviceHistory, emergencyContacts, hospitalSettings,
-  prescriptions, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
+  prescriptions, prescriptionItems, doctorSchedules, doctorPatients, doctorProfiles, patientProfiles, userNotifications, consentForms,
   patientConsents, medicines, oxygenCylinders, cylinderMovements, oxygenConsumption, lmoReadings, oxygenAlerts,
   bmwBags, bmwMovements, bmwPickups, bmwDisposals, bmwVendors, bmwStorageRooms, bmwIncidents, bmwReports,
   doctorOathConfirmations, consentTemplates, resolvedAlerts, doctorTimeSlots,
@@ -1415,8 +1415,97 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deletePrescription(id: string): Promise<boolean> {
+    // First delete prescription items
+    await db.delete(prescriptionItems).where(eq(prescriptionItems.prescriptionId, id));
     const result = await db.delete(prescriptions).where(eq(prescriptions.id, id)).returning();
     return result.length > 0;
+  }
+
+  async getPrescriptionsByPatientId(patientId: string): Promise<Prescription[]> {
+    return await db.select().from(prescriptions)
+      .where(eq(prescriptions.patientId, patientId))
+      .orderBy(desc(prescriptions.createdAt));
+  }
+
+  async getFinalizedPrescriptionsByPatientId(patientId: string): Promise<Prescription[]> {
+    return await db.select().from(prescriptions)
+      .where(and(
+        eq(prescriptions.patientId, patientId),
+        eq(prescriptions.prescriptionStatus, 'finalized')
+      ))
+      .orderBy(desc(prescriptions.createdAt));
+  }
+
+  async generatePrescriptionNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+    const result = await db.select().from(prescriptions)
+      .where(sql`prescription_number LIKE 'PR-${year}-%'`)
+      .orderBy(desc(prescriptions.createdAt));
+    
+    let nextNum = 1;
+    if (result.length > 0 && result[0].prescriptionNumber) {
+      const lastNum = parseInt(result[0].prescriptionNumber.split('-')[2] || '0');
+      nextNum = lastNum + 1;
+    }
+    return `PR-${year}-${String(nextNum).padStart(4, '0')}`;
+  }
+
+  async finalizePrescription(id: string, signedBy: string, signedByName: string): Promise<Prescription | undefined> {
+    const prescriptionNumber = await this.generatePrescriptionNumber();
+    const result = await db.update(prescriptions)
+      .set({
+        prescriptionStatus: 'finalized',
+        prescriptionNumber,
+        signedBy,
+        signedByName,
+        signedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(prescriptions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // ========== PRESCRIPTION ITEMS METHODS ==========
+  async getPrescriptionItems(prescriptionId: string): Promise<any[]> {
+    return await db.select().from(prescriptionItems)
+      .where(eq(prescriptionItems.prescriptionId, prescriptionId))
+      .orderBy(prescriptionItems.sortOrder);
+  }
+
+  async createPrescriptionItem(item: any): Promise<any> {
+    // Auto-generate schedule based on frequency
+    const schedule = this.generateScheduleFromFrequency(item.frequency);
+    const result = await db.insert(prescriptionItems)
+      .values({ ...item, schedule: JSON.stringify(schedule) })
+      .returning();
+    return result[0];
+  }
+
+  async createPrescriptionItems(items: any[]): Promise<any[]> {
+    if (items.length === 0) return [];
+    const itemsWithSchedule = items.map((item, index) => ({
+      ...item,
+      schedule: JSON.stringify(this.generateScheduleFromFrequency(item.frequency)),
+      sortOrder: index
+    }));
+    const result = await db.insert(prescriptionItems).values(itemsWithSchedule).returning();
+    return result;
+  }
+
+  async deletePrescriptionItems(prescriptionId: string): Promise<boolean> {
+    await db.delete(prescriptionItems).where(eq(prescriptionItems.prescriptionId, prescriptionId));
+    return true;
+  }
+
+  generateScheduleFromFrequency(frequency: string): string[] {
+    switch (frequency) {
+      case '1': return ['Morning'];
+      case '2': return ['Morning', 'Night'];
+      case '3': return ['Morning', 'Afternoon', 'Night'];
+      case '4': return ['Morning', 'Afternoon', 'Evening', 'Night'];
+      default: return ['Morning'];
+    }
   }
 
   // ========== DOCTOR SCHEDULE METHODS ==========

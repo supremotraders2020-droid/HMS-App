@@ -1,0 +1,300 @@
+🏥 HOSPITAL APP – DOCTOR / OPD PRESCRIPTION CREATION
+MASTER IMPLEMENTATION PROMPT
+🔹 ROLE & SYSTEM CONTEXT
+
+You are an AI-assisted Clinical Documentation & Prescription Management System inside a Hospital ERP / OPD Management Application.
+Your role is to allow Doctors and authorized OPD staff to create, generate, sign, and deliver digital prescriptions for a specific patient during or after consultation.
+
+The system must follow:
+
+Indian OPD workflow
+
+NABH digital documentation standards
+
+Doctor-first UX (fast, safe, error-free)
+
+Patient-friendly output
+
+🔹 USER ROLES & PERMISSIONS
+👨‍⚕️ Doctor
+
+Create prescription
+
+Add / edit medicines
+
+Add diagnosis & advice
+
+Digitally sign prescription
+
+Final approval
+
+🧑‍💼 OPD Staff (Authorized)
+
+Draft prescription
+
+Enter vitals
+
+Add investigations
+
+Cannot sign or finalize
+
+🧍 Patient
+
+View prescription
+
+Download PDF
+
+Cannot edit
+
+🔹 ENTRY POINT (MANDATORY)
+
+Prescription creation must be available from:
+
+Patient profile → Create Prescription
+
+OPD visit screen → Add Prescription
+
+Consultation screen → Generate Prescription
+
+Prescription must always be linked to:
+
+Patient ID
+
+OPD Visit ID
+
+Doctor ID
+
+🔹 STEP-BY-STEP PRESCRIPTION CREATION FLOW
+🟦 STEP 1: SELECT PATIENT
+
+System must:
+
+Auto-load patient details
+
+Lock patient identity (no change mid-flow)
+
+Display:
+
+Name, Age, Gender
+
+Patient ID
+
+OPD/IPD Number
+
+Visit Date
+
+🟦 STEP 2: ADD CLINICAL DETAILS
+
+Fields:
+
+Chief complaints
+
+Provisional / Final diagnosis
+
+Vitals (BP, Sugar, Pulse, Weight, Temp)
+
+Known allergies
+
+Past medical history (optional)
+
+🟦 STEP 3: MEDICINE ENTRY MODULE (CORE)
+
+Doctor / OPD must be able to add multiple medicines.
+
+Mandatory fields per medicine:
+
+Medicine Name (search / dropdown)
+
+Dosage form (Tab / Syrup / Inj)
+
+Strength (optional)
+
+Frequency selector (strict)
+
+1 time/day
+
+2 times/day
+
+3 times/day
+
+4 times/day
+
+Meal timing
+
+Before food
+
+After food
+
+Duration (days)
+
+Special instructions (optional)
+
+🟦 STEP 4: FREQUENCY → AUTO SCHEDULE LOGIC
+
+System must automatically map:
+
+Frequency	Schedule
+1 time	Morning
+2 times	Morning + Night
+3 times	Morning + Afternoon + Night
+4 times	Morning + Afternoon + Evening + Night
+
+Display preview to doctor before save.
+
+🟦 STEP 5: ADDITIONAL INSTRUCTIONS
+
+Optional sections:
+
+Diet advice (linked to disease module)
+
+Activity advice
+
+Investigations
+
+Follow-up date
+
+🟦 STEP 6: REVIEW & CONFIRM
+
+Doctor must be able to:
+
+Preview prescription exactly as patient will see
+
+Edit any section
+
+Confirm correctness
+
+🟦 STEP 7: DIGITAL SIGNATURE & FINALIZE
+
+Only Doctor can:
+
+Digitally sign prescription
+
+Finalize & lock record
+
+Once finalized:
+
+Prescription becomes read-only
+
+OPD staff cannot modify
+
+🔹 AUTOMATION AFTER FINALIZATION
+
+System must automatically:
+
+✅ Generate Prescription ID
+✅ Timestamp document
+✅ Save to patient record
+✅ Push to Patient Portal
+✅ Generate downloadable PDF
+✅ Log audit trail
+
+🔹 PRESCRIPTION FORMAT (STANDARDIZED)
+Header:
+
+Hospital Name & Logo
+
+Address & Contact
+
+Prescription ID
+
+Date & Time
+
+Body:
+
+Patient Details
+
+Diagnosis
+
+Medicines (clearly structured)
+
+Instructions
+
+Follow-up
+
+Footer:
+
+Doctor Name & Registration No
+
+Digital Signature
+
+Disclaimer
+
+🔹 DATA MODEL (BACKEND REQUIREMENT)
+{
+  "prescription_id": "PR-2025-001",
+  "patient_id": "PAT-101",
+  "visit_id": "OPD-555",
+  "doctor_id": "DOC-009",
+  "status": "FINAL",
+  "medicines": [
+    {
+      "medicine_name": "Example Med",
+      "frequency": "1-1-0-0",
+      "meal_timing": "After Food",
+      "duration": 5,
+      "schedule": ["Morning", "Night"]
+    }
+  ],
+  "created_by": "Doctor",
+  "signed_at": "ISO_TIMESTAMP"
+}
+
+🔹 PATIENT PORTAL REQUIREMENTS
+
+Patient should be able to:
+
+View prescription chronologically
+
+Download PDF
+
+See medicine schedule clearly
+
+View in English / regional language
+
+🔹 SAFETY, LEGAL & NABH COMPLIANCE
+
+System must:
+
+Prevent auto-prescribing
+
+Prevent dosage calculation by AI
+
+Include disclaimer on every prescription
+
+Maintain audit logs
+
+Track who created & signed
+
+🔹 UX REQUIREMENTS (CRITICAL)
+
+≤ 5 clicks to add medicine
+
+Keyboard-friendly
+
+Mobile-friendly
+
+Error validation before finalization
+
+Auto-save drafts
+
+🔹 FAIL-SAFE CONDITIONS
+
+If doctor exits → save draft
+
+If internet drops → local cache
+
+If OPD tries to finalize → block action
+
+🔹 FINAL SYSTEM BEHAVIOR
+
+Fast
+
+Professional
+
+Legally safe
+
+Doctor-first
+
+Patient-friendly
+
+Scalable across hospitals

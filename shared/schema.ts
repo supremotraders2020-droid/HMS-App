@@ -672,17 +672,37 @@ export type HospitalSettings = typeof hospitalSettings.$inferSelect;
 // Prescriptions table - doctor-created prescriptions for patients
 export const prescriptions = pgTable("prescriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  prescriptionNumber: text("prescription_number"), // Human-readable ID like PR-2025-001
   patientId: varchar("patient_id").notNull(),
   patientName: text("patient_name").notNull(),
+  patientAge: text("patient_age"),
+  patientGender: text("patient_gender"),
+  visitId: varchar("visit_id"), // Link to OPD visit
   doctorId: varchar("doctor_id").notNull(),
   doctorName: text("doctor_name").notNull(),
+  doctorRegistrationNo: text("doctor_registration_no"),
+  chiefComplaints: text("chief_complaints"),
   diagnosis: text("diagnosis").notNull(),
+  provisionalDiagnosis: text("provisional_diagnosis"),
+  vitals: text("vitals"), // JSON: {bp, sugar, pulse, weight, temp}
+  knownAllergies: text("known_allergies"),
+  pastMedicalHistory: text("past_medical_history"),
   medicines: text("medicines").array().notNull(), // Array of medicine strings like "Amlodipine 5mg - Once daily"
+  medicineDetails: text("medicine_details"), // JSON array with detailed medicine info
   instructions: text("instructions"),
+  dietAdvice: text("diet_advice"),
+  activityAdvice: text("activity_advice"),
+  investigations: text("investigations"),
   patientRecordId: varchar("patient_record_id"), // Link to medical record uploaded by admin
   prescriptionDate: text("prescription_date").notNull(),
   followUpDate: text("follow_up_date"),
+  prescriptionStatus: text("prescription_status").notNull().default("draft"), // 'draft', 'awaiting_signature', 'finalized', 'void'
   status: text("status").notNull().default("active"), // 'active', 'completed', 'cancelled'
+  createdByRole: text("created_by_role"), // 'ADMIN', 'DOCTOR', 'OPD_MANAGER'
+  createdByName: text("created_by_name"),
+  signedBy: varchar("signed_by"),
+  signedByName: text("signed_by_name"),
+  signedAt: timestamp("signed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1823,3 +1843,29 @@ export const insertPersonalizedCarePlanSchema = createInsertSchema(personalizedC
 });
 export type InsertPersonalizedCarePlan = z.infer<typeof insertPersonalizedCarePlanSchema>;
 export type PersonalizedCarePlan = typeof personalizedCarePlans.$inferSelect;
+
+// ========== PRESCRIPTION ITEMS TABLE ==========
+// Detailed medicine entries for prescriptions
+export const prescriptionItems = pgTable("prescription_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  prescriptionId: varchar("prescription_id").notNull(),
+  medicineName: text("medicine_name").notNull(),
+  dosageForm: text("dosage_form").notNull(), // 'Tab', 'Syrup', 'Inj', 'Cap', 'Cream', 'Drop'
+  strength: text("strength"), // e.g., '5mg', '250ml'
+  frequency: text("frequency").notNull(), // '1', '2', '3', '4' times per day
+  mealTiming: text("meal_timing").notNull(), // 'before_food', 'after_food', 'with_food'
+  duration: integer("duration").notNull(), // Number of days
+  durationUnit: text("duration_unit").notNull().default("days"), // 'days', 'weeks', 'months'
+  schedule: text("schedule"), // JSON array: ["Morning", "Night"] - auto-generated from frequency
+  specialInstructions: text("special_instructions"),
+  quantity: integer("quantity"), // Total quantity to dispense
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPrescriptionItemSchema = createInsertSchema(prescriptionItems).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPrescriptionItem = z.infer<typeof insertPrescriptionItemSchema>;
+export type PrescriptionItem = typeof prescriptionItems.$inferSelect;
