@@ -112,7 +112,9 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
         { title: "Schedules", url: "/schedules", icon: Calendar },
         { title: "Vitals", url: "/vitals", icon: Stethoscope }
       ],
-      OPD_MANAGER: [],
+      OPD_MANAGER: [
+        { title: "Prescriptions", url: "/prescriptions", icon: Stethoscope }
+      ],
       PATIENT: [
         { title: "My Appointments", url: "/my-appointments", icon: Calendar },
         { title: "Medical History", url: "/my-history", icon: FileText },

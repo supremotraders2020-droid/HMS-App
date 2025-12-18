@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send } from "lucide-react";
-import type { Prescription, Medicine } from "@shared/schema";
+import type { Prescription, Medicine, ServicePatient } from "@shared/schema";
 
 interface MedicineItem {
   medicineName: string;
@@ -165,6 +165,11 @@ export default function PrescriptionCreationModal({
   // Medicine search
   const [medicineSearch, setMedicineSearch] = useState('');
   
+  // Fetch patients from database for dropdown
+  const { data: patientsFromDB = [] } = useQuery<ServicePatient[]>({
+    queryKey: ['/api/service-patients'],
+  });
+  
   // Fetch medicines for search
   const { data: medicineDatabase = [] } = useQuery<Medicine[]>({
     queryKey: ['/api/medicines'],
@@ -192,6 +197,21 @@ export default function PrescriptionCreationModal({
       setPatientGender(initialPatientGender || '');
     }
   }, [open, initialPatientId, initialPatientName, initialPatientAge, initialPatientGender]);
+
+  // Handle patient selection from dropdown
+  const handlePatientSelect = (selectedPatientId: string) => {
+    const patient = patientsFromDB.find(p => p.id === selectedPatientId);
+    if (patient) {
+      setPatientId(patient.id);
+      setPatientName(`${patient.firstName} ${patient.lastName}`);
+      if (patient.dateOfBirth) {
+        const dob = new Date(patient.dateOfBirth);
+        const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+        setPatientAge(`${age} years`);
+      }
+      setPatientGender(patient.gender?.toLowerCase() || '');
+    }
+  };
 
   const addMedicine = () => {
     if (!currentMedicine.medicineName.trim()) {
@@ -341,46 +361,66 @@ export default function PrescriptionCreationModal({
                 <CardHeader>
                   <CardTitle className="text-base">Patient Details</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Patient Name *</Label>
-                    <Input
-                      data-testid="input-patient-name"
-                      value={patientName}
-                      onChange={(e) => setPatientName(e.target.value)}
-                      placeholder="Enter patient name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Patient ID</Label>
-                    <Input
-                      data-testid="input-patient-id"
-                      value={patientId}
-                      onChange={(e) => setPatientId(e.target.value)}
-                      placeholder="Patient ID (if registered)"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Age</Label>
-                    <Input
-                      data-testid="input-patient-age"
-                      value={patientAge}
-                      onChange={(e) => setPatientAge(e.target.value)}
-                      placeholder="e.g., 45 years"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Gender</Label>
-                    <Select value={patientGender} onValueChange={setPatientGender}>
-                      <SelectTrigger data-testid="select-patient-gender">
-                        <SelectValue placeholder="Select gender" />
+                    <Label>Select Patient from Database *</Label>
+                    <Select value={patientId} onValueChange={handlePatientSelect}>
+                      <SelectTrigger data-testid="select-patient-dropdown">
+                        <SelectValue placeholder="Choose a patient..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        {patientsFromDB.map((patient) => (
+                          <SelectItem key={patient.id} value={patient.id}>
+                            {patient.firstName} {patient.lastName} - {patient.gender}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Patient Name</Label>
+                      <Input
+                        data-testid="input-patient-name"
+                        value={patientName}
+                        onChange={(e) => setPatientName(e.target.value)}
+                        placeholder="Auto-filled from selection"
+                        readOnly
+                        className="bg-muted"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Patient ID</Label>
+                      <Input
+                        data-testid="input-patient-id"
+                        value={patientId}
+                        readOnly
+                        className="bg-muted font-mono text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Age</Label>
+                      <Input
+                        data-testid="input-patient-age"
+                        value={patientAge}
+                        onChange={(e) => setPatientAge(e.target.value)}
+                        placeholder="e.g., 45 years"
+                        readOnly
+                        className="bg-muted"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Gender</Label>
+                      <Input
+                        data-testid="input-patient-gender-display"
+                        value={patientGender ? patientGender.charAt(0).toUpperCase() + patientGender.slice(1) : ''}
+                        readOnly
+                        className="bg-muted"
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
