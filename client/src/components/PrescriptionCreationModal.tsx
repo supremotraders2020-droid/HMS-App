@@ -167,7 +167,7 @@ export default function PrescriptionCreationModal({
   
   // Fetch patients from database for dropdown
   const { data: patientsFromDB = [] } = useQuery<ServicePatient[]>({
-    queryKey: ['/api/service-patients'],
+    queryKey: ['/api/patients/service'],
   });
   
   // Fetch medicines for search
