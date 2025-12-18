@@ -4026,6 +4026,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== HEALTH TIPS ROUTES ==========
+  
+  // Get all health tips
+  app.get("/api/health-tips", async (req, res) => {
+    try {
+      const tips = await storage.getAllHealthTips();
+      res.json(tips);
+    } catch (error) {
+      console.error("Failed to fetch health tips:", error);
+      res.status(500).json({ error: "Failed to fetch health tips" });
+    }
+  });
+
+  // Get active health tips
+  app.get("/api/health-tips/active", async (req, res) => {
+    try {
+      const tips = await storage.getActiveHealthTips();
+      res.json(tips);
+    } catch (error) {
+      console.error("Failed to fetch active health tips:", error);
+      res.status(500).json({ error: "Failed to fetch active health tips" });
+    }
+  });
+
+  // Get latest health tip
+  app.get("/api/health-tips/latest", async (req, res) => {
+    try {
+      const tip = await storage.getLatestHealthTip();
+      res.json(tip || null);
+    } catch (error) {
+      console.error("Failed to fetch latest health tip:", error);
+      res.status(500).json({ error: "Failed to fetch latest health tip" });
+    }
+  });
+
+  // Manually generate a health tip (Admin only)
+  app.post("/api/health-tips/generate", async (req, res) => {
+    try {
+      const { scheduledFor = "9AM" } = req.body;
+      const tip = await notificationService.generateHealthTipNow(scheduledFor);
+      
+      if (tip) {
+        res.json(tip);
+      } else {
+        res.status(500).json({ error: "Failed to generate health tip" });
+      }
+    } catch (error) {
+      console.error("Failed to generate health tip:", error);
+      res.status(500).json({ error: "Failed to generate health tip" });
+    }
+  });
+
   // Get All AI Metrics (combined dashboard data)
   app.get("/api/ai/dashboard", async (req, res) => {
     try {
@@ -4057,6 +4109,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Start appointment reminder scheduler
   notificationService.startReminderScheduler();
+
+  // Start health tip scheduler (9 AM and 9 PM IST daily)
+  notificationService.startHealthTipScheduler();
 
   return httpServer;
 }

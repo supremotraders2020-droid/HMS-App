@@ -1,7 +1,8 @@
 import { WebSocket, WebSocketServer } from "ws";
 import type { Server } from "http";
 import { storage } from "./storage";
-import type { InsertUserNotification, UserNotification, Appointment, Doctor } from "@shared/schema";
+import type { InsertUserNotification, UserNotification, Appointment, Doctor, HealthTip } from "@shared/schema";
+import { generateHealthTip } from "./openai";
 
 interface WebSocketClient extends WebSocket {
   userId?: string;
@@ -12,7 +13,9 @@ class NotificationService {
   private wss: WebSocketServer | null = null;
   private clients: Map<string, WebSocketClient[]> = new Map();
   private reminderInterval: NodeJS.Timeout | null = null;
+  private healthTipInterval: NodeJS.Timeout | null = null;
   private doctorsCache: Map<string, Doctor> = new Map();
+  private lastHealthTipTime: string | null = null;
 
   initialize(server: Server) {
     this.wss = new WebSocketServer({ server, path: "/ws/notifications" });
@@ -478,6 +481,139 @@ class NotificationService {
     const period = hours >= 12 ? "PM" : "AM";
     const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
     return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  }
+
+  // ========== HEALTH TIPS SCHEDULER ==========
+  
+  startHealthTipScheduler() {
+    // Check every minute for scheduled health tip times (9 AM and 9 PM IST)
+    const INTERVAL_MS = 60 * 1000; // 1 minute
+    
+    console.log("Starting health tip scheduler (9 AM and 9 PM IST daily)");
+    
+    // Check immediately on start
+    this.checkAndGenerateHealthTip();
+    
+    // Then run periodically
+    this.healthTipInterval = setInterval(() => {
+      this.checkAndGenerateHealthTip();
+    }, INTERVAL_MS);
+  }
+
+  stopHealthTipScheduler() {
+    if (this.healthTipInterval) {
+      clearInterval(this.healthTipInterval);
+      this.healthTipInterval = null;
+      console.log("Health tip scheduler stopped");
+    }
+  }
+
+  private async checkAndGenerateHealthTip() {
+    try {
+      // Get current time in IST (UTC+5:30)
+      const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+      const istTime = new Date(now.getTime() + istOffset);
+      
+      const hour = istTime.getUTCHours();
+      const minute = istTime.getUTCMinutes();
+      const dateStr = istTime.toISOString().split('T')[0];
+      
+      // Check if it's 9 AM or 9 PM (with 5-minute window)
+      const is9AM = hour === 9 && minute >= 0 && minute < 5;
+      const is9PM = hour === 21 && minute >= 0 && minute < 5;
+      
+      if (!is9AM && !is9PM) {
+        return; // Not the right time
+      }
+      
+      const scheduledFor = is9AM ? "9AM" : "9PM";
+      const tipKey = `${dateStr}_${scheduledFor}`;
+      
+      // Prevent duplicate generation
+      if (this.lastHealthTipTime === tipKey) {
+        return;
+      }
+      
+      console.log(`Generating health tip for ${scheduledFor} on ${dateStr}`);
+      
+      // Generate health tip using AI
+      const tipData = await generateHealthTip(scheduledFor);
+      
+      // Store in database
+      const healthTip = await storage.createHealthTip({
+        title: tipData.title,
+        content: tipData.content,
+        category: tipData.category,
+        weatherContext: tipData.weatherContext,
+        season: tipData.season,
+        priority: tipData.priority,
+        targetAudience: tipData.targetAudience,
+        scheduledFor: scheduledFor,
+        isActive: true
+      });
+      
+      // Mark as generated
+      this.lastHealthTipTime = tipKey;
+      
+      // Broadcast to all connected users
+      this.broadcastHealthTip(healthTip);
+      
+      console.log(`Health tip generated and broadcast: ${healthTip.title}`);
+    } catch (error) {
+      console.error("Error generating health tip:", error);
+    }
+  }
+
+  broadcastHealthTip(healthTip: HealthTip) {
+    // Broadcast to ALL connected users (both admin and patients)
+    this.broadcast({
+      type: "health_tip",
+      event: "new_health_tip",
+      tip: {
+        id: healthTip.id,
+        title: healthTip.title,
+        content: healthTip.content,
+        category: healthTip.category,
+        weatherContext: healthTip.weatherContext,
+        season: healthTip.season,
+        priority: healthTip.priority,
+        targetAudience: healthTip.targetAudience,
+        scheduledFor: healthTip.scheduledFor,
+        generatedAt: healthTip.generatedAt
+      }
+    });
+    
+    console.log(`Health tip broadcast to all connected users: ${healthTip.title}`);
+  }
+
+  // Manual trigger for testing (can be called from admin API)
+  async generateHealthTipNow(scheduledFor: "9AM" | "9PM" = "9AM"): Promise<HealthTip | null> {
+    try {
+      console.log(`Manually generating health tip for ${scheduledFor}`);
+      
+      const tipData = await generateHealthTip(scheduledFor);
+      
+      const healthTip = await storage.createHealthTip({
+        title: tipData.title,
+        content: tipData.content,
+        category: tipData.category,
+        weatherContext: tipData.weatherContext,
+        season: tipData.season,
+        priority: tipData.priority,
+        targetAudience: tipData.targetAudience,
+        scheduledFor: scheduledFor,
+        isActive: true
+      });
+      
+      // Broadcast immediately
+      this.broadcastHealthTip(healthTip);
+      
+      return healthTip;
+    } catch (error) {
+      console.error("Error manually generating health tip:", error);
+      return null;
+    }
   }
 }
 

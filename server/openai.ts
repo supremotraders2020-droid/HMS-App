@@ -146,3 +146,170 @@ export function getChatbotStats(logs: Array<{ category: string | null }>): {
 
   return stats;
 }
+
+// ========== AI HEALTH TIPS GENERATOR ==========
+
+interface HealthTipData {
+  title: string;
+  content: string;
+  category: string;
+  weatherContext: string;
+  season: string;
+  priority: string;
+  targetAudience: string;
+}
+
+function getCurrentSeason(): string {
+  const month = new Date().getMonth() + 1;
+  if (month >= 3 && month <= 5) return "spring";
+  if (month >= 6 && month <= 9) return "monsoon"; // India-specific
+  if (month >= 10 && month <= 11) return "autumn";
+  return "winter";
+}
+
+function getCurrentTimeOfDay(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  return "evening";
+}
+
+export async function generateHealthTip(scheduledFor: "9AM" | "9PM"): Promise<HealthTipData> {
+  const season = getCurrentSeason();
+  const timeOfDay = scheduledFor === "9AM" ? "morning" : "evening";
+  const currentDate = new Date().toLocaleDateString("en-IN", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+
+  const HEALTH_TIP_PROMPT = `You are a healthcare expert at Gravity Hospital in Pune, Maharashtra, India. Generate a daily health tip for ${currentDate} (${timeOfDay} edition).
+
+Context:
+- Location: Pune, Maharashtra, India
+- Current Season: ${season}
+- Time: ${scheduledFor} IST
+- Hospital: Gravity Hospital, Nigdi, Pimpri-Chinchwad
+
+Generate a health tip considering:
+1. Current weather/climate conditions in Pune (${season} season)
+2. Seasonal health concerns (e.g., monsoon diseases, winter cold, summer heat)
+3. Current trending health topics in India
+4. Appropriate diet and nutrition advice for the season
+5. ${timeOfDay === "morning" ? "Morning routine and energy-boosting tips" : "Evening relaxation and sleep hygiene tips"}
+
+Respond with a JSON object (no markdown code blocks, just pure JSON):
+{
+  "title": "Brief catchy title (max 60 chars)",
+  "content": "Detailed health tip with actionable advice (150-200 words). Include specific food recommendations, activities, and precautions relevant to the current season and time of day.",
+  "category": "one of: weather, climate, diet, trending, seasonal",
+  "weatherContext": "Brief description of current weather conditions considered",
+  "priority": "one of: low, medium, high",
+  "targetAudience": "one of: all, patients, elderly, children"
+}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a healthcare expert generating daily health tips. Always respond with valid JSON only, no markdown formatting."
+        },
+        {
+          role: "user",
+          content: HEALTH_TIP_PROMPT
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.8,
+    });
+
+    const content = response.choices[0]?.message?.content || "";
+    
+    // Parse JSON response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        title: parsed.title || "Daily Health Tip",
+        content: parsed.content || "Stay healthy and hydrated!",
+        category: parsed.category || "seasonal",
+        weatherContext: parsed.weatherContext || `${season} season in Pune`,
+        season: season,
+        priority: parsed.priority || "medium",
+        targetAudience: parsed.targetAudience || "all"
+      };
+    }
+
+    throw new Error("Failed to parse health tip response");
+  } catch (error) {
+    console.error("Error generating health tip:", error);
+    
+    // Fallback health tips based on season
+    return getFallbackHealthTip(season, scheduledFor);
+  }
+}
+
+function getFallbackHealthTip(season: string, scheduledFor: "9AM" | "9PM"): HealthTipData {
+  const fallbackTips: Record<string, HealthTipData> = {
+    "monsoon_9AM": {
+      title: "Monsoon Morning Wellness Tips",
+      content: "During monsoon season, start your day with warm lemon water to boost immunity. Avoid street food and raw vegetables to prevent waterborne diseases. Wear waterproof footwear to prevent fungal infections. Include ginger, turmeric, and tulsi in your diet for natural immunity. Stay hydrated despite cooler weather. If you experience fever, cold, or digestive issues for more than 2 days, consult a doctor at Gravity Hospital.",
+      category: "seasonal",
+      weatherContext: "Monsoon season with high humidity and rainfall in Pune",
+      season: "monsoon",
+      priority: "high",
+      targetAudience: "all"
+    },
+    "monsoon_9PM": {
+      title: "Evening Monsoon Health Care",
+      content: "As the evening arrives during monsoon, ensure proper ventilation in your home to prevent mold and dampness. Dry your feet thoroughly and use antifungal powder if needed. Have a light dinner with warm, easily digestible foods like khichdi or dal soup. Avoid cold beverages and opt for warm herbal teas. Ensure mosquito protection before sleeping to prevent dengue and malaria. Keep emergency contacts of Gravity Hospital handy.",
+      category: "seasonal",
+      weatherContext: "Evening monsoon conditions in Pune",
+      season: "monsoon",
+      priority: "high",
+      targetAudience: "all"
+    },
+    "winter_9AM": {
+      title: "Winter Morning Wellness Guide",
+      content: "Start your winter morning with warm water and a light exercise routine to boost circulation. Include seasonal fruits like oranges, guavas, and amla rich in Vitamin C. Dress in layers and protect yourself from cold winds. Elderly and children should take extra precautions against respiratory infections. A warm cup of haldi doodh (turmeric milk) can help maintain immunity throughout the day.",
+      category: "climate",
+      weatherContext: "Winter season with cool mornings in Pune",
+      season: "winter",
+      priority: "medium",
+      targetAudience: "all"
+    },
+    "winter_9PM": {
+      title: "Winter Evening Health Tips",
+      content: "As temperatures drop in the evening, keep yourself warm to prevent cold and flu. Have an early dinner with warm, nutritious foods. Apply moisturizer to prevent dry skin. Ensure proper heating but maintain ventilation to avoid carbon monoxide risks. A brief walk after dinner aids digestion. Keep emergency medications and Gravity Hospital's contact number accessible.",
+      category: "climate",
+      weatherContext: "Cold winter evenings in Pune",
+      season: "winter",
+      priority: "medium",
+      targetAudience: "all"
+    },
+    "default_9AM": {
+      title: "Morning Health Boost",
+      content: "Start your day with 2 glasses of water to kickstart your metabolism. Include a balanced breakfast with proteins, carbs, and fruits. Take a 15-minute morning walk or yoga session. Plan your meals for the day to avoid unhealthy snacking. Stay hydrated throughout the day and take breaks from screen time every hour. For any health concerns, Gravity Hospital is here to help.",
+      category: "diet",
+      weatherContext: "Seasonal weather in Pune",
+      season: season,
+      priority: "medium",
+      targetAudience: "all"
+    },
+    "default_9PM": {
+      title: "Evening Wellness Routine",
+      content: "Wind down your evening with light activities and avoid heavy meals 2-3 hours before sleep. Practice relaxation techniques like deep breathing or meditation. Limit screen time an hour before bed for better sleep quality. Keep your bedroom cool and dark for optimal rest. Review your health goals and plan for tomorrow. Gravity Hospital wishes you a peaceful and healthy night.",
+      category: "diet",
+      weatherContext: "Evening conditions in Pune",
+      season: season,
+      priority: "medium",
+      targetAudience: "all"
+    }
+  };
+
+  const key = `${season}_${scheduledFor}`;
+  return fallbackTips[key] || fallbackTips[`default_${scheduledFor}`];
+}
