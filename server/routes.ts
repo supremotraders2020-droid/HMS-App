@@ -2511,6 +2511,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         patientName: bookedSlot.patientName
       });
 
+      // Log activity for admin dashboard recent activities
+      await storage.createActivityLog({
+        action: `New appointment booked for ${patientName}`,
+        entityType: "appointment",
+        entityId: appointment.id,
+        performedBy: "OPD System",
+        performedByRole: "SYSTEM",
+        activityType: "info"
+      });
+
+      // Send real-time notification to doctor, patient, and admin
+      notificationService.notifyAppointmentCreated(
+        appointment.id,
+        slot.doctorId,
+        patientName,
+        slot.slotDate,
+        `${slot.startTime} - ${slot.endTime}`,
+        slot.slotType || undefined,
+        slot.location || undefined,
+        patientId
+      ).catch(err => console.error("Notification error:", err));
+
       res.status(200).json({ slot: bookedSlot, appointment });
     } catch (error) {
       console.error("Error booking time slot:", error);
