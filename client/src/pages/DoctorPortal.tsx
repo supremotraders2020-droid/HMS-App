@@ -77,6 +77,7 @@ import {
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import DoctorOathModal from "@/components/DoctorOathModal";
+import PrescriptionCreationModal from "@/components/PrescriptionCreationModal";
 
 const LOCATIONS = [
   { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park", address: "Koregaon Park, Pune, Maharashtra 411001", mapUrl: "https://www.google.com/maps/search/?api=1&query=Koregaon+Park+Pune" },
@@ -1520,162 +1521,28 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           <h1 className="text-2xl font-bold" data-testid="text-prescriptions-title">Prescriptions</h1>
           <p className="text-muted-foreground">Manage and create prescriptions</p>
         </div>
-        <Dialog open={addPrescriptionDialogOpen} onOpenChange={(open) => {
-          setAddPrescriptionDialogOpen(open);
-          if (!open) {
+        <Button onClick={() => setAddPrescriptionDialogOpen(true)} data-testid="button-new-prescription">
+          <Plus className="h-4 w-4 mr-2" />
+          New Prescription
+        </Button>
+        <PrescriptionCreationModal
+          open={addPrescriptionDialogOpen}
+          onClose={() => {
+            setAddPrescriptionDialogOpen(false);
             setPatientSearchQuery("");
             setSelectedPatientForRx("");
             setSelectedPatientRecordId("");
             setShowPatientDropdown(false);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-new-prescription">
-              <Plus className="h-4 w-4 mr-2" />
-              New Prescription
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>New Prescription</DialogTitle>
-              <DialogDescription>Create a prescription for a patient</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const medicinesStr = formData.get('medicines') as string;
-              const patientName = formData.get('patientName') as string;
-              createPrescriptionMutation.mutate({
-                doctorId,
-                doctorName: doctorName,
-                patientId: `rx-patient-${Date.now()}`,
-                patientName: patientName,
-                diagnosis: formData.get('diagnosis') as string,
-                medicines: medicinesStr.split(',').map(m => m.trim()).filter(Boolean),
-                instructions: formData.get('instructions') as string || null,
-                patientRecordId: selectedPatientRecordId || null,
-                prescriptionDate: formData.get('prescriptionDate') as string,
-                followUpDate: formData.get('followUpDate') as string || null,
-                status: 'active',
-              });
-            }} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="rxPatientName">Patient Name *</Label>
-                  <div className="relative">
-                    <Input 
-                      id="rxPatientName" 
-                      name="patientName" 
-                      required 
-                      value={selectedPatientForRx || patientSearchQuery}
-                      onChange={(e) => {
-                        setPatientSearchQuery(e.target.value);
-                        setSelectedPatientForRx("");
-                        setShowPatientDropdown(true);
-                      }}
-                      onFocus={() => setShowPatientDropdown(true)}
-                      onBlur={() => {
-                        setTimeout(() => {
-                          setShowPatientDropdown(false);
-                        }, 200);
-                      }}
-                      placeholder="Type to search patients..."
-                      autoComplete="off"
-                      data-testid="input-rx-patient-name" 
-                    />
-                    <input type="hidden" name="patientNameHidden" value={selectedPatientForRx || patientSearchQuery} />
-                    {showPatientDropdown && (
-                      <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {appointmentPatients.length > 0 && (
-                          <div className="p-2">
-                            <p className="text-xs font-medium text-muted-foreground px-2 py-1">Patients with Appointments</p>
-                            {appointmentPatients
-                              .filter(p => 
-                                !patientSearchQuery || 
-                                p.name.toLowerCase().includes(patientSearchQuery.toLowerCase())
-                              )
-                              .slice(0, 10)
-                              .map((patient, index) => (
-                                <button
-                                  key={patient.id || `apt-patient-${index}`}
-                                  type="button"
-                                  className="w-full px-3 py-2 text-left hover-elevate rounded-md flex items-center gap-2"
-                                  onClick={() => {
-                                    setSelectedPatientForRx(patient.name);
-                                    setPatientSearchQuery("");
-                                    setShowPatientDropdown(false);
-                                  }}
-                                  data-testid={`patient-option-${index}`}
-                                >
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback className="text-xs">{patient.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <p className="text-sm font-medium">{patient.name}</p>
-                                    {patient.phone && <p className="text-xs text-muted-foreground">{patient.phone}</p>}
-                                  </div>
-                                </button>
-                              ))}
-                          </div>
-                        )}
-                        {patientSearchQuery && !appointmentPatients.some(p => p.name.toLowerCase() === patientSearchQuery.toLowerCase()) && (
-                          <button
-                            type="button"
-                            className="w-full px-3 py-2 text-left hover-elevate flex items-center gap-2 border-t"
-                            onClick={() => {
-                              setSelectedPatientForRx(patientSearchQuery);
-                              setShowPatientDropdown(false);
-                            }}
-                          >
-                            <Plus className="h-4 w-4 text-primary" />
-                            <span>Add "{patientSearchQuery}" as new patient</span>
-                          </button>
-                        )}
-                        {appointmentPatients.length === 0 && !patientSearchQuery && (
-                          <div className="p-4 text-center text-sm text-muted-foreground">
-                            No patients with appointments found. Type a name to add a new patient.
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prescriptionDate">Date *</Label>
-                  <Input id="prescriptionDate" name="prescriptionDate" type="date" required defaultValue={new Date().toISOString().split('T')[0]} data-testid="input-prescription-date" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="diagnosis">Diagnosis *</Label>
-                <Input id="diagnosis" name="diagnosis" required data-testid="input-diagnosis" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="medicines">Medicines (comma separated) *</Label>
-                <Textarea id="medicines" name="medicines" placeholder="e.g., Paracetamol 500mg, Amoxicillin 250mg" required rows={3} data-testid="input-medicines" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="instructions">Instructions</Label>
-                <Textarea id="instructions" name="instructions" placeholder="Dosage instructions and special notes" rows={3} data-testid="input-instructions" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="followUpDate">Follow-up Date</Label>
-                <Input id="followUpDate" name="followUpDate" type="date" data-testid="input-followup-date" />
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => {
-                  setAddPrescriptionDialogOpen(false);
-                  setPatientSearchQuery("");
-                  setSelectedPatientForRx("");
-                  setSelectedPatientRecordId("");
-                  setShowPatientDropdown(false);
-                }}>Cancel</Button>
-                <Button type="submit" disabled={createPrescriptionMutation.isPending} data-testid="button-submit-prescription">
-                  {createPrescriptionMutation.isPending ? "Creating..." : "Create Prescription"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+          }}
+          doctorId={doctorId}
+          doctorName={doctorName}
+          userRole="DOCTOR"
+          userName={doctorName}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['/api/prescriptions'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/prescriptions/doctor', doctorId] });
+          }}
+        />
       </div>
 
       <div className="grid gap-4">

@@ -115,10 +115,26 @@ The backend is a Node.js/Express application with TypeScript:
 - Bilingual support (English/Marathi)
 
 #### 12. Prescription Management
-- Doctor prescription creation
-- Medicine database integration
-- Prescription history
-- Print functionality
+- Comprehensive prescription creation modal with tabbed interface (Patient Info, Clinical, Medicines, Instructions)
+- Enhanced schema with prescriptionNumber (PR-YYYY-NNNN format), vitals, diagnosis, signature metadata
+- Prescription Items table for detailed medicine entries
+- Role-based access control:
+  - Admin/Doctor: Can create, draft, and finalize prescriptions with digital signature
+  - OPD Manager: Can only create drafts (no finalization)
+  - Patient: View finalized prescriptions only
+- Prescription workflow: draft → awaiting_signature → finalized → void
+- Auto-generated medication schedules from frequency:
+  - 1x = Morning
+  - 2x = Morning, Night
+  - 3x = Morning, Afternoon, Night
+  - 4x = Morning, Afternoon, Evening, Night
+- Medicine database search integration
+- Vitals recording (BP, Sugar, Pulse, Weight, Temp)
+- Chief complaints and diagnosis capture
+- Diet advice and activity recommendations
+- Follow-up date tracking
+- Patient notifications on prescription finalization
+- Print functionality with professional formatting
 
 #### 13. Medicine Database
 - Searchable database of Indian medicines
