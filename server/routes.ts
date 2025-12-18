@@ -4359,6 +4359,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Seed Demo Data for Swab Monitoring
+  app.post("/api/swab-monitoring/seed-demo", async (req, res) => {
+    try {
+      // Get existing master data
+      const areas = await storage.getAllSwabAreas();
+      const sites = await storage.getAllSwabSamplingSites();
+      const organisms = await storage.getAllSwabOrganisms();
+
+      if (areas.length === 0 || sites.length === 0 || organisms.length === 0) {
+        return res.status(400).json({ error: "Please seed master data first" });
+      }
+
+      // Find specific organisms for demo
+      const noGrowth = organisms.find(o => o.organismName === "No Growth");
+      const staphEpidermidis = organisms.find(o => o.organismName === "Staphylococcus epidermidis");
+      const mrsa = organisms.find(o => o.organismName === "MRSA");
+      const pseudomonas = organisms.find(o => o.organismName === "Pseudomonas aeruginosa");
+      const bacillus = organisms.find(o => o.organismName === "Bacillus species");
+
+      const demoCollections = [];
+
+      // Create demo swab collections with various results
+      const demoData = [
+        { areaIdx: 0, siteIdx: 0, organism: noGrowth, growthLevel: "None", reason: "Routine", status: "PASS", dayOffset: -7 },
+        { areaIdx: 0, siteIdx: 1, organism: noGrowth, growthLevel: "None", reason: "Post-fumigation", status: "PASS", dayOffset: -6 },
+        { areaIdx: 1, siteIdx: 2, organism: staphEpidermidis, growthLevel: "Low", reason: "Routine", status: "ACCEPTABLE", dayOffset: -5 },
+        { areaIdx: 1, siteIdx: 0, organism: bacillus, growthLevel: "Low", reason: "Routine", status: "ACCEPTABLE", dayOffset: -4 },
+        { areaIdx: 2, siteIdx: 3, organism: mrsa, growthLevel: "Moderate", reason: "Outbreak suspicion", status: "FAIL", dayOffset: -3 },
+        { areaIdx: 3, siteIdx: 4, organism: pseudomonas, growthLevel: "Heavy", reason: "Routine", status: "FAIL", dayOffset: -2 },
+        { areaIdx: 0, siteIdx: 5, organism: noGrowth, growthLevel: "None", reason: "Post-fumigation", status: "PASS", dayOffset: -1 },
+        { areaIdx: 4, siteIdx: 6, organism: staphEpidermidis, growthLevel: "Low", reason: "Routine", status: "ACCEPTABLE", dayOffset: 0 },
+      ];
+
+      for (const demo of demoData) {
+        const area = areas[demo.areaIdx % areas.length];
+        const site = sites[demo.siteIdx % sites.length];
+        const collectionDate = new Date(Date.now() + demo.dayOffset * 24 * 60 * 60 * 1000);
+
+        // Create collection
+        const collection = await storage.createSwabCollection({
+          collectionDate,
+          areaType: area.areaType,
+          areaId: area.id,
+          samplingSiteId: site.id,
+          reason: demo.reason,
+          collectedBy: "ICN001",
+          collectedByName: "Sr. Nurse Priya Sharma",
+          remarks: `Demo ${demo.status} sample - ${demo.reason}`,
+        });
+
+        // Create lab result
+        if (demo.organism) {
+          const labResult = await storage.createSwabLabResult({
+            swabCollectionId: collection.id,
+            cultureMedia: demo.growthLevel === "None" ? "Blood Agar" : "MacConkey Agar",
+            organismId: demo.organism.id,
+            cfuCount: demo.growthLevel === "None" ? 0 : demo.growthLevel === "Low" ? 5 : demo.growthLevel === "Moderate" ? 25 : 100,
+            growthLevel: demo.growthLevel,
+            sensitivityTest: demo.status === "FAIL",
+            sensitivityDetails: demo.status === "FAIL" ? "Resistant to Ampicillin, Sensitive to Vancomycin" : null,
+            resultDate: new Date(collectionDate.getTime() + 48 * 60 * 60 * 1000),
+            processedBy: "LAB001",
+            processedByName: "Lab Tech Rahul Verma",
+            remarks: `${demo.organism.organismName} detected with ${demo.growthLevel} growth`,
+          });
+
+          // Update collection with result status
+          await storage.updateSwabCollection(collection.id, {
+            status: "completed",
+            resultStatus: demo.status,
+          });
+
+          // Create CAPA for FAIL results
+          if (demo.status === "FAIL") {
+            const issueSummary = `Contamination detected at ${area.areaName} - ${site.siteName}. Organism: ${demo.organism.organismName}. Growth Level: ${demo.growthLevel}`;
+            
+            const capaAction = await storage.createSwabCapaAction({
+              swabCollectionId: collection.id,
+              issueSummary,
+              rootCause: "Inadequate surface disinfection during routine cleaning",
+              immediateAction: "Deep cleaning and re-fumigation scheduled",
+              responsibleDepartment: "Housekeeping",
+              responsiblePerson: "HK001",
+              responsiblePersonName: "Mr. Suresh Kumar",
+              targetClosureDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+              verificationSwabRequired: true,
+            });
+            
+            // Update CAPA status for older entries
+            if (demo.dayOffset < -2) {
+              await storage.updateSwabCapaAction(capaAction.id, { status: "in_progress" });
+            }
+
+            // Audit log for CAPA creation
+            await storage.createSwabAuditLog({
+              entityType: "capa_action",
+              entityId: capaAction.id,
+              action: "create",
+              newValue: JSON.stringify(capaAction),
+              performedBy: "SYSTEM",
+              performedByName: "Auto-generated",
+              performedByRole: "SYSTEM",
+            });
+          }
+        }
+
+        // Create audit log for collection
+        await storage.createSwabAuditLog({
+          entityType: "swab_collection",
+          entityId: collection.id,
+          action: "create",
+          newValue: JSON.stringify(collection),
+          performedBy: "ICN001",
+          performedByName: "Sr. Nurse Priya Sharma",
+          performedByRole: "ICN",
+        });
+
+        demoCollections.push(collection);
+      }
+
+      res.json({ 
+        message: "Demo data seeded successfully", 
+        collections: demoCollections.length,
+        summary: {
+          pass: demoData.filter(d => d.status === "PASS").length,
+          acceptable: demoData.filter(d => d.status === "ACCEPTABLE").length,
+          fail: demoData.filter(d => d.status === "FAIL").length
+        }
+      });
+    } catch (error) {
+      console.error("Failed to seed demo data:", error);
+      res.status(500).json({ error: "Failed to seed demo data" });
+    }
+  });
+
   // Seed Master Data for Swab Monitoring
   app.post("/api/swab-monitoring/seed", async (req, res) => {
     try {
