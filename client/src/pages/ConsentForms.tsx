@@ -1,28 +1,25 @@
-import { useState, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { 
   FileCheck, 
-  Upload, 
   Download, 
   Printer, 
-  Trash2, 
-  MoreVertical, 
-  Plus,
   FileText,
   Search,
-  Filter,
-  Eye
+  Eye,
+  Globe,
+  Languages,
+  ClipboardList,
+  Stethoscope,
+  TestTube,
+  Heart,
+  Baby
 } from "lucide-react";
 
 interface User {
@@ -38,260 +35,131 @@ interface ConsentFormsProps {
   currentUser: User;
 }
 
-interface ConsentForm {
+interface ConsentTemplate {
   id: string;
-  name: string;
+  title: string;
+  consentType: string;
   description: string | null;
   category: string;
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
-  uploadedBy: string;
+  pdfPath: string;
+  version: string;
   isActive: boolean;
-  hasFile: boolean;
+  isBilingual: boolean;
+  languages: string;
   createdAt: string;
   updatedAt: string;
 }
 
-const CATEGORIES = [
-  { value: "general", label: "General Consent" },
-  { value: "surgery", label: "Surgery Consent" },
-  { value: "treatment", label: "Treatment Consent" },
-  { value: "admission", label: "Admission Forms" },
-  { value: "discharge", label: "Discharge Forms" },
-  { value: "other", label: "Other" }
+const TEMPLATE_CATEGORIES = [
+  { value: "all", label: "All Forms", icon: FileCheck },
+  { value: "Legal & Administrative", label: "Legal & Administrative", icon: ClipboardList },
+  { value: "Surgical & Procedural", label: "Surgical & Procedural", icon: Stethoscope },
+  { value: "Diagnostic & Testing", label: "Diagnostic & Testing", icon: TestTube },
+  { value: "Treatment", label: "Treatment", icon: Heart },
+  { value: "Maternal & Neonatal", label: "Maternal & Neonatal", icon: Baby },
 ];
 
 export default function ConsentForms({ currentUser }: ConsentFormsProps) {
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [formName, setFormName] = useState("");
-  const [formDescription, setFormDescription] = useState("");
-  const [formCategory, setFormCategory] = useState("general");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const { toast } = useToast();
 
-  const getAuthHeaders = () => ({
-    'Content-Type': 'application/json',
-    'x-user-id': currentUser.id,
-    'x-user-role': currentUser.role,
-  });
-
-  const { data: consentForms = [], isLoading: formsLoading } = useQuery<ConsentForm[]>({
-    queryKey: ['/api/consent-forms'],
+  const { data: templates = [], isLoading } = useQuery<ConsentTemplate[]>({
+    queryKey: ['/api/consent-templates'],
     queryFn: async () => {
-      const res = await fetch('/api/consent-forms', {
-        headers: getAuthHeaders(),
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch consent forms');
-      return res.json();
-    },
-  });
-
-  const uploadMutation = useMutation({
-    mutationFn: async (data: { name: string; description: string; category: string; file: File }) => {
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          const base64 = result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-      });
-      reader.readAsDataURL(data.file);
-      const fileData = await base64Promise;
-
-      const res = await fetch('/api/consent-forms', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-        body: JSON.stringify({
-          name: data.name,
-          description: data.description,
-          category: data.category,
-          fileName: data.file.name,
-          fileData,
-          fileSize: data.file.size,
-          mimeType: data.file.type || 'application/pdf',
-          uploadedBy: currentUser.username
-        }),
-      });
-      if (!res.ok) throw new Error('Failed to upload consent form');
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/consent-forms'] });
-      toast({ title: "Consent form uploaded successfully" });
-      resetUploadForm();
-    },
-    onError: () => toast({ title: "Failed to upload consent form", variant: "destructive" }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/consent-forms/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to delete consent form');
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/consent-forms'] });
-      toast({ title: "Consent form deleted successfully" });
-    },
-    onError: () => toast({ title: "Failed to delete consent form", variant: "destructive" }),
-  });
-
-  const resetUploadForm = () => {
-    setUploadDialogOpen(false);
-    setSelectedFile(null);
-    setFormName("");
-    setFormDescription("");
-    setFormCategory("general");
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.type !== 'application/pdf') {
-        toast({ title: "Only PDF files are allowed", variant: "destructive" });
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        toast({ title: "File size must be less than 10MB", variant: "destructive" });
-        return;
-      }
-      setSelectedFile(file);
-      if (!formName) {
-        setFormName(file.name.replace('.pdf', ''));
-      }
-    }
-  };
-
-  const handleUpload = () => {
-    if (!selectedFile || !formName) {
-      toast({ title: "Please select a file and enter a name", variant: "destructive" });
-      return;
-    }
-    uploadMutation.mutate({
-      name: formName,
-      description: formDescription,
-      category: formCategory,
-      file: selectedFile
-    });
-  };
-
-  const handleDownload = async (form: ConsentForm) => {
-    try {
-      const response = await fetch(`/api/consent-forms/${form.id}/download`, {
+      const res = await fetch('/api/consent-templates', {
         headers: {
+          'Content-Type': 'application/json',
           'x-user-id': currentUser.id,
           'x-user-role': currentUser.role,
         },
         credentials: 'include',
       });
-      if (!response.ok) throw new Error('Download failed');
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = form.fileName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      if (!res.ok) throw new Error('Failed to fetch consent templates');
+      return res.json();
+    },
+  });
+
+  const handleDownload = async (template: ConsentTemplate) => {
+    try {
+      const link = document.createElement('a');
+      link.href = template.pdfPath;
+      link.download = template.pdfPath.split('/').pop() || 'consent-form.pdf';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       toast({ title: "Download started" });
     } catch {
       toast({ title: "Failed to download file", variant: "destructive" });
     }
   };
 
-  const handlePrint = async (form: ConsentForm) => {
-    try {
-      const response = await fetch(`/api/consent-forms/${form.id}/download`, {
-        headers: {
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role,
-        },
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch file');
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      
-      const printWindow = window.open(url, '_blank');
-      if (printWindow) {
-        printWindow.onload = () => {
-          printWindow.print();
-        };
-      }
-      toast({ title: "Opening print dialog..." });
-    } catch {
-      toast({ title: "Failed to print file", variant: "destructive" });
+  const handleView = (template: ConsentTemplate) => {
+    window.open(template.pdfPath, '_blank');
+  };
+
+  const handlePrint = (template: ConsentTemplate) => {
+    const printWindow = window.open(template.pdfPath, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
     }
-  };
-
-  const handleView = async (form: ConsentForm) => {
-    try {
-      const response = await fetch(`/api/consent-forms/${form.id}/download`, {
-        headers: {
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role,
-        },
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch file');
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-    } catch {
-      toast({ title: "Failed to view file", variant: "destructive" });
-    }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+    toast({ title: "Opening print dialog..." });
   };
 
   const getCategoryColor = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'surgical': 
-      case 'surgery': return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
-      case 'treatment': return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
-      case 'admission':
-      case 'general': return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
-      case 'discharge': return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300';
-      case 'legal': return 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300';
-      case 'diagnostic': return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300';
-      default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+    switch (category) {
+      case 'Legal & Administrative': 
+        return 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300';
+      case 'Surgical & Procedural': 
+        return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
+      case 'Diagnostic & Testing': 
+        return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300';
+      case 'Treatment': 
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
+      case 'Maternal & Neonatal': 
+        return 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300';
+      default: 
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
     }
   };
 
-  const filteredForms = consentForms.filter(form => {
-    const matchesSearch = form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      form.fileName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || form.category === categoryFilter;
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Legal & Administrative': return ClipboardList;
+      case 'Surgical & Procedural': return Stethoscope;
+      case 'Diagnostic & Testing': return TestTube;
+      case 'Treatment': return Heart;
+      case 'Maternal & Neonatal': return Baby;
+      default: return FileText;
+    }
+  };
+
+  const filteredTemplates = templates.filter(template => {
+    const matchesSearch = template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (template.description?.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const categoryCounts = TEMPLATE_CATEGORIES.reduce((acc, cat) => {
+    if (cat.value === 'all') {
+      acc[cat.value] = templates.length;
+    } else {
+      acc[cat.value] = templates.filter(t => t.category === cat.value).length;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-6">
@@ -299,224 +167,143 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
         <div className="min-w-0">
           <h1 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
             <FileCheck className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
-            <span className="truncate">Consent Forms Management</span>
+            <span className="truncate">Consent Forms Library</span>
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Upload and manage consent forms</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            13 trilingual consent forms (English, Hindi, Marathi) for comprehensive patient care
+          </p>
         </div>
-        <Button onClick={() => setUploadDialogOpen(true)} className="w-full sm:w-auto" data-testid="button-upload-form">
-          <Plus className="h-4 w-4 mr-2" />
-          Upload Form
-        </Button>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Languages className="h-3 w-3" />
+            Trilingual
+          </Badge>
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Globe className="h-3 w-3" />
+            {templates.length} Forms
+          </Badge>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search uploaded forms..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-              data-testid="input-search"
-            />
-          </div>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full sm:w-48" data-testid="select-category-filter">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {CATEGORIES.map(cat => (
-                <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search consent forms..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 max-w-md"
+          data-testid="input-search"
+        />
+      </div>
 
-        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredForms.map((form) => (
-              <Card key={form.id} className="hover-elevate" data-testid={`consent-form-card-${form.id}`}>
-                <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+      <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+        <TabsList className="flex flex-wrap h-auto gap-1 bg-transparent p-0 mb-4">
+          {TEMPLATE_CATEGORIES.map(cat => {
+            const Icon = cat.icon;
+            return (
+              <TabsTrigger
+                key={cat.value}
+                value={cat.value}
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-3 py-2 rounded-lg border"
+                data-testid={`tab-${cat.value.replace(/\s+/g, '-').toLowerCase()}`}
+              >
+                <Icon className="h-4 w-4 mr-1.5" />
+                {cat.label}
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                  {categoryCounts[cat.value] || 0}
+                </Badge>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+
+        <TabsContent value={selectedCategory} className="mt-0">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            {filteredTemplates.map((template) => {
+              const CategoryIcon = getCategoryIcon(template.category);
+              return (
+                <Card key={template.id} className="hover-elevate" data-testid={`consent-template-card-${template.id}`}>
+                  <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+                    <div className="flex items-start gap-3">
                       <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                        <CategoryIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <CardTitle className="text-sm sm:text-base truncate" data-testid={`form-name-${form.id}`}>
-                          {form.name}
+                        <CardTitle className="text-sm sm:text-base leading-tight" data-testid={`template-title-${template.id}`}>
+                          {template.title}
                         </CardTitle>
-                        <CardDescription className="text-[10px] sm:text-xs truncate">
-                          {form.fileName}
-                        </CardDescription>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge className={getCategoryColor(template.category)} data-testid={`template-category-${template.id}`}>
+                            {template.category}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            v{template.version}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" data-testid={`button-menu-${form.id}`}>
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleView(form)} data-testid={`button-view-${form.id}`}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownload(form)} data-testid={`button-download-${form.id}`}>
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handlePrint(form)} data-testid={`button-print-${form.id}`}>
-                          <Printer className="h-4 w-4 mr-2" />
-                          Print
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => deleteMutation.mutate(form.id)}
-                          data-testid={`button-delete-${form.id}`}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3 p-3 sm:p-4 md:p-6 pt-0">
-                  {form.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">{form.description}</p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <Badge className={getCategoryColor(form.category)}>
-                      {CATEGORIES.find(c => c.value === form.category)?.label || form.category}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">{formatFileSize(form.fileSize)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Uploaded: {formatDate(form.createdAt)}</span>
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleDownload(form)}>
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handlePrint(form)}>
-                      <Printer className="h-4 w-4 mr-1" />
-                      Print
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-        {filteredForms.length === 0 && !formsLoading && (
-          <Card className="p-12 text-center">
-            <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No uploaded forms found</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchQuery || categoryFilter !== 'all' 
-                ? "Try adjusting your search or filter"
-                : "Upload your first consent form to get started"}
-            </p>
-            <Button onClick={() => setUploadDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Form
-            </Button>
-          </Card>
-        )}
-      </div>
-
-      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Consent Form</DialogTitle>
-            <DialogDescription>
-              Upload a PDF consent form to the system
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="file">Select PDF File *</Label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                onChange={handleFileSelect}
-                className="hidden"
-                id="file-input"
-                data-testid="input-file"
-              />
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
-              >
-                {selectedFile ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <FileText className="h-6 w-6 text-primary" />
-                    <div>
-                      <p className="font-medium">{selectedFile.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-3 p-3 sm:p-4 md:p-6 pt-0">
+                    {template.description && (
+                      <CardDescription className="text-xs sm:text-sm line-clamp-3">
+                        {template.description}
+                      </CardDescription>
+                    )}
+                    
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Languages className="h-3 w-3" />
+                      <span>{template.languages}</span>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">Click to select a PDF file</p>
-                    <p className="text-xs text-muted-foreground">Maximum size: 10MB</p>
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Form Name *</Label>
-              <Input
-                id="name"
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                placeholder="e.g., Surgery Consent Form"
-                data-testid="input-form-name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={formCategory} onValueChange={setFormCategory}>
-                <SelectTrigger data-testid="select-category">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map(cat => (
-                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                value={formDescription}
-                onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Brief description of the consent form"
-                rows={3}
-                data-testid="input-description"
-              />
-            </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1" 
+                        onClick={() => handleView(template)}
+                        data-testid={`button-view-${template.id}`}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1" 
+                        onClick={() => handleDownload(template)}
+                        data-testid={`button-download-${template.id}`}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handlePrint(template)}
+                        data-testid={`button-print-${template.id}`}
+                      >
+                        <Printer className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={resetUploadForm}>Cancel</Button>
-            <Button 
-              onClick={handleUpload} 
-              disabled={uploadMutation.isPending || !selectedFile || !formName}
-              data-testid="button-submit-upload"
-            >
-              {uploadMutation.isPending ? "Uploading..." : "Upload"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          {filteredTemplates.length === 0 && (
+            <Card className="p-12 text-center">
+              <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No consent forms found</h3>
+              <p className="text-muted-foreground">
+                {searchQuery 
+                  ? "Try adjusting your search terms"
+                  : "No forms available in this category"}
+              </p>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
