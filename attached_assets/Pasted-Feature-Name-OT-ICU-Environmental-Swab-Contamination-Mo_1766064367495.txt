@@ -1,0 +1,273 @@
+Feature Name: OT & ICU Environmental Swab Contamination Monitoring Module
+
+🎯 OBJECTIVE
+
+Build a NABH-compliant digital module inside our hospital application to capture, process, monitor, and audit OT & ICU swab contamination data for infection control and hospital-acquired infection (HAI) prevention.
+
+The system must support end-to-end workflow:
+Swab Collection → Lab Processing → Result Evaluation → Corrective Action (CAPA) → Audit Reports.
+
+🏥 MODULE LOCATION IN APP
+
+Hospital App → Infection Control → Environmental Surveillance → OT & ICU Swabs
+
+1️⃣ USER ROLES & PERMISSIONS
+
+Define role-based access:
+
+Infection Control Nurse (ICN)
+
+Create swab entries
+
+View results
+
+Initiate CAPA
+
+Microbiology Lab Staff
+
+Enter culture results
+
+Upload reports
+
+Housekeeping Supervisor
+
+View failed cases
+
+Update cleaning / fumigation actions
+
+Admin / Medical Superintendent
+
+View dashboards
+
+Close CAPA
+
+Export NABH reports
+
+All actions must be timestamped and audit-logged.
+
+2️⃣ MASTER DATA SETUP (CONFIGURABLE)
+
+Create admin-configurable masters:
+
+📌 Area Master
+
+Hospital → Block → Floor → OT / ICU → Equipment / Bed
+
+📌 Sampling Site Master
+
+OT Table
+
+OT Light
+
+Ventilator
+
+Bed Rail
+
+Monitor
+
+Door Handle
+
+Floor
+
+Air Sample
+
+📌 Organism Master
+
+No Growth
+
+Skin Flora (CoNS)
+
+E. coli
+
+Klebsiella
+
+Pseudomonas
+
+MRSA
+
+Fungus
+
+3️⃣ SWAB COLLECTION WORKFLOW (FRONT-END)
+
+Create a Swab Collection Form with:
+
+Auto-generated Swab ID (QR / Barcode)
+
+Date & Time (auto)
+
+Area Type: OT / ICU
+
+Area Name (dropdown from Area Master)
+
+Sampling Site (dropdown)
+
+Reason:
+
+Routine
+
+Post-fumigation
+
+Outbreak suspicion
+
+Collected By (Staff ID)
+
+Remarks
+
+Status: Pending Lab Result
+
+On submit:
+
+Create lab task
+
+Lock record from editing
+
+4️⃣ LAB RESULT ENTRY MODULE
+
+Allow Microbiology Lab to enter:
+
+Swab ID (scan / select)
+
+Culture Media (Blood agar, MacConkey, etc.)
+
+Organism Detected (dropdown)
+
+CFU Count (numeric)
+
+Growth Level:
+
+None
+
+Low
+
+Moderate
+
+Heavy
+
+Sensitivity Test (Yes / No)
+
+Result Date
+
+5️⃣ AUTO-INTERPRETATION LOGIC (CRITICAL)
+
+Implement system rules:
+
+IF Organism = "No Growth"
+   Status = PASS
+
+IF Organism = "Skin Flora" AND CFU = Low
+   Status = ACCEPTABLE
+
+IF Organism = Pathogen OR CFU >= Moderate
+   Status = FAIL
+
+
+On FAIL:
+
+Auto-generate CAPA ticket
+
+Trigger alerts
+
+6️⃣ CAPA (CORRECTIVE & PREVENTIVE ACTION) MODULE
+
+For failed swabs, auto-open CAPA with:
+
+Issue Summary (auto)
+
+Root Cause (select)
+
+Immediate Action:
+
+Deep cleaning
+
+Fumigation
+
+Fogging
+
+Responsible Department
+
+Target Closure Date
+
+Verification Swab Required (Yes / No)
+
+Closure Status
+
+CAPA must be mandatory before closure.
+
+7️⃣ DASHBOARD & ALERT SYSTEM
+📊 Dashboard Metrics
+
+OT contamination rate (%)
+
+ICU contamination trend
+
+Area-wise failure heatmap
+
+Post-fumigation success rate
+
+Repeated failure alerts
+
+🔔 Alerts
+
+In-app + SMS / Email on:
+
+Positive culture
+
+CAPA overdue
+
+Repeat contamination
+
+8️⃣ REPORTS (NABH-READY)
+
+Generate downloadable reports:
+
+Monthly OT Swab Report
+
+ICU Environmental Surveillance Report
+
+Fumigation Validation Report
+
+CAPA Closure Report
+
+NABH Infection Control Evidence Pack
+
+Export formats:
+
+PDF
+
+Excel
+
+9️⃣ DATABASE REQUIREMENTS
+
+Create normalized tables:
+
+swab_collection
+
+swab_lab_results
+
+organism_master
+
+area_master
+
+capa_actions
+
+staff_master
+
+audit_logs
+
+Ensure:
+
+No hard delete
+
+Full change history
+
+Role-based access
+
+🔐 SECURITY & COMPLIANCE
+
+NABH & NABL compliant
+
+No result edits without admin override
+
+Encrypted data at rest
+
+Activity audit logs

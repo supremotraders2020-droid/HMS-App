@@ -30,6 +30,7 @@ import OxygenTracker from "@/pages/OxygenTracker";
 import BiowastePage from "@/pages/BiowastePage";
 import AIAnalytics from "@/pages/AIAnalytics";
 import InpatientAnalytics from "@/pages/InpatientAnalytics";
+import SwabMonitoring from "@/pages/SwabMonitoring";
 import FloatingChatButton from "@/components/FloatingChatButton";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
@@ -193,6 +194,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only administrators can access biomedical waste management.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/swab-monitoring">
+        {currentUser.role === "ADMIN" ? (
+          <SwabMonitoring />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators can access swab monitoring.</p>
           </div>
         )}
       </Route>

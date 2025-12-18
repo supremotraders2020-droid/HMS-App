@@ -1527,3 +1527,167 @@ export const insertHealthTipSchema = createInsertSchema(healthTips).omit({
 });
 export type InsertHealthTip = z.infer<typeof insertHealthTipSchema>;
 export type HealthTip = typeof healthTips.$inferSelect;
+
+// ========== OT & ICU SWAB CONTAMINATION MONITORING TABLES ==========
+
+// Area Master - Hospital locations (OT / ICU areas)
+export const swabAreaMaster = pgTable("swab_area_master", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  block: text("block").notNull(), // Block A, Block B, etc.
+  floor: text("floor").notNull(), // Ground Floor, 1st Floor, etc.
+  areaType: text("area_type").notNull(), // OT, ICU
+  areaName: text("area_name").notNull(), // OT-1, ICU-A, etc.
+  equipment: text("equipment"), // Equipment or Bed identifier
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSwabAreaMasterSchema = createInsertSchema(swabAreaMaster).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwabAreaMaster = z.infer<typeof insertSwabAreaMasterSchema>;
+export type SwabAreaMaster = typeof swabAreaMaster.$inferSelect;
+
+// Sampling Site Master - Where swabs are collected from
+export const swabSamplingSiteMaster = pgTable("swab_sampling_site_master", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  siteName: text("site_name").notNull(), // OT Table, OT Light, Ventilator, etc.
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSwabSamplingSiteMasterSchema = createInsertSchema(swabSamplingSiteMaster).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwabSamplingSiteMaster = z.infer<typeof insertSwabSamplingSiteMasterSchema>;
+export type SwabSamplingSiteMaster = typeof swabSamplingSiteMaster.$inferSelect;
+
+// Organism Master - Types of organisms that can be detected
+export const swabOrganismMaster = pgTable("swab_organism_master", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  organismName: text("organism_name").notNull(), // No Growth, E. coli, MRSA, etc.
+  category: text("category").notNull(), // pathogen, flora, none
+  riskLevel: text("risk_level").notNull().default("low"), // low, medium, high, critical
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSwabOrganismMasterSchema = createInsertSchema(swabOrganismMaster).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwabOrganismMaster = z.infer<typeof insertSwabOrganismMasterSchema>;
+export type SwabOrganismMaster = typeof swabOrganismMaster.$inferSelect;
+
+// Swab Collection - Main swab collection records
+export const swabCollection = pgTable("swab_collection", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  swabId: text("swab_id").notNull().unique(), // Auto-generated unique ID
+  collectionDate: timestamp("collection_date").notNull().defaultNow(),
+  areaType: text("area_type").notNull(), // OT / ICU
+  areaId: varchar("area_id").notNull(), // Reference to area master
+  samplingSiteId: varchar("sampling_site_id").notNull(), // Reference to sampling site
+  reason: text("reason").notNull(), // Routine, Post-fumigation, Outbreak suspicion
+  collectedBy: varchar("collected_by").notNull(), // Staff ID
+  collectedByName: text("collected_by_name"), // Staff Name for display
+  remarks: text("remarks"),
+  status: text("status").notNull().default("pending"), // pending, in_lab, completed, failed
+  resultStatus: text("result_status"), // PASS, ACCEPTABLE, FAIL
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSwabCollectionSchema = createInsertSchema(swabCollection).omit({
+  id: true,
+  swabId: true,
+  status: true,
+  resultStatus: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSwabCollection = z.infer<typeof insertSwabCollectionSchema>;
+export type SwabCollection = typeof swabCollection.$inferSelect;
+
+// Swab Lab Results - Laboratory test results
+export const swabLabResults = pgTable("swab_lab_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  swabCollectionId: varchar("swab_collection_id").notNull(), // Reference to swab collection
+  cultureMedia: text("culture_media").notNull(), // Blood agar, MacConkey, etc.
+  organismId: varchar("organism_id").notNull(), // Reference to organism master
+  cfuCount: integer("cfu_count"), // Colony Forming Units
+  growthLevel: text("growth_level").notNull(), // None, Low, Moderate, Heavy
+  sensitivityTest: boolean("sensitivity_test").default(false),
+  sensitivityDetails: text("sensitivity_details"),
+  resultDate: timestamp("result_date").notNull().defaultNow(),
+  processedBy: varchar("processed_by").notNull(), // Lab staff ID
+  processedByName: text("processed_by_name"),
+  remarks: text("remarks"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSwabLabResultSchema = createInsertSchema(swabLabResults).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwabLabResult = z.infer<typeof insertSwabLabResultSchema>;
+export type SwabLabResult = typeof swabLabResults.$inferSelect;
+
+// CAPA Actions - Corrective and Preventive Actions for failed swabs
+export const swabCapaActions = pgTable("swab_capa_actions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  swabCollectionId: varchar("swab_collection_id").notNull(), // Reference to failed swab
+  issueSummary: text("issue_summary").notNull(), // Auto-generated
+  rootCause: text("root_cause"), // Selected root cause
+  immediateAction: text("immediate_action").notNull(), // Deep cleaning, Fumigation, Fogging
+  responsibleDepartment: text("responsible_department").notNull(),
+  responsiblePerson: varchar("responsible_person"),
+  responsiblePersonName: text("responsible_person_name"),
+  targetClosureDate: timestamp("target_closure_date").notNull(),
+  verificationSwabRequired: boolean("verification_swab_required").default(true),
+  verificationSwabId: varchar("verification_swab_id"), // Link to verification swab
+  status: text("status").notNull().default("open"), // open, in_progress, pending_verification, closed
+  closedBy: varchar("closed_by"),
+  closedByName: text("closed_by_name"),
+  closedAt: timestamp("closed_at"),
+  closureRemarks: text("closure_remarks"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSwabCapaActionSchema = createInsertSchema(swabCapaActions).omit({
+  id: true,
+  status: true,
+  closedBy: true,
+  closedByName: true,
+  closedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSwabCapaAction = z.infer<typeof insertSwabCapaActionSchema>;
+export type SwabCapaAction = typeof swabCapaActions.$inferSelect;
+
+// Swab Audit Logs - Track all changes for compliance
+export const swabAuditLogs = pgTable("swab_audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entityType: text("entity_type").notNull(), // swab_collection, lab_result, capa_action
+  entityId: varchar("entity_id").notNull(),
+  action: text("action").notNull(), // create, update, delete, status_change
+  previousValue: text("previous_value"), // JSON of previous state
+  newValue: text("new_value"), // JSON of new state
+  performedBy: varchar("performed_by").notNull(),
+  performedByName: text("performed_by_name"),
+  performedByRole: text("performed_by_role"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSwabAuditLogSchema = createInsertSchema(swabAuditLogs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSwabAuditLog = z.infer<typeof insertSwabAuditLogSchema>;
+export type SwabAuditLog = typeof swabAuditLogs.$inferSelect;
