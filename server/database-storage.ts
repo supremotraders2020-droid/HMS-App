@@ -18,6 +18,7 @@ import {
   doctorOathConfirmations, consentTemplates, resolvedAlerts, doctorTimeSlots,
   patientBills, billPayments, healthTips,
   swabAreaMaster, swabSamplingSiteMaster, swabOrganismMaster, swabCollection, swabLabResults, swabCapaActions, swabAuditLogs,
+  diseaseCatalog, dietTemplates, medicationScheduleTemplates, patientDiseaseAssignments, personalizedCarePlans,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -66,7 +67,12 @@ import {
   type SwabCollection, type InsertSwabCollection,
   type SwabLabResult, type InsertSwabLabResult,
   type SwabCapaAction, type InsertSwabCapaAction,
-  type SwabAuditLog, type InsertSwabAuditLog
+  type SwabAuditLog, type InsertSwabAuditLog,
+  type DiseaseCatalog, type InsertDiseaseCatalog,
+  type DietTemplate, type InsertDietTemplate,
+  type MedicationScheduleTemplate, type InsertMedicationScheduleTemplate,
+  type PatientDiseaseAssignment, type InsertPatientDiseaseAssignment,
+  type PersonalizedCarePlan, type InsertPersonalizedCarePlan
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -2891,6 +2897,117 @@ export class DatabaseStorage implements IStorage {
 
   async createSwabAuditLog(log: InsertSwabAuditLog): Promise<SwabAuditLog> {
     const result = await db.insert(swabAuditLogs).values(log).returning();
+    return result[0];
+  }
+
+  // ========== DISEASE CATALOG ==========
+  async getAllDiseases(): Promise<DiseaseCatalog[]> {
+    return await db.select().from(diseaseCatalog).where(eq(diseaseCatalog.isActive, true)).orderBy(diseaseCatalog.diseaseName);
+  }
+
+  async getDiseasesByCategory(category: string): Promise<DiseaseCatalog[]> {
+    return await db.select().from(diseaseCatalog).where(and(eq(diseaseCatalog.category, category), eq(diseaseCatalog.isActive, true)));
+  }
+
+  async getDisease(id: string): Promise<DiseaseCatalog | undefined> {
+    const result = await db.select().from(diseaseCatalog).where(eq(diseaseCatalog.id, id));
+    return result[0];
+  }
+
+  async createDisease(disease: InsertDiseaseCatalog): Promise<DiseaseCatalog> {
+    const result = await db.insert(diseaseCatalog).values(disease).returning();
+    return result[0];
+  }
+
+  async updateDisease(id: string, updates: Partial<InsertDiseaseCatalog>): Promise<DiseaseCatalog | undefined> {
+    const result = await db.update(diseaseCatalog).set({ ...updates, updatedAt: new Date() }).where(eq(diseaseCatalog.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== DIET TEMPLATES ==========
+  async getAllDietTemplates(): Promise<DietTemplate[]> {
+    return await db.select().from(dietTemplates).where(eq(dietTemplates.isActive, true));
+  }
+
+  async getDietTemplatesByDisease(diseaseId: string): Promise<DietTemplate[]> {
+    return await db.select().from(dietTemplates).where(and(eq(dietTemplates.diseaseId, diseaseId), eq(dietTemplates.isActive, true)));
+  }
+
+  async getDietTemplate(id: string): Promise<DietTemplate | undefined> {
+    const result = await db.select().from(dietTemplates).where(eq(dietTemplates.id, id));
+    return result[0];
+  }
+
+  async createDietTemplate(template: InsertDietTemplate): Promise<DietTemplate> {
+    const result = await db.insert(dietTemplates).values(template).returning();
+    return result[0];
+  }
+
+  async updateDietTemplate(id: string, updates: Partial<InsertDietTemplate>): Promise<DietTemplate | undefined> {
+    const result = await db.update(dietTemplates).set(updates).where(eq(dietTemplates.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== MEDICATION SCHEDULE TEMPLATES ==========
+  async getAllMedicationScheduleTemplates(): Promise<MedicationScheduleTemplate[]> {
+    return await db.select().from(medicationScheduleTemplates).where(eq(medicationScheduleTemplates.isActive, true));
+  }
+
+  async getMedicationScheduleTemplatesByDisease(diseaseId: string): Promise<MedicationScheduleTemplate[]> {
+    return await db.select().from(medicationScheduleTemplates).where(and(eq(medicationScheduleTemplates.diseaseId, diseaseId), eq(medicationScheduleTemplates.isActive, true)));
+  }
+
+  async createMedicationScheduleTemplate(template: InsertMedicationScheduleTemplate): Promise<MedicationScheduleTemplate> {
+    const result = await db.insert(medicationScheduleTemplates).values(template).returning();
+    return result[0];
+  }
+
+  // ========== PATIENT DISEASE ASSIGNMENTS ==========
+  async getAllPatientDiseaseAssignments(): Promise<PatientDiseaseAssignment[]> {
+    return await db.select().from(patientDiseaseAssignments).where(eq(patientDiseaseAssignments.isActive, true)).orderBy(desc(patientDiseaseAssignments.createdAt));
+  }
+
+  async getPatientDiseaseAssignmentsByPatient(patientId: string): Promise<PatientDiseaseAssignment[]> {
+    return await db.select().from(patientDiseaseAssignments).where(and(eq(patientDiseaseAssignments.patientId, patientId), eq(patientDiseaseAssignments.isActive, true)));
+  }
+
+  async getPatientDiseaseAssignment(id: string): Promise<PatientDiseaseAssignment | undefined> {
+    const result = await db.select().from(patientDiseaseAssignments).where(eq(patientDiseaseAssignments.id, id));
+    return result[0];
+  }
+
+  async createPatientDiseaseAssignment(assignment: InsertPatientDiseaseAssignment): Promise<PatientDiseaseAssignment> {
+    const result = await db.insert(patientDiseaseAssignments).values(assignment).returning();
+    return result[0];
+  }
+
+  async updatePatientDiseaseAssignment(id: string, updates: Partial<PatientDiseaseAssignment>): Promise<PatientDiseaseAssignment | undefined> {
+    const result = await db.update(patientDiseaseAssignments).set({ ...updates, updatedAt: new Date() }).where(eq(patientDiseaseAssignments.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== PERSONALIZED CARE PLANS ==========
+  async getPersonalizedCarePlansByPatient(patientId: string): Promise<PersonalizedCarePlan[]> {
+    return await db.select().from(personalizedCarePlans).where(and(eq(personalizedCarePlans.patientId, patientId), eq(personalizedCarePlans.isActive, true))).orderBy(desc(personalizedCarePlans.createdAt));
+  }
+
+  async getPersonalizedCarePlan(id: string): Promise<PersonalizedCarePlan | undefined> {
+    const result = await db.select().from(personalizedCarePlans).where(eq(personalizedCarePlans.id, id));
+    return result[0];
+  }
+
+  async getPersonalizedCarePlanByAssignment(assignmentId: string): Promise<PersonalizedCarePlan | undefined> {
+    const result = await db.select().from(personalizedCarePlans).where(and(eq(personalizedCarePlans.assignmentId, assignmentId), eq(personalizedCarePlans.isActive, true)));
+    return result[0];
+  }
+
+  async createPersonalizedCarePlan(plan: InsertPersonalizedCarePlan): Promise<PersonalizedCarePlan> {
+    const result = await db.insert(personalizedCarePlans).values(plan).returning();
+    return result[0];
+  }
+
+  async updatePersonalizedCarePlan(id: string, updates: Partial<PersonalizedCarePlan>): Promise<PersonalizedCarePlan | undefined> {
+    const result = await db.update(personalizedCarePlans).set({ ...updates, updatedAt: new Date() }).where(eq(personalizedCarePlans.id, id)).returning();
     return result[0];
   }
 }

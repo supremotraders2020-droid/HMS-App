@@ -4559,6 +4559,436 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== DISEASE KNOWLEDGE ROUTES ==========
+
+  // Helper to verify disease knowledge access (Admin, Doctor, Nurse, OPD Manager)
+  const verifyDiseaseKnowledgeAccess = (req: express.Request, res: express.Response): boolean => {
+    const userRole = req.headers['x-user-role'] as string;
+    const allowedRoles = ['ADMIN', 'DOCTOR', 'NURSE', 'OPD_MANAGER'];
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      res.status(403).json({ error: "Access denied. Disease knowledge requires staff access." });
+      return false;
+    }
+    return true;
+  };
+
+  // Disease Catalog - Read access for all logged-in users (educational content)
+  app.get("/api/diseases", async (req, res) => {
+    try {
+      const { category } = req.query;
+      let diseases;
+      if (category && typeof category === "string") {
+        diseases = await storage.getDiseasesByCategory(category);
+      } else {
+        diseases = await storage.getAllDiseases();
+      }
+      res.json(diseases);
+    } catch (error) {
+      console.error("Failed to fetch diseases:", error);
+      res.status(500).json({ error: "Failed to fetch diseases" });
+    }
+  });
+
+  app.get("/api/diseases/:id", async (req, res) => {
+    try {
+      const disease = await storage.getDisease(req.params.id);
+      if (disease) {
+        res.json(disease);
+      } else {
+        res.status(404).json({ error: "Disease not found" });
+      }
+    } catch (error) {
+      console.error("Failed to fetch disease:", error);
+      res.status(500).json({ error: "Failed to fetch disease" });
+    }
+  });
+
+  app.post("/api/diseases", async (req, res) => {
+    try {
+      const userRole = req.headers['x-user-role'] as string;
+      if (userRole !== 'ADMIN') {
+        return res.status(403).json({ error: "Only admins can create diseases" });
+      }
+      const disease = await storage.createDisease(req.body);
+      res.json(disease);
+    } catch (error) {
+      console.error("Failed to create disease:", error);
+      res.status(500).json({ error: "Failed to create disease" });
+    }
+  });
+
+  // Diet Templates - Read access for all logged-in users
+  app.get("/api/diet-templates", async (req, res) => {
+    try {
+      const { diseaseId } = req.query;
+      let templates;
+      if (diseaseId && typeof diseaseId === "string") {
+        templates = await storage.getDietTemplatesByDisease(diseaseId);
+      } else {
+        templates = await storage.getAllDietTemplates();
+      }
+      res.json(templates);
+    } catch (error) {
+      console.error("Failed to fetch diet templates:", error);
+      res.status(500).json({ error: "Failed to fetch diet templates" });
+    }
+  });
+
+  app.post("/api/diet-templates", async (req, res) => {
+    try {
+      const userRole = req.headers['x-user-role'] as string;
+      if (userRole !== 'ADMIN') {
+        return res.status(403).json({ error: "Only admins can create diet templates" });
+      }
+      const template = await storage.createDietTemplate(req.body);
+      res.json(template);
+    } catch (error) {
+      console.error("Failed to create diet template:", error);
+      res.status(500).json({ error: "Failed to create diet template" });
+    }
+  });
+
+  // Medication Schedule Templates - Read access for all logged-in users
+  app.get("/api/medication-schedules", async (req, res) => {
+    try {
+      const { diseaseId } = req.query;
+      let templates;
+      if (diseaseId && typeof diseaseId === "string") {
+        templates = await storage.getMedicationScheduleTemplatesByDisease(diseaseId);
+      } else {
+        templates = await storage.getAllMedicationScheduleTemplates();
+      }
+      res.json(templates);
+    } catch (error) {
+      console.error("Failed to fetch medication schedules:", error);
+      res.status(500).json({ error: "Failed to fetch medication schedules" });
+    }
+  });
+
+  app.post("/api/medication-schedules", async (req, res) => {
+    try {
+      const userRole = req.headers['x-user-role'] as string;
+      if (userRole !== 'ADMIN') {
+        return res.status(403).json({ error: "Only admins can create medication schedules" });
+      }
+      const template = await storage.createMedicationScheduleTemplate(req.body);
+      res.json(template);
+    } catch (error) {
+      console.error("Failed to create medication schedule:", error);
+      res.status(500).json({ error: "Failed to create medication schedule" });
+    }
+  });
+
+  // Patient Disease Assignments - Staff access only
+  app.get("/api/patient-disease-assignments", async (req, res) => {
+    try {
+      if (!verifyDiseaseKnowledgeAccess(req, res)) return;
+      const { patientId } = req.query;
+      let assignments;
+      if (patientId && typeof patientId === "string") {
+        assignments = await storage.getPatientDiseaseAssignmentsByPatient(patientId);
+      } else {
+        assignments = await storage.getAllPatientDiseaseAssignments();
+      }
+      res.json(assignments);
+    } catch (error) {
+      console.error("Failed to fetch assignments:", error);
+      res.status(500).json({ error: "Failed to fetch assignments" });
+    }
+  });
+
+  app.post("/api/patient-disease-assignments", async (req, res) => {
+    try {
+      const userRole = req.headers['x-user-role'] as string;
+      if (userRole !== 'ADMIN' && userRole !== 'DOCTOR') {
+        return res.status(403).json({ error: "Only doctors and admins can assign diseases" });
+      }
+      const assignment = await storage.createPatientDiseaseAssignment(req.body);
+      res.json(assignment);
+    } catch (error) {
+      console.error("Failed to create assignment:", error);
+      res.status(500).json({ error: "Failed to create assignment" });
+    }
+  });
+
+  // Personalized Care Plans - Staff access only
+  app.get("/api/care-plans", async (req, res) => {
+    try {
+      if (!verifyDiseaseKnowledgeAccess(req, res)) return;
+      const { patientId, assignmentId } = req.query;
+      if (assignmentId && typeof assignmentId === "string") {
+        const plan = await storage.getPersonalizedCarePlanByAssignment(assignmentId);
+        res.json(plan || null);
+      } else if (patientId && typeof patientId === "string") {
+        const plans = await storage.getPersonalizedCarePlansByPatient(patientId);
+        res.json(plans);
+      } else {
+        res.status(400).json({ error: "patientId or assignmentId required" });
+      }
+    } catch (error) {
+      console.error("Failed to fetch care plans:", error);
+      res.status(500).json({ error: "Failed to fetch care plans" });
+    }
+  });
+
+  app.post("/api/care-plans", async (req, res) => {
+    try {
+      const userRole = req.headers['x-user-role'] as string;
+      if (userRole !== 'ADMIN' && userRole !== 'DOCTOR') {
+        return res.status(403).json({ error: "Only doctors and admins can create care plans" });
+      }
+      const plan = await storage.createPersonalizedCarePlan(req.body);
+      res.json(plan);
+    } catch (error) {
+      console.error("Failed to create care plan:", error);
+      res.status(500).json({ error: "Failed to create care plan" });
+    }
+  });
+
+  // AI Personalization - Generate personalized care plan using OpenAI
+  app.post("/api/care-plans/generate", async (req, res) => {
+    try {
+      const userRole = req.headers['x-user-role'] as string;
+      if (userRole !== 'ADMIN' && userRole !== 'DOCTOR') {
+        return res.status(403).json({ error: "Only doctors and admins can generate AI care plans" });
+      }
+      
+      const { assignmentId, patientInfo, generatedBy, generatedByName } = req.body;
+      
+      if (!assignmentId) {
+        return res.status(400).json({ error: "Assignment ID is required" });
+      }
+      
+      const assignment = await storage.getPatientDiseaseAssignment(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ error: "Assignment not found" });
+      }
+      
+      const disease = await storage.getDisease(assignment.diseaseId);
+      if (!disease) {
+        return res.status(404).json({ error: "Disease not found" });
+      }
+
+      const dietTemplates = await storage.getDietTemplatesByDisease(assignment.diseaseId);
+      const medSchedules = await storage.getMedicationScheduleTemplatesByDisease(assignment.diseaseId);
+
+      // Build AI prompt for personalization
+      const prompt = `You are an AI Clinical Care & Nutrition Intelligence System for an Indian hospital. Generate a personalized care plan in JSON format.
+
+PATIENT PROFILE:
+- Age: ${patientInfo.age || "Not specified"}
+- Gender: ${patientInfo.gender || "Not specified"}
+- Weight: ${patientInfo.weight || "Not specified"} kg
+- BMI: ${patientInfo.bmi || "Not specified"}
+- Activity Level: ${patientInfo.activityLevel || "Moderate"}
+- Diet Preference: ${patientInfo.dietPreference || "Both (Veg/Non-veg)"}
+- OPD/IPD Status: ${assignment.opdIpdStatus}
+- Disease Severity: ${assignment.severity}
+
+DISEASE: ${disease.diseaseName}
+CATEGORY: ${disease.category}
+DESCRIPTION: ${disease.shortDescription}
+
+BASE DIET TEMPLATES: ${JSON.stringify(dietTemplates.map(d => ({ name: d.templateName, type: d.dietType, plan: d.mealPlan })))}
+
+MEDICATION SCHEDULE TEMPLATES: ${JSON.stringify(medSchedules.map(m => ({ category: m.medicineCategory, timing: m.typicalTiming, foodRelation: m.beforeAfterFood })))}
+
+Generate a personalized JSON response with:
+1. personalizedDiet: Customized Indian diet plan with early_morning, breakfast, mid_morning, lunch, evening_snack, dinner, bedtime
+2. personalizedSchedule: Medicine timing guidance (NOT prescriptions)
+3. personalizedLifestyle: Activity recommendations, yoga, stress management
+4. personalizedMonitoring: Daily/weekly/monthly check recommendations
+
+IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for educational purposes only.`;
+
+      let aiResponse;
+      try {
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+          response_format: { type: "json_object" },
+          max_tokens: 2000,
+        });
+        aiResponse = JSON.parse(completion.choices[0].message.content || "{}");
+      } catch (aiError) {
+        console.error("OpenAI error, using template-based plan:", aiError);
+        // Fallback to template-based plan
+        aiResponse = {
+          personalizedDiet: dietTemplates[0]?.mealPlan || "{}",
+          personalizedSchedule: JSON.stringify(medSchedules),
+          personalizedLifestyle: disease.activityRecommendations || "{}",
+          personalizedMonitoring: disease.monitoringGuidelines || "{}",
+        };
+      }
+
+      const carePlan = await storage.createPersonalizedCarePlan({
+        patientId: assignment.patientId,
+        assignmentId,
+        personalizedDiet: typeof aiResponse.personalizedDiet === "string" ? aiResponse.personalizedDiet : JSON.stringify(aiResponse.personalizedDiet),
+        personalizedSchedule: typeof aiResponse.personalizedSchedule === "string" ? aiResponse.personalizedSchedule : JSON.stringify(aiResponse.personalizedSchedule),
+        personalizedLifestyle: typeof aiResponse.personalizedLifestyle === "string" ? aiResponse.personalizedLifestyle : JSON.stringify(aiResponse.personalizedLifestyle),
+        personalizedMonitoring: typeof aiResponse.personalizedMonitoring === "string" ? aiResponse.personalizedMonitoring : JSON.stringify(aiResponse.personalizedMonitoring),
+        aiInputParameters: JSON.stringify(patientInfo),
+        generatedBy,
+        generatedByName,
+      });
+
+      res.json(carePlan);
+    } catch (error) {
+      console.error("Failed to generate care plan:", error);
+      res.status(500).json({ error: "Failed to generate care plan" });
+    }
+  });
+
+  // Seed Disease Knowledge Data (Admin only, idempotent)
+  app.post("/api/diseases/seed", async (req, res) => {
+    try {
+      const userRole = req.headers['x-user-role'] as string;
+      if (userRole !== 'ADMIN') {
+        return res.status(403).json({ error: "Only admins can seed disease data" });
+      }
+      
+      const existingDiseases = await storage.getAllDiseases();
+      if (existingDiseases.length > 0) {
+        return res.json({ message: "Disease data already seeded", count: existingDiseases.length });
+      }
+
+      // Seed common Indian diseases
+      const diseases = [
+        {
+          diseaseName: "Diabetes Type 2",
+          alternateNames: "Type 2 DM, Adult-onset Diabetes, NIDDM",
+          category: "metabolic",
+          affectedSystem: "Endocrine System",
+          shortDescription: "A condition where the body doesn't use insulin properly, leading to high blood sugar levels.",
+          causes: JSON.stringify(["Insulin resistance", "Obesity", "Sedentary lifestyle", "Genetic factors", "Poor diet high in refined carbs"]),
+          riskFactors: JSON.stringify(["Family history", "Obesity", "Age > 45", "PCOD in women", "High BP", "High cholesterol"]),
+          symptoms: JSON.stringify(["Frequent urination", "Excessive thirst", "Unexplained weight loss", "Fatigue", "Blurred vision", "Slow healing wounds"]),
+          emergencySigns: JSON.stringify(["Blood sugar > 400 mg/dL", "Confusion", "Rapid breathing", "Fruity breath odor", "Unconsciousness"]),
+          clinicalParameters: JSON.stringify({ fasting_glucose: { normal: "<100", target: "<126", danger: ">200" }, hba1c: { normal: "<5.7%", target: "<7%", danger: ">9%" }, postprandial: { normal: "<140", target: "<180", danger: ">250" } }),
+          dosList: JSON.stringify(["Walk 30 mins daily", "Monitor blood sugar regularly", "Take medicines on time", "Eat at fixed times", "Include fiber in diet"]),
+          dontsList: JSON.stringify(["Skip meals", "Eat sweets/mithai", "Drink sugary drinks", "Skip medicines", "Ignore foot injuries"]),
+          activityRecommendations: JSON.stringify({ walking: "30 mins morning/evening", yoga: "Pranayama, Mandukasana", stress: "Deep breathing, meditation" }),
+          monitoringGuidelines: JSON.stringify({ daily: ["Fasting glucose", "Post-meal glucose"], weekly: ["Weight check", "Foot inspection"], monthly: ["HbA1c if needed", "BP check"] }),
+          isActive: true,
+        },
+        {
+          diseaseName: "Hypertension",
+          alternateNames: "High Blood Pressure, BP, Essential Hypertension",
+          category: "cardiovascular",
+          affectedSystem: "Cardiovascular System",
+          shortDescription: "A condition where blood pressure in arteries is persistently elevated, increasing heart disease risk.",
+          causes: JSON.stringify(["Excessive salt intake", "Obesity", "Stress", "Smoking", "Alcohol", "Genetic factors"]),
+          riskFactors: JSON.stringify(["Age > 40", "Family history", "Obesity", "High salt diet", "Sedentary lifestyle", "Diabetes"]),
+          symptoms: JSON.stringify(["Headache (especially morning)", "Dizziness", "Nosebleeds", "Shortness of breath", "Chest pain", "Often no symptoms"]),
+          emergencySigns: JSON.stringify(["BP > 180/120", "Severe headache", "Chest pain", "Vision problems", "Difficulty speaking", "Numbness"]),
+          clinicalParameters: JSON.stringify({ systolic: { normal: "<120", target: "<130", danger: ">180" }, diastolic: { normal: "<80", target: "<85", danger: ">120" } }),
+          dosList: JSON.stringify(["Reduce salt intake", "Exercise regularly", "Maintain healthy weight", "Take medicines daily", "Manage stress"]),
+          dontsList: JSON.stringify(["Eat pickle, papad excessively", "Skip BP medicines", "Smoke or use tobacco", "Drink alcohol", "Eat processed foods"]),
+          activityRecommendations: JSON.stringify({ walking: "45 mins brisk walk daily", yoga: "Shavasana, Pranayama", stress: "Meditation, music therapy" }),
+          monitoringGuidelines: JSON.stringify({ daily: ["BP morning and evening"], weekly: ["Weight check"], monthly: ["Doctor visit if uncontrolled"] }),
+          isActive: true,
+        },
+        {
+          diseaseName: "Tuberculosis",
+          alternateNames: "TB, Pulmonary TB, Koch's Disease",
+          category: "respiratory",
+          affectedSystem: "Respiratory System",
+          shortDescription: "A bacterial infection that primarily affects the lungs but can spread to other organs.",
+          causes: JSON.stringify(["Mycobacterium tuberculosis bacteria", "Airborne transmission", "Close contact with infected person"]),
+          riskFactors: JSON.stringify(["Weakened immune system", "HIV infection", "Malnutrition", "Crowded living", "Diabetes", "Smoking"]),
+          symptoms: JSON.stringify(["Persistent cough > 2 weeks", "Blood in sputum", "Night sweats", "Weight loss", "Evening fever", "Loss of appetite"]),
+          emergencySigns: JSON.stringify(["Coughing blood", "Severe breathing difficulty", "High fever", "Extreme weakness"]),
+          clinicalParameters: JSON.stringify({ sputum_test: "AFB positive/negative", chest_xray: "Cavity/infiltrates", weight: "Monitor weekly" }),
+          dosList: JSON.stringify(["Complete full DOTS course", "Eat protein-rich diet", "Cover mouth while coughing", "Ensure good ventilation", "Take medicines under supervision"]),
+          dontsList: JSON.stringify(["Stop medicines early", "Spit in open", "Share utensils", "Skip doses", "Smoke or drink alcohol"]),
+          activityRecommendations: JSON.stringify({ rest: "Adequate rest during treatment", walking: "Light walking as tolerated", breathing: "Deep breathing exercises after recovery" }),
+          monitoringGuidelines: JSON.stringify({ weekly: ["Weight check", "Medicine adherence"], monthly: ["Sputum test", "Doctor visit"], end_of_treatment: ["Chest X-ray"] }),
+          isActive: true,
+        },
+        {
+          diseaseName: "Dengue",
+          alternateNames: "Dengue Fever, Break-bone Fever",
+          category: "infectious",
+          affectedSystem: "Blood/Immune System",
+          shortDescription: "A mosquito-borne viral infection causing high fever and severe body pain.",
+          causes: JSON.stringify(["Dengue virus", "Aedes mosquito bite", "Stagnant water breeding"]),
+          riskFactors: JSON.stringify(["Monsoon season", "Stagnant water around home", "Previous dengue infection", "Urban areas"]),
+          symptoms: JSON.stringify(["High fever (104°F)", "Severe headache", "Pain behind eyes", "Muscle and joint pain", "Skin rash", "Nausea"]),
+          emergencySigns: JSON.stringify(["Platelet count < 50,000", "Bleeding from gums/nose", "Blood in vomit/stool", "Severe abdominal pain", "Persistent vomiting"]),
+          clinicalParameters: JSON.stringify({ platelets: { normal: ">150,000", caution: "100,000-150,000", danger: "<50,000" }, hematocrit: "Monitor for hemoconcentration" }),
+          dosList: JSON.stringify(["Drink plenty of fluids", "Eat papaya leaf extract", "Complete bed rest", "Monitor platelet count", "Use mosquito nets"]),
+          dontsList: JSON.stringify(["Take aspirin/ibuprofen", "Ignore warning signs", "Delay hospital visit", "Self-medicate"]),
+          activityRecommendations: JSON.stringify({ rest: "Complete bed rest during fever", hydration: "3-4 liters fluids daily", recovery: "Gradual return to activity" }),
+          monitoringGuidelines: JSON.stringify({ daily: ["Temperature", "Platelet count", "Fluid intake"], warning: ["Watch for bleeding", "Monitor BP"] }),
+          isActive: true,
+        },
+        {
+          diseaseName: "Asthma",
+          alternateNames: "Bronchial Asthma, Dama",
+          category: "respiratory",
+          affectedSystem: "Respiratory System",
+          shortDescription: "A chronic condition causing inflammation and narrowing of airways, leading to breathing difficulty.",
+          causes: JSON.stringify(["Allergies", "Air pollution", "Dust mites", "Cold air", "Exercise", "Stress"]),
+          riskFactors: JSON.stringify(["Family history", "Allergies", "Childhood respiratory infections", "Smoking exposure", "Obesity"]),
+          symptoms: JSON.stringify(["Wheezing", "Shortness of breath", "Chest tightness", "Coughing (especially at night)", "Difficulty speaking"]),
+          emergencySigns: JSON.stringify(["Severe breathlessness", "Blue lips/fingernails", "Inhaler not helping", "Cannot speak in sentences", "Confusion"]),
+          clinicalParameters: JSON.stringify({ peak_flow: "Monitor daily", oxygen: { normal: ">95%", danger: "<90%" } }),
+          dosList: JSON.stringify(["Keep inhaler always", "Identify triggers", "Take preventive medicines", "Keep home dust-free", "Practice breathing exercises"]),
+          dontsList: JSON.stringify(["Ignore early symptoms", "Stop preventer medicines", "Smoke or be near smokers", "Exercise in polluted air", "Keep pets in bedroom"]),
+          activityRecommendations: JSON.stringify({ breathing: "Pranayama daily", swimming: "Good for lung capacity", avoid: "High pollution areas" }),
+          monitoringGuidelines: JSON.stringify({ daily: ["Peak flow reading", "Symptom diary"], monthly: ["Inhaler technique check"], yearly: ["Lung function test"] }),
+          isActive: true,
+        },
+      ];
+
+      for (const disease of diseases) {
+        const created = await storage.createDisease(disease);
+        
+        // Create diet template for each disease
+        await storage.createDietTemplate({
+          diseaseId: created.id,
+          templateName: `Standard ${disease.diseaseName} Diet`,
+          dietType: "both",
+          mealPlan: JSON.stringify({
+            early_morning: "Warm water with lemon/methi seeds water",
+            breakfast: "Oats upma/poha with vegetables, 1 cup tea without sugar",
+            mid_morning: "1 fruit (apple/guava) or handful of nuts",
+            lunch: "2 roti, dal, sabzi, salad, curd",
+            evening_snack: "Green tea with roasted chana/makhana",
+            dinner: "1-2 roti, light sabzi, dal soup",
+            bedtime: "Warm turmeric milk (if applicable)"
+          }),
+          foodsToAvoid: JSON.stringify(["White sugar", "Maida products", "Fried foods", "Packaged snacks", "Sugary drinks"]),
+          foodsToLimit: JSON.stringify(["Rice", "Potatoes", "Mangoes", "Grapes", "Bananas"]),
+          safeInModeration: JSON.stringify(["Brown rice", "Sweet potato", "Dark chocolate", "Dry fruits"]),
+          portionGuidance: "Use small plates, fill half with vegetables",
+          hydrationGuidance: "8-10 glasses water daily, more in summer",
+          isActive: true,
+        });
+
+        // Create medication schedule template
+        await storage.createMedicationScheduleTemplate({
+          diseaseId: created.id,
+          medicineCategory: disease.category === "metabolic" ? "Antidiabetic" : disease.category === "cardiovascular" ? "Antihypertensive" : "As prescribed",
+          typicalTiming: "Morning",
+          beforeAfterFood: disease.diseaseName.includes("Diabetes") ? "before" : "after",
+          missedDoseInstructions: "Take as soon as remembered. Skip if close to next dose.",
+          storageGuidelines: "Store in cool, dry place away from sunlight",
+          interactionWarnings: JSON.stringify(["Avoid alcohol", "Inform doctor about all medicines"]),
+          generalNotes: "This is timing guidance only, NOT a prescription. Consult your doctor.",
+          isActive: true,
+        });
+      }
+
+      res.json({ message: "Disease knowledge data seeded successfully", count: diseases.length });
+    } catch (error) {
+      console.error("Failed to seed disease data:", error);
+      res.status(500).json({ error: "Failed to seed disease data" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service

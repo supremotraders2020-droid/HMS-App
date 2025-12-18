@@ -137,6 +137,23 @@ The backend is a Node.js/Express application with TypeScript:
 - Full audit logging for NABH compliance
 - Master data: 6 OT/ICU areas, 10 sampling sites, 12 organisms (flora + pathogens)
 
+#### 15. Disease Knowledge, Diet & Medication Scheduling
+- Comprehensive disease catalog for Indian clinical context
+- 5 database tables: disease_catalog, diet_templates, medication_schedule_templates, patient_disease_assignments, personalized_care_plans
+- Four-tab interface: Disease Catalog, Diet Plans, Medication Schedules, Patient Assignments
+- AI-powered personalization using OpenAI GPT-4o with fallback to template-based plans
+- Pre-seeded diseases: Diabetes Type 2, Hypertension, Tuberculosis, Dengue, Asthma
+- Indian diet plans with culturally-relevant meal options (roti, dal, sabzi, etc.)
+- Medication schedule templates (timing guidance only, NOT prescriptions)
+- Disease categories: metabolic, cardiovascular, respiratory, infectious, neuro, other
+- Clinical parameters with normal/target/danger ranges
+- Do's and Don'ts lists for each disease
+- Activity recommendations including yoga, walking, stress management
+- Monitoring guidelines (daily/weekly/monthly checks)
+- Educational disclaimers throughout (not medical advice)
+- Role access: Admin, Doctor, Nurse, OPD Manager (Patients view from Patient Portal)
+- ICMR/MoHFW guideline compliance
+
 ### Authentication and Authorization
 
 #### Role-Based Access Control (RBAC)

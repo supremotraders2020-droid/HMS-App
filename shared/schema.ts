@@ -1691,3 +1691,135 @@ export const insertSwabAuditLogSchema = createInsertSchema(swabAuditLogs).omit({
 });
 export type InsertSwabAuditLog = z.infer<typeof insertSwabAuditLogSchema>;
 export type SwabAuditLog = typeof swabAuditLogs.$inferSelect;
+
+// =====================================================
+// DISEASE KNOWLEDGE, DIET & MEDICATION SCHEDULING MODULE
+// =====================================================
+
+// Disease Catalog - Master list of diseases with clinical info
+export const diseaseCatalog = pgTable("disease_catalog", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  diseaseName: text("disease_name").notNull().unique(),
+  alternateNames: text("alternate_names"), // Comma-separated
+  category: text("category").notNull(), // metabolic, cardiovascular, respiratory, infectious, neuro, other
+  affectedSystem: text("affected_system").notNull(), // Endocrine, Heart, Lungs, etc.
+  shortDescription: text("short_description").notNull(), // Layman-friendly
+  causes: text("causes").notNull(), // JSON array of causes
+  riskFactors: text("risk_factors").notNull(), // JSON array
+  symptoms: text("symptoms").notNull(), // JSON array
+  emergencySigns: text("emergency_signs"), // JSON array - when to seek emergency care
+  clinicalParameters: text("clinical_parameters"), // JSON with target values like BP, blood sugar ranges
+  dosList: text("dos_list"), // JSON array of do's
+  dontsList: text("donts_list"), // JSON array of don'ts
+  activityRecommendations: text("activity_recommendations"), // JSON with exercise, yoga, etc.
+  monitoringGuidelines: text("monitoring_guidelines"), // JSON with daily/weekly/monthly checks
+  followUpSchedule: text("follow_up_schedule"), // JSON with timing guidance
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDiseaseCatalogSchema = createInsertSchema(diseaseCatalog).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDiseaseCatalog = z.infer<typeof insertDiseaseCatalogSchema>;
+export type DiseaseCatalog = typeof diseaseCatalog.$inferSelect;
+
+// Diet Templates - Disease-specific diet plans
+export const dietTemplates = pgTable("diet_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  diseaseId: varchar("disease_id").notNull(), // Reference to disease catalog
+  templateName: text("template_name").notNull(),
+  dietType: text("diet_type").notNull().default("both"), // veg, non-veg, both
+  mealPlan: text("meal_plan").notNull(), // JSON with early_morning, breakfast, mid_morning, lunch, evening_snack, dinner, bedtime
+  foodsToAvoid: text("foods_to_avoid"), // JSON array
+  foodsToLimit: text("foods_to_limit"), // JSON array
+  safeInModeration: text("safe_in_moderation"), // JSON array
+  portionGuidance: text("portion_guidance"),
+  hydrationGuidance: text("hydration_guidance"),
+  specialNotes: text("special_notes"), // Regional, seasonal adaptations
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDietTemplateSchema = createInsertSchema(dietTemplates).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDietTemplate = z.infer<typeof insertDietTemplateSchema>;
+export type DietTemplate = typeof dietTemplates.$inferSelect;
+
+// Medication Schedule Templates - Timing guidance (NOT prescriptions)
+export const medicationScheduleTemplates = pgTable("medication_schedule_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  diseaseId: varchar("disease_id").notNull(), // Reference to disease catalog
+  medicineCategory: text("medicine_category").notNull(), // Antidiabetic, Antihypertensive, etc.
+  typicalTiming: text("typical_timing").notNull(), // Morning, Afternoon, Evening, Night
+  beforeAfterFood: text("before_after_food").notNull(), // before, after, with, empty_stomach
+  missedDoseInstructions: text("missed_dose_instructions"),
+  storageGuidelines: text("storage_guidelines"),
+  interactionWarnings: text("interaction_warnings"), // JSON array - food/alcohol interactions
+  generalNotes: text("general_notes"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertMedicationScheduleTemplateSchema = createInsertSchema(medicationScheduleTemplates).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertMedicationScheduleTemplate = z.infer<typeof insertMedicationScheduleTemplateSchema>;
+export type MedicationScheduleTemplate = typeof medicationScheduleTemplates.$inferSelect;
+
+// Patient Disease Assignments - Link patients to diseases with personalized care
+export const patientDiseaseAssignments = pgTable("patient_disease_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(), // Reference to patient
+  diseaseId: varchar("disease_id").notNull(), // Reference to disease catalog
+  severity: text("severity").notNull().default("moderate"), // mild, moderate, severe
+  diagnosedDate: timestamp("diagnosed_date").defaultNow(),
+  assignedBy: varchar("assigned_by").notNull(), // Doctor ID
+  assignedByName: text("assigned_by_name"),
+  comorbidities: text("comorbidities"), // JSON array of other disease IDs
+  opdIpdStatus: text("opd_ipd_status").notNull().default("OPD"), // OPD, IPD
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPatientDiseaseAssignmentSchema = createInsertSchema(patientDiseaseAssignments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPatientDiseaseAssignment = z.infer<typeof insertPatientDiseaseAssignmentSchema>;
+export type PatientDiseaseAssignment = typeof patientDiseaseAssignments.$inferSelect;
+
+// Personalized Care Plans - AI-generated customized plans for patients
+export const personalizedCarePlans = pgTable("personalized_care_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  assignmentId: varchar("assignment_id").notNull(), // Reference to patient disease assignment
+  personalizedDiet: text("personalized_diet"), // JSON - AI-customized diet plan
+  personalizedSchedule: text("personalized_schedule"), // JSON - medication timing
+  personalizedLifestyle: text("personalized_lifestyle"), // JSON - activity recommendations
+  personalizedMonitoring: text("personalized_monitoring"), // JSON - monitoring schedule
+  aiInputParameters: text("ai_input_parameters"), // JSON - age, gender, weight, preferences used
+  aiGeneratedAt: timestamp("ai_generated_at").defaultNow(),
+  generatedBy: varchar("generated_by"), // Doctor who triggered AI generation
+  generatedByName: text("generated_by_name"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPersonalizedCarePlanSchema = createInsertSchema(personalizedCarePlans).omit({
+  id: true,
+  aiGeneratedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPersonalizedCarePlan = z.infer<typeof insertPersonalizedCarePlanSchema>;
+export type PersonalizedCarePlan = typeof personalizedCarePlans.$inferSelect;

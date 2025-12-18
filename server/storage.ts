@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate, type ResolvedAlert, type InsertResolvedAlert, type DoctorTimeSlot, type InsertDoctorTimeSlot, type PatientBill, type InsertPatientBill, type BillPayment, type InsertBillPayment, type HealthTip, type InsertHealthTip, type SwabAreaMaster, type InsertSwabAreaMaster, type SwabSamplingSiteMaster, type InsertSwabSamplingSiteMaster, type SwabOrganismMaster, type InsertSwabOrganismMaster, type SwabCollection, type InsertSwabCollection, type SwabLabResult, type InsertSwabLabResult, type SwabCapaAction, type InsertSwabCapaAction, type SwabAuditLog, type InsertSwabAuditLog } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate, type ResolvedAlert, type InsertResolvedAlert, type DoctorTimeSlot, type InsertDoctorTimeSlot, type PatientBill, type InsertPatientBill, type BillPayment, type InsertBillPayment, type HealthTip, type InsertHealthTip, type SwabAreaMaster, type InsertSwabAreaMaster, type SwabSamplingSiteMaster, type InsertSwabSamplingSiteMaster, type SwabOrganismMaster, type InsertSwabOrganismMaster, type SwabCollection, type InsertSwabCollection, type SwabLabResult, type InsertSwabLabResult, type SwabCapaAction, type InsertSwabCapaAction, type SwabAuditLog, type InsertSwabAuditLog, type DiseaseCatalog, type InsertDiseaseCatalog, type DietTemplate, type InsertDietTemplate, type MedicationScheduleTemplate, type InsertMedicationScheduleTemplate, type PatientDiseaseAssignment, type InsertPatientDiseaseAssignment, type PersonalizedCarePlan, type InsertPersonalizedCarePlan } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -351,6 +351,39 @@ export interface IStorage {
   getAllSwabAuditLogs(): Promise<SwabAuditLog[]>;
   getSwabAuditLogsByEntity(entityType: string, entityId: string): Promise<SwabAuditLog[]>;
   createSwabAuditLog(log: InsertSwabAuditLog): Promise<SwabAuditLog>;
+  
+  // Disease Catalog
+  getAllDiseases(): Promise<DiseaseCatalog[]>;
+  getDiseasesByCategory(category: string): Promise<DiseaseCatalog[]>;
+  getDisease(id: string): Promise<DiseaseCatalog | undefined>;
+  createDisease(disease: InsertDiseaseCatalog): Promise<DiseaseCatalog>;
+  updateDisease(id: string, updates: Partial<InsertDiseaseCatalog>): Promise<DiseaseCatalog | undefined>;
+  
+  // Diet Templates
+  getAllDietTemplates(): Promise<DietTemplate[]>;
+  getDietTemplatesByDisease(diseaseId: string): Promise<DietTemplate[]>;
+  getDietTemplate(id: string): Promise<DietTemplate | undefined>;
+  createDietTemplate(template: InsertDietTemplate): Promise<DietTemplate>;
+  updateDietTemplate(id: string, updates: Partial<InsertDietTemplate>): Promise<DietTemplate | undefined>;
+  
+  // Medication Schedule Templates
+  getAllMedicationScheduleTemplates(): Promise<MedicationScheduleTemplate[]>;
+  getMedicationScheduleTemplatesByDisease(diseaseId: string): Promise<MedicationScheduleTemplate[]>;
+  createMedicationScheduleTemplate(template: InsertMedicationScheduleTemplate): Promise<MedicationScheduleTemplate>;
+  
+  // Patient Disease Assignments
+  getAllPatientDiseaseAssignments(): Promise<PatientDiseaseAssignment[]>;
+  getPatientDiseaseAssignmentsByPatient(patientId: string): Promise<PatientDiseaseAssignment[]>;
+  getPatientDiseaseAssignment(id: string): Promise<PatientDiseaseAssignment | undefined>;
+  createPatientDiseaseAssignment(assignment: InsertPatientDiseaseAssignment): Promise<PatientDiseaseAssignment>;
+  updatePatientDiseaseAssignment(id: string, updates: Partial<PatientDiseaseAssignment>): Promise<PatientDiseaseAssignment | undefined>;
+  
+  // Personalized Care Plans
+  getPersonalizedCarePlansByPatient(patientId: string): Promise<PersonalizedCarePlan[]>;
+  getPersonalizedCarePlan(id: string): Promise<PersonalizedCarePlan | undefined>;
+  getPersonalizedCarePlanByAssignment(assignmentId: string): Promise<PersonalizedCarePlan | undefined>;
+  createPersonalizedCarePlan(plan: InsertPersonalizedCarePlan): Promise<PersonalizedCarePlan>;
+  updatePersonalizedCarePlan(id: string, updates: Partial<PersonalizedCarePlan>): Promise<PersonalizedCarePlan | undefined>;
 }
 
 export class MemStorage implements IStorage {
