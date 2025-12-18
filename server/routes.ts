@@ -4,7 +4,25 @@ import path from "path";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and } from "drizzle-orm";
+import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
+  patientMonitoringSessions, insertPatientMonitoringSessionSchema,
+  vitalsHourly, insertVitalsHourlySchema,
+  inotropesSedation, insertInotropesSedationSchema,
+  ventilatorSettings, insertVentilatorSettingsSchema,
+  abgLabResults, insertAbgLabResultsSchema,
+  intakeHourly, insertIntakeHourlySchema,
+  outputHourly, insertOutputHourlySchema,
+  diabeticFlow, insertDiabeticFlowSchema,
+  medicationAdminRecords, insertMedicationAdminRecordSchema,
+  onceOnlyDrugs, insertOnceOnlyDrugSchema,
+  nursingShiftNotes, insertNursingShiftNoteSchema,
+  airwayLinesTubes, insertAirwayLinesTubesSchema,
+  dutyStaffAssignments, insertDutyStaffAssignmentSchema,
+  patientAllergiesPrecautions, insertPatientAllergiesPrecautionsSchema,
+  patientMonitoringAuditLog, insertPatientMonitoringAuditLogSchema
+} from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
 import { aiEngines } from "./ai-engines";
@@ -5114,6 +5132,486 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Failed to seed disease data:", error);
       res.status(500).json({ error: "Failed to seed disease data" });
+    }
+  });
+
+  // ========== PATIENT MONITORING MODULE ROUTES ==========
+  // Medical-Grade, ICU Chart & Nursing Workflow (NABH-Compliant)
+
+  // Get all monitoring sessions
+  app.get("/api/patient-monitoring/sessions", async (_req, res) => {
+    try {
+      const sessions = await db.select().from(patientMonitoringSessions).orderBy(desc(patientMonitoringSessions.createdAt));
+      res.json(sessions);
+    } catch (error) {
+      console.error("Failed to fetch monitoring sessions:", error);
+      res.status(500).json({ error: "Failed to fetch monitoring sessions" });
+    }
+  });
+
+  // Get sessions by patient
+  app.get("/api/patient-monitoring/sessions/patient/:patientId", async (req, res) => {
+    try {
+      const sessions = await db.select().from(patientMonitoringSessions)
+        .where(eq(patientMonitoringSessions.patientId, req.params.patientId))
+        .orderBy(desc(patientMonitoringSessions.sessionDate));
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient sessions" });
+    }
+  });
+
+  // Get single session with all data
+  app.get("/api/patient-monitoring/sessions/:id", async (req, res) => {
+    try {
+      const session = await db.select().from(patientMonitoringSessions)
+        .where(eq(patientMonitoringSessions.id, req.params.id));
+      if (!session.length) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      res.json(session[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch session" });
+    }
+  });
+
+  // Create new monitoring session
+  app.post("/api/patient-monitoring/sessions", async (req, res) => {
+    try {
+      const parsed = insertPatientMonitoringSessionSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid session data", details: parsed.error });
+      }
+      const result = await db.insert(patientMonitoringSessions).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Failed to create monitoring session:", error);
+      res.status(500).json({ error: "Failed to create monitoring session" });
+    }
+  });
+
+  // Update session (lock patient info after first save)
+  app.patch("/api/patient-monitoring/sessions/:id", async (req, res) => {
+    try {
+      const result = await db.update(patientMonitoringSessions)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(patientMonitoringSessions.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update session" });
+    }
+  });
+
+  // ========== VITALS HOURLY (24 slots) ==========
+  app.get("/api/patient-monitoring/vitals/:sessionId", async (req, res) => {
+    try {
+      const vitals = await db.select().from(vitalsHourly)
+        .where(eq(vitalsHourly.sessionId, req.params.sessionId))
+        .orderBy(vitalsHourly.hourSlot);
+      res.json(vitals);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vitals" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/vitals", async (req, res) => {
+    try {
+      const parsed = insertVitalsHourlySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid vitals data", details: parsed.error });
+      }
+      const result = await db.insert(vitalsHourly).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save vitals" });
+    }
+  });
+
+  // ========== INOTROPES & SEDATION ==========
+  app.get("/api/patient-monitoring/inotropes/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(inotropesSedation)
+        .where(eq(inotropesSedation.sessionId, req.params.sessionId))
+        .orderBy(desc(inotropesSedation.createdAt));
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch inotropes data" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/inotropes", async (req, res) => {
+    try {
+      const parsed = insertInotropesSedationSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(inotropesSedation).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save inotropes data" });
+    }
+  });
+
+  // ========== VENTILATOR SETTINGS (Conditional) ==========
+  app.get("/api/patient-monitoring/ventilator/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(ventilatorSettings)
+        .where(eq(ventilatorSettings.sessionId, req.params.sessionId))
+        .orderBy(desc(ventilatorSettings.recordedAt));
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch ventilator settings" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/ventilator", async (req, res) => {
+    try {
+      const parsed = insertVentilatorSettingsSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(ventilatorSettings).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save ventilator settings" });
+    }
+  });
+
+  // ========== ABG & LAB RESULTS ==========
+  app.get("/api/patient-monitoring/abg-lab/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(abgLabResults)
+        .where(eq(abgLabResults.sessionId, req.params.sessionId))
+        .orderBy(desc(abgLabResults.recordedAt));
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch ABG/Lab results" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/abg-lab", async (req, res) => {
+    try {
+      const parsed = insertAbgLabResultsSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(abgLabResults).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save ABG/Lab results" });
+    }
+  });
+
+  // ========== INTAKE CHART (Hourly with auto-sums) ==========
+  app.get("/api/patient-monitoring/intake/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(intakeHourly)
+        .where(eq(intakeHourly.sessionId, req.params.sessionId))
+        .orderBy(intakeHourly.hourSlot);
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch intake data" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/intake", async (req, res) => {
+    try {
+      // Calculate hourly total
+      const data = req.body;
+      data.hourlyTotal = (data.ivLine1 || 0) + (data.ivLine2 || 0) + (data.ivLine3 || 0) + 
+                         (data.ivLine4 || 0) + (data.ivLine5 || 0) + (data.ivLine6 || 0) +
+                         (data.oral || 0) + (data.ngTube || 0) + (data.bloodProducts || 0) + 
+                         (data.medications || 0);
+      
+      const parsed = insertIntakeHourlySchema.safeParse(data);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(intakeHourly).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save intake data" });
+    }
+  });
+
+  // ========== OUTPUT CHART (Hourly with auto-sums) ==========
+  app.get("/api/patient-monitoring/output/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(outputHourly)
+        .where(eq(outputHourly.sessionId, req.params.sessionId))
+        .orderBy(outputHourly.hourSlot);
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch output data" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/output", async (req, res) => {
+    try {
+      // Calculate hourly total
+      const data = req.body;
+      data.hourlyTotal = (data.urineOutput || 0) + (data.drainOutput || 0) + 
+                         (data.vomitus || 0) + (data.stool || 0) + (data.otherLosses || 0);
+      
+      const parsed = insertOutputHourlySchema.safeParse(data);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(outputHourly).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save output data" });
+    }
+  });
+
+  // Get 24-hour fluid balance summary
+  app.get("/api/patient-monitoring/fluid-balance/:sessionId", async (req, res) => {
+    try {
+      const intakeData = await db.select().from(intakeHourly)
+        .where(eq(intakeHourly.sessionId, req.params.sessionId));
+      const outputData = await db.select().from(outputHourly)
+        .where(eq(outputHourly.sessionId, req.params.sessionId));
+      
+      const totalIntake = intakeData.reduce((sum, i) => sum + (i.hourlyTotal || 0), 0);
+      const totalOutput = outputData.reduce((sum, o) => sum + (o.hourlyTotal || 0), 0);
+      const netBalance = totalIntake - totalOutput;
+      
+      res.json({ totalIntake, totalOutput, netBalance, intakeEntries: intakeData.length, outputEntries: outputData.length });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to calculate fluid balance" });
+    }
+  });
+
+  // ========== DIABETIC FLOW CHART ==========
+  app.get("/api/patient-monitoring/diabetic/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(diabeticFlow)
+        .where(eq(diabeticFlow.sessionId, req.params.sessionId))
+        .orderBy(desc(diabeticFlow.createdAt));
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch diabetic flow data" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/diabetic", async (req, res) => {
+    try {
+      const data = req.body;
+      // Auto-generate alerts
+      if (data.bloodSugarLevel < 70) {
+        data.alertType = "HYPOGLYCEMIA";
+        data.alertMessage = "Low blood sugar detected. Immediate action required.";
+      } else if (data.bloodSugarLevel > 250) {
+        data.alertType = "HYPERGLYCEMIA";
+        data.alertMessage = "High blood sugar detected. Review insulin dosage.";
+      }
+      
+      const parsed = insertDiabeticFlowSchema.safeParse(data);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(diabeticFlow).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save diabetic flow data" });
+    }
+  });
+
+  // ========== MEDICATION ADMINISTRATION RECORD (MAR) ==========
+  app.get("/api/patient-monitoring/mar/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(medicationAdminRecords)
+        .where(eq(medicationAdminRecords.sessionId, req.params.sessionId))
+        .orderBy(medicationAdminRecords.scheduledTime);
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch MAR data" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/mar", async (req, res) => {
+    try {
+      const parsed = insertMedicationAdminRecordSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(medicationAdminRecords).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save MAR data" });
+    }
+  });
+
+  // ========== ONCE-ONLY DRUGS ==========
+  app.get("/api/patient-monitoring/once-only/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(onceOnlyDrugs)
+        .where(eq(onceOnlyDrugs.sessionId, req.params.sessionId))
+        .orderBy(desc(onceOnlyDrugs.createdAt));
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch once-only drugs" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/once-only", async (req, res) => {
+    try {
+      const parsed = insertOnceOnlyDrugSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(onceOnlyDrugs).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save once-only drug" });
+    }
+  });
+
+  // ========== NURSING SHIFT NOTES ==========
+  app.get("/api/patient-monitoring/shift-notes/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(nursingShiftNotes)
+        .where(eq(nursingShiftNotes.sessionId, req.params.sessionId))
+        .orderBy(desc(nursingShiftNotes.noteTime));
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch shift notes" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/shift-notes", async (req, res) => {
+    try {
+      const parsed = insertNursingShiftNoteSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(nursingShiftNotes).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save shift note" });
+    }
+  });
+
+  // ========== AIRWAY, LINES & TUBES ==========
+  app.get("/api/patient-monitoring/airway/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(airwayLinesTubes)
+        .where(eq(airwayLinesTubes.sessionId, req.params.sessionId));
+      res.json(data[0] || null);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch airway data" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/airway", async (req, res) => {
+    try {
+      const parsed = insertAirwayLinesTubesSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(airwayLinesTubes).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save airway data" });
+    }
+  });
+
+  app.patch("/api/patient-monitoring/airway/:id", async (req, res) => {
+    try {
+      const result = await db.update(airwayLinesTubes)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(airwayLinesTubes.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update airway data" });
+    }
+  });
+
+  // ========== DUTY STAFF ASSIGNMENTS ==========
+  app.get("/api/patient-monitoring/duty-staff/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(dutyStaffAssignments)
+        .where(eq(dutyStaffAssignments.sessionId, req.params.sessionId))
+        .orderBy(dutyStaffAssignments.shiftStartTime);
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch duty staff" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/duty-staff", async (req, res) => {
+    try {
+      const parsed = insertDutyStaffAssignmentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(dutyStaffAssignments).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save duty staff" });
+    }
+  });
+
+  // ========== ALLERGIES & PRECAUTIONS ==========
+  app.get("/api/patient-monitoring/allergies/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(patientAllergiesPrecautions)
+        .where(eq(patientAllergiesPrecautions.sessionId, req.params.sessionId));
+      res.json(data[0] || null);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch allergies" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/allergies", async (req, res) => {
+    try {
+      const parsed = insertPatientAllergiesPrecautionsSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(patientAllergiesPrecautions).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save allergies" });
+    }
+  });
+
+  app.patch("/api/patient-monitoring/allergies/:id", async (req, res) => {
+    try {
+      const result = await db.update(patientAllergiesPrecautions)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(patientAllergiesPrecautions.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update allergies" });
+    }
+  });
+
+  // ========== AUDIT LOG ==========
+  app.get("/api/patient-monitoring/audit/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(patientMonitoringAuditLog)
+        .where(eq(patientMonitoringAuditLog.sessionId, req.params.sessionId))
+        .orderBy(desc(patientMonitoringAuditLog.timestamp));
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch audit log" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/audit", async (req, res) => {
+    try {
+      const parsed = insertPatientMonitoringAuditLogSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(patientMonitoringAuditLog).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save audit log" });
     }
   });
 
