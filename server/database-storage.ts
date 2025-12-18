@@ -2505,120 +2505,158 @@ export class DatabaseStorage implements IStorage {
     }
 
     const templates: InsertConsentTemplate[] = [
+      // === LEGAL & ADMINISTRATIVE ===
       {
         title: "Medico-Legal Register (Digital Consent Form)",
         consentType: "MEDICO_LEGAL",
-        description: "Digital medico-legal form for documenting patient injuries, police information, and medical officer attestation. Must be preserved forever as per legal requirements.",
-        category: "Legal",
-        pdfPath: "/consents/Digital_Medico_Legal_Form_1765472182868.pdf",
-        version: "1.0",
-        isActive: true,
-        isBilingual: false,
-        languages: "English"
-      },
-      {
-        title: "Operation Theatre Register",
-        consentType: "OPERATION_THEATRE",
-        description: "Digital form for recording surgical procedures, operation team details, materials used, anaesthesia information, and post-operative notes.",
-        category: "Surgical",
-        pdfPath: "/consents/Operation_Theatre_Register_1765472182869.pdf",
-        version: "1.0",
-        isActive: true,
-        isBilingual: false,
-        languages: "English"
-      },
-      {
-        title: "Icon Hospital Consent Form (Multiple)",
-        consentType: "LOW_PROGNOSIS",
-        description: "Comprehensive consent form including: Low General Condition/Poor Prognosis, Emergency Procedure, Patient Shifting, Valuables Declaration, Treatment Denial, and DNR consents.",
-        category: "General",
-        pdfPath: "/consents/Icon_Hospital_Consent_Form_1765472182869.pdf",
-        version: "1.0",
+        description: "Comprehensive medico-legal form for documenting patient injuries, police information, body diagram markings, radiological investigations, and medical officer attestation. Must be preserved permanently as per legal requirements. Trilingual: English, Hindi, Marathi.",
+        category: "Legal & Administrative",
+        pdfPath: "/consents/Medico_Legal_Register.pdf",
+        version: "2.0",
         isActive: true,
         isBilingual: true,
-        languages: "English, Marathi"
-      },
-      {
-        title: "HIV Test Informed Consent",
-        consentType: "HIV_TEST",
-        description: "Consent form for HIV blood test with information about test results confidentiality, insurance coverage, and patient acknowledgment.",
-        category: "Diagnostic",
-        pdfPath: "/consents/Hiv_Consent_Form_1765472182870.pdf",
-        version: "1.0",
-        isActive: true,
-        isBilingual: true,
-        languages: "English, Marathi"
-      },
-      {
-        title: "HBsAg Test Informed Consent",
-        consentType: "HBSAG_TEST",
-        description: "Consent form for Hepatitis B (HBsAg) blood test with information about test results confidentiality, insurance coverage, and patient acknowledgment.",
-        category: "Diagnostic",
-        pdfPath: "/consents/Hbsag_Consent_Form_1765472182870.pdf",
-        version: "1.0",
-        isActive: true,
-        isBilingual: true,
-        languages: "English, Marathi"
-      },
-      {
-        title: "Informed Consent for Anaesthesia",
-        consentType: "ANAESTHESIA",
-        description: "Consent form explaining types of anaesthesia, associated risks and complications including rare possibilities of allergic reactions, dental injury, and other complications.",
-        category: "Surgical",
-        pdfPath: "/consents/Anaesthesia_Consent_Form_1765472182871.pdf",
-        version: "1.0",
-        isActive: true,
-        isBilingual: true,
-        languages: "English, Marathi"
-      },
-      {
-        title: "Consent for Surgery/Operative Procedure",
-        consentType: "SURGERY",
-        description: "Authorization for surgical/operative procedures including anaesthesia, with acknowledgment of risks, possible complications, and consent for photography/videography for medical purposes.",
-        category: "Surgical",
-        pdfPath: "/consents/Surgery_Consent_Form_1765472182872.pdf",
-        version: "1.0",
-        isActive: true,
-        isBilingual: true,
-        languages: "English, Marathi"
-      },
-      {
-        title: "Tubal Ligation Consent Form",
-        consentType: "TUBAL_LIGATION",
-        description: "Comprehensive consent form for tubal ligation procedure including patient declarations, eligibility criteria, anaesthesia consent, and follow-up requirements.",
-        category: "Surgical",
-        pdfPath: "/consents/Tubal_Ligation_Consent_Form_1765472182872.pdf",
-        version: "1.0",
-        isActive: true,
-        isBilingual: true,
-        languages: "English, Marathi"
-      },
-      {
-        title: "Consent for Blood/Blood Component Transfusion",
-        consentType: "BLOOD_TRANSFUSION",
-        description: "Consent form for blood or blood product transfusion explaining risks associated with refusal including organ damage, heart attack, stroke, and other complications.",
-        category: "Treatment",
-        pdfPath: "/consents/Blood_Transfusion_Consent_Form_1765472182873.pdf",
-        version: "1.0",
-        isActive: true,
-        isBilingual: true,
-        languages: "English, Marathi"
+        languages: "English, Hindi, Marathi"
       },
       {
         title: "Discharge Against Medical Advice (DAMA/LAMA)",
         consentType: "DAMA",
-        description: "Consent form for patients or relatives choosing to discharge against medical advice, acknowledging risks and releasing hospital from liability.",
-        category: "Discharge",
-        pdfPath: "/consents/Discharge_Against_Medical_Advice_Form_1765472182873.pdf",
+        description: "Consent form for patients or relatives choosing to discharge against medical advice. Includes patient representative/surrogate consent section and acknowledges all risks including deterioration of health or death. Trilingual: English, Hindi, Marathi.",
+        category: "Legal & Administrative",
+        pdfPath: "/consents/DAMA_LAMA_Consent.pdf",
+        version: "2.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Digital Consent Form (Multiple)",
+        consentType: "DIGITAL_CONSENT",
+        description: "Comprehensive consent form including: Low General Condition/Poor Prognosis, Emergency Procedure, Patient Shifting to Other Hospital, Handing Over of Valuables, Denial of Treatment, and DNR (Do Not Resuscitate) consents. Trilingual: English, Hindi, Marathi.",
+        category: "Legal & Administrative",
+        pdfPath: "/consents/Digital_Consent_Form.pdf",
+        version: "2.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      // === SURGICAL & PROCEDURAL ===
+      {
+        title: "Operation Theatre Register",
+        consentType: "OPERATION_THEATRE",
+        description: "OT case logging form for recording patient details, diagnosis, surgical procedures, operation team, materials used (HPE, implants, disposables), anaesthesia details, and post-operative notes. Part of hospital medico-legal records. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/Operation_Theatre_Register.pdf",
+        version: "2.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Informed Consent for Anaesthesia",
+        consentType: "ANAESTHESIA",
+        description: "Consent form explaining all types of anaesthesia (General/Spinal/Regional/Local/Sedation), associated risks including drug reactions, dental injury, nerve injury, paralysis, brain damage, heart attack, and other rare complications. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/Anaesthesia_Consent.pdf",
+        version: "2.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Consent for Surgery/Operative Procedure",
+        consentType: "SURGERY",
+        description: "Authorization for surgical/operative procedures including anaesthesia, with declaration of medical conditions (hypertension, diabetes, bleeding disorders), drug allergies, consent for blood products, and clinical photography for educational purposes. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/Surgery_Consent.pdf",
+        version: "2.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Tubal Ligation Consent Form",
+        consentType: "TUBAL_LIGATION",
+        description: "Comprehensive consent form for female sterilization procedure including personal/family details, voluntary declarations, eligibility criteria, anaesthesia consent, and follow-up requirements. Confirms procedure is permanent and irreversible. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/Tubal_Ligation_Consent.pdf",
+        version: "2.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Plastic Surgery Consent Form",
+        consentType: "PLASTIC_SURGERY",
+        description: "Authorization for plastic/reconstructive surgery with acknowledgment that no guarantee is given regarding surgical outcomes. Includes consent for anaesthesia and use of medical records/photographs for documentation and educational purposes. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/Plastic_Surgery_Consent.pdf",
         version: "1.0",
         isActive: true,
         isBilingual: true,
-        languages: "English, Marathi"
+        languages: "English, Hindi, Marathi"
+      },
+      // === DIAGNOSTIC & TESTING ===
+      {
+        title: "HIV Test Informed Consent",
+        consentType: "HIV_TEST",
+        description: "Consent form for HIV blood test with detailed information about test purpose, window period limitations, results confidentiality, insurance coverage implications, and consent/decline options. Trilingual: English, Hindi, Marathi.",
+        category: "Diagnostic & Testing",
+        pdfPath: "/consents/HIV_Test_Consent.pdf",
+        version: "2.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "HBsAg Test Informed Consent",
+        consentType: "HBSAG_TEST",
+        description: "Consent form for Hepatitis B Surface Antigen blood test with information about confirmatory testing requirements, results confidentiality, insurance coverage, and consent/decline options. Trilingual: English, Hindi, Marathi.",
+        category: "Diagnostic & Testing",
+        pdfPath: "/consents/HBsAg_Test_Consent.pdf",
+        version: "2.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Injection Consent Form (OPD)",
+        consentType: "INJECTION_OPD",
+        description: "Consent form for OPD injections and medications with acknowledgment of possible side effects, adverse reactions, and confirmation of allergy/medical history disclosure. For outpatient procedural use. Trilingual: English, Hindi, Marathi.",
+        category: "Diagnostic & Testing",
+        pdfPath: "/consents/Injection_Consent_OPD.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      // === TREATMENT ===
+      {
+        title: "Consent for Blood/Blood Component Transfusion",
+        consentType: "BLOOD_TRANSFUSION",
+        description: "Consent form for blood or blood product transfusion with detailed explanation of risks associated with refusal including inadequate oxygen supply, organ damage, heart attack, stroke, inability to control bleeding, and death. Trilingual: English, Hindi, Marathi.",
+        category: "Treatment",
+        pdfPath: "/consents/Blood_Transfusion_Consent.pdf",
+        version: "2.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      // === MATERNAL & NEONATAL ===
+      {
+        title: "Newborn Baby Consent Form",
+        consentType: "NEWBORN_BABY",
+        description: "Consent for medical examination, treatment, and necessary procedures for newborn babies including emergency procedures, vaccination, blood investigations, imaging studies, and routine neonatal care. Trilingual: English, Hindi, Marathi.",
+        category: "Maternal & Neonatal",
+        pdfPath: "/consents/Newborn_Baby_Consent.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
     await db.insert(consentTemplates).values(templates);
-    console.log("Consent templates seeded successfully with 10 forms");
+    console.log("Consent templates seeded successfully with 13 comprehensive forms");
   }
 
   // ========== RESOLVED ALERTS METHODS ==========
