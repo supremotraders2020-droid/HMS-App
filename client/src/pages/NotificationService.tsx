@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
-import type { Notification, HospitalTeamMember, ServicePatient } from "@shared/schema";
+import type { Notification, HospitalTeamMember, ServicePatient, HealthTip } from "@shared/schema";
 import { 
   Bell, 
   Send, 
@@ -37,7 +37,13 @@ import {
   UserCog,
   Trash2,
   Edit2,
-  X
+  X,
+  Sparkles,
+  RefreshCw,
+  Sun,
+  Cloud,
+  Leaf,
+  Heart
 } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 
@@ -154,6 +160,25 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
     byCategory: Record<string, number>;
   }>({
     queryKey: ["/api/notifications/stats/summary"],
+  });
+
+  // Health Tips query
+  const { data: healthTips = [], isLoading: healthTipsLoading, refetch: refetchHealthTips } = useQuery<HealthTip[]>({
+    queryKey: ["/api/health-tips"],
+  });
+
+  // Generate health tip mutation
+  const generateHealthTipMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/health-tips/generate");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/health-tips"] });
+      toast({ title: "Success", description: "Health tip generated and sent to all patients" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to generate health tip", variant: "destructive" });
+    }
   });
 
   // Mutations
@@ -379,7 +404,7 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
         </div>
       ) : (
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
           <TabsTrigger value="dashboard" className="gap-2" data-testid="tab-dashboard">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Dashboard</span>
@@ -387,6 +412,10 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
           <TabsTrigger value="notifications" className="gap-2" data-testid="tab-notifications">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
+          </TabsTrigger>
+          <TabsTrigger value="health-tips" className="gap-2" data-testid="tab-health-tips">
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Health Tips</span>
           </TabsTrigger>
           <TabsTrigger value="team" className="gap-2" data-testid="tab-team">
             <Users className="h-4 w-4" />
@@ -676,6 +705,102 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
               ))
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="health-tips" className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-green-500" />
+                AI Health Tips Sent to Patients
+              </h2>
+              <p className="text-sm text-muted-foreground">Health tips automatically generated at 9 AM and 9 PM IST</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetchHealthTips()}
+                disabled={healthTipsLoading}
+                data-testid="button-refresh-tips"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${healthTipsLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => generateHealthTipMutation.mutate()}
+                disabled={generateHealthTipMutation.isPending}
+                data-testid="button-generate-tip"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {generateHealthTipMutation.isPending ? "Generating..." : "Generate Now"}
+              </Button>
+            </div>
+          </div>
+
+          {healthTipsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          ) : healthTips.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No health tips generated yet.</p>
+                <p className="text-sm mt-2">Tips are automatically generated at 9 AM and 9 PM, or click "Generate Now" to create one immediately.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {healthTips.map((tip) => (
+                <Card key={tip.id} className="hover-elevate">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center shrink-0">
+                        {tip.category === "weather" ? <Cloud className="h-5 w-5 text-green-600 dark:text-green-400" /> :
+                         tip.category === "seasonal" ? <Leaf className="h-5 w-5 text-green-600 dark:text-green-400" /> :
+                         tip.category === "diet" ? <Heart className="h-5 w-5 text-green-600 dark:text-green-400" /> :
+                         <Sparkles className="h-5 w-5 text-green-600 dark:text-green-400" />}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold">{tip.title}</span>
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            {tip.category || "general"}
+                          </Badge>
+                          <Badge variant="outline">
+                            {tip.scheduledFor || "9AM"}
+                          </Badge>
+                          {tip.season && (
+                            <Badge variant="secondary">
+                              {tip.season}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{tip.content}</p>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          {tip.weatherContext && (
+                            <span className="flex items-center gap-1">
+                              <Sun className="h-4 w-4" />
+                              {tip.weatherContext}
+                            </span>
+                          )}
+                          <Separator orientation="vertical" className="h-4" />
+                          <span>
+                            {tip.generatedAt && format(new Date(tip.generatedAt), "MMM d, yyyy HH:mm")}
+                          </span>
+                          <Badge className={tip.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}>
+                            {tip.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="team" className="space-y-4">

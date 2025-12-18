@@ -569,6 +569,7 @@ Description: ${record.description}
       case "appointment": return <Calendar className="h-5 w-5 text-blue-500" />;
       case "lab_result": return <TestTube className="h-5 w-5 text-green-500" />;
       case "payment": return <CreditCard className="h-5 w-5 text-orange-500" />;
+      case "health_tip": return <Sparkles className="h-5 w-5 text-green-500" />;
       default: return <Info className="h-5 w-5 text-gray-500" />;
     }
   };

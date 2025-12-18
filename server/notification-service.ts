@@ -104,7 +104,7 @@ class NotificationService {
     count?: number;
   }) {
     const message = JSON.stringify({
-      type: 'slot_update',
+      category: 'slot_update',
       ...slotUpdate
     });
     
@@ -559,6 +559,9 @@ class NotificationService {
       // Broadcast to all connected users
       this.broadcastHealthTip(healthTip);
       
+      // Create user notifications for all patients
+      await this.createHealthTipNotificationsForPatients(healthTip);
+      
       console.log(`Health tip generated and broadcast: ${healthTip.title}`);
     } catch (error) {
       console.error("Error generating health tip:", error);
@@ -587,6 +590,54 @@ class NotificationService {
     console.log(`Health tip broadcast to all connected users: ${healthTip.title}`);
   }
 
+  async createHealthTipNotificationsForPatients(healthTip: HealthTip) {
+    try {
+      // Get all patient users
+      const patients = await storage.getUsersByRole("PATIENT");
+      
+      // Create a notification for each patient
+      for (const patient of patients) {
+        await storage.createUserNotification({
+          userId: patient.username,
+          userRole: "PATIENT",
+          title: healthTip.title,
+          message: healthTip.content,
+          type: "health_tip",
+          isRead: false,
+          metadata: JSON.stringify({
+            healthTipId: healthTip.id,
+            category: healthTip.category,
+            weatherContext: healthTip.weatherContext,
+            season: healthTip.season,
+            scheduledFor: healthTip.scheduledFor
+          })
+        });
+        
+        // Also send real-time WebSocket notification to the patient
+        this.sendToUser(patient.username, {
+          type: "health_tip",
+          event: "new_health_tip",
+          tip: {
+            id: healthTip.id,
+            title: healthTip.title,
+            content: healthTip.content,
+            category: healthTip.category,
+            weatherContext: healthTip.weatherContext,
+            season: healthTip.season,
+            priority: healthTip.priority,
+            targetAudience: healthTip.targetAudience,
+            scheduledFor: healthTip.scheduledFor,
+            generatedAt: healthTip.generatedAt
+          }
+        });
+      }
+      
+      console.log(`Created health tip notifications for ${patients.length} patients`);
+    } catch (error) {
+      console.error("Error creating health tip notifications:", error);
+    }
+  }
+
   // Manual trigger for testing (can be called from admin API)
   async generateHealthTipNow(scheduledFor: "9AM" | "9PM" = "9AM"): Promise<HealthTip | null> {
     try {
@@ -608,6 +659,9 @@ class NotificationService {
       
       // Broadcast immediately
       this.broadcastHealthTip(healthTip);
+      
+      // Create user notifications for all patients
+      await this.createHealthTipNotificationsForPatients(healthTip);
       
       return healthTip;
     } catch (error) {

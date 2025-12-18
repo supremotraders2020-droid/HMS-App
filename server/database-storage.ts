@@ -107,6 +107,11 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async getUsersByRole(role: string): Promise<User[]> {
+    const result = await db.select().from(users).where(eq(users.role, role));
+    return result;
+  }
+
   // ========== DOCTOR METHODS ==========
   async getDoctors(): Promise<Doctor[]> {
     return await db.select().from(doctors);
@@ -1061,6 +1066,111 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log("Initial data seeded successfully!");
+    
+    // Seed health tips data
+    await this.seedHealthTipsData();
+  }
+
+  // ========== HEALTH TIPS SEED DATA ==========
+  async seedHealthTipsData(): Promise<void> {
+    const existingTips = await db.select().from(healthTips).limit(1);
+    if (existingTips.length > 0) {
+      console.log("Health tips data already exists, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding health tips data for last 2 days...");
+
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+    // Set times for 9 AM and 9 PM IST (adding 5:30 hours offset for IST)
+    const setTime = (date: Date, hour: number): Date => {
+      const d = new Date(date);
+      d.setHours(hour, 0, 0, 0);
+      return d;
+    };
+
+    const sampleHealthTips: InsertHealthTip[] = [
+      {
+        title: "Winter Morning Wellness",
+        content: "Start your winter mornings with warm water and honey. This combination boosts immunity, aids digestion, and keeps you energized throughout the day. Add a pinch of turmeric for extra anti-inflammatory benefits.",
+        category: "seasonal",
+        weatherContext: "Cold weather, 18°C",
+        season: "Winter",
+        priority: "medium",
+        targetAudience: "all",
+        scheduledFor: "9AM",
+        isActive: true,
+        generatedAt: setTime(twoDaysAgo, 9)
+      },
+      {
+        title: "Evening Diet Tips for Better Sleep",
+        content: "Avoid heavy meals 3 hours before bedtime. Include magnesium-rich foods like nuts and seeds in your dinner. A glass of warm milk with a pinch of nutmeg can promote restful sleep.",
+        category: "diet",
+        weatherContext: "Clear night, 15°C",
+        season: "Winter",
+        priority: "low",
+        targetAudience: "all",
+        scheduledFor: "9PM",
+        isActive: true,
+        generatedAt: setTime(twoDaysAgo, 21)
+      },
+      {
+        title: "Hydration Reminder",
+        content: "Even in cold weather, your body needs adequate hydration. Drink at least 8 glasses of water daily. Include warm soups, herbal teas, and fresh fruit juices to maintain optimal hydration levels.",
+        category: "general",
+        weatherContext: "Partly cloudy, 20°C",
+        season: "Winter",
+        priority: "high",
+        targetAudience: "all",
+        scheduledFor: "9AM",
+        isActive: true,
+        generatedAt: setTime(yesterday, 9)
+      },
+      {
+        title: "Exercise in Winter",
+        content: "Don't skip exercise in winter! Indoor yoga, stretching, or a 20-minute walk can boost your metabolism and improve circulation. Exercise releases endorphins that combat winter blues.",
+        category: "wellness",
+        weatherContext: "Foggy morning, 16°C",
+        season: "Winter",
+        priority: "medium",
+        targetAudience: "all",
+        scheduledFor: "9PM",
+        isActive: true,
+        generatedAt: setTime(yesterday, 21)
+      }
+    ];
+
+    for (const tip of sampleHealthTips) {
+      await db.insert(healthTips).values(tip);
+    }
+
+    // Also create user notifications for patients with the health tips
+    const patientUsers = await db.select().from(users).where(eq(users.role, "PATIENT"));
+    
+    for (const tip of sampleHealthTips) {
+      for (const patient of patientUsers) {
+        await db.insert(userNotifications).values({
+          userId: patient.username,
+          userRole: "PATIENT",
+          title: tip.title,
+          message: tip.content,
+          type: "health_tip",
+          isRead: false,
+          createdAt: tip.generatedAt,
+          metadata: JSON.stringify({
+            category: tip.category,
+            weatherContext: tip.weatherContext,
+            season: tip.season,
+            scheduledFor: tip.scheduledFor
+          })
+        });
+      }
+    }
+
+    console.log("Health tips data seeded successfully!");
   }
 
   // ========== ACTIVITY LOG METHODS ==========
