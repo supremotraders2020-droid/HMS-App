@@ -323,7 +323,14 @@ export default function SwabMonitoring() {
           <p className="text-muted-foreground">NABH-compliant environmental surveillance for infection control</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/swab-monitoring"] })} data-testid="button-refresh-swab">
+          <Button variant="outline" onClick={() => {
+            queryClient.invalidateQueries({ queryKey: ["/api/swab-monitoring/areas"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/swab-monitoring/sampling-sites"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/swab-monitoring/organisms"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/swab-monitoring/collections"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/swab-monitoring/lab-results"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/swab-monitoring/capa-actions"] });
+          }} data-testid="button-refresh-swab">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>

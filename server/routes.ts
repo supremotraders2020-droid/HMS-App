@@ -4245,13 +4245,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const issueSummary = `Contamination detected at ${area?.areaName || 'Unknown Area'} - ${site?.siteName || 'Unknown Site'}. Organism: ${organism?.organismName || 'Unknown'}. Growth Level: ${req.body.growthLevel}`;
         
-        await storage.createSwabCapaAction({
+        const capaAction = await storage.createSwabCapaAction({
           swabCollectionId: collection.id,
           issueSummary,
           immediateAction: "Deep cleaning",
           responsibleDepartment: "Housekeeping",
           targetClosureDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
           verificationSwabRequired: true,
+        });
+        
+        // Audit log for CAPA creation
+        await storage.createSwabAuditLog({
+          entityType: "capa_action",
+          entityId: capaAction.id,
+          action: "create",
+          newValue: JSON.stringify(capaAction),
+          performedBy: "SYSTEM",
+          performedByName: "Auto-generated",
+          performedByRole: "SYSTEM",
         });
         
         // Create notification for admin
@@ -4345,6 +4356,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch audit logs:", error);
       res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+
+  // Seed Master Data for Swab Monitoring
+  app.post("/api/swab-monitoring/seed", async (req, res) => {
+    try {
+      // Check if already seeded
+      const existingAreas = await storage.getAllSwabAreas();
+      if (existingAreas.length > 0) {
+        return res.json({ message: "Master data already seeded" });
+      }
+
+      // Seed Areas
+      const areas = [
+        { block: "Main Building", floor: "1st Floor", areaType: "OT", areaName: "OT-1 (General Surgery)", equipment: "OT Table, Anesthesia Machine", isActive: true },
+        { block: "Main Building", floor: "1st Floor", areaType: "OT", areaName: "OT-2 (Cardiac)", equipment: "OT Table, Heart-Lung Machine", isActive: true },
+        { block: "Main Building", floor: "1st Floor", areaType: "OT", areaName: "OT-3 (Orthopedics)", equipment: "OT Table, C-Arm", isActive: true },
+        { block: "Main Building", floor: "2nd Floor", areaType: "ICU", areaName: "ICU-1 (Medical)", equipment: "Ventilators, Monitors", isActive: true },
+        { block: "Main Building", floor: "2nd Floor", areaType: "ICU", areaName: "ICU-2 (Surgical)", equipment: "Ventilators, Monitors", isActive: true },
+        { block: "Main Building", floor: "2nd Floor", areaType: "ICU", areaName: "NICU", equipment: "Incubators, Phototherapy", isActive: true },
+      ];
+      for (const area of areas) {
+        await storage.createSwabArea(area);
+      }
+
+      // Seed Sampling Sites
+      const sites = [
+        { siteName: "OT Table Surface", description: "Main operating table surface", isActive: true },
+        { siteName: "OT Light Handle", description: "Surgical light handles", isActive: true },
+        { siteName: "Anesthesia Machine Panel", description: "Control panel of anesthesia machine", isActive: true },
+        { siteName: "Ventilator Control Panel", description: "ICU ventilator controls", isActive: true },
+        { siteName: "Bed Rail", description: "Patient bed rails", isActive: true },
+        { siteName: "Monitor Screen", description: "Patient monitor touch screen", isActive: true },
+        { siteName: "IV Pole", description: "IV stand and pole", isActive: true },
+        { siteName: "Door Handle", description: "Entry/exit door handles", isActive: true },
+        { siteName: "Nurse Station Counter", description: "Nurse station work surface", isActive: true },
+        { siteName: "Medical Trolley", description: "Medication and instrument trolley", isActive: true },
+      ];
+      for (const site of sites) {
+        await storage.createSwabSamplingSite(site);
+      }
+
+      // Seed Organisms
+      const organisms = [
+        { organismName: "No Growth", category: "none", riskLevel: "low", description: "No bacterial growth detected", isActive: true },
+        { organismName: "Staphylococcus epidermidis", category: "flora", riskLevel: "low", description: "Common skin flora", isActive: true },
+        { organismName: "Bacillus species", category: "flora", riskLevel: "low", description: "Environmental contaminant", isActive: true },
+        { organismName: "Coagulase-negative Staphylococci", category: "flora", riskLevel: "medium", description: "Skin flora, potential opportunistic pathogen", isActive: true },
+        { organismName: "Staphylococcus aureus", category: "pathogen", riskLevel: "high", description: "Common pathogen causing HAI", isActive: true },
+        { organismName: "MRSA", category: "pathogen", riskLevel: "critical", description: "Methicillin-resistant S. aureus", isActive: true },
+        { organismName: "Pseudomonas aeruginosa", category: "pathogen", riskLevel: "high", description: "Opportunistic pathogen", isActive: true },
+        { organismName: "Acinetobacter baumannii", category: "pathogen", riskLevel: "critical", description: "MDR pathogen", isActive: true },
+        { organismName: "Escherichia coli", category: "pathogen", riskLevel: "high", description: "Gram-negative pathogen", isActive: true },
+        { organismName: "Klebsiella pneumoniae", category: "pathogen", riskLevel: "high", description: "Gram-negative pathogen", isActive: true },
+        { organismName: "Candida species", category: "pathogen", riskLevel: "medium", description: "Fungal pathogen", isActive: true },
+        { organismName: "Aspergillus species", category: "pathogen", riskLevel: "high", description: "Environmental fungus, dangerous in immunocompromised", isActive: true },
+      ];
+      for (const organism of organisms) {
+        await storage.createSwabOrganism(organism);
+      }
+
+      res.json({ message: "Master data seeded successfully", areas: areas.length, sites: sites.length, organisms: organisms.length });
+    } catch (error) {
+      console.error("Failed to seed master data:", error);
+      res.status(500).json({ error: "Failed to seed master data" });
     }
   });
 
