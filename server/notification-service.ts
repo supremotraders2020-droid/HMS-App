@@ -298,6 +298,44 @@ class NotificationService {
     });
   }
 
+  // ========== BILLING NOTIFICATIONS ==========
+
+  notifyBillRequested(billId: string, patientId: string, patientName: string) {
+    console.log(`Bill requested by ${patientName} (${patientId}), billId: ${billId}`);
+    
+    this.broadcast({
+      type: "admin_notification",
+      event: "bill_requested",
+      billId,
+      patientId,
+      patientName
+    }, "ADMIN");
+  }
+
+  notifyBillUpdated(billId: string, patientId: string, totalAmount: string, status: string) {
+    console.log(`Bill ${billId} updated for patient ${patientId}: Total ${totalAmount}, Status: ${status}`);
+    
+    // Send to the specific patient who owns this bill
+    this.sendToUser(patientId, {
+      type: "bill_updated",
+      event: "bill_updated",
+      billId,
+      patientId,
+      totalAmount,
+      status
+    });
+
+    // Also broadcast to admin for dashboard updates
+    this.broadcast({
+      type: "admin_notification",
+      event: "bill_updated",
+      billId,
+      patientId,
+      totalAmount,
+      status
+    }, "ADMIN");
+  }
+
   // ========== APPOINTMENT REMINDER SCHEDULER ==========
   
   startReminderScheduler() {

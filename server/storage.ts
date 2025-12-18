@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate, type ResolvedAlert, type InsertResolvedAlert, type DoctorTimeSlot, type InsertDoctorTimeSlot } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate, type ResolvedAlert, type InsertResolvedAlert, type DoctorTimeSlot, type InsertDoctorTimeSlot, type PatientBill, type InsertPatientBill, type BillPayment, type InsertBillPayment } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -277,6 +277,20 @@ export interface IStorage {
   getResolvedAlerts(): Promise<ResolvedAlert[]>;
   createResolvedAlert(alert: InsertResolvedAlert): Promise<ResolvedAlert>;
   deleteResolvedAlert(id: string): Promise<boolean>;
+  
+  // Patient Bills
+  getPatientBill(id: string): Promise<PatientBill | undefined>;
+  getPatientBillByPatientId(patientId: string): Promise<PatientBill | undefined>;
+  getPatientBillByAdmissionId(admissionId: string): Promise<PatientBill | undefined>;
+  getAllPatientBills(): Promise<PatientBill[]>;
+  getPendingBillRequests(): Promise<PatientBill[]>;
+  createPatientBill(bill: InsertPatientBill): Promise<PatientBill>;
+  updatePatientBill(id: string, updates: Partial<InsertPatientBill>): Promise<PatientBill | undefined>;
+  deletePatientBill(id: string): Promise<boolean>;
+  
+  // Bill Payments
+  getBillPayments(billId: string): Promise<BillPayment[]>;
+  createBillPayment(payment: InsertBillPayment): Promise<BillPayment>;
 }
 
 export class MemStorage implements IStorage {

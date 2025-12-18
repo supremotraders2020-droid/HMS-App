@@ -1436,3 +1436,70 @@ export const insertResolvedAlertSchema = createInsertSchema(resolvedAlerts).omit
 });
 export type InsertResolvedAlert = z.infer<typeof insertResolvedAlertSchema>;
 export type ResolvedAlert = typeof resolvedAlerts.$inferSelect;
+
+// ========== PATIENT BILLING TABLES ==========
+
+// Bill Status Enum
+export const billStatusEnum = pgEnum("bill_status", ["pending", "partial", "paid", "cancelled"]);
+
+// Patient Bills table
+export const patientBills = pgTable("patient_bills", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  admissionId: varchar("admission_id"),
+  
+  // Charge fields (in paisa/cents for precision)
+  roomCharges: decimal("room_charges", { precision: 12, scale: 2 }).notNull().default("0"),
+  roomDays: integer("room_days").default(1),
+  doctorConsultation: decimal("doctor_consultation", { precision: 12, scale: 2 }).notNull().default("0"),
+  labTests: decimal("lab_tests", { precision: 12, scale: 2 }).notNull().default("0"),
+  medicines: decimal("medicines", { precision: 12, scale: 2 }).notNull().default("0"),
+  inventoryCharges: decimal("inventory_charges", { precision: 12, scale: 2 }).notNull().default("0"),
+  otherFees: decimal("other_fees", { precision: 12, scale: 2 }).notNull().default("0"),
+  otherFeesDescription: text("other_fees_description"),
+  
+  // Totals
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  paidAmount: decimal("paid_amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  balanceDue: decimal("balance_due", { precision: 12, scale: 2 }).notNull().default("0"),
+  
+  // Status
+  status: text("status").notNull().default("pending"), // pending, partial, paid, cancelled
+  billRequestedAt: timestamp("bill_requested_at"),
+  lastUpdatedAt: timestamp("last_updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  
+  // Audit
+  createdBy: varchar("created_by"),
+  updatedBy: varchar("updated_by"),
+});
+
+export const insertPatientBillSchema = createInsertSchema(patientBills).omit({
+  id: true,
+  totalAmount: true,
+  balanceDue: true,
+  lastUpdatedAt: true,
+  createdAt: true,
+});
+export type InsertPatientBill = z.infer<typeof insertPatientBillSchema>;
+export type PatientBill = typeof patientBills.$inferSelect;
+
+// Bill Payments table - tracks individual payments
+export const billPayments = pgTable("bill_payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  billId: varchar("bill_id").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  paymentMethod: text("payment_method").notNull(), // cash, card, upi, insurance
+  transactionId: text("transaction_id"),
+  notes: text("notes"),
+  paidAt: timestamp("paid_at").defaultNow(),
+  receivedBy: varchar("received_by"),
+});
+
+export const insertBillPaymentSchema = createInsertSchema(billPayments).omit({
+  id: true,
+  paidAt: true,
+});
+export type InsertBillPayment = z.infer<typeof insertBillPaymentSchema>;
+export type BillPayment = typeof billPayments.$inferSelect;

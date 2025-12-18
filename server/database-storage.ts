@@ -16,6 +16,7 @@ import {
   patientConsents, medicines, oxygenCylinders, cylinderMovements, oxygenConsumption, lmoReadings, oxygenAlerts,
   bmwBags, bmwMovements, bmwPickups, bmwDisposals, bmwVendors, bmwStorageRooms, bmwIncidents, bmwReports,
   doctorOathConfirmations, consentTemplates, resolvedAlerts, doctorTimeSlots,
+  patientBills, billPayments,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -54,7 +55,9 @@ import {
   type DoctorOathConfirmation, type InsertDoctorOathConfirmation,
   type ConsentTemplate, type InsertConsentTemplate,
   type ResolvedAlert, type InsertResolvedAlert,
-  type DoctorTimeSlot, type InsertDoctorTimeSlot
+  type DoctorTimeSlot, type InsertDoctorTimeSlot,
+  type PatientBill, type InsertPatientBill,
+  type BillPayment, type InsertBillPayment
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -2417,6 +2420,118 @@ export class DatabaseStorage implements IStorage {
   async deleteResolvedAlert(id: string): Promise<boolean> {
     const result = await db.delete(resolvedAlerts).where(eq(resolvedAlerts.id, id)).returning();
     return result.length > 0;
+  }
+
+  // ========== PATIENT BILLING METHODS ==========
+  async getPatientBill(id: string): Promise<PatientBill | undefined> {
+    const result = await db.select().from(patientBills).where(eq(patientBills.id, id));
+    return result[0];
+  }
+
+  async getPatientBillByPatientId(patientId: string): Promise<PatientBill | undefined> {
+    const result = await db.select().from(patientBills)
+      .where(eq(patientBills.patientId, patientId))
+      .orderBy(desc(patientBills.createdAt));
+    return result[0];
+  }
+
+  async getPatientBillByAdmissionId(admissionId: string): Promise<PatientBill | undefined> {
+    const result = await db.select().from(patientBills)
+      .where(eq(patientBills.admissionId, admissionId));
+    return result[0];
+  }
+
+  async getAllPatientBills(): Promise<PatientBill[]> {
+    return await db.select().from(patientBills).orderBy(desc(patientBills.createdAt));
+  }
+
+  async getPendingBillRequests(): Promise<PatientBill[]> {
+    return await db.select().from(patientBills)
+      .where(eq(patientBills.status, "pending"))
+      .orderBy(desc(patientBills.billRequestedAt));
+  }
+
+  async createPatientBill(bill: InsertPatientBill): Promise<PatientBill> {
+    const roomCharges = parseFloat(bill.roomCharges?.toString() || "0");
+    const doctorConsultation = parseFloat(bill.doctorConsultation?.toString() || "0");
+    const labTests = parseFloat(bill.labTests?.toString() || "0");
+    const medicines = parseFloat(bill.medicines?.toString() || "0");
+    const inventoryCharges = parseFloat(bill.inventoryCharges?.toString() || "0");
+    const otherFees = parseFloat(bill.otherFees?.toString() || "0");
+    const paidAmount = parseFloat(bill.paidAmount?.toString() || "0");
+
+    const totalAmount = roomCharges + doctorConsultation + labTests + medicines + inventoryCharges + otherFees;
+    const balanceDue = totalAmount - paidAmount;
+
+    const result = await db.insert(patientBills).values({
+      ...bill,
+      totalAmount: totalAmount.toFixed(2),
+      balanceDue: balanceDue.toFixed(2),
+    }).returning();
+    return result[0];
+  }
+
+  async updatePatientBill(id: string, updates: Partial<InsertPatientBill>): Promise<PatientBill | undefined> {
+    const existingBill = await this.getPatientBill(id);
+    if (!existingBill) return undefined;
+
+    const roomCharges = parseFloat(updates.roomCharges?.toString() || existingBill.roomCharges?.toString() || "0");
+    const doctorConsultation = parseFloat(updates.doctorConsultation?.toString() || existingBill.doctorConsultation?.toString() || "0");
+    const labTests = parseFloat(updates.labTests?.toString() || existingBill.labTests?.toString() || "0");
+    const medicines = parseFloat(updates.medicines?.toString() || existingBill.medicines?.toString() || "0");
+    const inventoryCharges = parseFloat(updates.inventoryCharges?.toString() || existingBill.inventoryCharges?.toString() || "0");
+    const otherFees = parseFloat(updates.otherFees?.toString() || existingBill.otherFees?.toString() || "0");
+    const paidAmount = parseFloat(updates.paidAmount?.toString() || existingBill.paidAmount?.toString() || "0");
+
+    const totalAmount = roomCharges + doctorConsultation + labTests + medicines + inventoryCharges + otherFees;
+    const balanceDue = totalAmount - paidAmount;
+
+    let status = existingBill.status;
+    if (balanceDue <= 0 && totalAmount > 0) {
+      status = "paid";
+    } else if (paidAmount > 0 && balanceDue > 0) {
+      status = "partial";
+    } else if (totalAmount > 0) {
+      status = "pending";
+    }
+
+    const result = await db.update(patientBills)
+      .set({
+        ...updates,
+        totalAmount: totalAmount.toFixed(2),
+        balanceDue: balanceDue.toFixed(2),
+        status,
+        lastUpdatedAt: new Date(),
+      })
+      .where(eq(patientBills.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePatientBill(id: string): Promise<boolean> {
+    const result = await db.delete(patientBills).where(eq(patientBills.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== BILL PAYMENTS METHODS ==========
+  async getBillPayments(billId: string): Promise<BillPayment[]> {
+    return await db.select().from(billPayments)
+      .where(eq(billPayments.billId, billId))
+      .orderBy(desc(billPayments.paidAt));
+  }
+
+  async createBillPayment(payment: InsertBillPayment): Promise<BillPayment> {
+    const result = await db.insert(billPayments).values(payment).returning();
+    
+    const bill = await this.getPatientBill(payment.billId);
+    if (bill) {
+      const newPaidAmount = parseFloat(bill.paidAmount?.toString() || "0") + parseFloat(payment.amount.toString());
+      await this.updatePatientBill(payment.billId, {
+        paidAmount: newPaidAmount.toFixed(2)
+      } as any);
+    }
+    
+    return result[0];
   }
 }
 

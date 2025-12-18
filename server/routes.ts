@@ -3845,6 +3845,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== PATIENT BILLING ROUTES ==========
+
+  // Get all patient bills
+  app.get("/api/patient-bills", async (req, res) => {
+    try {
+      const bills = await storage.getAllPatientBills();
+      res.json(bills);
+    } catch (error) {
+      console.error("Failed to fetch bills:", error);
+      res.status(500).json({ error: "Failed to fetch bills" });
+    }
+  });
+
+  // Get pending bill requests (for admin)
+  app.get("/api/patient-bills/pending", async (req, res) => {
+    try {
+      const bills = await storage.getPendingBillRequests();
+      res.json(bills);
+    } catch (error) {
+      console.error("Failed to fetch pending bills:", error);
+      res.status(500).json({ error: "Failed to fetch pending bills" });
+    }
+  });
+
+  // Get bill by ID
+  app.get("/api/patient-bills/:id", async (req, res) => {
+    try {
+      const bill = await storage.getPatientBill(req.params.id);
+      if (!bill) {
+        return res.status(404).json({ error: "Bill not found" });
+      }
+      res.json(bill);
+    } catch (error) {
+      console.error("Failed to fetch bill:", error);
+      res.status(500).json({ error: "Failed to fetch bill" });
+    }
+  });
+
+  // Get bill by patient ID
+  app.get("/api/patient-bills/patient/:patientId", async (req, res) => {
+    try {
+      const bill = await storage.getPatientBillByPatientId(req.params.patientId);
+      res.json(bill || null);
+    } catch (error) {
+      console.error("Failed to fetch patient bill:", error);
+      res.status(500).json({ error: "Failed to fetch patient bill" });
+    }
+  });
+
+  // Create new bill (patient requests bill generation)
+  app.post("/api/patient-bills", async (req, res) => {
+    try {
+      const { patientId, patientName, admissionId } = req.body;
+      if (!patientId || !patientName) {
+        return res.status(400).json({ error: "Patient ID and name are required" });
+      }
+
+      // Check if bill already exists for this patient
+      const existingBill = await storage.getPatientBillByPatientId(patientId);
+      if (existingBill) {
+        return res.json(existingBill);
+      }
+
+      const bill = await storage.createPatientBill({
+        patientId,
+        patientName,
+        admissionId,
+        billRequestedAt: new Date(),
+        status: "pending",
+        roomCharges: "0",
+        doctorConsultation: "0",
+        labTests: "0",
+        medicines: "0",
+        inventoryCharges: "0",
+        otherFees: "0",
+        paidAmount: "0",
+      });
+
+      // Log activity
+      await storage.createActivityLog({
+        action: `Bill generation requested by ${patientName}`,
+        entityType: "patient_bill",
+        entityId: bill.id,
+        performedBy: patientName,
+        performedByRole: "PATIENT",
+        activityType: "info"
+      });
+
+      // Send real-time notification to admin
+      notificationService.notifyBillRequested(bill.id, patientId, patientName);
+
+      res.status(201).json(bill);
+    } catch (error) {
+      console.error("Failed to create bill:", error);
+      res.status(500).json({ error: "Failed to create bill" });
+    }
+  });
+
+  // Update bill charges (admin updates)
+  app.patch("/api/patient-bills/:id", async (req, res) => {
+    try {
+      const updates = req.body;
+      const bill = await storage.updatePatientBill(req.params.id, updates);
+      if (!bill) {
+        return res.status(404).json({ error: "Bill not found" });
+      }
+
+      // Send real-time notification to patient
+      notificationService.notifyBillUpdated(bill.id, bill.patientId, bill.totalAmount?.toString() || "0", bill.status);
+
+      res.json(bill);
+    } catch (error) {
+      console.error("Failed to update bill:", error);
+      res.status(500).json({ error: "Failed to update bill" });
+    }
+  });
+
+  // Delete bill
+  app.delete("/api/patient-bills/:id", async (req, res) => {
+    try {
+      await storage.deletePatientBill(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Failed to delete bill:", error);
+      res.status(500).json({ error: "Failed to delete bill" });
+    }
+  });
+
+  // Get bill payments
+  app.get("/api/patient-bills/:id/payments", async (req, res) => {
+    try {
+      const payments = await storage.getBillPayments(req.params.id);
+      res.json(payments);
+    } catch (error) {
+      console.error("Failed to fetch payments:", error);
+      res.status(500).json({ error: "Failed to fetch payments" });
+    }
+  });
+
+  // Add payment to bill
+  app.post("/api/patient-bills/:id/payments", async (req, res) => {
+    try {
+      const { amount, paymentMethod, transactionId, notes } = req.body;
+      if (!amount || !paymentMethod) {
+        return res.status(400).json({ error: "Amount and payment method are required" });
+      }
+
+      const bill = await storage.getPatientBill(req.params.id);
+      if (!bill) {
+        return res.status(404).json({ error: "Bill not found" });
+      }
+
+      const payment = await storage.createBillPayment({
+        billId: req.params.id,
+        amount: amount.toString(),
+        paymentMethod,
+        transactionId,
+        notes,
+        receivedBy: (req as any).session?.userId || null
+      });
+
+      // Get updated bill
+      const updatedBill = await storage.getPatientBill(req.params.id);
+      
+      // Notify patient of payment received
+      if (updatedBill) {
+        notificationService.notifyBillUpdated(
+          updatedBill.id, 
+          updatedBill.patientId, 
+          updatedBill.totalAmount?.toString() || "0", 
+          updatedBill.status
+        );
+      }
+
+      res.status(201).json({ payment, bill: updatedBill });
+    } catch (error) {
+      console.error("Failed to add payment:", error);
+      res.status(500).json({ error: "Failed to add payment" });
+    }
+  });
+
   // Get All AI Metrics (combined dashboard data)
   app.get("/api/ai/dashboard", async (req, res) => {
     try {

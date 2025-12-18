@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,9 @@ import {
   LogOut,
   Check,
   ChevronsUpDown,
-  Stethoscope
+  Stethoscope,
+  IndianRupee,
+  Save
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -45,9 +47,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { TrackingPatient, Medication, Meal, Vitals, ServicePatient, Doctor, DoctorVisit } from "@shared/schema";
+import type { TrackingPatient, Medication, Meal, Vitals, ServicePatient, Doctor, DoctorVisit, PatientBill } from "@shared/schema";
 
-type TabType = "patients" | "admit" | "vitals" | "medications" | "meals" | "doctor_visits";
+type TabType = "patients" | "admit" | "vitals" | "medications" | "meals" | "doctor_visits" | "billing";
 
 export default function PatientTrackingService() {
   const [activeTab, setActiveTab] = useState<TabType>("patients");
@@ -92,6 +94,102 @@ export default function PatientTrackingService() {
     queryKey: ["/api/tracking/patients", selectedDoctorVisitPatientId, "doctor-visits"],
     enabled: !!selectedDoctorVisitPatientId,
   });
+
+  // Billing state and queries
+  const [selectedBillingPatientId, setSelectedBillingPatientId] = useState<string>("");
+  const [billingPatientPopoverOpen, setBillingPatientPopoverOpen] = useState(false);
+  const [billingForm, setBillingForm] = useState({
+    roomCharges: "",
+    roomDays: "1",
+    doctorConsultation: "",
+    labTests: "",
+    medicines: "",
+    inventoryCharges: "",
+    otherFees: "",
+    otherFeesDescription: "",
+  });
+
+  // Fetch all pending bills
+  const { data: pendingBills = [], refetch: refetchBills } = useQuery<PatientBill[]>({
+    queryKey: ["/api/patient-bills"],
+    refetchInterval: 5000,
+  });
+
+  // Fetch selected patient's bill
+  const { data: selectedPatientBill, refetch: refetchSelectedBill } = useQuery<PatientBill | null>({
+    queryKey: ["/api/patient-bills/patient", selectedBillingPatientId],
+    enabled: !!selectedBillingPatientId,
+  });
+
+  // Update billing form when selected patient bill changes
+  useEffect(() => {
+    if (selectedPatientBill) {
+      setBillingForm({
+        roomCharges: selectedPatientBill.roomCharges?.toString() || "",
+        roomDays: selectedPatientBill.roomDays?.toString() || "1",
+        doctorConsultation: selectedPatientBill.doctorConsultation?.toString() || "",
+        labTests: selectedPatientBill.labTests?.toString() || "",
+        medicines: selectedPatientBill.medicines?.toString() || "",
+        inventoryCharges: selectedPatientBill.inventoryCharges?.toString() || "",
+        otherFees: selectedPatientBill.otherFees?.toString() || "",
+        otherFeesDescription: selectedPatientBill.otherFeesDescription || "",
+      });
+    } else {
+      setBillingForm({
+        roomCharges: "",
+        roomDays: "1",
+        doctorConsultation: "",
+        labTests: "",
+        medicines: "",
+        inventoryCharges: "",
+        otherFees: "",
+        otherFeesDescription: "",
+      });
+    }
+  }, [selectedPatientBill]);
+
+  // Update bill mutation
+  const updateBillMutation = useMutation({
+    mutationFn: async (billId: string) => {
+      const response = await apiRequest("PATCH", `/api/patient-bills/${billId}`, {
+        roomCharges: billingForm.roomCharges || "0",
+        roomDays: parseInt(billingForm.roomDays) || 1,
+        doctorConsultation: billingForm.doctorConsultation || "0",
+        labTests: billingForm.labTests || "0",
+        medicines: billingForm.medicines || "0",
+        inventoryCharges: billingForm.inventoryCharges || "0",
+        otherFees: billingForm.otherFees || "0",
+        otherFeesDescription: billingForm.otherFeesDescription,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchSelectedBill();
+      refetchBills();
+      toast({
+        title: "Bill Updated",
+        description: "Bill has been updated and patient has been notified.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update bill. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Calculate total for billing form
+  const calculateBillTotal = () => {
+    const room = parseFloat(billingForm.roomCharges) || 0;
+    const doctor = parseFloat(billingForm.doctorConsultation) || 0;
+    const lab = parseFloat(billingForm.labTests) || 0;
+    const med = parseFloat(billingForm.medicines) || 0;
+    const inv = parseFloat(billingForm.inventoryCharges) || 0;
+    const other = parseFloat(billingForm.otherFees) || 0;
+    return room + doctor + lab + med + inv + other;
+  };
 
   const admitPatientMutation = useMutation({
     mutationFn: async (data: {
@@ -372,6 +470,7 @@ export default function PatientTrackingService() {
     { id: "medications" as TabType, label: "Medications", icon: Pill },
     { id: "meals" as TabType, label: "Meal Tracking", icon: Utensils },
     { id: "doctor_visits" as TabType, label: "Doctor Visit", icon: Stethoscope },
+    { id: "billing" as TabType, label: "Billing", icon: IndianRupee },
   ];
 
   return (
@@ -1304,6 +1403,257 @@ export default function PatientTrackingService() {
             </Card>
           )}
           </>
+        )}
+
+        {activeTab === "billing" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Pending Bills List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-orange-500" />
+                  Pending Bill Requests
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pendingBills.filter(b => b.status === "pending" && parseFloat(b.totalAmount?.toString() || "0") === 0).length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No pending bill requests.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingBills
+                      .filter(b => b.status === "pending" && parseFloat(b.totalAmount?.toString() || "0") === 0)
+                      .map((bill) => {
+                        return (
+                          <div
+                            key={bill.id}
+                            className={cn(
+                              "p-4 rounded-lg border cursor-pointer transition-colors",
+                              selectedBillingPatientId === bill.patientId
+                                ? "border-primary bg-primary/5"
+                                : "hover:bg-muted/50"
+                            )}
+                            onClick={() => setSelectedBillingPatientId(bill.patientId)}
+                            data-testid={`pending-bill-${bill.id}`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{bill.patientName}</p>
+                                <p className="text-sm text-muted-foreground">ID: {bill.patientId}</p>
+                              </div>
+                              <Badge variant="secondary">Awaiting Charges</Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Requested: {new Date(bill.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+
+                {/* All Bills Section */}
+                <div className="mt-6">
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <IndianRupee className="h-4 w-4" />
+                    All Patient Bills
+                  </h4>
+                  {pendingBills.filter(b => parseFloat(b.totalAmount?.toString() || "0") > 0).length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">No processed bills yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {pendingBills
+                        .filter(b => parseFloat(b.totalAmount?.toString() || "0") > 0)
+                        .map((bill) => {
+                          return (
+                            <div
+                              key={bill.id}
+                              className={cn(
+                                "p-3 rounded-lg border cursor-pointer transition-colors",
+                                selectedBillingPatientId === bill.patientId
+                                  ? "border-primary bg-primary/5"
+                                  : "hover:bg-muted/50"
+                              )}
+                              onClick={() => setSelectedBillingPatientId(bill.patientId)}
+                              data-testid={`bill-${bill.id}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-sm">{bill.patientName}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Total: ₹{parseFloat(bill.totalAmount?.toString() || "0").toLocaleString('en-IN')}
+                                  </p>
+                                </div>
+                                <Badge variant={
+                                  bill.status === "paid" ? "default" :
+                                  bill.status === "partial" ? "secondary" :
+                                  "outline"
+                                }>
+                                  {bill.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Bill Editor */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <IndianRupee className="h-5 w-5" />
+                  {selectedPatientBill ? "Edit Bill Charges" : "Select a Bill to Edit"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!selectedBillingPatientId ? (
+                  <div className="text-center py-8">
+                    <IndianRupee className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Select a patient bill from the list to add or edit charges.</p>
+                  </div>
+                ) : !selectedPatientBill ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading bill details...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Patient Info */}
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <p className="font-medium">{selectedPatientBill.patientName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Patient ID: {selectedPatientBill.patientId}
+                      </p>
+                    </div>
+
+                    {/* Charge Fields */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="roomCharges">Room Charges (₹)</Label>
+                        <Input
+                          type="number"
+                          value={billingForm.roomCharges}
+                          onChange={(e) => setBillingForm(f => ({ ...f, roomCharges: e.target.value }))}
+                          placeholder="0"
+                          data-testid="input-room-charges"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="roomDays">Room Days</Label>
+                        <Input
+                          type="number"
+                          value={billingForm.roomDays}
+                          onChange={(e) => setBillingForm(f => ({ ...f, roomDays: e.target.value }))}
+                          min="1"
+                          data-testid="input-room-days"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="doctorConsultation">Doctor Consultation (₹)</Label>
+                        <Input
+                          type="number"
+                          value={billingForm.doctorConsultation}
+                          onChange={(e) => setBillingForm(f => ({ ...f, doctorConsultation: e.target.value }))}
+                          placeholder="0"
+                          data-testid="input-doctor-consultation"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="labTests">Lab Tests (₹)</Label>
+                        <Input
+                          type="number"
+                          value={billingForm.labTests}
+                          onChange={(e) => setBillingForm(f => ({ ...f, labTests: e.target.value }))}
+                          placeholder="0"
+                          data-testid="input-lab-tests"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="medicines">Medicines (₹)</Label>
+                        <Input
+                          type="number"
+                          value={billingForm.medicines}
+                          onChange={(e) => setBillingForm(f => ({ ...f, medicines: e.target.value }))}
+                          placeholder="0"
+                          data-testid="input-medicines"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="inventoryCharges">Inventory/Equipment (₹)</Label>
+                        <Input
+                          type="number"
+                          value={billingForm.inventoryCharges}
+                          onChange={(e) => setBillingForm(f => ({ ...f, inventoryCharges: e.target.value }))}
+                          placeholder="0"
+                          data-testid="input-inventory-charges"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="otherFees">Other Fees (₹)</Label>
+                        <Input
+                          type="number"
+                          value={billingForm.otherFees}
+                          onChange={(e) => setBillingForm(f => ({ ...f, otherFees: e.target.value }))}
+                          placeholder="0"
+                          data-testid="input-other-fees"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="otherFeesDescription">Other Fees Description</Label>
+                        <Input
+                          value={billingForm.otherFeesDescription}
+                          onChange={(e) => setBillingForm(f => ({ ...f, otherFeesDescription: e.target.value }))}
+                          placeholder="e.g., Ambulance"
+                          data-testid="input-other-fees-description"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Calculated Total */}
+                    <div className="p-4 bg-primary/10 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Calculated Total:</span>
+                        <span className="text-xl font-bold" data-testid="text-calculated-total">
+                          ₹{calculateBillTotal().toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                      {selectedPatientBill.paidAmount && parseFloat(selectedPatientBill.paidAmount.toString()) > 0 && (
+                        <div className="flex justify-between items-center mt-2 text-green-600">
+                          <span>Already Paid:</span>
+                          <span>₹{parseFloat(selectedPatientBill.paidAmount.toString()).toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Save Button */}
+                    <Button
+                      className="w-full"
+                      onClick={() => selectedPatientBill && updateBillMutation.mutate(selectedPatientBill.id)}
+                      disabled={updateBillMutation.isPending}
+                      data-testid="button-save-bill"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {updateBillMutation.isPending ? "Saving..." : "Save & Notify Patient"}
+                    </Button>
+
+                    {/* Bill Status */}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Bill Status:</span>
+                      <Badge variant={
+                        selectedPatientBill.status === "paid" ? "default" :
+                        selectedPatientBill.status === "partial" ? "secondary" :
+                        "outline"
+                      }>
+                        {selectedPatientBill.status}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>

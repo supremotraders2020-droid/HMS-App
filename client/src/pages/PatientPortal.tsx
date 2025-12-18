@@ -28,7 +28,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format, formatDistanceToNow } from "date-fns";
-import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent, DoctorTimeSlot } from "@shared/schema";
+import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent, DoctorTimeSlot, PatientBill } from "@shared/schema";
 import { 
   Home,
   Calendar,
@@ -304,6 +304,60 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     queryKey: ['/api/patient-consents'],
     refetchInterval: 3000, // Real-time sync
   });
+
+  // Fetch patient bill
+  const { data: patientBill, refetch: refetchBill } = useQuery<PatientBill | null>({
+    queryKey: ['/api/patient-bills/patient', username],
+    refetchInterval: 3000, // Real-time sync
+  });
+
+  // Generate bill mutation
+  const generateBillMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/patient-bills', {
+        patientId: username,
+        patientName: patientName,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchBill();
+      toast({ 
+        title: "Bill Request Sent", 
+        description: "Admin has been notified. Your bill will be updated shortly." 
+      });
+    },
+    onError: () => {
+      toast({ 
+        title: "Error", 
+        description: "Failed to request bill generation", 
+        variant: "destructive" 
+      });
+    }
+  });
+
+  // Listen for bill updates via WebSocket
+  useEffect(() => {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/notifications?userId=${username}&userRole=PATIENT`);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'bill_updated' || data.event === 'bill_updated') {
+          refetchBill();
+          toast({
+            title: "Bill Updated",
+            description: `Your bill has been updated. Total: ₹${data.totalAmount || 'N/A'}`,
+          });
+        }
+      } catch (e) {
+        console.error("WebSocket message parse error:", e);
+      }
+    };
+
+    return () => ws.close();
+  }, [username, refetchBill]);
 
   // Fetch available time slots from the new API (only available slots for patients)
   const { data: availableTimeSlots = [] } = useQuery<DoctorTimeSlot[]>({
@@ -1455,41 +1509,112 @@ Description: ${record.description}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Room Charges (3 days)</span>
-                      <span className="font-medium">₹6,000</span>
+                  {!patientBill ? (
+                    <div className="text-center py-6">
+                      <IndianRupee className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground mb-4">No bill generated yet</p>
+                      <Button 
+                        onClick={() => generateBillMutation.mutate()}
+                        disabled={generateBillMutation.isPending}
+                        data-testid="button-generate-bill"
+                      >
+                        {generateBillMutation.isPending ? "Requesting..." : "Generate Bill"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Click to request bill generation. Admin will be notified.
+                      </p>
                     </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Doctor Consultation</span>
-                      <span className="font-medium">₹2,500</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Lab Tests</span>
-                      <span className="font-medium">₹3,500</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Medicines</span>
-                      <span className="font-medium">₹1,500</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b text-lg font-semibold">
-                      <span>Total</span>
-                      <span data-testid="text-total">₹13,500</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b text-green-600">
-                      <span>Paid</span>
-                      <span data-testid="text-paid">- ₹11,000</span>
-                    </div>
-                    <div className="flex justify-between py-2 text-lg font-bold text-orange-600">
-                      <span>Balance Due</span>
-                      <span data-testid="text-balance">₹2,500</span>
-                    </div>
-                  </div>
+                  ) : (
+                    <>
+                      {patientBill.status === "pending" && parseFloat(patientBill.totalAmount?.toString() || "0") === 0 && (
+                        <div className="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 mb-4">
+                          <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                            Bill requested. Waiting for admin to add charges...
+                          </p>
+                        </div>
+                      )}
+                      <div className="space-y-3">
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Room Charges ({patientBill.roomDays || 1} days)</span>
+                          <span className="font-medium" data-testid="text-room-charges">
+                            ₹{parseFloat(patientBill.roomCharges?.toString() || "0").toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Doctor Consultation</span>
+                          <span className="font-medium" data-testid="text-doctor-consultation">
+                            ₹{parseFloat(patientBill.doctorConsultation?.toString() || "0").toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Lab Tests</span>
+                          <span className="font-medium" data-testid="text-lab-tests">
+                            ₹{parseFloat(patientBill.labTests?.toString() || "0").toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Medicines</span>
+                          <span className="font-medium" data-testid="text-medicines">
+                            ₹{parseFloat(patientBill.medicines?.toString() || "0").toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        {parseFloat(patientBill.inventoryCharges?.toString() || "0") > 0 && (
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Inventory/Equipment</span>
+                            <span className="font-medium" data-testid="text-inventory">
+                              ₹{parseFloat(patientBill.inventoryCharges?.toString() || "0").toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        )}
+                        {parseFloat(patientBill.otherFees?.toString() || "0") > 0 && (
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">
+                              {patientBill.otherFeesDescription || "Other Fees"}
+                            </span>
+                            <span className="font-medium" data-testid="text-other-fees">
+                              ₹{parseFloat(patientBill.otherFees?.toString() || "0").toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between py-2 border-b text-lg font-semibold">
+                          <span>Total</span>
+                          <span data-testid="text-total">
+                            ₹{parseFloat(patientBill.totalAmount?.toString() || "0").toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        {parseFloat(patientBill.paidAmount?.toString() || "0") > 0 && (
+                          <div className="flex justify-between py-2 border-b text-green-600">
+                            <span>Paid</span>
+                            <span data-testid="text-paid">
+                              - ₹{parseFloat(patientBill.paidAmount?.toString() || "0").toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        )}
+                        <div className={`flex justify-between py-2 text-lg font-bold ${
+                          parseFloat(patientBill.balanceDue?.toString() || "0") > 0 ? "text-orange-600" : "text-green-600"
+                        }`}>
+                          <span>Balance Due</span>
+                          <span data-testid="text-balance">
+                            ₹{parseFloat(patientBill.balanceDue?.toString() || "0").toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      </div>
 
-                  <Button className="w-full" data-testid="button-pay-now">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Pay Now
-                  </Button>
+                      {patientBill.status === "paid" ? (
+                        <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                            <span className="text-green-700 dark:text-green-300 font-medium">Fully Paid</span>
+                          </div>
+                        </div>
+                      ) : parseFloat(patientBill.balanceDue?.toString() || "0") > 0 ? (
+                        <Button className="w-full" data-testid="button-pay-now">
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Pay Now
+                        </Button>
+                      ) : null}
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
