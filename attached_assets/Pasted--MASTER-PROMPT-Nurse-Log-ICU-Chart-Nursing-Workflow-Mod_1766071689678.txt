@@ -1,0 +1,439 @@
+🧠 MASTER PROMPT
+Nurse Log, ICU Chart & Nursing Workflow Module
+
+(Zero-Loss, Medical-Grade, India-Compliant)
+
+ROLE DEFINITION
+
+You are a medical-grade hospital software system designed for nurses, ICU staff, and ward staff.
+Your job is to digitally capture, store, display, and audit every nursing activity without loss, overwrite, or ambiguity.
+
+This module must work for:
+
+ICU
+
+HDU
+
+General Ward
+
+Emergency
+
+Ventilated patients
+
+Diabetic & critical patients
+
+CORE DESIGN PRINCIPLES (NON-NEGOTIABLE)
+
+No field is optional by default unless clinically irrelevant
+
+No overwriting of data – every edit creates a new version
+
+Time-stamped + User-stamped (Nurse ID mandatory)
+
+Shift-based logging (Morning / Evening / Night)
+
+Audit-ready & NABH-compliant
+
+Works offline + syncs online
+
+Structured data + free-text notes both allowed
+
+MODULE 1: PATIENT IDENTIFICATION (LOCKED AFTER FIRST SAVE)
+Fields:
+
+Patient Name
+
+UHID / Patient ID
+
+Age
+
+Sex
+
+Date & Time of Admission
+
+Ward
+
+Bed Number
+
+Blood Group
+
+Weight (kg)
+
+Primary Diagnosis
+
+Secondary Diagnosis (multi-select)
+
+Admitting Consultant
+
+ICU Consultant
+
+⚠️ Once saved → Only Doctor/Admin can edit
+
+MODULE 2: VITAL SIGNS – HOURLY LOG (TIME-SERIES DATA)
+Auto-generated hourly slots (24 hrs):
+
+08:00 → 07:00 next day
+
+Parameters (Each parameter must store):
+
+Value
+
+Unit
+
+Time
+
+Nurse ID
+
+Entry method (Manual / Device / Auto)
+
+Fields:
+
+Heart Rate (bpm)
+
+Systolic BP
+
+Diastolic BP
+
+Mean Arterial Pressure (MAP)
+
+Respiratory Rate
+
+SpO₂ (%)
+
+Temperature (°C / °F)
+
+CVP
+
+ICP
+
+CPP
+
+⚠️ Allow missed entry justification (mandatory reason if skipped)
+
+MODULE 3: INOTROPES & SEDATION
+Fields:
+
+Drug Name
+
+Concentration
+
+Dose
+
+Rate (ml/hr or mcg/kg/min)
+
+Start Time
+
+End Time
+
+Route
+
+Sedation Scale (RASS / GCS)
+
+Nurse Remarks
+
+⚠️ Must support multiple concurrent inotropes
+
+MODULE 4: VENTILATOR MANAGEMENT (CONDITIONAL)
+
+Displayed ONLY if:
+
+Patient is ventilated / tracheostomized
+
+Fields:
+
+Ventilation Mode
+
+FiO₂ (%)
+
+Set Tidal Volume
+
+Expired Tidal Volume
+
+Set Minute Volume
+
+Expired Minute Volume
+
+Respiratory Rate (Set & Spontaneous)
+
+SIMV Rate
+
+PEEP / CPAP
+
+Auto PEEP
+
+Peak Airway Pressure
+
+Pressure Support
+
+I:E Ratio
+
+Each entry:
+
+Time-stamped
+
+Nurse ID locked
+
+Non-editable after shift end
+
+MODULE 5: ABG & LAB VALUES
+ABG Fields:
+
+pH
+
+pCO₂
+
+pO₂
+
+HCO₃ / SBC
+
+Base Excess
+
+O₂ Saturation
+
+SvO₂
+
+Lactate
+
+Investigations:
+
+Hb
+
+WBC
+
+Urea
+
+Creatinine
+
+Electrolytes (Na, K, Cl)
+
+PT / APTT
+
+LFT
+
+BSL
+
+Cultures (Blood / Urine / Sputum)
+
+X-Ray Chest
+
+Others (Free Text)
+
+⚠️ Must allow lab attachment (PDF/Image)
+
+MODULE 6: INTAKE CHART (HOURLY)
+Intake Sources (Multi-line):
+
+IV Line 1–6
+
+Oral
+
+NG
+
+Blood Products
+
+Medications
+
+Each entry:
+
+Time
+
+Type
+
+Quantity (ml)
+
+Nurse ID
+
+Auto-sum per hour
+
+Auto-sum per 24 hrs
+
+MODULE 7: OUTPUT CHART
+Fields:
+
+Urine Output (Hourly)
+
+Drain Output (Type + Quantity)
+
+Vomitus
+
+Stool
+
+Other losses
+
+Auto-calculate:
+
+Hourly total
+
+24-hour total
+
+Net fluid balance
+
+MODULE 8: DIABETIC FLOW CHART
+Fields:
+
+Time
+
+Blood Sugar Level
+
+Insulin Type
+
+Insulin Dose
+
+Route
+
+Electrolytes (Na, K, Cl)
+
+Nurse Signature
+
+⚠️ Alert if:
+
+Hypoglycemia
+
+Hyperglycemia
+
+Missed insulin
+
+MODULE 9: MEDICATION ADMINISTRATION RECORD (MAR)
+Doctor Order → Nurse Execution
+Fields:
+
+Drug Name
+
+Route
+
+Dose
+
+Frequency (1x / 2x / 3x / 4x)
+
+Pre-meal / Post-meal
+
+Scheduled Time
+
+Actual Given Time
+
+Nurse ID
+
+Status (Given / Held / Missed)
+
+Reason if not given
+
+⚠️ Once administered → Cannot be deleted
+
+MODULE 10: ONCE-ONLY DRUGS
+
+Drug Name
+
+Dose
+
+Route
+
+Time Ordered
+
+Time Given
+
+Doctor Signature
+
+Nurse Signature
+
+MODULE 11: NURSING REMARKS & SHIFT DIARY
+Free-text but structured:
+
+Time
+
+Event Type (Routine / Emergency / Critical)
+
+Observation
+
+Action Taken
+
+Doctor Informed (Yes/No)
+
+Nurse Initial
+
+MODULE 12: AIRWAY, LINES & TUBES
+
+ETT Size
+
+Tracheostomy Details
+
+Cuff Pressure (Morning / Evening / Night)
+
+Days Intubated
+
+Days Ventilated
+
+Central Line
+
+Foley
+
+Drains
+
+MODULE 13: STAFF ON DUTY
+
+Morning Nurse
+
+Evening Nurse
+
+Night Nurse
+
+Employee ID
+
+Shift Start & End Time
+
+MODULE 14: ALLERGIES & PRECAUTIONS (ALWAYS VISIBLE)
+
+Drug Allergy
+
+Food Allergy
+
+Special Precautions
+
+Infection Control Flags
+
+DATA SAFETY & AUDIT RULES
+
+Every entry:
+
+Timestamp
+
+Nurse ID
+
+Device ID
+
+No hard delete
+
+Version history for edits
+
+Exportable for:
+
+NABH
+
+Legal audit
+
+Insurance
+
+Medical boards
+
+AI-READINESS (DO NOT SKIP)
+
+Store all data in:
+
+Time-series format
+
+Patient-centric schema
+
+Shift-centric schema
+
+Enable future AI:
+
+Missed care detection
+
+Nurse workload analysis
+
+ICU deterioration prediction
+
+Compliance scoring
+
+FINAL SYSTEM BEHAVIOR
+
+“This nurse module must behave exactly like a digital ICU nurse who never forgets, never overwrites, and never misses a detail.”

@@ -1869,3 +1869,454 @@ export const insertPrescriptionItemSchema = createInsertSchema(prescriptionItems
 });
 export type InsertPrescriptionItem = z.infer<typeof insertPrescriptionItemSchema>;
 export type PrescriptionItem = typeof prescriptionItems.$inferSelect;
+
+// ========== PATIENT MONITORING MODULE ==========
+// Medical-Grade, ICU Chart & Nursing Workflow (NABH-Compliant)
+
+// Enums for Patient Monitoring
+export const monitoringShiftEnum = pgEnum("monitoring_shift", ["MORNING", "EVENING", "NIGHT"]);
+export const monitoringWardEnum = pgEnum("monitoring_ward", ["ICU", "HDU", "GENERAL_WARD", "EMERGENCY"]);
+export const entryMethodEnum = pgEnum("entry_method", ["MANUAL", "DEVICE", "AUTO"]);
+export const eventTypeEnum = pgEnum("event_type", ["ROUTINE", "EMERGENCY", "CRITICAL"]);
+export const marStatusEnum = pgEnum("mar_status", ["GIVEN", "HELD", "MISSED"]);
+
+// Module 1: Patient Monitoring Sessions (24-hour per patient)
+export const patientMonitoringSessions = pgTable("patient_monitoring_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  uhid: text("uhid").notNull(),
+  age: integer("age").notNull(),
+  sex: text("sex").notNull(),
+  admissionDateTime: timestamp("admission_datetime").notNull(),
+  ward: text("ward").notNull(),
+  bedNumber: text("bed_number").notNull(),
+  bloodGroup: text("blood_group"),
+  weightKg: decimal("weight_kg"),
+  primaryDiagnosis: text("primary_diagnosis").notNull(),
+  secondaryDiagnosis: text("secondary_diagnosis"), // JSON array
+  admittingConsultant: text("admitting_consultant").notNull(),
+  icuConsultant: text("icu_consultant"),
+  isVentilated: boolean("is_ventilated").default(false),
+  isLocked: boolean("is_locked").default(false),
+  sessionDate: text("session_date").notNull(), // YYYY-MM-DD for 24-hour period
+  sessionStartTime: timestamp("session_start_time").defaultNow(),
+  sessionEndTime: timestamp("session_end_time"),
+  createdBy: varchar("created_by").notNull(),
+  createdByName: text("created_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPatientMonitoringSessionSchema = createInsertSchema(patientMonitoringSessions).omit({
+  id: true,
+  isLocked: true,
+  sessionStartTime: true,
+  sessionEndTime: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPatientMonitoringSession = z.infer<typeof insertPatientMonitoringSessionSchema>;
+export type PatientMonitoringSession = typeof patientMonitoringSessions.$inferSelect;
+
+// Module 2: Vital Signs - Hourly Log (24 slots: 08:00 to 07:00 next day)
+export const vitalsHourly = pgTable("vitals_hourly", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  hourSlot: text("hour_slot").notNull(), // "08:00", "09:00", etc.
+  heartRate: integer("heart_rate"),
+  systolicBp: integer("systolic_bp"),
+  diastolicBp: integer("diastolic_bp"),
+  meanArterialPressure: integer("mean_arterial_pressure"),
+  respiratoryRate: integer("respiratory_rate"),
+  spo2: integer("spo2"),
+  temperature: decimal("temperature"),
+  temperatureUnit: text("temperature_unit").default("C"),
+  cvp: decimal("cvp"),
+  icp: decimal("icp"),
+  cpp: decimal("cpp"),
+  entryMethod: text("entry_method").default("MANUAL"),
+  missedReason: text("missed_reason"),
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  recordedAt: timestamp("recorded_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertVitalsHourlySchema = createInsertSchema(vitalsHourly).omit({
+  id: true,
+  recordedAt: true,
+  version: true,
+});
+export type InsertVitalsHourly = z.infer<typeof insertVitalsHourlySchema>;
+export type VitalsHourly = typeof vitalsHourly.$inferSelect;
+
+// Module 3: Inotropes & Sedation
+export const inotropesSedation = pgTable("inotropes_sedation", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  drugName: text("drug_name").notNull(),
+  concentration: text("concentration"),
+  dose: text("dose"),
+  rate: text("rate"), // ml/hr or mcg/kg/min
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  route: text("route"),
+  sedationScale: text("sedation_scale"), // RASS or GCS value
+  scaleType: text("scale_type"), // "RASS" or "GCS"
+  nurseRemarks: text("nurse_remarks"),
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertInotropesSedationSchema = createInsertSchema(inotropesSedation).omit({
+  id: true,
+  createdAt: true,
+  version: true,
+});
+export type InsertInotropesSedation = z.infer<typeof insertInotropesSedationSchema>;
+export type InotropesSedation = typeof inotropesSedation.$inferSelect;
+
+// Module 4: Ventilator Management (Conditional)
+export const ventilatorSettings = pgTable("ventilator_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  ventilationMode: text("ventilation_mode").notNull(),
+  fio2: integer("fio2"), // percentage
+  setTidalVolume: integer("set_tidal_volume"),
+  expiredTidalVolume: integer("expired_tidal_volume"),
+  setMinuteVolume: decimal("set_minute_volume"),
+  expiredMinuteVolume: decimal("expired_minute_volume"),
+  respiratoryRateSet: integer("respiratory_rate_set"),
+  respiratoryRateSpontaneous: integer("respiratory_rate_spontaneous"),
+  simvRate: integer("simv_rate"),
+  peepCpap: decimal("peep_cpap"),
+  autoPeep: decimal("auto_peep"),
+  peakAirwayPressure: decimal("peak_airway_pressure"),
+  pressureSupport: decimal("pressure_support"),
+  ieRatio: text("ie_ratio"),
+  recordedAt: timestamp("recorded_at").defaultNow(),
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  shift: text("shift").notNull(),
+  version: integer("version").default(1),
+});
+
+export const insertVentilatorSettingsSchema = createInsertSchema(ventilatorSettings).omit({
+  id: true,
+  recordedAt: true,
+  version: true,
+});
+export type InsertVentilatorSettings = z.infer<typeof insertVentilatorSettingsSchema>;
+export type VentilatorSettings = typeof ventilatorSettings.$inferSelect;
+
+// Module 5: ABG & Lab Values
+export const abgLabResults = pgTable("abg_lab_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  // ABG Values
+  ph: decimal("ph"),
+  pco2: decimal("pco2"),
+  po2: decimal("po2"),
+  hco3: decimal("hco3"),
+  baseExcess: decimal("base_excess"),
+  o2Saturation: decimal("o2_saturation"),
+  svo2: decimal("svo2"),
+  lactate: decimal("lactate"),
+  // Lab Values
+  hb: decimal("hb"),
+  wbc: decimal("wbc"),
+  urea: decimal("urea"),
+  creatinine: decimal("creatinine"),
+  sodium: decimal("sodium"),
+  potassium: decimal("potassium"),
+  chloride: decimal("chloride"),
+  pt: decimal("pt"),
+  aptt: decimal("aptt"),
+  lft: text("lft"), // JSON for multiple values
+  bsl: decimal("bsl"),
+  bloodCulture: text("blood_culture"),
+  urineCulture: text("urine_culture"),
+  sputumCulture: text("sputum_culture"),
+  xrayChest: text("xray_chest"),
+  otherInvestigations: text("other_investigations"),
+  attachmentUrl: text("attachment_url"),
+  attachmentType: text("attachment_type"),
+  recordedAt: timestamp("recorded_at").defaultNow(),
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  version: integer("version").default(1),
+});
+
+export const insertAbgLabResultsSchema = createInsertSchema(abgLabResults).omit({
+  id: true,
+  recordedAt: true,
+  version: true,
+});
+export type InsertAbgLabResults = z.infer<typeof insertAbgLabResultsSchema>;
+export type AbgLabResults = typeof abgLabResults.$inferSelect;
+
+// Module 6: Intake Chart (Hourly)
+export const intakeHourly = pgTable("intake_hourly", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  hourSlot: text("hour_slot").notNull(),
+  ivLine1: integer("iv_line_1").default(0),
+  ivLine2: integer("iv_line_2").default(0),
+  ivLine3: integer("iv_line_3").default(0),
+  ivLine4: integer("iv_line_4").default(0),
+  ivLine5: integer("iv_line_5").default(0),
+  ivLine6: integer("iv_line_6").default(0),
+  oral: integer("oral").default(0),
+  ngTube: integer("ng_tube").default(0),
+  bloodProducts: integer("blood_products").default(0),
+  medications: integer("medications").default(0),
+  hourlyTotal: integer("hourly_total").default(0),
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  recordedAt: timestamp("recorded_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertIntakeHourlySchema = createInsertSchema(intakeHourly).omit({
+  id: true,
+  recordedAt: true,
+  version: true,
+});
+export type InsertIntakeHourly = z.infer<typeof insertIntakeHourlySchema>;
+export type IntakeHourly = typeof intakeHourly.$inferSelect;
+
+// Module 7: Output Chart (Hourly)
+export const outputHourly = pgTable("output_hourly", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  hourSlot: text("hour_slot").notNull(),
+  urineOutput: integer("urine_output").default(0),
+  drainOutput: integer("drain_output").default(0),
+  drainType: text("drain_type"),
+  vomitus: integer("vomitus").default(0),
+  stool: integer("stool").default(0),
+  otherLosses: integer("other_losses").default(0),
+  otherLossesDescription: text("other_losses_description"),
+  hourlyTotal: integer("hourly_total").default(0),
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  recordedAt: timestamp("recorded_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertOutputHourlySchema = createInsertSchema(outputHourly).omit({
+  id: true,
+  recordedAt: true,
+  version: true,
+});
+export type InsertOutputHourly = z.infer<typeof insertOutputHourlySchema>;
+export type OutputHourly = typeof outputHourly.$inferSelect;
+
+// Module 8: Diabetic Flow Chart
+export const diabeticFlow = pgTable("diabetic_flow", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  recordedTime: timestamp("recorded_time").notNull(),
+  bloodSugarLevel: integer("blood_sugar_level").notNull(),
+  insulinType: text("insulin_type"),
+  insulinDose: decimal("insulin_dose"),
+  route: text("route"),
+  sodium: decimal("sodium"),
+  potassium: decimal("potassium"),
+  chloride: decimal("chloride"),
+  alertType: text("alert_type"), // HYPOGLYCEMIA, HYPERGLYCEMIA, MISSED_INSULIN
+  alertMessage: text("alert_message"),
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  nurseSignature: text("nurse_signature"),
+  createdAt: timestamp("created_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertDiabeticFlowSchema = createInsertSchema(diabeticFlow).omit({
+  id: true,
+  createdAt: true,
+  version: true,
+});
+export type InsertDiabeticFlow = z.infer<typeof insertDiabeticFlowSchema>;
+export type DiabeticFlow = typeof diabeticFlow.$inferSelect;
+
+// Module 9: Medication Administration Record (MAR)
+export const medicationAdminRecords = pgTable("medication_admin_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  drugName: text("drug_name").notNull(),
+  route: text("route").notNull(),
+  dose: text("dose").notNull(),
+  frequency: text("frequency").notNull(), // 1x, 2x, 3x, 4x
+  mealTiming: text("meal_timing"), // pre_meal, post_meal
+  scheduledTime: timestamp("scheduled_time").notNull(),
+  actualGivenTime: timestamp("actual_given_time"),
+  status: text("status").notNull().default("GIVEN"), // GIVEN, HELD, MISSED
+  reasonNotGiven: text("reason_not_given"),
+  orderedBy: varchar("ordered_by"),
+  orderedByName: text("ordered_by_name"),
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertMedicationAdminRecordSchema = createInsertSchema(medicationAdminRecords).omit({
+  id: true,
+  createdAt: true,
+  version: true,
+});
+export type InsertMedicationAdminRecord = z.infer<typeof insertMedicationAdminRecordSchema>;
+export type MedicationAdminRecord = typeof medicationAdminRecords.$inferSelect;
+
+// Module 10: Once-Only Drugs
+export const onceOnlyDrugs = pgTable("once_only_drugs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  drugName: text("drug_name").notNull(),
+  dose: text("dose").notNull(),
+  route: text("route").notNull(),
+  timeOrdered: timestamp("time_ordered").notNull(),
+  timeGiven: timestamp("time_given"),
+  doctorId: varchar("doctor_id"),
+  doctorName: text("doctor_name"),
+  doctorSignature: text("doctor_signature"),
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  nurseSignature: text("nurse_signature"),
+  createdAt: timestamp("created_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertOnceOnlyDrugSchema = createInsertSchema(onceOnlyDrugs).omit({
+  id: true,
+  createdAt: true,
+  version: true,
+});
+export type InsertOnceOnlyDrug = z.infer<typeof insertOnceOnlyDrugSchema>;
+export type OnceOnlyDrug = typeof onceOnlyDrugs.$inferSelect;
+
+// Module 11: Nursing Remarks & Shift Diary
+export const nursingShiftNotes = pgTable("nursing_shift_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  noteTime: timestamp("note_time").notNull(),
+  eventType: text("event_type").notNull().default("ROUTINE"), // ROUTINE, EMERGENCY, CRITICAL
+  observation: text("observation").notNull(),
+  actionTaken: text("action_taken"),
+  doctorInformed: boolean("doctor_informed").default(false),
+  doctorName: text("doctor_name"),
+  shift: text("shift").notNull(), // MORNING, EVENING, NIGHT
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  nurseInitial: text("nurse_initial"),
+  createdAt: timestamp("created_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertNursingShiftNoteSchema = createInsertSchema(nursingShiftNotes).omit({
+  id: true,
+  createdAt: true,
+  version: true,
+});
+export type InsertNursingShiftNote = z.infer<typeof insertNursingShiftNoteSchema>;
+export type NursingShiftNote = typeof nursingShiftNotes.$inferSelect;
+
+// Module 12: Airway, Lines & Tubes
+export const airwayLinesTubes = pgTable("airway_lines_tubes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  ettSize: text("ett_size"),
+  tracheostomyDetails: text("tracheostomy_details"),
+  cuffPressureMorning: decimal("cuff_pressure_morning"),
+  cuffPressureEvening: decimal("cuff_pressure_evening"),
+  cuffPressureNight: decimal("cuff_pressure_night"),
+  daysIntubated: integer("days_intubated").default(0),
+  daysVentilated: integer("days_ventilated").default(0),
+  centralLineDetails: text("central_line_details"),
+  centralLineInsertDate: text("central_line_insert_date"),
+  foleyDetails: text("foley_details"),
+  foleyInsertDate: text("foley_insert_date"),
+  drainsDetails: text("drains_details"), // JSON array
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertAirwayLinesTubesSchema = createInsertSchema(airwayLinesTubes).omit({
+  id: true,
+  updatedAt: true,
+  version: true,
+});
+export type InsertAirwayLinesTubes = z.infer<typeof insertAirwayLinesTubesSchema>;
+export type AirwayLinesTubes = typeof airwayLinesTubes.$inferSelect;
+
+// Module 13: Staff on Duty
+export const dutyStaffAssignments = pgTable("duty_staff_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  shift: text("shift").notNull(), // MORNING, EVENING, NIGHT
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name").notNull(),
+  employeeId: text("employee_id"),
+  shiftStartTime: timestamp("shift_start_time").notNull(),
+  shiftEndTime: timestamp("shift_end_time"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDutyStaffAssignmentSchema = createInsertSchema(dutyStaffAssignments).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDutyStaffAssignment = z.infer<typeof insertDutyStaffAssignmentSchema>;
+export type DutyStaffAssignment = typeof dutyStaffAssignments.$inferSelect;
+
+// Module 14: Allergies & Precautions (Always Visible)
+export const patientAllergiesPrecautions = pgTable("patient_allergies_precautions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  drugAllergies: text("drug_allergies"), // JSON array
+  foodAllergies: text("food_allergies"), // JSON array
+  specialPrecautions: text("special_precautions"),
+  infectionControlFlags: text("infection_control_flags"), // JSON array
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  version: integer("version").default(1),
+});
+
+export const insertPatientAllergiesPrecautionsSchema = createInsertSchema(patientAllergiesPrecautions).omit({
+  id: true,
+  updatedAt: true,
+  version: true,
+});
+export type InsertPatientAllergiesPrecautions = z.infer<typeof insertPatientAllergiesPrecautionsSchema>;
+export type PatientAllergiesPrecautions = typeof patientAllergiesPrecautions.$inferSelect;
+
+// Audit Log for Patient Monitoring (NABH Compliance)
+export const patientMonitoringAuditLog = pgTable("patient_monitoring_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  tableName: text("table_name").notNull(),
+  recordId: varchar("record_id").notNull(),
+  action: text("action").notNull(), // CREATE, UPDATE, VIEW
+  previousData: text("previous_data"), // JSON snapshot
+  newData: text("new_data"), // JSON snapshot
+  nurseId: varchar("nurse_id").notNull(),
+  nurseName: text("nurse_name"),
+  deviceId: text("device_id"),
+  ipAddress: text("ip_address"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertPatientMonitoringAuditLogSchema = createInsertSchema(patientMonitoringAuditLog).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertPatientMonitoringAuditLog = z.infer<typeof insertPatientMonitoringAuditLogSchema>;
+export type PatientMonitoringAuditLog = typeof patientMonitoringAuditLog.$inferSelect;
