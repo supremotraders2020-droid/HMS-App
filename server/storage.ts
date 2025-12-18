@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate, type ResolvedAlert, type InsertResolvedAlert, type DoctorTimeSlot, type InsertDoctorTimeSlot, type PatientBill, type InsertPatientBill, type BillPayment, type InsertBillPayment, type HealthTip, type InsertHealthTip } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate, type ResolvedAlert, type InsertResolvedAlert, type DoctorTimeSlot, type InsertDoctorTimeSlot, type PatientBill, type InsertPatientBill, type BillPayment, type InsertBillPayment, type HealthTip, type InsertHealthTip, type SwabAreaMaster, type InsertSwabAreaMaster, type SwabSamplingSiteMaster, type InsertSwabSamplingSiteMaster, type SwabOrganismMaster, type InsertSwabOrganismMaster, type SwabCollection, type InsertSwabCollection, type SwabLabResult, type InsertSwabLabResult, type SwabCapaAction, type InsertSwabCapaAction, type SwabAuditLog, type InsertSwabAuditLog } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -301,6 +301,56 @@ export interface IStorage {
   createHealthTip(tip: InsertHealthTip): Promise<HealthTip>;
   updateHealthTip(id: string, updates: Partial<InsertHealthTip>): Promise<HealthTip | undefined>;
   deleteHealthTip(id: string): Promise<boolean>;
+  
+  // Swab Monitoring - Area Master
+  getAllSwabAreas(): Promise<SwabAreaMaster[]>;
+  getSwabArea(id: string): Promise<SwabAreaMaster | undefined>;
+  getSwabAreasByType(areaType: string): Promise<SwabAreaMaster[]>;
+  createSwabArea(area: InsertSwabAreaMaster): Promise<SwabAreaMaster>;
+  updateSwabArea(id: string, updates: Partial<InsertSwabAreaMaster>): Promise<SwabAreaMaster | undefined>;
+  deleteSwabArea(id: string): Promise<boolean>;
+  
+  // Swab Monitoring - Sampling Site Master
+  getAllSwabSamplingSites(): Promise<SwabSamplingSiteMaster[]>;
+  getSwabSamplingSite(id: string): Promise<SwabSamplingSiteMaster | undefined>;
+  createSwabSamplingSite(site: InsertSwabSamplingSiteMaster): Promise<SwabSamplingSiteMaster>;
+  updateSwabSamplingSite(id: string, updates: Partial<InsertSwabSamplingSiteMaster>): Promise<SwabSamplingSiteMaster | undefined>;
+  deleteSwabSamplingSite(id: string): Promise<boolean>;
+  
+  // Swab Monitoring - Organism Master
+  getAllSwabOrganisms(): Promise<SwabOrganismMaster[]>;
+  getSwabOrganism(id: string): Promise<SwabOrganismMaster | undefined>;
+  createSwabOrganism(organism: InsertSwabOrganismMaster): Promise<SwabOrganismMaster>;
+  updateSwabOrganism(id: string, updates: Partial<InsertSwabOrganismMaster>): Promise<SwabOrganismMaster | undefined>;
+  deleteSwabOrganism(id: string): Promise<boolean>;
+  
+  // Swab Collection
+  getAllSwabCollections(): Promise<SwabCollection[]>;
+  getSwabCollection(id: string): Promise<SwabCollection | undefined>;
+  getSwabCollectionsByArea(areaId: string): Promise<SwabCollection[]>;
+  getSwabCollectionsByStatus(status: string): Promise<SwabCollection[]>;
+  createSwabCollection(collection: InsertSwabCollection): Promise<SwabCollection>;
+  updateSwabCollection(id: string, updates: Partial<SwabCollection>): Promise<SwabCollection | undefined>;
+  
+  // Swab Lab Results
+  getAllSwabLabResults(): Promise<SwabLabResult[]>;
+  getSwabLabResult(id: string): Promise<SwabLabResult | undefined>;
+  getSwabLabResultByCollection(collectionId: string): Promise<SwabLabResult | undefined>;
+  createSwabLabResult(result: InsertSwabLabResult): Promise<SwabLabResult>;
+  
+  // CAPA Actions
+  getAllSwabCapaActions(): Promise<SwabCapaAction[]>;
+  getSwabCapaAction(id: string): Promise<SwabCapaAction | undefined>;
+  getSwabCapaActionsByStatus(status: string): Promise<SwabCapaAction[]>;
+  getSwabCapaActionByCollection(collectionId: string): Promise<SwabCapaAction | undefined>;
+  createSwabCapaAction(capa: InsertSwabCapaAction): Promise<SwabCapaAction>;
+  updateSwabCapaAction(id: string, updates: Partial<SwabCapaAction>): Promise<SwabCapaAction | undefined>;
+  closeSwabCapaAction(id: string, closedBy: string, closedByName: string, closureRemarks: string): Promise<SwabCapaAction | undefined>;
+  
+  // Swab Audit Logs
+  getAllSwabAuditLogs(): Promise<SwabAuditLog[]>;
+  getSwabAuditLogsByEntity(entityType: string, entityId: string): Promise<SwabAuditLog[]>;
+  createSwabAuditLog(log: InsertSwabAuditLog): Promise<SwabAuditLog>;
 }
 
 export class MemStorage implements IStorage {

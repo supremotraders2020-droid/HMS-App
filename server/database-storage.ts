@@ -17,6 +17,7 @@ import {
   bmwBags, bmwMovements, bmwPickups, bmwDisposals, bmwVendors, bmwStorageRooms, bmwIncidents, bmwReports,
   doctorOathConfirmations, consentTemplates, resolvedAlerts, doctorTimeSlots,
   patientBills, billPayments, healthTips,
+  swabAreaMaster, swabSamplingSiteMaster, swabOrganismMaster, swabCollection, swabLabResults, swabCapaActions, swabAuditLogs,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -58,7 +59,14 @@ import {
   type DoctorTimeSlot, type InsertDoctorTimeSlot,
   type PatientBill, type InsertPatientBill,
   type BillPayment, type InsertBillPayment,
-  type HealthTip, type InsertHealthTip
+  type HealthTip, type InsertHealthTip,
+  type SwabAreaMaster, type InsertSwabAreaMaster,
+  type SwabSamplingSiteMaster, type InsertSwabSamplingSiteMaster,
+  type SwabOrganismMaster, type InsertSwabOrganismMaster,
+  type SwabCollection, type InsertSwabCollection,
+  type SwabLabResult, type InsertSwabLabResult,
+  type SwabCapaAction, type InsertSwabCapaAction,
+  type SwabAuditLog, type InsertSwabAuditLog
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -2686,6 +2694,204 @@ export class DatabaseStorage implements IStorage {
   async deleteHealthTip(id: string): Promise<boolean> {
     const result = await db.delete(healthTips).where(eq(healthTips.id, id)).returning();
     return result.length > 0;
+  }
+
+  // ========== SWAB MONITORING - AREA MASTER ==========
+  async getAllSwabAreas(): Promise<SwabAreaMaster[]> {
+    return await db.select().from(swabAreaMaster).orderBy(swabAreaMaster.areaName);
+  }
+
+  async getSwabArea(id: string): Promise<SwabAreaMaster | undefined> {
+    const result = await db.select().from(swabAreaMaster).where(eq(swabAreaMaster.id, id));
+    return result[0];
+  }
+
+  async getSwabAreasByType(areaType: string): Promise<SwabAreaMaster[]> {
+    return await db.select().from(swabAreaMaster).where(eq(swabAreaMaster.areaType, areaType));
+  }
+
+  async createSwabArea(area: InsertSwabAreaMaster): Promise<SwabAreaMaster> {
+    const result = await db.insert(swabAreaMaster).values(area).returning();
+    return result[0];
+  }
+
+  async updateSwabArea(id: string, updates: Partial<InsertSwabAreaMaster>): Promise<SwabAreaMaster | undefined> {
+    const result = await db.update(swabAreaMaster).set(updates).where(eq(swabAreaMaster.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSwabArea(id: string): Promise<boolean> {
+    const result = await db.delete(swabAreaMaster).where(eq(swabAreaMaster.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== SWAB MONITORING - SAMPLING SITE MASTER ==========
+  async getAllSwabSamplingSites(): Promise<SwabSamplingSiteMaster[]> {
+    return await db.select().from(swabSamplingSiteMaster).orderBy(swabSamplingSiteMaster.siteName);
+  }
+
+  async getSwabSamplingSite(id: string): Promise<SwabSamplingSiteMaster | undefined> {
+    const result = await db.select().from(swabSamplingSiteMaster).where(eq(swabSamplingSiteMaster.id, id));
+    return result[0];
+  }
+
+  async createSwabSamplingSite(site: InsertSwabSamplingSiteMaster): Promise<SwabSamplingSiteMaster> {
+    const result = await db.insert(swabSamplingSiteMaster).values(site).returning();
+    return result[0];
+  }
+
+  async updateSwabSamplingSite(id: string, updates: Partial<InsertSwabSamplingSiteMaster>): Promise<SwabSamplingSiteMaster | undefined> {
+    const result = await db.update(swabSamplingSiteMaster).set(updates).where(eq(swabSamplingSiteMaster.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSwabSamplingSite(id: string): Promise<boolean> {
+    const result = await db.delete(swabSamplingSiteMaster).where(eq(swabSamplingSiteMaster.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== SWAB MONITORING - ORGANISM MASTER ==========
+  async getAllSwabOrganisms(): Promise<SwabOrganismMaster[]> {
+    return await db.select().from(swabOrganismMaster).orderBy(swabOrganismMaster.organismName);
+  }
+
+  async getSwabOrganism(id: string): Promise<SwabOrganismMaster | undefined> {
+    const result = await db.select().from(swabOrganismMaster).where(eq(swabOrganismMaster.id, id));
+    return result[0];
+  }
+
+  async createSwabOrganism(organism: InsertSwabOrganismMaster): Promise<SwabOrganismMaster> {
+    const result = await db.insert(swabOrganismMaster).values(organism).returning();
+    return result[0];
+  }
+
+  async updateSwabOrganism(id: string, updates: Partial<InsertSwabOrganismMaster>): Promise<SwabOrganismMaster | undefined> {
+    const result = await db.update(swabOrganismMaster).set(updates).where(eq(swabOrganismMaster.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSwabOrganism(id: string): Promise<boolean> {
+    const result = await db.delete(swabOrganismMaster).where(eq(swabOrganismMaster.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== SWAB COLLECTION ==========
+  async getAllSwabCollections(): Promise<SwabCollection[]> {
+    return await db.select().from(swabCollection).orderBy(desc(swabCollection.collectionDate));
+  }
+
+  async getSwabCollection(id: string): Promise<SwabCollection | undefined> {
+    const result = await db.select().from(swabCollection).where(eq(swabCollection.id, id));
+    return result[0];
+  }
+
+  async getSwabCollectionsByArea(areaId: string): Promise<SwabCollection[]> {
+    return await db.select().from(swabCollection).where(eq(swabCollection.areaId, areaId)).orderBy(desc(swabCollection.collectionDate));
+  }
+
+  async getSwabCollectionsByStatus(status: string): Promise<SwabCollection[]> {
+    return await db.select().from(swabCollection).where(eq(swabCollection.status, status)).orderBy(desc(swabCollection.collectionDate));
+  }
+
+  async createSwabCollection(collection: InsertSwabCollection): Promise<SwabCollection> {
+    const swabId = `SWB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const result = await db.insert(swabCollection).values({
+      ...collection,
+      swabId,
+      status: "pending",
+    }).returning();
+    return result[0];
+  }
+
+  async updateSwabCollection(id: string, updates: Partial<SwabCollection>): Promise<SwabCollection | undefined> {
+    const result = await db.update(swabCollection)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(swabCollection.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // ========== SWAB LAB RESULTS ==========
+  async getAllSwabLabResults(): Promise<SwabLabResult[]> {
+    return await db.select().from(swabLabResults).orderBy(desc(swabLabResults.resultDate));
+  }
+
+  async getSwabLabResult(id: string): Promise<SwabLabResult | undefined> {
+    const result = await db.select().from(swabLabResults).where(eq(swabLabResults.id, id));
+    return result[0];
+  }
+
+  async getSwabLabResultByCollection(collectionId: string): Promise<SwabLabResult | undefined> {
+    const result = await db.select().from(swabLabResults).where(eq(swabLabResults.swabCollectionId, collectionId));
+    return result[0];
+  }
+
+  async createSwabLabResult(result: InsertSwabLabResult): Promise<SwabLabResult> {
+    const insertedResult = await db.insert(swabLabResults).values(result).returning();
+    return insertedResult[0];
+  }
+
+  // ========== CAPA ACTIONS ==========
+  async getAllSwabCapaActions(): Promise<SwabCapaAction[]> {
+    return await db.select().from(swabCapaActions).orderBy(desc(swabCapaActions.createdAt));
+  }
+
+  async getSwabCapaAction(id: string): Promise<SwabCapaAction | undefined> {
+    const result = await db.select().from(swabCapaActions).where(eq(swabCapaActions.id, id));
+    return result[0];
+  }
+
+  async getSwabCapaActionsByStatus(status: string): Promise<SwabCapaAction[]> {
+    return await db.select().from(swabCapaActions).where(eq(swabCapaActions.status, status)).orderBy(desc(swabCapaActions.createdAt));
+  }
+
+  async getSwabCapaActionByCollection(collectionId: string): Promise<SwabCapaAction | undefined> {
+    const result = await db.select().from(swabCapaActions).where(eq(swabCapaActions.swabCollectionId, collectionId));
+    return result[0];
+  }
+
+  async createSwabCapaAction(capa: InsertSwabCapaAction): Promise<SwabCapaAction> {
+    const result = await db.insert(swabCapaActions).values(capa).returning();
+    return result[0];
+  }
+
+  async updateSwabCapaAction(id: string, updates: Partial<SwabCapaAction>): Promise<SwabCapaAction | undefined> {
+    const result = await db.update(swabCapaActions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(swabCapaActions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async closeSwabCapaAction(id: string, closedBy: string, closedByName: string, closureRemarks: string): Promise<SwabCapaAction | undefined> {
+    const result = await db.update(swabCapaActions)
+      .set({
+        status: "closed",
+        closedBy,
+        closedByName,
+        closureRemarks,
+        closedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(swabCapaActions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // ========== SWAB AUDIT LOGS ==========
+  async getAllSwabAuditLogs(): Promise<SwabAuditLog[]> {
+    return await db.select().from(swabAuditLogs).orderBy(desc(swabAuditLogs.createdAt));
+  }
+
+  async getSwabAuditLogsByEntity(entityType: string, entityId: string): Promise<SwabAuditLog[]> {
+    return await db.select().from(swabAuditLogs)
+      .where(and(eq(swabAuditLogs.entityType, entityType), eq(swabAuditLogs.entityId, entityId)))
+      .orderBy(desc(swabAuditLogs.createdAt));
+  }
+
+  async createSwabAuditLog(log: InsertSwabAuditLog): Promise<SwabAuditLog> {
+    const result = await db.insert(swabAuditLogs).values(log).returning();
+    return result[0];
   }
 }
 

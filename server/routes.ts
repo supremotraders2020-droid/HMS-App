@@ -4102,6 +4102,252 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== SWAB MONITORING ROUTES ==========
+  
+  // Swab Areas
+  app.get("/api/swab-monitoring/areas", async (req, res) => {
+    try {
+      const areas = await storage.getAllSwabAreas();
+      res.json(areas);
+    } catch (error) {
+      console.error("Failed to fetch swab areas:", error);
+      res.status(500).json({ error: "Failed to fetch swab areas" });
+    }
+  });
+
+  app.post("/api/swab-monitoring/areas", async (req, res) => {
+    try {
+      const area = await storage.createSwabArea(req.body);
+      res.json(area);
+    } catch (error) {
+      console.error("Failed to create swab area:", error);
+      res.status(500).json({ error: "Failed to create swab area" });
+    }
+  });
+
+  // Sampling Sites
+  app.get("/api/swab-monitoring/sampling-sites", async (req, res) => {
+    try {
+      const sites = await storage.getAllSwabSamplingSites();
+      res.json(sites);
+    } catch (error) {
+      console.error("Failed to fetch sampling sites:", error);
+      res.status(500).json({ error: "Failed to fetch sampling sites" });
+    }
+  });
+
+  app.post("/api/swab-monitoring/sampling-sites", async (req, res) => {
+    try {
+      const site = await storage.createSwabSamplingSite(req.body);
+      res.json(site);
+    } catch (error) {
+      console.error("Failed to create sampling site:", error);
+      res.status(500).json({ error: "Failed to create sampling site" });
+    }
+  });
+
+  // Organisms
+  app.get("/api/swab-monitoring/organisms", async (req, res) => {
+    try {
+      const organisms = await storage.getAllSwabOrganisms();
+      res.json(organisms);
+    } catch (error) {
+      console.error("Failed to fetch organisms:", error);
+      res.status(500).json({ error: "Failed to fetch organisms" });
+    }
+  });
+
+  app.post("/api/swab-monitoring/organisms", async (req, res) => {
+    try {
+      const organism = await storage.createSwabOrganism(req.body);
+      res.json(organism);
+    } catch (error) {
+      console.error("Failed to create organism:", error);
+      res.status(500).json({ error: "Failed to create organism" });
+    }
+  });
+
+  // Swab Collections
+  app.get("/api/swab-monitoring/collections", async (req, res) => {
+    try {
+      const collections = await storage.getAllSwabCollections();
+      res.json(collections);
+    } catch (error) {
+      console.error("Failed to fetch swab collections:", error);
+      res.status(500).json({ error: "Failed to fetch swab collections" });
+    }
+  });
+
+  app.post("/api/swab-monitoring/collections", async (req, res) => {
+    try {
+      const collection = await storage.createSwabCollection(req.body);
+      
+      // Create audit log
+      await storage.createSwabAuditLog({
+        entityType: "swab_collection",
+        entityId: collection.id,
+        action: "create",
+        newValue: JSON.stringify(collection),
+        performedBy: req.body.collectedBy,
+        performedByName: req.body.collectedByName,
+        performedByRole: "ICN",
+      });
+      
+      res.json(collection);
+    } catch (error) {
+      console.error("Failed to create swab collection:", error);
+      res.status(500).json({ error: "Failed to create swab collection" });
+    }
+  });
+
+  // Lab Results with auto-interpretation logic
+  app.get("/api/swab-monitoring/lab-results", async (req, res) => {
+    try {
+      const results = await storage.getAllSwabLabResults();
+      res.json(results);
+    } catch (error) {
+      console.error("Failed to fetch lab results:", error);
+      res.status(500).json({ error: "Failed to fetch lab results" });
+    }
+  });
+
+  app.post("/api/swab-monitoring/lab-results", async (req, res) => {
+    try {
+      const labResult = await storage.createSwabLabResult(req.body);
+      
+      // Get the organism to determine result status
+      const organism = await storage.getSwabOrganism(req.body.organismId);
+      const collection = await storage.getSwabCollection(req.body.swabCollectionId);
+      
+      let resultStatus = "PASS";
+      
+      // Auto-interpretation logic
+      if (organism) {
+        if (organism.organismName === "No Growth" || organism.category === "none") {
+          resultStatus = "PASS";
+        } else if (organism.category === "flora" && req.body.growthLevel === "Low") {
+          resultStatus = "ACCEPTABLE";
+        } else if (organism.category === "pathogen" || req.body.growthLevel === "Moderate" || req.body.growthLevel === "Heavy") {
+          resultStatus = "FAIL";
+        }
+      }
+      
+      // Update the swab collection with result status
+      await storage.updateSwabCollection(req.body.swabCollectionId, {
+        status: "completed",
+        resultStatus,
+      });
+      
+      // If FAIL, auto-generate CAPA
+      if (resultStatus === "FAIL" && collection) {
+        const area = await storage.getSwabArea(collection.areaId);
+        const site = await storage.getSwabSamplingSite(collection.samplingSiteId);
+        
+        const issueSummary = `Contamination detected at ${area?.areaName || 'Unknown Area'} - ${site?.siteName || 'Unknown Site'}. Organism: ${organism?.organismName || 'Unknown'}. Growth Level: ${req.body.growthLevel}`;
+        
+        await storage.createSwabCapaAction({
+          swabCollectionId: collection.id,
+          issueSummary,
+          immediateAction: "Deep cleaning",
+          responsibleDepartment: "Housekeeping",
+          targetClosureDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+          verificationSwabRequired: true,
+        });
+        
+        // Create notification for admin
+        await storage.createUserNotification({
+          userId: "admin",
+          userRole: "ADMIN",
+          title: "Swab Contamination Alert",
+          message: issueSummary,
+          type: "swab_alert",
+          metadata: JSON.stringify({
+            swabId: collection.swabId,
+            areaType: collection.areaType,
+            resultStatus: "FAIL",
+          }),
+        });
+      }
+      
+      // Create audit log
+      await storage.createSwabAuditLog({
+        entityType: "lab_result",
+        entityId: labResult.id,
+        action: "create",
+        newValue: JSON.stringify({ ...labResult, resultStatus }),
+        performedBy: req.body.processedBy,
+        performedByName: req.body.processedByName,
+        performedByRole: "LAB_STAFF",
+      });
+      
+      res.json({ ...labResult, resultStatus });
+    } catch (error) {
+      console.error("Failed to create lab result:", error);
+      res.status(500).json({ error: "Failed to create lab result" });
+    }
+  });
+
+  // CAPA Actions
+  app.get("/api/swab-monitoring/capa-actions", async (req, res) => {
+    try {
+      const capas = await storage.getAllSwabCapaActions();
+      res.json(capas);
+    } catch (error) {
+      console.error("Failed to fetch CAPA actions:", error);
+      res.status(500).json({ error: "Failed to fetch CAPA actions" });
+    }
+  });
+
+  app.post("/api/swab-monitoring/capa-actions/:id/close", async (req, res) => {
+    try {
+      const { closedBy, closedByName, closureRemarks } = req.body;
+      const capa = await storage.closeSwabCapaAction(req.params.id, closedBy, closedByName, closureRemarks);
+      
+      if (capa) {
+        await storage.createSwabAuditLog({
+          entityType: "capa_action",
+          entityId: capa.id,
+          action: "close",
+          newValue: JSON.stringify(capa),
+          performedBy: closedBy,
+          performedByName: closedByName,
+          performedByRole: "ADMIN",
+        });
+        res.json(capa);
+      } else {
+        res.status(404).json({ error: "CAPA not found" });
+      }
+    } catch (error) {
+      console.error("Failed to close CAPA:", error);
+      res.status(500).json({ error: "Failed to close CAPA" });
+    }
+  });
+
+  app.patch("/api/swab-monitoring/capa-actions/:id", async (req, res) => {
+    try {
+      const capa = await storage.updateSwabCapaAction(req.params.id, req.body);
+      if (capa) {
+        res.json(capa);
+      } else {
+        res.status(404).json({ error: "CAPA not found" });
+      }
+    } catch (error) {
+      console.error("Failed to update CAPA:", error);
+      res.status(500).json({ error: "Failed to update CAPA" });
+    }
+  });
+
+  // Audit Logs
+  app.get("/api/swab-monitoring/audit-logs", async (req, res) => {
+    try {
+      const logs = await storage.getAllSwabAuditLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error("Failed to fetch audit logs:", error);
+      res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
