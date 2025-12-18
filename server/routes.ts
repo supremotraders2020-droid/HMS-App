@@ -2037,6 +2037,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get prescriptions by patient ID
+  app.get("/api/prescriptions/patient-id/:patientId", async (req, res) => {
+    try {
+      const prescriptions = await storage.getPrescriptionsByPatientId(req.params.patientId);
+      res.json(prescriptions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch prescriptions" });
+    }
+  });
+
+  // Get finalized prescriptions for patient (patient portal view)
+  app.get("/api/prescriptions/patient-id/:patientId/finalized", async (req, res) => {
+    try {
+      const prescriptions = await storage.getFinalizedPrescriptionsByPatientId(req.params.patientId);
+      res.json(prescriptions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch prescriptions" });
+    }
+  });
+
+  // Finalize prescription (add digital signature)
+  app.post("/api/prescriptions/:id/finalize", async (req, res) => {
+    try {
+      const { signedBy, signedByName, userRole } = req.body;
+      
+      // Only ADMIN and DOCTOR can finalize prescriptions
+      if (!['ADMIN', 'DOCTOR'].includes(userRole)) {
+        return res.status(403).json({ error: "Only Doctors and Admins can finalize prescriptions" });
+      }
+
+      const prescription = await storage.finalizePrescription(req.params.id, signedBy, signedByName);
+      if (!prescription) {
+        return res.status(404).json({ error: "Prescription not found" });
+      }
+
+      // Send notification to patient
+      if (prescription.patientId && prescription.patientName) {
+        notificationService.notifyPrescriptionCreated(
+          prescription.id,
+          prescription.patientId,
+          prescription.patientName,
+          prescription.signedByName || 'Doctor'
+        ).catch(err => console.error("Notification error:", err));
+      }
+
+      res.json(prescription);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to finalize prescription" });
+    }
+  });
+
+  // ========== PRESCRIPTION ITEMS ROUTES ==========
+
+  // Get prescription items
+  app.get("/api/prescriptions/:id/items", async (req, res) => {
+    try {
+      const items = await storage.getPrescriptionItems(req.params.id);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch prescription items" });
+    }
+  });
+
+  // Create prescription items (batch)
+  app.post("/api/prescriptions/:id/items", async (req, res) => {
+    try {
+      const { items } = req.body;
+      if (!items || !Array.isArray(items)) {
+        return res.status(400).json({ error: "Items array required" });
+      }
+      
+      const itemsWithPrescriptionId = items.map(item => ({
+        ...item,
+        prescriptionId: req.params.id
+      }));
+      
+      const createdItems = await storage.createPrescriptionItems(itemsWithPrescriptionId);
+      res.status(201).json(createdItems);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create prescription items" });
+    }
+  });
+
+  // Update prescription with items (combined create)
+  app.post("/api/prescriptions/with-items", async (req, res) => {
+    try {
+      const { prescription, items } = req.body;
+      
+      const parsed = insertPrescriptionSchema.safeParse(prescription);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors });
+      }
+      
+      // Create prescription
+      const createdPrescription = await storage.createPrescription(parsed.data);
+      
+      // Create prescription items if provided
+      if (items && Array.isArray(items) && items.length > 0) {
+        const itemsWithPrescriptionId = items.map(item => ({
+          ...item,
+          prescriptionId: createdPrescription.id
+        }));
+        await storage.createPrescriptionItems(itemsWithPrescriptionId);
+      }
+
+      // Fetch items to return with prescription
+      const prescriptionItems = await storage.getPrescriptionItems(createdPrescription.id);
+
+      res.status(201).json({ 
+        ...createdPrescription, 
+        items: prescriptionItems 
+      });
+    } catch (error) {
+      console.error("Error creating prescription with items:", error);
+      res.status(500).json({ error: "Failed to create prescription" });
+    }
+  });
+
+  // Delete all prescription items
+  app.delete("/api/prescriptions/:id/items", async (req, res) => {
+    try {
+      await storage.deletePrescriptionItems(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete prescription items" });
+    }
+  });
+
   // ========== DOCTOR SCHEDULE ROUTES ==========
 
   // Get doctor schedules by user ID
