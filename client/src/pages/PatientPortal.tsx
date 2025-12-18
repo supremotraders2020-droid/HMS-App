@@ -63,7 +63,12 @@ import {
   ArrowRight,
   Sparkles,
   MapPin,
-  ExternalLink
+  ExternalLink,
+  BookOpen,
+  Utensils,
+  AlertTriangle,
+  Leaf,
+  Apple
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -311,6 +316,44 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     refetchInterval: 3000, // Real-time sync
   });
 
+  // Fetch disease catalog for Health Guide section
+  const { data: diseases = [], isLoading: diseasesLoading } = useQuery<any[]>({
+    queryKey: ['/api/diseases'],
+  });
+
+  // Fetch diet templates for Health Guide section
+  const { data: dietTemplates = [] } = useQuery<any[]>({
+    queryKey: ['/api/diet-templates'],
+  });
+
+  // Fetch medication schedules for Health Guide section
+  const { data: medicationSchedules = [] } = useQuery<any[]>({
+    queryKey: ['/api/medication-schedules'],
+  });
+
+  // State for Health Guide section
+  const [selectedDisease, setSelectedDisease] = useState<any | null>(null);
+  const [diseaseSearchQuery, setDiseaseSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Filter diseases based on search and category
+  const filteredDiseases = diseases.filter((disease: any) => {
+    const matchesSearch = disease.diseaseName.toLowerCase().includes(diseaseSearchQuery.toLowerCase()) ||
+      (disease.alternateNames && disease.alternateNames.toLowerCase().includes(diseaseSearchQuery.toLowerCase()));
+    const matchesCategory = selectedCategory === "all" || disease.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Get diet template for a disease
+  const getDietForDisease = (diseaseId: string) => {
+    return dietTemplates.find((t: any) => t.diseaseId === diseaseId);
+  };
+
+  // Get medication schedule for a disease
+  const getMedicationForDisease = (diseaseId: string) => {
+    return medicationSchedules.find((s: any) => s.diseaseId === diseaseId);
+  };
+
   // Generate bill mutation
   const generateBillMutation = useMutation({
     mutationFn: async () => {
@@ -546,6 +589,7 @@ Description: ${record.description}
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "opd", label: "Book Appointment", icon: Calendar },
     { id: "records", label: "Health Records", icon: FileText },
+    { id: "health-guide", label: "Health Guide", icon: BookOpen },
     { id: "admission", label: "Admission", icon: BedDouble },
     { id: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifications },
     { id: "team", label: "Our Doctors", icon: Users },
@@ -2148,6 +2192,297 @@ Description: ${record.description}
                 </Button>
               </CardFooter>
             </Card>
+          </div>
+        );
+
+      case "health-guide":
+        return (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl p-6 text-white">
+              <h2 className="text-2xl font-bold mb-2" data-testid="text-health-guide-title">Health Guide</h2>
+              <p className="opacity-90">Learn about diseases, diet plans, and medication timing guidance. This is for educational purposes only.</p>
+            </div>
+
+            <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-amber-800 dark:text-amber-200">
+                    <strong>Disclaimer:</strong> This information is for educational purposes only and should not be considered medical advice. 
+                    Always consult your doctor before making any changes to your diet or medication. Medication schedules shown are 
+                    timing guidance only, NOT prescriptions.
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search diseases..."
+                  value={diseaseSearchQuery}
+                  onChange={(e) => setDiseaseSearchQuery(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-disease-search"
+                />
+              </div>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full sm:w-48" data-testid="select-disease-category">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="metabolic">Metabolic</SelectItem>
+                  <SelectItem value="cardiovascular">Cardiovascular</SelectItem>
+                  <SelectItem value="respiratory">Respiratory</SelectItem>
+                  <SelectItem value="infectious">Infectious</SelectItem>
+                  <SelectItem value="neuro">Neurological</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {diseasesLoading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardHeader>
+                      <div className="h-6 bg-muted rounded w-3/4"></div>
+                      <div className="h-4 bg-muted rounded w-1/2"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-16 bg-muted rounded"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredDiseases.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="font-semibold mb-2">No Diseases Found</h3>
+                  <p className="text-muted-foreground">Try adjusting your search or category filter.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredDiseases.map((disease: any) => (
+                  <Card 
+                    key={disease.id} 
+                    className="hover-elevate cursor-pointer"
+                    onClick={() => setSelectedDisease(disease)}
+                    data-testid={`card-disease-${disease.id}`}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-lg">{disease.diseaseName}</CardTitle>
+                          {disease.alternateNames && (
+                            <CardDescription className="text-xs">{disease.alternateNames}</CardDescription>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="capitalize text-xs">
+                          {disease.category}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {disease.shortDescription}
+                      </p>
+                      <div className="mt-3 flex items-center gap-2 text-xs text-primary">
+                        <span>Learn more</span>
+                        <ChevronRight className="h-3 w-3" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            <Dialog open={!!selectedDisease} onOpenChange={(open) => !open && setSelectedDisease(null)}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                {selectedDisease && (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle className="text-xl">{selectedDisease.diseaseName}</DialogTitle>
+                      <DialogDescription>
+                        {selectedDisease.alternateNames && <span className="italic">{selectedDisease.alternateNames}</span>}
+                        <Badge variant="outline" className="ml-2 capitalize">{selectedDisease.category}</Badge>
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6 py-4">
+                      <div>
+                        <h4 className="font-semibold mb-2 flex items-center gap-2">
+                          <Info className="h-4 w-4 text-blue-500" />
+                          About
+                        </h4>
+                        <p className="text-sm text-muted-foreground">{selectedDisease.shortDescription}</p>
+                      </div>
+
+                      <Separator />
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-semibold mb-2 text-green-600 dark:text-green-400">Do's</h4>
+                          <ul className="space-y-1">
+                            {(() => {
+                              try {
+                                const dosList = JSON.parse(selectedDisease.dosList || '[]');
+                                return dosList.map((item: string, idx: number) => (
+                                  <li key={idx} className="text-sm flex items-start gap-2">
+                                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                    <span>{item}</span>
+                                  </li>
+                                ));
+                              } catch { return <li className="text-sm text-muted-foreground">No recommendations available</li>; }
+                            })()}
+                          </ul>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2 text-red-600 dark:text-red-400">Don'ts</h4>
+                          <ul className="space-y-1">
+                            {(() => {
+                              try {
+                                const dontsList = JSON.parse(selectedDisease.dontsList || '[]');
+                                return dontsList.map((item: string, idx: number) => (
+                                  <li key={idx} className="text-sm flex items-start gap-2">
+                                    <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                    <span>{item}</span>
+                                  </li>
+                                ));
+                              } catch { return <li className="text-sm text-muted-foreground">No recommendations available</li>; }
+                            })()}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      {getDietForDisease(selectedDisease.id) && (
+                        <div>
+                          <h4 className="font-semibold mb-3 flex items-center gap-2">
+                            <Utensils className="h-4 w-4 text-orange-500" />
+                            Diet Plan
+                          </h4>
+                          {(() => {
+                            const diet = getDietForDisease(selectedDisease.id);
+                            if (!diet) return null;
+                            try {
+                              const mealPlan = typeof diet.mealPlan === 'string' ? JSON.parse(diet.mealPlan) : diet.mealPlan;
+                              return (
+                                <div className="space-y-4">
+                                  <div className="grid gap-2">
+                                    {Object.entries(mealPlan).map(([time, meal]: [string, any]) => (
+                                      <div key={time} className="flex items-start gap-3 p-2 bg-muted/50 rounded-lg">
+                                        <div className="w-28 font-medium text-sm capitalize">
+                                          {time.replace(/_/g, ' ')}:
+                                        </div>
+                                        <div className="text-sm text-muted-foreground flex-1">{meal}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  {diet.foodsToAvoid && (
+                                    <div>
+                                      <h5 className="text-sm font-medium text-red-600 dark:text-red-400 mb-1">Foods to Avoid:</h5>
+                                      <p className="text-sm text-muted-foreground">
+                                        {(() => {
+                                          try {
+                                            return JSON.parse(diet.foodsToAvoid).join(', ');
+                                          } catch { return diet.foodsToAvoid; }
+                                        })()}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {diet.hydrationGuidance && (
+                                    <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                                      <Leaf className="h-4 w-4" />
+                                      <span>Hydration: {diet.hydrationGuidance}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            } catch { return <p className="text-sm text-muted-foreground">Diet information not available</p>; }
+                          })()}
+                        </div>
+                      )}
+
+                      {getMedicationForDisease(selectedDisease.id) && (
+                        <>
+                          <Separator />
+                          <div>
+                            <h4 className="font-semibold mb-3 flex items-center gap-2">
+                              <Pill className="h-4 w-4 text-purple-500" />
+                              Medication Timing Guidance
+                            </h4>
+                            {(() => {
+                              const med = getMedicationForDisease(selectedDisease.id);
+                              if (!med) return null;
+                              return (
+                                <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
+                                  <CardContent className="p-4 space-y-3">
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      <div>
+                                        <span className="text-muted-foreground">Category:</span>
+                                        <span className="ml-2 font-medium">{med.medicineCategory}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-muted-foreground">Typical Timing:</span>
+                                        <span className="ml-2 font-medium">{med.typicalTiming}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-muted-foreground">Before/After Food:</span>
+                                        <span className="ml-2 font-medium capitalize">{med.beforeAfterFood}</span>
+                                      </div>
+                                    </div>
+                                    {med.missedDoseInstructions && (
+                                      <div className="text-sm">
+                                        <span className="text-muted-foreground">If dose is missed:</span>
+                                        <span className="ml-2">{med.missedDoseInstructions}</span>
+                                      </div>
+                                    )}
+                                    {med.generalNotes && (
+                                      <div className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-2">
+                                        {med.generalNotes}
+                                      </div>
+                                    )}
+                                  </CardContent>
+                                </Card>
+                              );
+                            })()}
+                          </div>
+                        </>
+                      )}
+
+                      {selectedDisease.emergencySigns && (
+                        <>
+                          <Separator />
+                          <div>
+                            <h4 className="font-semibold mb-2 text-red-600 dark:text-red-400 flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4" />
+                              Emergency Signs - Seek Immediate Help
+                            </h4>
+                            <ul className="grid md:grid-cols-2 gap-2">
+                              {(() => {
+                                try {
+                                  return JSON.parse(selectedDisease.emergencySigns).map((sign: string, idx: number) => (
+                                    <li key={idx} className="text-sm flex items-center gap-2 text-red-700 dark:text-red-300">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                                      {sign}
+                                    </li>
+                                  ));
+                                } catch { return null; }
+                              })()}
+                            </ul>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         );
 
