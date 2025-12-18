@@ -126,6 +126,19 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async getUserByName(name: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.name, name));
+    return result[0];
+  }
+
+  async getStaffMembers(): Promise<StaffMember[]> {
+    return await db.select().from(staffMembers);
+  }
+
   // ========== DOCTOR METHODS ==========
   async getDoctors(): Promise<Doctor[]> {
     return await db.select().from(doctors);

@@ -152,6 +152,7 @@ NABH-compliant ICU Chart & Nursing Workflow with 24-hour data collection:
 - WebSocket real-time notifications
 - Role-based notification filtering
 - Scheduled notifications
+- Birthday wish notifications (9 AM IST daily with role-specific professional messages)
 
 ### 10. Chatbot Service
 - OpenAI GPT-powered assistance

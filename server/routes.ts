@@ -5626,5 +5626,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Start health tip scheduler (9 AM and 9 PM IST daily)
   notificationService.startHealthTipScheduler();
 
+  // Start birthday wish scheduler (9 AM IST daily)
+  notificationService.startBirthdayScheduler();
+
   return httpServer;
 }

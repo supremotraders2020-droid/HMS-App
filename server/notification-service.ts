@@ -14,8 +14,10 @@ class NotificationService {
   private clients: Map<string, WebSocketClient[]> = new Map();
   private reminderInterval: NodeJS.Timeout | null = null;
   private healthTipInterval: NodeJS.Timeout | null = null;
+  private birthdayInterval: NodeJS.Timeout | null = null;
   private doctorsCache: Map<string, Doctor> = new Map();
   private lastHealthTipTime: string | null = null;
+  private lastBirthdayCheckDate: string | null = null;
 
   initialize(server: Server) {
     this.wss = new WebSocketServer({ server, path: "/ws/notifications" });
@@ -667,6 +669,253 @@ class NotificationService {
     } catch (error) {
       console.error("Error manually generating health tip:", error);
       return null;
+    }
+  }
+
+  // Birthday Wishes Scheduler
+  startBirthdayScheduler() {
+    // Check once per hour for birthdays
+    const INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+    
+    console.log("Starting birthday wishes scheduler (checks hourly at 9 AM IST)");
+    
+    // Check immediately on start
+    this.checkAndSendBirthdayWishes();
+    
+    // Then run periodically
+    this.birthdayInterval = setInterval(() => {
+      this.checkAndSendBirthdayWishes();
+    }, INTERVAL_MS);
+  }
+
+  stopBirthdayScheduler() {
+    if (this.birthdayInterval) {
+      clearInterval(this.birthdayInterval);
+      this.birthdayInterval = null;
+      console.log("Birthday wishes scheduler stopped");
+    }
+  }
+
+  private async checkAndSendBirthdayWishes() {
+    try {
+      // Get current time in IST (UTC+5:30)
+      const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+      const istTime = new Date(now.getTime() + istOffset);
+      
+      const hour = istTime.getUTCHours();
+      const dateStr = istTime.toISOString().split('T')[0];
+      const todayMonthDay = dateStr.substring(5); // MM-DD format
+      
+      // Only send at 9 AM IST
+      if (hour !== 9) {
+        return;
+      }
+      
+      // Prevent duplicate sending on the same day
+      if (this.lastBirthdayCheckDate === dateStr) {
+        return;
+      }
+      
+      console.log(`Checking for birthdays on ${dateStr}`);
+      this.lastBirthdayCheckDate = dateStr;
+      
+      // Check birthdays for all user types
+      await this.sendBirthdayWishesToPatients(todayMonthDay);
+      await this.sendBirthdayWishesToDoctors(todayMonthDay);
+      await this.sendBirthdayWishesToStaff(todayMonthDay);
+      await this.sendBirthdayWishesToUsers(todayMonthDay);
+      
+    } catch (error) {
+      console.error("Error in birthday wishes scheduler:", error);
+    }
+  }
+
+  private getBirthdayMessage(name: string, role: string): { title: string; message: string } {
+    const firstName = name.split(' ')[0];
+    
+    switch (role.toUpperCase()) {
+      case 'DOCTOR':
+        return {
+          title: "Happy Birthday, Dr. " + firstName + "!",
+          message: `Dear Dr. ${name},\n\nOn behalf of the entire Gravity Hospital family, we extend our warmest birthday wishes to you!\n\nYour dedication to patient care and medical excellence continues to inspire us all. We are truly grateful for your commitment to healing and compassion.\n\nMay this special day bring you joy, good health, and happiness. Wishing you continued success in all your endeavors.\n\nWarm Regards,\nGravity Hospital Administration`
+        };
+      
+      case 'NURSE':
+        return {
+          title: "Happy Birthday, " + firstName + "!",
+          message: `Dear ${name},\n\nWishing you a very Happy Birthday!\n\nYour compassion, dedication, and tireless efforts in patient care make our hospital a better place. The comfort and support you provide to patients and their families is invaluable.\n\nOn your special day, we want you to know how much we appreciate your service. May this year bring you happiness, good health, and professional fulfillment.\n\nWarm Regards,\nGravity Hospital Administration`
+        };
+      
+      case 'PATIENT':
+        return {
+          title: "Happy Birthday from Gravity Hospital!",
+          message: `Dear ${name},\n\nWishing you a very Happy Birthday!\n\nOn this special day, the entire team at Gravity Hospital wishes you good health, happiness, and joy. Your well-being is our priority, and we are honored to be a part of your healthcare journey.\n\nMay this year bring you excellent health, peace of mind, and wonderful moments with your loved ones.\n\nWarm wishes,\nGravity Hospital Team`
+        };
+      
+      case 'ADMIN':
+        return {
+          title: "Happy Birthday, " + firstName + "!",
+          message: `Dear ${name},\n\nHappy Birthday!\n\nYour leadership and dedication to hospital operations ensure smooth functioning of all departments. We appreciate your hard work and commitment to excellence.\n\nMay this special day bring you happiness and may the year ahead be filled with success and good health.\n\nBest Regards,\nGravity Hospital`
+        };
+      
+      case 'OPD_MANAGER':
+        return {
+          title: "Happy Birthday, " + firstName + "!",
+          message: `Dear ${name},\n\nWishing you a wonderful Birthday!\n\nYour efficient management of OPD operations ensures our patients receive timely care. We truly value your contribution to our hospital.\n\nMay this birthday bring you joy, good health, and continued success in your career.\n\nWarm Regards,\nGravity Hospital Administration`
+        };
+      
+      default:
+        return {
+          title: "Happy Birthday from Gravity Hospital!",
+          message: `Dear ${name},\n\nWishing you a very Happy Birthday!\n\nMay this special day bring you joy, happiness, and good health. We appreciate your association with Gravity Hospital.\n\nWarm wishes,\nGravity Hospital Team`
+        };
+    }
+  }
+
+  private async sendBirthdayWishesToPatients(todayMonthDay: string) {
+    try {
+      const patients = await storage.getUsersByRole("PATIENT");
+      
+      for (const patient of patients) {
+        // Check if user has dateOfBirth set
+        const user = await storage.getUserByUsername(patient.username);
+        if (!user?.dateOfBirth) continue;
+        
+        // Check if birthday matches (format: YYYY-MM-DD)
+        const userBirthdayMonthDay = user.dateOfBirth.substring(5);
+        if (userBirthdayMonthDay !== todayMonthDay) continue;
+        
+        const { title, message } = this.getBirthdayMessage(user.name || patient.username, "PATIENT");
+        
+        await this.createAndPushNotification({
+          userId: patient.username,
+          userRole: "PATIENT",
+          type: "birthday",
+          title,
+          message,
+          isRead: false,
+          metadata: JSON.stringify({ birthdayDate: new Date().toISOString().split('T')[0] })
+        });
+        
+        console.log(`Sent birthday wish to patient: ${patient.username}`);
+      }
+    } catch (error) {
+      console.error("Error sending birthday wishes to patients:", error);
+    }
+  }
+
+  private async sendBirthdayWishesToDoctors(todayMonthDay: string) {
+    try {
+      const doctors = await storage.getDoctors();
+      
+      for (const doctor of doctors) {
+        if (!doctor.dateOfBirth) continue;
+        
+        // Check if birthday matches (format: YYYY-MM-DD)
+        const doctorBirthdayMonthDay = doctor.dateOfBirth.substring(5);
+        if (doctorBirthdayMonthDay !== todayMonthDay) continue;
+        
+        const { title, message } = this.getBirthdayMessage(doctor.name, "DOCTOR");
+        
+        // Find the doctor's user account to get their username
+        const doctorUser = await storage.getUserByName(doctor.name);
+        if (!doctorUser) continue;
+        
+        await this.createAndPushNotification({
+          userId: doctorUser.username,
+          userRole: "DOCTOR",
+          type: "birthday",
+          title,
+          message,
+          isRead: false,
+          metadata: JSON.stringify({ birthdayDate: new Date().toISOString().split('T')[0] })
+        });
+        
+        console.log(`Sent birthday wish to doctor: ${doctor.name}`);
+      }
+    } catch (error) {
+      console.error("Error sending birthday wishes to doctors:", error);
+    }
+  }
+
+  private async sendBirthdayWishesToStaff(todayMonthDay: string) {
+    try {
+      const staffMembers = await storage.getStaffMembers();
+      
+      for (const staff of staffMembers) {
+        if (!staff.dateOfBirth) continue;
+        
+        // Check if birthday matches (format: YYYY-MM-DD)
+        const staffBirthdayMonthDay = staff.dateOfBirth.substring(5);
+        if (staffBirthdayMonthDay !== todayMonthDay) continue;
+        
+        // Determine role based on staff role
+        const role = staff.role.toLowerCase().includes('nurse') ? 'NURSE' : 'ADMIN';
+        const { title, message } = this.getBirthdayMessage(staff.name, role);
+        
+        // Find the staff's user account
+        const staffUser = await storage.getUserByName(staff.name);
+        if (!staffUser) continue;
+        
+        await this.createAndPushNotification({
+          userId: staffUser.username,
+          userRole: staffUser.role,
+          type: "birthday",
+          title,
+          message,
+          isRead: false,
+          metadata: JSON.stringify({ birthdayDate: new Date().toISOString().split('T')[0] })
+        });
+        
+        console.log(`Sent birthday wish to staff: ${staff.name}`);
+      }
+    } catch (error) {
+      console.error("Error sending birthday wishes to staff:", error);
+    }
+  }
+
+  private async sendBirthdayWishesToUsers(todayMonthDay: string) {
+    try {
+      // Get all users with dateOfBirth
+      const allUsers = await storage.getAllUsers();
+      
+      for (const user of allUsers) {
+        if (!user.dateOfBirth) continue;
+        
+        // Check if birthday matches (format: YYYY-MM-DD)
+        const userBirthdayMonthDay = user.dateOfBirth.substring(5);
+        if (userBirthdayMonthDay !== todayMonthDay) continue;
+        
+        // Check if we already sent a notification today
+        const existingNotifications = await storage.getUserNotifications(user.username);
+        const alreadySent = existingNotifications.some(n => {
+          try {
+            const metadata = n.metadata ? JSON.parse(n.metadata) : {};
+            return n.type === "birthday" && metadata.birthdayDate === new Date().toISOString().split('T')[0];
+          } catch {
+            return false;
+          }
+        });
+        
+        if (alreadySent) continue;
+        
+        const { title, message } = this.getBirthdayMessage(user.name || user.username, user.role);
+        
+        await this.createAndPushNotification({
+          userId: user.username,
+          userRole: user.role,
+          type: "birthday",
+          title,
+          message,
+          isRead: false,
+          metadata: JSON.stringify({ birthdayDate: new Date().toISOString().split('T')[0] })
+        });
+        
+        console.log(`Sent birthday wish to user: ${user.username} (${user.role})`);
+      }
+    } catch (error) {
+      console.error("Error sending birthday wishes to users:", error);
     }
   }
 }

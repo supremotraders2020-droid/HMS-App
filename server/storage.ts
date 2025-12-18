@@ -5,6 +5,9 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUsersByRole(role: string): Promise<User[]>;
+  getAllUsers(): Promise<User[]>;
+  getUserByName(name: string): Promise<User | undefined>;
+  getStaffMembers(): Promise<StaffMember[]>;
   createUser(user: InsertUser): Promise<User>;
   
   getDoctors(): Promise<Doctor[]>;

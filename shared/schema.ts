@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("PATIENT"),
   name: text("name"),
   email: text("email"),
+  dateOfBirth: text("date_of_birth"),
 });
 
 const validRoles = ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"] as const;
@@ -28,6 +29,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
   name: true,
   email: true,
+  dateOfBirth: true,
 }).extend({
   role: z.enum(validRoles).default("PATIENT"),
 });
@@ -46,6 +48,7 @@ export const doctors = pgTable("doctors", {
   rating: text("rating").notNull().default("4.5"),
   availableDays: text("available_days").notNull(),
   avatarInitials: text("avatar_initials").notNull(),
+  dateOfBirth: text("date_of_birth"),
 });
 
 export const insertDoctorSchema = createInsertSchema(doctors).omit({ id: true });
@@ -176,6 +179,7 @@ export const staffMembers = pgTable("staff_members", {
   email: text("email"),
   phone: text("phone"),
   department: text("department"),
+  dateOfBirth: text("date_of_birth"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
