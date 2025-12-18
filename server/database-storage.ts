@@ -16,7 +16,7 @@ import {
   patientConsents, medicines, oxygenCylinders, cylinderMovements, oxygenConsumption, lmoReadings, oxygenAlerts,
   bmwBags, bmwMovements, bmwPickups, bmwDisposals, bmwVendors, bmwStorageRooms, bmwIncidents, bmwReports,
   doctorOathConfirmations, consentTemplates, resolvedAlerts, doctorTimeSlots,
-  patientBills, billPayments,
+  patientBills, billPayments, healthTips,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -57,7 +57,8 @@ import {
   type ResolvedAlert, type InsertResolvedAlert,
   type DoctorTimeSlot, type InsertDoctorTimeSlot,
   type PatientBill, type InsertPatientBill,
-  type BillPayment, type InsertBillPayment
+  type BillPayment, type InsertBillPayment,
+  type HealthTip, type InsertHealthTip
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -2532,6 +2533,49 @@ export class DatabaseStorage implements IStorage {
     }
     
     return result[0];
+  }
+
+  // ========== HEALTH TIPS METHODS ==========
+  async getAllHealthTips(): Promise<HealthTip[]> {
+    return await db.select().from(healthTips).orderBy(desc(healthTips.generatedAt));
+  }
+
+  async getActiveHealthTips(): Promise<HealthTip[]> {
+    return await db.select().from(healthTips)
+      .where(eq(healthTips.isActive, true))
+      .orderBy(desc(healthTips.generatedAt));
+  }
+
+  async getHealthTipsByDate(date: string): Promise<HealthTip[]> {
+    return await db.select().from(healthTips)
+      .where(sql`DATE(${healthTips.generatedAt}) = ${date}`)
+      .orderBy(desc(healthTips.generatedAt));
+  }
+
+  async getLatestHealthTip(): Promise<HealthTip | undefined> {
+    const result = await db.select().from(healthTips)
+      .where(eq(healthTips.isActive, true))
+      .orderBy(desc(healthTips.generatedAt))
+      .limit(1);
+    return result[0];
+  }
+
+  async createHealthTip(tip: InsertHealthTip): Promise<HealthTip> {
+    const result = await db.insert(healthTips).values(tip).returning();
+    return result[0];
+  }
+
+  async updateHealthTip(id: string, updates: Partial<InsertHealthTip>): Promise<HealthTip | undefined> {
+    const result = await db.update(healthTips)
+      .set(updates)
+      .where(eq(healthTips.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteHealthTip(id: string): Promise<boolean> {
+    const result = await db.delete(healthTips).where(eq(healthTips.id, id)).returning();
+    return result.length > 0;
   }
 }
 

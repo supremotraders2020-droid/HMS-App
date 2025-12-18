@@ -1503,3 +1503,27 @@ export const insertBillPaymentSchema = createInsertSchema(billPayments).omit({
 });
 export type InsertBillPayment = z.infer<typeof insertBillPaymentSchema>;
 export type BillPayment = typeof billPayments.$inferSelect;
+
+// ========== AI HEALTH TIPS TABLES ==========
+
+// Health Tips table - stores AI-generated health tips
+export const healthTips = pgTable("health_tips", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull(), // weather, climate, diet, trending, seasonal
+  weatherContext: text("weather_context"), // Current weather conditions used
+  season: text("season"), // summer, monsoon, winter, spring
+  priority: text("priority").notNull().default("medium"), // low, medium, high
+  targetAudience: text("target_audience").notNull().default("all"), // all, patients, elderly, children
+  generatedAt: timestamp("generated_at").defaultNow(),
+  scheduledFor: text("scheduled_for"), // "9AM" or "9PM"
+  isActive: boolean("is_active").notNull().default(true),
+});
+
+export const insertHealthTipSchema = createInsertSchema(healthTips).omit({
+  id: true,
+  generatedAt: true,
+});
+export type InsertHealthTip = z.infer<typeof insertHealthTipSchema>;
+export type HealthTip = typeof healthTips.$inferSelect;
