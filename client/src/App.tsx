@@ -34,6 +34,7 @@ import SwabMonitoring from "@/pages/SwabMonitoring";
 import DiseaseKnowledge from "@/pages/DiseaseKnowledge";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import PrescriptionsPage from "@/pages/PrescriptionsPage";
+import PatientMonitoringPage from "@/pages/PatientMonitoringPage";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -250,6 +251,18 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only doctors and OPD managers can access prescriptions.</p>
+          </div>
+        )}
+      </Route>
+
+      {/* Patient Monitoring Route - for Admin, Doctor, Nurse */}
+      <Route path="/patient-monitoring">
+        {["ADMIN", "DOCTOR", "NURSE"].includes(currentUser.role) ? (
+          <PatientMonitoringPage />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only medical staff can access Patient Monitoring.</p>
           </div>
         )}
       </Route>
