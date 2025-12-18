@@ -320,7 +320,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
                 {getMenuItems(currentRole).filter(item => 
-                  !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service'].includes(item.title)
+                  !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Patient Monitoring', 'Prescriptions', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service'].includes(item.title)
                 ).map((item, index) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
