@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthForms from "@/components/AuthForms";
@@ -293,7 +294,7 @@ function AppContent() {
     location: "Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062",
     status: "ACTIVE"
   });
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Hospital data (Gravity Hospital only)
   const hospitals: Hospital[] = [
@@ -436,7 +437,54 @@ function AppContent() {
   }
 
   // Doctor Portal - separate interface for doctors
+  // But also allow access to shared routes like /patient-monitoring
   if (currentUser.role === "DOCTOR") {
+    // Check if doctor is accessing a shared route
+    if (location === "/patient-monitoring") {
+      // Render the shared layout with PatientMonitoringPage for doctors
+      return (
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <TooltipProvider>
+              <SidebarProvider style={sidebarStyle as React.CSSProperties}>
+                <div className="flex h-screen w-full">
+                  <HMSSidebar 
+                    currentRole={currentUser.role}
+                    currentUser={{
+                      name: currentUser.name,
+                      hospitalName: currentUser.hospitalName
+                    }}
+                    onNavigate={(path) => {
+                      console.log('Navigating to:', path);
+                      setLocation(path);
+                    }}
+                    onLogout={handleLogout}
+                  />
+                  <div className="flex flex-col flex-1">
+                    <header className="flex items-center justify-between p-4 border-b glass-panel sticky top-0 z-40">
+                      <div className="flex items-center space-x-4">
+                        <SidebarTrigger data-testid="button-sidebar-toggle" className="glass-button" />
+                        <Button variant="ghost" size="sm" onClick={() => setLocation('/dashboard')} className="gap-2">
+                          <span>Back to Doctor Portal</span>
+                        </Button>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <ThemeSwitcher />
+                      </div>
+                    </header>
+                    <main className="flex-1 overflow-auto p-6">
+                      <PatientMonitoringPage />
+                    </main>
+                  </div>
+                </div>
+              </SidebarProvider>
+              <Toaster />
+            </TooltipProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      );
+    }
+    
     return (
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>

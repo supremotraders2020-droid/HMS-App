@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -73,7 +73,8 @@ import {
   Camera,
   Loader2,
   ArrowLeft,
-  ExternalLink
+  ExternalLink,
+  MonitorCheck
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import DoctorOathModal from "@/components/DoctorOathModal";
@@ -111,6 +112,7 @@ const BLOOD_GROUP_COLORS: Record<string, string> = {
 };
 
 export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc-1", onLogout }: DoctorPortalProps) {
+  const [, setLocation] = useLocation();
   const [activeSection, setActiveSection] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<{
@@ -613,6 +615,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     { id: "schedules", title: "Schedules", icon: CalendarDays },
     { id: "patients", title: "Patients", icon: Users },
     { id: "prescriptions", title: "Prescriptions", icon: FileText },
+    { id: "patient-monitoring", title: "Patient Monitoring", icon: MonitorCheck, externalRoute: "/patient-monitoring" },
     { id: "notifications", title: "Notifications", icon: Bell, badge: unreadNotifications.length },
     { id: "profile", title: "Profile", icon: Settings },
   ];
@@ -2189,7 +2192,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                         <Button
                           variant={activeSection === item.id ? "secondary" : "ghost"}
                           className="w-full justify-start"
-                          onClick={() => setActiveSection(item.id)}
+                          onClick={() => item.externalRoute ? setLocation(item.externalRoute) : setActiveSection(item.id)}
                         >
                           <item.icon className="h-4 w-4 mr-2" />
                           <span className="flex-1 text-left">{item.title}</span>
