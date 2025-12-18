@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import HealthTipsBanner from "@/components/HealthTipsBanner";
 import {
   Brain,
   Activity,
@@ -312,6 +313,8 @@ export default function AIAnalytics() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
+              <HealthTipsBanner showGenerateButton={true} />
+              
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <ScoreCard
                   title="Hospital Health Index"

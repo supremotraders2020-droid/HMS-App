@@ -67,6 +67,7 @@ import {
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import ThemeToggle from "@/components/ThemeToggle";
+import HealthTipsBanner from "@/components/HealthTipsBanner";
 
 interface PatientPortalProps {
   patientId: string;
@@ -2190,7 +2191,8 @@ Description: ${record.description}
           </header>
 
           <ScrollArea className="flex-1">
-            <main className="p-4 lg:p-6">
+            <main className="p-4 lg:p-6 space-y-4">
+              <HealthTipsBanner compact={true} />
               {renderContent()}
             </main>
           </ScrollArea>
