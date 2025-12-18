@@ -63,7 +63,7 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
   };
 
   const handleCreatePrescription = () => {
-    if (!selectedDoctor && currentUser.role === "OPD_MANAGER") {
+    if (!selectedDoctor && (currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN")) {
       return;
     }
     setShowCreateModal(true);
@@ -105,7 +105,7 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
           </div>
           
           <div className="flex items-center gap-3">
-            {currentUser.role === "OPD_MANAGER" && (
+            {(currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN") && (
               <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
                 <SelectTrigger className="w-[200px]" data-testid="select-doctor">
                   <SelectValue placeholder="Select Doctor" />
@@ -122,7 +122,7 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
             
             <Button 
               onClick={handleCreatePrescription}
-              disabled={currentUser.role === "OPD_MANAGER" && !selectedDoctor}
+              disabled={(currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN") && !selectedDoctor}
               data-testid="button-create-prescription"
             >
               <Plus className="h-4 w-4 mr-2" />
