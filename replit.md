@@ -123,8 +123,19 @@ The backend is a Node.js/Express application with TypeScript:
 #### 13. Medicine Database
 - Searchable database of Indian medicines
 - Dosage information
-- Composition details
-- CSV import capability
+
+#### 14. OT & ICU Swab Contamination Monitoring
+- NABH-compliant environmental surveillance for infection control
+- 7 database tables: Area Master, Sampling Site Master, Organism Master, Swab Collection, Lab Results, CAPA Actions, Audit Logs
+- Six-tab interface: Dashboard, Collection, Lab Results, CAPA, Reports, Masters
+- Auto-interpretation logic:
+  - No Growth / None category = PASS
+  - Flora + Low growth = ACCEPTABLE
+  - Pathogen or Moderate/Heavy growth = FAIL
+- Auto-CAPA generation for failed swabs with 7-day closure target
+- Admin notifications on contamination alerts
+- Full audit logging for NABH compliance
+- Master data: 6 OT/ICU areas, 10 sampling sites, 12 organisms (flora + pathogens)
 
 ### Authentication and Authorization
 
