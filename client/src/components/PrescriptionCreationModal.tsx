@@ -173,8 +173,8 @@ export default function PrescriptionCreationModal({
 
   // Filter medicines based on search
   const filteredMedicines = medicineDatabase.filter(med => 
-    med.name.toLowerCase().includes(medicineSearch.toLowerCase()) ||
-    med.composition?.toLowerCase().includes(medicineSearch.toLowerCase())
+    med.brandName.toLowerCase().includes(medicineSearch.toLowerCase()) ||
+    med.genericName?.toLowerCase().includes(medicineSearch.toLowerCase())
   ).slice(0, 10);
 
   // Update quantity when frequency or duration changes
@@ -221,7 +221,7 @@ export default function PrescriptionCreationModal({
   const selectMedicineFromSearch = (medicine: Medicine) => {
     setCurrentMedicine(prev => ({
       ...prev,
-      medicineName: medicine.name,
+      medicineName: medicine.brandName,
       strength: medicine.strength || '',
     }));
     setMedicineSearch('');
@@ -262,10 +262,10 @@ export default function PrescriptionCreationModal({
       const response = await apiRequest('POST', '/api/prescriptions/with-items', {
         prescription: prescriptionData,
         items: medicines,
-      });
+      }) as any;
 
       // If finalizing, call finalize endpoint
-      if (finalize && response.id) {
+      if (finalize && response?.id) {
         await apiRequest('POST', `/api/prescriptions/${response.id}/finalize`, {
           signedBy: doctorId,
           signedByName: doctorName,
@@ -530,7 +530,7 @@ export default function PrescriptionCreationModal({
                                 className="p-2 hover-elevate cursor-pointer rounded text-sm"
                                 onClick={() => selectMedicineFromSearch(med)}
                               >
-                                <span className="font-medium">{med.name}</span>
+                                <span className="font-medium">{med.brandName}</span>
                                 {med.strength && <span className="text-muted-foreground ml-2">{med.strength}</span>}
                               </div>
                             ))}
