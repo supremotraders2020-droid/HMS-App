@@ -450,9 +450,12 @@ function AppContent() {
   // Doctor Portal - separate interface for doctors
   // But also allow access to shared routes like /patient-monitoring
   if (currentUser.role === "DOCTOR") {
-    // Check if doctor is accessing a shared route
-    if (location === "/patient-monitoring") {
-      // Render the shared layout with PatientMonitoringPage for doctors (with full sidebar like Nurse Portal)
+    // Check if doctor is accessing a shared route that needs the full HMS sidebar
+    const doctorSharedRoutes = ["/patient-monitoring", "/prescriptions"];
+    const isOnSharedRoute = doctorSharedRoutes.some(route => location === route || location.startsWith(route + "/"));
+    
+    if (isOnSharedRoute) {
+      // Render the shared layout with full HMSSidebar for doctors accessing shared routes
       return (
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
@@ -485,7 +488,14 @@ function AppContent() {
                       </div>
                     </header>
                     <main className="flex-1 overflow-auto p-6">
-                      <PatientMonitoringPage />
+                      <Switch>
+                        <Route path="/patient-monitoring">
+                          <PatientMonitoringPage />
+                        </Route>
+                        <Route path="/prescriptions">
+                          <PrescriptionsPage currentUser={currentUser} />
+                        </Route>
+                      </Switch>
                     </main>
                   </div>
                 </div>
