@@ -4326,7 +4326,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/swab-monitoring/collections", async (req, res) => {
     try {
-      const collection = await storage.createSwabCollection(req.body);
+      // Convert date strings to Date objects
+      const collectionData = {
+        ...req.body,
+        collectionDate: req.body.collectionDate ? new Date(req.body.collectionDate) : new Date()
+      };
+      
+      const collection = await storage.createSwabCollection(collectionData);
       
       // Create audit log
       await storage.createSwabAuditLog({
@@ -4359,7 +4365,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/swab-monitoring/lab-results", async (req, res) => {
     try {
-      const labResult = await storage.createSwabLabResult(req.body);
+      // Convert date strings to Date objects
+      const labResultData = {
+        ...req.body,
+        resultDate: req.body.resultDate ? new Date(req.body.resultDate) : new Date()
+      };
+      
+      const labResult = await storage.createSwabLabResult(labResultData);
       
       // Get the organism to determine result status
       const organism = await storage.getSwabOrganism(req.body.organismId);
