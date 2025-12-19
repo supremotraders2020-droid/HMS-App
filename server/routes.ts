@@ -6536,6 +6536,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       }
 
       // Check if storage facilities exist
+      let storageFacilityIds: string[] = [];
       const existingFacilities = await db.select().from(bloodStorageFacilities);
       if (existingFacilities.length === 0) {
         // Seed storage facilities
@@ -6545,9 +6546,161 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
           { facilityCode: "FRZ-001", name: "Plasma Freezer", type: "FREEZER", location: "Blood Bank Room B", capacity: 50, minTemperature: "-30", maxTemperature: "-18", currentTemperature: "-25", componentTypes: "FFP,CRYOPRECIPITATE" },
           { facilityCode: "PLT-001", name: "Platelet Agitator", type: "PLATELET_AGITATOR", location: "Blood Bank Room B", capacity: 20, minTemperature: "20", maxTemperature: "24", currentTemperature: "22", componentTypes: "PLATELET" }
         ];
-        await db.insert(bloodStorageFacilities).values(facilities);
+        const insertedFacilities = await db.insert(bloodStorageFacilities).values(facilities).returning();
+        storageFacilityIds = insertedFacilities.map(f => f.id);
         console.log("Blood Bank storage facilities seeded");
+      } else {
+        storageFacilityIds = existingFacilities.map(f => f.id);
       }
+
+      // Check if donors already exist
+      const existingDonors = await db.select().from(bloodDonors);
+      let donorData: any[] = [];
+      if (existingDonors.length === 0) {
+        // Seed test donors with realistic Indian names
+        const testDonors = [
+          { donorId: "DN-20241215-0001", name: "Rajesh Kumar Sharma", bloodGroup: "O+", rhFactor: "Positive", age: 32, gender: "Male", phone: "9876543210", email: "rajesh.sharma@email.com", address: "123 MG Road, Pune", weight: "72", hemoglobinLevel: "14.5", bloodPressure: "120/80", pulseRate: 72, totalDonations: 5, eligibilityStatus: "ELIGIBLE", consentGiven: true },
+          { donorId: "DN-20241215-0002", name: "Priya Patel", bloodGroup: "A+", rhFactor: "Positive", age: 28, gender: "Female", phone: "9876543211", email: "priya.patel@email.com", address: "456 FC Road, Pune", weight: "58", hemoglobinLevel: "12.8", bloodPressure: "110/70", pulseRate: 68, totalDonations: 3, eligibilityStatus: "ELIGIBLE", consentGiven: true },
+          { donorId: "DN-20241215-0003", name: "Amit Singh Rajput", bloodGroup: "B+", rhFactor: "Positive", age: 35, gender: "Male", phone: "9876543212", email: "amit.rajput@email.com", address: "789 JM Road, Pune", weight: "80", hemoglobinLevel: "15.2", bloodPressure: "125/82", pulseRate: 75, totalDonations: 8, eligibilityStatus: "ELIGIBLE", consentGiven: true },
+          { donorId: "DN-20241215-0004", name: "Sunita Devi Verma", bloodGroup: "AB+", rhFactor: "Positive", age: 30, gender: "Female", phone: "9876543213", email: "sunita.verma@email.com", address: "101 Aundh Road, Pune", weight: "62", hemoglobinLevel: "13.0", bloodPressure: "118/78", pulseRate: 70, totalDonations: 2, eligibilityStatus: "ELIGIBLE", consentGiven: true },
+          { donorId: "DN-20241215-0005", name: "Mohammad Iqbal Khan", bloodGroup: "O-", rhFactor: "Negative", age: 40, gender: "Male", phone: "9876543214", email: "iqbal.khan@email.com", address: "202 Koregaon Park, Pune", weight: "75", hemoglobinLevel: "14.8", bloodPressure: "122/80", pulseRate: 74, totalDonations: 12, eligibilityStatus: "ELIGIBLE", consentGiven: true },
+          { donorId: "DN-20241215-0006", name: "Kavita Joshi", bloodGroup: "A-", rhFactor: "Negative", age: 26, gender: "Female", phone: "9876543215", email: "kavita.joshi@email.com", address: "303 Baner Road, Pune", weight: "55", hemoglobinLevel: "12.5", bloodPressure: "108/72", pulseRate: 66, totalDonations: 1, eligibilityStatus: "ELIGIBLE", consentGiven: true },
+          { donorId: "DN-20241215-0007", name: "Vikram Deshmukh", bloodGroup: "B-", rhFactor: "Negative", age: 38, gender: "Male", phone: "9876543216", email: "vikram.deshmukh@email.com", address: "404 Viman Nagar, Pune", weight: "78", hemoglobinLevel: "15.0", bloodPressure: "130/85", pulseRate: 78, totalDonations: 6, eligibilityStatus: "ELIGIBLE", consentGiven: true },
+          { donorId: "DN-20241215-0008", name: "Anita Rao", bloodGroup: "AB-", rhFactor: "Negative", age: 33, gender: "Female", phone: "9876543217", email: "anita.rao@email.com", address: "505 Kothrud, Pune", weight: "60", hemoglobinLevel: "13.2", bloodPressure: "115/75", pulseRate: 69, totalDonations: 4, eligibilityStatus: "ELIGIBLE", consentGiven: true }
+        ];
+        donorData = await db.insert(bloodDonors).values(testDonors).returning();
+        console.log("Blood Bank donors seeded: " + donorData.length + " donors");
+      } else {
+        donorData = existingDonors;
+      }
+
+      // Check if blood units already exist
+      const existingUnits = await db.select().from(bloodUnits);
+      if (existingUnits.length === 0 && donorData.length > 0) {
+        // Calculate expiry dates
+        const today = new Date();
+        const getExpiryDate = (daysFromNow: number) => {
+          const date = new Date(today);
+          date.setDate(date.getDate() + daysFromNow);
+          return date.toISOString().split('T')[0];
+        };
+        const getCollectionDate = (daysAgo: number) => {
+          const date = new Date(today);
+          date.setDate(date.getDate() - daysAgo);
+          return date.toISOString().split('T')[0];
+        };
+
+        // Seed blood units with various statuses
+        const testUnits = [
+          { unitId: "BU-20241210-0001", componentType: "WHOLE_BLOOD", bloodGroup: "O+", rhFactor: "Positive", volume: 450, donorId: donorData[0]?.id || "donor-1", donorName: "Rajesh Kumar Sharma", collectionDate: getCollectionDate(5), status: "AVAILABLE", expiryDate: getExpiryDate(30), storageFacilityId: storageFacilityIds[0] },
+          { unitId: "BU-20241210-0002", componentType: "PRBC", bloodGroup: "O+", rhFactor: "Positive", volume: 280, donorId: donorData[0]?.id || "donor-1", donorName: "Rajesh Kumar Sharma", collectionDate: getCollectionDate(5), status: "AVAILABLE", expiryDate: getExpiryDate(35), storageFacilityId: storageFacilityIds[0] },
+          { unitId: "BU-20241211-0001", componentType: "WHOLE_BLOOD", bloodGroup: "A+", rhFactor: "Positive", volume: 450, donorId: donorData[1]?.id || "donor-2", donorName: "Priya Patel", collectionDate: getCollectionDate(4), status: "AVAILABLE", expiryDate: getExpiryDate(31), storageFacilityId: storageFacilityIds[0] },
+          { unitId: "BU-20241211-0002", componentType: "FFP", bloodGroup: "A+", rhFactor: "Positive", volume: 200, donorId: donorData[1]?.id || "donor-2", donorName: "Priya Patel", collectionDate: getCollectionDate(4), status: "AVAILABLE", expiryDate: getExpiryDate(365), storageFacilityId: storageFacilityIds[2] },
+          { unitId: "BU-20241212-0001", componentType: "WHOLE_BLOOD", bloodGroup: "B+", rhFactor: "Positive", volume: 450, donorId: donorData[2]?.id || "donor-3", donorName: "Amit Singh Rajput", collectionDate: getCollectionDate(3), status: "TESTING", expiryDate: getExpiryDate(32), storageFacilityId: storageFacilityIds[1] },
+          { unitId: "BU-20241212-0002", componentType: "PLATELET", bloodGroup: "B+", rhFactor: "Positive", volume: 50, donorId: donorData[2]?.id || "donor-3", donorName: "Amit Singh Rajput", collectionDate: getCollectionDate(3), status: "AVAILABLE", expiryDate: getExpiryDate(2), storageFacilityId: storageFacilityIds[3] },
+          { unitId: "BU-20241213-0001", componentType: "PRBC", bloodGroup: "AB+", rhFactor: "Positive", volume: 280, donorId: donorData[3]?.id || "donor-4", donorName: "Sunita Devi Verma", collectionDate: getCollectionDate(2), status: "AVAILABLE", expiryDate: getExpiryDate(40), storageFacilityId: storageFacilityIds[0] },
+          { unitId: "BU-20241213-0002", componentType: "WHOLE_BLOOD", bloodGroup: "O-", rhFactor: "Negative", volume: 450, donorId: donorData[4]?.id || "donor-5", donorName: "Mohammad Iqbal Khan", collectionDate: getCollectionDate(2), status: "RESERVED", expiryDate: getExpiryDate(33), storageFacilityId: storageFacilityIds[0], reservedForPatientName: "ICU Patient Emergency" },
+          { unitId: "BU-20241214-0001", componentType: "PRBC", bloodGroup: "A-", rhFactor: "Negative", volume: 280, donorId: donorData[5]?.id || "donor-6", donorName: "Kavita Joshi", collectionDate: getCollectionDate(1), status: "AVAILABLE", expiryDate: getExpiryDate(41), storageFacilityId: storageFacilityIds[1] },
+          { unitId: "BU-20241214-0002", componentType: "FFP", bloodGroup: "B-", rhFactor: "Negative", volume: 200, donorId: donorData[6]?.id || "donor-7", donorName: "Vikram Deshmukh", collectionDate: getCollectionDate(1), status: "AVAILABLE", expiryDate: getExpiryDate(364), storageFacilityId: storageFacilityIds[2] },
+          { unitId: "BU-20241215-0001", componentType: "WHOLE_BLOOD", bloodGroup: "AB-", rhFactor: "Negative", volume: 450, donorId: donorData[7]?.id || "donor-8", donorName: "Anita Rao", collectionDate: getCollectionDate(0), status: "COLLECTED", expiryDate: getExpiryDate(35), storageFacilityId: storageFacilityIds[1] },
+          { unitId: "BU-20241208-0001", componentType: "PRBC", bloodGroup: "O+", rhFactor: "Positive", volume: 280, donorId: donorData[0]?.id || "donor-1", donorName: "Rajesh Kumar Sharma", collectionDate: getCollectionDate(10), status: "ISSUED", expiryDate: getExpiryDate(25), storageFacilityId: storageFacilityIds[0], issuedToPatientName: "Rahul Mehra", issuedDate: getCollectionDate(1), issueDepartment: "ICU" }
+        ];
+        await db.insert(bloodUnits).values(testUnits);
+        console.log("Blood Bank units seeded: " + testUnits.length + " units");
+
+        // Update storage facility occupancy
+        await db.update(bloodStorageFacilities).set({ currentOccupancy: 5 }).where(eq(bloodStorageFacilities.facilityCode, "REF-001"));
+        await db.update(bloodStorageFacilities).set({ currentOccupancy: 3 }).where(eq(bloodStorageFacilities.facilityCode, "REF-002"));
+        await db.update(bloodStorageFacilities).set({ currentOccupancy: 2 }).where(eq(bloodStorageFacilities.facilityCode, "FRZ-001"));
+        await db.update(bloodStorageFacilities).set({ currentOccupancy: 1 }).where(eq(bloodStorageFacilities.facilityCode, "PLT-001"));
+      }
+
+      // Check if transfusion orders exist
+      const existingOrders = await db.select().from(bloodTransfusionOrders);
+      if (existingOrders.length === 0) {
+        const today = new Date().toISOString().split('T')[0];
+        const testOrders = [
+          { orderId: "TO-20241218-0001", patientId: "patient-1", patientName: "Suresh Kapoor", patientBloodGroup: "O+", patientRhFactor: "Positive", wardDepartment: "ICU", componentRequired: "PRBC", unitsRequired: 2, urgency: "URGENT", indication: "Post-operative anemia", requestingDoctorId: "doctor-1", requestingDoctorName: "Dr. Anil Mehta", status: "PENDING", crossMatchRequired: true, crossMatchStatus: "PENDING" },
+          { orderId: "TO-20241218-0002", patientId: "patient-2", patientName: "Meena Saxena", patientBloodGroup: "A+", patientRhFactor: "Positive", wardDepartment: "OT", componentRequired: "FFP", unitsRequired: 1, urgency: "ROUTINE", indication: "Coagulation disorder correction", requestingDoctorId: "doctor-2", requestingDoctorName: "Dr. Priya Nair", status: "APPROVED", crossMatchRequired: false, crossMatchStatus: "COMPATIBLE" },
+          { orderId: "TO-20241217-0001", patientId: "patient-3", patientName: "Arun Tiwari", patientBloodGroup: "B+", patientRhFactor: "Positive", wardDepartment: "EMERGENCY", componentRequired: "WHOLE_BLOOD", unitsRequired: 3, urgency: "EMERGENCY", indication: "Trauma with massive blood loss", requestingDoctorId: "doctor-1", requestingDoctorName: "Dr. Anil Mehta", status: "ISSUED", crossMatchRequired: true, crossMatchStatus: "COMPATIBLE" }
+        ];
+        await db.insert(bloodTransfusionOrders).values(testOrders);
+        console.log("Blood Bank orders seeded: " + testOrders.length + " orders");
+      }
+
+      // Seed temperature logs for storage facilities
+      const existingTempLogs = await db.select().from(bloodTemperatureLogs).limit(1);
+      if (existingTempLogs.length === 0 && storageFacilityIds.length > 0) {
+        const tempLogs = [];
+        const now = new Date();
+        
+        // Generate 24 hours of temperature readings (every 2 hours)
+        for (let i = 0; i < 12; i++) {
+          const timestamp = new Date(now.getTime() - i * 2 * 60 * 60 * 1000);
+          
+          // Refrigerator 1 - normal readings
+          tempLogs.push({
+            facilityId: storageFacilityIds[0],
+            temperature: (3.5 + Math.random() * 1.5).toFixed(1),
+            isBreach: false,
+            recordedByName: "Auto-Monitor",
+            notes: "Routine monitoring"
+          });
+          
+          // Refrigerator 2 - one breach
+          const temp2 = i === 3 ? "7.2" : (4 + Math.random() * 1).toFixed(1);
+          tempLogs.push({
+            facilityId: storageFacilityIds[1],
+            temperature: temp2,
+            isBreach: i === 3,
+            breachType: i === 3 ? "HIGH" : null,
+            recordedByName: "Auto-Monitor",
+            notes: i === 3 ? "Temperature breach detected - immediate action required" : "Routine monitoring"
+          });
+          
+          // Freezer - normal readings
+          tempLogs.push({
+            facilityId: storageFacilityIds[2],
+            temperature: (-25 + Math.random() * 4).toFixed(1),
+            isBreach: false,
+            recordedByName: "Auto-Monitor",
+            notes: "Routine monitoring"
+          });
+          
+          // Platelet agitator - normal readings
+          tempLogs.push({
+            facilityId: storageFacilityIds[3],
+            temperature: (21 + Math.random() * 2).toFixed(1),
+            isBreach: false,
+            recordedByName: "Auto-Monitor",
+            notes: "Routine monitoring"
+          });
+        }
+        
+        await db.insert(bloodTemperatureLogs).values(tempLogs);
+        console.log("Blood Bank temperature logs seeded: " + tempLogs.length + " readings");
+        
+        // Mark one facility as having had a breach
+        await db.update(bloodStorageFacilities)
+          .set({ hasTemperatureBreach: true })
+          .where(eq(bloodStorageFacilities.facilityCode, "REF-002"));
+      }
+
+      // Seed audit log entries
+      const existingAuditLogs = await db.select().from(bloodBankAuditLog).limit(1);
+      if (existingAuditLogs.length === 0) {
+        const auditEntries = [
+          { entityType: "BLOOD_UNIT", entityId: "BU-20241210-0001", action: "CREATE", details: "Blood unit collected from donor Rajesh Kumar Sharma", userId: "admin", userName: "System Admin", userRole: "ADMIN" },
+          { entityType: "BLOOD_UNIT", entityId: "BU-20241210-0001", action: "UPDATE", details: "Status changed: COLLECTED -> TESTING", userId: "admin", userName: "Lab Technician", userRole: "ADMIN" },
+          { entityType: "BLOOD_UNIT", entityId: "BU-20241210-0001", action: "UPDATE", details: "Status changed: TESTING -> AVAILABLE", userId: "admin", userName: "Lab Technician", userRole: "ADMIN" },
+          { entityType: "DONOR", entityId: "DN-20241215-0001", action: "CREATE", details: "New donor registered: Rajesh Kumar Sharma (O+)", userId: "admin", userName: "System Admin", userRole: "ADMIN" },
+          { entityType: "TRANSFUSION_ORDER", entityId: "TO-20241218-0001", action: "CREATE", details: "Transfusion order created for patient Suresh Kapoor", userId: "admin", userName: "Dr. Anil Mehta", userRole: "ADMIN" },
+          { entityType: "STORAGE", entityId: "REF-002", action: "TEMPERATURE_BREACH", details: "Temperature breach detected: 7.2C (Max allowed: 6C)", userId: "system", userName: "Auto-Monitor", userRole: "SYSTEM" }
+        ];
+        await db.insert(bloodBankAuditLog).values(auditEntries);
+        console.log("Blood Bank audit logs seeded: " + auditEntries.length + " entries");
+      }
+
     } catch (error) {
       console.error("Error seeding blood bank data:", error);
     }
