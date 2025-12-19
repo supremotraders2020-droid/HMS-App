@@ -236,7 +236,6 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
             
             <Button 
               onClick={handleCreatePrescription}
-              disabled={!canCreatePrescription}
               data-testid="button-create-prescription"
             >
               <Plus className="h-4 w-4 mr-2" />
