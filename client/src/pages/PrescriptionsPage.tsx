@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, FileText, Search, Printer, Clock, CheckCircle, AlertCircle, FileCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 import PrescriptionCreationModal from "@/components/PrescriptionCreationModal";
 import type { Prescription, Doctor } from "@shared/schema";
 
@@ -31,6 +32,7 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const { toast } = useToast();
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
@@ -82,6 +84,14 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
 
   const handleCreatePrescription = () => {
     if (!canCreatePrescription) {
+      return;
+    }
+    if (!doctorInfo) {
+      toast({
+        title: "Please Select a Doctor",
+        description: "You must select a doctor from the dropdown before creating a prescription.",
+        variant: "destructive",
+      });
       return;
     }
     setShowCreateModal(true);
