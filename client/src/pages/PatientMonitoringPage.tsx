@@ -89,10 +89,11 @@ export default function PatientMonitoringPage() {
   const handlePatientSelect = (patientId: string) => {
     const patient = patients.find((p: any) => p.id.toString() === patientId);
     if (patient) {
+      const patientName = `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || patient.name || 'Unknown';
       setNewSessionData({
         ...newSessionData,
         patientId: patientId,
-        patientName: patient.name,
+        patientName: patientName,
         ipNumber: patient.uhidNumber || `IP-${patient.id}`
       });
     }
@@ -135,11 +136,14 @@ export default function PatientMonitoringPage() {
                     <SelectValue placeholder="Search patient..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {patients.map((p: any) => (
-                      <SelectItem key={p.id} value={p.id.toString()}>
-                        {p.name} - {p.uhidNumber || `ID: ${p.id}`}
-                      </SelectItem>
-                    ))}
+                    {patients.map((p: any) => {
+                      const displayName = `${p.firstName || ''} ${p.lastName || ''}`.trim() || p.name || 'Unknown Patient';
+                      return (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {displayName} - {p.uhidNumber || p.phone || `ID: ${p.id.slice(0, 8)}`}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
