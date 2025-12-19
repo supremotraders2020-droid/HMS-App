@@ -200,15 +200,22 @@ export default function PrescriptionCreationModal({
 
   // Handle patient selection from dropdown
   const handlePatientSelect = (selectedPatientId: string) => {
+    console.log('handlePatientSelect called with:', selectedPatientId);
+    console.log('patientsFromDB:', patientsFromDB);
     const patient = patientsFromDB.find(p => p.id === selectedPatientId);
+    console.log('Found patient:', patient);
     if (patient) {
       setPatientId(patient.id);
-      setPatientName(`${patient.firstName} ${patient.lastName}`);
+      const fullName = `${patient.firstName} ${patient.lastName}`;
+      console.log('Setting patient name to:', fullName);
+      setPatientName(fullName);
       if (patient.dateOfBirth) {
         const dob = new Date(patient.dateOfBirth);
         const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+        console.log('Setting age to:', `${age} years`);
         setPatientAge(`${age} years`);
       }
+      console.log('Setting gender to:', patient.gender?.toLowerCase() || '');
       setPatientGender(patient.gender?.toLowerCase() || '');
     }
   };
