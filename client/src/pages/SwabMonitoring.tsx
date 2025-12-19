@@ -312,6 +312,259 @@ export default function SwabMonitoring() {
   const otContaminationRate = otCollections.length > 0 ? (otCollections.filter(c => c.resultStatus === "FAIL").length / otCollections.length * 100).toFixed(1) : "0";
   const icuContaminationRate = icuCollections.length > 0 ? (icuCollections.filter(c => c.resultStatus === "FAIL").length / icuCollections.length * 100).toFixed(1) : "0";
 
+  const generateReport = (reportType: string) => {
+    const currentDate = format(new Date(), "MMMM dd, yyyy");
+    const reportMonth = format(new Date(), "MMMM yyyy");
+    
+    let reportTitle = "";
+    let reportContent = "";
+    let filteredCollections: SwabCollection[] = [];
+    
+    switch (reportType) {
+      case "ot":
+        reportTitle = "Monthly OT Swab Report";
+        filteredCollections = otCollections;
+        break;
+      case "icu":
+        reportTitle = "ICU Environmental Report";
+        filteredCollections = icuCollections;
+        break;
+      case "fumigation":
+        reportTitle = "Fumigation Validation Report";
+        filteredCollections = collections.filter(c => c.reason === "Post-fumigation");
+        break;
+      case "capa":
+        reportTitle = "CAPA Closure Report";
+        break;
+      case "nabh":
+        reportTitle = "NABH Evidence Pack";
+        filteredCollections = collections;
+        break;
+      default:
+        reportTitle = "Swab Monitoring Report";
+        filteredCollections = collections;
+    }
+
+    const passResults = filteredCollections.filter(c => c.resultStatus === "PASS").length;
+    const failResults = filteredCollections.filter(c => c.resultStatus === "FAIL").length;
+    const acceptableResults = filteredCollections.filter(c => c.resultStatus === "ACCEPTABLE").length;
+    const pendingResults = filteredCollections.filter(c => c.status === "pending").length;
+    const complianceRate = filteredCollections.length > 0 
+      ? ((passResults + acceptableResults) / filteredCollections.length * 100).toFixed(1) 
+      : "N/A";
+
+    if (reportType === "capa") {
+      const openCapa = capaActions.filter(c => c.status === "open");
+      const closedCapa = capaActions.filter(c => c.status === "closed");
+      const inProgressCapa = capaActions.filter(c => c.status === "in_progress");
+      
+      reportContent = `
+        <html>
+          <head>
+            <title>${reportTitle} - ${reportMonth}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 40px; max-width: 900px; margin: 0 auto; }
+              .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+              .hospital-name { font-size: 24px; font-weight: bold; color: #1a365d; }
+              .report-title { font-size: 20px; margin-top: 10px; }
+              .report-date { color: #666; margin-top: 5px; }
+              .section { margin: 30px 0; }
+              .section-title { font-size: 16px; font-weight: bold; background: #f0f4f8; padding: 10px; border-left: 4px solid #3182ce; }
+              .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 20px 0; }
+              .stat-box { text-align: center; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
+              .stat-value { font-size: 32px; font-weight: bold; }
+              .stat-label { color: #666; font-size: 12px; }
+              .open { color: #e53e3e; }
+              .closed { color: #38a169; }
+              .in-progress { color: #3182ce; }
+              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+              th { background: #f7fafc; }
+              .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+              @media print { body { padding: 20px; } }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="hospital-name">Gravity Hospital</div>
+              <div class="report-title">${reportTitle}</div>
+              <div class="report-date">Report Period: ${reportMonth} | Generated: ${currentDate}</div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">CAPA Summary</div>
+              <div class="stat-grid">
+                <div class="stat-box">
+                  <div class="stat-value">${capaActions.length}</div>
+                  <div class="stat-label">Total CAPA</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value open">${openCapa.length}</div>
+                  <div class="stat-label">Open</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value in-progress">${inProgressCapa.length}</div>
+                  <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value closed">${closedCapa.length}</div>
+                  <div class="stat-label">Closed</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">CAPA Details</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Issue Summary</th>
+                    <th>Immediate Action</th>
+                    <th>Department</th>
+                    <th>Target Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${capaActions.map(capa => `
+                    <tr>
+                      <td>${capa.issueSummary}</td>
+                      <td>${capa.immediateAction}</td>
+                      <td>${capa.responsibleDepartment}</td>
+                      <td>${format(new Date(capa.targetClosureDate), "MMM d, yyyy")}</td>
+                      <td>${capa.status}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="footer">
+              <p>This report is NABH-compliant and auto-generated by HMS Core</p>
+              <p>Gravity Hospital - Infection Control Department</p>
+            </div>
+          </body>
+        </html>
+      `;
+    } else {
+      reportContent = `
+        <html>
+          <head>
+            <title>${reportTitle} - ${reportMonth}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 40px; max-width: 900px; margin: 0 auto; }
+              .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+              .hospital-name { font-size: 24px; font-weight: bold; color: #1a365d; }
+              .report-title { font-size: 20px; margin-top: 10px; }
+              .report-date { color: #666; margin-top: 5px; }
+              .section { margin: 30px 0; }
+              .section-title { font-size: 16px; font-weight: bold; background: #f0f4f8; padding: 10px; border-left: 4px solid #3182ce; }
+              .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin: 20px 0; }
+              .stat-box { text-align: center; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
+              .stat-value { font-size: 32px; font-weight: bold; }
+              .stat-label { color: #666; font-size: 12px; }
+              .pass { color: #38a169; }
+              .fail { color: #e53e3e; }
+              .acceptable { color: #d69e2e; }
+              .pending { color: #718096; }
+              .compliance { color: #3182ce; }
+              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+              th { background: #f7fafc; }
+              .badge { padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+              .badge-pass { background: #c6f6d5; color: #22543d; }
+              .badge-fail { background: #fed7d7; color: #742a2a; }
+              .badge-acceptable { background: #fefcbf; color: #744210; }
+              .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+              @media print { body { padding: 20px; } }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="hospital-name">Gravity Hospital</div>
+              <div class="report-title">${reportTitle}</div>
+              <div class="report-date">Report Period: ${reportMonth} | Generated: ${currentDate}</div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Summary Statistics</div>
+              <div class="stat-grid">
+                <div class="stat-box">
+                  <div class="stat-value">${filteredCollections.length}</div>
+                  <div class="stat-label">Total Samples</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value pass">${passResults}</div>
+                  <div class="stat-label">Pass</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value acceptable">${acceptableResults}</div>
+                  <div class="stat-label">Acceptable</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value fail">${failResults}</div>
+                  <div class="stat-label">Fail</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-value compliance">${complianceRate}%</div>
+                  <div class="stat-label">Compliance Rate</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Sample Details</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Swab ID</th>
+                    <th>Date</th>
+                    <th>Area</th>
+                    <th>Sampling Site</th>
+                    <th>Reason</th>
+                    <th>Collected By</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filteredCollections.map(collection => `
+                    <tr>
+                      <td>${collection.swabId}</td>
+                      <td>${format(new Date(collection.collectionDate), "MMM d, yyyy")}</td>
+                      <td>${getAreaName(collection.areaId)}</td>
+                      <td>${getSiteName(collection.samplingSiteId)}</td>
+                      <td>${collection.reason}</td>
+                      <td>${collection.collectedByName}</td>
+                      <td>
+                        <span class="badge ${collection.resultStatus === 'PASS' ? 'badge-pass' : collection.resultStatus === 'FAIL' ? 'badge-fail' : 'badge-acceptable'}">
+                          ${collection.resultStatus || 'Pending'}
+                        </span>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="footer">
+              <p>This report is NABH-compliant and auto-generated by HMS Core</p>
+              <p>Gravity Hospital - Infection Control Department</p>
+            </div>
+          </body>
+        </html>
+      `;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(reportContent);
+      printWindow.document.close();
+      toast({ title: "Report generated", description: `${reportTitle} opened in new tab. Use browser print to save as PDF.` });
+    } else {
+      toast({ title: "Popup blocked", description: "Please allow popups to generate reports", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -932,7 +1185,7 @@ export default function SwabMonitoring() {
                 <CardDescription>Environmental surveillance summary for OT areas</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full" data-testid="button-download-ot-report">
+                <Button variant="outline" className="w-full" data-testid="button-download-ot-report" onClick={() => generateReport("ot")}>
                   <Download className="w-4 h-4 mr-2" />
                   Generate Report
                 </Button>
@@ -947,7 +1200,7 @@ export default function SwabMonitoring() {
                 <CardDescription>ICU contamination trends and analysis</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full" data-testid="button-download-icu-report">
+                <Button variant="outline" className="w-full" data-testid="button-download-icu-report" onClick={() => generateReport("icu")}>
                   <Download className="w-4 h-4 mr-2" />
                   Generate Report
                 </Button>
@@ -962,7 +1215,7 @@ export default function SwabMonitoring() {
                 <CardDescription>Post-fumigation swab success rates</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full" data-testid="button-download-fumigation-report">
+                <Button variant="outline" className="w-full" data-testid="button-download-fumigation-report" onClick={() => generateReport("fumigation")}>
                   <Download className="w-4 h-4 mr-2" />
                   Generate Report
                 </Button>
@@ -977,7 +1230,7 @@ export default function SwabMonitoring() {
                 <CardDescription>Corrective action completion summary</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full" data-testid="button-download-capa-report">
+                <Button variant="outline" className="w-full" data-testid="button-download-capa-report" onClick={() => generateReport("capa")}>
                   <Download className="w-4 h-4 mr-2" />
                   Generate Report
                 </Button>
@@ -992,7 +1245,7 @@ export default function SwabMonitoring() {
                 <CardDescription>Complete infection control documentation</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full" data-testid="button-download-nabh-report">
+                <Button variant="outline" className="w-full" data-testid="button-download-nabh-report" onClick={() => generateReport("nabh")}>
                   <Download className="w-4 h-4 mr-2" />
                   Generate Report
                 </Button>
