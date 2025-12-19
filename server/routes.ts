@@ -142,6 +142,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { password: _, ...userWithoutPassword } = user;
+      
+      // Set session user for authenticated routes
+      (req.session as any).user = userWithoutPassword;
+      
       res.json(userWithoutPassword);
     } catch (error) {
       console.error("Login error:", error);
