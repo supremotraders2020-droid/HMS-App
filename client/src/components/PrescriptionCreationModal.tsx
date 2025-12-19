@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send } from "lucide-react";
+import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send, Printer } from "lucide-react";
 import type { Prescription, Medicine, ServicePatient } from "@shared/schema";
 
 interface MedicineItem {
@@ -872,16 +872,15 @@ export default function PrescriptionCreationModal({
             </Button>
             <Button
               variant="secondary"
-              disabled={!canSaveDraft}
-              onClick={() => {
-                toast({ 
-                  title: "Details saved", 
-                  description: "Your progress is saved. Click 'Sign & Finalize' when ready to create the prescription."
-                });
-              }}
+              disabled={!canSaveDraft || createPrescriptionMutation.isPending}
+              onClick={() => createPrescriptionMutation.mutate(false)}
               data-testid="button-save-draft"
             >
-              <Save className="h-4 w-4 mr-1" />
+              {createPrescriptionMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-1" />
+              )}
               Save Draft
             </Button>
             {canFinalize && (
