@@ -227,32 +227,15 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
               </Select>
             )}
             
-            {(currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN") && !selectedDoctor ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Button 
-                      disabled
-                      data-testid="button-create-prescription"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Prescription
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Please select a doctor first</p>
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button 
-                onClick={handleCreatePrescription}
-                data-testid="button-create-prescription"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Prescription
-              </Button>
-            )}
+            <Button 
+              onClick={handleCreatePrescription}
+              disabled={(currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN") && !selectedDoctor}
+              title={(currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN") && !selectedDoctor ? "Please select a doctor first" : undefined}
+              data-testid="button-create-prescription"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Prescription
+            </Button>
           </div>
         </CardHeader>
         
