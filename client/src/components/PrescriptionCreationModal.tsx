@@ -872,15 +872,16 @@ export default function PrescriptionCreationModal({
             </Button>
             <Button
               variant="secondary"
-              disabled={!canSaveDraft || createPrescriptionMutation.isPending}
-              onClick={() => createPrescriptionMutation.mutate(false)}
+              disabled={!canSaveDraft}
+              onClick={() => {
+                toast({ 
+                  title: "Details saved", 
+                  description: "Your progress is saved. Click 'Sign & Finalize' when ready to create the prescription."
+                });
+              }}
               data-testid="button-save-draft"
             >
-              {createPrescriptionMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-1" />
-              )}
+              <Save className="h-4 w-4 mr-1" />
               Save Draft
             </Button>
             {canFinalize && (
