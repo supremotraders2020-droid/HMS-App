@@ -341,8 +341,14 @@ export default function PrescriptionCreationModal({
   // Check if current medicine form has data that can be added
   const hasUnaddedMedicine = currentMedicine.medicineName.trim() !== '';
   
-  // Include unsaved medicine in validation - either have medicines in list OR have medicine in form
-  const isValid = patientName && diagnosis && (medicines.length > 0 || hasUnaddedMedicine);
+  // Save Draft only needs patient selected
+  const canSaveDraft = !!patientName;
+  
+  // Sign & Finalize needs everything complete
+  const canFinalizeRx = patientName && diagnosis && (medicines.length > 0 || hasUnaddedMedicine);
+  
+  // Legacy isValid for backward compatibility
+  const isValid = canFinalizeRx;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -841,18 +847,22 @@ export default function PrescriptionCreationModal({
 
         <DialogFooter className="flex justify-between gap-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {!isValid && (
+            {!canSaveDraft && (
               <>
                 <AlertCircle className="h-4 w-4 text-yellow-500" />
-                <span>
-                  Missing: {!patientName && 'Patient (select from dropdown)'}{!patientName && diagnosis ? '' : (!patientName && !diagnosis ? ', ' : '')}{!diagnosis && 'Diagnosis (Clinical tab)'}{((!patientName || !diagnosis) && medicines.length === 0 && !hasUnaddedMedicine) ? ', ' : ''}{medicines.length === 0 && !hasUnaddedMedicine && 'Medicine (add at least one)'}
-                </span>
+                <span>Select a patient to save draft</span>
               </>
             )}
-            {isValid && (
+            {canSaveDraft && !canFinalizeRx && (
+              <>
+                <AlertCircle className="h-4 w-4 text-blue-500" />
+                <span>Draft ready. To finalize: {!diagnosis && 'add diagnosis'}{!diagnosis && (medicines.length === 0 && !hasUnaddedMedicine) ? ', ' : ''}{medicines.length === 0 && !hasUnaddedMedicine && 'add medicine'}</span>
+              </>
+            )}
+            {canFinalizeRx && (
               <>
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Ready to save</span>
+                <span>Ready to save or finalize</span>
               </>
             )}
           </div>
@@ -862,7 +872,7 @@ export default function PrescriptionCreationModal({
             </Button>
             <Button
               variant="secondary"
-              disabled={!isValid || createPrescriptionMutation.isPending}
+              disabled={!canSaveDraft || createPrescriptionMutation.isPending}
               onClick={() => createPrescriptionMutation.mutate(false)}
               data-testid="button-save-draft"
             >
@@ -875,7 +885,7 @@ export default function PrescriptionCreationModal({
             </Button>
             {canFinalize && (
               <Button
-                disabled={!isValid || createPrescriptionMutation.isPending}
+                disabled={!canFinalizeRx || createPrescriptionMutation.isPending}
                 onClick={() => createPrescriptionMutation.mutate(true)}
                 data-testid="button-finalize"
               >
