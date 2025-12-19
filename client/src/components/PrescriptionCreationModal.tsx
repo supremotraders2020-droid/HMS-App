@@ -200,22 +200,15 @@ export default function PrescriptionCreationModal({
 
   // Handle patient selection from dropdown
   const handlePatientSelect = (selectedPatientId: string) => {
-    console.log('handlePatientSelect called with:', selectedPatientId);
-    console.log('patientsFromDB:', patientsFromDB);
     const patient = patientsFromDB.find(p => p.id === selectedPatientId);
-    console.log('Found patient:', patient);
     if (patient) {
       setPatientId(patient.id);
-      const fullName = `${patient.firstName} ${patient.lastName}`;
-      console.log('Setting patient name to:', fullName);
-      setPatientName(fullName);
+      setPatientName(`${patient.firstName} ${patient.lastName}`);
       if (patient.dateOfBirth) {
         const dob = new Date(patient.dateOfBirth);
         const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-        console.log('Setting age to:', `${age} years`);
         setPatientAge(`${age} years`);
       }
-      console.log('Setting gender to:', patient.gender?.toLowerCase() || '');
       setPatientGender(patient.gender?.toLowerCase() || '');
     }
   };
@@ -840,7 +833,15 @@ export default function PrescriptionCreationModal({
             {!isValid && (
               <>
                 <AlertCircle className="h-4 w-4 text-yellow-500" />
-                <span>Patient name, diagnosis, and at least one medicine required</span>
+                <span>
+                  Missing: {!patientName && 'Patient (select from dropdown)'}{!patientName && (diagnosis ? '' : ', ')}{!diagnosis && 'Diagnosis (Clinical tab)'}{((!patientName || !diagnosis) && medicines.length === 0) ? ', ' : ''}{medicines.length === 0 && 'Medicine (add at least one)'}
+                </span>
+              </>
+            )}
+            {isValid && (
+              <>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>Ready to save</span>
               </>
             )}
           </div>
