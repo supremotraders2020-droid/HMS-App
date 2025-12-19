@@ -36,16 +36,16 @@ type Session = {
   id: string;
   patientId: string;
   patientName: string;
-  ipNumber: string;
-  wardType: string;
+  uhid: string;
+  age: number;
+  sex: string;
+  ward: string;
   bedNumber: string;
   sessionDate: string;
-  shift: string;
-  attendingDoctorId?: string;
-  primaryNurseId?: string;
-  isOnVentilator: boolean;
-  diagnosis?: string;
-  sessionStatus: string;
+  primaryDiagnosis: string;
+  admittingConsultant: string;
+  isVentilated: boolean;
+  isLocked: boolean;
   createdAt: string;
 };
 
@@ -57,13 +57,18 @@ export default function PatientMonitoringPage() {
   const [newSessionData, setNewSessionData] = useState({
     patientId: "",
     patientName: "",
-    ipNumber: "",
-    wardType: "ICU",
+    uhid: "",
+    age: 0,
+    sex: "Male",
+    admissionDateTime: new Date().toISOString(),
+    ward: "ICU",
     bedNumber: "",
-    sessionDate: format(new Date(), "yyyy-MM-dd"),
-    shift: "MORNING",
-    isOnVentilator: false,
-    diagnosis: ""
+    bloodGroup: "",
+    weightKg: "",
+    primaryDiagnosis: "",
+    admittingConsultant: "",
+    isVentilated: false,
+    sessionDate: format(new Date(), "yyyy-MM-dd")
   });
 
   const { data: sessions = [], isLoading: loadingSessions } = useQuery<Session[]>({
@@ -90,11 +95,16 @@ export default function PatientMonitoringPage() {
     const patient = patients.find((p: any) => p.id.toString() === patientId);
     if (patient) {
       const patientName = `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || patient.name || 'Unknown';
+      const birthDate = patient.dateOfBirth ? new Date(patient.dateOfBirth) : null;
+      const age = birthDate ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30;
       setNewSessionData({
         ...newSessionData,
         patientId: patientId,
         patientName: patientName,
-        ipNumber: patient.uhidNumber || `IP-${patient.id}`
+        uhid: patient.uhidNumber || `UHID-${patient.id.slice(0, 8)}`,
+        age: age,
+        sex: patient.gender || "Male",
+        bloodGroup: patient.bloodGroup || ""
       });
     }
   };
@@ -128,9 +138,9 @@ export default function PatientMonitoringPage() {
               <DialogTitle>Start New Monitoring Session</DialogTitle>
               <DialogDescription>Create a 24-hour monitoring session for a patient</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 max-h-[60vh] overflow-auto">
               <div className="space-y-2">
-                <Label>Select Patient</Label>
+                <Label>Select Patient *</Label>
                 <Select onValueChange={handlePatientSelect}>
                   <SelectTrigger data-testid="select-patient">
                     <SelectValue placeholder="Search patient..." />
@@ -146,11 +156,16 @@ export default function PatientMonitoringPage() {
                     })}
                   </SelectContent>
                 </Select>
+                {newSessionData.patientName && (
+                  <div className="text-xs text-muted-foreground">
+                    Selected: {newSessionData.patientName} | UHID: {newSessionData.uhid} | Age: {newSessionData.age} | Sex: {newSessionData.sex}
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Ward</Label>
-                  <Select value={newSessionData.wardType} onValueChange={(v) => setNewSessionData({...newSessionData, wardType: v})}>
+                  <Label>Ward *</Label>
+                  <Select value={newSessionData.ward} onValueChange={(v) => setNewSessionData({...newSessionData, ward: v})}>
                     <SelectTrigger data-testid="select-ward">
                       <SelectValue />
                     </SelectTrigger>
@@ -160,40 +175,37 @@ export default function PatientMonitoringPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Bed Number</Label>
+                  <Label>Bed Number *</Label>
                   <Input value={newSessionData.bedNumber} onChange={(e) => setNewSessionData({...newSessionData, bedNumber: e.target.value})} placeholder="e.g., ICU-5" data-testid="input-bed" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Session Date</Label>
+                  <Label>Session Date *</Label>
                   <Input type="date" value={newSessionData.sessionDate} onChange={(e) => setNewSessionData({...newSessionData, sessionDate: e.target.value})} data-testid="input-date" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Starting Shift</Label>
-                  <Select value={newSessionData.shift} onValueChange={(v) => setNewSessionData({...newSessionData, shift: v})}>
-                    <SelectTrigger data-testid="select-shift">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SHIFTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Label>Admitting Consultant *</Label>
+                  <Input value={newSessionData.admittingConsultant} onChange={(e) => setNewSessionData({...newSessionData, admittingConsultant: e.target.value})} placeholder="Dr. Name" data-testid="input-consultant" />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Diagnosis</Label>
-                <Textarea value={newSessionData.diagnosis} onChange={(e) => setNewSessionData({...newSessionData, diagnosis: e.target.value})} placeholder="Primary diagnosis..." data-testid="input-diagnosis" />
+                <Label>Primary Diagnosis *</Label>
+                <Textarea value={newSessionData.primaryDiagnosis} onChange={(e) => setNewSessionData({...newSessionData, primaryDiagnosis: e.target.value})} placeholder="Primary diagnosis..." data-testid="input-diagnosis" />
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="ventilator" checked={newSessionData.isOnVentilator} onChange={(e) => setNewSessionData({...newSessionData, isOnVentilator: e.target.checked})} data-testid="checkbox-ventilator" />
+                <input type="checkbox" id="ventilator" checked={newSessionData.isVentilated} onChange={(e) => setNewSessionData({...newSessionData, isVentilated: e.target.checked})} data-testid="checkbox-ventilator" />
                 <Label htmlFor="ventilator">Patient on Ventilator</Label>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowNewSession(false)}>Cancel</Button>
-              <Button onClick={() => createSessionMutation.mutate(newSessionData)} disabled={!newSessionData.patientId} data-testid="button-create-session">
-                Start Session
+              <Button 
+                onClick={() => createSessionMutation.mutate(newSessionData)} 
+                disabled={!newSessionData.patientId || !newSessionData.bedNumber || !newSessionData.primaryDiagnosis || !newSessionData.admittingConsultant || createSessionMutation.isPending} 
+                data-testid="button-create-session"
+              >
+                {createSessionMutation.isPending ? "Creating..." : "Start Session"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -221,15 +233,15 @@ export default function PatientMonitoringPage() {
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium text-sm">{session.patientName}</span>
-                    <Badge variant={session.sessionStatus === "active" ? "default" : "secondary"} className="text-xs">
-                      {session.sessionStatus}
+                    <Badge variant={session.isLocked ? "secondary" : "default"} className="text-xs">
+                      {session.isLocked ? "Locked" : "Active"}
                     </Badge>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    <div>{session.wardType} - Bed {session.bedNumber}</div>
-                    <div>IP: {session.ipNumber} | {format(new Date(session.sessionDate), "dd MMM yyyy")}</div>
+                    <div>{session.ward} - Bed {session.bedNumber}</div>
+                    <div>UHID: {session.uhid} | {format(new Date(session.sessionDate), "dd MMM yyyy")}</div>
                   </div>
-                  {session.isOnVentilator && (
+                  {session.isVentilated && (
                     <Badge variant="destructive" className="mt-1 text-xs">
                       <Wind className="h-3 w-3 mr-1" /> Ventilator
                     </Badge>
@@ -255,10 +267,10 @@ export default function PatientMonitoringPage() {
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         {selectedSession.patientName}
-                        {selectedSession.isOnVentilator && <Badge variant="destructive"><Wind className="h-3 w-3" /></Badge>}
+                        {selectedSession.isVentilated && <Badge variant="destructive"><Wind className="h-3 w-3" /></Badge>}
                       </CardTitle>
                       <CardDescription>
-                        IP: {selectedSession.ipNumber} | {selectedSession.wardType} - Bed {selectedSession.bedNumber} | {format(new Date(selectedSession.sessionDate), "EEEE, dd MMMM yyyy")}
+                        UHID: {selectedSession.uhid} | {selectedSession.ward} - Bed {selectedSession.bedNumber} | {format(new Date(selectedSession.sessionDate), "EEEE, dd MMMM yyyy")}
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
@@ -298,7 +310,7 @@ export default function PatientMonitoringPage() {
                   <InotropesTab sessionId={selectedSession.id} />
                 </TabsContent>
                 <TabsContent value="ventilator">
-                  <VentilatorTab sessionId={selectedSession.id} isOnVentilator={selectedSession.isOnVentilator} />
+                  <VentilatorTab sessionId={selectedSession.id} isOnVentilator={selectedSession.isVentilated} />
                 </TabsContent>
                 <TabsContent value="abg-lab">
                   <ABGLabTab sessionId={selectedSession.id} />
@@ -358,10 +370,10 @@ function OverviewTab({ session }: { session: Session }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-1">
-          <div><span className="text-muted-foreground">Shift:</span> {session.shift}</div>
-          <div><span className="text-muted-foreground">Ward:</span> {session.wardType}</div>
+          <div><span className="text-muted-foreground">Ward:</span> {session.ward}</div>
           <div><span className="text-muted-foreground">Bed:</span> {session.bedNumber}</div>
-          <div><span className="text-muted-foreground">Status:</span> <Badge>{session.sessionStatus}</Badge></div>
+          <div><span className="text-muted-foreground">Consultant:</span> {session.admittingConsultant}</div>
+          <div><span className="text-muted-foreground">Status:</span> <Badge>{session.isLocked ? "Locked" : "Active"}</Badge></div>
         </CardContent>
       </Card>
 
@@ -398,7 +410,7 @@ function OverviewTab({ session }: { session: Session }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm">
-          {session.diagnosis || "No diagnosis recorded"}
+          {session.primaryDiagnosis || "No diagnosis recorded"}
         </CardContent>
       </Card>
     </div>
