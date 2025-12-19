@@ -250,6 +250,12 @@ export default function PrescriptionCreationModal({
   // Create prescription mutation
   const createPrescriptionMutation = useMutation({
     mutationFn: async (finalize: boolean) => {
+      // Auto-add medicine from form if it has a name and isn't already added
+      let allMedicines = [...medicines];
+      if (currentMedicine.medicineName.trim()) {
+        allMedicines = [...allMedicines, { ...currentMedicine }];
+      }
+      
       const prescriptionData = {
         patientId,
         patientName,
@@ -265,8 +271,8 @@ export default function PrescriptionCreationModal({
         vitals: JSON.stringify(vitals),
         knownAllergies,
         pastMedicalHistory,
-        medicines: medicines.map(m => `${m.dosageForm} ${m.medicineName} ${m.strength} - ${FREQUENCIES.find(f => f.value === m.frequency)?.label || 'Once daily'}`),
-        medicineDetails: JSON.stringify(medicines),
+        medicines: allMedicines.map(m => `${m.dosageForm} ${m.medicineName} ${m.strength} - ${FREQUENCIES.find(f => f.value === m.frequency)?.label || 'Once daily'}`),
+        medicineDetails: JSON.stringify(allMedicines),
         instructions,
         dietAdvice,
         activityAdvice,
@@ -281,7 +287,7 @@ export default function PrescriptionCreationModal({
 
       const response = await apiRequest('POST', '/api/prescriptions/with-items', {
         prescription: prescriptionData,
-        items: medicines,
+        items: allMedicines,
       }) as any;
 
       // If finalizing, call finalize endpoint
@@ -331,7 +337,12 @@ export default function PrescriptionCreationModal({
   };
 
   const canFinalize = userRole === 'ADMIN' || userRole === 'DOCTOR';
-  const isValid = patientName && diagnosis && medicines.length > 0;
+  
+  // Check if current medicine form has data that can be added
+  const hasUnaddedMedicine = currentMedicine.medicineName.trim() !== '';
+  
+  // Include unsaved medicine in validation - either have medicines in list OR have medicine in form
+  const isValid = patientName && diagnosis && (medicines.length > 0 || hasUnaddedMedicine);
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -834,7 +845,7 @@ export default function PrescriptionCreationModal({
               <>
                 <AlertCircle className="h-4 w-4 text-yellow-500" />
                 <span>
-                  Missing: {!patientName && 'Patient (select from dropdown)'}{!patientName && (diagnosis ? '' : ', ')}{!diagnosis && 'Diagnosis (Clinical tab)'}{((!patientName || !diagnosis) && medicines.length === 0) ? ', ' : ''}{medicines.length === 0 && 'Medicine (add at least one)'}
+                  Missing: {!patientName && 'Patient (select from dropdown)'}{!patientName && diagnosis ? '' : (!patientName && !diagnosis ? ', ' : '')}{!diagnosis && 'Diagnosis (Clinical tab)'}{((!patientName || !diagnosis) && medicines.length === 0 && !hasUnaddedMedicine) ? ', ' : ''}{medicines.length === 0 && !hasUnaddedMedicine && 'Medicine (add at least one)'}
                 </span>
               </>
             )}
