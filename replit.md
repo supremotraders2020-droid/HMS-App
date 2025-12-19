@@ -190,12 +190,12 @@ NABH-compliant cylinder management:
 - Hydrostatic test scheduling
 
 ### 13. Consent Forms Management
-**13 Trilingual Consent Templates** (English, Hindi, Marathi):
+**14 Trilingual Consent Templates** (English, Hindi, Marathi):
 
 | Category | Forms |
 |----------|-------|
 | Legal & Administrative | Medico-Legal Register, DAMA/LAMA, Digital Consent Form |
-| Surgical & Procedural | OT Register, Anaesthesia, Surgery, Tubal Ligation, Plastic Surgery |
+| Surgical & Procedural | OT Register, Anaesthesia, Surgery, Tubal Ligation, Plastic Surgery, Surgery Form |
 | Diagnostic & Testing | HIV Test, HBsAg Test, Injection Consent (OPD) |
 | Treatment | Blood Transfusion |
 | Maternal & Neonatal | Newborn Baby Consent |

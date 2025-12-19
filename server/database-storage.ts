@@ -2608,6 +2608,17 @@ export class DatabaseStorage implements IStorage {
         isBilingual: true,
         languages: "English, Hindi, Marathi"
       },
+      {
+        title: "Surgery Form",
+        consentType: "SURGERY_FORM",
+        description: "Comprehensive 5-page surgical procedure form including: Anesthesia Chart (patient identification, surgical team, premedication, monitoring, IV lines, anesthesia type), Pre-Operative Evaluation (ASA status, airway assessment, NBM status, vital signs, investigations, safety checklist), Surgical Safety Checklist Sign-In (patient verification, allergy assessment, anesthesia safety check), Surgical Safety Checklist Sign-Out (instrument/sponge/needle counts, specimen management, post-op instructions), and Operation Record. NABH-compliant documentation for complete surgical workflow. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/Surgery_Procedure_Form.pdf",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
       // === DIAGNOSTIC & TESTING ===
       {
         title: "HIV Test Informed Consent",
