@@ -63,7 +63,7 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
   };
 
   const doctorInfo = getDoctorInfo();
-  const canCreatePrescription = currentUser.role === "DOCTOR" || (selectedDoctor && doctorInfo !== null);
+  const canCreatePrescription = currentUser.role === "DOCTOR" || currentUser.role === "ADMIN" || currentUser.role === "OPD_MANAGER";
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -237,7 +237,6 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
             <Button 
               onClick={handleCreatePrescription}
               disabled={!canCreatePrescription}
-              title={!canCreatePrescription ? "Please select a doctor first" : undefined}
               data-testid="button-create-prescription"
             >
               <Plus className="h-4 w-4 mr-2" />
