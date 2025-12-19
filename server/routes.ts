@@ -5190,9 +5190,11 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Create new monitoring session
   app.post("/api/patient-monitoring/sessions", async (req, res) => {
     try {
+      console.log("Session create request body:", JSON.stringify(req.body, null, 2));
       const parsed = insertPatientMonitoringSessionSchema.safeParse(req.body);
       if (!parsed.success) {
-        return res.status(400).json({ error: "Invalid session data", details: parsed.error });
+        console.log("Validation errors:", JSON.stringify(parsed.error.errors, null, 2));
+        return res.status(400).json({ error: "Invalid session data", details: parsed.error.errors });
       }
       const result = await db.insert(patientMonitoringSessions).values(parsed.data).returning();
       res.status(201).json(result[0]);

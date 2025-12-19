@@ -58,9 +58,9 @@ export default function PatientMonitoringPage() {
     patientId: "",
     patientName: "",
     uhid: "",
-    age: 0,
+    age: 30,
     sex: "Male",
-    admissionDateTime: new Date().toISOString(),
+    admissionDateTime: new Date(),
     ward: "ICU",
     bedNumber: "",
     bloodGroup: "",
@@ -68,7 +68,9 @@ export default function PatientMonitoringPage() {
     primaryDiagnosis: "",
     admittingConsultant: "",
     isVentilated: false,
-    sessionDate: format(new Date(), "yyyy-MM-dd")
+    sessionDate: format(new Date(), "yyyy-MM-dd"),
+    createdBy: "system",
+    createdByName: "System"
   });
 
   const { data: sessions = [], isLoading: loadingSessions } = useQuery<Session[]>({
