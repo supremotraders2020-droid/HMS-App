@@ -448,65 +448,7 @@ function AppContent() {
   }
 
   // Doctor Portal - separate interface for doctors
-  // But also allow access to shared routes like /patient-monitoring
   if (currentUser.role === "DOCTOR") {
-    // Check if doctor is accessing a shared route that needs the full HMS sidebar
-    const doctorSharedRoutes = ["/patient-monitoring", "/prescriptions"];
-    const isOnSharedRoute = doctorSharedRoutes.some(route => location === route || location.startsWith(route + "/"));
-    
-    if (isOnSharedRoute) {
-      // Render the shared layout with full HMSSidebar for doctors accessing shared routes
-      return (
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <TooltipProvider>
-              <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-                <div className="flex h-screen w-full">
-                  <HMSSidebar 
-                    currentRole="DOCTOR"
-                    currentUser={{
-                      name: currentUser.name,
-                      hospitalName: currentUser.hospitalName
-                    }}
-                    onNavigate={(path) => {
-                      console.log('Navigating to:', path);
-                      setLocation(path);
-                    }}
-                    onLogout={handleLogout}
-                  />
-                  <div className="flex flex-col flex-1">
-                    <header className="flex items-center justify-between p-4 border-b glass-panel sticky top-0 z-40">
-                      <div className="flex items-center space-x-4">
-                        <SidebarTrigger data-testid="button-sidebar-toggle" className="glass-button" />
-                        <div className="flex flex-col">
-                          <span className="text-lg font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Gravity Hospital</span>
-                          <span className="text-xs text-muted-foreground">HMS Core System</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <ThemeSwitcher />
-                      </div>
-                    </header>
-                    <main className="flex-1 overflow-auto p-6">
-                      <Switch>
-                        <Route path="/patient-monitoring">
-                          <PatientMonitoringPage />
-                        </Route>
-                        <Route path="/prescriptions">
-                          <PrescriptionsPage currentUser={currentUser} />
-                        </Route>
-                      </Switch>
-                    </main>
-                  </div>
-                </div>
-              </SidebarProvider>
-              <Toaster />
-            </TooltipProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      );
-    }
-    
     return (
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>

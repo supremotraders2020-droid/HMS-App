@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import PatientMonitoringPage from "./PatientMonitoringPage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -615,7 +616,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     { id: "schedules", title: "Schedules", icon: CalendarDays },
     { id: "patients", title: "Patients", icon: Users },
     { id: "prescriptions", title: "Prescriptions", icon: FileText },
-    { id: "patient-monitoring", title: "Patient Monitoring", icon: MonitorCheck, externalRoute: "/patient-monitoring" },
+    { id: "patient-monitoring", title: "Patient Monitoring", icon: MonitorCheck },
     { id: "notifications", title: "Notifications", icon: Bell, badge: unreadNotifications.length },
     { id: "profile", title: "Profile", icon: Settings },
   ];
@@ -2140,6 +2141,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       case "appointments": return renderAppointments();
       case "schedules": return renderSchedules();
       case "prescriptions": return renderPrescriptions();
+      case "patient-monitoring": return <PatientMonitoringPage />;
       case "notifications": return renderNotifications();
       case "profile": return renderProfile();
       default: return renderDashboard();
