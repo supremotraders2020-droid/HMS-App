@@ -2489,3 +2489,310 @@ export const insertBedAuditLogSchema = createInsertSchema(bedAuditLog).omit({
 });
 export type InsertBedAuditLog = z.infer<typeof insertBedAuditLogSchema>;
 export type BedAuditLog = typeof bedAuditLog.$inferSelect;
+
+// ========== BLOOD BANK MODULE ==========
+
+// Blood Group Enum
+export const bloodGroupEnum = pgEnum("blood_group", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]);
+
+// Blood Component Type Enum
+export const bloodComponentEnum = pgEnum("blood_component", [
+  "WHOLE_BLOOD", "PRBC", "PLATELET", "FFP", "CRYOPRECIPITATE", "GRANULOCYTES"
+]);
+
+// Blood Unit Status Enum
+export const bloodUnitStatusEnum = pgEnum("blood_unit_status", [
+  "COLLECTED", "TESTING", "QUARANTINE", "AVAILABLE", "RESERVED", "ISSUED", "TRANSFUSED", "RETURNED", "EXPIRED", "DISPOSED"
+]);
+
+// Blood Bank Service Groups (10 NABH-compliant groups)
+export const bloodServiceGroups = pgTable("blood_service_groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBloodServiceGroupSchema = createInsertSchema(bloodServiceGroups).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertBloodServiceGroup = z.infer<typeof insertBloodServiceGroupSchema>;
+export type BloodServiceGroup = typeof bloodServiceGroups.$inferSelect;
+
+// Blood Bank Services (Individual services under each group)
+export const bloodServices = pgTable("blood_services", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull(),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isMandatory: boolean("is_mandatory").default(false),
+  isActive: boolean("is_active").default(true),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBloodServiceSchema = createInsertSchema(bloodServices).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertBloodService = z.infer<typeof insertBloodServiceSchema>;
+export type BloodService = typeof bloodServices.$inferSelect;
+
+// Blood Donors
+export const bloodDonors = pgTable("blood_donors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  donorId: text("donor_id").notNull().unique(), // DN-YYYYMMDD-XXXX
+  name: text("name").notNull(),
+  bloodGroup: text("blood_group").notNull(),
+  rhFactor: text("rh_factor").notNull(), // Positive/Negative
+  dateOfBirth: text("date_of_birth"),
+  age: integer("age"),
+  gender: text("gender").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  address: text("address"),
+  aadharNumber: text("aadhar_number"),
+  occupation: text("occupation"),
+  weight: decimal("weight", { precision: 5, scale: 2 }),
+  hemoglobinLevel: decimal("hemoglobin_level", { precision: 4, scale: 1 }),
+  bloodPressure: text("blood_pressure"),
+  pulseRate: integer("pulse_rate"),
+  totalDonations: integer("total_donations").default(0),
+  lastDonationDate: text("last_donation_date"),
+  nextEligibleDate: text("next_eligible_date"),
+  isDeferredPermanent: boolean("is_deferred_permanent").default(false),
+  deferralReason: text("deferral_reason"),
+  deferralEndDate: text("deferral_end_date"),
+  eligibilityStatus: text("eligibility_status").default("ELIGIBLE"), // ELIGIBLE, TEMPORARILY_DEFERRED, PERMANENTLY_DEFERRED
+  consentGiven: boolean("consent_given").default(false),
+  consentDate: text("consent_date"),
+  registeredBy: varchar("registered_by"),
+  registeredByName: text("registered_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBloodDonorSchema = createInsertSchema(bloodDonors).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBloodDonor = z.infer<typeof insertBloodDonorSchema>;
+export type BloodDonor = typeof bloodDonors.$inferSelect;
+
+// Blood Storage Facilities (Refrigerators/Freezers)
+export const bloodStorageFacilities = pgTable("blood_storage_facilities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  facilityCode: text("facility_code").notNull().unique(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // REFRIGERATOR, FREEZER, PLATELET_AGITATOR
+  location: text("location").notNull(),
+  capacity: integer("capacity").notNull(), // Number of units
+  currentOccupancy: integer("current_occupancy").default(0),
+  minTemperature: decimal("min_temperature", { precision: 5, scale: 2 }).notNull(),
+  maxTemperature: decimal("max_temperature", { precision: 5, scale: 2 }).notNull(),
+  currentTemperature: decimal("current_temperature", { precision: 5, scale: 2 }),
+  lastTemperatureReading: timestamp("last_temperature_reading"),
+  isOperational: boolean("is_operational").default(true),
+  hasTemperatureBreach: boolean("has_temperature_breach").default(false),
+  componentTypes: text("component_types"), // CSV of allowed component types
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBloodStorageFacilitySchema = createInsertSchema(bloodStorageFacilities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBloodStorageFacility = z.infer<typeof insertBloodStorageFacilitySchema>;
+export type BloodStorageFacility = typeof bloodStorageFacilities.$inferSelect;
+
+// Blood Storage Temperature Logs (Immutable)
+export const bloodTemperatureLogs = pgTable("blood_temperature_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  facilityId: varchar("facility_id").notNull(),
+  temperature: decimal("temperature", { precision: 5, scale: 2 }).notNull(),
+  isBreach: boolean("is_breach").default(false),
+  breachType: text("breach_type"), // HIGH, LOW
+  recordedBy: varchar("recorded_by"),
+  recordedByName: text("recorded_by_name"),
+  notes: text("notes"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertBloodTemperatureLogSchema = createInsertSchema(bloodTemperatureLogs).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertBloodTemperatureLog = z.infer<typeof insertBloodTemperatureLogSchema>;
+export type BloodTemperatureLog = typeof bloodTemperatureLogs.$inferSelect;
+
+// Blood Units (Core inventory)
+export const bloodUnits = pgTable("blood_units", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  unitId: text("unit_id").notNull().unique(), // BU-YYYYMMDD-XXXX (Barcode)
+  componentType: text("component_type").notNull(),
+  bloodGroup: text("blood_group").notNull(),
+  rhFactor: text("rh_factor").notNull(),
+  volume: integer("volume").notNull(), // in mL
+  donorId: varchar("donor_id").notNull(),
+  donorName: text("donor_name").notNull(),
+  collectionDate: text("collection_date").notNull(),
+  collectionTime: text("collection_time"),
+  collectionServiceId: varchar("collection_service_id"),
+  testingServiceId: varchar("testing_service_id"),
+  storageServiceId: varchar("storage_service_id"),
+  issueServiceId: varchar("issue_service_id"),
+  storageFacilityId: varchar("storage_facility_id"),
+  status: text("status").notNull().default("COLLECTED"),
+  expiryDate: text("expiry_date").notNull(),
+  expiryTime: text("expiry_time"),
+  isExpired: boolean("is_expired").default(false),
+  isTestingComplete: boolean("is_testing_complete").default(false),
+  testingResults: text("testing_results"), // JSON with all test results
+  crossMatchResults: text("cross_match_results"), // JSON
+  isCompatible: boolean("is_compatible"),
+  reservedForPatientId: varchar("reserved_for_patient_id"),
+  reservedForPatientName: text("reserved_for_patient_name"),
+  issuedToPatientId: varchar("issued_to_patient_id"),
+  issuedToPatientName: text("issued_to_patient_name"),
+  issuedDate: text("issued_date"),
+  issuedBy: varchar("issued_by"),
+  issuedByName: text("issued_by_name"),
+  issueDepartment: text("issue_department"), // ICU, OT, IPD, EMERGENCY
+  transfusionStartTime: text("transfusion_start_time"),
+  transfusionEndTime: text("transfusion_end_time"),
+  transfusionNotes: text("transfusion_notes"),
+  hasReaction: boolean("has_reaction").default(false),
+  returnedDate: text("returned_date"),
+  returnReason: text("return_reason"),
+  disposalDate: text("disposal_date"),
+  disposalReason: text("disposal_reason"),
+  disposalAuthorizedBy: varchar("disposal_authorized_by"),
+  disposalAuthorizedByName: text("disposal_authorized_by_name"),
+  createdBy: varchar("created_by"),
+  createdByName: text("created_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBloodUnitSchema = createInsertSchema(bloodUnits).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBloodUnit = z.infer<typeof insertBloodUnitSchema>;
+export type BloodUnit = typeof bloodUnits.$inferSelect;
+
+// Blood Transfusion Orders (Request to issue blood)
+export const bloodTransfusionOrders = pgTable("blood_transfusion_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: text("order_id").notNull().unique(), // TO-YYYYMMDD-XXXX
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientBloodGroup: text("patient_blood_group").notNull(),
+  patientRhFactor: text("patient_rh_factor").notNull(),
+  admissionId: varchar("admission_id"),
+  wardDepartment: text("ward_department").notNull(), // ICU, NICU, PICU, OT, IPD, EMERGENCY
+  componentRequired: text("component_required").notNull(),
+  unitsRequired: integer("units_required").notNull(),
+  urgency: text("urgency").notNull().default("ROUTINE"), // ROUTINE, URGENT, EMERGENCY, MASSIVE_TRANSFUSION
+  indication: text("indication").notNull(), // Reason for transfusion
+  requestingDoctorId: varchar("requesting_doctor_id").notNull(),
+  requestingDoctorName: text("requesting_doctor_name").notNull(),
+  crossMatchRequired: boolean("cross_match_required").default(true),
+  crossMatchStatus: text("cross_match_status").default("PENDING"), // PENDING, COMPATIBLE, INCOMPATIBLE
+  status: text("status").notNull().default("PENDING"), // PENDING, APPROVED, ISSUED, COMPLETED, CANCELLED
+  bloodUnitIds: text("blood_unit_ids"), // JSON array of assigned blood unit IDs
+  approvedBy: varchar("approved_by"),
+  approvedByName: text("approved_by_name"),
+  approvedAt: timestamp("approved_at"),
+  issuedBy: varchar("issued_by"),
+  issuedByName: text("issued_by_name"),
+  issuedAt: timestamp("issued_at"),
+  completedAt: timestamp("completed_at"),
+  cancelledReason: text("cancelled_reason"),
+  notes: text("notes"),
+  createdBy: varchar("created_by"),
+  createdByName: text("created_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBloodTransfusionOrderSchema = createInsertSchema(bloodTransfusionOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBloodTransfusionOrder = z.infer<typeof insertBloodTransfusionOrderSchema>;
+export type BloodTransfusionOrder = typeof bloodTransfusionOrders.$inferSelect;
+
+// Blood Transfusion Reactions
+export const bloodTransfusionReactions = pgTable("blood_transfusion_reactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reactionId: text("reaction_id").notNull().unique(), // TR-YYYYMMDD-XXXX
+  bloodUnitId: varchar("blood_unit_id").notNull(),
+  bloodUnitNumber: text("blood_unit_number").notNull(),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  transfusionOrderId: varchar("transfusion_order_id"),
+  reactionType: text("reaction_type").notNull(), // FEBRILE, ALLERGIC, HEMOLYTIC, ANAPHYLACTIC, TRALI, TACO, OTHER
+  severity: text("severity").notNull(), // MILD, MODERATE, SEVERE, LIFE_THREATENING
+  onsetTime: text("onset_time").notNull(),
+  symptoms: text("symptoms").notNull(), // JSON array
+  vitalSigns: text("vital_signs"), // JSON with vitals at reaction time
+  immediateActions: text("immediate_actions"), // JSON array of interventions
+  transfusionStopped: boolean("transfusion_stopped").default(true),
+  doctorNotified: boolean("doctor_notified").default(false),
+  doctorNotifiedTime: text("doctor_notified_time"),
+  doctorId: varchar("doctor_id"),
+  doctorName: text("doctor_name"),
+  bloodBankNotified: boolean("blood_bank_notified").default(false),
+  bloodBankNotifiedTime: text("blood_bank_notified_time"),
+  outcome: text("outcome"), // RECOVERED, HOSPITALIZED, ICU_TRANSFER, DECEASED
+  followUpRequired: boolean("follow_up_required").default(false),
+  investigationNotes: text("investigation_notes"),
+  reportedBy: varchar("reported_by").notNull(),
+  reportedByName: text("reported_by_name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBloodTransfusionReactionSchema = createInsertSchema(bloodTransfusionReactions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBloodTransfusionReaction = z.infer<typeof insertBloodTransfusionReactionSchema>;
+export type BloodTransfusionReaction = typeof bloodTransfusionReactions.$inferSelect;
+
+// Blood Bank Audit Log (Immutable - NABH/FDA Compliance)
+export const bloodBankAuditLog = pgTable("blood_bank_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  entityType: text("entity_type").notNull(), // DONOR, BLOOD_UNIT, TRANSFUSION_ORDER, STORAGE, SERVICE
+  entityId: varchar("entity_id").notNull(),
+  action: text("action").notNull(), // CREATE, UPDATE, STATUS_CHANGE, ISSUE, RETURN, DISPOSE, TEST, TEMP_BREACH
+  previousValue: text("previous_value"), // JSON
+  newValue: text("new_value"), // JSON
+  serviceId: varchar("service_id"), // Link to blood service that triggered this
+  serviceName: text("service_name"),
+  details: text("details"),
+  userId: varchar("user_id").notNull(),
+  userName: text("user_name").notNull(),
+  userRole: text("user_role").notNull(),
+  ipAddress: text("ip_address"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertBloodBankAuditLogSchema = createInsertSchema(bloodBankAuditLog).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertBloodBankAuditLog = z.infer<typeof insertBloodBankAuditLogSchema>;
+export type BloodBankAuditLog = typeof bloodBankAuditLog.$inferSelect;

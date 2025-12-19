@@ -1,0 +1,351 @@
+✅ MASTER PROMPT
+SERVICE-DRIVEN BLOOD BANK MODULE – HOSPITAL APP
+
+🎯 ROLE & CONTEXT
+You are a senior Hospital Information System (HIS) architect with expertise in:
+Blood Bank operations
+
+NABH standards
+
+Indian FDA blood bank regulations
+
+ICU, OT, Emergency workflows
+
+Zero-error clinical systems
+
+Design and implement a SERVICE-DRIVEN BLOOD BANK MODULE for a hospital application.
+⚠️ STRICT RULE:
+ This module must NOT include pricing, tariffs, or billing logic.
+ Focus ONLY on services, workflows, traceability, compliance, and safety.
+
+1️⃣ MODULE OBJECTIVE
+Create a fully traceable Blood Bank System that:
+Manages blood from donor to patient
+
+Enforces mandatory services at every stage
+
+Prevents unsafe blood usage
+
+Maintains complete audit trails
+
+Is inspection-ready at all times
+
+
+2️⃣ MODULE SCOPE
+The Blood Bank Module must support:
+IPD, ICU, NICU, PICU patients
+
+Emergency & Trauma cases
+
+OT & surgical blood support
+
+Inter-department blood requests
+
+Donor management & traceability
+
+
+3️⃣ CORE PRINCIPLE – SERVICE-DRIVEN DESIGN
+Every blood activity must be executed as a SERVICE.
+🚫 No direct status change
+ 🚫 No manual shortcuts
+✅ Only approved services can move blood from one stage to another
+
+4️⃣ BLOOD BANK – SERVICE MASTER (MANDATORY)
+Create a Service Master with the following groups:
+A. DONOR SERVICES
+Donor Registration
+
+Donor Medical Examination
+
+Donor Eligibility Screening
+
+Voluntary Donation
+
+Replacement Donation
+
+Donor Deferral Management
+
+Donor Counselling
+
+Donor Consent Recording
+
+
+B. BLOOD COLLECTION SERVICES
+Whole Blood Collection
+
+Apheresis Collection
+
+Emergency Collection
+
+Camp Collection
+
+Blood Bag Labelling & Barcoding
+
+
+C. COMPONENT PREPARATION SERVICES
+PRBC Preparation
+
+Platelet Separation
+
+Fresh Frozen Plasma Preparation
+
+Cryoprecipitate Preparation
+
+Component Labelling
+
+
+D. TESTING & SCREENING SERVICES
+Blood Grouping (ABO & Rh)
+
+Cross Matching
+
+Compatibility Testing
+
+Infectious Disease Screening
+
+Repeat / Confirmatory Testing
+
+Quality Control Testing
+
+
+E. STORAGE & INVENTORY SERVICES
+Blood Unit Storage Allocation
+
+Component Storage Allocation
+
+Temperature Monitoring
+
+Quarantine Management
+
+Expiry Monitoring
+
+FIFO Rotation
+
+
+F. ISSUE & TRANSFUSION SERVICES
+Blood Issue to IPD
+
+Blood Issue to ICU
+
+Emergency Blood Issue
+
+OT Blood Issue
+
+Pediatric / Neonatal Blood Issue
+
+Transfusion Start Documentation
+
+Transfusion Completion Documentation
+
+
+G. TRANSFUSION REACTION SERVICES
+Reaction Identification
+
+Severity Classification
+
+Immediate Intervention Documentation
+
+Doctor Notification
+
+Blood Bank Notification
+
+Reaction Outcome Recording
+
+
+H. RETURN & DISPOSAL SERVICES
+Unused Blood Return
+
+Re-temperature Validation
+
+Re-issue Approval
+
+Expired Blood Disposal
+
+Contaminated Blood Disposal
+
+Disposal Authorization
+
+
+I. EMERGENCY & SPECIAL SERVICES
+Massive Transfusion Protocol
+
+Rare Blood Group Handling
+
+O-Negative Emergency Issue
+
+Disaster / Trauma Blood Support
+
+
+J. AUDIT & COMPLIANCE SERVICES
+NABH Audit Support
+
+FDA Inspection Support
+
+Traceability Reporting
+
+Incident Reporting
+
+Statutory Report Generation
+
+
+5️⃣ BLOOD UNIT MASTER (SERVICE-LINKED)
+Each blood unit must have:
+Mandatory Fields:
+Blood Unit ID (Barcode / QR)
+
+Component Type
+
+Blood Group & Rh
+
+Donor ID
+
+Collection Service ID
+
+Testing Service IDs
+
+Storage Service ID
+
+Issue / Return / Disposal Service ID
+
+Current Status
+
+Expiry Date & Time
+
+Complete Service Timeline (immutable)
+
+
+6️⃣ DONOR MASTER (SERVICE-HISTORY BASED)
+Each donor record must include:
+Donor ID
+
+Blood Group
+
+Donation History (linked services)
+
+Deferral History
+
+Consent Records
+
+Eligibility Status
+
+Next Eligible Donation Date
+
+
+7️⃣ SERVICE-ENFORCED WORKFLOW (CRITICAL)
+Blood lifecycle must strictly follow:
+Donor → Collection → Testing → Storage → Issue → Transfusion / Return / Disposal
+System must BLOCK:
+Blood issue without testing service
+
+Blood issue without compatibility service
+
+Blood issue after expiry
+
+Blood issue from quarantine
+
+
+8️⃣ STORAGE & TEMPERATURE CONTROL
+Implement:
+Storage Unit Master (Fridge / Freezer)
+
+Temperature range definition
+
+Continuous temperature logs
+
+Breach alerts
+
+Auto-quarantine on breach
+
+Temperature logs must be non-editable.
+
+9️⃣ TRANSFUSION SAFETY RULES
+System must ensure:
+Doctor order mandatory
+
+Patient-blood compatibility enforced
+
+Transfusion start & end recorded
+
+Reaction monitoring enabled
+
+Emergency override logged separately
+
+
+🔟 DATA VALIDATION RULES
+The system must prevent:
+Duplicate blood unit IDs
+
+Untested blood usage
+
+Wrong blood group issue
+
+Unauthorized disposal
+
+Service skipping
+
+
+1️⃣1️⃣ REPORTING (SERVICE-BASED, NO COST)
+Generate:
+Blood group-wise availability
+
+Component-wise stock
+
+Expiry forecast
+
+Service volume reports
+
+Emergency usage reports
+
+Reaction incidence reports
+
+Donor frequency reports
+
+
+1️⃣2️⃣ NABH / FDA COMPLIANCE
+Ensure:
+Complete service traceability
+
+Role-based access control
+
+Immutable audit logs
+
+Time-stamped actions
+
+Inspection-ready reports
+
+
+1️⃣3️⃣ ERROR HANDLING & ALERTS
+System must alert:
+Expiry approaching
+
+Temperature breach
+
+Emergency stock shortage
+
+Reaction events
+
+Compliance violations
+
+
+1️⃣4️⃣ FINAL EXPECTATION
+The Blood Bank Module must function as:
+A zero-error, life-critical system
+
+Fully service-driven
+
+Legally & clinically safe
+
+Scalable for multi-hospital use
+
+
+✅ OUTPUT EXPECTED
+Service-based workflows
+
+Clean data models
+
+API-ready architecture
+
+NABH/FDA-ready audits
+
+No pricing logic anywhere
+
