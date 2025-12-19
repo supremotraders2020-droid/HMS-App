@@ -2324,3 +2324,168 @@ export const insertPatientMonitoringAuditLogSchema = createInsertSchema(patientM
 });
 export type InsertPatientMonitoringAuditLog = z.infer<typeof insertPatientMonitoringAuditLogSchema>;
 export type PatientMonitoringAuditLog = typeof patientMonitoringAuditLog.$inferSelect;
+
+// ========== BED MANAGEMENT MODULE ==========
+// NABH-Compliant Hospital Bed Management System
+
+// Bed Occupancy Status Enum
+export const bedOccupancyStatusEnum = pgEnum("bed_occupancy_status", [
+  "AVAILABLE", "OCCUPIED", "CLEANING", "BLOCKED", "MAINTENANCE"
+]);
+
+// Bed Category Enum
+export const bedCategoryTypeEnum = pgEnum("bed_category_type", [
+  "GENERAL_WARD", "SEMI_PRIVATE", "PRIVATE", "DELUXE", "SUITE",
+  "ICU", "HDU", "NICU", "PICU", "ISOLATION", "DAY_CARE", "EMERGENCY"
+]);
+
+// Bed Category Master (defines rules per category)
+export const bedCategories = pgTable("bed_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  code: text("code").notNull().unique(),
+  description: text("description"),
+  categoryType: text("category_type").notNull(), // GENERAL_WARD, ICU, etc.
+  serviceEntitlements: text("service_entitlements"), // JSON array of entitled services
+  monitoringRequirements: text("monitoring_requirements"), // JSON: vitals frequency, nursing ratio
+  transferEligibility: text("transfer_eligibility"), // JSON: which categories can transfer to/from
+  documentationIntensity: text("documentation_intensity").default("STANDARD"), // STANDARD, HIGH, CRITICAL
+  maxDayCareDurationHours: integer("max_day_care_duration_hours"), // For day-care beds
+  requiresIcuAdmission: boolean("requires_icu_admission").default(false),
+  requiresPediatricPatient: boolean("requires_pediatric_patient").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBedCategorySchema = createInsertSchema(bedCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBedCategory = z.infer<typeof insertBedCategorySchema>;
+export type BedCategory = typeof bedCategories.$inferSelect;
+
+// Bed Master (individual physical beds)
+export const beds = pgTable("beds", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bedNumber: text("bed_number").notNull(),
+  bedName: text("bed_name"),
+  categoryId: varchar("category_id").notNull(),
+  wardName: text("ward_name").notNull(),
+  floor: text("floor").notNull(),
+  department: text("department").notNull(), // General, ICU, Pediatric, Emergency
+  occupancyStatus: text("occupancy_status").default("AVAILABLE"), // AVAILABLE, OCCUPIED, CLEANING, BLOCKED, MAINTENANCE
+  currentPatientId: varchar("current_patient_id"),
+  currentAdmissionId: varchar("current_admission_id"),
+  hasOxygenCapability: boolean("has_oxygen_capability").default(false),
+  hasVentilatorCapability: boolean("has_ventilator_capability").default(false),
+  isIsolationBed: boolean("is_isolation_bed").default(false),
+  infectionControlFlag: boolean("infection_control_flag").default(false),
+  ppeProtocolRequired: boolean("ppe_protocol_required").default(false),
+  bedStartDatetime: timestamp("bed_start_datetime"),
+  lastOccupiedAt: timestamp("last_occupied_at"),
+  lastCleanedAt: timestamp("last_cleaned_at"),
+  lastMaintenanceAt: timestamp("last_maintenance_at"),
+  isActive: boolean("is_active").default(true),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBedSchema = createInsertSchema(beds).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBed = z.infer<typeof insertBedSchema>;
+export type Bed = typeof beds.$inferSelect;
+
+// Bed Transfers (Immutable audit trail for bed movements)
+export const bedTransfers = pgTable("bed_transfers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  admissionId: varchar("admission_id").notNull(),
+  fromBedId: varchar("from_bed_id").notNull(),
+  fromBedNumber: text("from_bed_number").notNull(),
+  fromWard: text("from_ward").notNull(),
+  toBedId: varchar("to_bed_id").notNull(),
+  toBedNumber: text("to_bed_number").notNull(),
+  toWard: text("to_ward").notNull(),
+  transferReason: text("transfer_reason").notNull(), // MEDICAL_CONDITION, PATIENT_REQUEST, ICU_ESCALATION, ICU_DOWNGRADE, ISOLATION, OTHER
+  transferReasonDetails: text("transfer_reason_details"),
+  doctorAuthorizationId: varchar("doctor_authorization_id").notNull(),
+  doctorName: text("doctor_name").notNull(),
+  transferSequenceNumber: integer("transfer_sequence_number").notNull(),
+  transferDatetime: timestamp("transfer_datetime").notNull(),
+  createdBy: varchar("created_by").notNull(),
+  createdByName: text("created_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBedTransferSchema = createInsertSchema(bedTransfers).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertBedTransfer = z.infer<typeof insertBedTransferSchema>;
+export type BedTransfer = typeof bedTransfers.$inferSelect;
+
+// Bed Allocation History (Records each bed allocation)
+export const bedAllocations = pgTable("bed_allocations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  admissionId: varchar("admission_id").notNull(),
+  bedId: varchar("bed_id").notNull(),
+  bedNumber: text("bed_number").notNull(),
+  categoryId: varchar("category_id").notNull(),
+  categoryName: text("category_name").notNull(),
+  wardName: text("ward_name").notNull(),
+  allocationDatetime: timestamp("allocation_datetime").notNull(),
+  releaseDatetime: timestamp("release_datetime"),
+  releaseReason: text("release_reason"), // DISCHARGE, TRANSFER, DEATH, LAMA
+  isDayCare: boolean("is_day_care").default(false),
+  expectedDuration: integer("expected_duration"), // For day-care in hours
+  isOverstay: boolean("is_overstay").default(false),
+  allocatedBy: varchar("allocated_by").notNull(),
+  allocatedByName: text("allocated_by_name"),
+  releasedBy: varchar("released_by"),
+  releasedByName: text("released_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBedAllocationSchema = createInsertSchema(bedAllocations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBedAllocation = z.infer<typeof insertBedAllocationSchema>;
+export type BedAllocation = typeof bedAllocations.$inferSelect;
+
+// Bed Audit Log (Immutable - NABH Compliance)
+export const bedAuditLog = pgTable("bed_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bedId: varchar("bed_id").notNull(),
+  bedNumber: text("bed_number").notNull(),
+  action: text("action").notNull(), // ALLOCATE, RELEASE, TRANSFER, STATUS_CHANGE, CLEANING_START, CLEANING_COMPLETE, BLOCK, UNBLOCK
+  previousStatus: text("previous_status"),
+  newStatus: text("new_status"),
+  patientId: varchar("patient_id"),
+  patientName: text("patient_name"),
+  admissionId: varchar("admission_id"),
+  details: text("details"), // JSON for additional context
+  userId: varchar("user_id").notNull(),
+  userName: text("user_name").notNull(),
+  userRole: text("user_role").notNull(),
+  ipAddress: text("ip_address"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertBedAuditLogSchema = createInsertSchema(bedAuditLog).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertBedAuditLog = z.infer<typeof insertBedAuditLogSchema>;
+export type BedAuditLog = typeof bedAuditLog.$inferSelect;

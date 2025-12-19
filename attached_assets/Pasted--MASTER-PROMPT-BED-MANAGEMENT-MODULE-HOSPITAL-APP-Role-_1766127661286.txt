@@ -1,0 +1,272 @@
+✅ MASTER PROMPT: BED MANAGEMENT MODULE (HOSPITAL APP)
+Role
+You are an expert Hospital Information System (HIS/HMS) architect with deep knowledge of IPD workflows, ICU protocols, NABH standards, and hospital compliance in India.
+Design and implement a Bed Management Module for a hospital application.
+⚠️ Important Rule:
+ This module must NOT handle costing, tariffs, or pricing.
+ Focus only on structure, workflows, data integrity, compliance, and automation.
+
+1️⃣ OBJECTIVE OF THE MODULE
+Create a centralized Bed Management System that:
+Controls where a patient stays
+
+Tracks how long the patient occupies a bed
+
+Automatically attaches logical services (nursing, monitoring, housekeeping)
+
+Supports ICU, NICU, PICU, isolation, and day-care beds
+
+Maintains audit-ready records for NABH and insurance
+
+
+2️⃣ SCOPE OF BED MANAGEMENT
+The module must apply to:
+All IPD admissions
+
+ICU / HDU / NICU / PICU stays
+
+Isolation rooms
+
+Day-care beds
+
+The module must explicitly exclude:
+Pure OPD cases
+
+
+3️⃣ BED CATEGORY MASTER (DATA STRUCTURE)
+Create a Bed Category Master with categories such as:
+General Ward
+
+Semi-Private
+
+Private
+
+Deluxe / Suite
+
+ICU
+
+HDU
+
+NICU
+
+PICU
+
+Isolation Room
+
+Each category must support:
+Service entitlement rules
+
+Monitoring requirements
+
+Transfer eligibility
+
+Documentation intensity level
+
+
+4️⃣ BED MASTER (CORE DATA MODEL)
+Each physical bed must exist as a unique record.
+Required Fields:
+Bed ID (system-generated, unique)
+
+Bed Name / Number
+
+Bed Category (linked to Bed Category Master)
+
+Ward Name
+
+Floor
+
+Department Linkage (General / ICU / Pediatric / Emergency)
+
+Occupancy Status (Available / Occupied / Cleaning / Blocked)
+
+Infection Isolation Flag (Yes / No)
+
+Oxygen Capability (Yes / No)
+
+Ventilator Capability (Yes / No)
+
+Active / Inactive Status
+
+Last Occupied Timestamp
+
+Last Cleaning Completed Timestamp
+
+
+5️⃣ BED ALLOCATION WORKFLOW
+Admission Flow:
+On IPD admission, allow selection of bed category
+
+Allocate a specific available bed
+
+Change bed status to Occupied
+
+Record bed start datetime
+
+Link bed to patient admission ID
+
+Discharge Flow:
+On discharge order:
+
+Release bed
+
+Change status to Cleaning
+
+After cleaning confirmation → mark Available
+
+Ensure bed release is mandatory before final discharge closure
+
+
+6️⃣ BED TRANSFER MANAGEMENT (CRITICAL)
+Support bed transfers due to:
+Medical condition change
+
+Patient request
+
+ICU escalation
+
+ICU downgrade
+
+Transfer Tracking (Mandatory):
+From Bed ID
+
+To Bed ID
+
+Transfer Date & Time
+
+Transfer Reason
+
+Doctor Authorization ID
+
+Transfer Sequence Number
+
+⚠️ Maintain immutable audit logs (no deletion allowed).
+
+7️⃣ ICU / SPECIAL BED RULE ENGINE
+ICU Beds Must Trigger:
+Mandatory vitals monitoring schedules
+
+Nursing ratio enforcement
+
+Device dependency flags (ventilator / monitor)
+
+Increased documentation frequency
+
+NICU / PICU Beds Must Enforce:
+Age validation
+
+Pediatric specialist assignment
+
+Guardian consent linkage
+
+Pediatric safety checks
+
+
+8️⃣ AUTOMATIC SERVICE ATTACHMENT (LOGICAL ONLY)
+On bed allocation, system must automatically attach:
+Nursing care workflow
+
+Ward service checklist
+
+Housekeeping workflow
+
+Monitoring frequency
+
+Doctor rounds schedule
+
+⚠️ These are non-financial logical services only.
+
+9️⃣ DAY-CARE BED LOGIC
+Day-care beds must:
+Enforce maximum allowed duration
+
+Prevent overnight stay
+
+Auto-trigger discharge workflow after procedure completion
+
+System must auto-flag:
+Overstay conditions
+
+Conversion from Day-Care → IPD
+
+
+🔟 INFECTION CONTROL & ISOLATION BEDS
+Isolation beds must:
+Be tagged with infection control flag
+
+Enforce PPE protocol linkage
+
+Restrict random bed transfers
+
+Follow separate cleaning & clearance workflow
+
+Required for:
+NABH compliance
+
+Infection Control Committee audits
+
+ICU safety audits
+
+
+1️⃣1️⃣ DATA VALIDATION & SAFETY RULES
+The system must prevent:
+Double allocation of the same bed
+
+ICU bed assignment without ICU admission
+
+Pediatric patient allocation to adult ICU
+
+Discharge without bed release
+
+Bed assignment to inactive beds
+
+
+1️⃣2️⃣ REPORTS & ANALYTICS (NON-FINANCIAL)
+Generate reports for:
+Bed occupancy rate
+
+ICU utilization
+
+Average length of stay
+
+Bed turnover time
+
+Isolation bed usage
+
+Department-wise bed utilization
+
+
+1️⃣3️⃣ NABH & COMPLIANCE REQUIREMENTS
+Ensure:
+Complete audit trail for every bed movement
+
+Time-stamped actions
+
+User accountability (who did what)
+
+Immutable logs for medico-legal cases
+
+
+1️⃣4️⃣ ERROR HANDLING & ALERTS
+System should alert:
+Bed overstay
+
+ICU misuse
+
+Isolation protocol breach
+
+Bed not cleaned but marked available
+
+Invalid transfer attempts
+
+
+1️⃣5️⃣ FINAL EXPECTATION
+The Bed Management Module should function as:
+A real-time hospital bed control system
+
+Fully NABH-ready
+
+Insurance-audit friendly
+
+Scalable for multi-floor / multi-ward hospitals
+

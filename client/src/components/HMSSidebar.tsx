@@ -35,7 +35,8 @@ import {
   Trash2,
   Brain,
   FlaskConical,
-  BookOpen
+  BookOpen,
+  BedDouble
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -82,6 +83,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Patient Tracking", url: "/patient-tracking", icon: MapPin, roles: ["ADMIN", "DOCTOR", "NURSE"] },
       { title: "Biometric Service", url: "/biometric-service", icon: Fingerprint, roles: ["ADMIN", "NURSE", "DOCTOR"] },
       { title: "Equipment Servicing", url: "/equipment-servicing", icon: Wrench, roles: ["ADMIN"] },
+      { title: "Bed Management", url: "/bed-management", icon: BedDouble, roles: ["ADMIN"] },
       { title: "Oxygen Tracker", url: "/oxygen-tracker", icon: Cylinder, roles: ["ADMIN", "NURSE"] },
       { title: "Biowaste Management", url: "/biowaste-management", icon: Trash2, roles: ["ADMIN"] },
       { title: "Swab Monitoring", url: "/swab-monitoring", icon: FlaskConical, roles: ["ADMIN"] },

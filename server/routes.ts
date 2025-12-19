@@ -21,7 +21,13 @@ import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTran
   airwayLinesTubes, insertAirwayLinesTubesSchema,
   dutyStaffAssignments, insertDutyStaffAssignmentSchema,
   patientAllergiesPrecautions, insertPatientAllergiesPrecautionsSchema,
-  patientMonitoringAuditLog, insertPatientMonitoringAuditLogSchema
+  patientMonitoringAuditLog, insertPatientMonitoringAuditLogSchema,
+  // Bed Management
+  bedCategories, insertBedCategorySchema,
+  beds, insertBedSchema,
+  bedTransfers, insertBedTransferSchema,
+  bedAllocations, insertBedAllocationSchema,
+  bedAuditLog, insertBedAuditLogSchema
 } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
@@ -5626,6 +5632,533 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       res.status(201).json(result[0]);
     } catch (error) {
       res.status(500).json({ error: "Failed to save audit log" });
+    }
+  });
+
+  // ========== BED MANAGEMENT MODULE ==========
+  // NABH-Compliant Hospital Bed Management System (ADMIN ONLY)
+
+  // Bed Categories CRUD
+  app.get("/api/bed-management/categories", async (req, res) => {
+    try {
+      const categories = await db.select().from(bedCategories).orderBy(bedCategories.name);
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bed categories" });
+    }
+  });
+
+  app.get("/api/bed-management/categories/:id", async (req, res) => {
+    try {
+      const category = await db.select().from(bedCategories)
+        .where(eq(bedCategories.id, req.params.id));
+      if (!category.length) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json(category[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch category" });
+    }
+  });
+
+  app.post("/api/bed-management/categories", async (req, res) => {
+    try {
+      const parsed = insertBedCategorySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid category data", details: parsed.error });
+      }
+      const result = await db.insert(bedCategories).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create bed category" });
+    }
+  });
+
+  app.patch("/api/bed-management/categories/:id", async (req, res) => {
+    try {
+      const result = await db.update(bedCategories)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(bedCategories.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update category" });
+    }
+  });
+
+  app.delete("/api/bed-management/categories/:id", async (req, res) => {
+    try {
+      await db.delete(bedCategories).where(eq(bedCategories.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete category" });
+    }
+  });
+
+  // Beds CRUD
+  app.get("/api/bed-management/beds", async (req, res) => {
+    try {
+      const allBeds = await db.select().from(beds).orderBy(beds.wardName, beds.bedNumber);
+      res.json(allBeds);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch beds" });
+    }
+  });
+
+  app.get("/api/bed-management/beds/:id", async (req, res) => {
+    try {
+      const bed = await db.select().from(beds)
+        .where(eq(beds.id, req.params.id));
+      if (!bed.length) {
+        return res.status(404).json({ error: "Bed not found" });
+      }
+      res.json(bed[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bed" });
+    }
+  });
+
+  app.get("/api/bed-management/beds/ward/:wardName", async (req, res) => {
+    try {
+      const wardBeds = await db.select().from(beds)
+        .where(eq(beds.wardName, req.params.wardName))
+        .orderBy(beds.bedNumber);
+      res.json(wardBeds);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch ward beds" });
+    }
+  });
+
+  app.get("/api/bed-management/beds/available", async (req, res) => {
+    try {
+      const availableBeds = await db.select().from(beds)
+        .where(and(eq(beds.occupancyStatus, "AVAILABLE"), eq(beds.isActive, true)))
+        .orderBy(beds.wardName, beds.bedNumber);
+      res.json(availableBeds);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch available beds" });
+    }
+  });
+
+  app.post("/api/bed-management/beds", async (req, res) => {
+    try {
+      const parsed = insertBedSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid bed data", details: parsed.error });
+      }
+      const result = await db.insert(beds).values(parsed.data).returning();
+      
+      // Log bed creation
+      await db.insert(bedAuditLog).values({
+        bedId: result[0].id,
+        bedNumber: result[0].bedNumber,
+        action: "CREATE",
+        newStatus: result[0].occupancyStatus || "AVAILABLE",
+        userId: req.body.createdBy || "system",
+        userName: req.body.createdByName || "System",
+        userRole: req.body.userRole || "ADMIN",
+        details: JSON.stringify({ message: "Bed created" })
+      });
+      
+      res.status(201).json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create bed" });
+    }
+  });
+
+  app.patch("/api/bed-management/beds/:id", async (req, res) => {
+    try {
+      // Get current bed state for audit
+      const currentBed = await db.select().from(beds).where(eq(beds.id, req.params.id));
+      const previousStatus = currentBed[0]?.occupancyStatus;
+      
+      const result = await db.update(beds)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(beds.id, req.params.id))
+        .returning();
+      
+      // Log status change if status changed
+      if (req.body.occupancyStatus && req.body.occupancyStatus !== previousStatus) {
+        await db.insert(bedAuditLog).values({
+          bedId: result[0].id,
+          bedNumber: result[0].bedNumber,
+          action: "STATUS_CHANGE",
+          previousStatus: previousStatus,
+          newStatus: req.body.occupancyStatus,
+          patientId: result[0].currentPatientId,
+          userId: req.body.updatedBy || "system",
+          userName: req.body.updatedByName || "System",
+          userRole: req.body.userRole || "ADMIN",
+          details: JSON.stringify({ reason: req.body.statusChangeReason || "Manual update" })
+        });
+      }
+      
+      res.json(result[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update bed" });
+    }
+  });
+
+  app.delete("/api/bed-management/beds/:id", async (req, res) => {
+    try {
+      // Get bed info for audit
+      const bed = await db.select().from(beds).where(eq(beds.id, req.params.id));
+      if (bed[0]) {
+        await db.insert(bedAuditLog).values({
+          bedId: bed[0].id,
+          bedNumber: bed[0].bedNumber,
+          action: "DELETE",
+          previousStatus: bed[0].occupancyStatus,
+          userId: req.body.deletedBy || "system",
+          userName: req.body.deletedByName || "System",
+          userRole: req.body.userRole || "ADMIN",
+          details: JSON.stringify({ message: "Bed deleted" })
+        });
+      }
+      await db.delete(beds).where(eq(beds.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete bed" });
+    }
+  });
+
+  // Bed Allocation
+  app.post("/api/bed-management/allocate", async (req, res) => {
+    try {
+      const { bedId, patientId, patientName, admissionId, categoryId, categoryName, allocatedBy, allocatedByName, isDayCare, expectedDuration } = req.body;
+      
+      // Get bed info
+      const bed = await db.select().from(beds).where(eq(beds.id, bedId));
+      if (!bed.length) {
+        return res.status(404).json({ error: "Bed not found" });
+      }
+      if (bed[0].occupancyStatus !== "AVAILABLE") {
+        return res.status(400).json({ error: "Bed is not available for allocation" });
+      }
+      
+      // Update bed status
+      await db.update(beds).set({
+        occupancyStatus: "OCCUPIED",
+        currentPatientId: patientId,
+        currentAdmissionId: admissionId,
+        bedStartDatetime: new Date(),
+        lastOccupiedAt: new Date(),
+        updatedAt: new Date()
+      }).where(eq(beds.id, bedId));
+      
+      // Create allocation record
+      const allocation = await db.insert(bedAllocations).values({
+        patientId,
+        patientName,
+        admissionId,
+        bedId,
+        bedNumber: bed[0].bedNumber,
+        categoryId,
+        categoryName,
+        wardName: bed[0].wardName,
+        allocationDatetime: new Date(),
+        isDayCare: isDayCare || false,
+        expectedDuration: expectedDuration || null,
+        allocatedBy,
+        allocatedByName
+      }).returning();
+      
+      // Log allocation
+      await db.insert(bedAuditLog).values({
+        bedId,
+        bedNumber: bed[0].bedNumber,
+        action: "ALLOCATE",
+        previousStatus: "AVAILABLE",
+        newStatus: "OCCUPIED",
+        patientId,
+        patientName,
+        admissionId,
+        userId: allocatedBy,
+        userName: allocatedByName,
+        userRole: "ADMIN",
+        details: JSON.stringify({ allocationId: allocation[0].id })
+      });
+      
+      res.status(201).json(allocation[0]);
+    } catch (error) {
+      console.error("Allocation error:", error);
+      res.status(500).json({ error: "Failed to allocate bed" });
+    }
+  });
+
+  // Bed Release
+  app.post("/api/bed-management/release", async (req, res) => {
+    try {
+      const { bedId, releaseReason, releasedBy, releasedByName } = req.body;
+      
+      // Get bed info
+      const bed = await db.select().from(beds).where(eq(beds.id, bedId));
+      if (!bed.length) {
+        return res.status(404).json({ error: "Bed not found" });
+      }
+      
+      // Update active allocation
+      const activeAllocation = await db.select().from(bedAllocations)
+        .where(and(eq(bedAllocations.bedId, bedId), eq(bedAllocations.releaseDatetime, null as any)));
+      
+      if (activeAllocation.length) {
+        await db.update(bedAllocations).set({
+          releaseDatetime: new Date(),
+          releaseReason,
+          releasedBy,
+          releasedByName,
+          updatedAt: new Date()
+        }).where(eq(bedAllocations.id, activeAllocation[0].id));
+      }
+      
+      // Update bed status to CLEANING
+      await db.update(beds).set({
+        occupancyStatus: "CLEANING",
+        currentPatientId: null,
+        currentAdmissionId: null,
+        bedStartDatetime: null,
+        updatedAt: new Date()
+      }).where(eq(beds.id, bedId));
+      
+      // Log release
+      await db.insert(bedAuditLog).values({
+        bedId,
+        bedNumber: bed[0].bedNumber,
+        action: "RELEASE",
+        previousStatus: "OCCUPIED",
+        newStatus: "CLEANING",
+        patientId: bed[0].currentPatientId,
+        userId: releasedBy,
+        userName: releasedByName,
+        userRole: "ADMIN",
+        details: JSON.stringify({ releaseReason })
+      });
+      
+      res.json({ success: true, message: "Bed released and marked for cleaning" });
+    } catch (error) {
+      console.error("Release error:", error);
+      res.status(500).json({ error: "Failed to release bed" });
+    }
+  });
+
+  // Mark bed as cleaned/available
+  app.post("/api/bed-management/mark-cleaned", async (req, res) => {
+    try {
+      const { bedId, cleanedBy, cleanedByName } = req.body;
+      
+      const bed = await db.select().from(beds).where(eq(beds.id, bedId));
+      if (!bed.length) {
+        return res.status(404).json({ error: "Bed not found" });
+      }
+      
+      await db.update(beds).set({
+        occupancyStatus: "AVAILABLE",
+        lastCleanedAt: new Date(),
+        updatedAt: new Date()
+      }).where(eq(beds.id, bedId));
+      
+      await db.insert(bedAuditLog).values({
+        bedId,
+        bedNumber: bed[0].bedNumber,
+        action: "CLEANING_COMPLETE",
+        previousStatus: "CLEANING",
+        newStatus: "AVAILABLE",
+        userId: cleanedBy,
+        userName: cleanedByName,
+        userRole: "ADMIN",
+        details: JSON.stringify({ message: "Bed cleaned and available" })
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark bed as cleaned" });
+    }
+  });
+
+  // Bed Transfers
+  app.get("/api/bed-management/transfers", async (req, res) => {
+    try {
+      const transfers = await db.select().from(bedTransfers)
+        .orderBy(desc(bedTransfers.transferDatetime));
+      res.json(transfers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transfers" });
+    }
+  });
+
+  app.get("/api/bed-management/transfers/patient/:patientId", async (req, res) => {
+    try {
+      const transfers = await db.select().from(bedTransfers)
+        .where(eq(bedTransfers.patientId, req.params.patientId))
+        .orderBy(bedTransfers.transferSequenceNumber);
+      res.json(transfers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient transfers" });
+    }
+  });
+
+  app.post("/api/bed-management/transfers", async (req, res) => {
+    try {
+      const parsed = insertBedTransferSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid transfer data", details: parsed.error });
+      }
+      
+      // Validate from bed is occupied by patient
+      const fromBed = await db.select().from(beds).where(eq(beds.id, parsed.data.fromBedId));
+      if (!fromBed.length || fromBed[0].currentPatientId !== parsed.data.patientId) {
+        return res.status(400).json({ error: "Patient is not in the source bed" });
+      }
+      
+      // Validate to bed is available
+      const toBed = await db.select().from(beds).where(eq(beds.id, parsed.data.toBedId));
+      if (!toBed.length || toBed[0].occupancyStatus !== "AVAILABLE") {
+        return res.status(400).json({ error: "Destination bed is not available" });
+      }
+      
+      // Release from bed
+      await db.update(beds).set({
+        occupancyStatus: "CLEANING",
+        currentPatientId: null,
+        currentAdmissionId: null,
+        bedStartDatetime: null,
+        updatedAt: new Date()
+      }).where(eq(beds.id, parsed.data.fromBedId));
+      
+      // Allocate to bed
+      await db.update(beds).set({
+        occupancyStatus: "OCCUPIED",
+        currentPatientId: parsed.data.patientId,
+        currentAdmissionId: parsed.data.admissionId,
+        bedStartDatetime: new Date(),
+        lastOccupiedAt: new Date(),
+        updatedAt: new Date()
+      }).where(eq(beds.id, parsed.data.toBedId));
+      
+      // Create transfer record
+      const result = await db.insert(bedTransfers).values(parsed.data).returning();
+      
+      // Log transfer
+      await db.insert(bedAuditLog).values({
+        bedId: parsed.data.fromBedId,
+        bedNumber: parsed.data.fromBedNumber,
+        action: "TRANSFER",
+        previousStatus: "OCCUPIED",
+        newStatus: "CLEANING",
+        patientId: parsed.data.patientId,
+        patientName: parsed.data.patientName,
+        admissionId: parsed.data.admissionId,
+        userId: parsed.data.createdBy,
+        userName: parsed.data.createdByName || "System",
+        userRole: "ADMIN",
+        details: JSON.stringify({ 
+          transferId: result[0].id,
+          toBedId: parsed.data.toBedId,
+          toBedNumber: parsed.data.toBedNumber,
+          reason: parsed.data.transferReason
+        })
+      });
+      
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Transfer error:", error);
+      res.status(500).json({ error: "Failed to create transfer" });
+    }
+  });
+
+  // Bed Allocations History
+  app.get("/api/bed-management/allocations", async (req, res) => {
+    try {
+      const allocations = await db.select().from(bedAllocations)
+        .orderBy(desc(bedAllocations.allocationDatetime));
+      res.json(allocations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch allocations" });
+    }
+  });
+
+  app.get("/api/bed-management/allocations/bed/:bedId", async (req, res) => {
+    try {
+      const allocations = await db.select().from(bedAllocations)
+        .where(eq(bedAllocations.bedId, req.params.bedId))
+        .orderBy(desc(bedAllocations.allocationDatetime));
+      res.json(allocations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bed allocations" });
+    }
+  });
+
+  // Bed Audit Log (Read-only, no deletion allowed for NABH compliance)
+  app.get("/api/bed-management/audit-log", async (req, res) => {
+    try {
+      const logs = await db.select().from(bedAuditLog)
+        .orderBy(desc(bedAuditLog.timestamp))
+        .limit(500);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch audit log" });
+    }
+  });
+
+  app.get("/api/bed-management/audit-log/bed/:bedId", async (req, res) => {
+    try {
+      const logs = await db.select().from(bedAuditLog)
+        .where(eq(bedAuditLog.bedId, req.params.bedId))
+        .orderBy(desc(bedAuditLog.timestamp));
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bed audit log" });
+    }
+  });
+
+  // Bed Statistics/Analytics
+  app.get("/api/bed-management/stats", async (req, res) => {
+    try {
+      const allBeds = await db.select().from(beds).where(eq(beds.isActive, true));
+      const categories = await db.select().from(bedCategories).where(eq(bedCategories.isActive, true));
+      
+      const stats = {
+        totalBeds: allBeds.length,
+        availableBeds: allBeds.filter(b => b.occupancyStatus === "AVAILABLE").length,
+        occupiedBeds: allBeds.filter(b => b.occupancyStatus === "OCCUPIED").length,
+        cleaningBeds: allBeds.filter(b => b.occupancyStatus === "CLEANING").length,
+        blockedBeds: allBeds.filter(b => b.occupancyStatus === "BLOCKED").length,
+        maintenanceBeds: allBeds.filter(b => b.occupancyStatus === "MAINTENANCE").length,
+        occupancyRate: allBeds.length > 0 
+          ? Math.round((allBeds.filter(b => b.occupancyStatus === "OCCUPIED").length / allBeds.length) * 100) 
+          : 0,
+        isolationBeds: allBeds.filter(b => b.isIsolationBed).length,
+        icuBeds: allBeds.filter(b => b.department === "ICU").length,
+        ventilatorCapable: allBeds.filter(b => b.hasVentilatorCapability).length,
+        oxygenCapable: allBeds.filter(b => b.hasOxygenCapability).length,
+        totalCategories: categories.length,
+        byWard: {} as Record<string, { total: number; occupied: number; available: number }>,
+        byDepartment: {} as Record<string, { total: number; occupied: number; available: number }>
+      };
+      
+      // Group by ward
+      allBeds.forEach(bed => {
+        if (!stats.byWard[bed.wardName]) {
+          stats.byWard[bed.wardName] = { total: 0, occupied: 0, available: 0 };
+        }
+        stats.byWard[bed.wardName].total++;
+        if (bed.occupancyStatus === "OCCUPIED") stats.byWard[bed.wardName].occupied++;
+        if (bed.occupancyStatus === "AVAILABLE") stats.byWard[bed.wardName].available++;
+      });
+      
+      // Group by department
+      allBeds.forEach(bed => {
+        if (!stats.byDepartment[bed.department]) {
+          stats.byDepartment[bed.department] = { total: 0, occupied: 0, available: 0 };
+        }
+        stats.byDepartment[bed.department].total++;
+        if (bed.occupancyStatus === "OCCUPIED") stats.byDepartment[bed.department].occupied++;
+        if (bed.occupancyStatus === "AVAILABLE") stats.byDepartment[bed.department].available++;
+      });
+      
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bed statistics" });
     }
   });
 

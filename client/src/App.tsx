@@ -36,6 +36,7 @@ import DiseaseKnowledge from "@/pages/DiseaseKnowledge";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import PrescriptionsPage from "@/pages/PrescriptionsPage";
 import PatientMonitoringPage from "@/pages/PatientMonitoringPage";
+import BedManagementPage from "@/pages/BedManagementPage";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -228,6 +229,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only administrators can access AI Analytics.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/bed-management">
+        {currentUser.role === "ADMIN" ? (
+          <BedManagementPage />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators can access bed management.</p>
           </div>
         )}
       </Route>
