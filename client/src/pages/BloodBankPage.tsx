@@ -152,7 +152,12 @@ export default function BloodBankPage() {
             variant="outline" 
             size="sm"
             onClick={() => {
-              queryClient.invalidateQueries({ queryKey: ["/api/blood-bank"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/blood-bank/units"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/blood-bank/donors"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/blood-bank/storage"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/blood-bank/orders"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/blood-bank/service-groups"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/blood-bank/audit-log"] });
               toast({ title: "Data refreshed" });
             }}
             data-testid="button-refresh"

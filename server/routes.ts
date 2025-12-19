@@ -6174,8 +6174,19 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   // ========== BLOOD BANK MODULE ROUTES ==========
 
+  // Blood Bank authentication middleware - ADMIN only
+  const bloodBankAuthMiddleware = async (req: any, res: any, next: any) => {
+    if (!req.session?.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    if (req.session.user.role !== "ADMIN") {
+      return res.status(403).json({ error: "Blood Bank access restricted to administrators only" });
+    }
+    next();
+  };
+
   // Blood Service Groups
-  app.get("/api/blood-bank/service-groups", async (req, res) => {
+  app.get("/api/blood-bank/service-groups", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const groups = await db.select().from(bloodServiceGroups).orderBy(bloodServiceGroups.displayOrder);
       res.json(groups);
@@ -6185,7 +6196,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Blood Services
-  app.get("/api/blood-bank/services", async (req, res) => {
+  app.get("/api/blood-bank/services", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const services = await db.select().from(bloodServices).orderBy(bloodServices.displayOrder);
       res.json(services);
@@ -6195,7 +6206,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Blood Units
-  app.get("/api/blood-bank/units", async (req, res) => {
+  app.get("/api/blood-bank/units", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const units = await db.select().from(bloodUnits).orderBy(desc(bloodUnits.createdAt));
       res.json(units);
@@ -6204,7 +6215,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.post("/api/blood-bank/units", async (req, res) => {
+  app.post("/api/blood-bank/units", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const data = insertBloodUnitSchema.parse(req.body);
       const [unit] = await db.insert(bloodUnits).values(data).returning();
@@ -6227,7 +6238,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.patch("/api/blood-bank/units/:id", async (req, res) => {
+  app.patch("/api/blood-bank/units/:id", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const [existing] = await db.select().from(bloodUnits).where(eq(bloodUnits.id, req.params.id));
       if (!existing) {
@@ -6261,7 +6272,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Blood Donors
-  app.get("/api/blood-bank/donors", async (req, res) => {
+  app.get("/api/blood-bank/donors", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const donorList = await db.select().from(bloodDonors).orderBy(desc(bloodDonors.createdAt));
       res.json(donorList);
@@ -6270,7 +6281,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.post("/api/blood-bank/donors", async (req, res) => {
+  app.post("/api/blood-bank/donors", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const data = insertBloodDonorSchema.parse(req.body);
       const [donor] = await db.insert(bloodDonors).values(data).returning();
@@ -6293,12 +6304,31 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.patch("/api/blood-bank/donors/:id", async (req, res) => {
+  app.patch("/api/blood-bank/donors/:id", bloodBankAuthMiddleware, async (req, res) => {
     try {
+      const [existing] = await db.select().from(bloodDonors).where(eq(bloodDonors.id, req.params.id));
+      if (!existing) {
+        return res.status(404).json({ error: "Donor not found" });
+      }
+      
       const [updated] = await db.update(bloodDonors)
         .set({ ...req.body, updatedAt: new Date() })
         .where(eq(bloodDonors.id, req.params.id))
         .returning();
+      
+      // Audit log for donor updates
+      await db.insert(bloodBankAuditLog).values({
+        entityType: "DONOR",
+        entityId: updated.id,
+        action: "UPDATE",
+        previousValue: JSON.stringify({ eligibilityStatus: existing.eligibilityStatus }),
+        newValue: JSON.stringify({ eligibilityStatus: updated.eligibilityStatus }),
+        userId: (req as any).session?.user?.id || "system",
+        userName: (req as any).session?.user?.fullName || "System",
+        userRole: "ADMIN",
+        details: `Donor ${updated.donorId} updated`
+      });
+      
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to update donor" });
@@ -6306,7 +6336,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Blood Storage Facilities
-  app.get("/api/blood-bank/storage", async (req, res) => {
+  app.get("/api/blood-bank/storage", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const facilities = await db.select().from(bloodStorageFacilities).orderBy(bloodStorageFacilities.name);
       res.json(facilities);
@@ -6315,7 +6345,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.post("/api/blood-bank/storage", async (req, res) => {
+  app.post("/api/blood-bank/storage", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const data = insertBloodStorageFacilitySchema.parse(req.body);
       const [facility] = await db.insert(bloodStorageFacilities).values(data).returning();
@@ -6326,7 +6356,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Temperature Logs
-  app.post("/api/blood-bank/storage/:facilityId/temperature", async (req, res) => {
+  app.post("/api/blood-bank/storage/:facilityId/temperature", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const data = insertBloodTemperatureLogSchema.parse({
         ...req.body,
@@ -6353,17 +6383,19 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
           })
           .where(eq(bloodStorageFacilities.id, req.params.facilityId));
         
-        if (isBreach) {
-          await db.insert(bloodBankAuditLog).values({
-            entityType: "STORAGE",
-            entityId: facility.id,
-            action: "TEMP_BREACH",
-            details: `Temperature breach detected: ${temp}°C (allowed: ${minTemp}-${maxTemp}°C)`,
-            userId: req.body.recordedBy || "system",
-            userName: req.body.recordedByName || "System",
-            userRole: "ADMIN"
-          });
-        }
+        // Audit log for all temperature readings
+        await db.insert(bloodBankAuditLog).values({
+          entityType: "STORAGE",
+          entityId: facility.id,
+          action: isBreach ? "TEMP_BREACH" : "TEMP_LOG",
+          newValue: JSON.stringify({ temperature: temp, facilityId: facility.id }),
+          details: isBreach 
+            ? `Temperature breach detected: ${temp}°C (allowed: ${minTemp}-${maxTemp}°C)` 
+            : `Temperature logged: ${temp}°C for ${facility.name}`,
+          userId: (req as any).session?.user?.id || "system",
+          userName: (req as any).session?.user?.fullName || "System",
+          userRole: "ADMIN"
+        });
       }
       
       res.json(log);
@@ -6373,7 +6405,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Transfusion Orders
-  app.get("/api/blood-bank/orders", async (req, res) => {
+  app.get("/api/blood-bank/orders", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const orders = await db.select().from(bloodTransfusionOrders).orderBy(desc(bloodTransfusionOrders.createdAt));
       res.json(orders);
@@ -6382,7 +6414,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.post("/api/blood-bank/orders", async (req, res) => {
+  app.post("/api/blood-bank/orders", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const data = insertBloodTransfusionOrderSchema.parse(req.body);
       const [order] = await db.insert(bloodTransfusionOrders).values(data).returning();
@@ -6404,12 +6436,33 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.patch("/api/blood-bank/orders/:id", async (req, res) => {
+  app.patch("/api/blood-bank/orders/:id", bloodBankAuthMiddleware, async (req, res) => {
     try {
+      const [existing] = await db.select().from(bloodTransfusionOrders).where(eq(bloodTransfusionOrders.id, req.params.id));
+      if (!existing) {
+        return res.status(404).json({ error: "Transfusion order not found" });
+      }
+      
       const [updated] = await db.update(bloodTransfusionOrders)
         .set({ ...req.body, updatedAt: new Date() })
         .where(eq(bloodTransfusionOrders.id, req.params.id))
         .returning();
+      
+      // Audit log for order status changes
+      if (req.body.status && req.body.status !== existing.status) {
+        await db.insert(bloodBankAuditLog).values({
+          entityType: "TRANSFUSION_ORDER",
+          entityId: updated.id,
+          action: "STATUS_CHANGE",
+          previousValue: JSON.stringify({ status: existing.status }),
+          newValue: JSON.stringify({ status: updated.status }),
+          userId: (req as any).session?.user?.id || "system",
+          userName: (req as any).session?.user?.fullName || "System",
+          userRole: "ADMIN",
+          details: `Transfusion order ${updated.orderId} status changed from ${existing.status} to ${updated.status}`
+        });
+      }
+      
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to update transfusion order" });
@@ -6417,7 +6470,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Transfusion Reactions
-  app.get("/api/blood-bank/reactions", async (req, res) => {
+  app.get("/api/blood-bank/reactions", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const reactions = await db.select().from(bloodTransfusionReactions).orderBy(desc(bloodTransfusionReactions.createdAt));
       res.json(reactions);
@@ -6426,7 +6479,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.post("/api/blood-bank/reactions", async (req, res) => {
+  app.post("/api/blood-bank/reactions", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const data = insertBloodTransfusionReactionSchema.parse(req.body);
       const [reaction] = await db.insert(bloodTransfusionReactions).values(data).returning();
@@ -6448,7 +6501,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Blood Bank Audit Log (Read-only)
-  app.get("/api/blood-bank/audit-log", async (req, res) => {
+  app.get("/api/blood-bank/audit-log", bloodBankAuthMiddleware, async (req, res) => {
     try {
       const logs = await db.select().from(bloodBankAuditLog)
         .orderBy(desc(bloodBankAuditLog.timestamp))
