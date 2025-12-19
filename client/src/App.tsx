@@ -441,32 +441,44 @@ function AppContent() {
   if (currentUser.role === "DOCTOR") {
     // Check if doctor is accessing a shared route
     if (location === "/patient-monitoring") {
-      // Render the shared layout with PatientMonitoringPage for doctors
+      // Render the shared layout with PatientMonitoringPage for doctors (with full sidebar like Nurse Portal)
       return (
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <TooltipProvider>
-              <div className="flex h-screen w-full bg-background">
-                <div className="flex flex-col flex-1">
-                  <header className="flex items-center justify-between p-4 border-b glass-panel sticky top-0 z-40">
-                    <div className="flex items-center space-x-4">
-                      <Button variant="outline" size="sm" onClick={() => setLocation('/dashboard')} className="gap-2">
-                        <span>Back to Doctor Portal</span>
-                      </Button>
-                      <div className="flex flex-col">
-                        <span className="text-lg font-semibold">Patient Monitoring</span>
-                        <span className="text-xs text-muted-foreground">ICU & Ward Monitoring</span>
+              <SidebarProvider style={sidebarStyle as React.CSSProperties}>
+                <div className="flex h-screen w-full">
+                  <HMSSidebar 
+                    currentRole="DOCTOR"
+                    currentUser={{
+                      name: currentUser.name,
+                      hospitalName: currentUser.hospitalName
+                    }}
+                    onNavigate={(path) => {
+                      console.log('Navigating to:', path);
+                      setLocation(path);
+                    }}
+                    onLogout={handleLogout}
+                  />
+                  <div className="flex flex-col flex-1">
+                    <header className="flex items-center justify-between p-4 border-b glass-panel sticky top-0 z-40">
+                      <div className="flex items-center space-x-4">
+                        <SidebarTrigger data-testid="button-sidebar-toggle" className="glass-button" />
+                        <div className="flex flex-col">
+                          <span className="text-lg font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Gravity Hospital</span>
+                          <span className="text-xs text-muted-foreground">HMS Core System</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <ThemeSwitcher />
-                    </div>
-                  </header>
-                  <main className="flex-1 overflow-auto p-6">
-                    <PatientMonitoringPage />
-                  </main>
+                      <div className="flex items-center space-x-3">
+                        <ThemeSwitcher />
+                      </div>
+                    </header>
+                    <main className="flex-1 overflow-auto p-6">
+                      <PatientMonitoringPage />
+                    </main>
+                  </div>
                 </div>
-              </div>
+              </SidebarProvider>
               <Toaster />
             </TooltipProvider>
           </ThemeProvider>
