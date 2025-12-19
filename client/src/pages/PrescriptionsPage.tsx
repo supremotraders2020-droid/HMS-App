@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, FileText, Search, Printer, Clock, CheckCircle, AlertCircle, FileCheck } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import PrescriptionCreationModal from "@/components/PrescriptionCreationModal";
 import type { Prescription, Doctor } from "@shared/schema";
 
@@ -76,8 +77,8 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
       return;
     }
 
-    const medicationsHtml = prescription.medications && Array.isArray(prescription.medications) 
-      ? (prescription.medications as any[]).map((med: any, idx: number) => `
+    const medicationsHtml = prescription.medicines && Array.isArray(prescription.medicines) 
+      ? (prescription.medicines as any[]).map((med: any, idx: number) => `
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${idx + 1}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${med.medicineName || '-'}</td>
@@ -226,14 +227,32 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
               </Select>
             )}
             
-            <Button 
-              onClick={handleCreatePrescription}
-              disabled={(currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN") && !selectedDoctor}
-              data-testid="button-create-prescription"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Prescription
-            </Button>
+            {(currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN") && !selectedDoctor ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button 
+                      disabled
+                      data-testid="button-create-prescription"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Prescription
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Please select a doctor first</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button 
+                onClick={handleCreatePrescription}
+                data-testid="button-create-prescription"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Prescription
+              </Button>
+            )}
           </div>
         </CardHeader>
         
