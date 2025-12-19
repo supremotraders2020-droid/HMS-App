@@ -37,6 +37,7 @@ import FloatingChatButton from "@/components/FloatingChatButton";
 import PrescriptionsPage from "@/pages/PrescriptionsPage";
 import PatientMonitoringPage from "@/pages/PatientMonitoringPage";
 import BedManagementPage from "@/pages/BedManagementPage";
+import BloodBankPage from "@/pages/BloodBankPage";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
 
@@ -239,6 +240,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only administrators can access bed management.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/blood-bank">
+        {currentUser.role === "ADMIN" ? (
+          <BloodBankPage />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators can access the Blood Bank module.</p>
           </div>
         )}
       </Route>

@@ -27,7 +27,17 @@ import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTran
   beds, insertBedSchema,
   bedTransfers, insertBedTransferSchema,
   bedAllocations, insertBedAllocationSchema,
-  bedAuditLog, insertBedAuditLogSchema
+  bedAuditLog, insertBedAuditLogSchema,
+  // Blood Bank
+  bloodServiceGroups, insertBloodServiceGroupSchema,
+  bloodServices, insertBloodServiceSchema,
+  bloodDonors, insertBloodDonorSchema,
+  bloodUnits, insertBloodUnitSchema,
+  bloodStorageFacilities, insertBloodStorageFacilitySchema,
+  bloodTemperatureLogs, insertBloodTemperatureLogSchema,
+  bloodTransfusionOrders, insertBloodTransfusionOrderSchema,
+  bloodTransfusionReactions, insertBloodTransfusionReactionSchema,
+  bloodBankAuditLog, insertBloodBankAuditLogSchema
 } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
@@ -6161,6 +6171,337 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       res.status(500).json({ error: "Failed to fetch bed statistics" });
     }
   });
+
+  // ========== BLOOD BANK MODULE ROUTES ==========
+
+  // Blood Service Groups
+  app.get("/api/blood-bank/service-groups", async (req, res) => {
+    try {
+      const groups = await db.select().from(bloodServiceGroups).orderBy(bloodServiceGroups.displayOrder);
+      res.json(groups);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch service groups" });
+    }
+  });
+
+  // Blood Services
+  app.get("/api/blood-bank/services", async (req, res) => {
+    try {
+      const services = await db.select().from(bloodServices).orderBy(bloodServices.displayOrder);
+      res.json(services);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch blood services" });
+    }
+  });
+
+  // Blood Units
+  app.get("/api/blood-bank/units", async (req, res) => {
+    try {
+      const units = await db.select().from(bloodUnits).orderBy(desc(bloodUnits.createdAt));
+      res.json(units);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch blood units" });
+    }
+  });
+
+  app.post("/api/blood-bank/units", async (req, res) => {
+    try {
+      const data = insertBloodUnitSchema.parse(req.body);
+      const [unit] = await db.insert(bloodUnits).values(data).returning();
+      
+      // Create audit log
+      await db.insert(bloodBankAuditLog).values({
+        entityType: "BLOOD_UNIT",
+        entityId: unit.id,
+        action: "CREATE",
+        newValue: JSON.stringify(data),
+        userId: req.body.createdBy || "system",
+        userName: req.body.createdByName || "System",
+        userRole: "ADMIN",
+        details: `Blood unit ${unit.unitId} created`
+      });
+      
+      res.json(unit);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create blood unit" });
+    }
+  });
+
+  app.patch("/api/blood-bank/units/:id", async (req, res) => {
+    try {
+      const [existing] = await db.select().from(bloodUnits).where(eq(bloodUnits.id, req.params.id));
+      if (!existing) {
+        return res.status(404).json({ error: "Blood unit not found" });
+      }
+      
+      const [updated] = await db.update(bloodUnits)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(bloodUnits.id, req.params.id))
+        .returning();
+      
+      // Create audit log for status changes
+      if (req.body.status && req.body.status !== existing.status) {
+        await db.insert(bloodBankAuditLog).values({
+          entityType: "BLOOD_UNIT",
+          entityId: updated.id,
+          action: "STATUS_CHANGE",
+          previousValue: JSON.stringify({ status: existing.status }),
+          newValue: JSON.stringify({ status: updated.status }),
+          userId: req.body.updatedBy || "system",
+          userName: req.body.updatedByName || "System",
+          userRole: "ADMIN",
+          details: `Blood unit ${updated.unitId} status changed from ${existing.status} to ${updated.status}`
+        });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update blood unit" });
+    }
+  });
+
+  // Blood Donors
+  app.get("/api/blood-bank/donors", async (req, res) => {
+    try {
+      const donorList = await db.select().from(bloodDonors).orderBy(desc(bloodDonors.createdAt));
+      res.json(donorList);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch donors" });
+    }
+  });
+
+  app.post("/api/blood-bank/donors", async (req, res) => {
+    try {
+      const data = insertBloodDonorSchema.parse(req.body);
+      const [donor] = await db.insert(bloodDonors).values(data).returning();
+      
+      // Create audit log
+      await db.insert(bloodBankAuditLog).values({
+        entityType: "DONOR",
+        entityId: donor.id,
+        action: "CREATE",
+        newValue: JSON.stringify({ donorId: donor.donorId, name: donor.name, bloodGroup: donor.bloodGroup }),
+        userId: req.body.registeredBy || "system",
+        userName: req.body.registeredByName || "System",
+        userRole: "ADMIN",
+        details: `Donor ${donor.donorId} registered`
+      });
+      
+      res.json(donor);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to register donor" });
+    }
+  });
+
+  app.patch("/api/blood-bank/donors/:id", async (req, res) => {
+    try {
+      const [updated] = await db.update(bloodDonors)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(bloodDonors.id, req.params.id))
+        .returning();
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update donor" });
+    }
+  });
+
+  // Blood Storage Facilities
+  app.get("/api/blood-bank/storage", async (req, res) => {
+    try {
+      const facilities = await db.select().from(bloodStorageFacilities).orderBy(bloodStorageFacilities.name);
+      res.json(facilities);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch storage facilities" });
+    }
+  });
+
+  app.post("/api/blood-bank/storage", async (req, res) => {
+    try {
+      const data = insertBloodStorageFacilitySchema.parse(req.body);
+      const [facility] = await db.insert(bloodStorageFacilities).values(data).returning();
+      res.json(facility);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create storage facility" });
+    }
+  });
+
+  // Temperature Logs
+  app.post("/api/blood-bank/storage/:facilityId/temperature", async (req, res) => {
+    try {
+      const data = insertBloodTemperatureLogSchema.parse({
+        ...req.body,
+        facilityId: req.params.facilityId
+      });
+      const [log] = await db.insert(bloodTemperatureLogs).values(data).returning();
+      
+      // Update facility current temperature and check for breach
+      const [facility] = await db.select().from(bloodStorageFacilities)
+        .where(eq(bloodStorageFacilities.id, req.params.facilityId));
+      
+      if (facility) {
+        const temp = parseFloat(req.body.temperature);
+        const minTemp = parseFloat(facility.minTemperature?.toString() || "0");
+        const maxTemp = parseFloat(facility.maxTemperature?.toString() || "0");
+        const isBreach = temp < minTemp || temp > maxTemp;
+        
+        await db.update(bloodStorageFacilities)
+          .set({
+            currentTemperature: req.body.temperature,
+            lastTemperatureReading: new Date(),
+            hasTemperatureBreach: isBreach,
+            updatedAt: new Date()
+          })
+          .where(eq(bloodStorageFacilities.id, req.params.facilityId));
+        
+        if (isBreach) {
+          await db.insert(bloodBankAuditLog).values({
+            entityType: "STORAGE",
+            entityId: facility.id,
+            action: "TEMP_BREACH",
+            details: `Temperature breach detected: ${temp}°C (allowed: ${minTemp}-${maxTemp}°C)`,
+            userId: req.body.recordedBy || "system",
+            userName: req.body.recordedByName || "System",
+            userRole: "ADMIN"
+          });
+        }
+      }
+      
+      res.json(log);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to log temperature" });
+    }
+  });
+
+  // Transfusion Orders
+  app.get("/api/blood-bank/orders", async (req, res) => {
+    try {
+      const orders = await db.select().from(bloodTransfusionOrders).orderBy(desc(bloodTransfusionOrders.createdAt));
+      res.json(orders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transfusion orders" });
+    }
+  });
+
+  app.post("/api/blood-bank/orders", async (req, res) => {
+    try {
+      const data = insertBloodTransfusionOrderSchema.parse(req.body);
+      const [order] = await db.insert(bloodTransfusionOrders).values(data).returning();
+      
+      await db.insert(bloodBankAuditLog).values({
+        entityType: "TRANSFUSION_ORDER",
+        entityId: order.id,
+        action: "CREATE",
+        newValue: JSON.stringify({ orderId: order.orderId, patientName: order.patientName, urgency: order.urgency }),
+        userId: req.body.createdBy || "system",
+        userName: req.body.createdByName || "System",
+        userRole: "ADMIN",
+        details: `Transfusion order ${order.orderId} created for ${order.patientName}`
+      });
+      
+      res.json(order);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create transfusion order" });
+    }
+  });
+
+  app.patch("/api/blood-bank/orders/:id", async (req, res) => {
+    try {
+      const [updated] = await db.update(bloodTransfusionOrders)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(bloodTransfusionOrders.id, req.params.id))
+        .returning();
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update transfusion order" });
+    }
+  });
+
+  // Transfusion Reactions
+  app.get("/api/blood-bank/reactions", async (req, res) => {
+    try {
+      const reactions = await db.select().from(bloodTransfusionReactions).orderBy(desc(bloodTransfusionReactions.createdAt));
+      res.json(reactions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transfusion reactions" });
+    }
+  });
+
+  app.post("/api/blood-bank/reactions", async (req, res) => {
+    try {
+      const data = insertBloodTransfusionReactionSchema.parse(req.body);
+      const [reaction] = await db.insert(bloodTransfusionReactions).values(data).returning();
+      
+      await db.insert(bloodBankAuditLog).values({
+        entityType: "TRANSFUSION_ORDER",
+        entityId: reaction.bloodUnitId,
+        action: "REACTION",
+        details: `Transfusion reaction reported: ${reaction.reactionType} - ${reaction.severity}`,
+        userId: reaction.reportedBy,
+        userName: reaction.reportedByName,
+        userRole: "ADMIN"
+      });
+      
+      res.json(reaction);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to report transfusion reaction" });
+    }
+  });
+
+  // Blood Bank Audit Log (Read-only)
+  app.get("/api/blood-bank/audit-log", async (req, res) => {
+    try {
+      const logs = await db.select().from(bloodBankAuditLog)
+        .orderBy(desc(bloodBankAuditLog.timestamp))
+        .limit(500);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch audit log" });
+    }
+  });
+
+  // Seed Blood Bank initial data
+  const seedBloodBankData = async () => {
+    try {
+      // Check if service groups already exist
+      const existingGroups = await db.select().from(bloodServiceGroups);
+      if (existingGroups.length === 0) {
+        // Seed 10 NABH-compliant service groups
+        const groups = [
+          { code: "DONOR", name: "Donor Services", description: "Donor registration, screening, and consent management", displayOrder: 1 },
+          { code: "COLLECTION", name: "Blood Collection Services", description: "Whole blood and apheresis collection", displayOrder: 2 },
+          { code: "COMPONENT", name: "Component Preparation", description: "Blood component separation and preparation", displayOrder: 3 },
+          { code: "TESTING", name: "Testing & Screening", description: "Blood grouping, cross-matching, and disease screening", displayOrder: 4 },
+          { code: "STORAGE", name: "Storage & Inventory", description: "Blood unit storage and temperature monitoring", displayOrder: 5 },
+          { code: "ISSUE", name: "Issue & Transfusion", description: "Blood issue and transfusion documentation", displayOrder: 6 },
+          { code: "REACTION", name: "Transfusion Reaction", description: "Adverse reaction identification and management", displayOrder: 7 },
+          { code: "RETURN", name: "Return & Disposal", description: "Unused blood return and disposal management", displayOrder: 8 },
+          { code: "EMERGENCY", name: "Emergency Services", description: "Emergency blood issue and massive transfusion protocols", displayOrder: 9 },
+          { code: "AUDIT", name: "Audit & Compliance", description: "NABH/FDA compliance and reporting", displayOrder: 10 }
+        ];
+        await db.insert(bloodServiceGroups).values(groups);
+        console.log("Blood Bank service groups seeded");
+      }
+
+      // Check if storage facilities exist
+      const existingFacilities = await db.select().from(bloodStorageFacilities);
+      if (existingFacilities.length === 0) {
+        // Seed storage facilities
+        const facilities = [
+          { facilityCode: "REF-001", name: "Blood Refrigerator 1", type: "REFRIGERATOR", location: "Blood Bank Room A", capacity: 100, minTemperature: "2", maxTemperature: "6", currentTemperature: "4", componentTypes: "WHOLE_BLOOD,PRBC" },
+          { facilityCode: "REF-002", name: "Blood Refrigerator 2", type: "REFRIGERATOR", location: "Blood Bank Room A", capacity: 80, minTemperature: "2", maxTemperature: "6", currentTemperature: "4.5", componentTypes: "WHOLE_BLOOD,PRBC" },
+          { facilityCode: "FRZ-001", name: "Plasma Freezer", type: "FREEZER", location: "Blood Bank Room B", capacity: 50, minTemperature: "-30", maxTemperature: "-18", currentTemperature: "-25", componentTypes: "FFP,CRYOPRECIPITATE" },
+          { facilityCode: "PLT-001", name: "Platelet Agitator", type: "PLATELET_AGITATOR", location: "Blood Bank Room B", capacity: 20, minTemperature: "20", maxTemperature: "24", currentTemperature: "22", componentTypes: "PLATELET" }
+        ];
+        await db.insert(bloodStorageFacilities).values(facilities);
+        console.log("Blood Bank storage facilities seeded");
+      }
+    } catch (error) {
+      console.error("Error seeding blood bank data:", error);
+    }
+  };
+
+  // Run blood bank seeding
+  await seedBloodBankData();
 
   const httpServer = createServer(app);
 
