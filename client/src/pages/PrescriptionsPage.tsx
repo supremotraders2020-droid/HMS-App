@@ -48,6 +48,23 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
     return matchesSearch && matchesStatus;
   });
 
+  // Get doctor info for modal
+  const getDoctorInfo = () => {
+    if (currentUser.role === "DOCTOR") {
+      return { id: currentUser.id, name: currentUser.name };
+    }
+    if (selectedDoctor) {
+      const doctor = doctors.find(d => d.id === selectedDoctor);
+      if (doctor) {
+        return { id: doctor.id, name: doctor.name };
+      }
+    }
+    return null;
+  };
+
+  const doctorInfo = getDoctorInfo();
+  const canCreatePrescription = currentUser.role === "DOCTOR" || (selectedDoctor && doctorInfo !== null);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'draft':
@@ -64,7 +81,7 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
   };
 
   const handleCreatePrescription = () => {
-    if (!selectedDoctor && (currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN")) {
+    if (!canCreatePrescription) {
       return;
     }
     setShowCreateModal(true);
@@ -176,16 +193,6 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
     printWindow.document.close();
   };
 
-  const getSelectedDoctorInfo = () => {
-    if (currentUser.role === "DOCTOR") {
-      return { id: currentUser.id, name: currentUser.name };
-    }
-    const doctor = doctors.find(d => d.id === selectedDoctor);
-    return doctor ? { id: doctor.id, name: doctor.name } : null;
-  };
-
-  const doctorInfo = getSelectedDoctorInfo();
-
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -229,8 +236,8 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
             
             <Button 
               onClick={handleCreatePrescription}
-              disabled={(currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN") && !selectedDoctor}
-              title={(currentUser.role === "OPD_MANAGER" || currentUser.role === "ADMIN") && !selectedDoctor ? "Please select a doctor first" : undefined}
+              disabled={!canCreatePrescription}
+              title={!canCreatePrescription ? "Please select a doctor first" : undefined}
               data-testid="button-create-prescription"
             >
               <Plus className="h-4 w-4 mr-2" />
