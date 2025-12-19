@@ -555,14 +555,16 @@ export default function SwabMonitoring() {
       `;
     }
     
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(reportContent);
-      printWindow.document.close();
-      toast({ title: "Report generated", description: `${reportTitle} opened in new tab. Use browser print to save as PDF.` });
-    } else {
-      toast({ title: "Popup blocked", description: "Please allow popups to generate reports", variant: "destructive" });
-    }
+    const blob = new Blob([reportContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${reportTitle.replace(/\s+/g, '_')}_${format(new Date(), "yyyy-MM-dd")}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({ title: "Report downloaded", description: `${reportTitle} has been downloaded. Open the file in a browser and use Print > Save as PDF.` });
   };
 
   return (
