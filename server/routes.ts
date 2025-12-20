@@ -313,10 +313,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Send real-time notification to doctor and patient
+      // Resolve doctorId to user ID for proper notification routing
       const patientId = req.body.patientId || req.body.patientName; // Use patientId if provided, fallback to patientName
+      const resolvedDoctorUserId = await resolveDoctorId(validatedData.doctorId);
       notificationService.notifyAppointmentCreated(
         appointment.id,
-        validatedData.doctorId,
+        resolvedDoctorUserId,
         validatedData.patientName,
         validatedData.appointmentDate,
         validatedData.timeSlot,
@@ -2817,9 +2819,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Send real-time notification to doctor, patient, and admin
+      // Resolve doctorId to user ID for proper notification routing
+      const resolvedDoctorId = await resolveDoctorId(slot.doctorId);
       notificationService.notifyAppointmentCreated(
         appointment.id,
-        slot.doctorId,
+        resolvedDoctorId,
         patientName,
         slot.slotDate,
         `${slot.startTime} - ${slot.endTime}`,
