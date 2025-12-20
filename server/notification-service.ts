@@ -122,6 +122,37 @@ class NotificationService {
     console.log(`Slot update broadcast: ${slotUpdate.type} for doctor ${slotUpdate.doctorId}`);
   }
 
+  // Helper method to notify all OPD Managers via stored notification + WebSocket
+  async notifyOpdManagers(
+    title: string,
+    message: string,
+    entityType: string,
+    entityId: string,
+    metadata: object
+  ) {
+    try {
+      // Get all OPD Managers from the database
+      const opdManagers = await storage.getUsersByRole('OPD_MANAGER');
+      
+      // Create persistent notifications for each OPD manager
+      for (const manager of opdManagers) {
+        await this.createAndPushNotification({
+          userId: manager.id,
+          userRole: "OPD_MANAGER",
+          type: "opd_update",
+          title,
+          message,
+          relatedEntityType: entityType,
+          relatedEntityId: entityId,
+          isRead: false,
+          metadata: JSON.stringify(metadata)
+        });
+      }
+    } catch (error) {
+      console.error("Error notifying OPD managers:", error);
+    }
+  }
+
   async createAndPushNotification(notification: InsertUserNotification): Promise<UserNotification> {
     const created = await storage.createUserNotification(notification);
     
@@ -174,8 +205,20 @@ class NotificationService {
       });
     }
 
+    // Notify all OPD Managers - New appointment request in their module
+    await this.notifyOpdManagers(
+      "New Appointment Request",
+      `${patientName} has requested an appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo}. Status: Pending doctor confirmation.`,
+      "appointment",
+      appointmentId,
+      { appointmentDate, appointmentTime, patientName, department, location, status: 'pending' }
+    );
+
     // Broadcast to all admins
     this.broadcast({ type: "admin_notification", event: "appointment_created", appointmentId, department, location }, "ADMIN");
+    
+    // Broadcast to OPD Managers for real-time updates
+    this.broadcast({ type: "opd_notification", event: "appointment_created", appointmentId, department, location, patientName, status: 'pending' }, "OPD_MANAGER");
     
     // Broadcast appointment update to the specific doctor for real-time schedule sync
     this.sendToUser(doctorId, {
@@ -227,8 +270,20 @@ class NotificationService {
       message: "Your appointment has been confirmed!"
     });
 
+    // Notify all OPD Managers - Appointment confirmed
+    await this.notifyOpdManagers(
+      "Appointment Confirmed",
+      `Dr. ${doctorName} has confirmed the appointment with ${patientName} for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo}`,
+      "appointment",
+      appointmentId,
+      { appointmentDate, appointmentTime, patientName, doctorName, department, location, status: 'confirmed' }
+    );
+
     // Broadcast to admins
     this.broadcast({ type: "admin_notification", event: "appointment_confirmed", appointmentId }, "ADMIN");
+    
+    // Broadcast to OPD Managers for real-time updates
+    this.broadcast({ type: "opd_notification", event: "appointment_confirmed", appointmentId, patientName, doctorName, status: 'confirmed' }, "OPD_MANAGER");
   }
 
   async notifyAppointmentCancelled(
@@ -285,8 +340,21 @@ class NotificationService {
       });
     }
 
+    // Notify all OPD Managers - Appointment cancelled
+    const cancelledByInfo = cancelledBy === 'doctor' ? `Dr. ${doctorName}` : patientName;
+    await this.notifyOpdManagers(
+      "Appointment Cancelled",
+      `Appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo} has been cancelled by ${cancelledByInfo}`,
+      "appointment",
+      appointmentId,
+      { appointmentDate, appointmentTime, patientName, doctorName, department, location, status: 'cancelled', cancelledBy }
+    );
+
     // Broadcast to admins
     this.broadcast({ type: "admin_notification", event: "appointment_cancelled", appointmentId }, "ADMIN");
+    
+    // Broadcast to OPD Managers for real-time updates
+    this.broadcast({ type: "opd_notification", event: "appointment_cancelled", appointmentId, patientName, cancelledBy, status: 'cancelled' }, "OPD_MANAGER");
   }
 
   async notifyAppointmentUpdated(appointmentId: string, doctorId: string, patientName: string, status: string, appointmentDate: string) {
