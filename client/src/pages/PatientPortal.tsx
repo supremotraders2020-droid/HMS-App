@@ -583,13 +583,25 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
 
   // Convert API time slots to the format expected by the UI
   const getAvailableSlots = () => {
+    // Helper to convert time string to minutes for sorting
+    const timeToMins = (timeStr: string): number => {
+      const [time, period] = timeStr.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      let totalHours = hours;
+      if (period === 'PM' && hours !== 12) totalHours += 12;
+      if (period === 'AM' && hours === 12) totalHours = 0;
+      return totalHours * 60 + (minutes || 0);
+    };
+
     // If we have slots from the new API, use those
     if (availableTimeSlots.length > 0) {
-      return availableTimeSlots.map(slot => ({
-        value: slot.startTime,
-        label: `${slot.startTime} - ${slot.endTime}`,
-        slotId: slot.id, // Include slot ID for booking
-      }));
+      return availableTimeSlots
+        .map(slot => ({
+          value: slot.startTime,
+          label: `${slot.startTime} - ${slot.endTime}`,
+          slotId: slot.id,
+        }))
+        .sort((a, b) => timeToMins(a.value) - timeToMins(b.value));
     }
 
     // Use schedule-based slots when available - filter by selected location
@@ -598,10 +610,12 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
       if (selectedLocation) {
         filteredSlots = scheduleBasedSlots.filter(slot => slot.location === selectedLocation);
       }
-      return filteredSlots.map(slot => ({
-        value: slot.value,
-        label: slot.label,
-      }));
+      return filteredSlots
+        .map(slot => ({
+          value: slot.value,
+          label: slot.label,
+        }))
+        .sort((a, b) => timeToMins(a.value) - timeToMins(b.value));
     }
     
     // Fallback: filter from static slots based on existing appointments
