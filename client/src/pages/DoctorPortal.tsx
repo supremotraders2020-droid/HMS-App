@@ -351,10 +351,10 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const confirmAppointmentMutation = useMutation({
     mutationFn: (id: string) =>
-      apiRequest('POST', `/api/appointments/${id}/checkin`),
+      apiRequest('PATCH', `/api/appointments/${id}/confirm`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
-      toast({ title: "Appointment confirmed successfully" });
+      toast({ title: "Appointment confirmed", description: "The patient has been notified" });
     },
     onError: () => toast({ title: "Failed to confirm appointment", variant: "destructive" }),
   });

@@ -121,18 +121,20 @@ export default function PatientMonitoringPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-80px)]">
-      <div className="flex items-center justify-between p-4 border-b bg-card">
-        <div className="flex items-center gap-3">
-          <Hospital className="h-8 w-8 text-primary" />
+      <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-primary/10">
+            <Hospital className="h-6 w-6 text-primary" />
+          </div>
           <div>
-            <h1 className="text-2xl font-bold">Patient Monitoring</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Patient Monitoring</h1>
             <p className="text-sm text-muted-foreground">ICU Chart & Nursing Workflow (NABH-Compliant)</p>
           </div>
         </div>
         <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
           <DialogTrigger asChild>
-            <Button data-testid="button-new-session">
-              <PlusCircle className="h-4 w-4 mr-2" /> New Session
+            <Button className="gap-2" data-testid="button-new-session">
+              <PlusCircle className="h-4 w-4" /> New Session
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
@@ -215,91 +217,112 @@ export default function PatientMonitoringPage() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-72 border-r bg-card overflow-auto">
-          <div className="p-3 border-b">
-            <h3 className="font-semibold text-sm text-muted-foreground">Active Sessions</h3>
+        <aside className="w-80 border-r bg-muted/30 overflow-auto">
+          <div className="px-4 py-3 border-b bg-muted/50">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-sm">Active Sessions</h3>
+              <Badge variant="secondary" className="text-xs">{sessions.length}</Badge>
+            </div>
           </div>
           <ScrollArea className="h-[calc(100vh-200px)]">
-            {sessions.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No active sessions</p>
-              </div>
-            ) : (
-              sessions.map((session) => (
-                <div 
-                  key={session.id} 
-                  className={`p-3 cursor-pointer border-b hover-elevate ${selectedSessionId === session.id ? 'bg-primary/10 border-l-4 border-l-primary' : ''}`}
-                  onClick={() => setSelectedSessionId(session.id)}
-                  data-testid={`session-item-${session.id}`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-sm">{session.patientName}</span>
-                    <Badge variant={session.isLocked ? "secondary" : "default"} className="text-xs">
-                      {session.isLocked ? "Locked" : "Active"}
-                    </Badge>
+            <div className="p-2 space-y-2">
+              {sessions.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                    <FileText className="h-8 w-8 opacity-50" />
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    <div>{session.ward} - Bed {session.bedNumber}</div>
-                    <div>UHID: {session.uhid} | {format(new Date(session.sessionDate), "dd MMM yyyy")}</div>
-                  </div>
-                  {session.isVentilated && (
-                    <Badge variant="destructive" className="mt-1 text-xs">
-                      <Wind className="h-3 w-3 mr-1" /> Ventilator
-                    </Badge>
-                  )}
+                  <p className="text-sm font-medium">No active sessions</p>
+                  <p className="text-xs mt-1">Click "New Session" to start monitoring</p>
                 </div>
-              ))
-            )}
+              ) : (
+                sessions.map((session) => (
+                  <div 
+                    key={session.id} 
+                    className={`p-4 rounded-lg cursor-pointer transition-all hover-elevate ${
+                      selectedSessionId === session.id 
+                        ? 'bg-primary/10 ring-2 ring-primary/30' 
+                        : 'bg-card hover:bg-card/80'
+                    }`}
+                    onClick={() => setSelectedSessionId(session.id)}
+                    data-testid={`session-item-${session.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-sm block truncate">{session.patientName}</span>
+                        <span className="text-xs text-muted-foreground">{session.ward} - Bed {session.bedNumber}</span>
+                      </div>
+                      <Badge variant={session.isLocked ? "secondary" : "default"} className="text-xs shrink-0">
+                        {session.isLocked ? "Locked" : "Active"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>UHID: {session.uhid}</span>
+                      <span className="text-muted-foreground/50">|</span>
+                      <span>{format(new Date(session.sessionDate), "dd MMM yyyy")}</span>
+                    </div>
+                    {session.isVentilated && (
+                      <Badge variant="destructive" className="mt-2 text-xs gap-1">
+                        <Wind className="h-3 w-3" /> Ventilator
+                      </Badge>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </ScrollArea>
         </aside>
 
-        <main className="flex-1 overflow-auto bg-muted/20 p-4">
+        <main className="flex-1 overflow-auto bg-background p-6">
           {!selectedSession ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <Stethoscope className="h-16 w-16 mb-4 opacity-30" />
+              <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mb-6">
+                <Stethoscope className="h-12 w-12 opacity-40" />
+              </div>
               <h2 className="text-xl font-medium mb-2">Select a Monitoring Session</h2>
               <p className="text-sm">Choose a session from the left panel or create a new one</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {selectedSession.patientName}
-                        {selectedSession.isVentilated && <Badge variant="destructive"><Wind className="h-3 w-3" /></Badge>}
-                      </CardTitle>
-                      <CardDescription>
-                        UHID: {selectedSession.uhid} | {selectedSession.ward} - Bed {selectedSession.bedNumber} | {format(new Date(selectedSession.sessionDate), "EEEE, dd MMMM yyyy")}
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4 mr-1" /> Export PDF
-                      </Button>
-                    </div>
+            <div className="space-y-6">
+              <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-r from-card to-card/50 border">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-xl font-bold text-primary">{selectedSession.patientName.charAt(0)}</span>
                   </div>
-                </CardHeader>
-              </Card>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold">{selectedSession.patientName}</h2>
+                      {selectedSession.isVentilated && (
+                        <Badge variant="destructive" className="gap-1">
+                          <Wind className="h-3 w-3" /> Ventilator
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      UHID: <span className="font-mono">{selectedSession.uhid}</span> | {selectedSession.ward} - Bed {selectedSession.bedNumber} | {format(new Date(selectedSession.sessionDate), "EEEE, dd MMMM yyyy")}
+                    </p>
+                  </div>
+                </div>
+                <Button variant="outline" className="gap-2 shrink-0">
+                  <Download className="h-4 w-4" /> Export PDF
+                </Button>
+              </div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="flex flex-wrap h-auto gap-1 p-1 bg-card">
-                  <TabsTrigger value="overview" className="text-xs"><Activity className="h-3 w-3 mr-1" />Overview</TabsTrigger>
-                  <TabsTrigger value="vitals" className="text-xs"><Heart className="h-3 w-3 mr-1" />Vitals</TabsTrigger>
-                  <TabsTrigger value="inotropes" className="text-xs"><Syringe className="h-3 w-3 mr-1" />Inotropes</TabsTrigger>
-                  <TabsTrigger value="ventilator" className="text-xs"><Wind className="h-3 w-3 mr-1" />Ventilator</TabsTrigger>
-                  <TabsTrigger value="abg-lab" className="text-xs"><FlaskConical className="h-3 w-3 mr-1" />ABG/Lab</TabsTrigger>
-                  <TabsTrigger value="intake" className="text-xs"><Droplets className="h-3 w-3 mr-1" />Intake</TabsTrigger>
-                  <TabsTrigger value="output" className="text-xs"><Droplets className="h-3 w-3 mr-1" />Output</TabsTrigger>
-                  <TabsTrigger value="diabetic" className="text-xs"><Activity className="h-3 w-3 mr-1" />Diabetic</TabsTrigger>
-                  <TabsTrigger value="mar" className="text-xs"><Pill className="h-3 w-3 mr-1" />MAR</TabsTrigger>
-                  <TabsTrigger value="once-only" className="text-xs"><Pill className="h-3 w-3 mr-1" />Once-Only</TabsTrigger>
-                  <TabsTrigger value="notes" className="text-xs"><FileText className="h-3 w-3 mr-1" />Shift Notes</TabsTrigger>
-                  <TabsTrigger value="airway" className="text-xs"><BedDouble className="h-3 w-3 mr-1" />Lines/Tubes</TabsTrigger>
-                  <TabsTrigger value="staff" className="text-xs"><Users className="h-3 w-3 mr-1" />Duty Staff</TabsTrigger>
-                  <TabsTrigger value="allergies" className="text-xs"><AlertTriangle className="h-3 w-3 mr-1" />Allergies</TabsTrigger>
+                <TabsList className="inline-flex flex-wrap h-auto gap-1 p-1.5 bg-muted/50 rounded-lg">
+                  <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Overview</TabsTrigger>
+                  <TabsTrigger value="vitals" className="text-xs gap-1.5 data-[state=active]:bg-background"><Heart className="h-3.5 w-3.5" />Vitals</TabsTrigger>
+                  <TabsTrigger value="inotropes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Inotropes</TabsTrigger>
+                  <TabsTrigger value="ventilator" className="text-xs gap-1.5 data-[state=active]:bg-background"><Wind className="h-3.5 w-3.5" />Ventilator</TabsTrigger>
+                  <TabsTrigger value="abg-lab" className="text-xs gap-1.5 data-[state=active]:bg-background"><FlaskConical className="h-3.5 w-3.5" />ABG/Lab</TabsTrigger>
+                  <TabsTrigger value="intake" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Intake</TabsTrigger>
+                  <TabsTrigger value="output" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Output</TabsTrigger>
+                  <TabsTrigger value="diabetic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Diabetic</TabsTrigger>
+                  <TabsTrigger value="mar" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />MAR</TabsTrigger>
+                  <TabsTrigger value="once-only" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />Once-Only</TabsTrigger>
+                  <TabsTrigger value="notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Shift Notes</TabsTrigger>
+                  <TabsTrigger value="airway" className="text-xs gap-1.5 data-[state=active]:bg-background"><BedDouble className="h-3.5 w-3.5" />Lines/Tubes</TabsTrigger>
+                  <TabsTrigger value="staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Duty Staff</TabsTrigger>
+                  <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -364,55 +387,91 @@ function OverviewTab({ session }: { session: Session }) {
   });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Info className="h-4 w-4" /> Session Info
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3 bg-blue-500/5">
+          <CardTitle className="text-sm flex items-center gap-2 text-blue-600 dark:text-blue-400">
+            <div className="p-1.5 rounded-md bg-blue-500/10">
+              <Info className="h-4 w-4" />
+            </div>
+            Session Info
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-sm space-y-1">
-          <div><span className="text-muted-foreground">Ward:</span> {session.ward}</div>
-          <div><span className="text-muted-foreground">Bed:</span> {session.bedNumber}</div>
-          <div><span className="text-muted-foreground">Consultant:</span> {session.admittingConsultant}</div>
-          <div><span className="text-muted-foreground">Status:</span> <Badge>{session.isLocked ? "Locked" : "Active"}</Badge></div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Droplets className="h-4 w-4" /> Fluid Balance
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm space-y-1">
-          <div><span className="text-muted-foreground">Total Intake:</span> {fluidBalance?.totalIntake || 0} ml</div>
-          <div><span className="text-muted-foreground">Total Output:</span> {fluidBalance?.totalOutput || 0} ml</div>
-          <div className={`font-semibold ${(fluidBalance?.netBalance || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-            Net Balance: {fluidBalance?.netBalance || 0} ml
+        <CardContent className="pt-4 space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Ward</span>
+            <span className="font-medium">{session.ward}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Bed</span>
+            <span className="font-medium">{session.bedNumber}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Consultant</span>
+            <span className="font-medium">{session.admittingConsultant}</span>
+          </div>
+          <div className="flex justify-between text-sm items-center">
+            <span className="text-muted-foreground">Status</span>
+            <Badge variant={session.isLocked ? "secondary" : "default"}>
+              {session.isLocked ? "Locked" : "Active"}
+            </Badge>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Heart className="h-4 w-4" /> Latest Vitals
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3 bg-cyan-500/5">
+          <CardTitle className="text-sm flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+            <div className="p-1.5 rounded-md bg-cyan-500/10">
+              <Droplets className="h-4 w-4" />
+            </div>
+            Fluid Balance
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Record vitals in the Vitals tab
+        <CardContent className="pt-4 space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Total Intake</span>
+            <span className="font-medium">{fluidBalance?.totalIntake || 0} ml</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Total Output</span>
+            <span className="font-medium">{fluidBalance?.totalOutput || 0} ml</span>
+          </div>
+          <Separator />
+          <div className="flex justify-between text-sm items-center">
+            <span className="text-muted-foreground">Net Balance</span>
+            <span className={`font-bold ${(fluidBalance?.netBalance || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              {(fluidBalance?.netBalance || 0) >= 0 ? '+' : ''}{fluidBalance?.netBalance || 0} ml
+            </span>
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <FileCheck className="h-4 w-4" /> Diagnosis
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3 bg-rose-500/5">
+          <CardTitle className="text-sm flex items-center gap-2 text-rose-600 dark:text-rose-400">
+            <div className="p-1.5 rounded-md bg-rose-500/10">
+              <Heart className="h-4 w-4" />
+            </div>
+            Latest Vitals
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-sm">
-          {session.primaryDiagnosis || "No diagnosis recorded"}
+        <CardContent className="pt-4">
+          <p className="text-sm text-muted-foreground">Record vitals in the Vitals tab</p>
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3 bg-amber-500/5">
+          <CardTitle className="text-sm flex items-center gap-2 text-amber-600 dark:text-amber-400">
+            <div className="p-1.5 rounded-md bg-amber-500/10">
+              <FileCheck className="h-4 w-4" />
+            </div>
+            Diagnosis
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <p className="text-sm font-medium">{session.primaryDiagnosis || "No diagnosis recorded"}</p>
         </CardContent>
       </Card>
     </div>

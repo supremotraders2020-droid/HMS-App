@@ -1764,6 +1764,13 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  async deleteUserNotificationsByAppointment(appointmentId: string): Promise<boolean> {
+    const result = await db.delete(userNotifications)
+      .where(eq(userNotifications.relatedEntityId, appointmentId))
+      .returning();
+    return result.length > 0;
+  }
+
   // ========== CONSENT FORM METHODS ==========
   async getConsentForms(): Promise<ConsentForm[]> {
     return await db.select().from(consentForms).orderBy(desc(consentForms.createdAt));

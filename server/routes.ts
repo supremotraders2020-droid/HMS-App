@@ -298,7 +298,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: "This time slot is no longer available. Please choose another time." });
       }
       
-      const appointment = await storage.createAppointment(validatedData);
+      // Force status to "pending" for all new appointments (requires doctor confirmation)
+      const appointmentData = { ...validatedData, status: "pending" };
+      const appointment = await storage.createAppointment(appointmentData);
       
       // Log activity
       await storage.createActivityLog({
@@ -343,15 +345,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Confirm appointment (doctor confirms pending appointment)
+  app.patch("/api/appointments/:id/confirm", async (req, res) => {
+    try {
+      const appointment = await storage.updateAppointmentStatus(req.params.id, "confirmed");
+      if (!appointment) {
+        return res.status(404).json({ error: "Appointment not found" });
+      }
+      
+      // Get doctor info for notification (fallback to stored name if not found)
+      let doctorName = 'Doctor';
+      try {
+        const doctor = await storage.getDoctor(appointment.doctorId);
+        if (doctor?.name) doctorName = doctor.name;
+      } catch (e) {
+        console.log("Doctor profile not found, using default name");
+      }
+      
+      // Send real-time notification to patient (use patientId or patientName as fallback)
+      const patientId = appointment.patientId || appointment.patientName;
+      if (patientId) {
+        notificationService.notifyAppointmentConfirmed(
+          appointment.id,
+          appointment.doctorId,
+          doctorName,
+          patientId,
+          appointment.patientName,
+          appointment.appointmentDate,
+          appointment.timeSlot,
+          appointment.department || undefined,
+          appointment.location || undefined
+        ).catch(err => console.error("Notification error:", err));
+      }
+      
+      res.json(appointment);
+    } catch (error) {
+      console.error("Failed to confirm appointment:", error);
+      res.status(500).json({ error: "Failed to confirm appointment" });
+    }
+  });
+
   // Cancel appointment
   app.patch("/api/appointments/:id/cancel", async (req, res) => {
     try {
+      const existingAppointment = await storage.getAppointment(req.params.id);
+      if (!existingAppointment) {
+        return res.status(404).json({ error: "Appointment not found" });
+      }
+      
       const appointment = await storage.updateAppointmentStatus(req.params.id, "cancelled");
       if (!appointment) {
         return res.status(404).json({ error: "Appointment not found" });
       }
+      
+      // Determine who cancelled (default to doctor if not specified)
+      const cancelledBy = req.body.cancelledBy || 'doctor';
+      
+      // Get doctor info for notification (fallback to default if not found)
+      let doctorName = 'Doctor';
+      try {
+        const doctor = await storage.getDoctor(appointment.doctorId);
+        if (doctor?.name) doctorName = doctor.name;
+      } catch (e) {
+        console.log("Doctor profile not found, using default name");
+      }
+      
+      // Send real-time notification (use patientId or patientName as fallback)
+      const patientId = appointment.patientId || appointment.patientName;
+      if (patientId) {
+        notificationService.notifyAppointmentCancelled(
+          appointment.id,
+          appointment.doctorId,
+          doctorName,
+          patientId,
+          appointment.patientName,
+          appointment.appointmentDate,
+          appointment.timeSlot,
+          cancelledBy,
+          appointment.department || undefined,
+          appointment.location || undefined
+        ).catch(err => console.error("Notification error:", err));
+      }
+      
       res.json(appointment);
     } catch (error) {
+      console.error("Failed to cancel appointment:", error);
       res.status(500).json({ error: "Failed to cancel appointment" });
     }
   });
@@ -2636,7 +2714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: "Slot is no longer available" });
       }
 
-      // Create appointment first
+      // Create appointment first (status: pending - waiting for doctor confirmation)
       const appointmentId = `APT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const appointment = await databaseStorage.createAppointment({
         appointmentId,
@@ -2650,7 +2728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         department: slot.slotType,
         location: slot.location,
         symptoms,
-        status: 'scheduled'
+        status: 'pending'
       });
 
       // Book the slot using transactional locking

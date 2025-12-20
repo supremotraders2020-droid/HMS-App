@@ -146,31 +146,31 @@ class NotificationService {
     const locationInfo = location ? ` at ${location}` : '';
     const deptInfo = department ? ` (${department})` : '';
     
-    // Notify the doctor
+    // Notify the doctor - Pending confirmation required
     await this.createAndPushNotification({
       userId: doctorId,
       userRole: "DOCTOR",
       type: "appointment",
-      title: "New Appointment Booked",
-      message: `${patientName} has booked an appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo}`,
+      title: "New Appointment Request",
+      message: `${patientName} has requested an appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo}. Please confirm or cancel.`,
       relatedEntityType: "appointment",
       relatedEntityId: appointmentId,
       isRead: false,
-      metadata: JSON.stringify({ appointmentDate, appointmentTime, patientName, department, location })
+      metadata: JSON.stringify({ appointmentDate, appointmentTime, patientName, department, location, status: 'pending' })
     });
 
-    // Notify the patient (confirmation)
+    // Notify the patient - Pending status (waiting for doctor confirmation)
     if (patientId) {
       await this.createAndPushNotification({
         userId: patientId,
         userRole: "PATIENT",
         type: "appointment",
-        title: "Appointment Confirmed",
-        message: `Your appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo} has been confirmed`,
+        title: "Appointment Pending",
+        message: `Your appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo} is pending. Waiting for doctor confirmation.`,
         relatedEntityType: "appointment",
         relatedEntityId: appointmentId,
         isRead: false,
-        metadata: JSON.stringify({ appointmentDate, appointmentTime, department, location })
+        metadata: JSON.stringify({ appointmentDate, appointmentTime, department, location, status: 'pending' })
       });
     }
 
@@ -187,6 +187,106 @@ class NotificationService {
       appointmentTime,
       patientName
     });
+  }
+
+  async notifyAppointmentConfirmed(
+    appointmentId: string,
+    doctorId: string,
+    doctorName: string,
+    patientId: string,
+    patientName: string,
+    appointmentDate: string,
+    appointmentTime: string,
+    department?: string,
+    location?: string
+  ) {
+    const locationInfo = location ? ` at ${location}` : '';
+    const deptInfo = department ? ` (${department})` : '';
+
+    // Delete the pending notifications for this appointment
+    await storage.deleteUserNotificationsByAppointment(appointmentId);
+
+    // Notify the patient - Confirmed
+    await this.createAndPushNotification({
+      userId: patientId,
+      userRole: "PATIENT",
+      type: "appointment",
+      title: "Appointment Confirmed",
+      message: `Your appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo} has been confirmed by Dr. ${doctorName}`,
+      relatedEntityType: "appointment",
+      relatedEntityId: appointmentId,
+      isRead: false,
+      metadata: JSON.stringify({ appointmentDate, appointmentTime, department, location, status: 'confirmed', doctorName })
+    });
+
+    // Send real-time update to patient
+    this.sendToUser(patientId, {
+      type: "appointment_status_update",
+      event: "confirmed",
+      appointmentId,
+      message: "Your appointment has been confirmed!"
+    });
+
+    // Broadcast to admins
+    this.broadcast({ type: "admin_notification", event: "appointment_confirmed", appointmentId }, "ADMIN");
+  }
+
+  async notifyAppointmentCancelled(
+    appointmentId: string,
+    doctorId: string,
+    doctorName: string,
+    patientId: string,
+    patientName: string,
+    appointmentDate: string,
+    appointmentTime: string,
+    cancelledBy: 'doctor' | 'patient',
+    department?: string,
+    location?: string
+  ) {
+    const locationInfo = location ? ` at ${location}` : '';
+    const deptInfo = department ? ` (${department})` : '';
+
+    // Delete the pending notifications for this appointment
+    await storage.deleteUserNotificationsByAppointment(appointmentId);
+
+    if (cancelledBy === 'doctor') {
+      // Notify the patient - Cancelled by doctor
+      await this.createAndPushNotification({
+        userId: patientId,
+        userRole: "PATIENT",
+        type: "appointment",
+        title: "Appointment Cancelled",
+        message: `Your appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo} has been cancelled by the doctor`,
+        relatedEntityType: "appointment",
+        relatedEntityId: appointmentId,
+        isRead: false,
+        metadata: JSON.stringify({ appointmentDate, appointmentTime, department, location, status: 'cancelled', cancelledBy })
+      });
+
+      // Send real-time update to patient
+      this.sendToUser(patientId, {
+        type: "appointment_status_update",
+        event: "cancelled",
+        appointmentId,
+        message: "Your appointment has been cancelled by the doctor"
+      });
+    } else {
+      // Notify the doctor - Cancelled by patient
+      await this.createAndPushNotification({
+        userId: doctorId,
+        userRole: "DOCTOR",
+        type: "appointment",
+        title: "Appointment Cancelled",
+        message: `${patientName} has cancelled their appointment for ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo}`,
+        relatedEntityType: "appointment",
+        relatedEntityId: appointmentId,
+        isRead: false,
+        metadata: JSON.stringify({ appointmentDate, appointmentTime, department, location, status: 'cancelled', cancelledBy, patientName })
+      });
+    }
+
+    // Broadcast to admins
+    this.broadcast({ type: "admin_notification", event: "appointment_cancelled", appointmentId }, "ADMIN");
   }
 
   async notifyAppointmentUpdated(appointmentId: string, doctorId: string, patientName: string, status: string, appointmentDate: string) {

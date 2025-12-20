@@ -245,6 +245,7 @@ export interface IStorage {
   markUserNotificationRead(id: string): Promise<UserNotification | undefined>;
   markAllUserNotificationsRead(userId: string): Promise<void>;
   deleteUserNotification(id: string): Promise<boolean>;
+  deleteUserNotificationsByAppointment(appointmentId: string): Promise<boolean>;
   
   // Consent Forms
   getConsentForms(): Promise<ConsentForm[]>;
@@ -2482,6 +2483,17 @@ export class MemStorage implements IStorage {
 
   async deleteUserNotification(id: string): Promise<boolean> {
     return this.userNotificationsData.delete(id);
+  }
+
+  async deleteUserNotificationsByAppointment(appointmentId: string): Promise<boolean> {
+    let deleted = false;
+    for (const [id, notification] of this.userNotificationsData.entries()) {
+      if (notification.relatedEntityId === appointmentId) {
+        this.userNotificationsData.delete(id);
+        deleted = true;
+      }
+    }
+    return deleted;
   }
 
   // Consent Forms stub methods
