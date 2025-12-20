@@ -52,6 +52,7 @@ const NOTIFICATION_CATEGORIES = [
   { value: "hospital_updates", label: "Hospital Updates", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" },
   { value: "emergency", label: "Emergency", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
   { value: "opd_announcements", label: "OPD Announcements", color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" },
+  { value: "appointment", label: "Appointment", color: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200" },
   { value: "disease_alerts", label: "Disease Alerts", color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200" },
   { value: "general", label: "General", color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200" },
 ];
@@ -283,7 +284,7 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
     id: un.id,
     title: un.title,
     message: un.message,
-    category: un.type === 'opd_update' ? 'opd_announcements' : un.type === 'appointment' ? 'opd_announcements' : 'general',
+    category: un.type === 'appointment' ? 'appointment' : un.type === 'opd_update' ? 'opd_announcements' : 'general',
     priority: 'medium' as const,
     status: un.isRead ? 'read' : 'unread',
     channels: ['push'] as string[],
