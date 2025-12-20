@@ -6,7 +6,7 @@ import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
-import { insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
+import { users, insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
   patientMonitoringSessions, insertPatientMonitoringSessionSchema,
   vitalsHourly, insertVitalsHourlySchema,
   inotropesSedation, insertInotropesSedationSchema,
@@ -2298,7 +2298,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/doctor-schedules-by-name/:doctorName", async (req, res) => {
     try {
       const doctorName = decodeURIComponent(req.params.doctorName);
-      const firstName = doctorName.toLowerCase().split(' ')[0];
+      // Remove "Dr." or "Dr " prefix if present and get the first name
+      const cleanedName = doctorName.replace(/^dr\.?\s*/i, '').toLowerCase();
+      const firstName = cleanedName.split(' ')[0];
       
       // Try to find user by matching first name in username
       let matchingUser = await databaseStorage.getUserByUsername(firstName);
@@ -2306,6 +2308,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!matchingUser) {
         // Try with 'dr.' prefix
         matchingUser = await databaseStorage.getUserByUsername(`dr.${firstName}`);
+      }
+      
+      // Also try full name match against users table
+      if (!matchingUser) {
+        const allUsers = await db.select().from(users).where(eq(users.role, 'DOCTOR'));
+        matchingUser = allUsers.find(u => 
+          u.name?.toLowerCase() === doctorName.toLowerCase() ||
+          u.name?.toLowerCase() === cleanedName ||
+          u.name?.toLowerCase().includes(firstName)
+        );
       }
       
       if (matchingUser && matchingUser.role === 'DOCTOR') {
