@@ -309,7 +309,16 @@ class NotificationService {
       { appointmentDate, appointmentTime, patientName, doctorName, department, location, status: 'confirmed' }
     );
 
-    // Broadcast to admins
+    // Notify all Admins - Appointment confirmed
+    await this.notifyAdmins(
+      "Appointment Confirmed",
+      `Appointment for ${patientName} on ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo} has been confirmed by Dr. ${doctorName}`,
+      "appointment",
+      appointmentId,
+      { appointmentDate, appointmentTime, patientName, doctorName, department, location, status: 'confirmed' }
+    );
+
+    // Broadcast to admins for real-time updates
     this.broadcast({ type: "admin_notification", event: "appointment_confirmed", appointmentId }, "ADMIN");
     
     // Broadcast to OPD Managers for real-time updates
