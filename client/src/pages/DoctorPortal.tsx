@@ -597,6 +597,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     if (date) {
       setSelectedCalendarDate(date);
       setCalendarSlotSheetOpen(true);
+    } else if (selectedCalendarDate) {
+      // If clicking the same date (deselect), reopen the sheet
+      setCalendarSlotSheetOpen(true);
     }
   };
 
@@ -1180,20 +1183,13 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         <CardContent className="space-y-4">
           <div className="grid grid-cols-7 gap-1 text-center border border-border/50 rounded-lg overflow-hidden">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => {
-              const fullDay = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][idx];
-              const daySlots = schedules.filter(s => s.day === fullDay && s.isAvailable);
-              const hasSlots = daySlots.length > 0;
               return (
                 <div 
                   key={day}
-                  className={`py-3 px-2 cursor-pointer transition-all ${hasSlots ? 'bg-green-600/20 dark:bg-green-700/30 hover:bg-green-600/30 dark:hover:bg-green-700/40' : 'bg-muted/30 hover:bg-muted/50'} ${idx > 0 ? 'border-l border-border/30' : ''}`}
-                  onClick={() => openScheduleEditor(fullDay)}
+                  className={`py-3 px-2 bg-muted/30 ${idx > 0 ? 'border-l border-border/30' : ''}`}
                   data-testid={`overview-${day.toLowerCase()}`}
                 >
-                  <p className="font-medium text-sm">{day}</p>
-                  <p className={`text-xs mt-0.5 ${hasSlots ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground'}`}>
-                    {hasSlots ? `${daySlots.length} slot${daySlots.length > 1 ? 's' : ''}` : 'Off'}
-                  </p>
+                  <p className="font-medium text-sm text-center">{day}</p>
                 </div>
               );
             })}
