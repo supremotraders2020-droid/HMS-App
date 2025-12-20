@@ -1582,6 +1582,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(doctorTimeSlots.startTime);
   }
 
+  async getTimeSlotDoctorMappings(): Promise<{ doctorId: string; doctorName: string }[]> {
+    const result = await db.selectDistinct({
+      doctorId: doctorTimeSlots.doctorId,
+      doctorName: doctorTimeSlots.doctorName
+    }).from(doctorTimeSlots);
+    return result;
+  }
+
   async createDoctorTimeSlot(slot: InsertDoctorTimeSlot): Promise<DoctorTimeSlot> {
     const result = await db.insert(doctorTimeSlots).values(slot).returning();
     return result[0];

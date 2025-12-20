@@ -225,6 +225,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     queryKey: ['/api/appointments'],
   });
 
+  // Fetch doctor mappings from time slots (maps time slot doctorId to doctorName)
+  const { data: doctorMappings = [] } = useQuery<{ doctorId: string; doctorName: string }[]>({
+    queryKey: ['/api/time-slots/doctor-mappings'],
+  });
+
   // Fetch doctor profile from API
   const { data: profileData, isLoading: profileLoading } = useQuery<DoctorProfile>({
     queryKey: ['/api/doctor-profiles', doctorId],
@@ -437,11 +442,28 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   };
 
   const today = new Date().toISOString().split('T')[0];
-  // Filter appointments by doctorId OR by department matching doctor's specialty (for legacy appointments)
+  // Filter appointments by doctorId, doctor name, OR by department matching doctor's specialty
   const doctorSpecialty = matchedDoctor?.specialty?.toLowerCase() || '';
+  const currentDoctorName = matchedDoctor?.name?.toLowerCase() || doctorName.toLowerCase();
+  
+  // Get all time slot doctor IDs that belong to this doctor (by name matching)
+  const doctorTimeSlotIds = new Set<string>();
+  doctorMappings.forEach((mapping) => {
+    const mappingDoctorName = mapping.doctorName?.toLowerCase() || '';
+    const normalizedCurrentName = currentDoctorName.replace('dr. ', '').trim();
+    const normalizedMappingName = mappingDoctorName.replace('dr. ', '').trim();
+    if (normalizedMappingName.includes(normalizedCurrentName) || 
+        normalizedCurrentName.includes(normalizedMappingName) ||
+        normalizedMappingName === normalizedCurrentName) {
+      doctorTimeSlotIds.add(mapping.doctorId);
+    }
+  });
+  
   const doctorAppointments = allAppointments.filter(a => {
-    // Match by doctorId if set
+    // Match by effectiveDoctorId (doctors table)
     if (a.doctorId && a.doctorId === effectiveDoctorId) return true;
+    // Match by time slot's doctorId (for appointments booked via OPD)
+    if (a.doctorId && doctorTimeSlotIds.has(a.doctorId)) return true;
     // Match by department if doctorId is not set (legacy appointments)
     if (!a.doctorId && a.department?.toLowerCase() === doctorSpecialty) return true;
     return false;

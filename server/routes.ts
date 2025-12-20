@@ -2650,6 +2650,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return doctorId;
   }
 
+  // Get unique doctor ID to name mappings from time slots (for matching appointments)
+  app.get("/api/time-slots/doctor-mappings", async (req, res) => {
+    try {
+      const mappings = await databaseStorage.getTimeSlotDoctorMappings();
+      res.json(mappings);
+    } catch (error) {
+      console.error("Error fetching doctor mappings:", error);
+      res.status(500).json({ error: "Failed to fetch doctor mappings" });
+    }
+  });
+
   // Get all time slots for a specific date (for admin dashboard)
   app.get("/api/time-slots/all", async (req, res) => {
     try {
