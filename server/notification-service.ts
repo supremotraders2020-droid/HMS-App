@@ -153,6 +153,36 @@ class NotificationService {
     }
   }
 
+  async notifyAdmins(
+    title: string,
+    message: string,
+    entityType: string,
+    entityId: string,
+    metadata: object
+  ) {
+    try {
+      // Get all Admins from the database
+      const admins = await storage.getUsersByRole('ADMIN');
+      
+      // Create persistent notifications for each admin
+      for (const admin of admins) {
+        await this.createAndPushNotification({
+          userId: admin.id,
+          userRole: "ADMIN",
+          type: "admin_update",
+          title,
+          message,
+          relatedEntityType: entityType,
+          relatedEntityId: entityId,
+          isRead: false,
+          metadata: JSON.stringify(metadata)
+        });
+      }
+    } catch (error) {
+      console.error("Error notifying admins:", error);
+    }
+  }
+
   async createAndPushNotification(notification: InsertUserNotification): Promise<UserNotification> {
     const created = await storage.createUserNotification(notification);
     
@@ -350,7 +380,16 @@ class NotificationService {
       { appointmentDate, appointmentTime, patientName, doctorName, department, location, status: 'cancelled', cancelledBy }
     );
 
-    // Broadcast to admins
+    // Notify all Admins - Appointment cancelled
+    await this.notifyAdmins(
+      "Appointment Cancelled",
+      `Appointment for ${patientName} on ${appointmentDate} at ${appointmentTime}${deptInfo}${locationInfo} has been cancelled by ${cancelledByInfo}`,
+      "appointment",
+      appointmentId,
+      { appointmentDate, appointmentTime, patientName, doctorName, department, location, status: 'cancelled', cancelledBy }
+    );
+
+    // Broadcast to admins for real-time updates
     this.broadcast({ type: "admin_notification", event: "appointment_cancelled", appointmentId }, "ADMIN");
     
     // Broadcast to OPD Managers for real-time updates
