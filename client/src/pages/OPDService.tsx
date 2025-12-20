@@ -230,7 +230,10 @@ export default function OPDService() {
       )
       .map(apt => normalizeTime(apt.timeSlot?.split(' - ')[0] || apt.timeSlot));
 
-    return slots.filter(slot => !bookedTimes.includes(slot.time));
+    // Sort slots from AM to PM (morning to evening)
+    return slots
+      .filter(slot => !bookedTimes.includes(slot.time))
+      .sort((a, b) => timeToMins(a.time) - timeToMins(b.time));
   };
 
   const availableBookingSlots = getBookingAvailableSlots();

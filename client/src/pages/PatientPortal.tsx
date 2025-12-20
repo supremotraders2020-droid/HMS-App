@@ -467,7 +467,10 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
       )
       .map(apt => apt.timeSlot?.split(' - ')[0] || apt.timeSlot);
 
-    return slots.filter(slot => !bookedTimes.includes(slot.value));
+    // Sort slots from AM to PM (morning to evening)
+    return slots
+      .filter(slot => !bookedTimes.includes(slot.value))
+      .sort((a, b) => timeToMins(a.value) - timeToMins(b.value));
   };
 
   const scheduleBasedSlots = getScheduleBasedSlots();
