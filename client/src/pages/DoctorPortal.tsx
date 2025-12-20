@@ -1141,58 +1141,137 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     }
   };
 
-  const renderSchedules = () => (
+  const renderSchedules = () => {
+    // Calculate schedule statistics
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const todaySlots = schedules.filter(s => s.specificDate === today && s.isAvailable);
+    
+    // Calculate week boundaries with start/end of day for accurate filtering
+    const now = new Date();
+    const thisWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    thisWeekStart.setHours(0, 0, 0, 0);
+    const thisWeekEnd = new Date(thisWeekStart);
+    thisWeekEnd.setDate(thisWeekEnd.getDate() + 6);
+    thisWeekEnd.setHours(23, 59, 59, 999);
+    
+    const weekSlots = schedules.filter(s => {
+      if (!s.specificDate || !s.isAvailable) return false;
+      const slotDate = new Date(s.specificDate + 'T00:00:00');
+      return slotDate >= thisWeekStart && slotDate <= thisWeekEnd;
+    });
+    const totalAvailableSlots = schedules.filter(s => s.isAvailable).length;
+    // Use doctor-specific appointments for pending count
+    const doctorAppointments = allAppointments.filter(a => a.doctorId === doctorId);
+    const pendingAppointments = doctorAppointments.filter(a => a.status === 'pending' || a.status === 'scheduled').length;
+
+    return (
     <div className="space-y-6">
-      <div className="flex items-center justify-end">
-        <Button onClick={() => openScheduleEditor("Monday")} data-testid="button-add-slot">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20" data-testid="stat-today-slots">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Today's Slots</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{todaySlots.length}</p>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                <CalendarDays className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20" data-testid="stat-week-slots">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">This Week</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{weekSlots.length}</p>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20" data-testid="stat-total-slots">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Available</p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalAvailableSlots}</p>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20" data-testid="stat-pending">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pending</p>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{pendingAppointments}</p>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Action Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-muted/30 rounded-lg border">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="px-3 py-1">
+            <CalendarDays className="h-3 w-3 mr-1" />
+            {format(calendarMonth, "MMMM yyyy")}
+          </Badge>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+            data-testid="button-prev-month"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+            data-testid="button-next-month"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setCalendarMonth(new Date())}
+            data-testid="button-today"
+          >
+            Today
+          </Button>
+        </div>
+        <Button onClick={() => openScheduleEditor("Monday")} className="shadow-lg" data-testid="button-add-slot">
           <Plus className="h-4 w-4 mr-2" />
           Add Time Slot
         </Button>
       </div>
 
-      <Card data-testid="card-schedule-calendar">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-primary" />
-                Schedule Calendar
-              </CardTitle>
-              <CardDescription>Your weekly availability and monthly view</CardDescription>
-            </div>
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                data-testid="button-prev-month"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-lg font-semibold min-w-[140px] text-center">
-                {format(calendarMonth, "MMMM yyyy")}
-              </span>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setCalendarMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                data-testid="button-next-month"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-7 gap-1 text-center border border-border/50 rounded-lg overflow-hidden">
+      <Card className="overflow-hidden" data-testid="card-schedule-calendar">
+        <CardContent className="p-0">
+          {/* Calendar Header */}
+          <div className="grid grid-cols-7 bg-muted/50">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => {
               return (
                 <div 
                   key={day}
-                  className={`py-3 px-2 bg-muted/30 ${idx > 0 ? 'border-l border-border/30' : ''}`}
+                  className={`py-4 px-2 text-center font-semibold text-sm ${idx > 0 ? 'border-l border-border/30' : ''}`}
                   data-testid={`overview-${day.toLowerCase()}`}
                 >
-                  <p className="font-medium text-sm text-center">{day}</p>
+                  {day}
                 </div>
               );
             })}
@@ -1218,7 +1297,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               head_row: "hidden",
               head_cell: "hidden",
               row: "grid grid-cols-7 w-full",
-              cell: "relative min-h-[90px] p-3 text-left align-top hover:bg-muted/30 transition-colors cursor-pointer border-t border-border/20 flex-1",
+              cell: "relative min-h-[100px] p-3 text-left align-top hover:bg-primary/5 hover:shadow-inner transition-all duration-200 cursor-pointer border-t border-r border-border/20 flex-1",
               day: "font-medium text-base",
               day_selected: "text-primary font-bold",
               day_today: "text-primary font-bold",
@@ -1239,14 +1318,28 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               DayContent: ({ date }) => {
                 const dateStr = format(date, 'yyyy-MM-dd');
                 const daySlots = schedules.filter(s => s.specificDate === dateStr && s.isAvailable);
-                const hasSlots = daySlots.length > 0;
+                const slotCount = daySlots.length;
+                const isToday = format(new Date(), 'yyyy-MM-dd') === dateStr;
+                const isPast = new Date(dateStr) < new Date(format(new Date(), 'yyyy-MM-dd'));
+                
+                // Heat-map coloring based on slot count
+                const getSlotBadgeStyle = () => {
+                  if (slotCount === 0) return "";
+                  if (slotCount === 1) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400";
+                  if (slotCount <= 3) return "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400";
+                  return "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400";
+                };
+                
                 return (
-                  <div className="flex flex-col gap-1">
-                    <span className={hasSlots ? "text-green-600 dark:text-green-400 font-semibold" : ""}>{date.getDate()}</span>
-                    {hasSlots && (
-                      <span className="text-xs text-amber-500">
-                        {daySlots.length} slot{daySlots.length > 1 ? 's' : ''}
-                      </span>
+                  <div className={`flex flex-col gap-1 w-full h-full ${isPast ? 'opacity-50' : ''}`}>
+                    <span className={`text-base ${isToday ? 'bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center' : ''} ${slotCount > 0 && !isToday ? 'font-semibold text-foreground' : ''}`}>
+                      {date.getDate()}
+                    </span>
+                    {slotCount > 0 && (
+                      <div className={`text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1 w-fit ${getSlotBadgeStyle()}`}>
+                        <Clock className="h-3 w-3" />
+                        {slotCount}
+                      </div>
                     )}
                   </div>
                 );
@@ -1547,6 +1640,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       </Dialog>
     </div>
   );
+  };
 
   const renderPrescriptions = () => (
     <div className="space-y-6">
