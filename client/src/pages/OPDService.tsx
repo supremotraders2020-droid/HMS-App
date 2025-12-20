@@ -70,6 +70,12 @@ export default function OPDService() {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  // Booking form state
+  const [bookingDoctorId, setBookingDoctorId] = useState<string>("");
+  const [bookingDate, setBookingDate] = useState<string>("");
+  const [bookingTimeSlot, setBookingTimeSlot] = useState<string>("");
+  const [bookingLocation, setBookingLocation] = useState<string>("");
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
@@ -116,6 +122,96 @@ export default function OPDService() {
     enabled: !!selectedDate,
     staleTime: 0,
   });
+
+  // Fetch booking form doctor's schedule blocks (for generating available slots)
+  const bookingDoctor = doctors.find(d => d.id === bookingDoctorId);
+  const { data: bookingDoctorSchedules = [] } = useQuery<DoctorSchedule[]>({
+    queryKey: ["/api/doctor-schedules-by-name", bookingDoctor?.name],
+    enabled: !!bookingDoctorId && !!bookingDoctor?.name,
+    staleTime: 0,
+  });
+
+  // Fetch available time slots for booking form from the database
+  const { data: bookingTimeSlots = [] } = useQuery<DoctorTimeSlot[]>({
+    queryKey: ["/api/time-slots", bookingDoctorId, bookingDate, "available"],
+    queryFn: async () => {
+      const response = await fetch(`/api/time-slots/${bookingDoctorId}/available/${bookingDate}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!bookingDoctorId && !!bookingDate,
+    staleTime: 0,
+  });
+
+  // Generate available time slots from doctor's schedule blocks if no pre-generated slots exist
+  const getBookingAvailableSlots = (): { time: string; location: string | null }[] => {
+    // If we have pre-generated slots in the database, use those
+    if (bookingTimeSlots.length > 0) {
+      return bookingTimeSlots.map(slot => ({
+        time: slot.startTime,
+        location: slot.location,
+      }));
+    }
+
+    // Otherwise, generate slots from the doctor's schedule blocks
+    if (!bookingDate || bookingDoctorSchedules.length === 0) return [];
+
+    const selectedDateObj = new Date(bookingDate + 'T00:00:00');
+    const dayName = selectedDateObj.toLocaleDateString('en-US', { weekday: 'long' });
+
+    // Find schedule blocks for the selected day
+    const daySchedules = bookingDoctorSchedules.filter(s => 
+      s.day === dayName && s.isAvailable
+    );
+
+    if (daySchedules.length === 0) return [];
+
+    // Generate 30-minute slots from each schedule block
+    const slots: { time: string; location: string | null }[] = [];
+    
+    const timeToMins = (timeStr: string): number => {
+      const [time, period] = timeStr.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      let totalHours = hours;
+      if (period === 'PM' && hours !== 12) totalHours += 12;
+      if (period === 'AM' && hours === 12) totalHours = 0;
+      return totalHours * 60 + (minutes || 0);
+    };
+
+    const minsToTime = (mins: number): string => {
+      const hours = Math.floor(mins / 60);
+      const minutes = mins % 60;
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+      return `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+    };
+
+    for (const schedule of daySchedules) {
+      const startMins = timeToMins(schedule.startTime);
+      const endMins = timeToMins(schedule.endTime);
+      
+      for (let mins = startMins; mins < endMins; mins += 30) {
+        slots.push({
+          time: minsToTime(mins),
+          location: schedule.location,
+        });
+      }
+    }
+
+    // Filter out already-booked slots by checking existing appointments
+    const bookedTimes = appointments
+      .filter(apt => 
+        apt.appointmentDate === bookingDate && 
+        apt.status !== 'cancelled' &&
+        (apt.doctorId === bookingDoctorId || 
+         apt.department?.toLowerCase() === bookingDoctor?.specialty?.toLowerCase())
+      )
+      .map(apt => apt.timeSlot?.split(' - ')[0] || apt.timeSlot);
+
+    return slots.filter(slot => !bookedTimes.includes(slot.time));
+  };
+
+  const availableBookingSlots = getBookingAvailableSlots();
 
   // Get legacy appointments for a doctor (booked via old system, not in time_slots table)
   const getLegacyAppointmentsForDoctor = (doctorId: string): DoctorTimeSlot[] => {
@@ -713,7 +809,16 @@ export default function OPDService() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="doctorId">Select Doctor</Label>
-                    <Select name="doctorId" required>
+                    <Select 
+                      name="doctorId" 
+                      required
+                      value={bookingDoctorId}
+                      onValueChange={(value) => {
+                        setBookingDoctorId(value);
+                        setBookingTimeSlot("");
+                        setBookingLocation("");
+                      }}
+                    >
                       <SelectTrigger data-testid="select-doctor">
                         <SelectValue placeholder="Choose a doctor" />
                       </SelectTrigger>
@@ -734,29 +839,74 @@ export default function OPDService() {
                       type="date"
                       min={new Date().toISOString().split('T')[0]}
                       required
+                      value={bookingDate}
+                      onChange={(e) => {
+                        setBookingDate(e.target.value);
+                        setBookingTimeSlot("");
+                        setBookingLocation("");
+                      }}
                       data-testid="input-appointment-date"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="timeSlot">Time Slot</Label>
-                    <Select name="timeSlot" required>
+                    <Select 
+                      name="timeSlot" 
+                      required
+                      value={bookingTimeSlot}
+                      onValueChange={(value) => {
+                        setBookingTimeSlot(value);
+                        // Auto-set location from the selected slot
+                        const selectedSlotData = availableBookingSlots.find(s => s.time === value);
+                        if (selectedSlotData?.location) {
+                          setBookingLocation(selectedSlotData.location);
+                        }
+                      }}
+                      disabled={!bookingDoctorId || !bookingDate}
+                    >
                       <SelectTrigger data-testid="select-time-slot">
-                        <SelectValue placeholder="Select time" />
+                        <SelectValue placeholder={
+                          !bookingDoctorId ? "Select doctor first" :
+                          !bookingDate ? "Select date first" :
+                          availableBookingSlots.length === 0 ? "No slots available" :
+                          "Select time slot"
+                        } />
                       </SelectTrigger>
                       <SelectContent>
-                        {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"].map((time) => (
-                          <SelectItem key={time} value={time}>
-                            {time}
-                          </SelectItem>
-                        ))}
+                        {availableBookingSlots.length === 0 && bookingDoctorId && bookingDate ? (
+                          <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                            No available slots for this date.
+                            <br />
+                            <span className="text-xs">Doctor may not have scheduled hours on this day.</span>
+                          </div>
+                        ) : (
+                          availableBookingSlots.map((slot) => (
+                            <SelectItem key={slot.time} value={slot.time}>
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span>{slot.time}</span>
+                                {slot.location && (
+                                  <span className="text-xs text-muted-foreground ml-2">
+                                    @ {slot.location.replace('Gravity Hospital - ', '')}
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="location">OPD Location</Label>
-                    <Select name="location" required>
+                    <Select 
+                      name="location" 
+                      required
+                      value={bookingLocation}
+                      onValueChange={setBookingLocation}
+                    >
                       <SelectTrigger data-testid="select-opd-location">
-                        <SelectValue placeholder="Select OPD location" />
+                        <SelectValue placeholder={bookingLocation || "Select OPD location"} />
                       </SelectTrigger>
                       <SelectContent>
                         {OPD_LOCATIONS.map((loc) => (
