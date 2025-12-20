@@ -157,6 +157,23 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     allDoctors[0]; // Fallback to first doctor for demo
   const effectiveDoctorId = matchedDoctor?.id || doctorId;
   
+  // Fetch doctor mappings from time slots to find the correct user ID for notifications
+  const { data: doctorMappingsForNotif = [] } = useQuery<{ doctorId: string; doctorName: string }[]>({
+    queryKey: ['/api/time-slots/doctor-mappings'],
+  });
+  
+  // Find the correct user ID for notifications by matching doctor name with time slot mappings
+  // Time slot doctorId is the actual user ID used for notifications
+  const currentDoctorNameForMatch = matchedDoctor?.name?.toLowerCase() || doctorName.toLowerCase();
+  const matchedTimeSlotMapping = doctorMappingsForNotif.find(m => {
+    const mappingName = m.doctorName?.toLowerCase() || '';
+    const normalizedCurrent = currentDoctorNameForMatch.replace('dr. ', '').trim();
+    const normalizedMapping = mappingName.replace('dr. ', '').trim();
+    return normalizedMapping.includes(normalizedCurrent) || normalizedCurrent.includes(normalizedMapping);
+  });
+  // Use time slot doctorId (which is user ID) for notifications, fall back to original doctorId
+  const notificationUserId = matchedTimeSlotMapping?.doctorId || doctorId;
+  
   // Real-time database notifications with WebSocket support
   const { 
     notifications, 
@@ -166,7 +183,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     markAsRead: markNotificationRead,
     markAllAsRead: markAllNotificationsRead,
     deleteNotification
-  } = useNotifications({ userId: effectiveDoctorId, userRole: "DOCTOR" });
+  } = useNotifications({ userId: notificationUserId, userRole: "DOCTOR" });
   const [editingSchedule, setEditingSchedule] = useState<{day: string; slots: DoctorSchedule[]} | null>(null);
   const [slotsToDelete, setSlotsToDelete] = useState<string[]>([]);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
