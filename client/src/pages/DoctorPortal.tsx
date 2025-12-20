@@ -167,6 +167,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     deleteNotification
   } = useNotifications({ userId: effectiveDoctorId, userRole: "DOCTOR" });
   const [editingSchedule, setEditingSchedule] = useState<{day: string; slots: DoctorSchedule[]} | null>(null);
+  const [slotsToDelete, setSlotsToDelete] = useState<string[]>([]);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
   const [notificationDetailOpen, setNotificationDetailOpen] = useState(false);
@@ -1033,6 +1034,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const openScheduleEditor = (day: string) => {
     const daySlots = schedules.filter(s => s.day === day);
     setEditingSchedule({ day, slots: daySlots });
+    setSlotsToDelete([]); // Reset slots to delete when opening editor
     setScheduleDialogOpen(true);
   };
 
@@ -1049,6 +1051,14 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const saveScheduleChanges = () => {
     if (editingSchedule) {
+      // First delete any slots marked for deletion
+      slotsToDelete.forEach(slotId => {
+        if (!slotId.startsWith('new-')) {
+          deleteScheduleMutation.mutate(slotId);
+        }
+      });
+      
+      // Then save/update remaining slots
       editingSchedule.slots.forEach(slot => {
         if (slot.id.startsWith('new-')) {
           createScheduleMutation.mutate({
@@ -1070,6 +1080,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       });
       setScheduleDialogOpen(false);
       setEditingSchedule(null);
+      setSlotsToDelete([]);
       toast({
         title: "Schedule Saved",
         description: `${editingSchedule.day} schedule has been updated`,
@@ -1113,6 +1124,10 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
   const removeSlot = (slotId: string) => {
     if (editingSchedule && editingSchedule.slots.length > 1) {
+      // Track existing slots for deletion (not new slots)
+      if (!slotId.startsWith('new-')) {
+        setSlotsToDelete(prev => [...prev, slotId]);
+      }
       setEditingSchedule({
         ...editingSchedule,
         slots: editingSchedule.slots.filter(s => s.id !== slotId)
