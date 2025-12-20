@@ -280,20 +280,30 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
   }
 
   // Transform user notifications to display format
-  const transformedUserNotifications = userNotifications.map(un => ({
-    id: un.id,
-    title: un.title,
-    message: un.message,
-    category: un.type === 'appointment' ? 'appointment' : un.type === 'opd_update' ? 'opd_announcements' : 'general',
-    priority: 'medium' as const,
-    status: un.isRead ? 'read' : 'unread',
-    channels: ['push'] as string[],
-    createdAt: un.createdAt,
-    createdBy: 'System',
-    sentAt: un.createdAt,
-    metadata: un.metadata,
-    isUserNotification: true,
-  }));
+  const transformedUserNotifications = userNotifications.map(un => {
+    // Determine category based on type and relatedEntityType
+    let category = 'general';
+    if (un.relatedEntityType === 'appointment' || un.type === 'appointment') {
+      category = 'appointment';
+    } else if (un.type === 'opd_update') {
+      category = 'opd_announcements';
+    }
+    
+    return {
+      id: un.id,
+      title: un.title,
+      message: un.message,
+      category,
+      priority: 'medium' as const,
+      status: un.isRead ? 'read' : 'unread',
+      channels: ['push'] as string[],
+      createdAt: un.createdAt,
+      createdBy: 'System',
+      sentAt: un.createdAt,
+      metadata: un.metadata,
+      isUserNotification: true,
+    };
+  });
 
   // Filter broadcast notifications
   const filteredBroadcastNotifications = notifications.filter(n => {
