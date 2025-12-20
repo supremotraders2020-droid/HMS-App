@@ -668,151 +668,225 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   ];
 
   const renderDashboard = () => (
-    <div className="space-y-6">
-      <div>
-          <h1 className="text-2xl font-bold" data-testid="text-welcome">Welcome, Dr. {doctorName}</h1>
-          <p className="text-muted-foreground">Here's your overview for today</p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Welcome Header with gradient accent */}
+      <div className="relative rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border border-primary/10">
+        <div className="relative z-10">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight" data-testid="text-welcome">
+            Welcome back, <span className="text-primary">Dr. {doctorName}</span>
+          </h1>
+          <p className="text-muted-foreground mt-1">Here's your clinical overview for today</p>
         </div>
+        <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-primary/5 to-transparent" />
+        <Stethoscope className="absolute right-6 top-1/2 -translate-y-1/2 h-20 w-20 text-primary/10" />
+      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover-elevate" data-testid="stat-today-appointments">
-          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Appointments</CardTitle>
-            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+      {/* Enhanced Stat Cards Grid */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {/* Today's Appointments Card */}
+        <Card className="group relative border-0 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent hover-elevate transition-all duration-300" data-testid="stat-today-appointments">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Today's Appointments</CardTitle>
+            <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <CalendarIcon className="h-5 w-5 text-blue-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-today-count">{todayAppointments.length}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-              +2 from yesterday
+          <CardContent className="relative z-10">
+            <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400" data-testid="text-today-count">{todayAppointments.length}</div>
+            <div className="flex items-center gap-1.5 mt-2 text-xs">
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
+                <TrendingUp className="h-3 w-3" />
+                <span>+2</span>
+              </div>
+              <span className="text-muted-foreground">from yesterday</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="hover-elevate" data-testid="stat-pending">
-          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Appointments</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+        {/* Pending Appointments Card */}
+        <Card className="group relative border-0 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent hover-elevate transition-all duration-300" data-testid="stat-pending">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+            <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <Clock className="h-5 w-5 text-amber-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-pending-count">{pendingAppointments.length}</div>
-            <p className="text-xs text-muted-foreground">Requires confirmation</p>
+          <CardContent className="relative z-10">
+            <div className="text-3xl md:text-4xl font-bold text-amber-600 dark:text-amber-400" data-testid="text-pending-count">{pendingAppointments.length}</div>
+            <p className="text-xs text-muted-foreground mt-2">Requires confirmation</p>
           </CardContent>
         </Card>
 
-        <Card className="hover-elevate" data-testid="stat-patients">
-          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+        {/* Total Patients Card */}
+        <Card className="group relative border-0 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent hover-elevate transition-all duration-300" data-testid="stat-patients">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Patients</CardTitle>
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <Users className="h-5 w-5 text-emerald-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-patients-count">{patients.length}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-              +12 this week
+          <CardContent className="relative z-10">
+            <div className="text-3xl md:text-4xl font-bold text-emerald-600 dark:text-emerald-400" data-testid="text-patients-count">{patients.length}</div>
+            <div className="flex items-center gap-1.5 mt-2 text-xs">
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
+                <TrendingUp className="h-3 w-3" />
+                <span>+12</span>
+              </div>
+              <span className="text-muted-foreground">this week</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="hover-elevate" data-testid="stat-prescriptions">
-          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Prescriptions Today</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+        {/* Prescriptions Card */}
+        <Card className="group relative border-0 bg-gradient-to-br from-violet-500/10 via-violet-500/5 to-transparent hover-elevate transition-all duration-300" data-testid="stat-prescriptions">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Prescriptions</CardTitle>
+            <div className="h-10 w-10 rounded-xl bg-violet-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <FileText className="h-5 w-5 text-violet-500" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{prescriptions.length}</div>
-            <p className="text-xs text-muted-foreground">Written today</p>
+          <CardContent className="relative z-10">
+            <div className="text-3xl md:text-4xl font-bold text-violet-600 dark:text-violet-400">{prescriptions.length}</div>
+            <p className="text-xs text-muted-foreground mt-2">Written today</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card data-testid="card-today-schedule">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5 text-primary" />
-              Today's Appointments
-            </CardTitle>
-            <CardDescription>Your scheduled appointments for today</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {todayAppointments.slice(0, 4).map((apt) => (
-                <div 
-                  key={apt.id} 
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover-elevate cursor-pointer"
-                  onClick={() => { setSelectedAppointment(apt); setActiveSection("appointments"); }}
-                  data-testid={`appointment-item-${apt.id}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{apt.patientName}</p>
-                      <p className="text-sm text-muted-foreground">{apt.symptoms || "General checkup"}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{apt.timeSlot}</p>
-                    {getStatusBadge(apt.status)}
-                  </div>
+      {/* Main Content Grid - Appointments & Notifications */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Today's Appointments - Takes more space */}
+        <Card className="lg:col-span-3 border-0 shadow-lg shadow-black/5 dark:shadow-black/20" data-testid="card-today-schedule">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <CalendarIcon className="h-5 w-5 text-primary" />
                 </div>
-              ))}
+                <div>
+                  <CardTitle className="text-lg">Today's Appointments</CardTitle>
+                  <CardDescription className="text-xs">Your scheduled appointments for today</CardDescription>
+                </div>
+              </div>
+              <Badge variant="secondary" className="text-xs">
+                {todayAppointments.length} scheduled
+              </Badge>
             </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <ScrollArea className="h-[320px] pr-4">
+              <div className="space-y-3">
+                {todayAppointments.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <CalendarIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm font-medium">No appointments today</p>
+                    <p className="text-xs mt-1">Your schedule is clear</p>
+                  </div>
+                ) : (
+                  todayAppointments.slice(0, 6).map((apt, index) => (
+                    <div 
+                      key={apt.id} 
+                      className="group flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 border border-transparent hover:border-primary/20 cursor-pointer transition-all duration-200"
+                      onClick={() => { setSelectedAppointment(apt); setActiveSection("appointments"); }}
+                      data-testid={`appointment-item-${apt.id}`}
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-12 w-12 ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
+                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
+                            {apt.patientName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold group-hover:text-primary transition-colors">{apt.patientName}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-1">{apt.symptoms || "General consultation"}</p>
+                        </div>
+                      </div>
+                      <div className="text-right flex flex-col items-end gap-1.5">
+                        <p className="font-mono text-sm font-semibold bg-muted px-2.5 py-1 rounded-lg">{apt.timeSlot}</p>
+                        {getStatusBadge(apt.status)}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full" onClick={() => setActiveSection("appointments")} data-testid="button-view-all-appointments">
+          <CardFooter className="pt-0">
+            <Button variant="outline" className="w-full group" onClick={() => setActiveSection("appointments")} data-testid="button-view-all-appointments">
               View All Appointments
-              <ChevronRight className="h-4 w-4 ml-2" />
+              <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </CardFooter>
         </Card>
 
-        <Card data-testid="card-notifications">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-primary" />
-              Recent Notifications
-              {unreadNotifications.length > 0 && (
-                <Badge variant="destructive" className="ml-2">{unreadNotifications.length}</Badge>
-              )}
-            </CardTitle>
-            <CardDescription>Latest updates and alerts</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {notifications.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No notifications yet</p>
+        {/* Recent Notifications - Compact sidebar */}
+        <Card className="lg:col-span-2 border-0 shadow-lg shadow-black/5 dark:shadow-black/20" data-testid="card-notifications">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center relative">
+                  <Bell className="h-5 w-5 text-primary" />
+                  {unreadNotifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-bold animate-pulse">
+                      {unreadNotifications.length}
+                    </span>
+                  )}
                 </div>
-              ) : (
-                notifications.slice(0, 4).map((notif) => (
-                  <div 
-                    key={notif.id} 
-                    className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer hover-elevate ${notif.isRead ? 'bg-muted/30' : 'bg-primary/5 border border-primary/20'}`}
-                    onClick={() => openNotificationDetail(notif)}
-                    data-testid={`notification-item-${notif.id}`}
-                  >
-                    {getNotificationIcon(notif.type)}
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium ${!notif.isRead ? 'text-primary' : ''}`}>{notif.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{notif.message}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {!notif.isRead && <div className="h-2 w-2 rounded-full bg-primary" />}
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-                ))
-              )}
+                <div>
+                  <CardTitle className="text-lg">Notifications</CardTitle>
+                  <CardDescription className="text-xs">Latest updates and alerts</CardDescription>
+                </div>
+              </div>
             </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <ScrollArea className="h-[320px] pr-4">
+              <div className="space-y-2">
+                {notifications.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Bell className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm font-medium">No notifications</p>
+                    <p className="text-xs mt-1">You're all caught up</p>
+                  </div>
+                ) : (
+                  notifications.slice(0, 6).map((notif, index) => (
+                    <div 
+                      key={notif.id} 
+                      className={`group flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                        notif.isRead 
+                          ? 'bg-muted/20 hover:bg-muted/40' 
+                          : 'bg-primary/5 border border-primary/20 hover:bg-primary/10'
+                      }`}
+                      onClick={() => openNotificationDetail(notif)}
+                      data-testid={`notification-item-${notif.id}`}
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="shrink-0 mt-0.5">
+                        {getNotificationIcon(notif.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium line-clamp-1 ${!notif.isRead ? 'text-primary' : ''}`}>
+                          {notif.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{notif.message}</p>
+                      </div>
+                      {!notif.isRead && (
+                        <div className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5 animate-pulse" />
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full" onClick={() => setActiveSection("notifications")} data-testid="button-view-all-notifications">
+          <CardFooter className="pt-0">
+            <Button variant="outline" className="w-full group" onClick={() => setActiveSection("notifications")} data-testid="button-view-all-notifications">
               View All Notifications
-              <ChevronRight className="h-4 w-4 ml-2" />
+              <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </CardFooter>
         </Card>
@@ -931,7 +1005,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             {todayAppointments.map((apt) => (
               <Card key={apt.id} className="hover-elevate" data-testid={`appointment-card-${apt.id}`}>
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                         <User className="h-6 w-6 text-primary" />
@@ -989,7 +1063,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             {pendingAppointments.map((apt) => (
               <Card key={apt.id} className="hover-elevate" data-testid={`pending-apt-${apt.id}`}>
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
                         <Clock className="h-6 w-6 text-yellow-600" />
@@ -1034,7 +1108,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             {doctorAppointments.map((apt) => (
               <Card key={apt.id} className="hover-elevate" data-testid={`all-apt-${apt.id}`}>
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                         <User className="h-6 w-6 text-primary" />
@@ -1209,7 +1283,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20" data-testid="stat-today-slots">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Today's Slots</p>
                 <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{todaySlots.length}</p>
@@ -1222,7 +1296,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         </Card>
         <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20" data-testid="stat-week-slots">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">This Week</p>
                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{weekSlots.length}</p>
@@ -1235,7 +1309,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         </Card>
         <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20" data-testid="stat-total-slots">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Total Available</p>
                 <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalAvailableSlots}</p>
@@ -1248,7 +1322,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         </Card>
         <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20" data-testid="stat-pending">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Pending</p>
                 <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{pendingAppointments}</p>
@@ -1401,7 +1475,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <h4 className="font-medium">Time Slots</h4>
               <Button 
                 size="sm"
@@ -1439,7 +1513,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       data-testid={`sheet-slot-${slot.id}`}
                     >
                       <CardContent className="p-4 space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-4">
                           <div className="flex items-center gap-2">
                             <Switch
                               checked={slot.isAvailable}
@@ -1587,7 +1661,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             {editingSchedule?.slots.map((slot, idx) => (
               <Card key={slot.id} data-testid={`slot-editor-${idx}`}>
                 <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4">
                     <span className="font-medium">Slot {idx + 1}</span>
                     {editingSchedule.slots.length > 1 && (
                       <Button 
