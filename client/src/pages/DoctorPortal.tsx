@@ -1114,7 +1114,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         specificDate: null,
         startTime: "14:00",
         endTime: "18:00",
-        slotType: "OPD",
+        slotType: "Gravity Hospital - Nigdi (Main)",
         location: null,
         maxPatients: 20,
         isAvailable: true,
@@ -1281,9 +1281,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       doctorId,
                       day: dayName,
                       specificDate: dateStr,
-                      startTime: "09:00",
-                      endTime: "12:00",
-                      slotType: "OPD",
+                      startTime: "09:00 AM",
+                      endTime: "12:00 PM",
+                      slotType: "Gravity Hospital - Nigdi (Main)",
                       location: null,
                       maxPatients: 20,
                       isAvailable: true,
@@ -1377,16 +1377,16 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="Pune - Koregaon Park">Pune - Koregaon Park</SelectItem>
-                                <SelectItem value="Pune - Shivaji Nagar">Pune - Shivaji Nagar</SelectItem>
-                                <SelectItem value="Pune - Kothrud">Pune - Kothrud</SelectItem>
-                                <SelectItem value="Pune - Hadapsar">Pune - Hadapsar</SelectItem>
-                                <SelectItem value="Pune - Wakad">Pune - Wakad</SelectItem>
-                                <SelectItem value="Pune - Baner">Pune - Baner</SelectItem>
-                                <SelectItem value="Pune - Aundh">Pune - Aundh</SelectItem>
-                                <SelectItem value="Pune - Viman Nagar">Pune - Viman Nagar</SelectItem>
-                                <SelectItem value="Pune - Hinjewadi">Pune - Hinjewadi</SelectItem>
-                                <SelectItem value="Pune - Deccan">Pune - Deccan</SelectItem>
+                                <SelectItem value="Gravity Hospital - Koregaon Park">Gravity Hospital - Koregaon Park</SelectItem>
+                                <SelectItem value="Gravity Hospital - Hinjewadi">Gravity Hospital - Hinjewadi</SelectItem>
+                                <SelectItem value="Gravity Hospital - Kothrud">Gravity Hospital - Kothrud</SelectItem>
+                                <SelectItem value="Gravity Hospital - Wakad">Gravity Hospital - Wakad</SelectItem>
+                                <SelectItem value="Gravity Hospital - Viman Nagar">Gravity Hospital - Viman Nagar</SelectItem>
+                                <SelectItem value="Gravity Hospital - Baner">Gravity Hospital - Baner</SelectItem>
+                                <SelectItem value="Gravity Hospital - Aundh">Gravity Hospital - Aundh</SelectItem>
+                                <SelectItem value="Gravity Hospital - Kalyani Nagar">Gravity Hospital - Kalyani Nagar</SelectItem>
+                                <SelectItem value="Gravity Hospital - Pimpri">Gravity Hospital - Pimpri</SelectItem>
+                                <SelectItem value="Gravity Hospital - Nigdi (Main)">Gravity Hospital - Nigdi (Main)</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1512,16 +1512,16 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Pune - Koregaon Park">Pune - Koregaon Park</SelectItem>
-                        <SelectItem value="Pune - Shivaji Nagar">Pune - Shivaji Nagar</SelectItem>
-                        <SelectItem value="Pune - Kothrud">Pune - Kothrud</SelectItem>
-                        <SelectItem value="Pune - Hadapsar">Pune - Hadapsar</SelectItem>
-                        <SelectItem value="Pune - Wakad">Pune - Wakad</SelectItem>
-                        <SelectItem value="Pune - Baner">Pune - Baner</SelectItem>
-                        <SelectItem value="Pune - Aundh">Pune - Aundh</SelectItem>
-                        <SelectItem value="Pune - Viman Nagar">Pune - Viman Nagar</SelectItem>
-                        <SelectItem value="Pune - Hinjewadi">Pune - Hinjewadi</SelectItem>
-                        <SelectItem value="Pune - Deccan">Pune - Deccan</SelectItem>
+                        <SelectItem value="Gravity Hospital - Koregaon Park">Gravity Hospital - Koregaon Park</SelectItem>
+                        <SelectItem value="Gravity Hospital - Hinjewadi">Gravity Hospital - Hinjewadi</SelectItem>
+                        <SelectItem value="Gravity Hospital - Kothrud">Gravity Hospital - Kothrud</SelectItem>
+                        <SelectItem value="Gravity Hospital - Wakad">Gravity Hospital - Wakad</SelectItem>
+                        <SelectItem value="Gravity Hospital - Viman Nagar">Gravity Hospital - Viman Nagar</SelectItem>
+                        <SelectItem value="Gravity Hospital - Baner">Gravity Hospital - Baner</SelectItem>
+                        <SelectItem value="Gravity Hospital - Aundh">Gravity Hospital - Aundh</SelectItem>
+                        <SelectItem value="Gravity Hospital - Kalyani Nagar">Gravity Hospital - Kalyani Nagar</SelectItem>
+                        <SelectItem value="Gravity Hospital - Pimpri">Gravity Hospital - Pimpri</SelectItem>
+                        <SelectItem value="Gravity Hospital - Nigdi (Main)">Gravity Hospital - Nigdi (Main)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
