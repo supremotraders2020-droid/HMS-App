@@ -355,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Appointment not found" });
       }
       
-      // Get doctor info for notification - check time slot first, then doctors table
+      // Get doctor info for notification - check time slot first, then users table, then doctors table
       let doctorName = 'Doctor';
       try {
         // First try to get from time slot (most reliable for OPD appointments)
@@ -363,9 +363,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (timeSlot?.doctorName) {
           doctorName = timeSlot.doctorName.replace(/^Dr\.\s*/i, ''); // Remove "Dr." prefix if present
         } else {
-          // Fallback to doctors table
-          const doctor = await storage.getDoctor(appointment.doctorId);
-          if (doctor?.name) doctorName = doctor.name.replace(/^Dr\.\s*/i, '');
+          // Try to get from users table (doctorId might be a userId)
+          const user = await storage.getUser(appointment.doctorId);
+          if (user?.name) {
+            doctorName = user.name.replace(/^Dr\.\s*/i, '');
+          } else {
+            // Final fallback to doctors table
+            const doctor = await storage.getDoctor(appointment.doctorId);
+            if (doctor?.name) doctorName = doctor.name.replace(/^Dr\.\s*/i, '');
+          }
         }
       } catch (e) {
         console.log("Doctor profile not found, using default name");
@@ -429,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Determine who cancelled (default to doctor if not specified)
       const cancelledBy = req.body.cancelledBy || 'doctor';
       
-      // Get doctor info for notification - check time slot first, then doctors table
+      // Get doctor info for notification - check time slot first, then users table, then doctors table
       let doctorName = 'Doctor';
       try {
         // First try to get from time slot (most reliable for OPD appointments)
@@ -437,9 +443,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (timeSlot?.doctorName) {
           doctorName = timeSlot.doctorName.replace(/^Dr\.\s*/i, ''); // Remove "Dr." prefix if present
         } else {
-          // Fallback to doctors table
-          const doctor = await storage.getDoctor(appointment.doctorId);
-          if (doctor?.name) doctorName = doctor.name.replace(/^Dr\.\s*/i, '');
+          // Try to get from users table (doctorId might be a userId)
+          const user = await storage.getUser(appointment.doctorId);
+          if (user?.name) {
+            doctorName = user.name.replace(/^Dr\.\s*/i, '');
+          } else {
+            // Final fallback to doctors table
+            const doctor = await storage.getDoctor(appointment.doctorId);
+            if (doctor?.name) doctorName = doctor.name.replace(/^Dr\.\s*/i, '');
+          }
         }
       } catch (e) {
         console.log("Doctor profile not found, using default name");
