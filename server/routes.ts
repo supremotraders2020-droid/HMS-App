@@ -304,12 +304,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log activity
       await storage.createActivityLog({
-        action: `New appointment booked for ${validatedData.patientName}`,
+        action: `Pending appointment for ${validatedData.patientName} - awaiting doctor confirmation`,
         entityType: "appointment",
         entityId: appointment.id,
         performedBy: "OPD System",
         performedByRole: "SYSTEM",
-        activityType: "info"
+        activityType: "pending"
       });
 
       // Send real-time notification to doctor and patient
@@ -377,6 +377,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           appointment.location || undefined
         ).catch(err => console.error("Notification error:", err));
       }
+      
+      // Log activity for admin dashboard recent activities
+      await storage.createActivityLog({
+        action: `Appointment confirmed for ${appointment.patientName} by Dr. ${doctorName}`,
+        entityType: "appointment",
+        entityId: appointment.id,
+        performedBy: `Dr. ${doctorName}`,
+        performedByRole: "DOCTOR",
+        activityType: "success",
+        metadata: JSON.stringify({
+          patientName: appointment.patientName,
+          doctorName,
+          appointmentDate: appointment.appointmentDate,
+          timeSlot: appointment.timeSlot,
+          department: appointment.department,
+          location: appointment.location,
+          status: 'confirmed'
+        })
+      });
       
       res.json(appointment);
     } catch (error) {
@@ -2789,12 +2808,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Log activity for admin dashboard recent activities
       await storage.createActivityLog({
-        action: `New appointment booked for ${patientName}`,
+        action: `Pending appointment for ${patientName} - awaiting doctor confirmation`,
         entityType: "appointment",
         entityId: appointment.id,
         performedBy: "OPD System",
         performedByRole: "SYSTEM",
-        activityType: "info"
+        activityType: "pending"
       });
 
       // Send real-time notification to doctor, patient, and admin
