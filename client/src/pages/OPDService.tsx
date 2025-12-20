@@ -164,10 +164,14 @@ export default function OPDService() {
     const selectedDateObj = new Date(bookingDate + 'T00:00:00');
     const dayName = selectedDateObj.toLocaleDateString('en-US', { weekday: 'long' });
 
-    // Find schedule blocks for the selected day
-    const daySchedules = bookingDoctorSchedules.filter(s => 
-      s.day === dayName && s.isAvailable
-    );
+    // Find schedule blocks for the selected day - prioritize specific date matches, then fall back to day name
+    const daySchedules = bookingDoctorSchedules.filter(s => {
+      // First check for specific date matches
+      if (s.specificDate === bookingDate && s.isAvailable) return true;
+      // Then check for day name matches (only if no specificDate set)
+      if (!s.specificDate && s.day === dayName && s.isAvailable) return true;
+      return false;
+    });
 
     if (daySchedules.length === 0) return [];
 
@@ -198,7 +202,7 @@ export default function OPDService() {
       for (let mins = startMins; mins < endMins; mins += 30) {
         slots.push({
           time: minsToTime(mins),
-          location: schedule.location,
+          location: schedule.slotType || schedule.location,
         });
       }
     }
@@ -230,6 +234,15 @@ export default function OPDService() {
   };
 
   const availableBookingSlots = getBookingAvailableSlots();
+
+  // Get unique locations from available slots for the location dropdown
+  const availableBookingLocations = (() => {
+    const locations = new Set<string>();
+    availableBookingSlots.forEach(slot => {
+      if (slot.location) locations.add(slot.location);
+    });
+    return Array.from(locations);
+  })();
 
   // Get legacy appointments for a doctor (booked via old system, not in time_slots table)
   const getLegacyAppointmentsForDoctor = (doctorId: string): DoctorTimeSlot[] => {
@@ -922,19 +935,31 @@ export default function OPDService() {
                       required
                       value={bookingLocation}
                       onValueChange={setBookingLocation}
+                      disabled={!bookingDoctorId || !bookingDate || availableBookingLocations.length === 0}
                     >
                       <SelectTrigger data-testid="select-opd-location">
-                        <SelectValue placeholder={bookingLocation || "Select OPD location"} />
+                        <SelectValue placeholder={
+                          !bookingDoctorId ? "Select doctor first" :
+                          !bookingDate ? "Select date first" :
+                          availableBookingLocations.length === 0 ? "No locations available" :
+                          bookingLocation || "Select location"
+                        } />
                       </SelectTrigger>
                       <SelectContent>
-                        {OPD_LOCATIONS.map((loc) => (
-                          <SelectItem key={loc.id} value={loc.name}>
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-muted-foreground" />
-                              <span>{loc.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
+                        {availableBookingLocations.length === 0 && bookingDoctorId && bookingDate ? (
+                          <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                            No locations available for this date.
+                          </div>
+                        ) : (
+                          availableBookingLocations.map((loc) => (
+                            <SelectItem key={loc} value={loc}>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                <span>{loc}</span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
