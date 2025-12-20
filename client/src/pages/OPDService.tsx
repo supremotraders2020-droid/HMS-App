@@ -131,15 +131,20 @@ export default function OPDService() {
     staleTime: 0,
   });
 
+  // Get the schedule owner's ID (user ID) from the schedule blocks
+  // This is needed because doctor_schedules.doctor_id references users table, not doctors table
+  const scheduleOwnerId = bookingDoctorSchedules.length > 0 ? bookingDoctorSchedules[0].doctorId : null;
+
   // Fetch available time slots for booking form from the database
   const { data: bookingTimeSlots = [] } = useQuery<DoctorTimeSlot[]>({
-    queryKey: ["/api/time-slots", bookingDoctorId, bookingDate, "available"],
+    queryKey: ["/api/time-slots", scheduleOwnerId, bookingDate, "available"],
     queryFn: async () => {
-      const response = await fetch(`/api/time-slots/${bookingDoctorId}/available/${bookingDate}`);
+      if (!scheduleOwnerId) return [];
+      const response = await fetch(`/api/time-slots/${scheduleOwnerId}/available/${bookingDate}`);
       if (!response.ok) return [];
       return response.json();
     },
-    enabled: !!bookingDoctorId && !!bookingDate,
+    enabled: !!scheduleOwnerId && !!bookingDate,
     staleTime: 0,
   });
 
@@ -198,6 +203,19 @@ export default function OPDService() {
       }
     }
 
+    // Normalize time to "HH:MM AM/PM" format for comparison
+    const normalizeTime = (timeStr: string | null | undefined): string => {
+      if (!timeStr) return '';
+      // Handle "HH:MM" format (add AM/PM)
+      if (!timeStr.includes('AM') && !timeStr.includes('PM')) {
+        const [hours, mins] = timeStr.split(':').map(Number);
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+        return `${String(displayHours).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${period}`;
+      }
+      return timeStr;
+    };
+
     // Filter out already-booked slots by checking existing appointments
     const bookedTimes = appointments
       .filter(apt => 
@@ -206,7 +224,7 @@ export default function OPDService() {
         (apt.doctorId === bookingDoctorId || 
          apt.department?.toLowerCase() === bookingDoctor?.specialty?.toLowerCase())
       )
-      .map(apt => apt.timeSlot?.split(' - ')[0] || apt.timeSlot);
+      .map(apt => normalizeTime(apt.timeSlot?.split(' - ')[0] || apt.timeSlot));
 
     return slots.filter(slot => !bookedTimes.includes(slot.time));
   };
