@@ -427,6 +427,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ).catch(err => console.error("Notification error:", err));
       }
       
+      // Log activity for admin dashboard recent activities
+      const cancelledByLabel = cancelledBy === 'doctor' ? `Dr. ${doctorName}` : appointment.patientName;
+      await storage.createActivityLog({
+        action: `Appointment cancelled for ${appointment.patientName} by ${cancelledByLabel}`,
+        entityType: "appointment",
+        entityId: appointment.id,
+        performedBy: cancelledByLabel,
+        performedByRole: cancelledBy === 'doctor' ? 'DOCTOR' : 'PATIENT',
+        activityType: "cancellation",
+        metadata: JSON.stringify({
+          patientName: appointment.patientName,
+          doctorName,
+          appointmentDate: appointment.appointmentDate,
+          timeSlot: appointment.timeSlot,
+          department: appointment.department,
+          location: appointment.location,
+          cancelledBy
+        })
+      });
+      
       res.json(appointment);
     } catch (error) {
       console.error("Failed to cancel appointment:", error);
