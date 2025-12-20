@@ -1123,6 +1123,18 @@ Description: ${record.description}
                       </div>
                     </div>
                     <div className="space-y-2">
+                      <Label>Preferred Date</Label>
+                      <Input 
+                        type="date" 
+                        value={selectedDate}
+                        onChange={(e) => { setSelectedDate(e.target.value); setSelectedSlot(""); setSelectedLocation(""); }}
+                        min={new Date().toISOString().split("T")[0]}
+                        data-testid="input-appointment-date"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
                       <Label>Location</Label>
                       <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                         <SelectTrigger data-testid="select-location">
@@ -1172,18 +1184,6 @@ Description: ${record.description}
                           </div>
                         ) : null;
                       })()}
-                    </div>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Preferred Date</Label>
-                      <Input 
-                        type="date" 
-                        value={selectedDate}
-                        onChange={(e) => { setSelectedDate(e.target.value); setSelectedSlot(""); setSelectedLocation(""); }}
-                        min={new Date().toISOString().split("T")[0]}
-                        data-testid="input-appointment-date"
-                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Available Slots</Label>
