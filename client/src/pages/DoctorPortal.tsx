@@ -76,7 +76,8 @@ import {
   ArrowLeft,
   ExternalLink,
   MonitorCheck,
-  Save
+  Save,
+  Home
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import DoctorOathModal from "@/components/DoctorOathModal";
@@ -2410,63 +2411,196 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       
       <SidebarProvider style={sidebarStyle as React.CSSProperties}>
         <div className={`flex h-screen w-full ${!hasAcceptedOath ? 'pointer-events-none blur-sm' : ''}`}>
-          <Sidebar>
-            <SidebarHeader className="py-3 px-2">
+          <Sidebar className="glass-sidebar">
+            <SidebarHeader className="py-4 px-3">
+              <div className="relative">
                 <img 
                   src={hospitalLogo} 
                   alt="Gravity Hospital" 
-                  className="w-full max-w-[210px] h-[56px] object-contain"
+                  className="w-full max-w-[210px] h-[56px] object-contain transition-transform duration-300 hover:scale-105"
                   data-testid="img-doctor-portal-logo"
                 />
+              </div>
+              {/* Doctor Profile Card */}
+              <div className="mt-4 p-3 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-50 dark:from-cyan-900/40 dark:via-blue-800/30 dark:to-sky-900/20 rounded-xl border border-white/40 dark:border-slate-700/40 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 ring-2 ring-cyan-500/20">
+                    <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-semibold">
+                      {(profileForm.fullName || doctorName).replace(/^Dr\.?\s*/i, '').split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+                    <p className="text-sm font-semibold text-foreground truncate" data-testid="text-doctor-name">
+                      {profileForm.fullName || `Dr. ${doctorName}`}
+                    </p>
+                    <Badge variant="default" className="text-xs mt-1 shadow-sm" data-testid="badge-role">
+                      DOCTOR
+                    </Badge>
+                  </div>
+                </div>
+              </div>
             </SidebarHeader>
 
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton asChild data-testid={`nav-${item.id}`}>
+            <SidebarContent>
+              {/* Dashboard Section */}
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Dashboard</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild data-testid="nav-dashboard">
                         <Button
-                          variant={activeSection === item.id ? "secondary" : "ghost"}
-                          className="w-full justify-start"
-                          onClick={() => item.externalRoute ? setLocation(item.externalRoute) : setActiveSection(item.id)}
+                          variant="ghost"
+                          className={`w-full justify-start group relative overflow-visible rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${
+                            activeSection === 'dashboard' 
+                              ? 'bg-gradient-to-r from-cyan-100 to-teal-100 dark:from-cyan-900/40 dark:to-teal-900/30 border border-cyan-200/50 dark:border-cyan-700/30' 
+                              : 'hover:bg-gradient-to-r hover:from-cyan-50/80 hover:to-teal-50/60 dark:hover:from-cyan-900/30 dark:hover:to-teal-900/20'
+                          }`}
+                          onClick={() => setActiveSection('dashboard')}
                         >
-                          <item.icon className="h-4 w-4 mr-2" />
-                          <span className="flex-1 text-left">{item.title}</span>
-                          {item.badge && item.badge > 0 && (
-                            <Badge variant="destructive" className="ml-auto">{item.badge}</Badge>
-                          )}
+                          <div className={`p-1.5 rounded-lg mr-3 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm ${
+                            activeSection === 'dashboard'
+                              ? 'bg-gradient-to-br from-cyan-500 to-teal-600 text-white'
+                              : 'bg-gradient-to-br from-cyan-100 to-teal-100 dark:from-cyan-800/50 dark:to-teal-800/40 text-cyan-600 dark:text-cyan-400 group-hover:from-cyan-500 group-hover:to-teal-600 group-hover:text-white'
+                          }`}>
+                            <Home className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="font-medium">Dashboard</span>
                         </Button>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
 
-          <SidebarFooter className="p-4">
-            <div className="p-3 bg-card rounded-lg mb-3">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {(profileForm.fullName || doctorName).replace(/^Dr\.?\s*/i, '').split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{profileForm.fullName || `Dr. ${doctorName}`}</p>
-                  <p className="text-xs text-muted-foreground">{profileForm.specialty || matchedDoctor?.specialty || 'Specialist'}</p>
+              {/* Core Services Section */}
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Clinical Services</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu className="space-y-1">
+                    {menuItems.filter(item => ['appointments', 'patients', 'prescriptions', 'patient-monitoring'].includes(item.id)).map((item) => (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton asChild data-testid={`nav-${item.id}`}>
+                          <Button
+                            variant="ghost"
+                            className={`w-full justify-start group relative overflow-visible rounded-xl transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5 ${
+                              activeSection === item.id 
+                                ? 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/30 border border-emerald-200/50 dark:border-emerald-700/30' 
+                                : 'hover:bg-gradient-to-r hover:from-emerald-50/80 hover:to-teal-50/60 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/20'
+                            }`}
+                            onClick={() => setActiveSection(item.id)}
+                          >
+                            <div className={`p-1.5 rounded-lg mr-3 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md group-hover:shadow-emerald-500/20 ${
+                              activeSection === item.id
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md'
+                                : 'bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-800/50 dark:to-teal-800/40 text-emerald-600 dark:text-emerald-400 group-hover:from-emerald-500 group-hover:to-teal-600 group-hover:text-white'
+                            }`}>
+                              <item.icon className="h-3.5 w-3.5" />
+                            </div>
+                            <span className={`font-medium transition-colors duration-200 ${activeSection === item.id ? 'text-emerald-700 dark:text-emerald-400' : 'group-hover:text-emerald-700 dark:group-hover:text-emerald-400'}`}>
+                              {item.title}
+                            </span>
+                            {item.badge && item.badge > 0 && (
+                              <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0 h-4">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </Button>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* Schedule & Communication Section */}
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Schedule & Alerts</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu className="space-y-1">
+                    {menuItems.filter(item => ['schedules', 'notifications'].includes(item.id)).map((item) => (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton asChild data-testid={`nav-${item.id}`}>
+                          <Button
+                            variant="ghost"
+                            className={`w-full justify-start group relative overflow-visible rounded-xl transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5 ${
+                              activeSection === item.id 
+                                ? 'bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/30 border border-amber-200/50 dark:border-amber-700/30' 
+                                : 'hover:bg-gradient-to-r hover:from-amber-50/80 hover:to-orange-50/60 dark:hover:from-amber-900/30 dark:hover:to-orange-900/20'
+                            }`}
+                            onClick={() => setActiveSection(item.id)}
+                          >
+                            <div className={`p-1.5 rounded-lg mr-3 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md group-hover:shadow-amber-500/20 ${
+                              activeSection === item.id
+                                ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md'
+                                : 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-800/50 dark:to-orange-800/40 text-amber-600 dark:text-amber-400 group-hover:from-amber-500 group-hover:to-orange-600 group-hover:text-white'
+                            }`}>
+                              <item.icon className="h-3.5 w-3.5" />
+                            </div>
+                            <span className={`font-medium transition-colors duration-200 ${activeSection === item.id ? 'text-amber-700 dark:text-amber-400' : 'group-hover:text-amber-700 dark:group-hover:text-amber-400'}`}>
+                              {item.title}
+                            </span>
+                            {item.badge && item.badge > 0 && (
+                              <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0 h-4 animate-pulse">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </Button>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* Profile Section */}
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Settings</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild data-testid="nav-profile">
+                        <Button
+                          variant="ghost"
+                          className={`w-full justify-start group relative overflow-visible rounded-xl transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5 ${
+                            activeSection === 'profile' 
+                              ? 'bg-gradient-to-r from-violet-100 to-purple-100 dark:from-violet-900/40 dark:to-purple-900/30 border border-violet-200/50 dark:border-violet-700/30' 
+                              : 'hover:bg-gradient-to-r hover:from-violet-50/80 hover:to-purple-50/60 dark:hover:from-violet-900/30 dark:hover:to-purple-900/20'
+                          }`}
+                          onClick={() => setActiveSection('profile')}
+                        >
+                          <div className={`p-1.5 rounded-lg mr-3 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md group-hover:shadow-violet-500/20 ${
+                            activeSection === 'profile'
+                              ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md'
+                              : 'bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-800/50 dark:to-purple-800/40 text-violet-600 dark:text-violet-400 group-hover:from-violet-500 group-hover:to-purple-600 group-hover:text-white'
+                          }`}>
+                            <Settings className="h-3.5 w-3.5" />
+                          </div>
+                          <span className={`font-medium transition-colors duration-200 ${activeSection === 'profile' ? 'text-violet-700 dark:text-violet-400' : 'group-hover:text-violet-700 dark:group-hover:text-violet-400'}`}>
+                            Profile
+                          </span>
+                        </Button>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+
+            <SidebarFooter className="p-4 border-t border-sidebar-border/50">
+              <Button 
+                variant="outline" 
+                className="w-full group relative overflow-visible bg-gradient-to-r from-rose-50/80 to-red-50/60 hover:from-rose-100 hover:to-red-100 dark:from-rose-900/30 dark:to-red-900/20 dark:hover:from-rose-800/40 dark:hover:to-red-800/30 border border-rose-200/50 dark:border-rose-700/30 rounded-xl transition-all duration-300 hover:shadow-md hover:shadow-rose-500/10" 
+                onClick={onLogout} 
+                data-testid="button-logout"
+              >
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-rose-500 to-red-600 text-white mr-3 transition-transform duration-300 group-hover:scale-110 shadow-sm">
+                  <LogOut className="h-3.5 w-3.5" />
                 </div>
-              </div>
-            </div>
-            <Button variant="outline" className="w-full" onClick={onLogout} data-testid="button-logout">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </SidebarFooter>
-        </Sidebar>
+                <span className="font-medium text-rose-700 dark:text-rose-400 group-data-[collapsible=icon]:hidden">Sign Out</span>
+              </Button>
+            </SidebarFooter>
+          </Sidebar>
 
         <div className="flex flex-col flex-1 overflow-hidden">
           <header className="flex items-center justify-between gap-2 p-3 border-b bg-background/95 backdrop-blur">
