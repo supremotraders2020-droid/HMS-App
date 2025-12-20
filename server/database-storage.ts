@@ -1590,6 +1590,11 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
+  async getDoctorTimeSlotByAppointmentId(appointmentId: string): Promise<DoctorTimeSlot | undefined> {
+    const result = await db.select().from(doctorTimeSlots).where(eq(doctorTimeSlots.appointmentId, appointmentId));
+    return result[0];
+  }
+
   async createDoctorTimeSlot(slot: InsertDoctorTimeSlot): Promise<DoctorTimeSlot> {
     const result = await db.insert(doctorTimeSlots).values(slot).returning();
     return result[0];

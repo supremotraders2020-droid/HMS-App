@@ -355,11 +355,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Appointment not found" });
       }
       
-      // Get doctor info for notification (fallback to stored name if not found)
+      // Get doctor info for notification - check time slot first, then doctors table
       let doctorName = 'Doctor';
       try {
-        const doctor = await storage.getDoctor(appointment.doctorId);
-        if (doctor?.name) doctorName = doctor.name;
+        // First try to get from time slot (most reliable for OPD appointments)
+        const timeSlot = await databaseStorage.getDoctorTimeSlotByAppointmentId(appointment.id);
+        if (timeSlot?.doctorName) {
+          doctorName = timeSlot.doctorName.replace(/^Dr\.\s*/i, ''); // Remove "Dr." prefix if present
+        } else {
+          // Fallback to doctors table
+          const doctor = await storage.getDoctor(appointment.doctorId);
+          if (doctor?.name) doctorName = doctor.name.replace(/^Dr\.\s*/i, '');
+        }
       } catch (e) {
         console.log("Doctor profile not found, using default name");
       }
@@ -422,11 +429,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Determine who cancelled (default to doctor if not specified)
       const cancelledBy = req.body.cancelledBy || 'doctor';
       
-      // Get doctor info for notification (fallback to default if not found)
+      // Get doctor info for notification - check time slot first, then doctors table
       let doctorName = 'Doctor';
       try {
-        const doctor = await storage.getDoctor(appointment.doctorId);
-        if (doctor?.name) doctorName = doctor.name;
+        // First try to get from time slot (most reliable for OPD appointments)
+        const timeSlot = await databaseStorage.getDoctorTimeSlotByAppointmentId(appointment.id);
+        if (timeSlot?.doctorName) {
+          doctorName = timeSlot.doctorName.replace(/^Dr\.\s*/i, ''); // Remove "Dr." prefix if present
+        } else {
+          // Fallback to doctors table
+          const doctor = await storage.getDoctor(appointment.doctorId);
+          if (doctor?.name) doctorName = doctor.name.replace(/^Dr\.\s*/i, '');
+        }
       } catch (e) {
         console.log("Doctor profile not found, using default name");
       }
