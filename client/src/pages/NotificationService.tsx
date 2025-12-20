@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
-import type { Notification, HospitalTeamMember, ServicePatient, HealthTip } from "@shared/schema";
+import type { Notification, HospitalTeamMember, ServicePatient, HealthTip, UserNotification } from "@shared/schema";
 import { 
   Bell, 
   Send, 
@@ -134,6 +134,12 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
   // Queries
   const { data: notifications = [], isLoading: notificationsLoading } = useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
+  });
+
+  // User-specific notifications (for OPD Managers, Doctors, etc.)
+  const { data: userNotifications = [], isLoading: userNotificationsLoading } = useQuery<UserNotification[]>({
+    queryKey: ["/api/user-notifications", currentUserId],
+    enabled: !!currentUserId,
   });
 
   const { data: teamMembers = [], isLoading: teamLoading } = useQuery<HospitalTeamMember[]>({
@@ -272,8 +278,24 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
     createNotificationMutation.mutate(formData);
   }
 
-  // Filter notifications
-  const filteredNotifications = notifications.filter(n => {
+  // Transform user notifications to display format
+  const transformedUserNotifications = userNotifications.map(un => ({
+    id: un.id,
+    title: un.title,
+    message: un.message,
+    category: un.type === 'opd_update' ? 'opd_announcements' : un.type === 'appointment' ? 'opd_announcements' : 'general',
+    priority: 'medium' as const,
+    status: un.isRead ? 'read' : 'unread',
+    channels: ['push'] as string[],
+    createdAt: un.createdAt,
+    createdBy: 'System',
+    sentAt: un.createdAt,
+    metadata: un.metadata,
+    isUserNotification: true,
+  }));
+
+  // Filter broadcast notifications
+  const filteredBroadcastNotifications = notifications.filter(n => {
     const matchesSearch = n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       n.message.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = !statusFilter || n.status === statusFilter;
@@ -291,6 +313,17 @@ export default function NotificationService({ currentRole = "ADMIN", currentUser
     
     return matchesSearch && matchesStatus && matchesCategory && matchesNursePatients;
   });
+
+  // Filter user-specific notifications
+  const filteredUserNotifications = transformedUserNotifications.filter(n => {
+    const matchesSearch = n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      n.message.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = !categoryFilter || categoryFilter === 'all' || n.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Combine all notifications for display (user notifications first, then broadcast)
+  const filteredNotifications = [...filteredUserNotifications, ...filteredBroadcastNotifications];
 
   // Filter team members
   const filteredTeamMembers = teamMembers.filter(m => {
