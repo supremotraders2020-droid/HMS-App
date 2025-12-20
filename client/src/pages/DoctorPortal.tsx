@@ -75,7 +75,8 @@ import {
   Loader2,
   ArrowLeft,
   ExternalLink,
-  MonitorCheck
+  MonitorCheck,
+  Save
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import DoctorOathModal from "@/components/DoctorOathModal";
@@ -330,11 +331,13 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   });
 
   const updateScheduleMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<DoctorSchedule> }) =>
+    mutationFn: ({ id, updates, showToast = false }: { id: string; updates: Partial<DoctorSchedule>; showToast?: boolean }) =>
       apiRequest('PATCH', `/api/doctor-schedules/${id}`, updates),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/doctor-schedules', doctorId] });
-      toast({ title: "Schedule updated successfully" });
+      if (variables.showToast) {
+        toast({ title: "Schedule updated successfully" });
+      }
     },
     onError: () => toast({ title: "Failed to update schedule", variant: "destructive" }),
   });
@@ -1294,7 +1297,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               </Button>
             </div>
             
-            <ScrollArea className="h-[calc(100vh-200px)]">
+            <ScrollArea className="h-[calc(100vh-280px)]">
               <div className="space-y-4 pr-4">
                 {getSchedulesForDate(selectedCalendarDate).length > 0 ? (
                   getSchedulesForDate(selectedCalendarDate).map((slot) => (
@@ -1416,6 +1419,22 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 )}
               </div>
             </ScrollArea>
+            
+            {getSchedulesForDate(selectedCalendarDate).length > 0 && (
+              <div className="pt-4 border-t mt-4">
+                <Button 
+                  className="w-full"
+                  onClick={() => {
+                    setCalendarSlotSheetOpen(false);
+                    toast({ title: "Schedule updated successfully" });
+                  }}
+                  data-testid="button-save-slots"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </Button>
+              </div>
+            )}
           </div>
         </SheetContent>
       </Sheet>
