@@ -28,7 +28,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format, formatDistanceToNow } from "date-fns";
-import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent, DoctorTimeSlot, PatientBill } from "@shared/schema";
+import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent, DoctorTimeSlot, PatientBill, DoctorSchedule } from "@shared/schema";
 import { 
   Home,
   Calendar,
@@ -402,6 +402,85 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     return () => ws.close();
   }, [username, refetchBill]);
 
+  // Fetch doctor schedules to determine available locations and time slots
+  const selectedDoctorData = doctors.find(d => d.id === selectedDoctor);
+  const { data: doctorSchedules = [] } = useQuery<DoctorSchedule[]>({
+    queryKey: ["/api/doctor-schedules-by-name", selectedDoctorData?.name],
+    enabled: !!selectedDoctor && !!selectedDoctorData?.name,
+    staleTime: 0,
+  });
+
+  // Generate available slots from doctor schedules
+  const getScheduleBasedSlots = (): { value: string; label: string; location: string | null }[] => {
+    if (!selectedDate || doctorSchedules.length === 0) return [];
+
+    const selectedDateObj = new Date(selectedDate + 'T00:00:00');
+    const dayName = selectedDateObj.toLocaleDateString('en-US', { weekday: 'long' });
+
+    // Find schedule blocks for the selected day - prioritize specific date matches
+    const daySchedules = doctorSchedules.filter(s => {
+      if (s.specificDate === selectedDate && s.isAvailable) return true;
+      if (!s.specificDate && s.day === dayName && s.isAvailable) return true;
+      return false;
+    });
+
+    if (daySchedules.length === 0) return [];
+
+    const slots: { value: string; label: string; location: string | null }[] = [];
+    
+    const timeToMins = (timeStr: string): number => {
+      const [time, period] = timeStr.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      let totalHours = hours;
+      if (period === 'PM' && hours !== 12) totalHours += 12;
+      if (period === 'AM' && hours === 12) totalHours = 0;
+      return totalHours * 60 + (minutes || 0);
+    };
+
+    const minsToTime = (mins: number): string => {
+      const hours = Math.floor(mins / 60);
+      const minutes = mins % 60;
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+      return `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+    };
+
+    for (const schedule of daySchedules) {
+      const startMins = timeToMins(schedule.startTime);
+      const endMins = timeToMins(schedule.endTime);
+      
+      for (let mins = startMins; mins < endMins; mins += 30) {
+        const timeLabel = minsToTime(mins);
+        slots.push({
+          value: timeLabel,
+          label: timeLabel,
+          location: schedule.slotType || schedule.location,
+        });
+      }
+    }
+
+    // Filter out already-booked slots
+    const bookedTimes = appointments
+      .filter(apt => 
+        apt.appointmentDate === selectedDate && 
+        apt.status !== 'cancelled'
+      )
+      .map(apt => apt.timeSlot?.split(' - ')[0] || apt.timeSlot);
+
+    return slots.filter(slot => !bookedTimes.includes(slot.value));
+  };
+
+  const scheduleBasedSlots = getScheduleBasedSlots();
+
+  // Get unique locations from schedule-based slots
+  const availableLocations = (() => {
+    const locations = new Set<string>();
+    scheduleBasedSlots.forEach(slot => {
+      if (slot.location) locations.add(slot.location);
+    });
+    return Array.from(locations);
+  })();
+
   // Fetch available time slots from the new API (only available slots for patients)
   const { data: availableTimeSlots = [] } = useQuery<DoctorTimeSlot[]>({
     queryKey: ["/api/time-slots/available", selectedDoctor, selectedDate],
@@ -507,6 +586,18 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
         value: slot.startTime,
         label: `${slot.startTime} - ${slot.endTime}`,
         slotId: slot.id, // Include slot ID for booking
+      }));
+    }
+
+    // Use schedule-based slots when available - filter by selected location
+    if (scheduleBasedSlots.length > 0) {
+      let filteredSlots = scheduleBasedSlots;
+      if (selectedLocation) {
+        filteredSlots = scheduleBasedSlots.filter(slot => slot.location === selectedLocation);
+      }
+      return filteredSlots.map(slot => ({
+        value: slot.value,
+        label: slot.label,
       }));
     }
     
@@ -1018,17 +1109,31 @@ Description: ${record.description}
                       <Label>Location</Label>
                       <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                         <SelectTrigger data-testid="select-location">
-                          <SelectValue placeholder="Select location" />
+                          <SelectValue placeholder={availableLocations.length === 0 && selectedDate ? "No locations available for this date" : "Select location"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {LOCATIONS.map((loc) => (
-                            <SelectItem key={loc.id} value={loc.name}>
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4 text-muted-foreground" />
-                                <span>{loc.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
+                          {availableLocations.length > 0 ? (
+                            availableLocations.map((locName) => {
+                              const loc = LOCATIONS.find(l => l.name === locName);
+                              return (
+                                <SelectItem key={locName} value={locName}>
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                                    <span>{locName}</span>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })
+                          ) : (
+                            LOCATIONS.map((loc) => (
+                              <SelectItem key={loc.id} value={loc.name}>
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                                  <span>{loc.name}</span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       {selectedLocation && (() => {
@@ -1058,7 +1163,7 @@ Description: ${record.description}
                       <Input 
                         type="date" 
                         value={selectedDate}
-                        onChange={(e) => { setSelectedDate(e.target.value); setSelectedSlot(""); }}
+                        onChange={(e) => { setSelectedDate(e.target.value); setSelectedSlot(""); setSelectedLocation(""); }}
                         min={new Date().toISOString().split("T")[0]}
                         data-testid="input-appointment-date"
                       />
