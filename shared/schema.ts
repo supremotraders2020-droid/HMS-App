@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // User Role Enum
-export const userRoleEnum = pgEnum("user_role", ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"]);
+export const userRoleEnum = pgEnum("user_role", ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE"]);
 
 // Inventory Enums
 export const inventoryCategoryEnum = pgEnum("inventory_category", ["disposables", "syringes", "gloves", "medicines", "equipment"]);
@@ -21,7 +21,7 @@ export const users = pgTable("users", {
   dateOfBirth: text("date_of_birth"),
 });
 
-const validRoles = ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"] as const;
+const validRoles = ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE"] as const;
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -2796,3 +2796,225 @@ export const insertBloodBankAuditLogSchema = createInsertSchema(bloodBankAuditLo
 });
 export type InsertBloodBankAuditLog = z.infer<typeof insertBloodBankAuditLogSchema>;
 export type BloodBankAuditLog = typeof bloodBankAuditLog.$inferSelect;
+
+// ========== MEDICAL STORE INTEGRATION MODULE ==========
+// Medical Store Types: IN_HOUSE (hospital pharmacy), THIRD_PARTY (external pharmacy)
+
+// Medical Store Status Enum
+export const medicalStoreStatusEnum = pgEnum("medical_store_status", ["ACTIVE", "INACTIVE", "SUSPENDED"]);
+
+// Medical Stores table - stores managed by admin
+export const medicalStores = pgTable("medical_stores", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storeCode: text("store_code").notNull().unique(), // MS-001, MS-002
+  storeName: text("store_name").notNull(),
+  storeType: text("store_type").notNull().default("IN_HOUSE"), // IN_HOUSE, THIRD_PARTY
+  ownerName: text("owner_name"),
+  licenseNumber: text("license_number").notNull(),
+  gstNumber: text("gst_number"),
+  drugLicenseNumber: text("drug_license_number"),
+  address: text("address").notNull(),
+  city: text("city").notNull().default("Pune"),
+  state: text("state").notNull().default("Maharashtra"),
+  pincode: text("pincode"),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  website: text("website"),
+  operatingHours: text("operating_hours").default("08:00 AM - 10:00 PM"),
+  is24Hours: boolean("is_24_hours").default(false),
+  status: text("status").notNull().default("ACTIVE"), // ACTIVE, INACTIVE, SUSPENDED
+  hasInventoryAccess: boolean("has_inventory_access").default(false), // Only for IN_HOUSE
+  canSubstituteMedicines: boolean("can_substitute_medicines").default(false),
+  requiresDoctorApproval: boolean("requires_doctor_approval").default(true),
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }).default("0"),
+  maxDiscountPercentage: decimal("max_discount_percentage", { precision: 5, scale: 2 }).default("10"),
+  notes: text("notes"),
+  createdBy: varchar("created_by"),
+  createdByName: text("created_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMedicalStoreSchema = createInsertSchema(medicalStores).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertMedicalStore = z.infer<typeof insertMedicalStoreSchema>;
+export type MedicalStore = typeof medicalStores.$inferSelect;
+
+// Medical Store Users - login credentials for store staff
+export const medicalStoreUsers = pgTable("medical_store_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(), // Link to users table
+  storeId: varchar("store_id").notNull(), // Link to medical_stores
+  staffRole: text("staff_role").notNull().default("PHARMACIST"), // MANAGER, PHARMACIST, BILLING_STAFF
+  employeeId: text("employee_id"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMedicalStoreUserSchema = createInsertSchema(medicalStoreUsers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertMedicalStoreUser = z.infer<typeof insertMedicalStoreUserSchema>;
+export type MedicalStoreUser = typeof medicalStoreUsers.$inferSelect;
+
+// Medical Store Inventory - store-specific stock (for third-party stores)
+export const medicalStoreInventory = pgTable("medical_store_inventory", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storeId: varchar("store_id").notNull(),
+  medicineName: text("medicine_name").notNull(),
+  genericName: text("generic_name"),
+  brandName: text("brand_name"),
+  strength: text("strength"),
+  dosageForm: text("dosage_form"),
+  batchNumber: text("batch_number"),
+  expiryDate: text("expiry_date"),
+  quantity: integer("quantity").notNull().default(0),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  mrp: decimal("mrp", { precision: 10, scale: 2 }),
+  gstPercentage: decimal("gst_percentage", { precision: 5, scale: 2 }).default("12"),
+  isAvailable: boolean("is_available").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMedicalStoreInventorySchema = createInsertSchema(medicalStoreInventory).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertMedicalStoreInventory = z.infer<typeof insertMedicalStoreInventorySchema>;
+export type MedicalStoreInventory = typeof medicalStoreInventory.$inferSelect;
+
+// Prescription Dispensing - tracks which prescriptions are dispensed by which store
+export const prescriptionDispensing = pgTable("prescription_dispensing", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dispensingNumber: text("dispensing_number").notNull().unique(), // DISP-2025-001
+  prescriptionId: varchar("prescription_id").notNull(),
+  prescriptionNumber: text("prescription_number"),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientPhone: text("patient_phone"),
+  storeId: varchar("store_id").notNull(),
+  storeName: text("store_name").notNull(),
+  dispensedBy: varchar("dispensed_by").notNull(),
+  dispensedByName: text("dispensed_by_name").notNull(),
+  dispensingStatus: text("dispensing_status").notNull().default("PENDING"), // PENDING, PARTIALLY_DISPENSED, FULLY_DISPENSED, CANCELLED
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).default("0"),
+  gstAmount: decimal("gst_amount", { precision: 10, scale: 2 }).default("0"),
+  netAmount: decimal("net_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  paymentStatus: text("payment_status").notNull().default("PENDING"), // PENDING, PAID, PARTIAL, INSURANCE
+  paymentMethod: text("payment_method"), // CASH, CARD, UPI, INSURANCE
+  dispensedAt: timestamp("dispensed_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPrescriptionDispensingSchema = createInsertSchema(prescriptionDispensing).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPrescriptionDispensing = z.infer<typeof insertPrescriptionDispensingSchema>;
+export type PrescriptionDispensing = typeof prescriptionDispensing.$inferSelect;
+
+// Dispensing Items - individual medicine items in a dispensing record
+export const dispensingItems = pgTable("dispensing_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dispensingId: varchar("dispensing_id").notNull(),
+  medicineName: text("medicine_name").notNull(),
+  genericName: text("generic_name"),
+  strength: text("strength"),
+  dosageForm: text("dosage_form"),
+  prescribedQuantity: integer("prescribed_quantity").notNull(),
+  dispensedQuantity: integer("dispensed_quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  batchNumber: text("batch_number"),
+  expiryDate: text("expiry_date"),
+  isSubstitute: boolean("is_substitute").default(false),
+  originalMedicine: text("original_medicine"), // If substitute, what was prescribed
+  substitutionApprovedBy: varchar("substitution_approved_by"),
+  status: text("status").notNull().default("DISPENSED"), // DISPENSED, UNAVAILABLE, PARTIAL
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDispensingItemSchema = createInsertSchema(dispensingItems).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDispensingItem = z.infer<typeof insertDispensingItemSchema>;
+export type DispensingItem = typeof dispensingItems.$inferSelect;
+
+// Medical Store Access Logs - audit trail for prescription access
+export const medicalStoreAccessLogs = pgTable("medical_store_access_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storeId: varchar("store_id").notNull(),
+  storeName: text("store_name").notNull(),
+  userId: varchar("user_id").notNull(),
+  userName: text("user_name").notNull(),
+  action: text("action").notNull(), // LOGIN, LOGOUT, PRESCRIPTION_VIEW, PRESCRIPTION_DISPENSE, BILL_GENERATE
+  prescriptionId: varchar("prescription_id"),
+  prescriptionNumber: text("prescription_number"),
+  patientId: varchar("patient_id"),
+  patientName: text("patient_name"),
+  details: text("details"),
+  ipAddress: text("ip_address"),
+  deviceInfo: text("device_info"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertMedicalStoreAccessLogSchema = createInsertSchema(medicalStoreAccessLogs).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertMedicalStoreAccessLog = z.infer<typeof insertMedicalStoreAccessLogSchema>;
+export type MedicalStoreAccessLog = typeof medicalStoreAccessLogs.$inferSelect;
+
+// Medical Store Billing - generated invoices
+export const medicalStoreBills = pgTable("medical_store_bills", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  billNumber: text("bill_number").notNull().unique(), // INV-2025-001
+  dispensingId: varchar("dispensing_id").notNull(),
+  storeId: varchar("store_id").notNull(),
+  storeName: text("store_name").notNull(),
+  storeAddress: text("store_address"),
+  storeGst: text("store_gst"),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientPhone: text("patient_phone"),
+  patientAddress: text("patient_address"),
+  doctorName: text("doctor_name"),
+  prescriptionNumber: text("prescription_number"),
+  itemsJson: text("items_json").notNull(), // JSON array of items
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }).default("0"),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).default("0"),
+  gstAmount: decimal("gst_amount", { precision: 10, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  paymentStatus: text("payment_status").notNull().default("PENDING"), // PENDING, PAID, PARTIAL
+  paymentMethod: text("payment_method"),
+  paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }).default("0"),
+  balanceAmount: decimal("balance_amount", { precision: 10, scale: 2 }).default("0"),
+  billedBy: varchar("billed_by").notNull(),
+  billedByName: text("billed_by_name").notNull(),
+  billedAt: timestamp("billed_at").defaultNow(),
+  isPrinted: boolean("is_printed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMedicalStoreBillSchema = createInsertSchema(medicalStoreBills).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertMedicalStoreBill = z.infer<typeof insertMedicalStoreBillSchema>;
+export type MedicalStoreBill = typeof medicalStoreBills.$inferSelect;
