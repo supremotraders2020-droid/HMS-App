@@ -1,0 +1,131 @@
+{
+  "export_date": "2025-12-24",
+  "database": "HMS Core - Gravity Hospital",
+  "tables": {
+    "users": {
+      "count": 48,
+      "sample_data": [
+        {"id": "bd0deed3-6151-4c19-97a2-c47e6c45f4ba", "username": "admin", "role": "ADMIN", "name": "admin", "email": "admin@school.com"},
+        {"id": "31c640f4-e013-4ec8-95a5-e8c4abcfb667", "username": "doctor1", "role": "DOCTOR", "name": "Dr. Anil Kulkarni", "email": "anil.kulkarni@gravityhospital.com"},
+        {"id": "f13fc329-8e10-4fee-935e-0191bb22506a", "username": "priya", "role": "NURSE", "name": "priya", "email": "student@school.com"},
+        {"id": "135556e5-4cb9-4f69-a0e5-f1e82961dbcd", "username": "opd1", "role": "OPD_MANAGER", "name": "Sachin Tendulkar", "email": "sachin.t@gravityhospital.com"},
+        {"id": "a51c2b32-66c5-42ad-a661-f81943cc6c55", "username": "patient1", "role": "PATIENT", "name": "Rahul Verma", "email": "rahul.verma@gmail.com"}
+      ]
+    },
+    "doctors": {
+      "count": 4,
+      "data": [
+        {"id": "d64449b8-fb78-4356-b567-ccbb8e3548f5", "name": "Kapil Saxena", "specialty": "Cardiology", "qualification": "MBBS", "experience": 5, "rating": "4.5"},
+        {"id": "4d428f90-9186-47c9-8bbb-baa5cb97dfe3", "name": "Anil Kumar", "specialty": "Neurology", "qualification": "MBBS", "experience": 5, "rating": "4.5"},
+        {"id": "3f737df7-66c4-4c55-b3b2-fe6a339090eb", "name": "Jay Gupta", "specialty": "Orthopedics", "qualification": "MBBS", "experience": 5, "rating": "4.5"},
+        {"id": "ef50313d-d8ab-4a2f-8fed-7df1b2c97b11", "name": "Ajay", "specialty": "Pediatrics", "qualification": "MBBS", "experience": 5, "rating": "4.5"}
+      ]
+    },
+    "service_patients": {
+      "count": 26,
+      "sample_data": [
+        {"first_name": "Rohan", "last_name": "Patil", "gender": "Male", "phone": "+91 98201 11111", "insurance_provider": "Star Health"},
+        {"first_name": "Priya", "last_name": "Sharma", "gender": "Female", "phone": "+91 98201 22222", "insurance_provider": "ICICI Lombard"},
+        {"first_name": "Sanjay", "last_name": "Kulkarni", "gender": "Male", "phone": "+91 98201 33333", "insurance_provider": "Max Bupa"},
+        {"first_name": "Anjali", "last_name": "Deshmukh", "gender": "Female", "phone": "+91 98201 44444", "insurance_provider": "Apollo Munich"},
+        {"first_name": "Vikrant", "last_name": "Jadhav", "gender": "Male", "phone": "+91 98201 55555", "insurance_provider": "Star Health"}
+      ]
+    },
+    "prescriptions": {
+      "count": 9,
+      "data": [
+        {"patient_name": "Raj verma", "doctor_name": "Sarah Wilson", "diagnosis": "body pain", "status": "active"},
+        {"patient_name": "patient", "doctor_name": "doctor", "diagnosis": "body pain", "status": "active"},
+        {"patient_name": "shruti patil", "doctor_name": "Jay", "diagnosis": "gfvsrfdeg", "status": "active"},
+        {"patient_name": "Test Patient", "doctor_name": "Dr. Jay GUPTA", "diagnosis": "Fever and cold", "status": "active"},
+        {"patient_name": "Shruti Patil", "doctor_name": "Anil", "diagnosis": "DXCGV", "status": "active"}
+      ]
+    },
+    "inventory_items": {
+      "count": 18,
+      "data": [
+        {"name": "Syringes 5ml", "category": "Medical Devices", "current_stock": 2000, "low_stock_threshold": 500, "cost": "3.50"},
+        {"name": "Insulin Injection 100IU", "category": "Medicine", "current_stock": 15, "low_stock_threshold": 20, "cost": "350.00"},
+        {"name": "Hand Sanitizer 500ml", "category": "PPE", "current_stock": 60, "low_stock_threshold": 30, "cost": "120.00"},
+        {"name": "Omeprazole 20mg", "category": "Medicine", "current_stock": 8, "low_stock_threshold": 50, "cost": "25.00"},
+        {"name": "Surgical Sutures", "category": "Surgical Supplies", "current_stock": 250, "low_stock_threshold": 50, "cost": "180.00"},
+        {"name": "Saline IV Bags 500ml", "category": "Medicine", "current_stock": 3, "low_stock_threshold": 50, "cost": "35.00"},
+        {"name": "Disposable Bed Sheets", "category": "Hospital Supplies", "current_stock": 0, "low_stock_threshold": 100, "cost": "50.00"},
+        {"name": "Surgical Gloves (Medium)", "category": "Surgical Supplies", "current_stock": 950, "low_stock_threshold": 200, "cost": "5.00"},
+        {"name": "Paracetamol 500mg", "category": "Medicine", "current_stock": 550, "low_stock_threshold": 100, "cost": "2.50"},
+        {"name": "Cotton Wool 500g", "category": "Wound Care", "current_stock": 150, "low_stock_threshold": 30, "cost": "45.00"}
+      ]
+    },
+    "beds": {
+      "count": 19,
+      "data": [
+        {"bed_number": "GW-01", "bed_name": "General Ward Bed 1", "ward_name": "General Ward A", "department": "General Medicine", "occupancy_status": "occupied"},
+        {"bed_number": "GW-02", "bed_name": "General Ward Bed 2", "ward_name": "General Ward A", "department": "General Medicine", "occupancy_status": "available"},
+        {"bed_number": "GW-03", "bed_name": "General Ward Bed 3", "ward_name": "General Ward A", "department": "General Medicine", "occupancy_status": "cleaning"},
+        {"bed_number": "ICU-01", "bed_name": "ICU Bed 1", "ward_name": "ICU", "department": "Critical Care", "occupancy_status": "occupied"},
+        {"bed_number": "ICU-02", "bed_name": "ICU Bed 2", "ward_name": "ICU", "department": "Critical Care", "occupancy_status": "occupied"},
+        {"bed_number": "HDU-01", "bed_name": "HDU Bed 1", "ward_name": "HDU", "department": "High Dependency", "occupancy_status": "available"},
+        {"bed_number": "HDU-02", "bed_name": "HDU Bed 2", "ward_name": "HDU", "department": "High Dependency", "occupancy_status": "maintenance"},
+        {"bed_number": "SP-01", "bed_name": "Semi-Private 1", "ward_name": "Semi-Private Wing", "department": "General Medicine", "occupancy_status": "available"},
+        {"bed_number": "PVT-01", "bed_name": "Private Suite 1", "ward_name": "Private Wing", "department": "VIP Care", "occupancy_status": "available"},
+        {"bed_number": "ISO-01", "bed_name": "Isolation Room 1", "ward_name": "Isolation Ward", "department": "Infectious Disease", "occupancy_status": "available"}
+      ]
+    },
+    "equipment": {
+      "count": 11,
+      "data": [
+        {"name": "X-Ray Machine", "model": "GE Definium 656", "serial_number": "XR-2024-001", "next_due_date": "2025-02-15"},
+        {"name": "MRI Scanner", "model": "Siemens MAGNETOM", "serial_number": "MR-2024-002", "next_due_date": "2024-12-20"},
+        {"name": "CT Scanner", "model": "Philips Ingenuity", "serial_number": "CT-2024-003", "next_due_date": "2024-11-10"},
+        {"name": "Ultrasound System", "model": "GE LOGIQ E10", "serial_number": "US-2024-004", "next_due_date": "2025-02-25"},
+        {"name": "ECG Machine", "model": "Philips PageWriter", "serial_number": "ECG-2024-005", "next_due_date": "2025-01-01"},
+        {"name": "Ventilator", "model": "Draeger Evita V500", "serial_number": "VT-2024-006", "next_due_date": "2024-11-15"},
+        {"name": "Defibrillator", "model": "Philips HeartStart", "serial_number": "DF-2024-007", "next_due_date": "2025-02-20"},
+        {"name": "Anesthesia Machine", "model": "GE Aisys CS2", "serial_number": "AN-2024-008", "next_due_date": "2024-12-05"},
+        {"name": "Patient Monitor", "model": "Philips IntelliVue", "serial_number": "PM-2024-009", "next_due_date": "2025-01-10"}
+      ]
+    },
+    "consent_templates": {
+      "count": 14,
+      "data": [
+        {"title": "Medico-Legal Register (Digital Consent Form)", "consent_type": "MEDICO_LEGAL", "category": "Legal & Administrative", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "Discharge Against Medical Advice (DAMA/LAMA)", "consent_type": "DAMA", "category": "Legal & Administrative", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "Digital Consent Form (Multiple)", "consent_type": "DIGITAL_CONSENT", "category": "Legal & Administrative", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "Operation Theatre Register", "consent_type": "OPERATION_THEATRE", "category": "Surgical & Procedural", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "Informed Consent for Anaesthesia", "consent_type": "ANAESTHESIA", "category": "Surgical & Procedural", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "Consent for Surgery/Operative Procedure", "consent_type": "SURGERY", "category": "Surgical & Procedural", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "Tubal Ligation Consent Form", "consent_type": "TUBAL_LIGATION", "category": "Surgical & Procedural", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "Plastic Surgery Consent Form", "consent_type": "PLASTIC_SURGERY", "category": "Surgical & Procedural", "languages": "English, Hindi, Marathi", "version": "1.0"},
+        {"title": "HIV Test Informed Consent", "consent_type": "HIV_TEST", "category": "Diagnostic & Testing", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "HBsAg Test Informed Consent", "consent_type": "HBSAG_TEST", "category": "Diagnostic & Testing", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "Injection Consent Form (OPD)", "consent_type": "INJECTION_OPD", "category": "Diagnostic & Testing", "languages": "English, Hindi, Marathi", "version": "1.0"},
+        {"title": "Consent for Blood/Blood Component Transfusion", "consent_type": "BLOOD_TRANSFUSION", "category": "Treatment", "languages": "English, Hindi, Marathi", "version": "2.0"},
+        {"title": "Newborn Baby Consent Form", "consent_type": "NEWBORN_BABY", "category": "Maternal & Neonatal", "languages": "English, Hindi, Marathi", "version": "1.0"},
+        {"title": "Surgery Form", "consent_type": "SURGERY_FORM", "category": "Surgical & Procedural", "languages": "English, Hindi, Marathi", "version": "1.0"}
+      ]
+    }
+  },
+  "statistics": {
+    "total_users": 48,
+    "users_by_role": {
+      "ADMIN": 8,
+      "DOCTOR": 18,
+      "NURSE": 4,
+      "OPD_MANAGER": 7,
+      "PATIENT": 12
+    },
+    "total_appointments": 92,
+    "total_prescriptions": 9,
+    "total_beds": 19,
+    "beds_by_status": {
+      "available": 14,
+      "occupied": 3,
+      "cleaning": 1,
+      "maintenance": 1
+    },
+    "total_inventory_items": 18,
+    "low_stock_items": 4,
+    "total_equipment": 11,
+    "total_consent_templates": 14
+  }
+}
