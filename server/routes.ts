@@ -37,7 +37,15 @@ import { users, insertAppointmentSchema, insertInventoryItemSchema, insertInvent
   bloodTemperatureLogs, insertBloodTemperatureLogSchema,
   bloodTransfusionOrders, insertBloodTransfusionOrderSchema,
   bloodTransfusionReactions, insertBloodTransfusionReactionSchema,
-  bloodBankAuditLog, insertBloodBankAuditLogSchema
+  bloodBankAuditLog, insertBloodBankAuditLogSchema,
+  medicalStores, insertMedicalStoreSchema,
+  medicalStoreUsers, insertMedicalStoreUserSchema,
+  medicalStoreInventory, insertMedicalStoreInventorySchema,
+  prescriptionDispensing, insertPrescriptionDispensingSchema,
+  dispensingItems, insertDispensingItemSchema,
+  medicalStoreAccessLogs, insertMedicalStoreAccessLogSchema,
+  medicalStoreBills, insertMedicalStoreBillSchema,
+  prescriptions
 } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
@@ -6882,6 +6890,454 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   // Run blood bank seeding
   await seedBloodBankData();
+
+  // ========== MEDICAL STORE MANAGEMENT ROUTES ==========
+
+  // Get all medical stores (Admin only)
+  app.get("/api/medical-stores", async (req, res) => {
+    try {
+      const stores = await databaseStorage.getAllMedicalStores();
+      res.json(stores);
+    } catch (error) {
+      console.error("Error fetching medical stores:", error);
+      res.status(500).json({ error: "Failed to fetch medical stores" });
+    }
+  });
+
+  // Get single medical store
+  app.get("/api/medical-stores/:id", async (req, res) => {
+    try {
+      const store = await databaseStorage.getMedicalStore(req.params.id);
+      if (!store) {
+        return res.status(404).json({ error: "Medical store not found" });
+      }
+      res.json(store);
+    } catch (error) {
+      console.error("Error fetching medical store:", error);
+      res.status(500).json({ error: "Failed to fetch medical store" });
+    }
+  });
+
+  // Create medical store (Admin only)
+  app.post("/api/medical-stores", async (req, res) => {
+    try {
+      const validatedData = insertMedicalStoreSchema.parse(req.body);
+      
+      // Generate store code if not provided
+      if (!validatedData.storeCode) {
+        const existingStores = await databaseStorage.getAllMedicalStores();
+        const storeNumber = existingStores.length + 1;
+        validatedData.storeCode = `MS-${String(storeNumber).padStart(3, '0')}`;
+      }
+      
+      const store = await databaseStorage.createMedicalStore(validatedData);
+      res.status(201).json(store);
+    } catch (error) {
+      console.error("Error creating medical store:", error);
+      res.status(500).json({ error: "Failed to create medical store" });
+    }
+  });
+
+  // Update medical store (Admin only)
+  app.patch("/api/medical-stores/:id", async (req, res) => {
+    try {
+      const store = await databaseStorage.updateMedicalStore(req.params.id, req.body);
+      if (!store) {
+        return res.status(404).json({ error: "Medical store not found" });
+      }
+      res.json(store);
+    } catch (error) {
+      console.error("Error updating medical store:", error);
+      res.status(500).json({ error: "Failed to update medical store" });
+    }
+  });
+
+  // Delete medical store (Admin only)
+  app.delete("/api/medical-stores/:id", async (req, res) => {
+    try {
+      const deleted = await databaseStorage.deleteMedicalStore(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Medical store not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting medical store:", error);
+      res.status(500).json({ error: "Failed to delete medical store" });
+    }
+  });
+
+  // Get active medical stores (for patients to see)
+  app.get("/api/medical-stores/active/list", async (req, res) => {
+    try {
+      const stores = await databaseStorage.getAllMedicalStores();
+      const activeStores = stores.filter(s => s.status === 'ACTIVE');
+      res.json(activeStores);
+    } catch (error) {
+      console.error("Error fetching active medical stores:", error);
+      res.status(500).json({ error: "Failed to fetch medical stores" });
+    }
+  });
+
+  // ========== MEDICAL STORE USER ROUTES ==========
+
+  // Create medical store user (Admin only) - also creates a user account
+  app.post("/api/medical-stores/:storeId/users", async (req, res) => {
+    try {
+      const { username, password, name, email, staffRole, employeeId } = req.body;
+      
+      // Validate required fields
+      if (!username || !password) {
+        return res.status(400).json({ error: "Username and password are required" });
+      }
+      
+      // Check if username already exists
+      const existingUser = await databaseStorage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(409).json({ error: "Username already exists" });
+      }
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      
+      // Create user account with MEDICAL_STORE role
+      const newUser = await databaseStorage.createUser({
+        username,
+        password: hashedPassword,
+        role: "MEDICAL_STORE",
+        name: name || username,
+        email: email || null,
+      });
+      
+      // Link user to medical store
+      const storeUser = await databaseStorage.createMedicalStoreUser({
+        userId: newUser.id,
+        storeId: req.params.storeId,
+        staffRole: staffRole || "PHARMACIST",
+        employeeId: employeeId || null,
+        isActive: true,
+      });
+      
+      res.status(201).json({ user: newUser, storeUser });
+    } catch (error) {
+      console.error("Error creating medical store user:", error);
+      res.status(500).json({ error: "Failed to create medical store user" });
+    }
+  });
+
+  // Get users for a medical store
+  app.get("/api/medical-stores/:storeId/users", async (req, res) => {
+    try {
+      const storeUsers = await databaseStorage.getMedicalStoreUsersByStore(req.params.storeId);
+      res.json(storeUsers);
+    } catch (error) {
+      console.error("Error fetching store users:", error);
+      res.status(500).json({ error: "Failed to fetch store users" });
+    }
+  });
+
+  // Get current user's store info (for medical store portal)
+  app.get("/api/medical-stores/my-store/:userId", async (req, res) => {
+    try {
+      const storeUser = await databaseStorage.getMedicalStoreUserByUserId(req.params.userId);
+      if (!storeUser) {
+        return res.status(404).json({ error: "Store user not found" });
+      }
+      const store = await databaseStorage.getMedicalStore(storeUser.storeId);
+      res.json({ storeUser, store });
+    } catch (error) {
+      console.error("Error fetching user's store:", error);
+      res.status(500).json({ error: "Failed to fetch store info" });
+    }
+  });
+
+  // ========== PRESCRIPTION ACCESS ROUTES (Medical Store) ==========
+
+  // Search prescriptions by patient name or ID (for medical store)
+  app.get("/api/medical-stores/prescriptions/search", async (req, res) => {
+    try {
+      const { query } = req.query;
+      if (!query) {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+      
+      // Get all finalized prescriptions
+      const allPrescriptions = await db.select().from(prescriptions)
+        .where(eq(prescriptions.prescriptionStatus, 'finalized'))
+        .orderBy(desc(prescriptions.createdAt));
+      
+      // Filter by patient name or prescription number
+      const searchLower = String(query).toLowerCase();
+      const matchedPrescriptions = allPrescriptions.filter(p => 
+        p.patientName.toLowerCase().includes(searchLower) ||
+        p.patientId.toLowerCase().includes(searchLower) ||
+        (p.prescriptionNumber && p.prescriptionNumber.toLowerCase().includes(searchLower))
+      );
+      
+      res.json(matchedPrescriptions);
+    } catch (error) {
+      console.error("Error searching prescriptions:", error);
+      res.status(500).json({ error: "Failed to search prescriptions" });
+    }
+  });
+
+  // Get prescription details for dispensing
+  app.get("/api/medical-stores/prescriptions/:id", async (req, res) => {
+    try {
+      const prescription = await databaseStorage.getPrescription(req.params.id);
+      if (!prescription) {
+        return res.status(404).json({ error: "Prescription not found" });
+      }
+      
+      // Get any existing dispensing records for this prescription
+      const dispensingRecords = await databaseStorage.getPrescriptionDispensingByPrescription(req.params.id);
+      
+      res.json({ prescription, dispensingRecords });
+    } catch (error) {
+      console.error("Error fetching prescription:", error);
+      res.status(500).json({ error: "Failed to fetch prescription" });
+    }
+  });
+
+  // ========== PRESCRIPTION DISPENSING ROUTES ==========
+
+  // Create dispensing record
+  app.post("/api/medical-stores/dispensing", async (req, res) => {
+    try {
+      const { prescriptionId, storeId, storeName, dispensedBy, dispensedByName, items, ...restData } = req.body;
+      
+      // Generate dispensing number
+      const year = new Date().getFullYear();
+      const allDispensing = await databaseStorage.getAllPrescriptionDispensing();
+      const dispensingNumber = `DISP-${year}-${String(allDispensing.length + 1).padStart(4, '0')}`;
+      
+      // Get prescription details
+      const prescription = await databaseStorage.getPrescription(prescriptionId);
+      if (!prescription) {
+        return res.status(404).json({ error: "Prescription not found" });
+      }
+      
+      // Create dispensing record
+      const dispensing = await databaseStorage.createPrescriptionDispensing({
+        dispensingNumber,
+        prescriptionId,
+        prescriptionNumber: prescription.prescriptionNumber,
+        patientId: prescription.patientId,
+        patientName: prescription.patientName,
+        storeId,
+        storeName,
+        dispensedBy,
+        dispensedByName,
+        dispensingStatus: "PENDING",
+        ...restData,
+      });
+      
+      // Create dispensing items if provided
+      if (items && Array.isArray(items)) {
+        for (const item of items) {
+          await databaseStorage.createDispensingItem({
+            dispensingId: dispensing.id,
+            ...item,
+          });
+        }
+      }
+      
+      res.status(201).json(dispensing);
+    } catch (error) {
+      console.error("Error creating dispensing:", error);
+      res.status(500).json({ error: "Failed to create dispensing record" });
+    }
+  });
+
+  // Update dispensing record
+  app.patch("/api/medical-stores/dispensing/:id", async (req, res) => {
+    try {
+      const dispensing = await databaseStorage.updatePrescriptionDispensing(req.params.id, req.body);
+      if (!dispensing) {
+        return res.status(404).json({ error: "Dispensing record not found" });
+      }
+      res.json(dispensing);
+    } catch (error) {
+      console.error("Error updating dispensing:", error);
+      res.status(500).json({ error: "Failed to update dispensing record" });
+    }
+  });
+
+  // Get dispensing records for a store
+  app.get("/api/medical-stores/:storeId/dispensing", async (req, res) => {
+    try {
+      const dispensingRecords = await databaseStorage.getPrescriptionDispensingByStore(req.params.storeId);
+      res.json(dispensingRecords);
+    } catch (error) {
+      console.error("Error fetching dispensing records:", error);
+      res.status(500).json({ error: "Failed to fetch dispensing records" });
+    }
+  });
+
+  // ========== MEDICAL STORE BILLING ROUTES ==========
+
+  // Create bill from dispensing
+  app.post("/api/medical-stores/bills", async (req, res) => {
+    try {
+      const { dispensingId, storeId, ...restData } = req.body;
+      
+      // Get dispensing record
+      const allDispensing = await databaseStorage.getAllPrescriptionDispensing();
+      const dispensing = allDispensing.find(d => d.id === dispensingId);
+      if (!dispensing) {
+        return res.status(404).json({ error: "Dispensing record not found" });
+      }
+      
+      // Generate bill number
+      const year = new Date().getFullYear();
+      const allBills = await databaseStorage.getAllMedicalStoreBills();
+      const billNumber = `INV-${year}-${String(allBills.length + 1).padStart(4, '0')}`;
+      
+      // Get store details
+      const store = await databaseStorage.getMedicalStore(storeId);
+      
+      // Create bill
+      const bill = await databaseStorage.createMedicalStoreBill({
+        billNumber,
+        dispensingId,
+        storeId,
+        storeName: store?.storeName || 'Unknown Store',
+        storeAddress: store?.address,
+        storeGst: store?.gstNumber,
+        patientId: dispensing.patientId,
+        patientName: dispensing.patientName,
+        patientPhone: dispensing.patientPhone,
+        prescriptionNumber: dispensing.prescriptionNumber,
+        ...restData,
+      });
+      
+      // Update dispensing status to FULLY_DISPENSED
+      await databaseStorage.updatePrescriptionDispensing(dispensingId, {
+        dispensingStatus: "FULLY_DISPENSED",
+        paymentStatus: restData.paymentStatus || "PENDING",
+      });
+      
+      res.status(201).json(bill);
+    } catch (error) {
+      console.error("Error creating bill:", error);
+      res.status(500).json({ error: "Failed to create bill" });
+    }
+  });
+
+  // Get bills for a store
+  app.get("/api/medical-stores/:storeId/bills", async (req, res) => {
+    try {
+      const bills = await databaseStorage.getMedicalStoreBillsByStore(req.params.storeId);
+      res.json(bills);
+    } catch (error) {
+      console.error("Error fetching bills:", error);
+      res.status(500).json({ error: "Failed to fetch bills" });
+    }
+  });
+
+  // Update bill (e.g., mark as paid)
+  app.patch("/api/medical-stores/bills/:id", async (req, res) => {
+    try {
+      const bill = await databaseStorage.updateMedicalStoreBill(req.params.id, req.body);
+      if (!bill) {
+        return res.status(404).json({ error: "Bill not found" });
+      }
+      res.json(bill);
+    } catch (error) {
+      console.error("Error updating bill:", error);
+      res.status(500).json({ error: "Failed to update bill" });
+    }
+  });
+
+  // ========== MEDICAL STORE ACCESS LOGS ==========
+
+  // Log access (automatically called on prescription view/dispensing)
+  app.post("/api/medical-stores/access-logs", async (req, res) => {
+    try {
+      const log = await databaseStorage.createMedicalStoreAccessLog(req.body);
+      res.status(201).json(log);
+    } catch (error) {
+      console.error("Error creating access log:", error);
+      res.status(500).json({ error: "Failed to create access log" });
+    }
+  });
+
+  // Get access logs (Admin only)
+  app.get("/api/medical-stores/access-logs/all", async (req, res) => {
+    try {
+      const logs = await databaseStorage.getMedicalStoreAccessLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching access logs:", error);
+      res.status(500).json({ error: "Failed to fetch access logs" });
+    }
+  });
+
+  // Get access logs for a specific store
+  app.get("/api/medical-stores/:storeId/access-logs", async (req, res) => {
+    try {
+      const logs = await databaseStorage.getMedicalStoreAccessLogs(req.params.storeId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching store access logs:", error);
+      res.status(500).json({ error: "Failed to fetch access logs" });
+    }
+  });
+
+  // ========== PATIENT PRESCRIPTION ACCESS ==========
+
+  // Get prescriptions for a patient (for patient portal)
+  app.get("/api/patients/:patientId/prescriptions", async (req, res) => {
+    try {
+      const patientPrescriptions = await db.select().from(prescriptions)
+        .where(eq(prescriptions.patientId, req.params.patientId))
+        .orderBy(desc(prescriptions.createdAt));
+      res.json(patientPrescriptions);
+    } catch (error) {
+      console.error("Error fetching patient prescriptions:", error);
+      res.status(500).json({ error: "Failed to fetch prescriptions" });
+    }
+  });
+
+  // ========== MEDICAL STORE INVENTORY ROUTES ==========
+
+  // Get store inventory
+  app.get("/api/medical-stores/:storeId/inventory", async (req, res) => {
+    try {
+      const inventory = await databaseStorage.getMedicalStoreInventory(req.params.storeId);
+      res.json(inventory);
+    } catch (error) {
+      console.error("Error fetching inventory:", error);
+      res.status(500).json({ error: "Failed to fetch inventory" });
+    }
+  });
+
+  // Add inventory item
+  app.post("/api/medical-stores/:storeId/inventory", async (req, res) => {
+    try {
+      const item = await databaseStorage.createMedicalStoreInventoryItem({
+        storeId: req.params.storeId,
+        ...req.body,
+      });
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error adding inventory item:", error);
+      res.status(500).json({ error: "Failed to add inventory item" });
+    }
+  });
+
+  // Update inventory item
+  app.patch("/api/medical-stores/inventory/:id", async (req, res) => {
+    try {
+      const item = await databaseStorage.updateMedicalStoreInventoryItem(req.params.id, req.body);
+      if (!item) {
+        return res.status(404).json({ error: "Inventory item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating inventory item:", error);
+      res.status(500).json({ error: "Failed to update inventory item" });
+    }
+  });
 
   const httpServer = createServer(app);
 
