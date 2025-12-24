@@ -48,7 +48,7 @@ interface Notification {
   status?: string;
 }
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE";
 
 interface HMSSidebarProps {
   currentRole: UserRole;
@@ -95,7 +95,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Patient Analytics", url: "/patient-analytics", icon: Activity, roles: ["ADMIN"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
       { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "PATIENT"] },
-      { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] }
+      { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] },
+      { title: "Medical Stores", url: "/medical-stores", icon: Package, roles: ["ADMIN"] }
     ];
 
     // Filter services based on user role
@@ -124,6 +125,9 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
         { title: "My Appointments", url: "/my-appointments", icon: Calendar },
         { title: "Medical History", url: "/my-history", icon: FileText },
         { title: "Test Results", url: "/test-results", icon: Activity }
+      ],
+      MEDICAL_STORE: [
+        { title: "Medical Store Portal", url: "/medical-store-portal", icon: Package }
       ]
     };
 
@@ -139,6 +143,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       case "NURSE": return "secondary";
       case "OPD_MANAGER": return "outline";
       case "PATIENT": return "secondary";
+      case "MEDICAL_STORE": return "default";
       default: return "outline";
     }
   };
@@ -150,6 +155,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       case "NURSE": return "from-emerald-100 via-green-50 to-teal-50 dark:from-emerald-900/40 dark:via-green-800/30 dark:to-teal-900/20";
       case "OPD_MANAGER": return "from-amber-100 via-orange-50 to-yellow-50 dark:from-amber-900/40 dark:via-orange-800/30 dark:to-yellow-900/20";
       case "PATIENT": return "from-teal-100 via-cyan-50 to-sky-50 dark:from-teal-900/40 dark:via-cyan-800/30 dark:to-sky-900/20";
+      case "MEDICAL_STORE": return "from-rose-100 via-pink-50 to-red-50 dark:from-rose-900/40 dark:via-pink-800/30 dark:to-red-900/20";
       default: return "from-slate-100 via-gray-50 to-zinc-50 dark:from-slate-800/40 dark:via-gray-700/30 dark:to-zinc-800/20";
     }
   };

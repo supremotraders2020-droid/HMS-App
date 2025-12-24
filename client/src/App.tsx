@@ -38,8 +38,10 @@ import PrescriptionsPage from "@/pages/PrescriptionsPage";
 import PatientMonitoringPage from "@/pages/PatientMonitoringPage";
 import BedManagementPage from "@/pages/BedManagementPage";
 import BloodBankPage from "@/pages/BloodBankPage";
+import MedicalStoreManagement from "@/pages/MedicalStoreManagement";
+import MedicalStorePortal from "@/pages/MedicalStorePortal";
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE";
 
 interface User {
   id: string;
@@ -253,6 +255,26 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           </div>
         )}
       </Route>
+      <Route path="/medical-stores">
+        {currentUser.role === "ADMIN" ? (
+          <MedicalStoreManagement />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators can access Medical Store Management.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/medical-store-portal">
+        {currentUser.role === "MEDICAL_STORE" ? (
+          <MedicalStorePortal currentUserId={currentUser.id} />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only medical store staff can access this portal.</p>
+          </div>
+        )}
+      </Route>
       <Route path="/patient-analytics">
         {currentUser.role === "ADMIN" ? (
           <InpatientAnalytics />
@@ -411,7 +433,8 @@ function AppContent() {
       DOCTOR: "Dr. Sarah Wilson", 
       NURSE: "Nurse Jennifer Adams",
       OPD_MANAGER: "Mary Johnson",
-      PATIENT: "John Smith"
+      PATIENT: "John Smith",
+      MEDICAL_STORE: "Pharmacy Staff"
     };
     return names[role] || username;
   };
