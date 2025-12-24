@@ -28,7 +28,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format, formatDistanceToNow } from "date-fns";
-import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent, DoctorTimeSlot, PatientBill, DoctorSchedule } from "@shared/schema";
+import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent, DoctorTimeSlot, PatientBill, DoctorSchedule, MedicalStore } from "@shared/schema";
 import { 
   Home,
   Calendar,
@@ -68,7 +68,9 @@ import {
   Utensils,
   AlertTriangle,
   Leaf,
-  Apple
+  Apple,
+  Store,
+  Package
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -153,6 +155,15 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
+  });
+
+  const { data: medicalStores = [] } = useQuery<MedicalStore[]>({
+    queryKey: ["/api/medical-stores"],
+    queryFn: async () => {
+      const response = await fetch("/api/medical-stores");
+      if (!response.ok) return [];
+      return response.json();
+    },
   });
 
   // Fetch service patients to find the one matching this user's email
@@ -696,7 +707,9 @@ Description: ${record.description}
   const navigationItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "opd", label: "Book Appointment", icon: Calendar },
+    { id: "prescriptions", label: "Prescriptions", icon: Pill },
     { id: "records", label: "Health Records", icon: FileText },
+    { id: "medical-stores", label: "Medical Stores", icon: Store },
     { id: "health-guide", label: "Health Guide", icon: BookOpen },
     { id: "admission", label: "Admission", icon: BedDouble },
     { id: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifications },
@@ -2089,6 +2102,236 @@ Description: ${record.description}
                 ))}
               </div>
             )}
+          </div>
+        );
+
+      case "prescriptions":
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold" data-testid="text-prescriptions-title">My Prescriptions</h2>
+              <p className="text-muted-foreground">View and manage your prescriptions</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {patientPrescriptions.length > 0 ? (
+                patientPrescriptions.map((prescription) => (
+                  <Card key={prescription.id} className="hover-elevate" data-testid={`card-prescription-${prescription.id}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-base font-mono">{prescription.prescriptionNumber}</CardTitle>
+                          <CardDescription>
+                            {prescription.createdAt ? format(new Date(prescription.createdAt), "MMM dd, yyyy") : "-"}
+                          </CardDescription>
+                        </div>
+                        <Badge 
+                          className={
+                            prescription.prescriptionStatus === "finalized" 
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" 
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                          }
+                        >
+                          {prescription.prescriptionStatus}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Stethoscope className="h-4 w-4 text-muted-foreground" />
+                        <span>Dr. {prescription.doctorName}</span>
+                      </div>
+                      {prescription.diagnosis && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Diagnosis: </span>
+                          <span>{prescription.diagnosis}</span>
+                        </div>
+                      )}
+                      {prescription.medicines && prescription.medicines.length > 0 && (
+                        <div className="space-y-2">
+                          <span className="text-sm text-muted-foreground">Medicines:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {(prescription.medicines as any[]).slice(0, 3).map((med, idx) => (
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                <Pill className="h-3 w-3 mr-1" />
+                                {med.name || med}
+                              </Badge>
+                            ))}
+                            {(prescription.medicines as any[]).length > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{(prescription.medicines as any[]).length - 3} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <Separator />
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => setActiveSection("medical-stores")}
+                        data-testid={`button-buy-medicines-${prescription.id}`}
+                      >
+                        <Store className="h-4 w-4 mr-2" />
+                        Find Medical Store
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Card className="col-span-full" data-testid="card-no-prescriptions">
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <Pill className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold">No Prescriptions Yet</h3>
+                    <p className="text-muted-foreground mt-2 max-w-sm">
+                      Your prescriptions will appear here after your doctor consultations.
+                    </p>
+                    <Button 
+                      className="mt-4" 
+                      onClick={() => setActiveSection("opd")}
+                      data-testid="button-book-appointment-prescriptions"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Book Appointment
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        );
+
+      case "medical-stores":
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold" data-testid="text-medical-stores-title">Medical Stores</h2>
+              <p className="text-muted-foreground">Find authorized pharmacies to buy your prescribed medicines</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {medicalStores.length > 0 ? (
+                medicalStores.map((store: any) => (
+                  <Card key={store.id} className="hover-elevate" data-testid={`card-store-${store.id}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <Store className="h-5 w-5 text-primary" />
+                            {store.storeName}
+                          </CardTitle>
+                          <CardDescription className="flex items-center gap-1 mt-1">
+                            <MapPin className="h-3 w-3" />
+                            {store.address}
+                          </CardDescription>
+                        </div>
+                        <Badge 
+                          className={
+                            store.storeType === "IN_HOUSE" 
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" 
+                              : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
+                          }
+                        >
+                          {store.storeType === "IN_HOUSE" ? "Hospital Pharmacy" : "Partner Store"}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        {store.phone && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">Phone:</span>
+                            <span>{store.phone}</span>
+                          </div>
+                        )}
+                        {store.operatingHours && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span>{store.operatingHours}</span>
+                          </div>
+                        )}
+                      </div>
+                      {store.storeType === "IN_HOUSE" && (
+                        <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                          <p className="text-sm text-blue-800 dark:text-blue-200">
+                            <CheckCircle className="h-4 w-4 inline mr-2" />
+                            Hospital pharmacy with direct prescription access
+                          </p>
+                        </div>
+                      )}
+                      <Separator />
+                      <div className="flex gap-2">
+                        <Button variant="outline" className="flex-1" data-testid={`button-call-store-${store.id}`}>
+                          Call Store
+                        </Button>
+                        <Button 
+                          className="flex-1"
+                          onClick={() => {
+                            if (store.mapUrl) {
+                              window.open(store.mapUrl, '_blank');
+                            }
+                          }}
+                          data-testid={`button-directions-${store.id}`}
+                        >
+                          <MapPin className="h-4 w-4 mr-2" />
+                          Directions
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Card className="col-span-full" data-testid="card-no-stores">
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                    <Store className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold">No Medical Stores Available</h3>
+                    <p className="text-muted-foreground mt-2 max-w-sm">
+                      Partner medical stores will be displayed here once available.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            <Card data-testid="card-hospital-pharmacy-info">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-primary" />
+                  Hospital Pharmacy Benefits
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Direct Prescription Access</h4>
+                      <p className="text-sm text-muted-foreground">No need to carry paper prescriptions</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                      <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Insurance Integration</h4>
+                      <p className="text-sm text-muted-foreground">Seamless billing with your insurance</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                      <Pill className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Genuine Medicines</h4>
+                      <p className="text-sm text-muted-foreground">Verified quality and authenticity</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         );
 
