@@ -19,7 +19,7 @@ The frontend is built with React 18 and TypeScript, utilizing Radix UI and shadc
 The backend uses Node.js with Express, Drizzle ORM for type-safe database interactions, PostgreSQL (Neon) as the serverless database, bcrypt for password hashing (10 rounds), Express Sessions for authentication, and WebSockets for real-time notifications. OpenAI GPT-4o is integrated for AI services.
 
 ### Feature Specifications
-HMS Core includes 18 core modules, with a strong emphasis on role-based access control for ADMIN, DOCTOR, NURSE, OPD_MANAGER, and PATIENT roles.
+HMS Core includes 19 core modules, with a strong emphasis on role-based access control for ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, and MEDICAL_STORE roles.
 
 Key modules and features include:
 - **Authentication & RBAC**: Session-based authentication, bcrypt hashing, daily Doctor Oath requirement, and role-based UI filtering.
@@ -41,6 +41,7 @@ Key modules and features include:
 - **OT & ICU Swab Contamination Monitoring**: NABH-compliant environmental surveillance with auto-interpretation logic (PASS/ACCEPTABLE/FAIL), CAPA generation, and full audit logging.
 - **Disease Knowledge, Diet & Medication Scheduling**: AI-powered clinical knowledge for pre-seeded diseases (Diabetes Type 2, Hypertension, Tuberculosis, Dengue, Asthma), Indian diet plans, medication schedule templates, and AI-powered personalization using OpenAI GPT-4o, adhering to ICMR/MoHFW guidelines.
 - **AI Intelligence Layer**: Hospital-wide analytics and predictions including Doctor/Nurse/OPD efficiency, Hospital Health Index, Compliance Risk, and predictive analytics for ICU load and oxygen demand using AI Analytics Snapshots and Anomaly Detection.
+- **Medical Store Integration**: Prescription sharing between hospital, patients, and external pharmacies with two store types (IN_HOUSE and THIRD_PARTY), complete prescription dispensing workflow with status tracking (PENDING, PARTIALLY_DISPENSED, FULLY_DISPENSED), billing integration with GST calculation, medicine substitution approval, payment methods (CASH, CARD, UPI, INSURANCE), and full audit logging for compliance.
 
 ### System Design Choices
 - **Role-Based Access Control**: Strict hierarchical permissions for all modules and data.
