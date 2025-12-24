@@ -19,6 +19,7 @@ import {
   patientBills, billPayments, healthTips,
   swabAreaMaster, swabSamplingSiteMaster, swabOrganismMaster, swabCollection, swabLabResults, swabCapaActions, swabAuditLogs,
   diseaseCatalog, dietTemplates, medicationScheduleTemplates, patientDiseaseAssignments, personalizedCarePlans,
+  medicalStores, medicalStoreUsers, medicalStoreInventory, prescriptionDispensing, dispensingItems, medicalStoreAccessLogs, medicalStoreBills,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -72,7 +73,14 @@ import {
   type DietTemplate, type InsertDietTemplate,
   type MedicationScheduleTemplate, type InsertMedicationScheduleTemplate,
   type PatientDiseaseAssignment, type InsertPatientDiseaseAssignment,
-  type PersonalizedCarePlan, type InsertPersonalizedCarePlan
+  type PersonalizedCarePlan, type InsertPersonalizedCarePlan,
+  type MedicalStore, type InsertMedicalStore,
+  type MedicalStoreUser, type InsertMedicalStoreUser,
+  type MedicalStoreInventory, type InsertMedicalStoreInventory,
+  type PrescriptionDispensing, type InsertPrescriptionDispensing,
+  type DispensingItem, type InsertDispensingItem,
+  type MedicalStoreAccessLog, type InsertMedicalStoreAccessLog,
+  type MedicalStoreBill, type InsertMedicalStoreBill
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -3179,6 +3187,136 @@ export class DatabaseStorage implements IStorage {
 
   async updatePersonalizedCarePlan(id: string, updates: Partial<PersonalizedCarePlan>): Promise<PersonalizedCarePlan | undefined> {
     const result = await db.update(personalizedCarePlans).set({ ...updates, updatedAt: new Date() }).where(eq(personalizedCarePlans.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== MEDICAL STORE MANAGEMENT ==========
+  async getAllMedicalStores(): Promise<MedicalStore[]> {
+    return await db.select().from(medicalStores).orderBy(desc(medicalStores.createdAt));
+  }
+
+  async getMedicalStore(id: string): Promise<MedicalStore | undefined> {
+    const result = await db.select().from(medicalStores).where(eq(medicalStores.id, id));
+    return result[0];
+  }
+
+  async getMedicalStoreByCode(code: string): Promise<MedicalStore | undefined> {
+    const result = await db.select().from(medicalStores).where(eq(medicalStores.storeCode, code));
+    return result[0];
+  }
+
+  async createMedicalStore(store: InsertMedicalStore): Promise<MedicalStore> {
+    const result = await db.insert(medicalStores).values(store).returning();
+    return result[0];
+  }
+
+  async updateMedicalStore(id: string, updates: Partial<InsertMedicalStore>): Promise<MedicalStore | undefined> {
+    const result = await db.update(medicalStores).set({ ...updates, updatedAt: new Date() }).where(eq(medicalStores.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteMedicalStore(id: string): Promise<boolean> {
+    const result = await db.delete(medicalStores).where(eq(medicalStores.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== MEDICAL STORE USERS ==========
+  async getMedicalStoreUsersByStore(storeId: string): Promise<MedicalStoreUser[]> {
+    return await db.select().from(medicalStoreUsers).where(eq(medicalStoreUsers.storeId, storeId));
+  }
+
+  async getMedicalStoreUserByUserId(userId: string): Promise<MedicalStoreUser | undefined> {
+    const result = await db.select().from(medicalStoreUsers).where(eq(medicalStoreUsers.userId, userId));
+    return result[0];
+  }
+
+  async createMedicalStoreUser(user: InsertMedicalStoreUser): Promise<MedicalStoreUser> {
+    const result = await db.insert(medicalStoreUsers).values(user).returning();
+    return result[0];
+  }
+
+  async updateMedicalStoreUser(id: string, updates: Partial<InsertMedicalStoreUser>): Promise<MedicalStoreUser | undefined> {
+    const result = await db.update(medicalStoreUsers).set({ ...updates, updatedAt: new Date() }).where(eq(medicalStoreUsers.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== MEDICAL STORE INVENTORY ==========
+  async getMedicalStoreInventory(storeId: string): Promise<MedicalStoreInventory[]> {
+    return await db.select().from(medicalStoreInventory).where(eq(medicalStoreInventory.storeId, storeId)).orderBy(medicalStoreInventory.medicineName);
+  }
+
+  async createMedicalStoreInventoryItem(item: InsertMedicalStoreInventory): Promise<MedicalStoreInventory> {
+    const result = await db.insert(medicalStoreInventory).values(item).returning();
+    return result[0];
+  }
+
+  async updateMedicalStoreInventoryItem(id: string, updates: Partial<InsertMedicalStoreInventory>): Promise<MedicalStoreInventory | undefined> {
+    const result = await db.update(medicalStoreInventory).set({ ...updates, updatedAt: new Date() }).where(eq(medicalStoreInventory.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== PRESCRIPTION DISPENSING ==========
+  async getAllPrescriptionDispensing(): Promise<PrescriptionDispensing[]> {
+    return await db.select().from(prescriptionDispensing).orderBy(desc(prescriptionDispensing.createdAt));
+  }
+
+  async getPrescriptionDispensingByStore(storeId: string): Promise<PrescriptionDispensing[]> {
+    return await db.select().from(prescriptionDispensing).where(eq(prescriptionDispensing.storeId, storeId)).orderBy(desc(prescriptionDispensing.createdAt));
+  }
+
+  async getPrescriptionDispensingByPrescription(prescriptionId: string): Promise<PrescriptionDispensing[]> {
+    return await db.select().from(prescriptionDispensing).where(eq(prescriptionDispensing.prescriptionId, prescriptionId));
+  }
+
+  async createPrescriptionDispensing(dispensing: InsertPrescriptionDispensing): Promise<PrescriptionDispensing> {
+    const result = await db.insert(prescriptionDispensing).values(dispensing).returning();
+    return result[0];
+  }
+
+  async updatePrescriptionDispensing(id: string, updates: Partial<InsertPrescriptionDispensing>): Promise<PrescriptionDispensing | undefined> {
+    const result = await db.update(prescriptionDispensing).set({ ...updates, updatedAt: new Date() }).where(eq(prescriptionDispensing.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== DISPENSING ITEMS ==========
+  async getDispensingItemsByDispensing(dispensingId: string): Promise<DispensingItem[]> {
+    return await db.select().from(dispensingItems).where(eq(dispensingItems.dispensingId, dispensingId));
+  }
+
+  async createDispensingItem(item: InsertDispensingItem): Promise<DispensingItem> {
+    const result = await db.insert(dispensingItems).values(item).returning();
+    return result[0];
+  }
+
+  // ========== MEDICAL STORE BILLS ==========
+  async getAllMedicalStoreBills(): Promise<MedicalStoreBill[]> {
+    return await db.select().from(medicalStoreBills).orderBy(desc(medicalStoreBills.createdAt));
+  }
+
+  async getMedicalStoreBillsByStore(storeId: string): Promise<MedicalStoreBill[]> {
+    return await db.select().from(medicalStoreBills).where(eq(medicalStoreBills.storeId, storeId)).orderBy(desc(medicalStoreBills.createdAt));
+  }
+
+  async createMedicalStoreBill(bill: InsertMedicalStoreBill): Promise<MedicalStoreBill> {
+    const result = await db.insert(medicalStoreBills).values(bill).returning();
+    return result[0];
+  }
+
+  async updateMedicalStoreBill(id: string, updates: Partial<InsertMedicalStoreBill>): Promise<MedicalStoreBill | undefined> {
+    const result = await db.update(medicalStoreBills).set({ ...updates, updatedAt: new Date() }).where(eq(medicalStoreBills.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== MEDICAL STORE ACCESS LOGS ==========
+  async getMedicalStoreAccessLogs(storeId?: string): Promise<MedicalStoreAccessLog[]> {
+    if (storeId) {
+      return await db.select().from(medicalStoreAccessLogs).where(eq(medicalStoreAccessLogs.storeId, storeId)).orderBy(desc(medicalStoreAccessLogs.timestamp));
+    }
+    return await db.select().from(medicalStoreAccessLogs).orderBy(desc(medicalStoreAccessLogs.timestamp));
+  }
+
+  async createMedicalStoreAccessLog(log: InsertMedicalStoreAccessLog): Promise<MedicalStoreAccessLog> {
+    const result = await db.insert(medicalStoreAccessLogs).values(log).returning();
     return result[0];
   }
 }

@@ -388,6 +388,46 @@ export interface IStorage {
   getPersonalizedCarePlanByAssignment(assignmentId: string): Promise<PersonalizedCarePlan | undefined>;
   createPersonalizedCarePlan(plan: InsertPersonalizedCarePlan): Promise<PersonalizedCarePlan>;
   updatePersonalizedCarePlan(id: string, updates: Partial<PersonalizedCarePlan>): Promise<PersonalizedCarePlan | undefined>;
+  
+  // Medical Store Management
+  getAllMedicalStores(): Promise<any[]>;
+  getMedicalStore(id: string): Promise<any | undefined>;
+  getMedicalStoreByCode(code: string): Promise<any | undefined>;
+  createMedicalStore(store: any): Promise<any>;
+  updateMedicalStore(id: string, updates: any): Promise<any | undefined>;
+  deleteMedicalStore(id: string): Promise<boolean>;
+  
+  // Medical Store Users
+  getMedicalStoreUsersByStore(storeId: string): Promise<any[]>;
+  getMedicalStoreUserByUserId(userId: string): Promise<any | undefined>;
+  createMedicalStoreUser(user: any): Promise<any>;
+  updateMedicalStoreUser(id: string, updates: any): Promise<any | undefined>;
+  
+  // Medical Store Inventory
+  getMedicalStoreInventory(storeId: string): Promise<any[]>;
+  createMedicalStoreInventoryItem(item: any): Promise<any>;
+  updateMedicalStoreInventoryItem(id: string, updates: any): Promise<any | undefined>;
+  
+  // Prescription Dispensing
+  getAllPrescriptionDispensing(): Promise<any[]>;
+  getPrescriptionDispensingByStore(storeId: string): Promise<any[]>;
+  getPrescriptionDispensingByPrescription(prescriptionId: string): Promise<any[]>;
+  createPrescriptionDispensing(dispensing: any): Promise<any>;
+  updatePrescriptionDispensing(id: string, updates: any): Promise<any | undefined>;
+  
+  // Dispensing Items
+  getDispensingItemsByDispensing(dispensingId: string): Promise<any[]>;
+  createDispensingItem(item: any): Promise<any>;
+  
+  // Medical Store Bills
+  getAllMedicalStoreBills(): Promise<any[]>;
+  getMedicalStoreBillsByStore(storeId: string): Promise<any[]>;
+  createMedicalStoreBill(bill: any): Promise<any>;
+  updateMedicalStoreBill(id: string, updates: any): Promise<any | undefined>;
+  
+  // Medical Store Access Logs
+  getMedicalStoreAccessLogs(storeId?: string): Promise<any[]>;
+  createMedicalStoreAccessLog(log: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
