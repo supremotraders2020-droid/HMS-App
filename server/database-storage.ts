@@ -1425,6 +1425,20 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(prescriptions).where(eq(prescriptions.patientName, patientName)).orderBy(desc(prescriptions.createdAt));
   }
 
+  async getPrescriptionsByPatientFlexible(patientName: string): Promise<Prescription[]> {
+    // Normalize the search name: trim, lowercase, collapse multiple spaces
+    const normalizedSearch = patientName.trim().toLowerCase().replace(/\s+/g, ' ');
+    
+    // Get all prescriptions and filter with normalized matching
+    const allPrescriptions = await db.select().from(prescriptions).orderBy(desc(prescriptions.createdAt));
+    
+    return allPrescriptions.filter(rx => {
+      if (!rx.patientName) return false;
+      const normalizedPatientName = rx.patientName.trim().toLowerCase().replace(/\s+/g, ' ');
+      return normalizedPatientName === normalizedSearch;
+    });
+  }
+
   async getPrescription(id: string): Promise<Prescription | undefined> {
     const result = await db.select().from(prescriptions).where(eq(prescriptions.id, id));
     return result[0];

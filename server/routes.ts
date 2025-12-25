@@ -2154,10 +2154,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get prescriptions by patient name
+  // Get prescriptions by patient name (with flexible matching for spacing/case)
   app.get("/api/prescriptions/patient/:patientName", async (req, res) => {
     try {
-      const prescriptions = await storage.getPrescriptionsByPatient(decodeURIComponent(req.params.patientName));
+      const patientName = decodeURIComponent(req.params.patientName);
+      const prescriptions = await storage.getPrescriptionsByPatientFlexible(patientName);
       res.json(prescriptions);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch patient prescriptions" });

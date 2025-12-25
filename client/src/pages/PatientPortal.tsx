@@ -309,9 +309,9 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     enabled: true
   });
 
-  // Fetch prescriptions for this patient
+  // Fetch prescriptions for this patient by name with flexible matching
   const { data: patientPrescriptions = [] } = useQuery<Prescription[]>({
-    queryKey: ['/api/prescriptions/patient', encodeURIComponent(patientName)],
+    queryKey: [`/api/prescriptions/patient/${encodeURIComponent(patientName)}`],
     refetchInterval: 3000, // Real-time sync
   });
 
