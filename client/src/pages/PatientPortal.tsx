@@ -342,6 +342,12 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     queryKey: ['/api/medication-schedules'],
   });
 
+  // Fetch lab reports for this patient
+  const { data: labReports = [], isLoading: labReportsLoading } = useQuery<any[]>({
+    queryKey: [`/api/lab-reports/patient/${username}`],
+    refetchInterval: 5000,
+  });
+
   // State for Health Guide section
   const [selectedDisease, setSelectedDisease] = useState<any | null>(null);
   const [diseaseSearchQuery, setDiseaseSearchQuery] = useState("");
@@ -708,6 +714,7 @@ Description: ${record.description}
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "opd", label: "Book Appointment", icon: Calendar },
     { id: "prescriptions", label: "Prescriptions", icon: Pill },
+    { id: "lab-reports", label: "Lab Reports", icon: TestTube },
     { id: "records", label: "Health Records", icon: FileText },
     { id: "medical-stores", label: "Medical Stores", icon: Store },
     { id: "health-guide", label: "Health Guide", icon: BookOpen },
@@ -2198,6 +2205,175 @@ Description: ${record.description}
                 </Card>
               )}
             </div>
+          </div>
+        );
+
+      case "lab-reports":
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold" data-testid="text-lab-reports-title">My Lab Reports</h2>
+              <p className="text-muted-foreground">View your pathology test results and lab reports</p>
+            </div>
+
+            {labReportsLoading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardHeader className="pb-3">
+                      <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+                      <div className="h-3 bg-muted rounded w-1/2" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="h-3 bg-muted rounded" />
+                        <div className="h-3 bg-muted rounded w-2/3" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : labReports.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {labReports.map((report: any) => (
+                  <Card key={report.id} className="hover-elevate" data-testid={`card-lab-report-${report.id}`}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-base font-mono flex items-center gap-2">
+                            <TestTube className="h-4 w-4 text-blue-500" />
+                            {report.reportNumber}
+                          </CardTitle>
+                          <CardDescription>
+                            {report.reportDate ? format(new Date(report.reportDate), "MMM dd, yyyy") : "-"}
+                          </CardDescription>
+                        </div>
+                        <Badge 
+                          className={
+                            report.reportStatus === "VERIFIED"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                              : report.reportStatus === "COMPLETED"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                              : report.reportStatus === "IN_PROGRESS"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                          }
+                        >
+                          {report.reportStatus}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{report.testName || "Lab Test"}</span>
+                        </div>
+                        {report.labName && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Building2 className="h-4 w-4" />
+                            <span>{report.labName}</span>
+                          </div>
+                        )}
+                        {report.doctorName && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Stethoscope className="h-4 w-4" />
+                            <span>Ordered by Dr. {report.doctorName}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {report.reportSummary && (
+                        <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                          <p className="text-sm text-blue-800 dark:text-blue-200">
+                            <strong>Summary:</strong> {report.reportSummary}
+                          </p>
+                        </div>
+                      )}
+
+                      {report.criticalFlags && (
+                        <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                          <p className="text-sm text-red-800 dark:text-red-200 flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            <strong>Critical:</strong> {report.criticalFlags}
+                          </p>
+                        </div>
+                      )}
+
+                      <Separator />
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => {
+                            const content = `
+Lab Report: ${report.reportNumber}
+Date: ${report.reportDate ? format(new Date(report.reportDate), "MMM dd, yyyy") : "-"}
+Test: ${report.testName || "Lab Test"}
+Lab: ${report.labName || "N/A"}
+Status: ${report.reportStatus}
+
+Summary: ${report.reportSummary || "N/A"}
+${report.criticalFlags ? `\nCritical Notes: ${report.criticalFlags}` : ""}
+                            `.trim();
+                            const blob = new Blob([content], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `${report.reportNumber || 'lab-report'}.txt`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
+                            toast({
+                              title: "Download Started",
+                              description: `Downloading ${report.reportNumber}`,
+                            });
+                          }}
+                          data-testid={`button-download-report-${report.id}`}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => {
+                            toast({
+                              title: "Report Details",
+                              description: report.reportSummary || "Full report details available on request.",
+                            });
+                          }}
+                          data-testid={`button-view-report-${report.id}`}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="col-span-full" data-testid="card-no-lab-reports">
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <TestTube className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold">No Lab Reports Yet</h3>
+                  <p className="text-muted-foreground mt-2 max-w-sm">
+                    Your lab test results will appear here once your doctor orders tests and the lab uploads reports.
+                  </p>
+                  <Button 
+                    className="mt-4" 
+                    onClick={() => setActiveSection("opd")}
+                    data-testid="button-book-appointment-lab"
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Book Appointment
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
 
