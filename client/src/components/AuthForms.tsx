@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserPlus, LogIn } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface AuthFormsProps {
   onLogin?: (username: string, password: string, role: UserRole) => void;
@@ -33,7 +33,9 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
     { value: "DOCTOR", label: "Doctor", description: "Patient care & diagnosis" },
     { value: "NURSE", label: "Nurse", description: "Patient care & monitoring" },
     { value: "OPD_MANAGER", label: "OPD Manager", description: "Outpatient department" },
-    { value: "PATIENT", label: "Patient", description: "Personal health records" }
+    { value: "PATIENT", label: "Patient", description: "Personal health records" },
+    { value: "MEDICAL_STORE", label: "Medical Store", description: "Pharmacy & dispensing" },
+    { value: "PATHOLOGY_LAB", label: "Pathology Lab", description: "Lab tests & reports" }
   ];
   
   // Only PATIENT role is allowed for self-registration

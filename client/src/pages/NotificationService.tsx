@@ -104,7 +104,7 @@ function getChannelIcon(channel: string) {
   }
 }
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface NotificationServiceProps {
   currentRole?: UserRole;

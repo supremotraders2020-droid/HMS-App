@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import type { ActivityLog, Appointment, ServicePatient } from "@shared/schema";
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface HMSDashboardProps {
   currentRole: UserRole;
@@ -165,6 +165,18 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
         { title: "Test Results", value: "3", change: "+1", icon: FileText, urgent: false },
         { title: "Prescriptions", value: "2", change: "0", icon: HeartPulse, urgent: false },
         { title: "Follow-ups Due", value: "1", change: "+1", icon: Clock, urgent: true }
+      ],
+      MEDICAL_STORE: [
+        { title: "Pending Orders", value: "15", change: "+3", icon: FileText, urgent: false },
+        { title: "Low Stock Items", value: "5", change: "+2", icon: AlertTriangle, urgent: true },
+        { title: "Dispensed Today", value: "28", change: "+5", icon: TrendingUp, urgent: false },
+        { title: "Revenue Today", value: "Rs. 12.5K", change: "+8%", icon: BarChart3, urgent: false }
+      ],
+      PATHOLOGY_LAB: [
+        { title: "Pending Tests", value: "12", change: "+2", icon: FileText, urgent: false },
+        { title: "Reports Uploaded", value: "34", change: "+5", icon: TrendingUp, urgent: false },
+        { title: "Critical Results", value: "2", change: "+1", icon: AlertTriangle, urgent: true },
+        { title: "Samples Collected", value: "18", change: "+3", icon: Activity, urgent: false }
       ]
     };
 
@@ -200,6 +212,8 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
       case "NURSE": return "from-emerald-500/25 to-green-600/15";
       case "OPD_MANAGER": return "from-amber-500/25 to-orange-600/15";
       case "PATIENT": return "from-teal-500/25 to-cyan-600/15";
+      case "MEDICAL_STORE": return "from-rose-500/25 to-pink-600/15";
+      case "PATHOLOGY_LAB": return "from-indigo-500/25 to-blue-600/15";
       default: return "from-slate-500/25 to-gray-600/15";
     }
   };

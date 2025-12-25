@@ -40,8 +40,9 @@ import BedManagementPage from "@/pages/BedManagementPage";
 import BloodBankPage from "@/pages/BloodBankPage";
 import MedicalStoreManagement from "@/pages/MedicalStoreManagement";
 import MedicalStorePortal from "@/pages/MedicalStorePortal";
+import PathologyLabPortal from "@/pages/PathologyLabPortal";
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface User {
   id: string;
@@ -275,6 +276,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           </div>
         )}
       </Route>
+      <Route path="/pathology-lab-portal">
+        {currentUser.role === "PATHOLOGY_LAB" ? (
+          <PathologyLabPortal currentUserId={currentUser.id} currentUserName={currentUser.name} />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only pathology lab staff can access this portal.</p>
+          </div>
+        )}
+      </Route>
       <Route path="/patient-analytics">
         {currentUser.role === "ADMIN" ? (
           <InpatientAnalytics />
@@ -434,7 +445,8 @@ function AppContent() {
       NURSE: "Nurse Jennifer Adams",
       OPD_MANAGER: "Mary Johnson",
       PATIENT: "John Smith",
-      MEDICAL_STORE: "Pharmacy Staff"
+      MEDICAL_STORE: "Pharmacy Staff",
+      PATHOLOGY_LAB: "Lab Technician"
     };
     return names[role] || username;
   };

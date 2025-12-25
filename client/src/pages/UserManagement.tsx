@@ -34,14 +34,16 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { HospitalTeamMember } from "@shared/schema";
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 const roleToTitle: Record<UserRole, string> = {
   DOCTOR: "Doctor",
   NURSE: "Nurse",
   OPD_MANAGER: "OPD Manager",
   ADMIN: "Administrator",
-  PATIENT: "Patient"
+  PATIENT: "Patient",
+  MEDICAL_STORE: "Medical Store Staff",
+  PATHOLOGY_LAB: "Lab Technician"
 };
 
 const titleToRole = (title: string): UserRole => {

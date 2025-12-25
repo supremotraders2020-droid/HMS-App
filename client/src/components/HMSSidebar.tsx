@@ -48,7 +48,7 @@ interface Notification {
   status?: string;
 }
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface HMSSidebarProps {
   currentRole: UserRole;
@@ -128,6 +128,9 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       ],
       MEDICAL_STORE: [
         { title: "Medical Store Portal", url: "/medical-store-portal", icon: Package }
+      ],
+      PATHOLOGY_LAB: [
+        { title: "Lab Portal", url: "/pathology-lab-portal", icon: FlaskConical }
       ]
     };
 
@@ -144,6 +147,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       case "OPD_MANAGER": return "outline";
       case "PATIENT": return "secondary";
       case "MEDICAL_STORE": return "default";
+      case "PATHOLOGY_LAB": return "secondary";
       default: return "outline";
     }
   };
@@ -156,6 +160,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       case "OPD_MANAGER": return "from-amber-100 via-orange-50 to-yellow-50 dark:from-amber-900/40 dark:via-orange-800/30 dark:to-yellow-900/20";
       case "PATIENT": return "from-teal-100 via-cyan-50 to-sky-50 dark:from-teal-900/40 dark:via-cyan-800/30 dark:to-sky-900/20";
       case "MEDICAL_STORE": return "from-rose-100 via-pink-50 to-red-50 dark:from-rose-900/40 dark:via-pink-800/30 dark:to-red-900/20";
+      case "PATHOLOGY_LAB": return "from-indigo-100 via-blue-50 to-violet-50 dark:from-indigo-900/40 dark:via-blue-800/30 dark:to-violet-900/20";
       default: return "from-slate-100 via-gray-50 to-zinc-50 dark:from-slate-800/40 dark:via-gray-700/30 dark:to-zinc-800/20";
     }
   };

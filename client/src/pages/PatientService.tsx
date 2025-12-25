@@ -72,7 +72,7 @@ const medicalRecordFormSchema = insertMedicalRecordSchema.extend({
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface PatientServiceProps {
   currentRole?: UserRole;
