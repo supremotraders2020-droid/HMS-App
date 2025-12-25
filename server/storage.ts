@@ -428,6 +428,57 @@ export interface IStorage {
   // Medical Store Access Logs
   getMedicalStoreAccessLogs(storeId?: string): Promise<any[]>;
   createMedicalStoreAccessLog(log: any): Promise<any>;
+
+  // ==================== PATHOLOGY LAB MODULE ====================
+  
+  // Pathology Labs
+  getAllPathologyLabs(): Promise<any[]>;
+  getPathologyLab(id: string): Promise<any | undefined>;
+  getPathologyLabByCode(code: string): Promise<any | undefined>;
+  createPathologyLab(lab: any): Promise<any>;
+  updatePathologyLab(id: string, updates: any): Promise<any | undefined>;
+  deletePathologyLab(id: string): Promise<boolean>;
+  
+  // Lab Test Catalog
+  getAllLabTests(): Promise<any[]>;
+  getLabTest(id: string): Promise<any | undefined>;
+  getLabTestByCode(code: string): Promise<any | undefined>;
+  createLabTest(test: any): Promise<any>;
+  updateLabTest(id: string, updates: any): Promise<any | undefined>;
+  deleteLabTest(id: string): Promise<boolean>;
+  
+  // Lab Test Orders
+  getAllLabTestOrders(): Promise<any[]>;
+  getLabTestOrder(id: string): Promise<any | undefined>;
+  getLabTestOrdersByPatient(patientId: string): Promise<any[]>;
+  getLabTestOrdersByDoctor(doctorId: string): Promise<any[]>;
+  getLabTestOrdersByLab(labId: string): Promise<any[]>;
+  createLabTestOrder(order: any): Promise<any>;
+  updateLabTestOrder(id: string, updates: any): Promise<any | undefined>;
+  
+  // Sample Collections
+  getAllSampleCollections(): Promise<any[]>;
+  getSampleCollection(id: string): Promise<any | undefined>;
+  getSampleCollectionsByOrder(orderId: string): Promise<any[]>;
+  createSampleCollection(sample: any): Promise<any>;
+  updateSampleCollection(id: string, updates: any): Promise<any | undefined>;
+  
+  // Lab Reports
+  getAllLabReports(): Promise<any[]>;
+  getLabReport(id: string): Promise<any | undefined>;
+  getLabReportsByPatient(patientId: string): Promise<any[]>;
+  getLabReportsByDoctor(doctorId: string): Promise<any[]>;
+  getLabReportsByLab(labId: string): Promise<any[]>;
+  createLabReport(report: any): Promise<any>;
+  updateLabReport(id: string, updates: any): Promise<any | undefined>;
+  
+  // Lab Report Results
+  getLabReportResults(reportId: string): Promise<any[]>;
+  createLabReportResult(result: any): Promise<any>;
+  
+  // Pathology Lab Access Logs
+  getPathologyLabAccessLogs(labId?: string): Promise<any[]>;
+  createPathologyLabAccessLog(log: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {

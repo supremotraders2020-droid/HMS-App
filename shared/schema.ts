@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // User Role Enum
-export const userRoleEnum = pgEnum("user_role", ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE"]);
+export const userRoleEnum = pgEnum("user_role", ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"]);
 
 // Inventory Enums
 export const inventoryCategoryEnum = pgEnum("inventory_category", ["disposables", "syringes", "gloves", "medicines", "equipment"]);
@@ -21,7 +21,7 @@ export const users = pgTable("users", {
   dateOfBirth: text("date_of_birth"),
 });
 
-const validRoles = ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE"] as const;
+const validRoles = ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"] as const;
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -3018,3 +3018,208 @@ export const insertMedicalStoreBillSchema = createInsertSchema(medicalStoreBills
 });
 export type InsertMedicalStoreBill = z.infer<typeof insertMedicalStoreBillSchema>;
 export type MedicalStoreBill = typeof medicalStoreBills.$inferSelect;
+
+// ==================== PATHOLOGY LAB MODULE ====================
+
+// Pathology Lab Types Enum
+export const labTypeEnum = pgEnum("lab_type", ["IN_HOUSE", "THIRD_PARTY"]);
+export const sampleStatusEnum = pgEnum("sample_status", ["COLLECTED", "IN_TRANSIT", "RECEIVED", "REJECTED", "PROCESSED"]);
+export const reportStatusEnum = pgEnum("report_status", ["PENDING", "IN_PROGRESS", "COMPLETED", "VERIFIED"]);
+
+// Pathology Labs - registered labs (in-house and third-party)
+export const pathologyLabs = pgTable("pathology_labs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  labName: text("lab_name").notNull(),
+  labCode: text("lab_code").notNull().unique(),
+  labType: text("lab_type").notNull().default("IN_HOUSE"), // IN_HOUSE, THIRD_PARTY
+  address: text("address"),
+  phone: text("phone"),
+  email: text("email"),
+  licenseNumber: text("license_number"),
+  accreditation: text("accreditation"), // NABL, CAP, etc.
+  operatingHours: text("operating_hours"),
+  contactPerson: text("contact_person"),
+  isActive: boolean("is_active").default(true),
+  canAccessFullRecords: boolean("can_access_full_records").default(false), // Only in-house labs
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPathologyLabSchema = createInsertSchema(pathologyLabs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPathologyLab = z.infer<typeof insertPathologyLabSchema>;
+export type PathologyLab = typeof pathologyLabs.$inferSelect;
+
+// Lab Test Catalog - master list of all available tests
+export const labTestCatalog = pgTable("lab_test_catalog", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  testCode: text("test_code").notNull().unique(),
+  testName: text("test_name").notNull(),
+  testCategory: text("test_category").notNull(), // Blood, Urine, Imaging, Biopsy, etc.
+  sampleType: text("sample_type").notNull(), // Blood, Serum, Urine, Stool, etc.
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  turnaroundTime: text("turnaround_time"), // e.g., "24 hours", "2-3 days"
+  normalRange: text("normal_range"), // Reference range as text/JSON
+  instructions: text("instructions"), // Patient preparation instructions
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLabTestCatalogSchema = createInsertSchema(labTestCatalog).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLabTestCatalog = z.infer<typeof insertLabTestCatalogSchema>;
+export type LabTestCatalog = typeof labTestCatalog.$inferSelect;
+
+// Lab Test Orders - orders placed by doctors
+export const labTestOrders = pgTable("lab_test_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderNumber: text("order_number").notNull().unique(), // LAB-2025-001
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientUhid: text("patient_uhid"), // Unique Hospital ID
+  patientAge: text("patient_age"),
+  patientGender: text("patient_gender"),
+  doctorId: varchar("doctor_id").notNull(),
+  doctorName: text("doctor_name").notNull(),
+  testId: varchar("test_id").notNull(),
+  testName: text("test_name").notNull(),
+  testCode: text("test_code"),
+  assignedLabId: varchar("assigned_lab_id"),
+  assignedLabName: text("assigned_lab_name"),
+  priority: text("priority").default("NORMAL"), // NORMAL, URGENT, CRITICAL
+  clinicalNotes: text("clinical_notes"),
+  orderStatus: text("order_status").default("PENDING"), // PENDING, ASSIGNED, SAMPLE_COLLECTED, IN_PROGRESS, COMPLETED
+  orderedAt: timestamp("ordered_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLabTestOrderSchema = createInsertSchema(labTestOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLabTestOrder = z.infer<typeof insertLabTestOrderSchema>;
+export type LabTestOrder = typeof labTestOrders.$inferSelect;
+
+// Sample Collection Tracking
+export const sampleCollections = pgTable("sample_collections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull(),
+  orderNumber: text("order_number").notNull(),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  testName: text("test_name").notNull(),
+  sampleType: text("sample_type").notNull(),
+  collectorName: text("collector_name").notNull(),
+  collectorId: varchar("collector_id"),
+  collectionLocation: text("collection_location"), // Ward, OPD, Home
+  collectionDate: timestamp("collection_date").defaultNow(),
+  sampleStatus: text("sample_status").default("COLLECTED"), // COLLECTED, IN_TRANSIT, RECEIVED, REJECTED, PROCESSED
+  rejectionReason: text("rejection_reason"),
+  receivedAt: timestamp("received_at"),
+  receivedBy: text("received_by"),
+  processedAt: timestamp("processed_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSampleCollectionSchema = createInsertSchema(sampleCollections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSampleCollection = z.infer<typeof insertSampleCollectionSchema>;
+export type SampleCollection = typeof sampleCollections.$inferSelect;
+
+// Lab Reports - uploaded reports
+export const labReports = pgTable("lab_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportNumber: text("report_number").notNull().unique(), // RPT-2025-001
+  orderId: varchar("order_id").notNull(),
+  orderNumber: text("order_number").notNull(),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientUhid: text("patient_uhid"),
+  doctorId: varchar("doctor_id").notNull(),
+  doctorName: text("doctor_name").notNull(),
+  labId: varchar("lab_id").notNull(),
+  labName: text("lab_name").notNull(),
+  testId: varchar("test_id").notNull(),
+  testName: text("test_name").notNull(),
+  testCategory: text("test_category"),
+  reportDate: timestamp("report_date").defaultNow(),
+  reportStatus: text("report_status").default("PENDING"), // PENDING, IN_PROGRESS, COMPLETED, VERIFIED
+  reportType: text("report_type").default("STRUCTURED"), // PDF, STRUCTURED
+  pdfUrl: text("pdf_url"), // URL to uploaded PDF
+  resultData: text("result_data"), // JSON with structured test results
+  interpretation: text("interpretation"), // Normal, Abnormal, Critical
+  remarks: text("remarks"),
+  verifiedBy: text("verified_by"),
+  verifiedAt: timestamp("verified_at"),
+  isNotified: boolean("is_notified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLabReportSchema = createInsertSchema(labReports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLabReport = z.infer<typeof insertLabReportSchema>;
+export type LabReport = typeof labReports.$inferSelect;
+
+// Lab Report Results - individual test parameters within a report
+export const labReportResults = pgTable("lab_report_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportId: varchar("report_id").notNull(),
+  parameterName: text("parameter_name").notNull(),
+  value: text("value").notNull(),
+  unit: text("unit"),
+  normalRange: text("normal_range"),
+  flag: text("flag"), // NORMAL, LOW, HIGH, CRITICAL
+  remarks: text("remarks"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertLabReportResultSchema = createInsertSchema(labReportResults).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertLabReportResult = z.infer<typeof insertLabReportResultSchema>;
+export type LabReportResult = typeof labReportResults.$inferSelect;
+
+// Pathology Lab Access Logs - audit trail
+export const pathologyLabAccessLogs = pgTable("pathology_lab_access_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  labId: varchar("lab_id").notNull(),
+  labName: text("lab_name").notNull(),
+  userId: varchar("user_id").notNull(),
+  userName: text("user_name").notNull(),
+  userRole: text("user_role").notNull(),
+  action: text("action").notNull(), // LOGIN, LOGOUT, REPORT_VIEW, REPORT_UPLOAD, SAMPLE_UPDATE
+  reportId: varchar("report_id"),
+  patientId: varchar("patient_id"),
+  patientName: text("patient_name"),
+  details: text("details"),
+  ipAddress: text("ip_address"),
+  deviceInfo: text("device_info"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertPathologyLabAccessLogSchema = createInsertSchema(pathologyLabAccessLogs).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertPathologyLabAccessLog = z.infer<typeof insertPathologyLabAccessLogSchema>;
+export type PathologyLabAccessLog = typeof pathologyLabAccessLogs.$inferSelect;

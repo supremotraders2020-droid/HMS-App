@@ -20,6 +20,7 @@ import {
   swabAreaMaster, swabSamplingSiteMaster, swabOrganismMaster, swabCollection, swabLabResults, swabCapaActions, swabAuditLogs,
   diseaseCatalog, dietTemplates, medicationScheduleTemplates, patientDiseaseAssignments, personalizedCarePlans,
   medicalStores, medicalStoreUsers, medicalStoreInventory, prescriptionDispensing, dispensingItems, medicalStoreAccessLogs, medicalStoreBills,
+  pathologyLabs, labTestCatalog, labTestOrders, sampleCollections, labReports, labReportResults, pathologyLabAccessLogs,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -80,7 +81,14 @@ import {
   type PrescriptionDispensing, type InsertPrescriptionDispensing,
   type DispensingItem, type InsertDispensingItem,
   type MedicalStoreAccessLog, type InsertMedicalStoreAccessLog,
-  type MedicalStoreBill, type InsertMedicalStoreBill
+  type MedicalStoreBill, type InsertMedicalStoreBill,
+  type PathologyLab, type InsertPathologyLab,
+  type LabTestCatalog, type InsertLabTestCatalog,
+  type LabTestOrder, type InsertLabTestOrder,
+  type SampleCollection, type InsertSampleCollection,
+  type LabReport, type InsertLabReport,
+  type LabReportResult, type InsertLabReportResult,
+  type PathologyLabAccessLog, type InsertPathologyLabAccessLog
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -3317,6 +3325,179 @@ export class DatabaseStorage implements IStorage {
 
   async createMedicalStoreAccessLog(log: InsertMedicalStoreAccessLog): Promise<MedicalStoreAccessLog> {
     const result = await db.insert(medicalStoreAccessLogs).values(log).returning();
+    return result[0];
+  }
+
+  // ==================== PATHOLOGY LAB MODULE ====================
+
+  // ========== PATHOLOGY LABS ==========
+  async getAllPathologyLabs(): Promise<PathologyLab[]> {
+    return await db.select().from(pathologyLabs).orderBy(desc(pathologyLabs.createdAt));
+  }
+
+  async getPathologyLab(id: string): Promise<PathologyLab | undefined> {
+    const result = await db.select().from(pathologyLabs).where(eq(pathologyLabs.id, id));
+    return result[0];
+  }
+
+  async getPathologyLabByCode(code: string): Promise<PathologyLab | undefined> {
+    const result = await db.select().from(pathologyLabs).where(eq(pathologyLabs.labCode, code));
+    return result[0];
+  }
+
+  async createPathologyLab(lab: InsertPathologyLab): Promise<PathologyLab> {
+    const result = await db.insert(pathologyLabs).values(lab).returning();
+    return result[0];
+  }
+
+  async updatePathologyLab(id: string, updates: Partial<InsertPathologyLab>): Promise<PathologyLab | undefined> {
+    const result = await db.update(pathologyLabs).set({ ...updates, updatedAt: new Date() }).where(eq(pathologyLabs.id, id)).returning();
+    return result[0];
+  }
+
+  async deletePathologyLab(id: string): Promise<boolean> {
+    const result = await db.delete(pathologyLabs).where(eq(pathologyLabs.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== LAB TEST CATALOG ==========
+  async getAllLabTests(): Promise<LabTestCatalog[]> {
+    return await db.select().from(labTestCatalog).orderBy(labTestCatalog.testName);
+  }
+
+  async getLabTest(id: string): Promise<LabTestCatalog | undefined> {
+    const result = await db.select().from(labTestCatalog).where(eq(labTestCatalog.id, id));
+    return result[0];
+  }
+
+  async getLabTestByCode(code: string): Promise<LabTestCatalog | undefined> {
+    const result = await db.select().from(labTestCatalog).where(eq(labTestCatalog.testCode, code));
+    return result[0];
+  }
+
+  async createLabTest(test: InsertLabTestCatalog): Promise<LabTestCatalog> {
+    const result = await db.insert(labTestCatalog).values(test).returning();
+    return result[0];
+  }
+
+  async updateLabTest(id: string, updates: Partial<InsertLabTestCatalog>): Promise<LabTestCatalog | undefined> {
+    const result = await db.update(labTestCatalog).set({ ...updates, updatedAt: new Date() }).where(eq(labTestCatalog.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteLabTest(id: string): Promise<boolean> {
+    const result = await db.delete(labTestCatalog).where(eq(labTestCatalog.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== LAB TEST ORDERS ==========
+  async getAllLabTestOrders(): Promise<LabTestOrder[]> {
+    return await db.select().from(labTestOrders).orderBy(desc(labTestOrders.createdAt));
+  }
+
+  async getLabTestOrder(id: string): Promise<LabTestOrder | undefined> {
+    const result = await db.select().from(labTestOrders).where(eq(labTestOrders.id, id));
+    return result[0];
+  }
+
+  async getLabTestOrdersByPatient(patientId: string): Promise<LabTestOrder[]> {
+    return await db.select().from(labTestOrders).where(eq(labTestOrders.patientId, patientId)).orderBy(desc(labTestOrders.createdAt));
+  }
+
+  async getLabTestOrdersByDoctor(doctorId: string): Promise<LabTestOrder[]> {
+    return await db.select().from(labTestOrders).where(eq(labTestOrders.doctorId, doctorId)).orderBy(desc(labTestOrders.createdAt));
+  }
+
+  async getLabTestOrdersByLab(labId: string): Promise<LabTestOrder[]> {
+    return await db.select().from(labTestOrders).where(eq(labTestOrders.assignedLabId, labId)).orderBy(desc(labTestOrders.createdAt));
+  }
+
+  async createLabTestOrder(order: InsertLabTestOrder): Promise<LabTestOrder> {
+    const result = await db.insert(labTestOrders).values(order).returning();
+    return result[0];
+  }
+
+  async updateLabTestOrder(id: string, updates: Partial<InsertLabTestOrder>): Promise<LabTestOrder | undefined> {
+    const result = await db.update(labTestOrders).set({ ...updates, updatedAt: new Date() }).where(eq(labTestOrders.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== SAMPLE COLLECTIONS ==========
+  async getAllSampleCollections(): Promise<SampleCollection[]> {
+    return await db.select().from(sampleCollections).orderBy(desc(sampleCollections.createdAt));
+  }
+
+  async getSampleCollection(id: string): Promise<SampleCollection | undefined> {
+    const result = await db.select().from(sampleCollections).where(eq(sampleCollections.id, id));
+    return result[0];
+  }
+
+  async getSampleCollectionsByOrder(orderId: string): Promise<SampleCollection[]> {
+    return await db.select().from(sampleCollections).where(eq(sampleCollections.orderId, orderId)).orderBy(desc(sampleCollections.createdAt));
+  }
+
+  async createSampleCollection(sample: InsertSampleCollection): Promise<SampleCollection> {
+    const result = await db.insert(sampleCollections).values(sample).returning();
+    return result[0];
+  }
+
+  async updateSampleCollection(id: string, updates: Partial<InsertSampleCollection>): Promise<SampleCollection | undefined> {
+    const result = await db.update(sampleCollections).set({ ...updates, updatedAt: new Date() }).where(eq(sampleCollections.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== LAB REPORTS ==========
+  async getAllLabReports(): Promise<LabReport[]> {
+    return await db.select().from(labReports).orderBy(desc(labReports.createdAt));
+  }
+
+  async getLabReport(id: string): Promise<LabReport | undefined> {
+    const result = await db.select().from(labReports).where(eq(labReports.id, id));
+    return result[0];
+  }
+
+  async getLabReportsByPatient(patientId: string): Promise<LabReport[]> {
+    return await db.select().from(labReports).where(eq(labReports.patientId, patientId)).orderBy(desc(labReports.createdAt));
+  }
+
+  async getLabReportsByDoctor(doctorId: string): Promise<LabReport[]> {
+    return await db.select().from(labReports).where(eq(labReports.doctorId, doctorId)).orderBy(desc(labReports.createdAt));
+  }
+
+  async getLabReportsByLab(labId: string): Promise<LabReport[]> {
+    return await db.select().from(labReports).where(eq(labReports.labId, labId)).orderBy(desc(labReports.createdAt));
+  }
+
+  async createLabReport(report: InsertLabReport): Promise<LabReport> {
+    const result = await db.insert(labReports).values(report).returning();
+    return result[0];
+  }
+
+  async updateLabReport(id: string, updates: Partial<InsertLabReport>): Promise<LabReport | undefined> {
+    const result = await db.update(labReports).set({ ...updates, updatedAt: new Date() }).where(eq(labReports.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== LAB REPORT RESULTS ==========
+  async getLabReportResults(reportId: string): Promise<LabReportResult[]> {
+    return await db.select().from(labReportResults).where(eq(labReportResults.reportId, reportId));
+  }
+
+  async createLabReportResult(result: InsertLabReportResult): Promise<LabReportResult> {
+    const insertResult = await db.insert(labReportResults).values(result).returning();
+    return insertResult[0];
+  }
+
+  // ========== PATHOLOGY LAB ACCESS LOGS ==========
+  async getPathologyLabAccessLogs(labId?: string): Promise<PathologyLabAccessLog[]> {
+    if (labId) {
+      return await db.select().from(pathologyLabAccessLogs).where(eq(pathologyLabAccessLogs.labId, labId)).orderBy(desc(pathologyLabAccessLogs.timestamp));
+    }
+    return await db.select().from(pathologyLabAccessLogs).orderBy(desc(pathologyLabAccessLogs.timestamp));
+  }
+
+  async createPathologyLabAccessLog(log: InsertPathologyLabAccessLog): Promise<PathologyLabAccessLog> {
+    const result = await db.insert(pathologyLabAccessLogs).values(log).returning();
     return result[0];
   }
 }

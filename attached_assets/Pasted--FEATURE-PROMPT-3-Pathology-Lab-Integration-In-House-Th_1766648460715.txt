@@ -1,0 +1,333 @@
+📌 FEATURE PROMPT
+3️⃣ Pathology Lab Integration (In-House + Third-Party)
+🎯 OBJECTIVE
+
+Build a secure, scalable Pathology Lab Module that integrates internal (in-house) and external (third-party) pathology labs into the hospital application.
+
+The module must support:
+
+Test catalog & pricing
+
+Sample collection tracking
+
+Report uploads (PDF + structured data)
+
+Automatic attachment to patient timeline
+
+Controlled report sharing
+
+Doctor & patient notifications
+
+Dedicated Pathology Lab Login
+
+🧩 MODULE NAME
+
+Pathology & Diagnostic Lab Integration Module
+
+👥 USER ROLES INVOLVED
+
+Admin
+
+Doctor
+
+Patient
+
+Pathology Lab (NEW ROLE)
+
+In-House Lab
+
+Third-Party Lab
+
+🔐 AUTHENTICATION & LOGIN – PATHOLOGY LAB
+Pathology Lab Login
+
+Separate Pathology Lab Login inside the app
+
+Credentials created & controlled by Admin
+
+Login methods:
+
+Email + Password
+
+Mobile + OTP (optional)
+
+Role-based access inside lab:
+
+Lab Technician
+
+Lab Manager
+
+Report Verifier
+
+Security
+
+Login audit logs (date, time, IP, device)
+
+Access limited only to assigned patients/tests
+
+No access to billing, prescriptions, or unrelated hospital data
+
+🏥 PATHOLOGY LAB TYPES SUPPORTED
+1️⃣ In-House Pathology Lab
+
+Fully integrated with hospital workflow
+
+Direct patient & doctor linkage
+
+Full test lifecycle access
+
+2️⃣ Third-Party Pathology Lab
+
+Restricted access
+
+Only assigned tests & patients visible
+
+No access to internal hospital analytics
+
+Admin can:
+
+Tag lab as In-House / Third-Party
+
+Enable / Disable lab
+
+Define data visibility rules
+
+🧪 TEST CATALOG MANAGEMENT
+Test Master
+
+Each test must include:
+
+Test Name
+
+Test Category (Blood, Urine, Imaging, Biopsy, etc.)
+
+Test Code
+
+Sample Type
+
+Price
+
+Turnaround Time (TAT – hours/days)
+
+Normal Reference Range (structured)
+
+Lab Type (Internal / External)
+
+Admin controls:
+
+Global test master
+
+Lab-specific pricing override
+
+Enable/disable tests per lab
+
+📋 TEST ORDER & ASSIGNMENT FLOW
+
+Doctor orders pathology test for patient (OPD / IPD)
+
+Test order is visible to:
+
+Admin
+
+Assigned Pathology Lab
+
+Patient (view-only)
+
+Admin or system auto-assigns:
+
+In-house lab OR
+
+Selected third-party lab
+
+🧪 SAMPLE COLLECTION TRACKING
+Sample Collection Fields
+
+Patient Name & UHID
+
+Test Name
+
+Sample Type
+
+Collection Date & Time
+
+Sample Collector Name
+
+Collection Location (Ward / OPD / Home)
+
+Sample Status:
+
+Collected
+
+In Transit
+
+Received in Lab
+
+Rejected (with reason)
+
+Processed
+
+Timeline Tracking
+
+Each status change is timestamped
+
+Visible in patient timeline & admin panel
+
+📄 REPORT GENERATION & UPLOAD
+Report Upload Options
+
+PDF Upload
+
+Structured Data Entry
+
+Test value
+
+Units
+
+Normal range
+
+Remarks
+
+Flag (Normal / Abnormal / Critical)
+
+Report Metadata
+
+Report Date & Time
+
+Verified By (Doctor / Pathologist)
+
+Lab Name
+
+Digital Signature (optional)
+
+🔗 AUTO-ATTACH TO PATIENT TIMELINE
+
+Once uploaded:
+
+Report auto-attaches to:
+
+Patient medical timeline
+
+Doctor dashboard
+
+Admin records
+
+Chronologically sorted
+
+Cannot be deleted (only revised with version history)
+
+🔔 NOTIFICATIONS & ALERTS
+Doctor Notification
+
+Instant notification when report is uploaded
+
+Highlight abnormal / critical values
+
+Quick access from doctor dashboard
+
+Patient Notification
+
+App notification
+
+Email / WhatsApp (optional)
+
+View-only access
+
+🔁 REPORT SHARING CONTROL
+
+Reports can be shared inside the app with:
+
+Admin
+
+Treating Doctor
+
+Patient
+
+Admin rules:
+
+Who can share reports
+
+Time-limited sharing
+
+Download allowed / restricted
+
+Audit trail of report views
+
+📊 ADMIN DASHBOARD – PATHOLOGY CONTROL
+
+Admin should see:
+
+Lab-wise test volume
+
+Pending samples
+
+Average TAT
+
+Abnormal report trends
+
+In-house vs third-party workload
+
+Revenue reports (optional)
+
+Admin controls:
+
+Enable / disable lab login
+
+Assign / reassign tests
+
+Lock reports after verification
+
+Control report visibility duration
+
+🔒 SECURITY & COMPLIANCE
+
+Role-based access control (RBAC)
+
+End-to-end data encryption
+
+Immutable audit logs
+
+NABH-ready diagnostic documentation
+
+Versioning for revised reports
+
+No hard deletion of medical records
+
+🧠 FUTURE AI EXTENSIONS (Optional)
+
+Auto-flag abnormal values
+
+Predict delayed TAT
+
+Lab performance benchmarking
+
+Doctor-wise test ordering patterns
+
+AI-assisted preliminary report insights
+
+🧱 TECHNICAL EXPECTATIONS
+
+API-first architecture
+
+Works with existing Patient Timeline & Prescription modules
+
+Modular & multi-hospital ready
+
+Mobile + Web compatible
+
+Supports large PDF & structured datasets
+
+✅ SUCCESS CRITERIA
+
+Pathology lab can login securely
+
+View assigned patients & tests
+
+Track sample collection lifecycle
+
+Upload reports (PDF / structured)
+
+Reports auto-attach to patient timeline
+
+Doctors & patients receive notifications
+
+Admin has full visibility & control
