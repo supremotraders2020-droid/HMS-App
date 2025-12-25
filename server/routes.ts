@@ -7339,6 +7339,361 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ==================== PATHOLOGY LAB ROUTES ====================
+
+  // Get all pathology labs
+  app.get("/api/pathology-labs", async (req, res) => {
+    try {
+      const labs = await databaseStorage.getAllPathologyLabs();
+      res.json(labs);
+    } catch (error) {
+      console.error("Error fetching pathology labs:", error);
+      res.status(500).json({ error: "Failed to fetch pathology labs" });
+    }
+  });
+
+  // Get single pathology lab
+  app.get("/api/pathology-labs/:id", async (req, res) => {
+    try {
+      const lab = await databaseStorage.getPathologyLab(req.params.id);
+      if (!lab) {
+        return res.status(404).json({ error: "Lab not found" });
+      }
+      res.json(lab);
+    } catch (error) {
+      console.error("Error fetching lab:", error);
+      res.status(500).json({ error: "Failed to fetch lab" });
+    }
+  });
+
+  // Create pathology lab
+  app.post("/api/pathology-labs", async (req, res) => {
+    try {
+      const lab = await databaseStorage.createPathologyLab(req.body);
+      res.status(201).json(lab);
+    } catch (error) {
+      console.error("Error creating pathology lab:", error);
+      res.status(500).json({ error: "Failed to create pathology lab" });
+    }
+  });
+
+  // Update pathology lab
+  app.patch("/api/pathology-labs/:id", async (req, res) => {
+    try {
+      const lab = await databaseStorage.updatePathologyLab(req.params.id, req.body);
+      if (!lab) {
+        return res.status(404).json({ error: "Lab not found" });
+      }
+      res.json(lab);
+    } catch (error) {
+      console.error("Error updating lab:", error);
+      res.status(500).json({ error: "Failed to update lab" });
+    }
+  });
+
+  // Delete pathology lab
+  app.delete("/api/pathology-labs/:id", async (req, res) => {
+    try {
+      const success = await databaseStorage.deletePathologyLab(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Lab not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting lab:", error);
+      res.status(500).json({ error: "Failed to delete lab" });
+    }
+  });
+
+  // Get all lab tests
+  app.get("/api/lab-tests", async (req, res) => {
+    try {
+      const tests = await databaseStorage.getAllLabTests();
+      res.json(tests);
+    } catch (error) {
+      console.error("Error fetching lab tests:", error);
+      res.status(500).json({ error: "Failed to fetch lab tests" });
+    }
+  });
+
+  // Create lab test
+  app.post("/api/lab-tests", async (req, res) => {
+    try {
+      const test = await databaseStorage.createLabTest(req.body);
+      res.status(201).json(test);
+    } catch (error) {
+      console.error("Error creating lab test:", error);
+      res.status(500).json({ error: "Failed to create lab test" });
+    }
+  });
+
+  // Update lab test
+  app.patch("/api/lab-tests/:id", async (req, res) => {
+    try {
+      const test = await databaseStorage.updateLabTest(req.params.id, req.body);
+      if (!test) {
+        return res.status(404).json({ error: "Test not found" });
+      }
+      res.json(test);
+    } catch (error) {
+      console.error("Error updating test:", error);
+      res.status(500).json({ error: "Failed to update test" });
+    }
+  });
+
+  // Delete lab test
+  app.delete("/api/lab-tests/:id", async (req, res) => {
+    try {
+      const success = await databaseStorage.deleteLabTest(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Test not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting test:", error);
+      res.status(500).json({ error: "Failed to delete test" });
+    }
+  });
+
+  // Get all lab test orders
+  app.get("/api/lab-test-orders", async (req, res) => {
+    try {
+      const orders = await databaseStorage.getAllLabTestOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching lab test orders:", error);
+      res.status(500).json({ error: "Failed to fetch lab test orders" });
+    }
+  });
+
+  // Get orders by lab
+  app.get("/api/lab-test-orders/lab/:labId", async (req, res) => {
+    try {
+      const orders = await databaseStorage.getLabTestOrdersByLab(req.params.labId);
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching lab orders:", error);
+      res.status(500).json({ error: "Failed to fetch lab orders" });
+    }
+  });
+
+  // Create lab test order
+  app.post("/api/lab-test-orders", async (req, res) => {
+    try {
+      const allOrders = await databaseStorage.getAllLabTestOrders();
+      const orderNumber = `LAB-${new Date().getFullYear()}-${String(allOrders.length + 1).padStart(4, '0')}`;
+      const order = await databaseStorage.createLabTestOrder({ ...req.body, orderNumber });
+      res.status(201).json(order);
+    } catch (error) {
+      console.error("Error creating lab test order:", error);
+      res.status(500).json({ error: "Failed to create lab test order" });
+    }
+  });
+
+  // Update lab test order
+  app.patch("/api/lab-test-orders/:id", async (req, res) => {
+    try {
+      const order = await databaseStorage.updateLabTestOrder(req.params.id, req.body);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      res.json(order);
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(500).json({ error: "Failed to update order" });
+    }
+  });
+
+  // Get all sample collections
+  app.get("/api/sample-collections", async (req, res) => {
+    try {
+      const samples = await databaseStorage.getAllSampleCollections();
+      res.json(samples);
+    } catch (error) {
+      console.error("Error fetching sample collections:", error);
+      res.status(500).json({ error: "Failed to fetch sample collections" });
+    }
+  });
+
+  // Create sample collection
+  app.post("/api/sample-collections", async (req, res) => {
+    try {
+      const sample = await databaseStorage.createSampleCollection(req.body);
+      await databaseStorage.updateLabTestOrder(req.body.orderId, { orderStatus: "SAMPLE_COLLECTED" });
+      res.status(201).json(sample);
+    } catch (error) {
+      console.error("Error creating sample collection:", error);
+      res.status(500).json({ error: "Failed to create sample collection" });
+    }
+  });
+
+  // Update sample collection status
+  app.patch("/api/sample-collections/:id", async (req, res) => {
+    try {
+      const sample = await databaseStorage.updateSampleCollection(req.params.id, req.body);
+      if (!sample) {
+        return res.status(404).json({ error: "Sample not found" });
+      }
+      res.json(sample);
+    } catch (error) {
+      console.error("Error updating sample:", error);
+      res.status(500).json({ error: "Failed to update sample" });
+    }
+  });
+
+  // Get all lab reports
+  app.get("/api/lab-reports", async (req, res) => {
+    try {
+      const reports = await databaseStorage.getAllLabReports();
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching lab reports:", error);
+      res.status(500).json({ error: "Failed to fetch lab reports" });
+    }
+  });
+
+  // Get reports by patient
+  app.get("/api/lab-reports/patient/:patientId", async (req, res) => {
+    try {
+      const reports = await databaseStorage.getLabReportsByPatient(req.params.patientId);
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching patient reports:", error);
+      res.status(500).json({ error: "Failed to fetch patient reports" });
+    }
+  });
+
+  // Get reports by lab
+  app.get("/api/lab-reports/lab/:labId", async (req, res) => {
+    try {
+      const reports = await databaseStorage.getLabReportsByLab(req.params.labId);
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching lab reports:", error);
+      res.status(500).json({ error: "Failed to fetch lab reports" });
+    }
+  });
+
+  // Get single lab report with results
+  app.get("/api/lab-reports/:id", async (req, res) => {
+    try {
+      const report = await databaseStorage.getLabReport(req.params.id);
+      if (!report) {
+        return res.status(404).json({ error: "Report not found" });
+      }
+      const results = await databaseStorage.getLabReportResults(report.id);
+      res.json({ ...report, results });
+    } catch (error) {
+      console.error("Error fetching report:", error);
+      res.status(500).json({ error: "Failed to fetch report" });
+    }
+  });
+
+  // Create lab report with notifications
+  app.post("/api/lab-reports", async (req, res) => {
+    try {
+      const allReports = await databaseStorage.getAllLabReports();
+      const reportNumber = `RPT-${new Date().getFullYear()}-${String(allReports.length + 1).padStart(4, '0')}`;
+      const report = await databaseStorage.createLabReport({ ...req.body, reportNumber });
+
+      await databaseStorage.updateLabTestOrder(req.body.orderId, { orderStatus: "COMPLETED" });
+
+      const notificationData = {
+        title: "Lab Report Available",
+        message: `New lab report uploaded: ${report.testName} for patient ${report.patientName}`,
+        type: "lab_report",
+        priority: req.body.interpretation === "CRITICAL" ? "critical" : "normal",
+        channel: "push",
+        isRead: false,
+        referenceId: report.id,
+        referenceType: "lab_report",
+      };
+
+      await databaseStorage.createUserNotification({ ...notificationData, userId: report.patientId, targetRole: "PATIENT" });
+      await databaseStorage.createUserNotification({ ...notificationData, userId: report.doctorId, targetRole: "DOCTOR" });
+
+      const admins = await databaseStorage.getUsersByRole("ADMIN");
+      for (const admin of admins) {
+        await databaseStorage.createUserNotification({ ...notificationData, userId: admin.id, targetRole: "ADMIN" });
+      }
+
+      const nurses = await databaseStorage.getUsersByRole("NURSE");
+      for (const nurse of nurses) {
+        await databaseStorage.createUserNotification({ ...notificationData, userId: nurse.id, targetRole: "NURSE" });
+      }
+
+      await databaseStorage.createPathologyLabAccessLog({
+        labId: report.labId,
+        labName: report.labName,
+        userId: req.body.uploadedBy || report.labId,
+        userName: req.body.uploadedByName || report.labName,
+        userRole: "PATHOLOGY_LAB",
+        action: "REPORT_UPLOAD",
+        reportId: report.id,
+        patientId: report.patientId,
+        patientName: report.patientName,
+        details: `Uploaded report ${reportNumber} for test ${report.testName}`,
+      });
+
+      res.status(201).json(report);
+    } catch (error) {
+      console.error("Error creating lab report:", error);
+      res.status(500).json({ error: "Failed to create lab report" });
+    }
+  });
+
+  // Update lab report
+  app.patch("/api/lab-reports/:id", async (req, res) => {
+    try {
+      const report = await databaseStorage.updateLabReport(req.params.id, req.body);
+      if (!report) {
+        return res.status(404).json({ error: "Report not found" });
+      }
+      res.json(report);
+    } catch (error) {
+      console.error("Error updating report:", error);
+      res.status(500).json({ error: "Failed to update report" });
+    }
+  });
+
+  // Add results to a report
+  app.post("/api/lab-reports/:reportId/results", async (req, res) => {
+    try {
+      const results = req.body.results || [req.body];
+      const createdResults = [];
+      for (const result of results) {
+        const created = await databaseStorage.createLabReportResult({ ...result, reportId: req.params.reportId });
+        createdResults.push(created);
+      }
+      res.status(201).json(createdResults);
+    } catch (error) {
+      console.error("Error adding report results:", error);
+      res.status(500).json({ error: "Failed to add report results" });
+    }
+  });
+
+  // Get pathology lab access logs
+  app.get("/api/pathology-labs/access-logs", async (req, res) => {
+    try {
+      const logs = await databaseStorage.getPathologyLabAccessLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching access logs:", error);
+      res.status(500).json({ error: "Failed to fetch access logs" });
+    }
+  });
+
+  // Create pathology lab access log
+  app.post("/api/pathology-labs/access-logs", async (req, res) => {
+    try {
+      const log = await databaseStorage.createPathologyLabAccessLog(req.body);
+      res.status(201).json(log);
+    } catch (error) {
+      console.error("Error creating access log:", error);
+      res.status(500).json({ error: "Failed to create access log" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
