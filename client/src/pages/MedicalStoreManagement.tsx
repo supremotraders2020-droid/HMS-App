@@ -107,9 +107,6 @@ export default function MedicalStoreManagement() {
   const [selectedStore, setSelectedStore] = useState<MedicalStore | null>(null);
   const [newStore, setNewStore] = useState<NewStoreForm>(initialStoreForm);
   const [newUser, setNewUser] = useState<NewUserForm>(initialUserForm);
-  const [prescriptionSearch, setPrescriptionSearch] = useState("");
-  const [prescriptionResults, setPrescriptionResults] = useState<Prescription[]>([]);
-  const [searchingPrescriptions, setSearchingPrescriptions] = useState(false);
 
   const { data: stores = [], isLoading: storesLoading } = useQuery<MedicalStore[]>({
     queryKey: ["/api/medical-stores"],
@@ -117,6 +114,10 @@ export default function MedicalStoreManagement() {
 
   const { data: accessLogs = [], isLoading: logsLoading } = useQuery<MedicalStoreAccessLog[]>({
     queryKey: ["/api/medical-stores/access-logs/all"],
+  });
+
+  const { data: prescriptions = [], isLoading: prescriptionsLoading } = useQuery<Prescription[]>({
+    queryKey: ["/api/prescriptions"],
   });
 
   const createStoreMutation = useMutation({
@@ -263,39 +264,6 @@ export default function MedicalStoreManagement() {
       : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
   };
 
-  const handlePrescriptionSearch = async () => {
-    if (!prescriptionSearch.trim()) {
-      toast({
-        title: "Search Required",
-        description: "Please enter a patient name or prescription number",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setSearchingPrescriptions(true);
-    try {
-      const response = await fetch(`/api/medical-stores/prescriptions/search?query=${encodeURIComponent(prescriptionSearch)}`);
-      if (!response.ok) throw new Error("Search failed");
-      const results = await response.json();
-      setPrescriptionResults(results);
-      if (results.length === 0) {
-        toast({
-          title: "No Results",
-          description: "No prescriptions found for the search query",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Search Failed",
-        description: "Could not search prescriptions",
-        variant: "destructive",
-      });
-    } finally {
-      setSearchingPrescriptions(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -373,10 +341,6 @@ export default function MedicalStoreManagement() {
           <TabsTrigger value="stores" data-testid="tab-stores">
             <Store className="h-4 w-4 mr-2" />
             Stores
-          </TabsTrigger>
-          <TabsTrigger value="prescriptions" data-testid="tab-prescriptions">
-            <Pill className="h-4 w-4 mr-2" />
-            Prescriptions
           </TabsTrigger>
           <TabsTrigger value="audit" data-testid="tab-audit">
             <FileText className="h-4 w-4 mr-2" />
@@ -500,79 +464,84 @@ export default function MedicalStoreManagement() {
           )}
         </TabsContent>
 
-        <TabsContent value="prescriptions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Search Prescriptions</CardTitle>
-              <CardDescription>Find prescriptions by patient name or prescription number</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter patient name or prescription number..."
-                    value={prescriptionSearch}
-                    onChange={(e) => setPrescriptionSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handlePrescriptionSearch()}
-                    className="pl-10"
-                    data-testid="input-search-prescription"
-                  />
-                </div>
-                <Button 
-                  onClick={handlePrescriptionSearch} 
-                  disabled={searchingPrescriptions}
-                  data-testid="button-search-prescription"
-                >
-                  {searchingPrescriptions ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
-                </Button>
-              </div>
-              
-              {prescriptionResults.length > 0 && (
-                <div className="space-y-3">
-                  {prescriptionResults.map((prescription) => (
-                    <Card key={prescription.id} className="hover-elevate" data-testid={`card-prescription-${prescription.id}`}>
-                      <CardContent className="pt-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold">{prescription.patientName}</p>
-                              <Badge variant="outline">{prescription.prescriptionStatus}</Badge>
-                            </div>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              <p>Doctor: {prescription.doctorName}</p>
-                              <p>Date: {prescription.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : "-"}</p>
-                              {prescription.diagnosis && <p>Diagnosis: {prescription.diagnosis}</p>}
-                            </div>
-                            {prescription.medicines && prescription.medicines.length > 0 && (
-                              <div className="pt-2">
-                                <p className="text-sm font-medium mb-1">Medicines:</p>
-                                <div className="flex flex-wrap gap-1">
-                                  {prescription.medicines.map((med, idx) => (
-                                    <Badge key={idx} variant="secondary" className="text-xs">
-                                      <Pill className="h-3 w-3 mr-1" />
-                                      {med}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="audit" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Prescription Access Logs</CardTitle>
-              <CardDescription>Track all prescription access and dispensing activities</CardDescription>
+              <CardTitle>Doctor Prescription Audit Logs</CardTitle>
+              <CardDescription>Track all doctor-created prescriptions for compliance and audit purposes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {prescriptionsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : prescriptions.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No prescriptions recorded yet
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date/Time</TableHead>
+                      <TableHead>Prescription #</TableHead>
+                      <TableHead>Doctor</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Diagnosis</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Medicines</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {prescriptions.slice(0, 50).map((prescription) => (
+                      <TableRow key={prescription.id} data-testid={`row-prescription-${prescription.id}`}>
+                        <TableCell className="text-sm">
+                          {prescription.createdAt ? new Date(prescription.createdAt).toLocaleString() : "-"}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {prescription.prescriptionNumber || `RX-${prescription.id}`}
+                        </TableCell>
+                        <TableCell>{prescription.doctorName || "-"}</TableCell>
+                        <TableCell>{prescription.patientName || "-"}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">
+                          {prescription.diagnosis || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={prescription.prescriptionStatus === "finalized" ? "default" : "outline"}>
+                            {prescription.prescriptionStatus || "draft"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-[200px]">
+                            {prescription.medicines && prescription.medicines.length > 0 ? (
+                              prescription.medicines.slice(0, 2).map((med, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  <Pill className="h-3 w-3 mr-1" />
+                                  {med}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                            {prescription.medicines && prescription.medicines.length > 2 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{prescription.medicines.length - 2} more
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Store Access Logs</CardTitle>
+              <CardDescription>Track all prescription access and dispensing activities by stores</CardDescription>
             </CardHeader>
             <CardContent>
               {logsLoading ? (
@@ -581,7 +550,7 @@ export default function MedicalStoreManagement() {
                 </div>
               ) : accessLogs.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No access logs recorded yet
+                  No store access logs recorded yet
                 </div>
               ) : (
                 <Table>
