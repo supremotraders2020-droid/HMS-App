@@ -85,6 +85,10 @@ export default function PatientMonitoringPage() {
     queryKey: ["/api/patients/service"]
   });
 
+  const { data: doctors = [] } = useQuery<any[]>({
+    queryKey: ["/api/doctors"]
+  });
+
   const selectedSession = sessions.find(s => s.id === selectedSessionId);
 
   const uniquePatients = Array.from(
@@ -224,7 +228,21 @@ export default function PatientMonitoringPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Admitting Consultant *</Label>
-                  <Input value={newSessionData.admittingConsultant} onChange={(e) => setNewSessionData({...newSessionData, admittingConsultant: e.target.value})} placeholder="Dr. Name" data-testid="input-consultant" />
+                  <Select 
+                    value={newSessionData.admittingConsultant} 
+                    onValueChange={(v) => setNewSessionData({...newSessionData, admittingConsultant: v})}
+                  >
+                    <SelectTrigger data-testid="select-consultant">
+                      <SelectValue placeholder="Select Doctor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {doctors.map((doctor: any) => (
+                        <SelectItem key={doctor.id} value={`Dr. ${doctor.name}`}>
+                          Dr. {doctor.name} - {doctor.specialization || 'General'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="space-y-2">

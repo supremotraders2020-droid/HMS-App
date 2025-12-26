@@ -5476,7 +5476,14 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/patient-monitoring/sessions", async (req, res) => {
     try {
       console.log("Session create request body:", JSON.stringify(req.body, null, 2));
-      const parsed = insertPatientMonitoringSessionSchema.safeParse(req.body);
+      // Convert admissionDateTime string to Date object if needed
+      const dataToValidate = {
+        ...req.body,
+        admissionDateTime: req.body.admissionDateTime 
+          ? new Date(req.body.admissionDateTime) 
+          : new Date()
+      };
+      const parsed = insertPatientMonitoringSessionSchema.safeParse(dataToValidate);
       if (!parsed.success) {
         console.log("Validation errors:", JSON.stringify(parsed.error.errors, null, 2));
         return res.status(400).json({ error: "Invalid session data", details: parsed.error.errors });
