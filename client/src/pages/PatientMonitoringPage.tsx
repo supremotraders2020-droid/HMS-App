@@ -655,13 +655,14 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
     saveMutation.mutate({
       sessionId,
       hourSlot: selectedSlot,
-      pulse: vitalsForm.pulse ? parseInt(vitalsForm.pulse) : null,
+      heartRate: vitalsForm.pulse ? parseInt(vitalsForm.pulse) : null,
       systolicBp: vitalsForm.sbp ? parseInt(vitalsForm.sbp) : null,
       diastolicBp: vitalsForm.dbp ? parseInt(vitalsForm.dbp) : null,
-      temperature: vitalsForm.temperature ? parseFloat(vitalsForm.temperature) : null,
+      temperature: vitalsForm.temperature ? vitalsForm.temperature : null,
       respiratoryRate: vitalsForm.respiratoryRate ? parseInt(vitalsForm.respiratoryRate) : null,
       spo2: vitalsForm.spo2 ? parseInt(vitalsForm.spo2) : null,
-      recordedBy: "Current Nurse"
+      nurseId: "system-nurse",
+      nurseName: "ICU Nurse"
     });
   };
 
@@ -722,12 +723,12 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
                 return (
                   <TableRow key={slot} className={v ? "" : "opacity-50"}>
                     <TableCell className="font-medium">{slot}</TableCell>
-                    <TableCell>{v?.pulse || "-"}</TableCell>
+                    <TableCell>{v?.heartRate || "-"}</TableCell>
                     <TableCell>{v ? `${v.systolicBp || "-"}/${v.diastolicBp || "-"}` : "-"}</TableCell>
                     <TableCell>{v?.temperature ? `${v.temperature}°C` : "-"}</TableCell>
                     <TableCell>{v?.respiratoryRate || "-"}</TableCell>
                     <TableCell>{v?.spo2 ? `${v.spo2}%` : "-"}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{v?.recordedBy || "-"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{v?.nurseName || "-"}</TableCell>
                   </TableRow>
                 );
               })}
@@ -768,7 +769,15 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
               <div><Label>Dose Rate</Label><Input value={form.doseRate} onChange={(e) => setForm({...form, doseRate: e.target.value})} placeholder="e.g., 0.1 mcg/kg/min" /></div>
               <div><Label>Pump Channel</Label><Input value={form.pumpChannel} onChange={(e) => setForm({...form, pumpChannel: e.target.value})} placeholder="e.g., Channel 1" /></div>
             </div>
-            <DialogFooter><Button onClick={() => saveMutation.mutate({ sessionId, ...form, recordedBy: "Nurse" })}>Save</Button></DialogFooter>
+            <DialogFooter><Button onClick={() => saveMutation.mutate({ 
+                  sessionId, 
+                  drugName: form.drugName,
+                  concentration: form.concentration,
+                  rate: form.doseRate,
+                  startTime: new Date().toISOString(),
+                  nurseId: "system-nurse",
+                  nurseName: "ICU Nurse"
+                })} disabled={!form.drugName}>Save</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </CardHeader>
@@ -856,12 +865,14 @@ function VentilatorTab({ sessionId, isOnVentilator }: { sessionId: string; isOnV
             <DialogFooter>
               <Button onClick={() => saveMutation.mutate({ 
                 sessionId, 
-                mode: form.mode, 
-                fio2: parseFloat(form.fio2) || null,
-                peep: parseFloat(form.peep) || null,
-                tidalVolume: parseInt(form.tidalVolume) || null,
-                respiratoryRateSet: parseInt(form.respiratoryRateSet) || null,
-                recordedBy: "Nurse"
+                ventilationMode: form.mode, 
+                fio2: form.fio2 ? parseInt(form.fio2) : null,
+                peepCpap: form.peep || null,
+                setTidalVolume: form.tidalVolume ? parseInt(form.tidalVolume) : null,
+                respiratoryRateSet: form.respiratoryRateSet ? parseInt(form.respiratoryRateSet) : null,
+                shift: "MORNING",
+                nurseId: "system-nurse",
+                nurseName: "ICU Nurse"
               })}>Save</Button>
             </DialogFooter>
           </DialogContent>
@@ -935,13 +946,14 @@ function ABGLabTab({ sessionId }: { sessionId: string }) {
             <DialogFooter>
               <Button onClick={() => saveMutation.mutate({ 
                 sessionId, 
-                ph: parseFloat(form.ph) || null,
-                pco2: parseFloat(form.pco2) || null,
-                po2: parseFloat(form.po2) || null,
-                hco3: parseFloat(form.hco3) || null,
-                lactate: parseFloat(form.lactate) || null,
-                hemoglobin: parseFloat(form.hemoglobin) || null,
-                recordedBy: "Lab"
+                ph: form.ph || null,
+                pco2: form.pco2 || null,
+                po2: form.po2 || null,
+                hco3: form.hco3 || null,
+                lactate: form.lactate || null,
+                hb: form.hemoglobin || null,
+                nurseId: "system-nurse",
+                nurseName: "Lab Tech"
               })}>Save</Button>
             </DialogFooter>
           </DialogContent>
@@ -1036,7 +1048,8 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
                 oral: parseInt(form.oral) || 0,
                 ngTube: parseInt(form.ngTube) || 0,
                 bloodProducts: parseInt(form.bloodProducts) || 0,
-                recordedBy: "Nurse"
+                nurseId: "system-nurse",
+                nurseName: "ICU Nurse"
               })} disabled={!selectedSlot}>Save</Button>
             </DialogFooter>
           </DialogContent>
@@ -1130,7 +1143,8 @@ function OutputTab({ sessionId }: { sessionId: string }) {
                 drainOutput: parseInt(form.drainOutput) || 0,
                 vomitus: parseInt(form.vomitus) || 0,
                 stool: parseInt(form.stool) || 0,
-                recordedBy: "Nurse"
+                nurseId: "system-nurse",
+                nurseName: "ICU Nurse"
               })} disabled={!selectedSlot}>Save</Button>
             </DialogFooter>
           </DialogContent>
@@ -1213,11 +1227,12 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
               <Button onClick={() => saveMutation.mutate({ 
                 sessionId, 
                 bloodSugarLevel: parseInt(form.bloodSugarLevel),
-                checkTime: form.checkTime,
+                recordedTime: new Date().toISOString(),
                 insulinType: form.insulinType || null,
-                insulinDose: form.insulinDose ? parseFloat(form.insulinDose) : null,
-                recordedBy: "Nurse"
-              })}>Save</Button>
+                insulinDose: form.insulinDose || null,
+                nurseId: "system-nurse",
+                nurseName: "ICU Nurse"
+              })} disabled={!form.bloodSugarLevel}>Save</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1305,7 +1320,17 @@ function MARTab({ sessionId }: { sessionId: string }) {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ sessionId, ...form, status: "SCHEDULED", recordedBy: "Nurse" })}>Add</Button>
+              <Button onClick={() => saveMutation.mutate({ 
+                  sessionId, 
+                  drugName: form.medicineName,
+                  dose: form.dose,
+                  route: form.route,
+                  frequency: form.frequency || "1x",
+                  scheduledTime: new Date().toISOString(),
+                  status: "GIVEN",
+                  nurseId: "system-nurse",
+                  nurseName: "ICU Nurse"
+                })} disabled={!form.medicineName || !form.dose || !form.route}>Add</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1381,7 +1406,15 @@ function OnceOnlyTab({ sessionId }: { sessionId: string }) {
               <div><Label>Indication</Label><Textarea value={form.indication} onChange={(e) => setForm({...form, indication: e.target.value})} /></div>
             </div>
             <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ sessionId, ...form, givenBy: "Nurse", givenAt: new Date().toISOString() })}>Add</Button>
+              <Button onClick={() => saveMutation.mutate({ 
+                  sessionId, 
+                  drugName: form.drugName,
+                  dose: form.dose,
+                  route: form.route,
+                  timeOrdered: new Date().toISOString(),
+                  nurseId: "system-nurse",
+                  nurseName: "ICU Nurse"
+                })} disabled={!form.drugName || !form.dose || !form.route}>Add</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1463,7 +1496,15 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
               <div><Label>Note Content</Label><Textarea value={form.noteContent} onChange={(e) => setForm({...form, noteContent: e.target.value})} rows={4} /></div>
             </div>
             <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ sessionId, ...form, nurseId: "current", nurseName: "Current Nurse" })}>Save Note</Button>
+              <Button onClick={() => saveMutation.mutate({ 
+                  sessionId, 
+                  shift: form.shift,
+                  eventType: form.noteType,
+                  observation: form.noteContent,
+                  noteTime: new Date().toISOString(),
+                  nurseId: "system-nurse",
+                  nurseName: "ICU Nurse"
+                })} disabled={!form.noteContent}>Save Note</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1567,15 +1608,14 @@ function AirwayTab({ sessionId }: { sessionId: string }) {
               <DialogFooter>
                 <Button onClick={() => saveMutation.mutate({ 
                   sessionId, 
-                  airwayType: form.airwayType || null,
-                  endotrachealTubeSize: form.endotrachealTubeSize || null,
-                  centralLineType: form.centralLineType || null,
-                  centralLineSite: form.centralLineSite || null,
-                  centralLineInsertionDate: form.centralLineDate || null,
-                  urinaryCatheterSize: form.urinaryCatheterSize || null,
-                  urinaryCatheterInsertionDate: form.urinaryCatheterDate || null,
-                  ngTubeSize: form.ngTubeSize || null,
-                  ngTubeInsertionDate: form.ngTubeDate || null
+                  ettSize: form.endotrachealTubeSize || null,
+                  tracheostomyDetails: form.airwayType === "Tracheostomy" ? form.airwayType : null,
+                  centralLineDetails: form.centralLineType ? `${form.centralLineType} - ${form.centralLineSite}` : null,
+                  centralLineInsertDate: form.centralLineDate || null,
+                  foleyDetails: form.urinaryCatheterSize ? `${form.urinaryCatheterSize} Fr` : null,
+                  foleyInsertDate: form.urinaryCatheterDate || null,
+                  nurseId: "system-nurse",
+                  nurseName: "ICU Nurse"
                 })}>Save</Button>
               </DialogFooter>
             </DialogContent>
@@ -1663,7 +1703,13 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ sessionId, ...form, staffId: "staff-" + Date.now() })}>Assign</Button>
+              <Button onClick={() => saveMutation.mutate({ 
+                  sessionId, 
+                  shift: form.shift,
+                  nurseId: "staff-" + Date.now(),
+                  nurseName: form.staffName,
+                  shiftStartTime: new Date().toISOString()
+                })} disabled={!form.staffName}>Assign</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1744,7 +1790,14 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={() => saveMutation.mutate({ sessionId, ...form })}>Save</Button>
+                <Button onClick={() => saveMutation.mutate({ 
+                  sessionId, 
+                  drugAllergies: form.drugAllergies || null,
+                  foodAllergies: form.foodAllergies || null,
+                  specialPrecautions: form.isolationPrecautions || null,
+                  nurseId: "system-nurse",
+                  nurseName: "ICU Nurse"
+                })}>Save</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
