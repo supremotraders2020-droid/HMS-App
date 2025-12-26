@@ -3268,3 +3268,228 @@ export const insertBarcodeScanLogSchema = createInsertSchema(barcodeScanLogs).om
 });
 export type InsertBarcodeScanLog = z.infer<typeof insertBarcodeScanLogSchema>;
 export type BarcodeScanLog = typeof barcodeScanLogs.$inferSelect;
+
+// ========== STAFF MANAGEMENT MODULE TABLES ==========
+
+// Staff Master Profile - Enhanced staff profile linked to users
+export const staffMaster = pgTable("staff_master", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(), // Links to users table
+  employeeCode: text("employee_code").notNull().unique(), // Hospital-generated code
+  fullName: text("full_name").notNull(),
+  role: text("role").notNull(), // DOCTOR, NURSE, TECHNICIAN, PHARMACIST, ADMIN, OPD_MANAGER, etc.
+  department: text("department"),
+  designation: text("designation"),
+  qualifications: text("qualifications"),
+  email: text("email"),
+  phone: text("phone"),
+  joiningDate: text("joining_date"),
+  employmentType: text("employment_type").default("FULL_TIME"), // FULL_TIME, PART_TIME, CONTRACT
+  shiftType: text("shift_type").default("FIXED"), // FIXED, ROTATIONAL
+  reportingManagerId: varchar("reporting_manager_id"), // Reference to another staff_master
+  status: text("status").default("ACTIVE"), // ACTIVE, ON_LEAVE, SUSPENDED, RESIGNED
+  photoUrl: text("photo_url"),
+  emergencyContact: text("emergency_contact"),
+  address: text("address"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertStaffMasterSchema = createInsertSchema(staffMaster).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertStaffMaster = z.infer<typeof insertStaffMasterSchema>;
+export type StaffMaster = typeof staffMaster.$inferSelect;
+
+// Shift Roster - Staff shift scheduling
+export const shiftRoster = pgTable("shift_roster", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull(), // Reference to staff_master
+  department: text("department"),
+  shiftDate: text("shift_date").notNull(), // YYYY-MM-DD format
+  shiftType: text("shift_type").notNull(), // MORNING, EVENING, NIGHT, ON_CALL
+  startTime: text("start_time").notNull(), // HH:mm format
+  endTime: text("end_time").notNull(), // HH:mm format
+  status: text("status").default("SCHEDULED"), // SCHEDULED, COMPLETED, MISSED, CANCELLED
+  assignedBy: varchar("assigned_by"), // User who assigned the shift
+  overrideReason: text("override_reason"), // For emergency overrides
+  notes: text("notes"),
+  linkedAppointmentId: varchar("linked_appointment_id"), // Link to doctor appointment slots
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertShiftRosterSchema = createInsertSchema(shiftRoster).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertShiftRoster = z.infer<typeof insertShiftRosterSchema>;
+export type ShiftRoster = typeof shiftRoster.$inferSelect;
+
+// Task Logs - Staff duty/task logging
+export const taskLogs = pgTable("task_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull(), // Reference to staff_master
+  assignedBy: varchar("assigned_by"), // User who assigned the task
+  department: text("department"),
+  taskType: text("task_type").notNull(), // CLINICAL, ADMIN, EMERGENCY, ROUTINE, OTHER
+  taskTitle: text("task_title").notNull(),
+  taskDescription: text("task_description"),
+  patientId: varchar("patient_id"), // Optional patient link
+  patientName: text("patient_name"),
+  shiftId: varchar("shift_id"), // Link to shift_roster
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
+  status: text("status").default("PENDING"), // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  priority: text("priority").default("NORMAL"), // LOW, NORMAL, HIGH, URGENT
+  completionNotes: text("completion_notes"),
+  proofFileUrl: text("proof_file_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTaskLogSchema = createInsertSchema(taskLogs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertTaskLog = z.infer<typeof insertTaskLogSchema>;
+export type TaskLog = typeof taskLogs.$inferSelect;
+
+// Attendance Logs - Staff attendance tracking
+export const attendanceLogs = pgTable("attendance_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull(), // Reference to staff_master
+  date: text("date").notNull(), // YYYY-MM-DD format
+  checkInTime: timestamp("check_in_time"),
+  checkOutTime: timestamp("check_out_time"),
+  checkInMethod: text("check_in_method"), // BIOMETRIC, MANUAL, SYSTEM
+  checkOutMethod: text("check_out_method"),
+  status: text("status").default("PRESENT"), // PRESENT, ABSENT, HALF_DAY, LATE, ON_LEAVE
+  shiftId: varchar("shift_id"), // Link to shift_roster
+  workHours: text("work_hours"), // Calculated work hours
+  isOvertime: boolean("is_overtime").default(false),
+  overtimeHours: text("overtime_hours"),
+  remarks: text("remarks"),
+  approvedBy: varchar("approved_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAttendanceLogSchema = createInsertSchema(attendanceLogs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertAttendanceLog = z.infer<typeof insertAttendanceLogSchema>;
+export type AttendanceLog = typeof attendanceLogs.$inferSelect;
+
+// Leave Requests - Staff leave management
+export const leaveRequests = pgTable("leave_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull(), // Reference to staff_master
+  leaveType: text("leave_type").notNull(), // CASUAL, SICK, EARNED, MATERNITY, PATERNITY, EMERGENCY, UNPAID
+  startDate: text("start_date").notNull(), // YYYY-MM-DD format
+  endDate: text("end_date").notNull(), // YYYY-MM-DD format
+  totalDays: integer("total_days").notNull(),
+  reason: text("reason").notNull(),
+  status: text("status").default("PENDING"), // PENDING, DEPT_APPROVED, HR_APPROVED, APPROVED, REJECTED, CANCELLED
+  deptApprovedBy: varchar("dept_approved_by"), // Department head approval
+  deptApprovedAt: timestamp("dept_approved_at"),
+  hrApprovedBy: varchar("hr_approved_by"), // HR final approval
+  hrApprovedAt: timestamp("hr_approved_at"),
+  rejectedBy: varchar("rejected_by"),
+  rejectionReason: text("rejection_reason"),
+  emergencyContact: text("emergency_contact"),
+  attachmentUrl: text("attachment_url"), // Medical certificate, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLeaveRequestSchema = createInsertSchema(leaveRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;
+export type LeaveRequest = typeof leaveRequests.$inferSelect;
+
+// Overtime Logs - Staff overtime tracking
+export const overtimeLogs = pgTable("overtime_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull(), // Reference to staff_master
+  date: text("date").notNull(), // YYYY-MM-DD format
+  shiftId: varchar("shift_id"), // Link to shift_roster
+  attendanceId: varchar("attendance_id"), // Link to attendance_logs
+  scheduledEndTime: text("scheduled_end_time"),
+  actualEndTime: text("actual_end_time"),
+  overtimeHours: text("overtime_hours").notNull(),
+  reason: text("reason"),
+  status: text("status").default("PENDING"), // PENDING, APPROVED, REJECTED
+  approvedBy: varchar("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  payRate: text("pay_rate"), // Overtime pay rate multiplier
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOvertimeLogSchema = createInsertSchema(overtimeLogs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertOvertimeLog = z.infer<typeof insertOvertimeLogSchema>;
+export type OvertimeLog = typeof overtimeLogs.$inferSelect;
+
+// Staff Performance Metrics - Performance tracking and scoring
+export const staffPerformanceMetrics = pgTable("staff_performance_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull(), // Reference to staff_master
+  periodType: text("period_type").notNull(), // WEEKLY, MONTHLY, QUARTERLY
+  periodStart: text("period_start").notNull(), // YYYY-MM-DD format
+  periodEnd: text("period_end").notNull(), // YYYY-MM-DD format
+  attendancePercentage: text("attendance_percentage"), // 0-100
+  taskCompletionRate: text("task_completion_rate"), // 0-100
+  patientFeedbackScore: text("patient_feedback_score"), // 0-5
+  overtimeHours: text("overtime_hours"),
+  shiftMissCount: integer("shift_miss_count").default(0),
+  lateCount: integer("late_count").default(0),
+  leavesTaken: integer("leaves_taken").default(0),
+  responseTimeAvg: text("response_time_avg"), // In minutes
+  performanceScore: text("performance_score"), // Calculated weighted score
+  aiNotes: text("ai_notes"), // AI-generated performance insights
+  evaluatedBy: varchar("evaluated_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertStaffPerformanceMetricSchema = createInsertSchema(staffPerformanceMetrics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertStaffPerformanceMetric = z.infer<typeof insertStaffPerformanceMetricSchema>;
+export type StaffPerformanceMetric = typeof staffPerformanceMetrics.$inferSelect;
+
+// Staff Roster Audit Logs - Audit trail for shift changes
+export const rosterAuditLogs = pgTable("roster_audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  rosterId: varchar("roster_id").notNull(), // Reference to shift_roster
+  action: text("action").notNull(), // CREATED, UPDATED, DELETED, OVERRIDE
+  changedBy: varchar("changed_by").notNull(),
+  changedByName: text("changed_by_name"),
+  previousValue: text("previous_value"), // JSON of previous state
+  newValue: text("new_value"), // JSON of new state
+  reason: text("reason"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertRosterAuditLogSchema = createInsertSchema(rosterAuditLogs).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertRosterAuditLog = z.infer<typeof insertRosterAuditLogSchema>;
+export type RosterAuditLog = typeof rosterAuditLogs.$inferSelect;
