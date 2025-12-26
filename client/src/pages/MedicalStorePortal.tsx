@@ -625,7 +625,7 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex items-start justify-between gap-4 flex-wrap relative z-20">
         <div>
           <h1 className="text-3xl font-bold" data-testid="text-page-title">Medical Store Portal</h1>
           <p className="text-muted-foreground">{storeInfo.store.storeName}</p>
@@ -635,13 +635,16 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
             variant="outline"
             size="icon"
             type="button"
-            onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+            onClick={() => {
+              console.log("Bell button clicked!");
+              setShowNotificationPanel(!showNotificationPanel);
+            }}
             data-testid="button-notifications"
-            className={`relative overflow-visible cursor-pointer ${incomingPrescriptions.length > 0 ? "animate-pulse" : ""}`}
+            className="relative overflow-visible"
           >
             <Bell className="h-4 w-4" />
             {incomingPrescriptions.length > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center z-10 pointer-events-none">
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center pointer-events-none">
                 {incomingPrescriptions.length}
               </span>
             )}
