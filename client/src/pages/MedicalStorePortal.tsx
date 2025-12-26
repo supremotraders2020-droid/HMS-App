@@ -587,14 +587,12 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
   };
 
   const handleViewIncomingPrescription = async (notification: PrescriptionNotification) => {
-    // Fetch full prescription details and open in view dialog
     try {
       const response = await fetch(`/api/prescriptions/${notification.id}`);
       if (response.ok) {
         const prescription = await response.json();
         setViewPrescription(prescription);
         setIsViewOpen(true);
-        dismissNotification(notification.id);
       }
     } catch (error) {
       toast({
@@ -612,7 +610,6 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
         const prescription = await response.json();
         setSelectedPrescription(prescription);
         setIsDispensingOpen(true);
-        dismissNotification(notification.id);
       }
     } catch (error) {
       toast({
