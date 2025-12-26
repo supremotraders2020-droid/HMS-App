@@ -251,11 +251,8 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
 
   const handleScan = () => {
     if (!uhidInput.trim()) {
-      toast({
-        title: "Enter UHID",
-        description: "Please enter a valid UHID to scan",
-        variant: "destructive",
-      });
+      // If no UHID entered, start camera scanner instead
+      startCamera();
       return;
     }
     scanMutation.mutate(uhidInput.trim());
