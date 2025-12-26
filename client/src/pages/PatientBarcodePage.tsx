@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 import { 
   QrCode, 
   Scan, 
@@ -25,11 +26,13 @@ import {
   Thermometer,
   Droplets,
   Wind,
-  Plus,
   History,
   Shield,
   X,
-  Loader2
+  Loader2,
+  Camera,
+  CameraOff,
+  Video
 } from "lucide-react";
 
 interface PatientData {
@@ -83,6 +86,13 @@ export default function PatientBarcodePage() {
   const [scannedPatient, setScannedPatient] = useState<PatientData | null>(null);
   const [showScanner, setShowScanner] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
+  const controlsRef = useRef<any>(null);
 
   const scanMutation = useMutation({
     mutationFn: async (uhid: string) => {
@@ -92,6 +102,7 @@ export default function PatientBarcodePage() {
     onSuccess: (data) => {
       setScannedPatient(data);
       setShowScanner(false);
+      stopCamera();
       toast({
         title: "Patient Found",
         description: `Successfully loaded data for ${data.patient.name}`,
@@ -110,6 +121,81 @@ export default function PatientBarcodePage() {
     queryKey: ["/api/barcodes"],
     enabled: showScanner,
   });
+
+  const extractUHID = (barcodeText: string): string | null => {
+    const text = barcodeText.trim();
+    if (text.startsWith("HMS:")) {
+      const parts = text.split(":");
+      return parts[1] || null;
+    }
+    if (text.match(/^GRAV-(IPD|OPD)-\d{4}-\d+$/)) {
+      return text;
+    }
+    return null;
+  };
+
+  const startCamera = async () => {
+    try {
+      setCameraError(null);
+      setIsScanning(true);
+      
+      if (!readerRef.current) {
+        readerRef.current = new BrowserMultiFormatReader();
+      }
+
+      const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
+      const selectedDeviceId = videoInputDevices.length > 0 ? videoInputDevices[0].deviceId : undefined;
+
+      if (!videoRef.current) {
+        setCameraError("Video element not ready");
+        setIsScanning(false);
+        return;
+      }
+
+      controlsRef.current = await readerRef.current.decodeFromVideoDevice(
+        selectedDeviceId,
+        videoRef.current,
+        (result, error, controls) => {
+          if (result) {
+            const barcodeText = result.getText();
+            const uhid = extractUHID(barcodeText);
+            
+            if (uhid && !scanMutation.isPending) {
+              controls.stop();
+              setUhidInput(uhid);
+              scanMutation.mutate(uhid);
+            }
+          }
+        }
+      );
+
+      setCameraActive(true);
+    } catch (err: any) {
+      console.error("Camera error:", err);
+      setCameraError(err.message || "Could not access camera. Please use manual entry.");
+      setCameraActive(false);
+      setIsScanning(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (controlsRef.current) {
+      controlsRef.current.stop();
+      controlsRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setCameraActive(false);
+    setIsScanning(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
 
   const handleScan = () => {
     if (!uhidInput.trim()) {
@@ -143,6 +229,11 @@ export default function PatientBarcodePage() {
       return allergiesStr.split(",").map(a => a.trim()).filter(Boolean);
     }
   };
+
+  const userRole = scannedPatient?.scanInfo?.role || "";
+  const canSeePrescriptions = userRole === "DOCTOR" || userRole === "ADMIN";
+  const canSeeBilling = userRole === "ADMIN";
+  const canSeeVitals = userRole === "NURSE" || userRole === "DOCTOR" || userRole === "ADMIN";
 
   if (showScanner) {
     return (
@@ -187,13 +278,65 @@ export default function PatientBarcodePage() {
                 </Button>
               </div>
 
-              <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <QrCode className="h-16 w-16 mx-auto mb-3 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Position the patient's wristband barcode in front of the camera
-                  <br />
-                  or manually enter the UHID above
-                </p>
+              <div className="bg-muted/50 rounded-lg p-4">
+                {cameraActive ? (
+                  <div className="space-y-3">
+                    <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+                      <video 
+                        ref={videoRef} 
+                        className="w-full h-full object-cover"
+                        autoPlay 
+                        playsInline
+                        muted
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-48 h-24 border-2 border-white/70 rounded-lg" />
+                      </div>
+                    </div>
+                    <div className="flex justify-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={stopCamera}
+                        data-testid="button-stop-camera"
+                      >
+                        <CameraOff className="h-4 w-4 mr-2" />
+                        Stop Camera
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span>Scanning for barcode... Position UHID barcode in frame</span>
+                    </div>
+                    <p className="text-xs text-center text-muted-foreground">
+                      Or enter UHID manually above if camera scan doesn't work
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-3">
+                    {cameraError ? (
+                      <Alert variant="destructive" className="text-left">
+                        <CameraOff className="h-4 w-4" />
+                        <AlertTitle>Camera Error</AlertTitle>
+                        <AlertDescription>{cameraError}</AlertDescription>
+                      </Alert>
+                    ) : (
+                      <>
+                        <Video className="h-16 w-16 mx-auto text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Use camera to scan barcode or enter UHID manually above
+                        </p>
+                      </>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      onClick={startCamera}
+                      data-testid="button-start-camera"
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Start Camera
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <Alert>
@@ -266,7 +409,7 @@ export default function PatientBarcodePage() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-4">
           <Button variant="outline" onClick={resetScanner} data-testid="button-back-scanner">
             <X className="h-4 w-4 mr-2" />
@@ -278,6 +421,7 @@ export default function PatientBarcodePage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Badge variant="outline">{scannedPatient.scanInfo.role}</Badge>
           <Badge variant={scannedPatient.patient.admissionType === "IPD" ? "default" : "secondary"}>
             {scannedPatient.patient.admissionType}
           </Badge>
@@ -307,24 +451,30 @@ export default function PatientBarcodePage() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+        <TabsList className="inline-flex flex-wrap gap-1">
           <TabsTrigger value="overview" data-testid="tab-overview">
             <User className="h-4 w-4 mr-2" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="vitals" data-testid="tab-vitals">
-            <Activity className="h-4 w-4 mr-2" />
-            Vitals
-          </TabsTrigger>
-          <TabsTrigger value="prescriptions" data-testid="tab-prescriptions">
-            <Pill className="h-4 w-4 mr-2" />
-            Prescriptions
-          </TabsTrigger>
-          <TabsTrigger value="reports" data-testid="tab-reports">
-            <FileText className="h-4 w-4 mr-2" />
-            Reports
-          </TabsTrigger>
-          {scannedPatient.billing && (
+          {canSeeVitals && (
+            <TabsTrigger value="vitals" data-testid="tab-vitals">
+              <Activity className="h-4 w-4 mr-2" />
+              Vitals
+            </TabsTrigger>
+          )}
+          {canSeePrescriptions && (
+            <TabsTrigger value="prescriptions" data-testid="tab-prescriptions">
+              <Pill className="h-4 w-4 mr-2" />
+              Prescriptions
+            </TabsTrigger>
+          )}
+          {canSeePrescriptions && (
+            <TabsTrigger value="reports" data-testid="tab-reports">
+              <FileText className="h-4 w-4 mr-2" />
+              Reports
+            </TabsTrigger>
+          )}
+          {canSeeBilling && scannedPatient.billing && (
             <TabsTrigger value="billing" data-testid="tab-billing">
               <DollarSign className="h-4 w-4 mr-2" />
               Billing
@@ -366,55 +516,57 @@ export default function PatientBarcodePage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Latest Vitals
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {scannedPatient.vitals ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2">
-                      <Heart className="h-4 w-4 text-red-500" />
-                      <div>
-                        <div className="text-2xl font-bold">{scannedPatient.vitals.heartRate || "—"}</div>
-                        <div className="text-xs text-muted-foreground">Heart Rate (bpm)</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Droplets className="h-4 w-4 text-blue-500" />
-                      <div>
-                        <div className="text-2xl font-bold">
-                          {scannedPatient.vitals.systolicBp || "—"}/{scannedPatient.vitals.diastolicBp || "—"}
+            {canSeeVitals && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Latest Vitals
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {scannedPatient.vitals ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4 text-red-500" />
+                        <div>
+                          <div className="text-2xl font-bold">{scannedPatient.vitals.heartRate || "—"}</div>
+                          <div className="text-xs text-muted-foreground">Heart Rate (bpm)</div>
                         </div>
-                        <div className="text-xs text-muted-foreground">Blood Pressure</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Droplets className="h-4 w-4 text-blue-500" />
+                        <div>
+                          <div className="text-2xl font-bold">
+                            {scannedPatient.vitals.systolicBp || "—"}/{scannedPatient.vitals.diastolicBp || "—"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Blood Pressure</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Thermometer className="h-4 w-4 text-orange-500" />
+                        <div>
+                          <div className="text-2xl font-bold">{scannedPatient.vitals.temperature || "—"}°</div>
+                          <div className="text-xs text-muted-foreground">Temperature</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Wind className="h-4 w-4 text-green-500" />
+                        <div>
+                          <div className="text-2xl font-bold">{scannedPatient.vitals.spo2 || "—"}%</div>
+                          <div className="text-xs text-muted-foreground">SpO2</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Thermometer className="h-4 w-4 text-orange-500" />
-                      <div>
-                        <div className="text-2xl font-bold">{scannedPatient.vitals.temperature || "—"}°</div>
-                        <div className="text-xs text-muted-foreground">Temperature</div>
-                      </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No vitals recorded yet</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Wind className="h-4 w-4 text-green-500" />
-                      <div>
-                        <div className="text-2xl font-bold">{scannedPatient.vitals.spo2 || "—"}%</div>
-                        <div className="text-xs text-muted-foreground">SpO2</div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-muted-foreground">
-                    <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No vitals recorded yet</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader className="pb-2">
@@ -444,110 +596,116 @@ export default function PatientBarcodePage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="vitals" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Vital Signs History
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {scannedPatient.vitals ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card className="p-4 text-center">
-                    <Heart className="h-8 w-8 mx-auto mb-2 text-red-500" />
-                    <div className="text-3xl font-bold">{scannedPatient.vitals.heartRate || "—"}</div>
-                    <div className="text-sm text-muted-foreground">Heart Rate (bpm)</div>
-                  </Card>
-                  <Card className="p-4 text-center">
-                    <Droplets className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-                    <div className="text-3xl font-bold">
-                      {scannedPatient.vitals.systolicBp || "—"}/{scannedPatient.vitals.diastolicBp || "—"}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Blood Pressure (mmHg)</div>
-                  </Card>
-                  <Card className="p-4 text-center">
-                    <Thermometer className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-                    <div className="text-3xl font-bold">{scannedPatient.vitals.temperature || "—"}°F</div>
-                    <div className="text-sm text-muted-foreground">Temperature</div>
-                  </Card>
-                  <Card className="p-4 text-center">
-                    <Wind className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                    <div className="text-3xl font-bold">{scannedPatient.vitals.spo2 || "—"}%</div>
-                    <div className="text-sm text-muted-foreground">SpO2</div>
-                  </Card>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No vitals recorded for this patient</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {canSeeVitals && (
+          <TabsContent value="vitals" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Vital Signs History
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {scannedPatient.vitals ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="p-4 text-center">
+                      <Heart className="h-8 w-8 mx-auto mb-2 text-red-500" />
+                      <div className="text-3xl font-bold">{scannedPatient.vitals.heartRate || "—"}</div>
+                      <div className="text-sm text-muted-foreground">Heart Rate (bpm)</div>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <Droplets className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                      <div className="text-3xl font-bold">
+                        {scannedPatient.vitals.systolicBp || "—"}/{scannedPatient.vitals.diastolicBp || "—"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Blood Pressure (mmHg)</div>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <Thermometer className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+                      <div className="text-3xl font-bold">{scannedPatient.vitals.temperature || "—"}°F</div>
+                      <div className="text-sm text-muted-foreground">Temperature</div>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <Wind className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                      <div className="text-3xl font-bold">{scannedPatient.vitals.spo2 || "—"}%</div>
+                      <div className="text-sm text-muted-foreground">SpO2</div>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No vitals recorded for this patient</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
-        <TabsContent value="prescriptions" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Pill className="h-5 w-5" />
-                Active Prescriptions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {scannedPatient.prescriptions && scannedPatient.prescriptions.length > 0 ? (
-                <div className="space-y-4">
-                  {scannedPatient.prescriptions.map((rx: any) => (
-                    <div key={rx.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="font-medium">{rx.diagnosis || "Prescription"}</div>
-                        <Badge variant={rx.status === "finalized" ? "default" : "secondary"}>
-                          {rx.status}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        <p>Doctor: {rx.doctorName}</p>
-                        <p>Date: {new Date(rx.prescriptionDate).toLocaleDateString()}</p>
-                      </div>
-                      {rx.medications && (
-                        <div className="mt-2">
-                          <p className="text-sm font-medium">Medications:</p>
-                          <p className="text-sm text-muted-foreground">{rx.medications}</p>
+        {canSeePrescriptions && (
+          <TabsContent value="prescriptions" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Pill className="h-5 w-5" />
+                  Active Prescriptions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {scannedPatient.prescriptions && scannedPatient.prescriptions.length > 0 ? (
+                  <div className="space-y-4">
+                    {scannedPatient.prescriptions.map((rx: any) => (
+                      <div key={rx.id} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                          <div className="font-medium">{rx.diagnosis || "Prescription"}</div>
+                          <Badge variant={rx.status === "finalized" ? "default" : "secondary"}>
+                            {rx.status}
+                          </Badge>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
+                        <div className="text-sm text-muted-foreground">
+                          <p>Doctor: {rx.doctorName}</p>
+                          <p>Date: {new Date(rx.prescriptionDate).toLocaleDateString()}</p>
+                        </div>
+                        {rx.medications && (
+                          <div className="mt-2">
+                            <p className="text-sm font-medium">Medications:</p>
+                            <p className="text-sm text-muted-foreground">{rx.medications}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Pill className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No active prescriptions</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {canSeePrescriptions && (
+          <TabsContent value="reports" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Reports & Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="text-center py-8 text-muted-foreground">
-                  <Pill className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No active prescriptions</p>
+                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>Lab reports and documents will appear here</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
-        <TabsContent value="reports" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Reports & Documents
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>Lab reports and documents will appear here</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {scannedPatient.billing && (
+        {canSeeBilling && scannedPatient.billing && (
           <TabsContent value="billing" className="mt-4">
             <Card>
               <CardHeader>
@@ -561,7 +719,7 @@ export default function PatientBarcodePage() {
                   <div className="space-y-4">
                     {scannedPatient.billing.map((bill: any) => (
                       <div key={bill.id} className="p-4 border rounded-lg">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
                           <div>
                             <p className="font-medium">Bill #{bill.billNumber}</p>
                             <p className="text-sm text-muted-foreground">
