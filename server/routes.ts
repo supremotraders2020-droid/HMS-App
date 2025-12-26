@@ -1217,6 +1217,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activityType: "urgent"
       });
       
+      // Auto-create patient monitoring session for admitted patient
+      try {
+        const patient = await storage.getServicePatientById(parsed.data.patientId);
+        if (patient) {
+          const today = new Date();
+          const sessionDate = today.toISOString().split('T')[0];
+          
+          // Check if session already exists for this patient today
+          const existingSessions = await db.select()
+            .from(patientMonitoringSessions)
+            .where(
+              and(
+                eq(patientMonitoringSessions.patientId, parsed.data.patientId),
+                eq(patientMonitoringSessions.sessionDate, sessionDate)
+              )
+            );
+          
+          if (existingSessions.length === 0) {
+            await db.insert(patientMonitoringSessions).values({
+              patientId: parsed.data.patientId,
+              patientName: `${patient.firstName} ${patient.lastName}`,
+              uhid: patient.mrn || `MRN-${parsed.data.patientId}`,
+              sessionDate,
+              wardBed: parsed.data.wardBed || "General Ward",
+              primaryDiagnosis: parsed.data.diagnosis || "Pending Assessment",
+              isOnVentilator: false,
+              isDiabetic: false,
+              gcsMeasure: { eye: 4, verbal: 5, motor: 6, total: 15 },
+              status: "ACTIVE"
+            });
+          }
+        }
+      } catch (sessionError) {
+        console.error("Failed to create monitoring session:", sessionError);
+        // Don't fail the admission if session creation fails
+      }
+      
       res.status(201).json(admission);
     } catch (error) {
       res.status(500).json({ error: "Failed to create admission" });
