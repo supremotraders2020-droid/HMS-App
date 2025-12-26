@@ -90,6 +90,7 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
   const [viewPrescription, setViewPrescription] = useState<Prescription | null>(null);
   const [storeInfo, setStoreInfo] = useState<{ store: MedicalStore; storeUser: any } | null>(null);
   const [incomingPrescriptions, setIncomingPrescriptions] = useState<PrescriptionNotification[]>([]);
+  const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(new Set());
 
   // Fetch stored notifications from backend on mount (last 3 hours only)
   useEffect(() => {
@@ -102,6 +103,7 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
         const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
         
         // Filter prescription notifications from last 3 hours and parse metadata
+        const readIds = new Set<string>();
         const prescriptionNotifications = notifications
           .filter((notif: any) => {
             if (notif.type !== 'prescription') return false;
@@ -113,8 +115,15 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
               const metadata = JSON.parse(notif.metadata || '{}');
               if (metadata.notificationType !== 'new_prescription_for_dispensing') return null;
               
+              const prescriptionId = metadata.prescriptionId || notif.relatedEntityId;
+              
+              // Track if notification is already read
+              if (notif.isRead) {
+                readIds.add(prescriptionId);
+              }
+              
               return {
-                id: metadata.prescriptionId || notif.relatedEntityId,
+                id: prescriptionId,
                 prescriptionNumber: metadata.prescriptionNumber,
                 patientName: metadata.patientName || 'Unknown',
                 patientAge: metadata.patientAge,
@@ -135,6 +144,7 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
           .filter((n: PrescriptionNotification | null): n is PrescriptionNotification => n !== null);
 
         setIncomingPrescriptions(prescriptionNotifications);
+        setReadNotificationIds(readIds);
       } catch (error) {
         console.error("Failed to fetch stored notifications:", error);
       }
@@ -645,7 +655,22 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
     setIncomingPrescriptions(prev => prev.filter(n => n.id !== id));
   };
 
+  const markNotificationAsRead = async (prescriptionId: string) => {
+    // Mark as read locally
+    setReadNotificationIds(prev => new Set(prev).add(prescriptionId));
+    
+    // Mark as read on backend - find notification by prescription id in metadata
+    try {
+      await apiRequest("PATCH", `/api/user-notifications/${currentUserId}/read-all`);
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
+
   const handleViewIncomingPrescription = async (notification: PrescriptionNotification) => {
+    // Mark as read when clicked
+    markNotificationAsRead(notification.id);
+    
     try {
       const response = await fetch(`/api/prescriptions/${notification.id}`);
       if (response.ok) {
@@ -663,6 +688,9 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
   };
 
   const handleDispenseIncomingPrescription = async (notification: PrescriptionNotification) => {
+    // Mark as read when clicked
+    markNotificationAsRead(notification.id);
+    
     try {
       const response = await fetch(`/api/prescriptions/${notification.id}`);
       if (response.ok) {
@@ -757,9 +785,9 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
           <TabsTrigger value="notifications" data-testid="tab-notifications" className="relative">
             <Bell className="h-4 w-4 mr-2" />
             Notifications
-            {incomingPrescriptions.length > 0 && (
+            {incomingPrescriptions.filter(n => !readNotificationIds.has(n.id)).length > 0 && (
               <span className="ml-2 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-                {incomingPrescriptions.length}
+                {incomingPrescriptions.filter(n => !readNotificationIds.has(n.id)).length}
               </span>
             )}
           </TabsTrigger>
