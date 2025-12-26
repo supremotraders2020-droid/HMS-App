@@ -102,12 +102,27 @@ export default function PatientMonitoringPage() {
     .map(s => parseISO(s.sessionDate));
 
   const createSessionMutation = useMutation({
-    mutationFn: (data: typeof newSessionData) => 
-      apiRequest("POST", "/api/patient-monitoring/sessions", data),
+    mutationFn: (data: typeof newSessionData) => {
+      const payload = {
+        ...data,
+        admissionDateTime: data.admissionDateTime instanceof Date 
+          ? data.admissionDateTime.toISOString() 
+          : data.admissionDateTime
+      };
+      return apiRequest("POST", "/api/patient-monitoring/sessions", payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/patient-monitoring/sessions"] });
       setShowNewSession(false);
       toast({ title: "Session Created", description: "New monitoring session started" });
+    },
+    onError: (error: any) => {
+      console.error("Session creation error:", error);
+      toast({ 
+        title: "Failed to Create Session", 
+        description: error?.message || "Please check all required fields and try again",
+        variant: "destructive"
+      });
     }
   });
 
