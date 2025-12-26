@@ -8,7 +8,7 @@ import { databaseStorage } from "./database-storage";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 import { users, insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
-  patientBarcodes, insertPatientBarcodeSchema, barcodeScanLogs, insertBarcodeScanLogSchema,
+  patientBarcodes, insertPatientBarcodeSchema, barcodeScanLogs, insertBarcodeScanLogSchema, servicePatients,
   patientMonitoringSessions, insertPatientMonitoringSessionSchema,
   vitalsHourly, insertVitalsHourlySchema,
   inotropesSedation, insertInotropesSedationSchema,

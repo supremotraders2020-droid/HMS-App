@@ -191,8 +191,15 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
       const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
       const selectedDeviceId = videoInputDevices.length > 0 ? videoInputDevices[0].deviceId : undefined;
 
+      // Wait for video element to be ready with retry
+      let attempts = 0;
+      while (!videoRef.current && attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+
       if (!videoRef.current) {
-        setCameraError("Video element not ready");
+        setCameraError("Video element not ready. Please try again.");
         setIsScanning(false);
         return;
       }
