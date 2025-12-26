@@ -91,6 +91,58 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
   const [storeInfo, setStoreInfo] = useState<{ store: MedicalStore; storeUser: any } | null>(null);
   const [incomingPrescriptions, setIncomingPrescriptions] = useState<PrescriptionNotification[]>([]);
 
+  // Fetch stored notifications from backend on mount (last 3 hours only)
+  useEffect(() => {
+    const fetchStoredNotifications = async () => {
+      try {
+        const response = await fetch(`/api/user-notifications/${currentUserId}`);
+        if (!response.ok) return;
+        
+        const notifications = await response.json();
+        const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+        
+        // Filter prescription notifications from last 3 hours and parse metadata
+        const prescriptionNotifications = notifications
+          .filter((notif: any) => {
+            if (notif.type !== 'prescription') return false;
+            const createdAt = new Date(notif.createdAt);
+            return createdAt >= threeHoursAgo;
+          })
+          .map((notif: any) => {
+            try {
+              const metadata = JSON.parse(notif.metadata || '{}');
+              if (metadata.notificationType !== 'new_prescription_for_dispensing') return null;
+              
+              return {
+                id: metadata.prescriptionId || notif.relatedEntityId,
+                prescriptionNumber: metadata.prescriptionNumber,
+                patientName: metadata.patientName || 'Unknown',
+                patientAge: metadata.patientAge,
+                patientGender: metadata.patientGender,
+                doctorName: metadata.doctorName || 'Unknown',
+                diagnosis: metadata.diagnosis || '',
+                medicines: metadata.medicines || [],
+                medicineDetails: metadata.medicineDetails,
+                instructions: metadata.instructions,
+                prescriptionDate: metadata.prescriptionDate || notif.createdAt,
+                signedByName: metadata.signedByName,
+                receivedAt: new Date(notif.createdAt)
+              } as PrescriptionNotification;
+            } catch {
+              return null;
+            }
+          })
+          .filter((n: PrescriptionNotification | null): n is PrescriptionNotification => n !== null);
+
+        setIncomingPrescriptions(prescriptionNotifications);
+      } catch (error) {
+        console.error("Failed to fetch stored notifications:", error);
+      }
+    };
+
+    fetchStoredNotifications();
+  }, [currentUserId]);
+
   const { data: myStoreData } = useQuery<{ store: MedicalStore; storeUser: any }>({
     queryKey: ["/api/medical-stores/my-store", currentUserId],
     queryFn: async () => {
@@ -147,7 +199,12 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
                 receivedAt: new Date()
               };
 
-              setIncomingPrescriptions(prev => [newNotification, ...prev]);
+              // Add only if not already exists (avoid duplicates)
+              setIncomingPrescriptions(prev => {
+                const exists = prev.some(p => p.id === newNotification.id);
+                if (exists) return prev;
+                return [newNotification, ...prev];
+              });
               setActiveTab("notifications");
 
               // Show toast notification
