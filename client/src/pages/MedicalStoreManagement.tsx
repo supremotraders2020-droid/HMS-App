@@ -223,7 +223,19 @@ export default function MedicalStoreManagement() {
 
   const handleUpdateStore = () => {
     if (!selectedStore) return;
-    updateStoreMutation.mutate({ id: selectedStore.id, data: selectedStore });
+    // Only send the editable fields to avoid type/validation issues
+    const updateData = {
+      storeName: selectedStore.storeName,
+      status: selectedStore.status,
+      licenseNumber: selectedStore.licenseNumber,
+      gstNumber: selectedStore.gstNumber,
+      phone: selectedStore.phone,
+      operatingHours: selectedStore.operatingHours,
+      address: selectedStore.address,
+      city: selectedStore.city,
+      state: selectedStore.state,
+    };
+    updateStoreMutation.mutate({ id: selectedStore.id, data: updateData });
   };
 
   const handleDeleteStore = (id: string) => {
@@ -790,6 +802,22 @@ export default function MedicalStoreManagement() {
                   value={selectedStore.address || ""}
                   onChange={(e) => setSelectedStore({ ...selectedStore, address: e.target.value })}
                   data-testid="input-edit-address"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>City</Label>
+                <Input
+                  value={selectedStore.city || ""}
+                  onChange={(e) => setSelectedStore({ ...selectedStore, city: e.target.value })}
+                  data-testid="input-edit-city"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>State</Label>
+                <Input
+                  value={selectedStore.state || ""}
+                  onChange={(e) => setSelectedStore({ ...selectedStore, state: e.target.value })}
+                  data-testid="input-edit-state"
                 />
               </div>
             </div>
