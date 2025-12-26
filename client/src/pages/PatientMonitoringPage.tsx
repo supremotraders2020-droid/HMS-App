@@ -14,13 +14,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 import { 
   Activity, Heart, Droplets, Thermometer, Clock, 
   FileText, Pill, AlertTriangle, Users, Shield,
   PlusCircle, RefreshCw, Download, Stethoscope,
   Wind, Syringe, FlaskConical, ClipboardList, Baby,
-  BedDouble, FileCheck, Hospital, Timer, Info
+  BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays
 } from "lucide-react";
 
 const HOUR_SLOTS = [
@@ -54,6 +55,9 @@ export default function PatientMonitoringPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [showNewSession, setShowNewSession] = useState(false);
+  const [selectedPatientFilter, setSelectedPatientFilter] = useState<string>("all");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [newSessionData, setNewSessionData] = useState({
     patientId: "",
     patientName: "",
@@ -82,6 +86,20 @@ export default function PatientMonitoringPage() {
   });
 
   const selectedSession = sessions.find(s => s.id === selectedSessionId);
+
+  const uniquePatients = Array.from(
+    new Map(sessions.map(s => [s.patientId, { id: s.patientId, name: s.patientName, uhid: s.uhid }])).values()
+  );
+
+  const filteredSessions = sessions.filter(session => {
+    const matchesPatient = selectedPatientFilter === "all" || session.patientId === selectedPatientFilter;
+    const matchesDate = !selectedDate || isSameDay(parseISO(session.sessionDate), selectedDate);
+    return matchesPatient && matchesDate;
+  });
+
+  const sessionDates = sessions
+    .filter(s => selectedPatientFilter === "all" || s.patientId === selectedPatientFilter)
+    .map(s => parseISO(s.sessionDate));
 
   const createSessionMutation = useMutation({
     mutationFn: (data: typeof newSessionData) => 
@@ -218,24 +236,75 @@ export default function PatientMonitoringPage() {
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-80 border-r bg-muted/30 overflow-auto">
-          <div className="px-4 py-3 border-b bg-muted/50">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-sm">Active Sessions</h3>
-              <Badge variant="secondary" className="text-xs">{sessions.length}</Badge>
+          <div className="px-4 py-3 border-b bg-muted/50 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-medium text-sm">Patient Sessions</h3>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant={showCalendar ? "default" : "outline"} 
+                  size="icon" 
+                  onClick={() => setShowCalendar(!showCalendar)}
+                  data-testid="button-toggle-calendar"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                </Button>
+                <Badge variant="secondary" className="text-xs">{filteredSessions.length}</Badge>
+              </div>
             </div>
+            <Select value={selectedPatientFilter} onValueChange={setSelectedPatientFilter}>
+              <SelectTrigger className="h-8 text-xs" data-testid="select-patient-filter">
+                <SelectValue placeholder="Filter by patient" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Patients</SelectItem>
+                {uniquePatients.map(p => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} ({p.uhid})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {showCalendar && (
+              <div className="bg-card rounded-lg border p-2">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  modifiers={{ hasSession: sessionDates }}
+                  modifiersStyles={{ hasSession: { fontWeight: 'bold', color: 'hsl(var(--primary))' } }}
+                  className="w-full"
+                  data-testid="calendar-date-picker"
+                />
+                {selectedDate && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full mt-2 text-xs"
+                    onClick={() => setSelectedDate(undefined)}
+                    data-testid="button-clear-date"
+                  >
+                    Clear Date Filter
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
-          <ScrollArea className="h-[calc(100vh-200px)]">
+          <ScrollArea className="h-[calc(100vh-300px)]">
             <div className="p-2 space-y-2">
-              {sessions.length === 0 ? (
+              {filteredSessions.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                     <FileText className="h-8 w-8 opacity-50" />
                   </div>
-                  <p className="text-sm font-medium">No active sessions</p>
-                  <p className="text-xs mt-1">Click "New Session" to start monitoring</p>
+                  <p className="text-sm font-medium">No sessions found</p>
+                  <p className="text-xs mt-1">
+                    {selectedPatientFilter !== "all" || selectedDate 
+                      ? "Try changing the filter or date" 
+                      : "Click 'New Session' to start monitoring"}
+                  </p>
                 </div>
               ) : (
-                sessions.map((session) => (
+                filteredSessions.map((session) => (
                   <div 
                     key={session.id} 
                     className={`p-4 rounded-lg cursor-pointer transition-all hover-elevate ${
