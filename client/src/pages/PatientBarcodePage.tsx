@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { BrowserMultiFormatReader } from "@zxing/browser";
+import { BrowserMultiFormatReader, BrowserQRCodeReader } from "@zxing/browser";
 import { 
   QrCode, 
   Scan, 
@@ -111,7 +111,7 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
   const [selectedPatientForBarcode, setSelectedPatientForBarcode] = useState<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
+  const readerRef = useRef<BrowserQRCodeReader | null>(null);
   const controlsRef = useRef<any>(null);
 
   const openBarcodeModal = (patient: any) => {
@@ -153,21 +153,21 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
       printWindow.document.write(`
         <html>
           <head>
-            <title>Patient Barcode - ${selectedPatientForBarcode.name}</title>
+            <title>Patient QR Code - ${selectedPatientForBarcode.name}</title>
             <style>
               body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-              .barcode-container { border: 2px solid #333; padding: 20px; display: inline-block; }
+              .qr-container { border: 2px solid #333; padding: 20px; display: inline-block; }
               .patient-name { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
               .uhid { font-size: 14px; color: #666; margin-bottom: 15px; }
-              .barcode-img { max-width: 100%; }
+              .qr-img { width: 150px; height: 150px; }
               .hospital-name { font-size: 12px; margin-top: 10px; color: #888; }
             </style>
           </head>
           <body>
-            <div class="barcode-container">
+            <div class="qr-container">
               <div class="patient-name">${selectedPatientForBarcode.name}</div>
               <div class="uhid">UHID: ${selectedPatientForBarcode.barcode.uhid}</div>
-              <img class="barcode-img" src="/api/barcodes/image/${selectedPatientForBarcode.barcode.uhid}" />
+              <img class="qr-img" src="/api/barcodes/image/${selectedPatientForBarcode.barcode.uhid}" />
               <div class="hospital-name">Gravity Hospital - HMS Core</div>
             </div>
             <script>
@@ -253,19 +253,18 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
     try {
       setCameraError(null);
       setIsScanning(true);
-      // Set cameraActive first to render the video element
       setCameraActive(true);
       
+      // Use QR Code specific reader for better detection
       if (!readerRef.current) {
-        readerRef.current = new BrowserMultiFormatReader();
+        readerRef.current = new BrowserQRCodeReader();
       }
 
       // Get available video devices - prefer back camera on mobile
-      const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
+      const videoInputDevices = await BrowserQRCodeReader.listVideoInputDevices();
       let selectedDeviceId: string | undefined = undefined;
       
       if (videoInputDevices.length > 0) {
-        // Try to find back camera for mobile devices
         const backCamera = videoInputDevices.find(device => 
           device.label.toLowerCase().includes('back') || 
           device.label.toLowerCase().includes('rear') ||
@@ -274,7 +273,7 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
         selectedDeviceId = backCamera?.deviceId || videoInputDevices[0].deviceId;
       }
 
-      // Wait for video element to be rendered and ready
+      // Wait for video element to be rendered
       let attempts = 0;
       while (!videoRef.current && attempts < 30) {
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -288,16 +287,21 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
         return;
       }
 
+      console.log("Starting QR code scanner with device:", selectedDeviceId);
+      
       controlsRef.current = await readerRef.current.decodeFromVideoDevice(
         selectedDeviceId,
         videoRef.current,
         (result, error, controls) => {
           if (result) {
             const barcodeText = result.getText();
+            console.log("QR Code detected:", barcodeText);
             const uhid = extractUHID(barcodeText);
             
             if (uhid && !scanMutation.isPending) {
               controls.stop();
+              setCameraActive(false);
+              setIsScanning(false);
               setUhidInput(uhid);
               scanMutation.mutate(uhid);
             }
@@ -571,16 +575,16 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
           </Card>
         </div>
 
-        {/* Barcode Modal */}
+        {/* QR Code Modal */}
         <Dialog open={barcodeModalOpen} onOpenChange={setBarcodeModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <QrCode className="h-5 w-5" />
-                Patient Barcode
+                Patient QR Code
               </DialogTitle>
               <DialogDescription>
-                Scan this barcode to access patient information
+                Scan this QR code to access patient information
               </DialogDescription>
             </DialogHeader>
             {selectedPatientForBarcode && (

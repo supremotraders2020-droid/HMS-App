@@ -8039,15 +8039,12 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       // Barcode content format: HMS:UHID:SIGNATURE
       const barcodeContent = `HMS:${barcode.uhid}:${signature}`;
 
-      // Generate barcode image using Code 128 (widely scannable)
+      // Generate QR code (compact and easier to scan with camera)
       const png = await bwipjs.toBuffer({
-        bcid: "code128",
+        bcid: "qrcode",
         text: barcodeContent,
-        scale: 3,
-        height: 15,
-        includetext: true,
-        textxalign: "center",
-        textsize: 10,
+        scale: 4,
+        eclevel: "M",
       });
 
       res.set("Content-Type", "image/png");
