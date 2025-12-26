@@ -32,7 +32,7 @@ type StaffMember = {
   joiningDate: string | null;
   status: string;
   qualifications: string | null;
-  specialization: string | null;
+  designation: string | null;
   createdAt: string;
 };
 
@@ -318,11 +318,11 @@ export default function StaffManagement() {
                   employeeCode: formData.get("employeeCode") as string,
                   fullName: formData.get("fullName") as string,
                   role: formData.get("role") as string,
-                  department: formData.get("department") as string,
-                  email: formData.get("email") as string,
-                  phone: formData.get("phone") as string,
-                  qualifications: formData.get("qualifications") as string,
-                  specialization: formData.get("specialization") as string,
+                  department: formData.get("department") as string || null,
+                  email: formData.get("email") as string || null,
+                  phone: formData.get("phone") as string || null,
+                  qualifications: formData.get("qualifications") as string || null,
+                  designation: formData.get("designation") as string || null,
                   status: "ACTIVE",
                 });
               }}>
@@ -381,8 +381,8 @@ export default function StaffManagement() {
                     <Input id="qualifications" name="qualifications" data-testid="input-qualifications" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="specialization">Specialization</Label>
-                    <Input id="specialization" name="specialization" data-testid="input-specialization" />
+                    <Label htmlFor="designation">Designation</Label>
+                    <Input id="designation" name="designation" data-testid="input-designation" />
                   </div>
                 </div>
                 <DialogFooter className="mt-6">
