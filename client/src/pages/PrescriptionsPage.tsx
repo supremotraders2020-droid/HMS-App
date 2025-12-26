@@ -18,7 +18,7 @@ interface User {
   id: string;
   username: string;
   name: string;
-  role: "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER";
+  role: "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
   tenantId: string;
   hospitalName: string;
 }

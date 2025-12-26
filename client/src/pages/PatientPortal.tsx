@@ -2307,25 +2307,35 @@ Description: ${record.description}
                           variant="outline" 
                           className="flex-1"
                           onClick={() => {
-                            const content = `
+                            if (report.pdfUrl) {
+                              const link = document.createElement('a');
+                              link.href = report.pdfUrl;
+                              link.download = `${report.reportNumber || 'lab-report'}.pdf`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            } else {
+                              const content = `
 Lab Report: ${report.reportNumber}
 Date: ${report.reportDate ? format(new Date(report.reportDate), "MMM dd, yyyy") : "-"}
 Test: ${report.testName || "Lab Test"}
 Lab: ${report.labName || "N/A"}
 Status: ${report.reportStatus}
 
-Summary: ${report.reportSummary || "N/A"}
+Summary: ${report.reportSummary || report.resultData ? JSON.parse(report.resultData || "{}").summary : "N/A"}
 ${report.criticalFlags ? `\nCritical Notes: ${report.criticalFlags}` : ""}
-                            `.trim();
-                            const blob = new Blob([content], { type: 'text/plain' });
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `${report.reportNumber || 'lab-report'}.txt`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(url);
+${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
+                              `.trim();
+                              const blob = new Blob([content], { type: 'text/plain' });
+                              const url = URL.createObjectURL(blob);
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = `${report.reportNumber || 'lab-report'}.txt`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              URL.revokeObjectURL(url);
+                            }
                             toast({
                               title: "Download Started",
                               description: `Downloading ${report.reportNumber}`,
@@ -2340,15 +2350,19 @@ ${report.criticalFlags ? `\nCritical Notes: ${report.criticalFlags}` : ""}
                           variant="outline" 
                           className="flex-1"
                           onClick={() => {
-                            toast({
-                              title: "Report Details",
-                              description: report.reportSummary || "Full report details available on request.",
-                            });
+                            if (report.pdfUrl) {
+                              window.open(report.pdfUrl, '_blank');
+                            } else {
+                              toast({
+                                title: "Report Details",
+                                description: report.reportSummary || report.remarks || "Full report details available on request.",
+                              });
+                            }
                           }}
                           data-testid={`button-view-report-${report.id}`}
                         >
                           <Eye className="h-4 w-4 mr-2" />
-                          View Details
+                          {report.pdfUrl ? "View PDF" : "View Details"}
                         </Button>
                       </div>
                     </CardContent>

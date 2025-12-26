@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +46,11 @@ import {
   Users,
   Activity,
   Beaker,
+  Plus,
+  File,
+  Eye,
+  Download,
+  Calendar,
 } from "lucide-react";
 
 interface PathologyLabPortalProps {
@@ -100,6 +107,20 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<LabTestOrder | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showUploadForm, setShowUploadForm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const [uploadFormData, setUploadFormData] = useState({
+    orderId: "",
+    patientName: "",
+    testName: "",
+    resultSummary: "",
+    reportDate: new Date().toISOString().split('T')[0],
+    remarks: "",
+    interpretation: "NORMAL" as "NORMAL" | "ABNORMAL" | "CRITICAL",
+  });
 
   const [reportData, setReportData] = useState({
     testName: "",
@@ -188,6 +209,120 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
       uploadedBy: currentUserId,
       uploadedByName: currentUserName,
     });
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a PDF or image file (JPEG, PNG)",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "File size must be less than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "No File Selected",
+        description: "Please select a PDF or image file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!uploadFormData.orderId) {
+      toast({
+        title: "Order Required",
+        description: "Please select a pending order to upload report for",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedOrderData = pendingOrders.find(o => o.id === uploadFormData.orderId);
+    if (!selectedOrderData) {
+      toast({
+        title: "Order Not Found",
+        description: "Selected order is no longer pending",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('reportFile', selectedFile);
+      formData.append('orderId', uploadFormData.orderId);
+      formData.append('orderNumber', selectedOrderData.orderNumber);
+      formData.append('patientId', selectedOrderData.patientId);
+      formData.append('patientName', selectedOrderData.patientName);
+      formData.append('doctorId', selectedOrderData.doctorId);
+      formData.append('doctorName', selectedOrderData.doctorName);
+      formData.append('testId', selectedOrderData.testId);
+      formData.append('testName', uploadFormData.testName || selectedOrderData.testName);
+      formData.append('resultSummary', uploadFormData.resultSummary);
+      formData.append('reportDate', uploadFormData.reportDate);
+      formData.append('remarks', uploadFormData.remarks);
+      formData.append('interpretation', uploadFormData.interpretation);
+
+      const response = await fetch('/api/lab-reports/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      toast({
+        title: "Report Uploaded Successfully",
+        description: "The lab report has been uploaded and notifications sent to patient, doctor, and staff.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/lab-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/lab-test-orders"] });
+
+      setShowUploadForm(false);
+      setSelectedFile(null);
+      setUploadFormData({
+        orderId: "",
+        patientName: "",
+        testName: "",
+        resultSummary: "",
+        reportDate: new Date().toISOString().split('T')[0],
+        remarks: "",
+        interpretation: "NORMAL",
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error: any) {
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload lab report",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const pendingOrders = orders.filter(o => 
@@ -562,56 +697,233 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
         </TabsContent>
 
         <TabsContent value="my-reports" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Uploaded Lab Reports</CardTitle>
-              <CardDescription>
-                View all lab reports you have uploaded
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {reportsLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Loading reports...</div>
-              ) : filteredReports.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No lab reports uploaded yet</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Upload Lab Report
+                </CardTitle>
+                <CardDescription>
+                  Upload a new lab report with PDF/image file
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="selectOrder">Select Pending Order *</Label>
+                    <Select
+                      value={uploadFormData.orderId}
+                      onValueChange={(value) => {
+                        const order = pendingOrders.find(o => o.id === value);
+                        setUploadFormData(prev => ({
+                          ...prev,
+                          orderId: value,
+                          patientName: order?.patientName || "",
+                          testName: order?.testName || "",
+                        }));
+                      }}
+                    >
+                      <SelectTrigger data-testid="select-pending-order">
+                        <SelectValue placeholder="Select a pending order" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pendingOrders.length === 0 ? (
+                          <SelectItem value="none" disabled>No pending orders</SelectItem>
+                        ) : (
+                          pendingOrders.map((order) => (
+                            <SelectItem key={order.id} value={order.id}>
+                              {order.patientName} - {order.testName}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {uploadFormData.orderId && (
+                    <div className="p-3 bg-muted rounded-lg text-sm">
+                      <p><strong>Patient:</strong> {uploadFormData.patientName}</p>
+                      <p><strong>Test:</strong> {uploadFormData.testName}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="resultSummary">Result Summary</Label>
+                    <Textarea
+                      id="resultSummary"
+                      value={uploadFormData.resultSummary}
+                      onChange={(e) => setUploadFormData(prev => ({ ...prev, resultSummary: e.target.value }))}
+                      placeholder="Brief summary of test results..."
+                      rows={2}
+                      data-testid="textarea-result-summary"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="reportDate">Report Date</Label>
+                    <Input
+                      id="reportDate"
+                      type="date"
+                      value={uploadFormData.reportDate}
+                      onChange={(e) => setUploadFormData(prev => ({ ...prev, reportDate: e.target.value }))}
+                      data-testid="input-report-date"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="uploadInterpretation">Interpretation</Label>
+                    <Select
+                      value={uploadFormData.interpretation}
+                      onValueChange={(value: "NORMAL" | "ABNORMAL" | "CRITICAL") => 
+                        setUploadFormData(prev => ({ ...prev, interpretation: value }))
+                      }
+                    >
+                      <SelectTrigger data-testid="select-upload-interpretation">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NORMAL">Normal</SelectItem>
+                        <SelectItem value="ABNORMAL">Abnormal</SelectItem>
+                        <SelectItem value="CRITICAL">Critical (Urgent)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="remarks">Remarks</Label>
+                    <Textarea
+                      id="remarks"
+                      value={uploadFormData.remarks}
+                      onChange={(e) => setUploadFormData(prev => ({ ...prev, remarks: e.target.value }))}
+                      placeholder="Any additional remarks..."
+                      rows={2}
+                      data-testid="textarea-remarks"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Report File (PDF/Image) *</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleFileSelect}
+                        className="flex-1"
+                        data-testid="input-report-file"
+                      />
+                    </div>
+                    {selectedFile && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <File className="h-4 w-4" />
+                        {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    className="w-full"
+                    onClick={handleFileUpload}
+                    disabled={isUploading || !selectedFile || !uploadFormData.orderId}
+                    data-testid="button-upload-file"
+                  >
+                    {isUploading ? (
+                      "Uploading..."
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Report
+                      </>
+                    )}
+                  </Button>
                 </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Report #</TableHead>
-                      <TableHead>Patient</TableHead>
-                      <TableHead>Test</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Interpretation</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredReports.map((report) => (
-                      <TableRow key={report.id} data-testid={`row-report-${report.id}`}>
-                        <TableCell className="font-mono text-sm">{report.reportNumber}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            {report.patientName}
-                          </div>
-                        </TableCell>
-                        <TableCell>{report.testName}</TableCell>
-                        <TableCell>{getStatusBadge(report.reportStatus)}</TableCell>
-                        <TableCell>{getInterpretationBadge(report.interpretation)}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {report.createdAt ? format(new Date(report.createdAt), "dd MMM yyyy HH:mm") : "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Uploaded Lab Reports</CardTitle>
+                <CardDescription>
+                  View all lab reports uploaded
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {reportsLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading reports...</div>
+                ) : filteredReports.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No lab reports uploaded yet</p>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[400px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Report #</TableHead>
+                          <TableHead>Patient</TableHead>
+                          <TableHead>Test</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Interpretation</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredReports.map((report: any) => (
+                          <TableRow key={report.id} data-testid={`row-report-${report.id}`}>
+                            <TableCell className="font-mono text-sm">{report.reportNumber}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Users className="h-4 w-4 text-muted-foreground" />
+                                {report.patientName}
+                              </div>
+                            </TableCell>
+                            <TableCell>{report.testName}</TableCell>
+                            <TableCell>{getStatusBadge(report.reportStatus)}</TableCell>
+                            <TableCell>{getInterpretationBadge(report.interpretation)}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {report.createdAt ? format(new Date(report.createdAt), "dd MMM yyyy") : "-"}
+                            </TableCell>
+                            <TableCell>
+                              {report.pdfUrl && (
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => window.open(report.pdfUrl, '_blank')}
+                                    title="View Report"
+                                    data-testid={`button-view-report-${report.id}`}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const link = document.createElement('a');
+                                      link.href = report.pdfUrl;
+                                      link.download = `${report.reportNumber}.pdf`;
+                                      link.click();
+                                    }}
+                                    title="Download Report"
+                                    data-testid={`button-download-report-${report.id}`}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

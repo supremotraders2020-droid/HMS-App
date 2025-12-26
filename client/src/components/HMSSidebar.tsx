@@ -98,7 +98,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
       { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "PATIENT"] },
       { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] },
-      { title: "Medical Stores", url: "/medical-stores", icon: Package, roles: ["ADMIN"] }
+      { title: "Medical Stores", url: "/medical-stores", icon: Package, roles: ["ADMIN"] },
+      { title: "Pathology Lab", url: "/pathology-lab-portal", icon: FlaskConical, roles: ["ADMIN"] }
     ];
 
     // Filter services based on user role

@@ -1,9 +1,11 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import path from "path";
+import fs from "fs";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import bwipjs from "bwip-js";
+import multer from "multer";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db } from "./db";
@@ -56,9 +58,90 @@ import { aiEngines } from "./ai-engines";
 
 const SALT_ROUNDS = 10;
 
+// Configure multer for file uploads
+const labReportStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'lab-reports');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, `lab-report-${uniqueSuffix}${ext}`);
+  }
+});
+
+const uploadLabReport = multer({
+  storage: labReportStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF and image files are allowed'));
+    }
+  }
+});
+
+// Authorization middleware for lab report uploads - runs BEFORE multer
+const requireLabReportUploadAuth = (req: any, res: any, next: any) => {
+  const session = req.session;
+  const user = session?.user;
+  
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  
+  const allowedRoles = ["PATHOLOGY_LAB", "ADMIN"];
+  if (!allowedRoles.includes(user.role)) {
+    return res.status(403).json({ error: "Access denied. Only pathology lab staff and administrators can upload lab reports." });
+  }
+  
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static consent PDF files from server/public/consents
   app.use('/consents', express.static(path.join(process.cwd(), 'server/public/consents')));
+  
+  // Authenticated lab report file downloads - protects PHI from unauthorized access
+  app.get('/uploads/lab-reports/:filename', async (req, res) => {
+    const session = (req.session as any);
+    const user = session?.user;
+    
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized. Please log in to access lab reports." });
+    }
+    
+    // Only allow access for authorized roles (patient ownership checked at API level)
+    const allowedRoles = ["ADMIN", "PATHOLOGY_LAB", "DOCTOR", "NURSE", "PATIENT"];
+    if (!allowedRoles.includes(user.role)) {
+      return res.status(403).json({ error: "Access denied." });
+    }
+    
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'uploads', 'lab-reports', filename);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "File not found" });
+    }
+    
+    // Security: Prevent path traversal attacks
+    const realPath = fs.realpathSync(filePath);
+    const uploadsDir = fs.realpathSync(path.join(process.cwd(), 'uploads', 'lab-reports'));
+    if (!realPath.startsWith(uploadsDir)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    // Set content disposition for download
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.sendFile(realPath);
+  });
   
   // Seed initial data if database is empty
   await databaseStorage.seedInitialData();
@@ -7545,21 +7628,75 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  // Get all lab reports
+  // Get all lab reports - role-based filtering for security
   app.get("/api/lab-reports", async (req, res) => {
     try {
-      const reports = await databaseStorage.getAllLabReports();
-      res.json(reports);
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Role-based filtering
+      const allReports = await databaseStorage.getAllLabReports();
+      
+      // ADMIN and PATHOLOGY_LAB can see all reports
+      if (user.role === "ADMIN" || user.role === "PATHOLOGY_LAB") {
+        return res.json(allReports);
+      }
+      
+      // DOCTOR can only see reports for their patients
+      if (user.role === "DOCTOR") {
+        const doctorReports = allReports.filter(r => r.doctorId === user.id);
+        return res.json(doctorReports);
+      }
+      
+      // PATIENT can only see their own reports
+      if (user.role === "PATIENT") {
+        const patientReports = allReports.filter(r => r.patientId === user.id);
+        return res.json(patientReports);
+      }
+      
+      // NURSE can see reports for patients they are caring for
+      if (user.role === "NURSE") {
+        return res.json(allReports);
+      }
+      
+      // Default: return empty array for other roles
+      res.json([]);
     } catch (error) {
       console.error("Error fetching lab reports:", error);
       res.status(500).json({ error: "Failed to fetch lab reports" });
     }
   });
 
-  // Get reports by patient
+  // Get reports by patient - with authorization check
   app.get("/api/lab-reports/patient/:patientId", async (req, res) => {
     try {
-      const reports = await databaseStorage.getLabReportsByPatient(req.params.patientId);
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const patientId = req.params.patientId;
+      
+      // Only allow access if:
+      // 1. User is the patient themselves
+      // 2. User is ADMIN/PATHOLOGY_LAB/DOCTOR/NURSE
+      const allowedRoles = ["ADMIN", "PATHOLOGY_LAB", "DOCTOR", "NURSE"];
+      if (user.role !== "PATIENT" && !allowedRoles.includes(user.role)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      // If patient, can only access their own reports
+      if (user.role === "PATIENT" && user.id !== patientId) {
+        return res.status(403).json({ error: "Access denied. You can only view your own lab reports." });
+      }
+      
+      const reports = await databaseStorage.getLabReportsByPatient(patientId);
       res.json(reports);
     } catch (error) {
       console.error("Error fetching patient reports:", error);
@@ -7593,9 +7730,22 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  // Create lab report with notifications
+  // Create lab report with notifications - Restricted to PATHOLOGY_LAB and ADMIN
   app.post("/api/lab-reports", async (req, res) => {
     try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Role-based authorization - only PATHOLOGY_LAB and ADMIN can create reports
+      const allowedRoles = ["PATHOLOGY_LAB", "ADMIN"];
+      if (!allowedRoles.includes(user.role)) {
+        return res.status(403).json({ error: "Access denied. Only pathology lab staff and administrators can create lab reports." });
+      }
+      
       const allReports = await databaseStorage.getAllLabReports();
       const reportNumber = `RPT-${new Date().getFullYear()}-${String(allReports.length + 1).padStart(4, '0')}`;
       const report = await databaseStorage.createLabReport({ ...req.body, reportNumber });
@@ -7643,6 +7793,119 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error creating lab report:", error);
       res.status(500).json({ error: "Failed to create lab report" });
+    }
+  });
+
+  // Upload lab report with file (PDF/image) - Authorization middleware runs BEFORE multer
+  app.post("/api/lab-reports/upload", requireLabReportUploadAuth, uploadLabReport.single('reportFile'), async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      // User already validated by requireLabReportUploadAuth middleware
+      // Parse form data
+      const formData = req.body;
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({ error: "Report file is required" });
+      }
+      
+      // Generate report number
+      const allReports = await databaseStorage.getAllLabReports();
+      const reportNumber = `RPT-${new Date().getFullYear()}-${String(allReports.length + 1).padStart(4, '0')}`;
+      
+      // Create file URL
+      const pdfUrl = `/uploads/lab-reports/${file.filename}`;
+      
+      // Create lab report
+      const reportData = {
+        reportNumber,
+        orderId: formData.orderId,
+        orderNumber: formData.orderNumber || `ORD-${Date.now()}`,
+        patientId: formData.patientId,
+        patientName: formData.patientName,
+        patientUhid: formData.patientUhid || null,
+        doctorId: formData.doctorId || user.id,
+        doctorName: formData.doctorName || user.firstName + ' ' + user.lastName,
+        labId: user.id,
+        labName: formData.labName || "Hospital Lab",
+        testId: formData.testId || formData.orderId,
+        testName: formData.testName || "Lab Test",
+        testCategory: formData.testCategory || "General",
+        reportDate: new Date(),
+        reportStatus: "COMPLETED",
+        reportType: "PDF",
+        pdfUrl,
+        resultData: formData.resultSummary ? JSON.stringify({ summary: formData.resultSummary }) : null,
+        interpretation: formData.interpretation || "NORMAL",
+        remarks: formData.remarks || null,
+        verifiedBy: user.firstName + ' ' + user.lastName,
+        verifiedAt: new Date(),
+        isNotified: false,
+      };
+      
+      const report = await databaseStorage.createLabReport(reportData);
+      
+      // Mark the order as completed if orderId provided
+      if (formData.orderId) {
+        await databaseStorage.updateLabTestOrder(formData.orderId, { orderStatus: "COMPLETED" });
+      }
+      
+      // Send notifications
+      const notificationData = {
+        title: "Lab Report Available",
+        message: `Your lab report for ${reportData.testName} is now available.`,
+        type: "lab_report",
+        priority: formData.interpretation === "CRITICAL" ? "critical" : "normal",
+        channel: "push",
+        isRead: false,
+        referenceId: report.id,
+        referenceType: "lab_report",
+      };
+      
+      // Notify patient
+      await databaseStorage.createUserNotification({ 
+        ...notificationData, 
+        userId: report.patientId, 
+        targetRole: "PATIENT" 
+      });
+      
+      // Notify doctor
+      await databaseStorage.createUserNotification({ 
+        ...notificationData, 
+        userId: report.doctorId, 
+        targetRole: "DOCTOR" 
+      });
+      
+      // Notify admins
+      const admins = await databaseStorage.getUsersByRole("ADMIN");
+      for (const admin of admins) {
+        await databaseStorage.createUserNotification({ 
+          ...notificationData, 
+          userId: admin.id, 
+          targetRole: "ADMIN" 
+        });
+      }
+      
+      // Create access log
+      await databaseStorage.createPathologyLabAccessLog({
+        labId: user.id,
+        labName: reportData.labName,
+        userId: user.id,
+        userName: user.firstName + ' ' + user.lastName,
+        userRole: user.role,
+        action: "REPORT_UPLOAD",
+        reportId: report.id,
+        patientId: report.patientId,
+        patientName: report.patientName,
+        details: `Uploaded report ${reportNumber} with file for ${reportData.testName}`,
+      });
+      
+      res.status(201).json(report);
+    } catch (error) {
+      console.error("Error uploading lab report:", error);
+      res.status(500).json({ error: "Failed to upload lab report" });
     }
   });
 

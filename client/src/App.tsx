@@ -278,12 +278,12 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         )}
       </Route>
       <Route path="/pathology-lab-portal">
-        {currentUser.role === "PATHOLOGY_LAB" ? (
+        {["PATHOLOGY_LAB", "ADMIN"].includes(currentUser.role) ? (
           <PathologyLabPortal currentUserId={currentUser.id} currentUserName={currentUser.name} />
         ) : (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
-            <p className="text-muted-foreground">Only pathology lab staff can access this portal.</p>
+            <p className="text-muted-foreground">Only pathology lab staff and administrators can access this portal.</p>
           </div>
         )}
       </Route>
