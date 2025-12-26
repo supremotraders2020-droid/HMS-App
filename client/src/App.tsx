@@ -41,6 +41,7 @@ import BloodBankPage from "@/pages/BloodBankPage";
 import MedicalStoreManagement from "@/pages/MedicalStoreManagement";
 import MedicalStorePortal from "@/pages/MedicalStorePortal";
 import PathologyLabPortal from "@/pages/PathologyLabPortal";
+import PatientBarcodePage from "@/pages/PatientBarcodePage";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
@@ -319,6 +320,18 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only medical staff can access Patient Monitoring.</p>
+          </div>
+        )}
+      </Route>
+
+      {/* Patient Barcode Scanner Route - for Admin, Doctor, Nurse only */}
+      <Route path="/patient-barcode">
+        {["ADMIN", "DOCTOR", "NURSE"].includes(currentUser.role) ? (
+          <PatientBarcodePage />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only Doctors, Nurses, and Administrators can scan patient barcodes.</p>
           </div>
         )}
       </Route>
