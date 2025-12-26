@@ -89,20 +89,28 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
   return (
     <Switch>
       <Route path="/">
-        <HMSDashboard 
-          currentRole={currentUser.role}
-          userName={currentUser.name}
-          hospitalName={currentUser.hospitalName}
-          userId={currentUser.id}
-        />
+        {currentUser.role === "MEDICAL_STORE" ? (
+          <MedicalStorePortal currentUserId={currentUser.id} />
+        ) : (
+          <HMSDashboard 
+            currentRole={currentUser.role}
+            userName={currentUser.name}
+            hospitalName={currentUser.hospitalName}
+            userId={currentUser.id}
+          />
+        )}
       </Route>
       <Route path="/dashboard">
-        <HMSDashboard 
-          currentRole={currentUser.role}
-          userName={currentUser.name}
-          hospitalName={currentUser.hospitalName}
-          userId={currentUser.id}
-        />
+        {currentUser.role === "MEDICAL_STORE" ? (
+          <MedicalStorePortal currentUserId={currentUser.id} />
+        ) : (
+          <HMSDashboard 
+            currentRole={currentUser.role}
+            userName={currentUser.name}
+            hospitalName={currentUser.hospitalName}
+            userId={currentUser.id}
+          />
+        )}
       </Route>
       <Route path="/users">
         {currentUser.role === "ADMIN" ? (
