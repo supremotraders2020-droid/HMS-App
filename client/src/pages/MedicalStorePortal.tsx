@@ -125,9 +125,11 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
+            console.log("Medical Store WebSocket message received:", data);
             
             // Handle incoming prescription notifications
             if (data.type === "medical_store_notification" && data.event === "new_prescription") {
+              console.log("New prescription notification received:", data.prescription);
               const prescription = data.prescription;
               const newNotification: PrescriptionNotification = {
                 id: prescription.id,
@@ -788,14 +790,6 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
                               >
                                 <Pill className="h-4 w-4 mr-1" />
                                 Dispense
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => dismissNotification(notification.id)}
-                                data-testid={`button-dismiss-notification-${notification.id}`}
-                              >
-                                <X className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
