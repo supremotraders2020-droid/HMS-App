@@ -425,17 +425,17 @@ export default function PatientMonitoringPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-4 h-full flex flex-col">
+          <div className="space-y-4">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="gap-2 shrink-0" 
+                className="gap-2" 
                 onClick={() => setSelectedSessionId(null)}
                 data-testid="button-back-to-sessions"
               >
                 <ArrowLeft className="h-4 w-4" /> Back to {format(selectedDate, "dd MMM")} Sessions
               </Button>
-              <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-r from-card to-card/50 border shrink-0">
+              <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-r from-card to-card/50 border">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
                     <span className="text-xl font-bold text-primary">{selectedSession.patientName.charAt(0)}</span>
@@ -459,8 +459,8 @@ export default function PatientMonitoringPage() {
                 </Button>
               </div>
 
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-                <TabsList className="inline-flex flex-wrap h-auto gap-1 p-1.5 bg-muted/50 rounded-lg shrink-0">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="inline-flex flex-wrap h-auto gap-1 p-1.5 bg-muted/50 rounded-lg">
                   <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Overview</TabsTrigger>
                   <TabsTrigger value="vitals" className="text-xs gap-1.5 data-[state=active]:bg-background"><Heart className="h-3.5 w-3.5" />Vitals</TabsTrigger>
                   <TabsTrigger value="inotropes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Inotropes</TabsTrigger>
@@ -477,8 +477,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
                 </TabsList>
 
-                <div className="flex-1 overflow-auto mt-4">
-                <TabsContent value="overview" className="mt-0">
+                <TabsContent value="overview">
                   <OverviewTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="vitals">
@@ -517,10 +516,9 @@ export default function PatientMonitoringPage() {
                 <TabsContent value="staff">
                   <DutyStaffTab sessionId={selectedSession.id} />
                 </TabsContent>
-                <TabsContent value="allergies" className="mt-0">
+                <TabsContent value="allergies">
                   <AllergiesTab sessionId={selectedSession.id} />
                 </TabsContent>
-                </div>
               </Tabs>
             </div>
           )}
