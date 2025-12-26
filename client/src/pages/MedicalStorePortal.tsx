@@ -43,7 +43,13 @@ import {
   AlertCircle,
   Loader2,
   Package,
-  CreditCard
+  CreditCard,
+  Eye,
+  Download,
+  Printer,
+  Stethoscope,
+  Activity,
+  ClipboardList
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -61,6 +67,8 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
   const [isSearching, setIsSearching] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
   const [isDispensingOpen, setIsDispensingOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [viewPrescription, setViewPrescription] = useState<Prescription | null>(null);
   const [storeInfo, setStoreInfo] = useState<{ store: MedicalStore; storeUser: any } | null>(null);
 
   const { data: myStoreData } = useQuery<{ store: MedicalStore; storeUser: any }>({
@@ -194,6 +202,203 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
   const handleDispense = (prescription: Prescription) => {
     setSelectedPrescription(prescription);
     setIsDispensingOpen(true);
+  };
+
+  const handleViewPrescription = (prescription: Prescription) => {
+    setViewPrescription(prescription);
+    setIsViewOpen(true);
+  };
+
+  const handleDownloadPrescription = (prescription: Prescription) => {
+    const content = generatePrescriptionContent(prescription);
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Prescription_${prescription.prescriptionNumber || prescription.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({
+      title: "Downloaded",
+      description: "Prescription downloaded successfully",
+    });
+  };
+
+  const handlePrintPrescription = (prescription: Prescription) => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Prescription - ${prescription.prescriptionNumber}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+              .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+              .header h1 { margin: 0; color: #2563eb; }
+              .patient-info, .doctor-info { display: flex; justify-content: space-between; margin-bottom: 15px; }
+              .section { margin-bottom: 20px; }
+              .section-title { font-weight: bold; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px; }
+              .medicine-list { list-style: none; padding: 0; }
+              .medicine-list li { padding: 8px; background: #f5f5f5; margin-bottom: 5px; border-radius: 4px; }
+              .footer { margin-top: 40px; text-align: right; }
+              .signature-line { border-top: 1px solid #333; width: 200px; margin-left: auto; padding-top: 5px; }
+              @media print { body { padding: 0; } }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Gravity Hospital</h1>
+              <p>Prescription</p>
+            </div>
+            <div class="patient-info">
+              <div><strong>Patient:</strong> ${prescription.patientName}</div>
+              <div><strong>Prescription #:</strong> ${prescription.prescriptionNumber || '-'}</div>
+            </div>
+            <div class="patient-info">
+              <div><strong>Age/Gender:</strong> ${prescription.patientAge || '-'} / ${prescription.patientGender || '-'}</div>
+              <div><strong>Date:</strong> ${prescription.prescriptionDate}</div>
+            </div>
+            <div class="doctor-info">
+              <div><strong>Doctor:</strong> Dr. ${prescription.doctorName}</div>
+              <div><strong>Reg. No:</strong> ${prescription.doctorRegistrationNo || '-'}</div>
+            </div>
+            
+            ${prescription.chiefComplaints ? `<div class="section"><div class="section-title">Chief Complaints</div><p>${prescription.chiefComplaints}</p></div>` : ''}
+            
+            <div class="section">
+              <div class="section-title">Diagnosis</div>
+              <p>${prescription.diagnosis}</p>
+              ${prescription.provisionalDiagnosis ? `<p><em>Provisional: ${prescription.provisionalDiagnosis}</em></p>` : ''}
+            </div>
+            
+            ${prescription.vitals ? `<div class="section"><div class="section-title">Vitals</div><p>${prescription.vitals}</p></div>` : ''}
+            
+            <div class="section">
+              <div class="section-title">Medicines</div>
+              <ul class="medicine-list">
+                ${prescription.medicines?.map(med => `<li>${med}</li>`).join('') || '<li>No medicines prescribed</li>'}
+              </ul>
+            </div>
+            
+            ${prescription.instructions ? `<div class="section"><div class="section-title">Instructions</div><p>${prescription.instructions}</p></div>` : ''}
+            ${prescription.dietAdvice ? `<div class="section"><div class="section-title">Diet Advice</div><p>${prescription.dietAdvice}</p></div>` : ''}
+            ${prescription.activityAdvice ? `<div class="section"><div class="section-title">Activity Advice</div><p>${prescription.activityAdvice}</p></div>` : ''}
+            ${prescription.investigations ? `<div class="section"><div class="section-title">Investigations</div><p>${prescription.investigations}</p></div>` : ''}
+            ${prescription.followUpDate ? `<div class="section"><div class="section-title">Follow Up</div><p>${prescription.followUpDate}</p></div>` : ''}
+            
+            <div class="footer">
+              <div class="signature-line">
+                <p>Dr. ${prescription.doctorName}</p>
+                ${prescription.signedByName ? `<p>Signed by: ${prescription.signedByName}</p>` : ''}
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const generatePrescriptionContent = (prescription: Prescription): string => {
+    let content = `
+GRAVITY HOSPITAL - PRESCRIPTION
+================================
+
+Prescription #: ${prescription.prescriptionNumber || '-'}
+Date: ${prescription.prescriptionDate}
+
+PATIENT INFORMATION
+-------------------
+Name: ${prescription.patientName}
+Age: ${prescription.patientAge || '-'}
+Gender: ${prescription.patientGender || '-'}
+
+DOCTOR INFORMATION
+------------------
+Name: Dr. ${prescription.doctorName}
+Registration No: ${prescription.doctorRegistrationNo || '-'}
+
+`;
+
+    if (prescription.chiefComplaints) {
+      content += `CHIEF COMPLAINTS
+----------------
+${prescription.chiefComplaints}
+
+`;
+    }
+
+    content += `DIAGNOSIS
+---------
+${prescription.diagnosis}
+${prescription.provisionalDiagnosis ? `Provisional: ${prescription.provisionalDiagnosis}` : ''}
+
+`;
+
+    if (prescription.vitals) {
+      content += `VITALS
+------
+${prescription.vitals}
+
+`;
+    }
+
+    content += `MEDICINES
+---------
+${prescription.medicines?.map((med, i) => `${i + 1}. ${med}`).join('\n') || 'No medicines prescribed'}
+
+`;
+
+    if (prescription.instructions) {
+      content += `INSTRUCTIONS
+------------
+${prescription.instructions}
+
+`;
+    }
+
+    if (prescription.dietAdvice) {
+      content += `DIET ADVICE
+-----------
+${prescription.dietAdvice}
+
+`;
+    }
+
+    if (prescription.activityAdvice) {
+      content += `ACTIVITY ADVICE
+---------------
+${prescription.activityAdvice}
+
+`;
+    }
+
+    if (prescription.investigations) {
+      content += `INVESTIGATIONS
+--------------
+${prescription.investigations}
+
+`;
+    }
+
+    if (prescription.followUpDate) {
+      content += `FOLLOW UP
+---------
+${prescription.followUpDate}
+
+`;
+    }
+
+    content += `
+================================
+Dr. ${prescription.doctorName}
+${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
+`;
+
+    return content;
   };
 
   const confirmDispensing = () => {
@@ -393,7 +598,9 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
                                 <p className="font-semibold">{prescription.patientName}</p>
                                 <p className="text-sm text-muted-foreground font-mono">{prescription.prescriptionNumber}</p>
                               </div>
-                              <Badge variant="outline">{prescription.prescriptionStatus}</Badge>
+                              <div className="flex items-center gap-1">
+                                <Badge variant="outline">{prescription.prescriptionStatus}</Badge>
+                              </div>
                             </div>
                             <Separator />
                             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -412,6 +619,35 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
                                 <p>{prescription.diagnosis}</p>
                               </div>
                             )}
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                size="icon"
+                                variant="outline"
+                                onClick={() => handleViewPrescription(prescription)}
+                                data-testid={`button-view-${prescription.id}`}
+                                title="View Prescription"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="icon"
+                                variant="outline"
+                                onClick={() => handleDownloadPrescription(prescription)}
+                                data-testid={`button-download-${prescription.id}`}
+                                title="Download Prescription"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="icon"
+                                variant="outline"
+                                onClick={() => handlePrintPrescription(prescription)}
+                                data-testid={`button-print-${prescription.id}`}
+                                title="Print Prescription"
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                            </div>
                             <Button 
                               className="w-full" 
                               onClick={() => handleDispense(prescription)}
@@ -603,6 +839,192 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
               ) : (
                 <><CheckCircle className="h-4 w-4 mr-2" />Confirm Dispensing</>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Prescription Details
+            </DialogTitle>
+            <DialogDescription>
+              Full prescription information from the doctor
+            </DialogDescription>
+          </DialogHeader>
+          {viewPrescription && (
+            <div className="space-y-6">
+              <div className="bg-primary/5 p-4 rounded-lg border">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-lg">Gravity Hospital</h3>
+                  <Badge variant="outline">{viewPrescription.prescriptionStatus}</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground font-mono">
+                  Prescription #: {viewPrescription.prescriptionNumber}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Patient Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div><span className="text-muted-foreground">Name:</span> <span className="font-medium">{viewPrescription.patientName}</span></div>
+                    <div><span className="text-muted-foreground">Age:</span> {viewPrescription.patientAge || '-'}</div>
+                    <div><span className="text-muted-foreground">Gender:</span> {viewPrescription.patientGender || '-'}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Stethoscope className="h-4 w-4" />
+                      Doctor Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div><span className="text-muted-foreground">Name:</span> <span className="font-medium">Dr. {viewPrescription.doctorName}</span></div>
+                    <div><span className="text-muted-foreground">Reg. No:</span> {viewPrescription.doctorRegistrationNo || '-'}</div>
+                    <div><span className="text-muted-foreground">Date:</span> {viewPrescription.prescriptionDate}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {viewPrescription.chiefComplaints && (
+                <div className="space-y-2">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4" />
+                    Chief Complaints
+                  </h4>
+                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{viewPrescription.chiefComplaints}</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <h4 className="font-medium flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Diagnosis
+                </h4>
+                <p className="text-sm bg-muted/50 p-3 rounded-lg">
+                  {viewPrescription.diagnosis}
+                  {viewPrescription.provisionalDiagnosis && (
+                    <span className="block mt-2 text-muted-foreground italic">
+                      Provisional: {viewPrescription.provisionalDiagnosis}
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              {viewPrescription.vitals && (
+                <div className="space-y-2">
+                  <h4 className="font-medium">Vitals</h4>
+                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{viewPrescription.vitals}</p>
+                </div>
+              )}
+
+              {viewPrescription.knownAllergies && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-red-600 dark:text-red-400">Known Allergies</h4>
+                  <p className="text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-900">{viewPrescription.knownAllergies}</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <h4 className="font-medium flex items-center gap-2">
+                  <Pill className="h-4 w-4" />
+                  Prescribed Medicines
+                </h4>
+                <div className="space-y-2">
+                  {viewPrescription.medicines?.length > 0 ? (
+                    viewPrescription.medicines.map((med, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                        <Badge variant="outline" className="shrink-0">{index + 1}</Badge>
+                        <span className="text-sm">{med}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No medicines prescribed</p>
+                  )}
+                </div>
+              </div>
+
+              {viewPrescription.instructions && (
+                <div className="space-y-2">
+                  <h4 className="font-medium">Instructions</h4>
+                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{viewPrescription.instructions}</p>
+                </div>
+              )}
+
+              {viewPrescription.dietAdvice && (
+                <div className="space-y-2">
+                  <h4 className="font-medium">Diet Advice</h4>
+                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{viewPrescription.dietAdvice}</p>
+                </div>
+              )}
+
+              {viewPrescription.activityAdvice && (
+                <div className="space-y-2">
+                  <h4 className="font-medium">Activity Advice</h4>
+                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{viewPrescription.activityAdvice}</p>
+                </div>
+              )}
+
+              {viewPrescription.investigations && (
+                <div className="space-y-2">
+                  <h4 className="font-medium">Investigations</h4>
+                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{viewPrescription.investigations}</p>
+                </div>
+              )}
+
+              {viewPrescription.followUpDate && (
+                <div className="space-y-2">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Follow Up Date
+                  </h4>
+                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{viewPrescription.followUpDate}</p>
+                </div>
+              )}
+
+              {viewPrescription.signedByName && (
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Digitally signed by: <span className="font-medium">{viewPrescription.signedByName}</span>
+                  </p>
+                  {viewPrescription.signedAt && (
+                    <p className="text-xs text-muted-foreground">
+                      on {new Date(viewPrescription.signedAt).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => viewPrescription && handleDownloadPrescription(viewPrescription)}
+              data-testid="button-dialog-download"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => viewPrescription && handlePrintPrescription(viewPrescription)}
+              data-testid="button-dialog-print"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </Button>
+            <Button onClick={() => setIsViewOpen(false)} data-testid="button-close-view">
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
