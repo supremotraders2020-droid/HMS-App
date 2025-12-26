@@ -183,23 +183,37 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
     try {
       setCameraError(null);
       setIsScanning(true);
+      // Set cameraActive first to render the video element
+      setCameraActive(true);
       
       if (!readerRef.current) {
         readerRef.current = new BrowserMultiFormatReader();
       }
 
+      // Get available video devices - prefer back camera on mobile
       const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
-      const selectedDeviceId = videoInputDevices.length > 0 ? videoInputDevices[0].deviceId : undefined;
+      let selectedDeviceId: string | undefined = undefined;
+      
+      if (videoInputDevices.length > 0) {
+        // Try to find back camera for mobile devices
+        const backCamera = videoInputDevices.find(device => 
+          device.label.toLowerCase().includes('back') || 
+          device.label.toLowerCase().includes('rear') ||
+          device.label.toLowerCase().includes('environment')
+        );
+        selectedDeviceId = backCamera?.deviceId || videoInputDevices[0].deviceId;
+      }
 
-      // Wait for video element to be ready with retry
+      // Wait for video element to be rendered and ready
       let attempts = 0;
-      while (!videoRef.current && attempts < 10) {
+      while (!videoRef.current && attempts < 30) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
       }
 
       if (!videoRef.current) {
-        setCameraError("Video element not ready. Please try again.");
+        setCameraError("Video element not ready. Please refresh and try again.");
+        setCameraActive(false);
         setIsScanning(false);
         return;
       }
@@ -220,8 +234,6 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
           }
         }
       );
-
-      setCameraActive(true);
     } catch (err: any) {
       console.error("Camera error:", err);
       setCameraError(err.message || "Could not access camera. Please use manual entry.");
