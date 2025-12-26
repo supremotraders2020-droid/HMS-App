@@ -2478,6 +2478,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch items to return with prescription
       const prescriptionItems = await storage.getPrescriptionItems(createdPrescription.id);
 
+      // Send notification to medical store if prescription is finalized on creation
+      if (createdPrescription.prescriptionStatus === 'finalized') {
+        notificationService.notifyMedicalStoreNewPrescription({
+          id: createdPrescription.id,
+          prescriptionNumber: createdPrescription.prescriptionNumber,
+          patientId: createdPrescription.patientId,
+          patientName: createdPrescription.patientName,
+          patientAge: createdPrescription.patientAge,
+          patientGender: createdPrescription.patientGender,
+          doctorId: createdPrescription.doctorId,
+          doctorName: createdPrescription.doctorName,
+          diagnosis: createdPrescription.diagnosis,
+          medicines: createdPrescription.medicines || [],
+          medicineDetails: createdPrescription.medicineDetails,
+          instructions: createdPrescription.instructions,
+          prescriptionDate: createdPrescription.prescriptionDate,
+          signedByName: createdPrescription.signedByName
+        }).catch(err => console.error("Medical store notification error:", err));
+      }
+
       res.status(201).json({ 
         ...createdPrescription, 
         items: prescriptionItems 
