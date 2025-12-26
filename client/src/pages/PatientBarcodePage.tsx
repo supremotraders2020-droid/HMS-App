@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { BrowserMultiFormatReader } from "@zxing/browser";
@@ -43,7 +44,8 @@ import {
   Mail,
   MapPin,
   Calendar,
-  Printer
+  Printer,
+  Download
 } from "lucide-react";
 
 interface PatientBarcodePageProps {
@@ -105,10 +107,78 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
+  const [selectedPatientForBarcode, setSelectedPatientForBarcode] = useState<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const controlsRef = useRef<any>(null);
+
+  const openBarcodeModal = (patient: any) => {
+    setSelectedPatientForBarcode(patient);
+    setBarcodeModalOpen(true);
+  };
+
+  const downloadBarcode = async (uhid: string, patientName: string) => {
+    try {
+      const response = await fetch(`/api/barcodes/image/${uhid}`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to download barcode");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `barcode-${uhid}-${patientName.replace(/\s+/g, "_")}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({
+        title: "Downloaded",
+        description: "Barcode image saved successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Could not download barcode image",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const printBarcode = () => {
+    const printWindow = window.open("", "_blank");
+    if (printWindow && selectedPatientForBarcode) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Patient Barcode - ${selectedPatientForBarcode.name}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+              .barcode-container { border: 2px solid #333; padding: 20px; display: inline-block; }
+              .patient-name { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+              .uhid { font-size: 14px; color: #666; margin-bottom: 15px; }
+              .barcode-img { max-width: 100%; }
+              .hospital-name { font-size: 12px; margin-top: 10px; color: #888; }
+            </style>
+          </head>
+          <body>
+            <div class="barcode-container">
+              <div class="patient-name">${selectedPatientForBarcode.name}</div>
+              <div class="uhid">UHID: ${selectedPatientForBarcode.barcode.uhid}</div>
+              <img class="barcode-img" src="/api/barcodes/image/${selectedPatientForBarcode.barcode.uhid}" />
+              <div class="hospital-name">Gravity Hospital - HMS Core</div>
+            </div>
+            <script>
+              setTimeout(() => { window.print(); window.close(); }, 500);
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
 
   const scanMutation = useMutation({
     mutationFn: async (uhid: string) => {
@@ -473,7 +543,13 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
                               {patient.barcode.wardBed && (
                                 <Badge variant="outline">{patient.barcode.wardBed}</Badge>
                               )}
-                              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleQuickScan(patient.barcode.uhid); }}>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                onClick={(e) => { e.stopPropagation(); openBarcodeModal(patient); }}
+                                title="View Barcode"
+                                data-testid={`button-view-barcode-${patient.id}`}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
                             </>
@@ -494,6 +570,85 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
             </CardContent>
           </Card>
         </div>
+
+        {/* Barcode Modal */}
+        <Dialog open={barcodeModalOpen} onOpenChange={setBarcodeModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <QrCode className="h-5 w-5" />
+                Patient Barcode
+              </DialogTitle>
+              <DialogDescription>
+                Scan this barcode to access patient information
+              </DialogDescription>
+            </DialogHeader>
+            {selectedPatientForBarcode && (
+              <div className="space-y-4">
+                <div className="text-center space-y-2 p-4 bg-muted rounded-lg">
+                  <p className="font-bold text-lg">{selectedPatientForBarcode.name}</p>
+                  <p className="text-sm text-muted-foreground font-mono">{selectedPatientForBarcode.barcode?.uhid}</p>
+                  <div className="flex justify-center gap-2 flex-wrap">
+                    <Badge variant={selectedPatientForBarcode.barcode?.admissionType === "IPD" ? "default" : "secondary"}>
+                      {selectedPatientForBarcode.barcode?.admissionType}
+                    </Badge>
+                    {selectedPatientForBarcode.barcode?.wardBed && (
+                      <Badge variant="outline">{selectedPatientForBarcode.barcode.wardBed}</Badge>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex justify-center p-4 bg-white rounded-lg border">
+                  <img 
+                    src={`/api/barcodes/image/${selectedPatientForBarcode.barcode?.uhid}`}
+                    alt={`Barcode for ${selectedPatientForBarcode.name}`}
+                    className="max-w-full h-auto"
+                    data-testid="barcode-image"
+                  />
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg text-sm">
+                  <p className="font-medium mb-2">Encryption Process:</p>
+                  <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                    <li>UHID + Patient ID combined with HMAC-SHA256</li>
+                    <li>12-character signature appended for integrity</li>
+                    <li>Format: HMS:UHID:SIGNATURE</li>
+                    <li>Verified on scan to prevent tampering</li>
+                  </ul>
+                </div>
+
+                <div className="flex justify-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => downloadBarcode(selectedPatientForBarcode.barcode?.uhid, selectedPatientForBarcode.name)}
+                    data-testid="button-download-barcode"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={printBarcode}
+                    data-testid="button-print-barcode"
+                  >
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setBarcodeModalOpen(false);
+                      handleQuickScan(selectedPatientForBarcode.barcode?.uhid);
+                    }}
+                    data-testid="button-scan-barcode"
+                  >
+                    <Scan className="h-4 w-4 mr-2" />
+                    View Patient Data
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }

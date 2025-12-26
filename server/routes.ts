@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import path from "path";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import bwipjs from "bwip-js";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db } from "./db";
@@ -8007,6 +8008,54 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error fetching scan logs:", error);
       res.status(500).json({ error: "Failed to fetch scan logs" });
+    }
+  });
+
+  // Generate barcode image as PNG
+  app.get("/api/barcodes/image/:uhid", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user || !BARCODE_ALLOWED_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      const [barcode] = await db.select().from(patientBarcodes)
+        .where(eq(patientBarcodes.uhid, req.params.uhid));
+      
+      if (!barcode) {
+        return res.status(404).json({ error: "Barcode not found" });
+      }
+
+      // Generate encrypted token for scanning (HMAC signature for integrity)
+      const encryptionSecret = process.env.BARCODE_SECRET || "hms-gravity-hospital-2025";
+      const dataToSign = `${barcode.uhid}:${barcode.patientId}`;
+      const signature = crypto.createHmac("sha256", encryptionSecret)
+        .update(dataToSign)
+        .digest("hex")
+        .substring(0, 12);
+      
+      // Barcode content format: HMS:UHID:SIGNATURE
+      const barcodeContent = `HMS:${barcode.uhid}:${signature}`;
+
+      // Generate barcode image using Code 128 (widely scannable)
+      const png = await bwipjs.toBuffer({
+        bcid: "code128",
+        text: barcodeContent,
+        scale: 3,
+        height: 15,
+        includetext: true,
+        textxalign: "center",
+        textsize: 10,
+      });
+
+      res.set("Content-Type", "image/png");
+      res.set("Cache-Control", "public, max-age=3600");
+      res.send(png);
+    } catch (error) {
+      console.error("Error generating barcode image:", error);
+      res.status(500).json({ error: "Failed to generate barcode image" });
     }
   });
 
