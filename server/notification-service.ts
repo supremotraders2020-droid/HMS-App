@@ -437,6 +437,90 @@ class NotificationService {
     this.broadcast({ type: "admin_notification", event: "prescription_created", prescriptionId }, "ADMIN");
   }
 
+  // Notify all medical store users about a new finalized prescription
+  async notifyMedicalStoreNewPrescription(prescription: {
+    id: string;
+    prescriptionNumber?: string | null;
+    patientId: string;
+    patientName: string;
+    patientAge?: string | null;
+    patientGender?: string | null;
+    doctorId: string;
+    doctorName: string;
+    diagnosis: string;
+    medicines: string[];
+    medicineDetails?: string | null;
+    instructions?: string | null;
+    prescriptionDate: string;
+    signedByName?: string | null;
+  }) {
+    try {
+      // Get all medical store users
+      const medicalStoreUsers = await storage.getUsersByRole('MEDICAL_STORE');
+      
+      // Create medicine summary for notification message
+      const medicineCount = prescription.medicines?.length || 0;
+      const medicineSummary = medicineCount > 0 
+        ? prescription.medicines.slice(0, 3).join(', ') + (medicineCount > 3 ? ` (+${medicineCount - 3} more)` : '')
+        : 'No medicines listed';
+      
+      // Create persistent notifications for each medical store user
+      for (const user of medicalStoreUsers) {
+        await this.createAndPushNotification({
+          userId: user.id,
+          userRole: "MEDICAL_STORE",
+          type: "prescription",
+          title: "New Prescription Ready for Dispensing",
+          message: `Dr. ${prescription.doctorName} has finalized a prescription for ${prescription.patientName}. Medicines: ${medicineSummary}`,
+          relatedEntityType: "prescription",
+          relatedEntityId: prescription.id,
+          isRead: false,
+          metadata: JSON.stringify({
+            prescriptionId: prescription.id,
+            prescriptionNumber: prescription.prescriptionNumber,
+            patientId: prescription.patientId,
+            patientName: prescription.patientName,
+            patientAge: prescription.patientAge,
+            patientGender: prescription.patientGender,
+            doctorId: prescription.doctorId,
+            doctorName: prescription.doctorName,
+            diagnosis: prescription.diagnosis,
+            medicines: prescription.medicines,
+            medicineDetails: prescription.medicineDetails,
+            instructions: prescription.instructions,
+            prescriptionDate: prescription.prescriptionDate,
+            signedByName: prescription.signedByName,
+            notificationType: 'new_prescription_for_dispensing'
+          })
+        });
+      }
+      
+      // Also broadcast to all connected medical store clients for real-time updates
+      this.broadcast({
+        type: "medical_store_notification",
+        event: "new_prescription",
+        prescription: {
+          id: prescription.id,
+          prescriptionNumber: prescription.prescriptionNumber,
+          patientName: prescription.patientName,
+          patientAge: prescription.patientAge,
+          patientGender: prescription.patientGender,
+          doctorName: prescription.doctorName,
+          diagnosis: prescription.diagnosis,
+          medicines: prescription.medicines,
+          medicineDetails: prescription.medicineDetails,
+          instructions: prescription.instructions,
+          prescriptionDate: prescription.prescriptionDate,
+          signedByName: prescription.signedByName
+        }
+      }, "MEDICAL_STORE");
+      
+      console.log(`Prescription notification sent to ${medicalStoreUsers.length} medical store users for prescription ${prescription.prescriptionNumber || prescription.id}`);
+    } catch (error) {
+      console.error("Error notifying medical store users:", error);
+    }
+  }
+
   async notifyScheduleUpdated(doctorId: string, scheduleId: string, date: string, action: string) {
     await this.createAndPushNotification({
       userId: doctorId,

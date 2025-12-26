@@ -2394,8 +2394,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           prescription.patientId,
           prescription.patientName,
           prescription.signedByName || 'Doctor'
-        ).catch(err => console.error("Notification error:", err));
+        ).catch(err => console.error("Patient notification error:", err));
       }
+
+      // Send real-time notification to medical store with complete prescription details
+      notificationService.notifyMedicalStoreNewPrescription({
+        id: prescription.id,
+        prescriptionNumber: prescription.prescriptionNumber,
+        patientId: prescription.patientId,
+        patientName: prescription.patientName,
+        patientAge: prescription.patientAge,
+        patientGender: prescription.patientGender,
+        doctorId: prescription.doctorId,
+        doctorName: prescription.doctorName,
+        diagnosis: prescription.diagnosis,
+        medicines: prescription.medicines || [],
+        medicineDetails: prescription.medicineDetails,
+        instructions: prescription.instructions,
+        prescriptionDate: prescription.prescriptionDate,
+        signedByName: prescription.signedByName
+      }).catch(err => console.error("Medical store notification error:", err));
 
       res.json(prescription);
     } catch (error) {

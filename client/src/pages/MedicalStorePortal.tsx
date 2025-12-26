@@ -49,7 +49,9 @@ import {
   Printer,
   Stethoscope,
   Activity,
-  ClipboardList
+  ClipboardList,
+  Bell,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -57,6 +59,22 @@ import type { Prescription, PrescriptionDispensing, MedicalStore, MedicalStoreBi
 
 interface MedicalStorePortalProps {
   currentUserId: string;
+}
+
+interface PrescriptionNotification {
+  id: string;
+  prescriptionNumber?: string;
+  patientName: string;
+  patientAge?: string;
+  patientGender?: string;
+  doctorName: string;
+  diagnosis: string;
+  medicines: string[];
+  medicineDetails?: string;
+  instructions?: string;
+  prescriptionDate: string;
+  signedByName?: string;
+  receivedAt: Date;
 }
 
 export default function MedicalStorePortal({ currentUserId }: MedicalStorePortalProps) {
@@ -70,6 +88,8 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewPrescription, setViewPrescription] = useState<Prescription | null>(null);
   const [storeInfo, setStoreInfo] = useState<{ store: MedicalStore; storeUser: any } | null>(null);
+  const [incomingPrescriptions, setIncomingPrescriptions] = useState<PrescriptionNotification[]>([]);
+  const [showNotificationPanel, setShowNotificationPanel] = useState(false);
 
   const { data: myStoreData } = useQuery<{ store: MedicalStore; storeUser: any }>({
     queryKey: ["/api/medical-stores/my-store", currentUserId],
@@ -85,6 +105,94 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
       setStoreInfo(myStoreData);
     }
   }, [myStoreData]);
+
+  // WebSocket connection for real-time prescription notifications
+  useEffect(() => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/notifications?userId=${currentUserId}&userRole=MEDICAL_STORE`;
+    
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log("Medical Store WebSocket connected");
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            
+            // Handle incoming prescription notifications
+            if (data.type === "medical_store_notification" && data.event === "new_prescription") {
+              const prescription = data.prescription;
+              const newNotification: PrescriptionNotification = {
+                id: prescription.id,
+                prescriptionNumber: prescription.prescriptionNumber,
+                patientName: prescription.patientName,
+                patientAge: prescription.patientAge,
+                patientGender: prescription.patientGender,
+                doctorName: prescription.doctorName,
+                diagnosis: prescription.diagnosis,
+                medicines: prescription.medicines || [],
+                medicineDetails: prescription.medicineDetails,
+                instructions: prescription.instructions,
+                prescriptionDate: prescription.prescriptionDate,
+                signedByName: prescription.signedByName,
+                receivedAt: new Date()
+              };
+
+              setIncomingPrescriptions(prev => [newNotification, ...prev]);
+              setShowNotificationPanel(true);
+
+              // Show toast notification
+              toast({
+                title: "New Prescription Received",
+                description: `Dr. ${prescription.doctorName} has finalized a prescription for ${prescription.patientName}`,
+              });
+
+              // Play notification sound if available
+              try {
+                const audio = new Audio('/notification.mp3');
+                audio.volume = 0.5;
+                audio.play().catch(() => {});
+              } catch {}
+            }
+
+            // Handle stored notification updates
+            if (data.type === "notification" && data.notification?.type === "prescription") {
+              // Refresh any prescription-related queries
+              queryClient.invalidateQueries({ queryKey: ["/api/medical-stores"] });
+            }
+          } catch (err) {
+            console.error("WebSocket message parse error:", err);
+          }
+        };
+
+        ws.onclose = () => {
+          console.log("Medical Store WebSocket disconnected");
+          // Attempt to reconnect after 5 seconds
+          reconnectTimeout = setTimeout(connect, 5000);
+        };
+
+        ws.onerror = (error) => {
+          console.error("WebSocket error:", error);
+        };
+      } catch (error) {
+        console.error("Failed to connect WebSocket:", error);
+      }
+    };
+
+    connect();
+
+    return () => {
+      if (ws) ws.close();
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    };
+  }, [currentUserId, toast]);
 
   const { data: dispensingRecords = [], isLoading: dispensingLoading } = useQuery<PrescriptionDispensing[]>({
     queryKey: ["/api/medical-stores", storeInfo?.store?.id, "dispensing"],
@@ -474,6 +582,47 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
     );
   }
 
+  const dismissNotification = (id: string) => {
+    setIncomingPrescriptions(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleViewIncomingPrescription = async (notification: PrescriptionNotification) => {
+    // Fetch full prescription details and open in view dialog
+    try {
+      const response = await fetch(`/api/prescriptions/${notification.id}`);
+      if (response.ok) {
+        const prescription = await response.json();
+        setViewPrescription(prescription);
+        setIsViewOpen(true);
+        dismissNotification(notification.id);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load prescription details",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDispenseIncomingPrescription = async (notification: PrescriptionNotification) => {
+    try {
+      const response = await fetch(`/api/prescriptions/${notification.id}`);
+      if (response.ok) {
+        const prescription = await response.json();
+        setSelectedPrescription(prescription);
+        setIsDispensingOpen(true);
+        dismissNotification(notification.id);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load prescription details",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -481,11 +630,113 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
           <h1 className="text-3xl font-bold" data-testid="text-page-title">Medical Store Portal</h1>
           <p className="text-muted-foreground">{storeInfo.store.storeName}</p>
         </div>
-        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" data-testid="badge-store-status">
-          <Store className="h-4 w-4 mr-1" />
-          {storeInfo.store.storeType === "IN_HOUSE" ? "Hospital Pharmacy" : "Third Party Store"}
-        </Badge>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+              data-testid="button-notifications"
+              className={incomingPrescriptions.length > 0 ? "animate-pulse" : ""}
+            >
+              <Bell className="h-4 w-4" />
+              {incomingPrescriptions.length > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                  {incomingPrescriptions.length}
+                </span>
+              )}
+            </Button>
+          </div>
+          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" data-testid="badge-store-status">
+            <Store className="h-4 w-4 mr-1" />
+            {storeInfo.store.storeType === "IN_HOUSE" ? "Hospital Pharmacy" : "Third Party Store"}
+          </Badge>
+        </div>
       </div>
+
+      {showNotificationPanel && incomingPrescriptions.length > 0 && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Bell className="h-5 w-5 text-primary" />
+                Incoming Prescriptions ({incomingPrescriptions.length})
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNotificationPanel(false)}
+                data-testid="button-close-notifications"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <CardDescription>New prescriptions ready for dispensing</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {incomingPrescriptions.map((notification) => (
+              <Card key={notification.id} className="bg-background">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold">{notification.patientName}</span>
+                        {notification.patientAge && notification.patientGender && (
+                          <Badge variant="outline" className="text-xs">
+                            {notification.patientAge} / {notification.patientGender}
+                          </Badge>
+                        )}
+                        {notification.prescriptionNumber && (
+                          <Badge variant="secondary" className="text-xs">
+                            {notification.prescriptionNumber}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Dr. {notification.doctorName} - {notification.diagnosis}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {notification.prescriptionDate}
+                        <span>-</span>
+                        <Pill className="h-3 w-3" />
+                        {notification.medicines.length} medicines
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewIncomingPrescription(notification)}
+                        data-testid={`button-view-notification-${notification.id}`}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleDispenseIncomingPrescription(notification)}
+                        data-testid={`button-dispense-notification-${notification.id}`}
+                      >
+                        <Pill className="h-4 w-4 mr-1" />
+                        Dispense
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => dismissNotification(notification.id)}
+                        data-testid={`button-dismiss-notification-${notification.id}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
