@@ -1,0 +1,294 @@
+🧠 EXACT DEVELOPER PROMPT FOR REPLIT AI
+Feature: Automatic Patient Barcode Scan & Real-Time Data Retrieval
+🎯 PROJECT CONTEXT
+
+You are building a Hospital Management Application that already supports:
+
+Patient admission (OPD / IPD)
+
+Doctor prescriptions
+
+Nursing logs
+
+Pathology & medical store integration
+
+Role-based login (Admin, Doctor, Nurse, Lab, Medical Store, Patient)
+
+Now implement Automatic Patient Barcode Generation & Scanning System.
+
+🔹 FEATURE GOAL
+
+When a patient is admitted:
+
+Generate a UHID-based barcode
+
+Print barcode on wristband, file sticker, reports
+
+When barcode is scanned, fetch and show real-time patient data instantly
+
+Show different data based on user role
+
+Ensure security, accuracy, and zero data mismatch
+
+🔹 TECH STACK (MANDATORY)
+
+Frontend: React (Web) + React Native compatible structure
+
+Backend: Node.js + Express
+
+Database: PostgreSQL (preferred) or MongoDB
+
+Auth: JWT + Role-based access control
+
+Real-Time: WebSockets / Socket.IO
+
+Barcode: QR / Code-128 generation & scanning
+
+PDF Handling: For reports & documents
+
+🔹 STEP 1: PATIENT ADMISSION → BARCODE GENERATION
+On Patient Admission:
+
+Generate a Unique Hospital ID (UHID)
+Example:
+
+GRAV-IPD-2025-000345
+
+Barcode Rules:
+
+Barcode must NOT store patient data
+
+Barcode stores encrypted token / UHID reference only
+
+Use Code-128 or QR Code
+
+Backend Tasks:
+
+Create a patient_barcode table:
+
+barcode_id
+patient_id (FK)
+uhid
+barcode_token (encrypted)
+created_at
+
+
+Auto-generate barcode on admission
+
+Store barcode mapping securely
+
+🔹 STEP 2: BARCODE PRINTING
+
+Enable barcode printing for:
+
+Wristband
+
+File sticker
+
+Report header
+
+Each print action must log:
+
+print_id
+barcode_id
+print_type (wristband/file/report)
+printed_by
+printed_at
+
+🔹 STEP 3: BARCODE SCANNING FLOW
+On Barcode Scan:
+
+Scan barcode using:
+
+Mobile camera
+
+Handheld scanner
+
+Extract encrypted token
+
+Send token to backend API:
+
+POST /api/barcode/scan
+Authorization: Bearer <JWT>
+
+
+Backend validates:
+
+Token authenticity
+
+User role
+
+Access permissions
+
+Fetch LATEST patient data in real-time
+
+🔹 STEP 4: DATA TO RETURN AFTER SCAN (REAL-TIME DASHBOARD)
+Core Patient Identity (Always visible):
+
+Patient name
+
+UHID / OPD / IPD number
+
+Age / Gender
+
+Ward / Bed / OPD room
+
+Treating doctor
+
+Admission date & time
+
+Current status
+
+Medical Data:
+
+Active prescription
+
+Medicine schedule (1x / 2x / 3x / 4x)
+
+Pre-meal / Post-meal
+
+Allergies
+
+IV fluids & injections
+
+Nursing Data:
+
+Latest vitals
+
+Intake / Output
+
+Nursing notes
+
+Medication administration log
+
+Pathology & Reports:
+
+Ordered tests
+
+Sample status
+
+Uploaded reports (PDF)
+
+Structured test values
+
+Auto-attach reports to patient timeline
+
+Documents:
+
+OPD papers
+
+Consent forms
+
+External uploads
+
+Download / view options
+
+Billing (Admin-only):
+
+Services consumed
+
+Medicines issued
+
+Lab charges
+
+Running bill
+
+🔹 STEP 5: ROLE-BASED RESPONSE FILTERING
+
+Return data based on role:
+
+Role	Access
+Doctor	Full medical + reports
+Nurse	Vitals + meds
+Lab	Test orders only
+Medical Store	Prescription only
+Admin	Full access
+Patient	Reports + prescription
+🔹 STEP 6: REAL-TIME SYNC
+
+Implement real-time updates:
+
+Use WebSockets / Socket.IO
+
+Any update (prescription, report, vitals) should:
+
+Instantly reflect on scanned dashboard
+
+No manual refresh
+
+🔹 STEP 7: SAFETY & ERROR PREVENTION
+
+Add system checks:
+
+Wrong patient scan alert
+
+Allergy conflict warning
+
+Duplicate medicine warning
+
+Already-administered alert
+
+Scan logs:
+
+scan_id
+barcode_id
+scanned_by
+role
+timestamp
+
+🔹 STEP 8: OFFLINE MODE (OPTIONAL BUT IMPORTANT)
+
+Cache last synced patient data
+
+Allow read-only view offline
+
+Auto-sync when connection returns
+
+🔹 API ENDPOINTS TO IMPLEMENT
+POST   /api/patient/admit
+POST   /api/barcode/generate
+POST   /api/barcode/scan
+GET    /api/patient/:id/dashboard
+POST   /api/reports/upload
+POST   /api/vitals/update
+POST   /api/prescription/update
+
+🔹 UI REQUIREMENTS
+
+One-screen Patient Snapshot Dashboard
+
+Tabs:
+
+Overview
+
+Prescription
+
+Nursing
+
+Reports
+
+Documents
+
+Billing (admin)
+
+Loading time < 2 seconds
+
+Large fonts for bedside use
+
+✅ FINAL OUTPUT EXPECTED FROM YOU (REPLIT AI)
+
+Database schema
+
+Secure backend APIs
+
+Barcode generation & scan logic
+
+Role-based dashboards
+
+Real-time sync
+
+Error & audit logging
+
+Production-ready code structure
+
+🚀 BUILD THIS FEATURE AS A HOSPITAL-GRADE, SCALABLE MODULE

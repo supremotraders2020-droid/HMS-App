@@ -3223,3 +3223,48 @@ export const insertPathologyLabAccessLogSchema = createInsertSchema(pathologyLab
 });
 export type InsertPathologyLabAccessLog = z.infer<typeof insertPathologyLabAccessLogSchema>;
 export type PathologyLabAccessLog = typeof pathologyLabAccessLogs.$inferSelect;
+
+// Patient Barcodes - UHID-based secure barcode system for patient identification
+export const patientBarcodes = pgTable("patient_barcodes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  uhid: text("uhid").notNull().unique(),
+  admissionType: text("admission_type").notNull(), // OPD, IPD
+  encryptedToken: text("encrypted_token").notNull(),
+  barcodeData: text("barcode_data").notNull(), // The actual barcode string
+  wardBed: text("ward_bed"),
+  treatingDoctor: text("treating_doctor"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
+export const insertPatientBarcodeSchema = createInsertSchema(patientBarcodes).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPatientBarcode = z.infer<typeof insertPatientBarcodeSchema>;
+export type PatientBarcode = typeof patientBarcodes.$inferSelect;
+
+// Barcode Scan Logs - Audit trail for all scan attempts (NABH compliance)
+export const barcodeScanLogs = pgTable("barcode_scan_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  barcodeId: varchar("barcode_id"),
+  uhid: text("uhid"),
+  scannedBy: varchar("scanned_by").notNull(),
+  scannedByName: text("scanned_by_name").notNull(),
+  role: text("role").notNull(),
+  allowed: boolean("allowed").notNull(),
+  denialReason: text("denial_reason"),
+  ipAddress: text("ip_address"),
+  deviceInfo: text("device_info"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertBarcodeScanLogSchema = createInsertSchema(barcodeScanLogs).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertBarcodeScanLog = z.infer<typeof insertBarcodeScanLogSchema>;
+export type BarcodeScanLog = typeof barcodeScanLogs.$inferSelect;

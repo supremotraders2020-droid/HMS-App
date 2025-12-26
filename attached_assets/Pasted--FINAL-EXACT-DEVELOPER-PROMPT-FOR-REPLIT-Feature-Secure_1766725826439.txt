@@ -1,0 +1,231 @@
+🧠 FINAL EXACT DEVELOPER PROMPT FOR REPLIT
+Feature: Secure Patient Barcode Scan (Doctor–Nurse–Admin Only)
+🎯 PROJECT CONTEXT
+
+You are building a Hospital Management System (HMS).
+
+Implement a UHID-based Automatic Patient Barcode System where:
+
+Barcode is generated at admission
+
+Barcode is scanned inside the app
+
+ONLY Doctors, Nurses, and Admin can access patient data
+
+Data loads in real time
+
+System is audit-safe, error-proof, and NABH-aligned
+
+🔐 STRICT ACCESS CONTROL (NON-NEGOTIABLE)
+Allowed Roles:
+
+✅ ADMIN
+✅ DOCTOR
+✅ NURSE
+
+Blocked Roles:
+
+❌ PATIENT
+❌ MEDICAL_STORE
+❌ PATHOLOGY
+❌ Any other role
+
+Enforcement Rules:
+
+Barcode scan API must hard-reject unauthorized roles
+
+Even if token is valid → deny access
+
+Log every blocked attempt
+
+IF role NOT IN [ADMIN, DOCTOR, NURSE]
+→ RETURN 403 UNAUTHORIZED
+→ LOG ATTEMPT
+
+🔹 STEP 1: PATIENT ADMISSION → BARCODE GENERATION
+On Admission (OPD / IPD):
+
+Generate UHID
+
+Auto-generate barcode / QR
+
+Barcode stores encrypted token only
+
+NO patient data inside barcode
+
+Example UHID:
+
+GRAV-IPD-2025-000348
+
+🔹 STEP 2: BARCODE STORAGE SCHEMA
+patient_barcodes (
+  id UUID PRIMARY KEY,
+  patient_id UUID,
+  uhid VARCHAR,
+  encrypted_token TEXT,
+  created_at TIMESTAMP
+)
+
+🔹 STEP 3: BARCODE SCAN API (CORE LOGIC)
+Endpoint
+POST /api/barcode/scan
+Authorization: Bearer <JWT>
+
+Backend Flow:
+
+Decode barcode token
+
+Validate JWT
+
+Check role
+
+If role ∉ Doctor/Nurse/Admin → DENY
+
+Fetch latest patient data
+
+Return role-filtered dashboard
+
+🔹 STEP 4: DATA SHOWN AFTER SCAN (REAL-TIME)
+🧾 Patient Identity
+
+Name
+
+UHID / IPD / OPD
+
+Age / Gender
+
+Ward / Bed
+
+Admission Date
+
+Treating Doctor
+
+Current Status
+
+💊 Medical & Clinical Data
+
+Active prescriptions
+
+Medicine timing (1x–4x)
+
+Pre/Post meal flags
+
+Allergies
+
+IV fluids / injections
+
+🧍 Nursing Data
+
+Vitals (BP, Sugar, SpO₂, Pulse)
+
+Intake / Output
+
+Nursing notes
+
+Medication administration logs
+
+🧪 Reports & Documents
+
+Lab tests (status + PDFs)
+
+Radiology
+
+OPD/IPD papers
+
+Consent forms
+
+External uploads
+
+💰 Billing (Admin Only)
+
+Services
+
+Medicine charges
+
+Lab charges
+
+Running bill
+
+🔹 STEP 5: ROLE-WISE DATA VISIBILITY
+Role	Access
+Doctor	Full medical + reports
+Nurse	Vitals + medication + notes
+Admin	EVERYTHING
+Others	❌ NO ACCESS
+🔹 STEP 6: REAL-TIME SYNC
+
+Use Socket.IO / WebSockets
+
+Updates must reflect instantly:
+
+Prescription updates
+
+Vitals entry
+
+Report upload
+
+Nursing actions
+
+No page reloads.
+
+🔹 STEP 7: SAFETY & ERROR PREVENTION
+Mandatory Alerts:
+
+Wrong patient scanned
+
+Allergy conflict
+
+Duplicate medicine
+
+Already administered warning
+
+🔹 STEP 8: AUDIT & LOGGING (MANDATORY)
+barcode_scan_logs (
+  id UUID,
+  barcode_id UUID,
+  scanned_by UUID,
+  role VARCHAR,
+  allowed BOOLEAN,
+  timestamp
+)
+
+
+Log every scan
+
+Log every denied attempt
+
+Required for NABH audits
+
+🔹 STEP 9: UI REQUIREMENTS
+
+One Patient Snapshot Screen
+
+Large fonts (bedside use)
+
+Tabs:
+
+Overview
+
+Prescription
+
+Nursing
+
+Reports
+
+Documents
+
+Billing (Admin)
+
+✅ FINAL OUTPUT EXPECTED FROM REPLIT AI
+
+Secure backend APIs
+
+Enforced role-based access
+
+Barcode generation & scanning
+
+Real-time dashboards
+
+Audit-safe logging
+
+Production-ready architecture
