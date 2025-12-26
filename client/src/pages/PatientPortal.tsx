@@ -2377,14 +2377,6 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
                   <p className="text-muted-foreground mt-2 max-w-sm">
                     Your lab test results will appear here once your doctor orders tests and the lab uploads reports.
                   </p>
-                  <Button 
-                    className="mt-4" 
-                    onClick={() => setActiveSection("opd")}
-                    data-testid="button-book-appointment-lab"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Book Appointment
-                  </Button>
                 </CardContent>
               </Card>
             )}
