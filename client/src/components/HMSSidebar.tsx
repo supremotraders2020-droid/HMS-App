@@ -38,7 +38,8 @@ import {
   BookOpen,
   BedDouble,
   Droplet,
-  QrCode
+  QrCode,
+  UserCheck
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -93,6 +94,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Disease Knowledge", url: "/disease-knowledge", icon: BookOpen, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"] },
       { title: "Patient Monitoring", url: "/patient-monitoring", icon: Stethoscope, roles: ["ADMIN", "DOCTOR", "NURSE"] },
       { title: "Patient Barcode", url: "/patient-barcode", icon: QrCode, roles: ["ADMIN", "DOCTOR", "NURSE"] },
+      { title: "Staff Management", url: "/staff-management", icon: UserCheck, roles: ["ADMIN", "OPD_MANAGER"] },
       { title: "AI Analytics", url: "/ai-analytics", icon: Brain, roles: ["ADMIN"] },
       { title: "Patient Analytics", url: "/patient-analytics", icon: Activity, roles: ["ADMIN"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },

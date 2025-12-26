@@ -42,6 +42,7 @@ import MedicalStoreManagement from "@/pages/MedicalStoreManagement";
 import MedicalStorePortal from "@/pages/MedicalStorePortal";
 import PathologyLabPortal from "@/pages/PathologyLabPortal";
 import PatientBarcodePage from "@/pages/PatientBarcodePage";
+import StaffManagement from "@/pages/StaffManagement";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
@@ -350,6 +351,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <h2 className="text-xl font-semibold">Appointments</h2>
           <p className="text-muted-foreground">Appointment management interface (Demo)</p>
         </div>
+      </Route>
+      <Route path="/staff-management">
+        {["ADMIN", "OPD_MANAGER"].includes(currentUser.role) ? (
+          <StaffManagement />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Staff management is accessible to administrators and OPD managers only.</p>
+          </div>
+        )}
       </Route>
       <Route path="/settings">
         <div className="text-center py-12">

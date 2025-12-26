@@ -21,6 +21,7 @@ import {
   diseaseCatalog, dietTemplates, medicationScheduleTemplates, patientDiseaseAssignments, personalizedCarePlans,
   medicalStores, medicalStoreUsers, medicalStoreInventory, prescriptionDispensing, dispensingItems, medicalStoreAccessLogs, medicalStoreBills,
   pathologyLabs, labTestCatalog, labTestOrders, sampleCollections, labReports, labReportResults, pathologyLabAccessLogs,
+  staffMaster, shiftRoster, taskLogs, attendanceLogs, leaveRequests, overtimeLogs, staffPerformanceMetrics, rosterAuditLogs,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -88,7 +89,15 @@ import {
   type SampleCollection, type InsertSampleCollection,
   type LabReport, type InsertLabReport,
   type LabReportResult, type InsertLabReportResult,
-  type PathologyLabAccessLog, type InsertPathologyLabAccessLog
+  type PathologyLabAccessLog, type InsertPathologyLabAccessLog,
+  type StaffMaster, type InsertStaffMaster,
+  type ShiftRoster, type InsertShiftRoster,
+  type TaskLog, type InsertTaskLog,
+  type AttendanceLog, type InsertAttendanceLog,
+  type LeaveRequest, type InsertLeaveRequest,
+  type OvertimeLog, type InsertOvertimeLog,
+  type StaffPerformanceMetric, type InsertStaffPerformanceMetric,
+  type RosterAuditLog, type InsertRosterAuditLog
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -3518,6 +3527,263 @@ export class DatabaseStorage implements IStorage {
 
   async createPathologyLabAccessLog(log: InsertPathologyLabAccessLog): Promise<PathologyLabAccessLog> {
     const result = await db.insert(pathologyLabAccessLogs).values(log).returning();
+    return result[0];
+  }
+
+  // ========== STAFF MASTER METHODS ==========
+  async getAllStaffMaster(): Promise<StaffMaster[]> {
+    return await db.select().from(staffMaster).orderBy(desc(staffMaster.createdAt));
+  }
+
+  async getStaffMaster(id: string): Promise<StaffMaster | undefined> {
+    const result = await db.select().from(staffMaster).where(eq(staffMaster.id, id));
+    return result[0];
+  }
+
+  async getStaffMasterByUserId(userId: string): Promise<StaffMaster | undefined> {
+    const result = await db.select().from(staffMaster).where(eq(staffMaster.userId, userId));
+    return result[0];
+  }
+
+  async getStaffMasterByEmployeeCode(employeeCode: string): Promise<StaffMaster | undefined> {
+    const result = await db.select().from(staffMaster).where(eq(staffMaster.employeeCode, employeeCode));
+    return result[0];
+  }
+
+  async getStaffMasterByDepartment(department: string): Promise<StaffMaster[]> {
+    return await db.select().from(staffMaster).where(eq(staffMaster.department, department)).orderBy(staffMaster.fullName);
+  }
+
+  async getStaffMasterByRole(role: string): Promise<StaffMaster[]> {
+    return await db.select().from(staffMaster).where(eq(staffMaster.role, role)).orderBy(staffMaster.fullName);
+  }
+
+  async createStaffMaster(staff: InsertStaffMaster): Promise<StaffMaster> {
+    const result = await db.insert(staffMaster).values(staff).returning();
+    return result[0];
+  }
+
+  async updateStaffMaster(id: string, updates: Partial<InsertStaffMaster>): Promise<StaffMaster | undefined> {
+    const result = await db.update(staffMaster).set({ ...updates, updatedAt: new Date() }).where(eq(staffMaster.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteStaffMaster(id: string): Promise<boolean> {
+    const result = await db.delete(staffMaster).where(eq(staffMaster.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== SHIFT ROSTER METHODS ==========
+  async getAllShiftRoster(): Promise<ShiftRoster[]> {
+    return await db.select().from(shiftRoster).orderBy(desc(shiftRoster.shiftDate));
+  }
+
+  async getShiftRoster(id: string): Promise<ShiftRoster | undefined> {
+    const result = await db.select().from(shiftRoster).where(eq(shiftRoster.id, id));
+    return result[0];
+  }
+
+  async getShiftRosterByStaff(staffId: string): Promise<ShiftRoster[]> {
+    return await db.select().from(shiftRoster).where(eq(shiftRoster.staffId, staffId)).orderBy(desc(shiftRoster.shiftDate));
+  }
+
+  async getShiftRosterByDate(date: string): Promise<ShiftRoster[]> {
+    return await db.select().from(shiftRoster).where(eq(shiftRoster.shiftDate, date)).orderBy(shiftRoster.startTime);
+  }
+
+  async getShiftRosterByDateRange(startDate: string, endDate: string): Promise<ShiftRoster[]> {
+    return await db.select().from(shiftRoster)
+      .where(and(
+        sql`${shiftRoster.shiftDate} >= ${startDate}`,
+        sql`${shiftRoster.shiftDate} <= ${endDate}`
+      ))
+      .orderBy(shiftRoster.shiftDate, shiftRoster.startTime);
+  }
+
+  async getShiftRosterByDepartment(department: string): Promise<ShiftRoster[]> {
+    return await db.select().from(shiftRoster).where(eq(shiftRoster.department, department)).orderBy(desc(shiftRoster.shiftDate));
+  }
+
+  async createShiftRoster(shift: InsertShiftRoster): Promise<ShiftRoster> {
+    const result = await db.insert(shiftRoster).values(shift).returning();
+    return result[0];
+  }
+
+  async updateShiftRoster(id: string, updates: Partial<InsertShiftRoster>): Promise<ShiftRoster | undefined> {
+    const result = await db.update(shiftRoster).set({ ...updates, updatedAt: new Date() }).where(eq(shiftRoster.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteShiftRoster(id: string): Promise<boolean> {
+    const result = await db.delete(shiftRoster).where(eq(shiftRoster.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== TASK LOGS METHODS ==========
+  async getAllTaskLogs(): Promise<TaskLog[]> {
+    return await db.select().from(taskLogs).orderBy(desc(taskLogs.createdAt));
+  }
+
+  async getTaskLog(id: string): Promise<TaskLog | undefined> {
+    const result = await db.select().from(taskLogs).where(eq(taskLogs.id, id));
+    return result[0];
+  }
+
+  async getTaskLogsByStaff(staffId: string): Promise<TaskLog[]> {
+    return await db.select().from(taskLogs).where(eq(taskLogs.staffId, staffId)).orderBy(desc(taskLogs.createdAt));
+  }
+
+  async getTaskLogsByDepartment(department: string): Promise<TaskLog[]> {
+    return await db.select().from(taskLogs).where(eq(taskLogs.department, department)).orderBy(desc(taskLogs.createdAt));
+  }
+
+  async getTaskLogsByStatus(status: string): Promise<TaskLog[]> {
+    return await db.select().from(taskLogs).where(eq(taskLogs.status, status)).orderBy(desc(taskLogs.createdAt));
+  }
+
+  async createTaskLog(task: InsertTaskLog): Promise<TaskLog> {
+    const result = await db.insert(taskLogs).values(task).returning();
+    return result[0];
+  }
+
+  async updateTaskLog(id: string, updates: Partial<InsertTaskLog>): Promise<TaskLog | undefined> {
+    const result = await db.update(taskLogs).set({ ...updates, updatedAt: new Date() }).where(eq(taskLogs.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== ATTENDANCE LOGS METHODS ==========
+  async getAllAttendanceLogs(): Promise<AttendanceLog[]> {
+    return await db.select().from(attendanceLogs).orderBy(desc(attendanceLogs.date));
+  }
+
+  async getAttendanceLog(id: string): Promise<AttendanceLog | undefined> {
+    const result = await db.select().from(attendanceLogs).where(eq(attendanceLogs.id, id));
+    return result[0];
+  }
+
+  async getAttendanceLogsByStaff(staffId: string): Promise<AttendanceLog[]> {
+    return await db.select().from(attendanceLogs).where(eq(attendanceLogs.staffId, staffId)).orderBy(desc(attendanceLogs.date));
+  }
+
+  async getAttendanceLogsByDate(date: string): Promise<AttendanceLog[]> {
+    return await db.select().from(attendanceLogs).where(eq(attendanceLogs.date, date));
+  }
+
+  async getAttendanceLogByStaffAndDate(staffId: string, date: string): Promise<AttendanceLog | undefined> {
+    const result = await db.select().from(attendanceLogs)
+      .where(and(eq(attendanceLogs.staffId, staffId), eq(attendanceLogs.date, date)));
+    return result[0];
+  }
+
+  async createAttendanceLog(attendance: InsertAttendanceLog): Promise<AttendanceLog> {
+    const result = await db.insert(attendanceLogs).values(attendance).returning();
+    return result[0];
+  }
+
+  async updateAttendanceLog(id: string, updates: Partial<InsertAttendanceLog>): Promise<AttendanceLog | undefined> {
+    const result = await db.update(attendanceLogs).set({ ...updates, updatedAt: new Date() }).where(eq(attendanceLogs.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== LEAVE REQUESTS METHODS ==========
+  async getAllLeaveRequests(): Promise<LeaveRequest[]> {
+    return await db.select().from(leaveRequests).orderBy(desc(leaveRequests.createdAt));
+  }
+
+  async getLeaveRequest(id: string): Promise<LeaveRequest | undefined> {
+    const result = await db.select().from(leaveRequests).where(eq(leaveRequests.id, id));
+    return result[0];
+  }
+
+  async getLeaveRequestsByStaff(staffId: string): Promise<LeaveRequest[]> {
+    return await db.select().from(leaveRequests).where(eq(leaveRequests.staffId, staffId)).orderBy(desc(leaveRequests.createdAt));
+  }
+
+  async getLeaveRequestsByStatus(status: string): Promise<LeaveRequest[]> {
+    return await db.select().from(leaveRequests).where(eq(leaveRequests.status, status)).orderBy(desc(leaveRequests.createdAt));
+  }
+
+  async getPendingLeaveRequests(): Promise<LeaveRequest[]> {
+    return await db.select().from(leaveRequests).where(eq(leaveRequests.status, "PENDING")).orderBy(desc(leaveRequests.createdAt));
+  }
+
+  async createLeaveRequest(leave: InsertLeaveRequest): Promise<LeaveRequest> {
+    const result = await db.insert(leaveRequests).values(leave).returning();
+    return result[0];
+  }
+
+  async updateLeaveRequest(id: string, updates: Partial<InsertLeaveRequest>): Promise<LeaveRequest | undefined> {
+    const result = await db.update(leaveRequests).set({ ...updates, updatedAt: new Date() }).where(eq(leaveRequests.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== OVERTIME LOGS METHODS ==========
+  async getAllOvertimeLogs(): Promise<OvertimeLog[]> {
+    return await db.select().from(overtimeLogs).orderBy(desc(overtimeLogs.date));
+  }
+
+  async getOvertimeLog(id: string): Promise<OvertimeLog | undefined> {
+    const result = await db.select().from(overtimeLogs).where(eq(overtimeLogs.id, id));
+    return result[0];
+  }
+
+  async getOvertimeLogsByStaff(staffId: string): Promise<OvertimeLog[]> {
+    return await db.select().from(overtimeLogs).where(eq(overtimeLogs.staffId, staffId)).orderBy(desc(overtimeLogs.date));
+  }
+
+  async getOvertimeLogsByStatus(status: string): Promise<OvertimeLog[]> {
+    return await db.select().from(overtimeLogs).where(eq(overtimeLogs.status, status)).orderBy(desc(overtimeLogs.date));
+  }
+
+  async getPendingOvertimeLogs(): Promise<OvertimeLog[]> {
+    return await db.select().from(overtimeLogs).where(eq(overtimeLogs.status, "PENDING")).orderBy(desc(overtimeLogs.date));
+  }
+
+  async createOvertimeLog(overtime: InsertOvertimeLog): Promise<OvertimeLog> {
+    const result = await db.insert(overtimeLogs).values(overtime).returning();
+    return result[0];
+  }
+
+  async updateOvertimeLog(id: string, updates: Partial<InsertOvertimeLog>): Promise<OvertimeLog | undefined> {
+    const result = await db.update(overtimeLogs).set({ ...updates, updatedAt: new Date() }).where(eq(overtimeLogs.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== STAFF PERFORMANCE METRICS METHODS ==========
+  async getAllStaffPerformanceMetrics(): Promise<StaffPerformanceMetric[]> {
+    return await db.select().from(staffPerformanceMetrics).orderBy(desc(staffPerformanceMetrics.periodEnd));
+  }
+
+  async getStaffPerformanceMetric(id: string): Promise<StaffPerformanceMetric | undefined> {
+    const result = await db.select().from(staffPerformanceMetrics).where(eq(staffPerformanceMetrics.id, id));
+    return result[0];
+  }
+
+  async getStaffPerformanceMetricsByStaff(staffId: string): Promise<StaffPerformanceMetric[]> {
+    return await db.select().from(staffPerformanceMetrics).where(eq(staffPerformanceMetrics.staffId, staffId)).orderBy(desc(staffPerformanceMetrics.periodEnd));
+  }
+
+  async createStaffPerformanceMetric(metric: InsertStaffPerformanceMetric): Promise<StaffPerformanceMetric> {
+    const result = await db.insert(staffPerformanceMetrics).values(metric).returning();
+    return result[0];
+  }
+
+  async updateStaffPerformanceMetric(id: string, updates: Partial<InsertStaffPerformanceMetric>): Promise<StaffPerformanceMetric | undefined> {
+    const result = await db.update(staffPerformanceMetrics).set({ ...updates, updatedAt: new Date() }).where(eq(staffPerformanceMetrics.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== ROSTER AUDIT LOGS METHODS ==========
+  async getAllRosterAuditLogs(): Promise<RosterAuditLog[]> {
+    return await db.select().from(rosterAuditLogs).orderBy(desc(rosterAuditLogs.timestamp));
+  }
+
+  async getRosterAuditLogsByRoster(rosterId: string): Promise<RosterAuditLog[]> {
+    return await db.select().from(rosterAuditLogs).where(eq(rosterAuditLogs.rosterId, rosterId)).orderBy(desc(rosterAuditLogs.timestamp));
+  }
+
+  async createRosterAuditLog(log: InsertRosterAuditLog): Promise<RosterAuditLog> {
+    const result = await db.insert(rosterAuditLogs).values(log).returning();
     return result[0];
   }
 }

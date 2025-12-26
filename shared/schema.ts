@@ -3274,7 +3274,7 @@ export type BarcodeScanLog = typeof barcodeScanLogs.$inferSelect;
 // Staff Master Profile - Enhanced staff profile linked to users
 export const staffMaster = pgTable("staff_master", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().unique(), // Links to users table
+  userId: varchar("user_id"), // Links to users table (optional - can be linked later)
   employeeCode: text("employee_code").notNull().unique(), // Hospital-generated code
   fullName: text("full_name").notNull(),
   role: text("role").notNull(), // DOCTOR, NURSE, TECHNICIAN, PHARMACIST, ADMIN, OPD_MANAGER, etc.

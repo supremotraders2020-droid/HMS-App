@@ -8622,6 +8622,1031 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ========== STAFF MANAGEMENT MODULE ROUTES ==========
+
+  const STAFF_MANAGEMENT_ADMIN_ROLES = ["ADMIN", "OPD_MANAGER"];
+  const STAFF_MANAGEMENT_ALL_ROLES = ["ADMIN", "OPD_MANAGER", "DOCTOR", "NURSE", "MEDICAL_STORE", "PATHOLOGY_LAB"];
+
+  // Staff Master CRUD
+  app.get("/api/staff", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      const staff = await storage.getAllStaffMaster();
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      res.status(500).json({ error: "Failed to fetch staff" });
+    }
+  });
+
+  app.get("/api/staff/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const staff = await storage.getStaffMaster(req.params.id);
+      if (!staff) return res.status(404).json({ error: "Staff not found" });
+      
+      // Staff can only see their own profile unless admin
+      if (!STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role) && staff.userId !== user.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      res.status(500).json({ error: "Failed to fetch staff" });
+    }
+  });
+
+  app.get("/api/staff/user/:userId", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const staff = await storage.getStaffMasterByUserId(req.params.userId);
+      if (!staff) return res.status(404).json({ error: "Staff profile not found" });
+      
+      // Staff can only see their own profile unless admin
+      if (!STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role) && staff.userId !== user.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff by user:", error);
+      res.status(500).json({ error: "Failed to fetch staff profile" });
+    }
+  });
+
+  app.get("/api/staff/department/:department", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      const staff = await storage.getStaffMasterByDepartment(req.params.department);
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff by department:", error);
+      res.status(500).json({ error: "Failed to fetch staff" });
+    }
+  });
+
+  app.get("/api/staff/role/:role", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      const staff = await storage.getStaffMasterByRole(req.params.role);
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff by role:", error);
+      res.status(500).json({ error: "Failed to fetch staff" });
+    }
+  });
+
+  app.post("/api/staff", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      const staff = await storage.createStaffMaster(req.body);
+      res.status(201).json(staff);
+    } catch (error) {
+      console.error("Error creating staff:", error);
+      res.status(500).json({ error: "Failed to create staff" });
+    }
+  });
+
+  app.patch("/api/staff/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      const staff = await storage.updateStaffMaster(req.params.id, req.body);
+      if (!staff) return res.status(404).json({ error: "Staff not found" });
+      res.json(staff);
+    } catch (error) {
+      console.error("Error updating staff:", error);
+      res.status(500).json({ error: "Failed to update staff" });
+    }
+  });
+
+  app.delete("/api/staff/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || user.role !== "ADMIN") {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      const deleted = await storage.deleteStaffMaster(req.params.id);
+      if (!deleted) return res.status(404).json({ error: "Staff not found" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting staff:", error);
+      res.status(500).json({ error: "Failed to delete staff" });
+    }
+  });
+
+  // Shift Roster Routes
+  app.get("/api/roster", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const { startDate, endDate, department } = req.query;
+      let roster;
+      
+      if (startDate && endDate) {
+        roster = await storage.getShiftRosterByDateRange(startDate as string, endDate as string);
+      } else if (department) {
+        roster = await storage.getShiftRosterByDepartment(department as string);
+      } else {
+        roster = await storage.getAllShiftRoster();
+      }
+      res.json(roster);
+    } catch (error) {
+      console.error("Error fetching roster:", error);
+      res.status(500).json({ error: "Failed to fetch roster" });
+    }
+  });
+
+  app.get("/api/roster/date/:date", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      const roster = await storage.getShiftRosterByDate(req.params.date);
+      res.json(roster);
+    } catch (error) {
+      console.error("Error fetching roster by date:", error);
+      res.status(500).json({ error: "Failed to fetch roster" });
+    }
+  });
+
+  app.get("/api/roster/staff/:staffId", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      // Staff can see their own roster
+      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      if (!STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role) && 
+          (!staffProfile || staffProfile.id !== req.params.staffId)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const roster = await storage.getShiftRosterByStaff(req.params.staffId);
+      res.json(roster);
+    } catch (error) {
+      console.error("Error fetching staff roster:", error);
+      res.status(500).json({ error: "Failed to fetch staff roster" });
+    }
+  });
+
+  app.get("/api/roster/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      const roster = await storage.getShiftRoster(req.params.id);
+      if (!roster) return res.status(404).json({ error: "Shift not found" });
+      res.json(roster);
+    } catch (error) {
+      console.error("Error fetching shift:", error);
+      res.status(500).json({ error: "Failed to fetch shift" });
+    }
+  });
+
+  app.post("/api/roster", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      // Check for overlapping shifts
+      const existingShifts = await storage.getShiftRosterByStaff(req.body.staffId);
+      const newDate = req.body.shiftDate;
+      const newStart = req.body.startTime;
+      const newEnd = req.body.endTime;
+      
+      const hasConflict = existingShifts.some(shift => {
+        if (shift.shiftDate !== newDate) return false;
+        // Simple time overlap check
+        return !(newEnd <= shift.startTime || newStart >= shift.endTime);
+      });
+      
+      if (hasConflict && !req.body.overrideReason) {
+        return res.status(400).json({ error: "Shift conflict detected. Provide override reason to proceed." });
+      }
+      
+      const roster = await storage.createShiftRoster({
+        ...req.body,
+        assignedBy: user.id,
+      });
+      
+      // Create audit log
+      await storage.createRosterAuditLog({
+        rosterId: roster.id,
+        action: "CREATED",
+        changedBy: user.id,
+        changedByName: user.name || user.username,
+        newValue: JSON.stringify(roster),
+        reason: req.body.overrideReason,
+      });
+      
+      res.status(201).json(roster);
+    } catch (error) {
+      console.error("Error creating shift:", error);
+      res.status(500).json({ error: "Failed to create shift" });
+    }
+  });
+
+  app.patch("/api/roster/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const existingRoster = await storage.getShiftRoster(req.params.id);
+      if (!existingRoster) return res.status(404).json({ error: "Shift not found" });
+      
+      const roster = await storage.updateShiftRoster(req.params.id, req.body);
+      
+      // Create audit log
+      await storage.createRosterAuditLog({
+        rosterId: roster!.id,
+        action: "UPDATED",
+        changedBy: user.id,
+        changedByName: user.name || user.username,
+        previousValue: JSON.stringify(existingRoster),
+        newValue: JSON.stringify(roster),
+        reason: req.body.updateReason,
+      });
+      
+      res.json(roster);
+    } catch (error) {
+      console.error("Error updating shift:", error);
+      res.status(500).json({ error: "Failed to update shift" });
+    }
+  });
+
+  app.delete("/api/roster/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const existingRoster = await storage.getShiftRoster(req.params.id);
+      if (!existingRoster) return res.status(404).json({ error: "Shift not found" });
+      
+      // Create audit log before deletion
+      await storage.createRosterAuditLog({
+        rosterId: req.params.id,
+        action: "DELETED",
+        changedBy: user.id,
+        changedByName: user.name || user.username,
+        previousValue: JSON.stringify(existingRoster),
+        reason: req.body.deleteReason,
+      });
+      
+      const deleted = await storage.deleteShiftRoster(req.params.id);
+      res.json({ success: deleted });
+    } catch (error) {
+      console.error("Error deleting shift:", error);
+      res.status(500).json({ error: "Failed to delete shift" });
+    }
+  });
+
+  // Task Logs Routes
+  app.get("/api/tasks", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      if (STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        const tasks = await storage.getAllTaskLogs();
+        return res.json(tasks);
+      }
+      
+      // Non-admin staff can only see their own tasks
+      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      if (!staffProfile) return res.json([]);
+      
+      const tasks = await storage.getTaskLogsByStaff(staffProfile.id);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      res.status(500).json({ error: "Failed to fetch tasks" });
+    }
+  });
+
+  app.get("/api/tasks/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const task = await storage.getTaskLog(req.params.id);
+      if (!task) return res.status(404).json({ error: "Task not found" });
+      res.json(task);
+    } catch (error) {
+      console.error("Error fetching task:", error);
+      res.status(500).json({ error: "Failed to fetch task" });
+    }
+  });
+
+  app.get("/api/tasks/staff/:staffId", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const tasks = await storage.getTaskLogsByStaff(req.params.staffId);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error fetching staff tasks:", error);
+      res.status(500).json({ error: "Failed to fetch tasks" });
+    }
+  });
+
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const task = await storage.createTaskLog({
+        ...req.body,
+        assignedBy: req.body.assignedBy || user.id,
+      });
+      res.status(201).json(task);
+    } catch (error) {
+      console.error("Error creating task:", error);
+      res.status(500).json({ error: "Failed to create task" });
+    }
+  });
+
+  app.patch("/api/tasks/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const task = await storage.updateTaskLog(req.params.id, req.body);
+      if (!task) return res.status(404).json({ error: "Task not found" });
+      res.json(task);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      res.status(500).json({ error: "Failed to update task" });
+    }
+  });
+
+  // Attendance Routes
+  app.get("/api/attendance", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const { date } = req.query;
+      if (date) {
+        const attendance = await storage.getAttendanceLogsByDate(date as string);
+        return res.json(attendance);
+      }
+      
+      const attendance = await storage.getAllAttendanceLogs();
+      res.json(attendance);
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+      res.status(500).json({ error: "Failed to fetch attendance" });
+    }
+  });
+
+  app.get("/api/attendance/staff/:staffId", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const attendance = await storage.getAttendanceLogsByStaff(req.params.staffId);
+      res.json(attendance);
+    } catch (error) {
+      console.error("Error fetching staff attendance:", error);
+      res.status(500).json({ error: "Failed to fetch attendance" });
+    }
+  });
+
+  app.post("/api/attendance/check-in", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      if (!staffProfile) {
+        return res.status(400).json({ error: "Staff profile not found" });
+      }
+      
+      const today = new Date().toISOString().split('T')[0];
+      const existing = await storage.getAttendanceLogByStaffAndDate(staffProfile.id, today);
+      
+      if (existing) {
+        return res.status(400).json({ error: "Already checked in today" });
+      }
+      
+      const attendance = await storage.createAttendanceLog({
+        staffId: staffProfile.id,
+        date: today,
+        checkInTime: new Date(),
+        checkInMethod: req.body.method || "MANUAL",
+        status: "PRESENT",
+      });
+      
+      res.status(201).json(attendance);
+    } catch (error) {
+      console.error("Error checking in:", error);
+      res.status(500).json({ error: "Failed to check in" });
+    }
+  });
+
+  app.post("/api/attendance/check-out", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      if (!staffProfile) {
+        return res.status(400).json({ error: "Staff profile not found" });
+      }
+      
+      const today = new Date().toISOString().split('T')[0];
+      const existing = await storage.getAttendanceLogByStaffAndDate(staffProfile.id, today);
+      
+      if (!existing) {
+        return res.status(400).json({ error: "No check-in found for today" });
+      }
+      
+      if (existing.checkOutTime) {
+        return res.status(400).json({ error: "Already checked out today" });
+      }
+      
+      const checkOutTime = new Date();
+      const checkInTime = existing.checkInTime ? new Date(existing.checkInTime) : new Date();
+      const workHours = ((checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60)).toFixed(2);
+      
+      const attendance = await storage.updateAttendanceLog(existing.id, {
+        checkOutTime,
+        checkOutMethod: req.body.method || "MANUAL",
+        workHours,
+      });
+      
+      res.json(attendance);
+    } catch (error) {
+      console.error("Error checking out:", error);
+      res.status(500).json({ error: "Failed to check out" });
+    }
+  });
+
+  app.post("/api/attendance", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const attendance = await storage.createAttendanceLog(req.body);
+      res.status(201).json(attendance);
+    } catch (error) {
+      console.error("Error creating attendance:", error);
+      res.status(500).json({ error: "Failed to create attendance record" });
+    }
+  });
+
+  app.patch("/api/attendance/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const attendance = await storage.updateAttendanceLog(req.params.id, {
+        ...req.body,
+        approvedBy: user.id,
+      });
+      if (!attendance) return res.status(404).json({ error: "Attendance record not found" });
+      res.json(attendance);
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+      res.status(500).json({ error: "Failed to update attendance" });
+    }
+  });
+
+  // Leave Request Routes
+  app.get("/api/leave", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      if (STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        const { status } = req.query;
+        if (status) {
+          const leaves = await storage.getLeaveRequestsByStatus(status as string);
+          return res.json(leaves);
+        }
+        const leaves = await storage.getAllLeaveRequests();
+        return res.json(leaves);
+      }
+      
+      // Staff can only see their own leave requests
+      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      if (!staffProfile) return res.json([]);
+      
+      const leaves = await storage.getLeaveRequestsByStaff(staffProfile.id);
+      res.json(leaves);
+    } catch (error) {
+      console.error("Error fetching leave requests:", error);
+      res.status(500).json({ error: "Failed to fetch leave requests" });
+    }
+  });
+
+  app.get("/api/leave/pending", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const leaves = await storage.getPendingLeaveRequests();
+      res.json(leaves);
+    } catch (error) {
+      console.error("Error fetching pending leaves:", error);
+      res.status(500).json({ error: "Failed to fetch pending leave requests" });
+    }
+  });
+
+  app.get("/api/leave/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const leave = await storage.getLeaveRequest(req.params.id);
+      if (!leave) return res.status(404).json({ error: "Leave request not found" });
+      res.json(leave);
+    } catch (error) {
+      console.error("Error fetching leave request:", error);
+      res.status(500).json({ error: "Failed to fetch leave request" });
+    }
+  });
+
+  app.post("/api/leave", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      if (!staffProfile) {
+        return res.status(400).json({ error: "Staff profile not found" });
+      }
+      
+      const leave = await storage.createLeaveRequest({
+        ...req.body,
+        staffId: staffProfile.id,
+        status: "PENDING",
+      });
+      res.status(201).json(leave);
+    } catch (error) {
+      console.error("Error creating leave request:", error);
+      res.status(500).json({ error: "Failed to create leave request" });
+    }
+  });
+
+  app.patch("/api/leave/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const { action } = req.body;
+      let updates: any = {};
+      
+      if (action === "approve") {
+        if (!STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+          return res.status(403).json({ error: "Unauthorized" });
+        }
+        updates = {
+          status: "APPROVED",
+          hrApprovedBy: user.id,
+          hrApprovedAt: new Date(),
+        };
+      } else if (action === "reject") {
+        if (!STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+          return res.status(403).json({ error: "Unauthorized" });
+        }
+        updates = {
+          status: "REJECTED",
+          rejectedBy: user.id,
+          rejectionReason: req.body.reason,
+        };
+      } else if (action === "cancel") {
+        const leave = await storage.getLeaveRequest(req.params.id);
+        const staffProfile = await storage.getStaffMasterByUserId(user.id);
+        if (!leave || !staffProfile || leave.staffId !== staffProfile.id) {
+          return res.status(403).json({ error: "Cannot cancel this leave request" });
+        }
+        updates = { status: "CANCELLED" };
+      } else {
+        updates = req.body;
+      }
+      
+      const leave = await storage.updateLeaveRequest(req.params.id, updates);
+      if (!leave) return res.status(404).json({ error: "Leave request not found" });
+      res.json(leave);
+    } catch (error) {
+      console.error("Error updating leave request:", error);
+      res.status(500).json({ error: "Failed to update leave request" });
+    }
+  });
+
+  // Overtime Routes
+  app.get("/api/overtime", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      if (STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        const { status } = req.query;
+        if (status) {
+          const overtime = await storage.getOvertimeLogsByStatus(status as string);
+          return res.json(overtime);
+        }
+        const overtime = await storage.getAllOvertimeLogs();
+        return res.json(overtime);
+      }
+      
+      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      if (!staffProfile) return res.json([]);
+      
+      const overtime = await storage.getOvertimeLogsByStaff(staffProfile.id);
+      res.json(overtime);
+    } catch (error) {
+      console.error("Error fetching overtime logs:", error);
+      res.status(500).json({ error: "Failed to fetch overtime logs" });
+    }
+  });
+
+  app.get("/api/overtime/pending", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const overtime = await storage.getPendingOvertimeLogs();
+      res.json(overtime);
+    } catch (error) {
+      console.error("Error fetching pending overtime:", error);
+      res.status(500).json({ error: "Failed to fetch pending overtime" });
+    }
+  });
+
+  app.post("/api/overtime", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const overtime = await storage.createOvertimeLog(req.body);
+      res.status(201).json(overtime);
+    } catch (error) {
+      console.error("Error creating overtime log:", error);
+      res.status(500).json({ error: "Failed to create overtime log" });
+    }
+  });
+
+  app.patch("/api/overtime/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const { action } = req.body;
+      let updates: any = {};
+      
+      if (action === "approve") {
+        updates = {
+          status: "APPROVED",
+          approvedBy: user.id,
+          approvedAt: new Date(),
+        };
+      } else if (action === "reject") {
+        updates = { status: "REJECTED" };
+      } else {
+        updates = req.body;
+      }
+      
+      const overtime = await storage.updateOvertimeLog(req.params.id, updates);
+      if (!overtime) return res.status(404).json({ error: "Overtime log not found" });
+      res.json(overtime);
+    } catch (error) {
+      console.error("Error updating overtime log:", error);
+      res.status(500).json({ error: "Failed to update overtime log" });
+    }
+  });
+
+  // Performance Metrics Routes
+  app.get("/api/performance", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const metrics = await storage.getAllStaffPerformanceMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching performance metrics:", error);
+      res.status(500).json({ error: "Failed to fetch performance metrics" });
+    }
+  });
+
+  app.get("/api/performance/staff/:staffId", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const metrics = await storage.getStaffPerformanceMetricsByStaff(req.params.staffId);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching staff performance:", error);
+      res.status(500).json({ error: "Failed to fetch performance metrics" });
+    }
+  });
+
+  app.post("/api/performance", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const metric = await storage.createStaffPerformanceMetric({
+        ...req.body,
+        evaluatedBy: user.id,
+      });
+      res.status(201).json(metric);
+    } catch (error) {
+      console.error("Error creating performance metric:", error);
+      res.status(500).json({ error: "Failed to create performance metric" });
+    }
+  });
+
+  app.patch("/api/performance/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const metric = await storage.updateStaffPerformanceMetric(req.params.id, req.body);
+      if (!metric) return res.status(404).json({ error: "Performance metric not found" });
+      res.json(metric);
+    } catch (error) {
+      console.error("Error updating performance metric:", error);
+      res.status(500).json({ error: "Failed to update performance metric" });
+    }
+  });
+
+  // Roster Audit Logs
+  app.get("/api/roster-audit", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || user.role !== "ADMIN") {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const logs = await storage.getAllRosterAuditLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching roster audit logs:", error);
+      res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+
+  app.get("/api/roster-audit/:rosterId", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const logs = await storage.getRosterAuditLogsByRoster(req.params.rosterId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching roster audit logs:", error);
+      res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+
+  // Sync doctor appointments with roster - create shifts from doctor schedules
+  app.post("/api/roster/sync-appointments", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const { date, doctorId } = req.body;
+      
+      // Get all doctor time slots for the specified date
+      const allTimeSlots = await storage.getAllDoctorTimeSlots();
+      const dateSlots = allTimeSlots.filter(slot => {
+        if (slot.date !== date) return false;
+        if (doctorId && slot.doctorId !== doctorId) return false;
+        return true;
+      });
+      
+      const createdShifts = [];
+      
+      for (const slot of dateSlots) {
+        // Check if staff profile exists for this doctor
+        const staffProfile = await storage.getStaffMasterByUserId(slot.doctorId);
+        if (!staffProfile) continue;
+        
+        // Check if shift already exists
+        const existingShifts = await storage.getShiftRosterByStaff(staffProfile.id);
+        const hasExisting = existingShifts.some(s => 
+          s.shiftDate === slot.date && 
+          s.startTime === slot.startTime &&
+          s.linkedAppointmentId === slot.id
+        );
+        
+        if (hasExisting) continue;
+        
+        // Create shift from appointment slot
+        const shift = await storage.createShiftRoster({
+          staffId: staffProfile.id,
+          department: staffProfile.department || "OPD",
+          shiftDate: slot.date,
+          shiftType: slot.slotType === "OPD" ? "MORNING" : "ON_CALL",
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          status: slot.status === "booked" ? "SCHEDULED" : "SCHEDULED",
+          assignedBy: user.id,
+          linkedAppointmentId: slot.id,
+          notes: `Auto-synced from appointment slot ${slot.id}`,
+        });
+        
+        createdShifts.push(shift);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Created ${createdShifts.length} shifts from appointment slots`,
+        shifts: createdShifts 
+      });
+    } catch (error) {
+      console.error("Error syncing appointments:", error);
+      res.status(500).json({ error: "Failed to sync appointments with roster" });
+    }
+  });
+
+  // Analytics endpoint for department-wise staff metrics
+  app.get("/api/analytics/staff", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const { startDate, endDate, department } = req.query;
+      
+      // Get all staff
+      const allStaff = await storage.getAllStaffMaster();
+      const filteredStaff = department 
+        ? allStaff.filter(s => s.department === department)
+        : allStaff;
+      
+      // Get roster data
+      let rosterData;
+      if (startDate && endDate) {
+        rosterData = await storage.getShiftRosterByDateRange(startDate as string, endDate as string);
+      } else {
+        rosterData = await storage.getAllShiftRoster();
+      }
+      
+      // Calculate analytics
+      const staffCount = filteredStaff.length;
+      const activeStaff = filteredStaff.filter(s => s.status === "ACTIVE").length;
+      const onLeaveStaff = filteredStaff.filter(s => s.status === "ON_LEAVE").length;
+      
+      const shiftsByType = {
+        MORNING: rosterData.filter(r => r.shiftType === "MORNING").length,
+        EVENING: rosterData.filter(r => r.shiftType === "EVENING").length,
+        NIGHT: rosterData.filter(r => r.shiftType === "NIGHT").length,
+        ON_CALL: rosterData.filter(r => r.shiftType === "ON_CALL").length,
+      };
+      
+      const shiftStatus = {
+        SCHEDULED: rosterData.filter(r => r.status === "SCHEDULED").length,
+        COMPLETED: rosterData.filter(r => r.status === "COMPLETED").length,
+        MISSED: rosterData.filter(r => r.status === "MISSED").length,
+        CANCELLED: rosterData.filter(r => r.status === "CANCELLED").length,
+      };
+      
+      // Get leave and overtime data
+      const pendingLeaves = await storage.getPendingLeaveRequests();
+      const pendingOvertime = await storage.getPendingOvertimeLogs();
+      
+      // Department breakdown
+      const departments = [...new Set(allStaff.map(s => s.department).filter(Boolean))];
+      const departmentBreakdown = departments.map(dept => ({
+        department: dept,
+        staffCount: allStaff.filter(s => s.department === dept).length,
+        activeCount: allStaff.filter(s => s.department === dept && s.status === "ACTIVE").length,
+      }));
+      
+      res.json({
+        summary: {
+          totalStaff: staffCount,
+          activeStaff,
+          onLeaveStaff,
+          totalShifts: rosterData.length,
+          pendingLeaveRequests: pendingLeaves.length,
+          pendingOvertimeApprovals: pendingOvertime.length,
+        },
+        shiftsByType,
+        shiftStatus,
+        departmentBreakdown,
+      });
+    } catch (error) {
+      console.error("Error fetching staff analytics:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
