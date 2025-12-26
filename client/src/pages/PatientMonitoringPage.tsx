@@ -237,8 +237,8 @@ export default function PatientMonitoringPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {doctors.map((doctor: any) => (
-                        <SelectItem key={doctor.id} value={`Dr. ${doctor.name}`}>
-                          Dr. {doctor.name} - {doctor.specialization || 'General'}
+                        <SelectItem key={doctor.id} value={doctor.name.startsWith('Dr.') ? doctor.name : `Dr. ${doctor.name}`}>
+                          {doctor.name.startsWith('Dr.') ? doctor.name : `Dr. ${doctor.name}`} - {doctor.specialization || 'General'}
                         </SelectItem>
                       ))}
                     </SelectContent>

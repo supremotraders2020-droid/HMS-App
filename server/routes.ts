@@ -5476,12 +5476,14 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/patient-monitoring/sessions", async (req, res) => {
     try {
       console.log("Session create request body:", JSON.stringify(req.body, null, 2));
-      // Convert admissionDateTime string to Date object if needed
+      // Convert admissionDateTime string to Date object and handle empty strings for numeric fields
       const dataToValidate = {
         ...req.body,
         admissionDateTime: req.body.admissionDateTime 
           ? new Date(req.body.admissionDateTime) 
-          : new Date()
+          : new Date(),
+        weightKg: req.body.weightKg && req.body.weightKg !== "" ? req.body.weightKg : null,
+        bloodGroup: req.body.bloodGroup && req.body.bloodGroup !== "" ? req.body.bloodGroup : null
       };
       const parsed = insertPatientMonitoringSessionSchema.safeParse(dataToValidate);
       if (!parsed.success) {
