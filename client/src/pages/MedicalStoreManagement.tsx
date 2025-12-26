@@ -550,54 +550,6 @@ export default function MedicalStoreManagement() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Store Access Logs</CardTitle>
-              <CardDescription>Track all prescription access and dispensing activities by stores</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {logsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
-              ) : accessLogs.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No store access logs recorded yet
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date/Time</TableHead>
-                      <TableHead>Store</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Prescription</TableHead>
-                      <TableHead>Patient</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {accessLogs.slice(0, 50).map((log) => (
-                      <TableRow key={log.id} data-testid={`row-log-${log.id}`}>
-                        <TableCell className="text-sm">
-                          {log.timestamp ? new Date(log.timestamp).toLocaleString() : "-"}
-                        </TableCell>
-                        <TableCell>{log.storeName || "-"}</TableCell>
-                        <TableCell>{log.userName}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{log.action}</Badge>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {log.prescriptionNumber || "-"}
-                        </TableCell>
-                        <TableCell>{log.patientName || "-"}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
 
