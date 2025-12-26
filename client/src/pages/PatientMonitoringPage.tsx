@@ -139,22 +139,23 @@ export default function PatientMonitoringPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-80px)]">
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary/10">
-            <Hospital className="h-6 w-6 text-primary" />
+      <div className="px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-transparent space-y-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-primary/10">
+              <Hospital className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">Patient Monitoring</h1>
+              <p className="text-sm text-muted-foreground">ICU Chart & Nursing Workflow (NABH-Compliant)</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">Patient Monitoring</h1>
-            <p className="text-sm text-muted-foreground">ICU Chart & Nursing Workflow (NABH-Compliant)</p>
-          </div>
-        </div>
-        <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
-          <DialogTrigger asChild>
-            <Button className="gap-2" data-testid="button-new-session">
-              <PlusCircle className="h-4 w-4" /> New Session
-            </Button>
-          </DialogTrigger>
+          <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
+            <DialogTrigger asChild>
+              <Button className="gap-2" data-testid="button-new-session">
+                <PlusCircle className="h-4 w-4" /> New Session
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Start New Monitoring Session</DialogTitle>
@@ -232,28 +233,13 @@ export default function PatientMonitoringPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
-
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-80 border-r bg-muted/30 overflow-auto">
-          <div className="px-4 py-3 border-b bg-muted/50 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="font-medium text-sm">Patient Sessions</h3>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant={showCalendar ? "default" : "outline"} 
-                  size="icon" 
-                  onClick={() => setShowCalendar(!showCalendar)}
-                  data-testid="button-toggle-calendar"
-                >
-                  <CalendarDays className="h-4 w-4" />
-                </Button>
-                <Badge variant="secondary" className="text-xs">{filteredSessions.length}</Badge>
-              </div>
-            </div>
+        </div>
+        
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
             <Select value={selectedPatientFilter} onValueChange={setSelectedPatientFilter}>
-              <SelectTrigger className="h-8 text-xs" data-testid="select-patient-filter">
-                <SelectValue placeholder="Filter by patient" />
+              <SelectTrigger className="w-[200px]" data-testid="select-patient-filter">
+                <SelectValue placeholder="All Patients" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Patients</SelectItem>
@@ -264,69 +250,83 @@ export default function PatientMonitoringPage() {
                 ))}
               </SelectContent>
             </Select>
-            {showCalendar && (
-              <div className="bg-card rounded-lg border p-2">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  modifiers={{ hasSession: sessionDates }}
-                  modifiersStyles={{ hasSession: { fontWeight: 'bold', color: 'hsl(var(--primary))' } }}
-                  className="w-full"
-                  data-testid="calendar-date-picker"
-                />
-                {selectedDate && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="w-full mt-2 text-xs"
-                    onClick={() => setSelectedDate(undefined)}
-                    data-testid="button-clear-date"
-                  >
-                    Clear Date Filter
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
-          <ScrollArea className="h-[calc(100vh-300px)]">
-            <div className="p-2 space-y-2">
-              {filteredSessions.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                    <FileText className="h-8 w-8 opacity-50" />
-                  </div>
-                  <p className="text-sm font-medium">No sessions found</p>
-                  <p className="text-xs mt-1">
-                    {selectedPatientFilter !== "all" || selectedDate 
-                      ? "Try changing the filter or date" 
-                      : "Click 'New Session' to start monitoring"}
-                  </p>
-                </div>
-              ) : (
-                filteredSessions.map((session) => (
-                  <div 
-                    key={session.id} 
-                    className={`p-4 rounded-lg cursor-pointer transition-all hover-elevate ${
-                      selectedSessionId === session.id 
-                        ? 'bg-primary/10 ring-2 ring-primary/30' 
-                        : 'bg-card hover:bg-card/80'
-                    }`}
-                    onClick={() => setSelectedSessionId(session.id)}
-                    data-testid={`session-item-${session.id}`}
-                  >
+          <div className="flex items-center gap-2">
+            <Button 
+              variant={showCalendar ? "default" : "outline"} 
+              size="icon" 
+              onClick={() => setShowCalendar(!showCalendar)}
+              data-testid="button-toggle-calendar"
+            >
+              <CalendarDays className="h-4 w-4" />
+            </Button>
+            {selectedDate && (
+              <Badge variant="secondary" className="text-sm gap-1">
+                {format(selectedDate, "dd MMM yyyy")}
+                <Button variant="ghost" size="icon" className="h-4 w-4 ml-1" onClick={() => setSelectedDate(undefined)}>
+                  <span className="text-xs">×</span>
+                </Button>
+              </Badge>
+            )}
+            <Badge variant="outline" className="text-xs">{filteredSessions.length} sessions</Badge>
+          </div>
+        </div>
+
+        {showCalendar && (
+          <div className="flex justify-center">
+            <Card className="p-2">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                modifiers={{ hasSession: sessionDates }}
+                modifiersStyles={{ hasSession: { fontWeight: 'bold', color: 'hsl(var(--primary))' } }}
+                data-testid="calendar-date-picker"
+              />
+            </Card>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-auto bg-background p-6">
+        {filteredSessions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mb-6">
+              <FileText className="h-12 w-12 opacity-40" />
+            </div>
+            <h2 className="text-xl font-medium mb-2">No Sessions Found</h2>
+            <p className="text-sm">
+              {selectedPatientFilter !== "all" || selectedDate 
+                ? "Try changing the filter or date" 
+                : "Click 'New Session' to start monitoring"}
+            </p>
+          </div>
+        ) : !selectedSession ? (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Select a Session</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredSessions.map((session) => (
+                <Card 
+                  key={session.id} 
+                  className={`cursor-pointer hover-elevate ${
+                    selectedSessionId === session.id ? 'ring-2 ring-primary' : ''
+                  }`}
+                  onClick={() => setSelectedSessionId(session.id)}
+                  data-testid={`session-card-${session.id}`}
+                >
+                  <CardContent className="pt-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
-                        <span className="font-medium text-sm block truncate">{session.patientName}</span>
-                        <span className="text-xs text-muted-foreground">{session.ward} - Bed {session.bedNumber}</span>
+                        <span className="font-medium block truncate">{session.patientName}</span>
+                        <span className="text-sm text-muted-foreground">{session.ward} - Bed {session.bedNumber}</span>
                       </div>
                       <Badge variant={session.isLocked ? "secondary" : "default"} className="text-xs shrink-0">
                         {session.isLocked ? "Locked" : "Active"}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
                       <span>UHID: {session.uhid}</span>
-                      <span className="text-muted-foreground/50">|</span>
+                      <span>|</span>
                       <span>{format(new Date(session.sessionDate), "dd MMM yyyy")}</span>
                     </div>
                     {session.isVentilated && (
@@ -334,24 +334,13 @@ export default function PatientMonitoringPage() {
                         <Wind className="h-3 w-3" /> Ventilator
                       </Badge>
                     )}
-                  </div>
-                ))
-              )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          </ScrollArea>
-        </aside>
-
-        <main className="flex-1 overflow-auto bg-background p-6">
-          {!selectedSession ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mb-6">
-                <Stethoscope className="h-12 w-12 opacity-40" />
-              </div>
-              <h2 className="text-xl font-medium mb-2">Select a Monitoring Session</h2>
-              <p className="text-sm">Choose a session from the left panel or create a new one</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
+          </div>
+        ) : (
+          <div className="space-y-6">
               <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-r from-card to-card/50 border">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
@@ -439,7 +428,6 @@ export default function PatientMonitoringPage() {
               </Tabs>
             </div>
           )}
-        </main>
       </div>
     </div>
   );
