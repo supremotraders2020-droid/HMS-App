@@ -2,11 +2,13 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import path from "path";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 import { users, insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
+  patientBarcodes, insertPatientBarcodeSchema, barcodeScanLogs, insertBarcodeScanLogSchema,
   patientMonitoringSessions, insertPatientMonitoringSessionSchema,
   vitalsHourly, insertVitalsHourlySchema,
   inotropesSedation, insertInotropesSedationSchema,
@@ -7692,6 +7694,348 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error creating access log:", error);
       res.status(500).json({ error: "Failed to create access log" });
+    }
+  });
+
+  // ============================================
+  // PATIENT BARCODE SYSTEM - UHID Based Secure Scanning
+  // ============================================
+
+  // Allowed roles for barcode scanning (ADMIN, DOCTOR, NURSE only)
+  const BARCODE_ALLOWED_ROLES = ["ADMIN", "DOCTOR", "NURSE"];
+
+  // Generate UHID for new patient
+  const generateUHID = async (admissionType: string): Promise<string> => {
+    const year = new Date().getFullYear();
+    const prefix = admissionType === "IPD" ? "GRAV-IPD" : "GRAV-OPD";
+    
+    // Get count of existing barcodes for this type and year
+    const existingBarcodes = await db.select().from(patientBarcodes)
+      .where(eq(patientBarcodes.admissionType, admissionType));
+    
+    const count = existingBarcodes.filter(b => b.uhid.includes(`${year}`)).length + 1;
+    const paddedCount = count.toString().padStart(6, '0');
+    
+    return `${prefix}-${year}-${paddedCount}`;
+  };
+
+  // Generate encrypted token for barcode
+  const generateEncryptedToken = (patientId: string, uhid: string): string => {
+    const data = `${patientId}|${uhid}|${Date.now()}`;
+    const cipher = crypto.createHash('sha256');
+    cipher.update(data);
+    return cipher.digest('hex');
+  };
+
+  // Generate barcode on patient admission
+  app.post("/api/barcode/generate", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      // Only ADMIN, DOCTOR, NURSE can generate barcodes
+      if (!BARCODE_ALLOWED_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized: Only Admin, Doctor, or Nurse can generate patient barcodes" });
+      }
+
+      const { patientId, patientName, admissionType, wardBed, treatingDoctor } = req.body;
+
+      if (!patientId || !patientName || !admissionType) {
+        return res.status(400).json({ error: "Patient ID, name, and admission type are required" });
+      }
+
+      // Generate UHID
+      const uhid = await generateUHID(admissionType);
+      
+      // Generate encrypted token (no patient data in barcode)
+      const encryptedToken = generateEncryptedToken(patientId, uhid);
+      
+      // Barcode data is just the UHID and token - no sensitive info
+      const barcodeData = `HMS:${uhid}:${encryptedToken.substring(0, 16)}`;
+
+      // Create barcode record
+      const [barcode] = await db.insert(patientBarcodes).values({
+        patientId,
+        patientName,
+        uhid,
+        admissionType,
+        encryptedToken,
+        barcodeData,
+        wardBed: wardBed || null,
+        treatingDoctor: treatingDoctor || null,
+        isActive: true,
+      }).returning();
+
+      // Log the barcode generation
+      await db.insert(barcodeScanLogs).values({
+        barcodeId: barcode.id,
+        uhid,
+        scannedBy: user.id,
+        scannedByName: user.name || user.username,
+        role: user.role,
+        allowed: true,
+        ipAddress: req.ip || null,
+        deviceInfo: req.headers['user-agent'] || null,
+      });
+
+      res.status(201).json({
+        id: barcode.id,
+        uhid,
+        barcodeData,
+        patientName,
+        admissionType,
+        wardBed,
+        treatingDoctor,
+        createdAt: barcode.createdAt,
+      });
+    } catch (error) {
+      console.error("Error generating barcode:", error);
+      res.status(500).json({ error: "Failed to generate barcode" });
+    }
+  });
+
+  // Scan barcode - STRICT ROLE-BASED ACCESS (ADMIN, DOCTOR, NURSE only)
+  app.post("/api/barcode/scan", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const { barcodeData, uhid: manualUhid } = req.body;
+      const searchUhid = manualUhid || (barcodeData?.includes(':') ? barcodeData.split(':')[1] : barcodeData);
+
+      // Log every scan attempt
+      const logScanAttempt = async (allowed: boolean, reason?: string, barcodeId?: string) => {
+        await db.insert(barcodeScanLogs).values({
+          barcodeId: barcodeId || null,
+          uhid: searchUhid || null,
+          scannedBy: user.id,
+          scannedByName: user.name || user.username,
+          role: user.role,
+          allowed,
+          denialReason: reason || null,
+          ipAddress: req.ip || null,
+          deviceInfo: req.headers['user-agent'] || null,
+        });
+      };
+
+      // STRICT ROLE CHECK - Only ADMIN, DOCTOR, NURSE allowed
+      if (!BARCODE_ALLOWED_ROLES.includes(user.role)) {
+        await logScanAttempt(false, `Access denied: Role ${user.role} not authorized`);
+        return res.status(403).json({ 
+          error: "ACCESS DENIED: Your role is not authorized to scan patient barcodes",
+          roleRequired: "ADMIN, DOCTOR, or NURSE",
+          yourRole: user.role
+        });
+      }
+
+      if (!searchUhid) {
+        await logScanAttempt(false, "No barcode data provided");
+        return res.status(400).json({ error: "Barcode data or UHID is required" });
+      }
+
+      // Find barcode by UHID
+      const [barcode] = await db.select().from(patientBarcodes)
+        .where(eq(patientBarcodes.uhid, searchUhid));
+
+      if (!barcode) {
+        await logScanAttempt(false, "Barcode not found in system");
+        return res.status(404).json({ error: "Patient barcode not found in system" });
+      }
+
+      if (!barcode.isActive) {
+        await logScanAttempt(false, "Barcode is inactive/expired", barcode.id);
+        return res.status(400).json({ error: "This patient barcode is no longer active" });
+      }
+
+      // Log successful scan
+      await logScanAttempt(true, undefined, barcode.id);
+
+      // Fetch comprehensive patient data based on role
+      const patientId = barcode.patientId;
+      
+      // Get monitoring sessions for this patient
+      const sessions = await db.select().from(patientMonitoringSessions)
+        .where(eq(patientMonitoringSessions.patientId, patientId))
+        .orderBy(desc(patientMonitoringSessions.createdAt));
+      
+      const latestSession = sessions[0];
+
+      // Get prescriptions
+      const patientPrescriptions = await db.select().from(prescriptions)
+        .where(eq(prescriptions.patientId, patientId));
+
+      // Get allergies if session exists
+      let allergies = null;
+      if (latestSession) {
+        const [allergyData] = await db.select().from(patientAllergiesPrecautions)
+          .where(eq(patientAllergiesPrecautions.sessionId, latestSession.id));
+        allergies = allergyData;
+      }
+
+      // Get latest vitals if session exists
+      let latestVitals = null;
+      if (latestSession) {
+        const [vitals] = await db.select().from(vitalsHourly)
+          .where(eq(vitalsHourly.sessionId, latestSession.id))
+          .orderBy(desc(vitalsHourly.recordedAt))
+          .limit(1);
+        latestVitals = vitals;
+      }
+
+      // Prepare role-filtered response
+      const baseData = {
+        barcode: {
+          id: barcode.id,
+          uhid: barcode.uhid,
+          admissionType: barcode.admissionType,
+          wardBed: barcode.wardBed,
+          treatingDoctor: barcode.treatingDoctor,
+          createdAt: barcode.createdAt,
+        },
+        patient: {
+          id: patientId,
+          name: barcode.patientName,
+          uhid: barcode.uhid,
+          admissionType: barcode.admissionType,
+          wardBed: barcode.wardBed,
+          treatingDoctor: barcode.treatingDoctor,
+          age: latestSession?.age,
+          gender: latestSession?.gender,
+          status: latestSession?.status || "active",
+        },
+        scanInfo: {
+          scannedBy: user.name || user.username,
+          scannedAt: new Date().toISOString(),
+          role: user.role,
+        }
+      };
+
+      // Role-based data visibility
+      let responseData: any = { ...baseData };
+
+      // NURSE: Vitals, medication administration, nursing notes
+      if (user.role === "NURSE" || user.role === "DOCTOR" || user.role === "ADMIN") {
+        responseData.vitals = latestVitals;
+        responseData.allergies = allergies;
+        responseData.monitoringSession = latestSession;
+      }
+
+      // DOCTOR: Full medical data + prescriptions + reports
+      if (user.role === "DOCTOR" || user.role === "ADMIN") {
+        responseData.prescriptions = patientPrescriptions;
+        responseData.allSessions = sessions;
+      }
+
+      // ADMIN: Everything including billing
+      if (user.role === "ADMIN") {
+        // Get billing data
+        const bills = await databaseStorage.getPatientBills(patientId);
+        responseData.billing = bills;
+      }
+
+      res.json(responseData);
+    } catch (error) {
+      console.error("Error scanning barcode:", error);
+      res.status(500).json({ error: "Failed to scan barcode" });
+    }
+  });
+
+  // Get all patient barcodes (for admin/authorized staff)
+  app.get("/api/barcodes", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user || !BARCODE_ALLOWED_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      const barcodes = await db.select().from(patientBarcodes)
+        .orderBy(desc(patientBarcodes.createdAt));
+      
+      res.json(barcodes);
+    } catch (error) {
+      console.error("Error fetching barcodes:", error);
+      res.status(500).json({ error: "Failed to fetch barcodes" });
+    }
+  });
+
+  // Get barcode by UHID
+  app.get("/api/barcodes/uhid/:uhid", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user || !BARCODE_ALLOWED_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      const [barcode] = await db.select().from(patientBarcodes)
+        .where(eq(patientBarcodes.uhid, req.params.uhid));
+      
+      if (!barcode) {
+        return res.status(404).json({ error: "Barcode not found" });
+      }
+
+      res.json(barcode);
+    } catch (error) {
+      console.error("Error fetching barcode:", error);
+      res.status(500).json({ error: "Failed to fetch barcode" });
+    }
+  });
+
+  // Get barcode scan logs (audit trail)
+  app.get("/api/barcode/scan-logs", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user || user.role !== "ADMIN") {
+        return res.status(403).json({ error: "Only Admin can view scan logs" });
+      }
+
+      const logs = await db.select().from(barcodeScanLogs)
+        .orderBy(desc(barcodeScanLogs.timestamp))
+        .limit(100);
+      
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching scan logs:", error);
+      res.status(500).json({ error: "Failed to fetch scan logs" });
+    }
+  });
+
+  // Deactivate a barcode (on discharge)
+  app.patch("/api/barcodes/:id/deactivate", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user || !BARCODE_ALLOWED_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      const [updated] = await db.update(patientBarcodes)
+        .set({ isActive: false })
+        .where(eq(patientBarcodes.id, req.params.id))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Barcode not found" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error deactivating barcode:", error);
+      res.status(500).json({ error: "Failed to deactivate barcode" });
     }
   });
 
