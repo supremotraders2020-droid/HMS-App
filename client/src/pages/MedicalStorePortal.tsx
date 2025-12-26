@@ -631,22 +631,21 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
           <p className="text-muted-foreground">{storeInfo.store.storeName}</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setShowNotificationPanel(!showNotificationPanel)}
-              data-testid="button-notifications"
-              className={incomingPrescriptions.length > 0 ? "animate-pulse" : ""}
-            >
-              <Bell className="h-4 w-4" />
-              {incomingPrescriptions.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-                  {incomingPrescriptions.length}
-                </span>
-              )}
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            type="button"
+            onClick={() => setShowNotificationPanel(!showNotificationPanel)}
+            data-testid="button-notifications"
+            className={`relative overflow-visible cursor-pointer ${incomingPrescriptions.length > 0 ? "animate-pulse" : ""}`}
+          >
+            <Bell className="h-4 w-4" />
+            {incomingPrescriptions.length > 0 && (
+              <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center z-10 pointer-events-none">
+                {incomingPrescriptions.length}
+              </span>
+            )}
+          </Button>
           <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" data-testid="badge-store-status">
             <Store className="h-4 w-4 mr-1" />
             {storeInfo.store.storeType === "IN_HOUSE" ? "Hospital Pharmacy" : "Third Party Store"}
