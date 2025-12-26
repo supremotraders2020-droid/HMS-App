@@ -32,8 +32,23 @@ import {
   Loader2,
   Camera,
   CameraOff,
-  Video
+  Video,
+  Users,
+  Plus,
+  Eye,
+  Stethoscope,
+  ClipboardList,
+  FolderOpen,
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  Printer
 } from "lucide-react";
+
+interface PatientBarcodePageProps {
+  currentRole?: string;
+}
 
 interface PatientData {
   barcode: {
@@ -80,8 +95,9 @@ interface PatientData {
   allSessions?: any[];
 }
 
-export default function PatientBarcodePage() {
+export default function PatientBarcodePage({ currentRole }: PatientBarcodePageProps) {
   const { toast } = useToast();
+  const isAdmin = currentRole === "ADMIN";
   const [uhidInput, setUhidInput] = useState("");
   const [scannedPatient, setScannedPatient] = useState<PatientData | null>(null);
   const [showScanner, setShowScanner] = useState(true);
@@ -117,9 +133,38 @@ export default function PatientBarcodePage() {
     },
   });
 
-  const { data: allBarcodes } = useQuery<any[]>({
+  const { data: allBarcodes, refetch: refetchBarcodes } = useQuery<any[]>({
     queryKey: ["/api/barcodes"],
     enabled: showScanner,
+  });
+
+  const { data: patientsWithBarcodes, refetch: refetchPatients, isLoading: loadingPatients } = useQuery<any[]>({
+    queryKey: ["/api/patients/with-barcodes"],
+    enabled: showScanner,
+  });
+
+  const generateAllMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/barcodes/generate-all", {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Barcodes Generated",
+        description: data.message,
+      });
+      refetchBarcodes();
+      refetchPatients();
+      queryClient.invalidateQueries({ queryKey: ["/api/barcodes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/patients/with-barcodes"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Could not generate barcodes",
+        variant: "destructive",
+      });
+    },
   });
 
   const extractUHID = (barcodeText: string): string | null => {
@@ -231,9 +276,12 @@ export default function PatientBarcodePage() {
   };
 
   const userRole = scannedPatient?.scanInfo?.role || "";
-  const canSeePrescriptions = userRole === "DOCTOR" || userRole === "ADMIN";
-  const canSeeBilling = userRole === "ADMIN";
-  const canSeeVitals = userRole === "NURSE" || userRole === "DOCTOR" || userRole === "ADMIN";
+  const isAuthorizedRole = userRole === "ADMIN" || userRole === "DOCTOR" || userRole === "NURSE";
+  const canSeePrescriptions = isAuthorizedRole;
+  const canSeeBilling = isAuthorizedRole;
+  const canSeeVitals = isAuthorizedRole;
+  const canSeeNursing = isAuthorizedRole;
+  const canSeeDocuments = isAuthorizedRole;
 
   if (showScanner) {
     return (
@@ -351,36 +399,70 @@ export default function PatientBarcodePage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
               <CardTitle className="flex items-center gap-2">
-                <History className="h-5 w-5" />
-                Active Patient Barcodes
+                <Users className="h-5 w-5" />
+                All Patients
               </CardTitle>
+              {isAdmin && (
+                <Button 
+                  onClick={() => generateAllMutation.mutate()}
+                  disabled={generateAllMutation.isPending}
+                  size="sm"
+                  data-testid="button-generate-all"
+                >
+                  {generateAllMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  Generate All Barcodes
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[300px]">
-                {allBarcodes && allBarcodes.length > 0 ? (
+              <ScrollArea className="h-[400px]">
+                {loadingPatients ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : patientsWithBarcodes && patientsWithBarcodes.length > 0 ? (
                   <div className="space-y-2">
-                    {allBarcodes.filter(b => b.isActive).map((barcode) => (
+                    {patientsWithBarcodes.map((patient) => (
                       <div
-                        key={barcode.id}
-                        className="flex items-center justify-between p-3 rounded-lg border hover-elevate cursor-pointer"
-                        onClick={() => handleQuickScan(barcode.uhid)}
-                        data-testid={`barcode-item-${barcode.uhid}`}
+                        key={patient.id}
+                        className={`flex items-center justify-between p-3 rounded-lg border hover-elevate ${patient.hasBarcode ? 'cursor-pointer' : 'opacity-60'}`}
+                        onClick={() => patient.hasBarcode && handleQuickScan(patient.barcode.uhid)}
+                        data-testid={`patient-item-${patient.id}`}
                       >
                         <div className="flex items-center gap-3">
-                          <QrCode className="h-5 w-5 text-primary" />
+                          <div className={`p-2 rounded-full ${patient.hasBarcode ? 'bg-primary/10' : 'bg-muted'}`}>
+                            <User className={`h-4 w-4 ${patient.hasBarcode ? 'text-primary' : 'text-muted-foreground'}`} />
+                          </div>
                           <div>
-                            <p className="font-medium">{barcode.patientName}</p>
-                            <p className="text-sm text-muted-foreground font-mono">{barcode.uhid}</p>
+                            <p className="font-medium">{patient.name}</p>
+                            {patient.hasBarcode ? (
+                              <p className="text-sm text-muted-foreground font-mono">{patient.barcode.uhid}</p>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">No barcode assigned</p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant={barcode.admissionType === "IPD" ? "default" : "secondary"}>
-                            {barcode.admissionType}
-                          </Badge>
-                          {barcode.wardBed && (
-                            <Badge variant="outline">{barcode.wardBed}</Badge>
+                          {patient.hasBarcode ? (
+                            <>
+                              <Badge variant={patient.barcode.admissionType === "IPD" ? "default" : "secondary"}>
+                                {patient.barcode.admissionType}
+                              </Badge>
+                              {patient.barcode.wardBed && (
+                                <Badge variant="outline">{patient.barcode.wardBed}</Badge>
+                              )}
+                              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleQuickScan(patient.barcode.uhid); }}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground">Pending</Badge>
                           )}
                         </div>
                       </div>
@@ -388,9 +470,8 @@ export default function PatientBarcodePage() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    <QrCode className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No active patient barcodes</p>
-                    <p className="text-sm">Barcodes are generated on patient admission</p>
+                    <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No patients found</p>
                   </div>
                 )}
               </ScrollArea>
@@ -456,25 +537,31 @@ export default function PatientBarcodePage() {
             <User className="h-4 w-4 mr-2" />
             Overview
           </TabsTrigger>
-          {canSeeVitals && (
-            <TabsTrigger value="vitals" data-testid="tab-vitals">
-              <Activity className="h-4 w-4 mr-2" />
-              Vitals
-            </TabsTrigger>
-          )}
           {canSeePrescriptions && (
             <TabsTrigger value="prescriptions" data-testid="tab-prescriptions">
               <Pill className="h-4 w-4 mr-2" />
-              Prescriptions
+              Prescription
             </TabsTrigger>
           )}
-          {canSeePrescriptions && (
+          {canSeeNursing && (
+            <TabsTrigger value="nursing" data-testid="tab-nursing">
+              <Stethoscope className="h-4 w-4 mr-2" />
+              Nursing
+            </TabsTrigger>
+          )}
+          {canSeeDocuments && (
             <TabsTrigger value="reports" data-testid="tab-reports">
               <FileText className="h-4 w-4 mr-2" />
               Reports
             </TabsTrigger>
           )}
-          {canSeeBilling && scannedPatient.billing && (
+          {canSeeDocuments && (
+            <TabsTrigger value="documents" data-testid="tab-documents">
+              <FolderOpen className="h-4 w-4 mr-2" />
+              Documents
+            </TabsTrigger>
+          )}
+          {canSeeBilling && (
             <TabsTrigger value="billing" data-testid="tab-billing">
               <DollarSign className="h-4 w-4 mr-2" />
               Billing
@@ -596,52 +683,6 @@ export default function PatientBarcodePage() {
           </div>
         </TabsContent>
 
-        {canSeeVitals && (
-          <TabsContent value="vitals" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Vital Signs History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {scannedPatient.vitals ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="p-4 text-center">
-                      <Heart className="h-8 w-8 mx-auto mb-2 text-red-500" />
-                      <div className="text-3xl font-bold">{scannedPatient.vitals.heartRate || "—"}</div>
-                      <div className="text-sm text-muted-foreground">Heart Rate (bpm)</div>
-                    </Card>
-                    <Card className="p-4 text-center">
-                      <Droplets className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-                      <div className="text-3xl font-bold">
-                        {scannedPatient.vitals.systolicBp || "—"}/{scannedPatient.vitals.diastolicBp || "—"}
-                      </div>
-                      <div className="text-sm text-muted-foreground">Blood Pressure (mmHg)</div>
-                    </Card>
-                    <Card className="p-4 text-center">
-                      <Thermometer className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-                      <div className="text-3xl font-bold">{scannedPatient.vitals.temperature || "—"}°F</div>
-                      <div className="text-sm text-muted-foreground">Temperature</div>
-                    </Card>
-                    <Card className="p-4 text-center">
-                      <Wind className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                      <div className="text-3xl font-bold">{scannedPatient.vitals.spo2 || "—"}%</div>
-                      <div className="text-sm text-muted-foreground">SpO2</div>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No vitals recorded for this patient</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
-
         {canSeePrescriptions && (
           <TabsContent value="prescriptions" className="mt-4">
             <Card>
@@ -686,19 +727,239 @@ export default function PatientBarcodePage() {
           </TabsContent>
         )}
 
-        {canSeePrescriptions && (
+        {canSeeNursing && (
+          <TabsContent value="nursing" className="mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Vital Signs
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {scannedPatient.vitals ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4 text-red-500" />
+                        <div>
+                          <div className="text-2xl font-bold">{scannedPatient.vitals.heartRate || "—"}</div>
+                          <div className="text-xs text-muted-foreground">Heart Rate (bpm)</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Droplets className="h-4 w-4 text-blue-500" />
+                        <div>
+                          <div className="text-2xl font-bold">
+                            {scannedPatient.vitals.systolicBp || "—"}/{scannedPatient.vitals.diastolicBp || "—"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Blood Pressure</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Thermometer className="h-4 w-4 text-orange-500" />
+                        <div>
+                          <div className="text-2xl font-bold">{scannedPatient.vitals.temperature || "—"}°F</div>
+                          <div className="text-xs text-muted-foreground">Temperature</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Wind className="h-4 w-4 text-green-500" />
+                        <div>
+                          <div className="text-2xl font-bold">{scannedPatient.vitals.spo2 || "—"}%</div>
+                          <div className="text-xs text-muted-foreground">SpO2</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No vitals recorded</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5" />
+                    Nursing Notes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {scannedPatient.monitoringSession ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <Badge variant="outline">Session #{scannedPatient.monitoringSession.id}</Badge>
+                        <Badge variant={scannedPatient.monitoringSession.status === "active" ? "default" : "secondary"}>
+                          {scannedPatient.monitoringSession.status}
+                        </Badge>
+                      </div>
+                      {scannedPatient.monitoringSession.notes && (
+                        <p className="text-sm text-muted-foreground">{scannedPatient.monitoringSession.notes}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <ClipboardList className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No monitoring sessions</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Allergies & Precautions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {hasAllergies || scannedPatient.allergies?.specialPrecautions ? (
+                    <div className="space-y-3">
+                      {drugAllergies.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium mb-1">Drug Allergies:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {drugAllergies.map((a, i) => (
+                              <Badge key={i} variant="destructive">{a}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {foodAllergies.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium mb-1">Food Allergies:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {foodAllergies.map((a, i) => (
+                              <Badge key={i} variant="outline">{a}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {scannedPatient.allergies?.specialPrecautions && (
+                        <div>
+                          <p className="text-sm font-medium mb-1">Special Precautions:</p>
+                          <p className="text-sm text-muted-foreground">{scannedPatient.allergies.specialPrecautions}</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500 opacity-50" />
+                      <p className="text-sm">No known allergies</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <History className="h-5 w-5" />
+                    Recent Monitoring Sessions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {scannedPatient.allSessions && scannedPatient.allSessions.length > 0 ? (
+                    <div className="space-y-2">
+                      {scannedPatient.allSessions.slice(0, 5).map((session: any) => (
+                        <div key={session.id} className="flex items-center justify-between p-2 border rounded-lg">
+                          <div className="text-sm">
+                            <p className="font-medium">{new Date(session.sessionDate).toLocaleDateString()}</p>
+                            <p className="text-muted-foreground text-xs">{session.shift || "Day Shift"}</p>
+                          </div>
+                          <Badge variant="outline">{session.status}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No monitoring sessions</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        )}
+
+        {canSeeDocuments && (
           <TabsContent value="reports" className="mt-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  Reports & Documents
+                  Lab Reports
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Lab reports and documents will appear here</p>
+                  <p>Lab reports and test results will appear here</p>
+                  <p className="text-sm mt-2">Reports are linked when pathology tests are completed</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {canSeeDocuments && (
+          <TabsContent value="documents" className="mt-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <FolderOpen className="h-5 w-5" />
+                  Patient Documents
+                </CardTitle>
+                <Button variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Upload Document
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-lg hover-elevate cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-8 w-8 text-blue-500" />
+                        <div>
+                          <p className="font-medium">Consent Forms</p>
+                          <p className="text-sm text-muted-foreground">Admission & procedure consents</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 border rounded-lg hover-elevate cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-8 w-8 text-green-500" />
+                        <div>
+                          <p className="font-medium">Medical Records</p>
+                          <p className="text-sm text-muted-foreground">Previous medical history</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 border rounded-lg hover-elevate cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-8 w-8 text-purple-500" />
+                        <div>
+                          <p className="font-medium">Insurance Documents</p>
+                          <p className="text-sm text-muted-foreground">Insurance cards & claims</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 border rounded-lg hover-elevate cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-8 w-8 text-orange-500" />
+                        <div>
+                          <p className="font-medium">Discharge Summary</p>
+                          <p className="text-sm text-muted-foreground">Final reports & instructions</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

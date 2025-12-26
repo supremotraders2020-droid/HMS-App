@@ -327,7 +327,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
       {/* Patient Barcode Scanner Route - for Admin, Doctor, Nurse only */}
       <Route path="/patient-barcode">
         {["ADMIN", "DOCTOR", "NURSE"].includes(currentUser.role) ? (
-          <PatientBarcodePage />
+          <PatientBarcodePage currentRole={currentUser.role} />
         ) : (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>

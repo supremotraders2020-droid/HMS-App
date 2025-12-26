@@ -7928,15 +7928,12 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         responseData.monitoringSession = latestSession;
       }
 
-      // DOCTOR: Full medical data + prescriptions + reports
-      if (user.role === "DOCTOR" || user.role === "ADMIN") {
+      // ALL AUTHORIZED ROLES: Full access to prescriptions, sessions, and billing
+      if (user.role === "DOCTOR" || user.role === "ADMIN" || user.role === "NURSE") {
         responseData.prescriptions = patientPrescriptions;
         responseData.allSessions = sessions;
-      }
-
-      // ADMIN: Everything including billing
-      if (user.role === "ADMIN") {
-        // Get billing data
+        
+        // Get billing data - full access for all authorized roles
         const bills = await databaseStorage.getPatientBills(patientId);
         responseData.billing = bills;
       }
@@ -8036,6 +8033,155 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error deactivating barcode:", error);
       res.status(500).json({ error: "Failed to deactivate barcode" });
+    }
+  });
+
+  // Bulk generate barcodes for all patients without one (Admin only)
+  app.post("/api/barcodes/generate-all", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user || user.role !== "ADMIN") {
+        return res.status(403).json({ error: "Only Admin can bulk generate barcodes" });
+      }
+
+      // Get all service patients
+      const allPatients = await db.select().from(servicePatients);
+      
+      // Get existing barcodes
+      const existingBarcodes = await db.select().from(patientBarcodes);
+      const existingPatientIds = new Set(existingBarcodes.map(b => b.patientId));
+
+      const newBarcodes = [];
+      let ipdCount = existingBarcodes.filter(b => b.admissionType === "IPD").length;
+      let opdCount = existingBarcodes.filter(b => b.admissionType === "OPD").length;
+
+      for (const patient of allPatients) {
+        if (!existingPatientIds.has(patient.id)) {
+          // Alternate between IPD and OPD for demo purposes
+          const admissionType = newBarcodes.length % 2 === 0 ? "IPD" : "OPD";
+          const year = new Date().getFullYear();
+          
+          let count;
+          if (admissionType === "IPD") {
+            ipdCount++;
+            count = ipdCount;
+          } else {
+            opdCount++;
+            count = opdCount;
+          }
+          
+          const prefix = admissionType === "IPD" ? "GRAV-IPD" : "GRAV-OPD";
+          const uhid = `${prefix}-${year}-${count.toString().padStart(6, '0')}`;
+          
+          const patientName = `${patient.firstName} ${patient.lastName}`;
+          const encryptedToken = generateEncryptedToken(patient.id, uhid);
+          const barcodeData = `HMS:${uhid}:${encryptedToken.substring(0, 16)}`;
+
+          const [barcode] = await db.insert(patientBarcodes).values({
+            patientId: patient.id,
+            patientName,
+            uhid,
+            admissionType,
+            encryptedToken,
+            barcodeData,
+            wardBed: admissionType === "IPD" ? `Ward-${Math.floor(Math.random() * 5) + 1}/Bed-${Math.floor(Math.random() * 20) + 1}` : null,
+            treatingDoctor: null,
+            isActive: true,
+          }).returning();
+
+          newBarcodes.push(barcode);
+        }
+      }
+
+      // Log bulk generation
+      if (newBarcodes.length > 0) {
+        await db.insert(barcodeScanLogs).values({
+          barcodeId: newBarcodes[0].id,
+          uhid: "BULK-GENERATION",
+          scannedBy: user.id,
+          scannedByName: user.name || user.username,
+          role: user.role,
+          allowed: true,
+          ipAddress: req.ip || null,
+          deviceInfo: `Bulk generated ${newBarcodes.length} barcodes`,
+        });
+      }
+
+      res.json({
+        message: `Generated ${newBarcodes.length} new barcodes`,
+        totalPatients: allPatients.length,
+        existingBarcodes: existingPatientIds.size,
+        newBarcodes: newBarcodes.length,
+        barcodes: newBarcodes,
+      });
+    } catch (error) {
+      console.error("Error bulk generating barcodes:", error);
+      res.status(500).json({ error: "Failed to bulk generate barcodes" });
+    }
+  });
+
+  // Get all patients with their barcodes (for Admin view)
+  app.get("/api/patients/with-barcodes", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      
+      if (!user || !BARCODE_ALLOWED_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      // Get all service patients
+      const allPatients = await db.select().from(servicePatients);
+      
+      // Get all barcodes
+      const allBarcodes = await db.select().from(patientBarcodes)
+        .orderBy(desc(patientBarcodes.createdAt));
+      
+      // Create a map of patient ID to barcode
+      const barcodeMap = new Map();
+      for (const barcode of allBarcodes) {
+        if (!barcodeMap.has(barcode.patientId)) {
+          barcodeMap.set(barcode.patientId, barcode);
+        }
+      }
+
+      // Combine patient data with barcode data
+      const patientsWithBarcodes = allPatients.map(patient => {
+        const barcode = barcodeMap.get(patient.id);
+        return {
+          id: patient.id,
+          name: `${patient.firstName} ${patient.lastName}`,
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          gender: patient.gender,
+          dateOfBirth: patient.dateOfBirth,
+          phone: patient.phone,
+          email: patient.email,
+          address: patient.address,
+          emergencyContact: patient.emergencyContact,
+          emergencyPhone: patient.emergencyPhone,
+          insuranceProvider: patient.insuranceProvider,
+          insuranceNumber: patient.insuranceNumber,
+          barcode: barcode ? {
+            id: barcode.id,
+            uhid: barcode.uhid,
+            admissionType: barcode.admissionType,
+            wardBed: barcode.wardBed,
+            treatingDoctor: barcode.treatingDoctor,
+            barcodeData: barcode.barcodeData,
+            isActive: barcode.isActive,
+            createdAt: barcode.createdAt,
+          } : null,
+          hasBarcode: !!barcode,
+        };
+      });
+
+      res.json(patientsWithBarcodes);
+    } catch (error) {
+      console.error("Error fetching patients with barcodes:", error);
+      res.status(500).json({ error: "Failed to fetch patients with barcodes" });
     }
   });
 
