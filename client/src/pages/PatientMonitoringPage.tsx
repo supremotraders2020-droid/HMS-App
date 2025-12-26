@@ -21,7 +21,7 @@ import {
   FileText, Pill, AlertTriangle, Users, Shield,
   PlusCircle, RefreshCw, Download, Stethoscope,
   Wind, Syringe, FlaskConical, ClipboardList, Baby,
-  BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays
+  BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays, ArrowLeft
 } from "lucide-react";
 
 const HOUR_SLOTS = [
@@ -56,8 +56,8 @@ export default function PatientMonitoringPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedPatientFilter, setSelectedPatientFilter] = useState<string>("all");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [showCalendar, setShowCalendar] = useState(true);
   const [newSessionData, setNewSessionData] = useState({
     patientId: "",
     patientName: "",
@@ -93,7 +93,7 @@ export default function PatientMonitoringPage() {
 
   const filteredSessions = sessions.filter(session => {
     const matchesPatient = selectedPatientFilter === "all" || session.patientId === selectedPatientFilter;
-    const matchesDate = !selectedDate || isSameDay(parseISO(session.sessionDate), selectedDate);
+    const matchesDate = selectedDate ? isSameDay(parseISO(session.sessionDate), selectedDate) : false;
     return matchesPatient && matchesDate;
   });
 
@@ -260,50 +260,102 @@ export default function PatientMonitoringPage() {
             >
               <CalendarDays className="h-4 w-4" />
             </Button>
-            {selectedDate && (
-              <Badge variant="secondary" className="text-sm gap-1">
-                {format(selectedDate, "dd MMM yyyy")}
-                <Button variant="ghost" size="icon" className="h-4 w-4 ml-1" onClick={() => setSelectedDate(undefined)}>
-                  <span className="text-xs">×</span>
-                </Button>
+            {selectedDate && filteredSessions.length > 0 && (
+              <Badge variant="default" className="text-xs gap-1">
+                {filteredSessions.length} session{filteredSessions.length !== 1 ? 's' : ''} on {format(selectedDate, "dd MMM")}
               </Badge>
             )}
-            <Badge variant="outline" className="text-xs">{filteredSessions.length} sessions</Badge>
           </div>
         </div>
 
         {showCalendar && (
-          <div className="flex justify-center">
-            <Card className="p-2">
+          <Card className="border-primary/20 bg-gradient-to-br from-card to-card/80 shadow-lg max-w-fit mx-auto">
+            <CardHeader className="pb-2 pt-4 px-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <CalendarDays className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">Session Calendar</CardTitle>
+                    <CardDescription className="text-xs">Select a date to view sessions</CardDescription>
+                  </div>
+                </div>
+                {selectedDate && (
+                  <Badge className="gap-1 text-sm px-3 py-1">
+                    {format(selectedDate, "dd MMM yyyy")}
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="pb-4 px-4">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
                 modifiers={{ hasSession: sessionDates }}
-                modifiersStyles={{ hasSession: { fontWeight: 'bold', color: 'hsl(var(--primary))' } }}
+                modifiersStyles={{ 
+                  hasSession: { 
+                    fontWeight: 'bold', 
+                    backgroundColor: 'hsl(var(--primary) / 0.15)',
+                    borderRadius: '6px'
+                  } 
+                }}
+                className="rounded-lg border"
                 data-testid="calendar-date-picker"
               />
-            </Card>
-          </div>
+              <div className="flex items-center gap-4 mt-3 pt-3 border-t text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-primary/15 border border-primary/30" />
+                  <span>Has sessions</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded bg-primary" />
+                  <span>Selected</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
 
       <div className="flex-1 overflow-auto bg-background p-6">
-        {filteredSessions.length === 0 ? (
+        {!selectedDate ? (
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <CalendarDays className="h-12 w-12 text-primary opacity-60" />
+            </div>
+            <h2 className="text-xl font-medium mb-2">Select a Date</h2>
+            <p className="text-sm text-center max-w-md">
+              Use the calendar above to select a date and view monitoring sessions for that day.
+              <br />Highlighted dates have recorded sessions.
+            </p>
+          </div>
+        ) : filteredSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mb-6">
               <FileText className="h-12 w-12 opacity-40" />
             </div>
-            <h2 className="text-xl font-medium mb-2">No Sessions Found</h2>
-            <p className="text-sm">
-              {selectedPatientFilter !== "all" || selectedDate 
-                ? "Try changing the filter or date" 
-                : "Click 'New Session' to start monitoring"}
+            <h2 className="text-xl font-medium mb-2">No Sessions on {format(selectedDate, "dd MMM yyyy")}</h2>
+            <p className="text-sm text-center max-w-md">
+              {selectedPatientFilter !== "all" 
+                ? "No sessions found for the selected patient on this date. Try selecting a different date or patient." 
+                : "No monitoring sessions recorded for this date. Select a highlighted date on the calendar to view sessions."}
             </p>
+            <Button variant="outline" className="mt-4 gap-2" onClick={() => setShowNewSession(true)}>
+              <PlusCircle className="h-4 w-4" /> Create New Session
+            </Button>
           </div>
         ) : !selectedSession ? (
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Select a Session</h3>
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="text-lg font-medium">
+                Sessions for {format(selectedDate, "EEEE, dd MMMM yyyy")}
+              </h3>
+              <Badge variant="secondary" className="text-sm">
+                {filteredSessions.length} session{filteredSessions.length !== 1 ? 's' : ''}
+              </Badge>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredSessions.map((session) => (
                 <Card 
@@ -341,6 +393,15 @@ export default function PatientMonitoringPage() {
           </div>
         ) : (
           <div className="space-y-6">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2 mb-2" 
+                onClick={() => setSelectedSessionId(null)}
+                data-testid="button-back-to-sessions"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to {format(selectedDate, "dd MMM")} Sessions
+              </Button>
               <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-r from-card to-card/50 border">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
