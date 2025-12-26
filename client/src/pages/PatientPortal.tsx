@@ -345,7 +345,6 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   // Fetch lab reports for this patient
   const { data: labReports = [], isLoading: labReportsLoading } = useQuery<any[]>({
     queryKey: [`/api/lab-reports/patient/${username}`],
-    refetchInterval: 5000,
   });
 
   // State for Health Guide section
