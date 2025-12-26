@@ -126,14 +126,15 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
         setSearchResults(results);
 
         if (storeInfo?.store) {
-          await apiRequest("POST", "/api/medical-stores/access-logs", {
+          apiRequest("POST", "/api/medical-stores/access-logs", {
             storeId: storeInfo.store.id,
             storeName: storeInfo.store.storeName,
             userId: currentUserId,
             userName: storeInfo.storeUser?.staffRole || "Staff",
             actionType: "PRESCRIPTION_SEARCH",
+            action: "PRESCRIPTION_SEARCH",
             details: `Searched for: ${searchQuery}`,
-          });
+          }).catch(() => {});
         }
       } else {
         toast({
@@ -418,11 +419,12 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
       userId: currentUserId,
       userName: storeInfo.storeUser?.staffRole || "Staff",
       actionType: "PRESCRIPTION_DISPENSED",
+      action: "PRESCRIPTION_DISPENSED",
       prescriptionId: selectedPrescription.id,
       prescriptionNumber: selectedPrescription.prescriptionNumber,
       patientId: selectedPrescription.patientId,
       patientName: selectedPrescription.patientName,
-    });
+    }).catch(() => {});
   };
 
   const handleCreateBill = (dispensing: PrescriptionDispensing) => {
