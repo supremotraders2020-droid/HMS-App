@@ -7866,25 +7866,42 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       
       // Notify patient
       await databaseStorage.createUserNotification({ 
-        ...notificationData, 
         userId: report.patientId, 
-        targetRole: "PATIENT" 
+        userRole: "PATIENT",
+        type: notificationData.type,
+        title: notificationData.title,
+        message: notificationData.message,
+        relatedEntityId: report.id,
+        relatedEntityType: "lab_report",
+        isRead: false,
       });
       
-      // Notify doctor
-      await databaseStorage.createUserNotification({ 
-        ...notificationData, 
-        userId: report.doctorId, 
-        targetRole: "DOCTOR" 
-      });
+      // Notify doctor if doctorId exists
+      if (report.doctorId) {
+        await databaseStorage.createUserNotification({ 
+          userId: report.doctorId, 
+          userRole: "DOCTOR",
+          type: notificationData.type,
+          title: notificationData.title,
+          message: notificationData.message,
+          relatedEntityId: report.id,
+          relatedEntityType: "lab_report",
+          isRead: false,
+        });
+      }
       
       // Notify admins
       const admins = await databaseStorage.getUsersByRole("ADMIN");
       for (const admin of admins) {
         await databaseStorage.createUserNotification({ 
-          ...notificationData, 
           userId: admin.id, 
-          targetRole: "ADMIN" 
+          userRole: "ADMIN",
+          type: notificationData.type,
+          title: notificationData.title,
+          message: notificationData.message,
+          relatedEntityId: report.id,
+          relatedEntityType: "lab_report",
+          isRead: false,
         });
       }
       

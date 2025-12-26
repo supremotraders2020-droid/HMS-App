@@ -3141,20 +3141,20 @@ export const insertSampleCollectionSchema = createInsertSchema(sampleCollections
 export type InsertSampleCollection = z.infer<typeof insertSampleCollectionSchema>;
 export type SampleCollection = typeof sampleCollections.$inferSelect;
 
-// Lab Reports - uploaded reports
+// Lab Reports - uploaded reports (supports both order-linked and direct uploads)
 export const labReports = pgTable("lab_reports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   reportNumber: text("report_number").notNull().unique(), // RPT-2025-001
-  orderId: varchar("order_id").notNull(),
+  orderId: varchar("order_id"), // Optional for direct uploads
   orderNumber: text("order_number").notNull(),
   patientId: varchar("patient_id").notNull(),
   patientName: text("patient_name").notNull(),
   patientUhid: text("patient_uhid"),
-  doctorId: varchar("doctor_id").notNull(),
-  doctorName: text("doctor_name").notNull(),
+  doctorId: varchar("doctor_id"), // Optional for direct uploads
+  doctorName: text("doctor_name"),
   labId: varchar("lab_id").notNull(),
   labName: text("lab_name").notNull(),
-  testId: varchar("test_id").notNull(),
+  testId: varchar("test_id"), // Optional for direct uploads
   testName: text("test_name").notNull(),
   testCategory: text("test_category"),
   reportDate: timestamp("report_date").defaultNow(),
