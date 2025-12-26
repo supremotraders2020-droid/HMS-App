@@ -721,8 +721,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all staff members
-  app.get("/api/staff", async (_req, res) => {
+  // Get all inventory staff members (legacy endpoint for inventory module)
+  app.get("/api/inventory/staff", async (_req, res) => {
     try {
       const staff = await storage.getAllStaffMembers();
       res.json(staff);
@@ -731,8 +731,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new staff member
-  app.post("/api/staff", async (req, res) => {
+  // Create new inventory staff member (legacy endpoint for inventory module)
+  app.post("/api/inventory/staff", async (req, res) => {
     try {
       const parsed = insertStaffMemberSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -8717,9 +8717,12 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     try {
       const session = (req.session as any);
       const user = session?.user;
+      console.log("POST /api/staff - Session user:", user?.role, user?.id);
       if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
+        console.log("POST /api/staff - Unauthorized: user role not in", STAFF_MANAGEMENT_ADMIN_ROLES);
         return res.status(403).json({ error: "Unauthorized" });
       }
+      console.log("POST /api/staff - Creating staff with:", req.body);
       const staff = await storage.createStaffMaster(req.body);
       res.status(201).json(staff);
     } catch (error) {

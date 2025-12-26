@@ -480,6 +480,75 @@ export interface IStorage {
   // Pathology Lab Access Logs
   getPathologyLabAccessLogs(labId?: string): Promise<any[]>;
   createPathologyLabAccessLog(log: any): Promise<any>;
+
+  // ==================== STAFF MANAGEMENT MODULE ====================
+  
+  // Staff Master
+  getAllStaffMaster(): Promise<any[]>;
+  getStaffMaster(id: string): Promise<any | undefined>;
+  getStaffMasterByUserId(userId: string): Promise<any | undefined>;
+  getStaffMasterByDepartment(department: string): Promise<any[]>;
+  getStaffMasterByRole(role: string): Promise<any[]>;
+  createStaffMaster(staff: any): Promise<any>;
+  updateStaffMaster(id: string, updates: any): Promise<any | undefined>;
+  deleteStaffMaster(id: string): Promise<boolean>;
+  
+  // Shift Roster
+  getAllShiftRoster(): Promise<any[]>;
+  getShiftRoster(id: string): Promise<any | undefined>;
+  getShiftRosterByStaff(staffId: string): Promise<any[]>;
+  getShiftRosterByDate(date: string): Promise<any[]>;
+  getShiftRosterByDateRange(startDate: string, endDate: string): Promise<any[]>;
+  getShiftRosterByDepartment(department: string): Promise<any[]>;
+  createShiftRoster(shift: any): Promise<any>;
+  updateShiftRoster(id: string, updates: any): Promise<any | undefined>;
+  deleteShiftRoster(id: string): Promise<boolean>;
+  
+  // Task Logs
+  getAllTaskLogs(): Promise<any[]>;
+  getTaskLog(id: string): Promise<any | undefined>;
+  getTaskLogsByStaff(staffId: string): Promise<any[]>;
+  createTaskLog(task: any): Promise<any>;
+  updateTaskLog(id: string, updates: any): Promise<any | undefined>;
+  
+  // Attendance Logs
+  getAllAttendanceLogs(): Promise<any[]>;
+  getAttendanceLogsByStaff(staffId: string): Promise<any[]>;
+  getAttendanceLogsByDate(date: string): Promise<any[]>;
+  getAttendanceLogByStaffAndDate(staffId: string, date: string): Promise<any | undefined>;
+  createAttendanceLog(log: any): Promise<any>;
+  updateAttendanceLog(id: string, updates: any): Promise<any | undefined>;
+  
+  // Leave Requests
+  getAllLeaveRequests(): Promise<any[]>;
+  getLeaveRequest(id: string): Promise<any | undefined>;
+  getLeaveRequestsByStaff(staffId: string): Promise<any[]>;
+  getLeaveRequestsByStatus(status: string): Promise<any[]>;
+  getPendingLeaveRequests(): Promise<any[]>;
+  createLeaveRequest(request: any): Promise<any>;
+  updateLeaveRequest(id: string, updates: any): Promise<any | undefined>;
+  
+  // Overtime Logs
+  getAllOvertimeLogs(): Promise<any[]>;
+  getOvertimeLogsByStaff(staffId: string): Promise<any[]>;
+  getOvertimeLogsByStatus(status: string): Promise<any[]>;
+  getPendingOvertimeLogs(): Promise<any[]>;
+  createOvertimeLog(log: any): Promise<any>;
+  updateOvertimeLog(id: string, updates: any): Promise<any | undefined>;
+  
+  // Staff Performance Metrics
+  getAllStaffPerformanceMetrics(): Promise<any[]>;
+  getStaffPerformanceMetricsByStaff(staffId: string): Promise<any[]>;
+  createStaffPerformanceMetric(metric: any): Promise<any>;
+  updateStaffPerformanceMetric(id: string, updates: any): Promise<any | undefined>;
+  
+  // Roster Audit Logs
+  getAllRosterAuditLogs(): Promise<any[]>;
+  getRosterAuditLogsByRoster(rosterId: string): Promise<any[]>;
+  createRosterAuditLog(log: any): Promise<any>;
+  
+  // Doctor Time Slots (for syncing)
+  getAllDoctorTimeSlots(): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
