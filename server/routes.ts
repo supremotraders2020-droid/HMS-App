@@ -5587,7 +5587,12 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/patient-monitoring/inotropes", async (req, res) => {
     try {
-      const parsed = insertInotropesSedationSchema.safeParse(req.body);
+      const data = {
+        ...req.body,
+        startTime: req.body.startTime ? new Date(req.body.startTime) : undefined,
+        endTime: req.body.endTime ? new Date(req.body.endTime) : undefined
+      };
+      const parsed = insertInotropesSedationSchema.safeParse(data);
       if (!parsed.success) {
         return res.status(400).json({ error: "Invalid data", details: parsed.error });
       }
@@ -5742,7 +5747,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/patient-monitoring/diabetic", async (req, res) => {
     try {
-      const data = req.body;
+      const data = {
+        ...req.body,
+        recordedTime: req.body.recordedTime ? new Date(req.body.recordedTime) : new Date()
+      };
       // Auto-generate alerts
       if (data.bloodSugarLevel < 70) {
         data.alertType = "HYPOGLYCEMIA";
@@ -5777,7 +5785,12 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/patient-monitoring/mar", async (req, res) => {
     try {
-      const parsed = insertMedicationAdminRecordSchema.safeParse(req.body);
+      const data = {
+        ...req.body,
+        scheduledTime: req.body.scheduledTime ? new Date(req.body.scheduledTime) : new Date(),
+        actualGivenTime: req.body.actualGivenTime ? new Date(req.body.actualGivenTime) : undefined
+      };
+      const parsed = insertMedicationAdminRecordSchema.safeParse(data);
       if (!parsed.success) {
         return res.status(400).json({ error: "Invalid data", details: parsed.error });
       }
@@ -5802,7 +5815,12 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/patient-monitoring/once-only", async (req, res) => {
     try {
-      const parsed = insertOnceOnlyDrugSchema.safeParse(req.body);
+      const data = {
+        ...req.body,
+        timeOrdered: req.body.timeOrdered ? new Date(req.body.timeOrdered) : new Date(),
+        timeGiven: req.body.timeGiven ? new Date(req.body.timeGiven) : undefined
+      };
+      const parsed = insertOnceOnlyDrugSchema.safeParse(data);
       if (!parsed.success) {
         return res.status(400).json({ error: "Invalid data", details: parsed.error });
       }
@@ -5827,7 +5845,11 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/patient-monitoring/shift-notes", async (req, res) => {
     try {
-      const parsed = insertNursingShiftNoteSchema.safeParse(req.body);
+      const data = {
+        ...req.body,
+        noteTime: req.body.noteTime ? new Date(req.body.noteTime) : new Date()
+      };
+      const parsed = insertNursingShiftNoteSchema.safeParse(data);
       if (!parsed.success) {
         return res.status(400).json({ error: "Invalid data", details: parsed.error });
       }
@@ -5888,7 +5910,12 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/patient-monitoring/duty-staff", async (req, res) => {
     try {
-      const parsed = insertDutyStaffAssignmentSchema.safeParse(req.body);
+      const data = {
+        ...req.body,
+        shiftStartTime: req.body.shiftStartTime ? new Date(req.body.shiftStartTime) : new Date(),
+        shiftEndTime: req.body.shiftEndTime ? new Date(req.body.shiftEndTime) : undefined
+      };
+      const parsed = insertDutyStaffAssignmentSchema.safeParse(data);
       if (!parsed.success) {
         return res.status(400).json({ error: "Invalid data", details: parsed.error });
       }
