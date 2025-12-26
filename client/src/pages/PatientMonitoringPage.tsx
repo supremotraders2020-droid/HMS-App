@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
@@ -454,7 +454,56 @@ export default function PatientMonitoringPage() {
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" className="gap-2 shrink-0">
+                <Button 
+                variant="outline" 
+                className="gap-2 shrink-0"
+                onClick={() => {
+                  const printContent = document.createElement('div');
+                  printContent.innerHTML = `
+                    <html>
+                    <head>
+                      <title>Patient Monitoring Report - ${selectedSession.patientName}</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; }
+                        h2 { color: #2d3748; margin-top: 20px; }
+                        .header { margin-bottom: 20px; }
+                        .info-row { display: flex; gap: 20px; margin: 5px 0; }
+                        .label { font-weight: bold; color: #4a5568; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+                        th { background: #edf2f7; }
+                        @media print { body { print-color-adjust: exact; } }
+                      </style>
+                    </head>
+                    <body>
+                      <h1>Patient Monitoring Report</h1>
+                      <div class="header">
+                        <div class="info-row"><span class="label">Patient:</span> ${selectedSession.patientName}</div>
+                        <div class="info-row"><span class="label">UHID:</span> ${selectedSession.uhid}</div>
+                        <div class="info-row"><span class="label">Ward:</span> ${selectedSession.ward} - Bed ${selectedSession.bedNumber}</div>
+                        <div class="info-row"><span class="label">Date:</span> ${format(new Date(selectedSession.sessionDate), "dd MMMM yyyy")}</div>
+                        <div class="info-row"><span class="label">Diagnosis:</span> ${selectedSession.primaryDiagnosis || "Not recorded"}</div>
+                        <div class="info-row"><span class="label">Consultant:</span> ${selectedSession.admittingConsultant || "Not assigned"}</div>
+                        <div class="info-row"><span class="label">Ventilator:</span> ${selectedSession.isVentilated ? "Yes" : "No"}</div>
+                      </div>
+                      <p style="margin-top: 30px; color: #718096; font-size: 12px;">Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")}</p>
+                    </body>
+                    </html>
+                  `;
+                  const printWindow = window.open('', '_blank');
+                  if (printWindow) {
+                    printWindow.document.write(printContent.innerHTML);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    setTimeout(() => {
+                      printWindow.print();
+                    }, 250);
+                  }
+                  toast({ title: "Export Ready", description: "Print dialog opened for PDF export" });
+                }}
+                data-testid="button-export-pdf"
+              >
                   <Download className="h-4 w-4" /> Export PDF
                 </Button>
               </div>
@@ -631,6 +680,7 @@ function OverviewTab({ session }: { session: Session }) {
 
 function VitalsTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [vitalsForm, setVitalsForm] = useState({
     pulse: "", sbp: "", dbp: "", temperature: "", respiratoryRate: "", spo2: ""
@@ -644,9 +694,13 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/vitals", data),
     onSuccess: () => {
       refetch();
-      toast({ title: "Vitals Saved" });
+      toast({ title: "Vitals Saved", description: "Record added successfully" });
       setVitalsForm({ pulse: "", sbp: "", dbp: "", temperature: "", respiratoryRate: "", spo2: "" });
       setSelectedSlot("");
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save vitals", variant: "destructive" });
     }
   });
 
@@ -670,13 +724,14 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Hourly Vitals Chart (24 Hours)</CardTitle>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" data-testid="button-add-vitals"><PlusCircle className="h-4 w-4 mr-1" /> Add Vitals</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Record Vitals</DialogTitle>
+              <DialogDescription>Enter patient vital signs for the selected time slot</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -697,8 +752,13 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
                 <div><Label>RR (/min)</Label><Input type="number" value={vitalsForm.respiratoryRate} onChange={(e) => setVitalsForm({...vitalsForm, respiratoryRate: e.target.value})} data-testid="input-rr" /></div>
               </div>
             </div>
-            <DialogFooter>
-              <Button onClick={handleSave} disabled={!selectedSlot} data-testid="button-save-vitals">Save Vitals</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={!selectedSlot || saveMutation.isPending} data-testid="button-save-vitals">
+                {saveMutation.isPending ? "Saving..." : "Save Vitals"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -742,6 +802,7 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
 
 function InotropesTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ drugName: "", concentration: "", doseRate: "", pumpChannel: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
@@ -750,34 +811,56 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/inotropes", data),
-    onSuccess: () => { refetch(); toast({ title: "Inotrope Added" }); setForm({ drugName: "", concentration: "", doseRate: "", pumpChannel: "" }); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "Inotrope Added", description: "Record saved successfully" }); 
+      setForm({ drugName: "", concentration: "", doseRate: "", pumpChannel: "" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save inotrope", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      drugName: form.drugName,
+      concentration: form.concentration,
+      rate: form.doseRate,
+      startTime: new Date().toISOString(),
+      nurseId: "system-nurse",
+      nurseName: "ICU Nurse"
+    });
+  };
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Inotropes & Sedation</CardTitle>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" data-testid="button-add-inotrope"><PlusCircle className="h-4 w-4 mr-1" /> Add Drug</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Add Inotrope/Sedation</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Add Inotrope/Sedation</DialogTitle>
+              <DialogDescription>Add drug infusion details</DialogDescription>
+            </DialogHeader>
             <div className="space-y-3">
               <div><Label>Drug Name</Label><Input value={form.drugName} onChange={(e) => setForm({...form, drugName: e.target.value})} placeholder="e.g., Noradrenaline" /></div>
               <div><Label>Concentration</Label><Input value={form.concentration} onChange={(e) => setForm({...form, concentration: e.target.value})} placeholder="e.g., 8mg/50ml" /></div>
               <div><Label>Dose Rate</Label><Input value={form.doseRate} onChange={(e) => setForm({...form, doseRate: e.target.value})} placeholder="e.g., 0.1 mcg/kg/min" /></div>
               <div><Label>Pump Channel</Label><Input value={form.pumpChannel} onChange={(e) => setForm({...form, pumpChannel: e.target.value})} placeholder="e.g., Channel 1" /></div>
             </div>
-            <DialogFooter><Button onClick={() => saveMutation.mutate({ 
-                  sessionId, 
-                  drugName: form.drugName,
-                  concentration: form.concentration,
-                  rate: form.doseRate,
-                  startTime: new Date().toISOString(),
-                  nurseId: "system-nurse",
-                  nurseName: "ICU Nurse"
-                })} disabled={!form.drugName}>Save</Button></DialogFooter>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={!form.drugName || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </CardHeader>
@@ -815,6 +898,7 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
 
 function VentilatorTab({ sessionId, isOnVentilator }: { sessionId: string; isOnVentilator: boolean }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ mode: "CMV", fio2: "", peep: "", tidalVolume: "", respiratoryRateSet: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
@@ -824,8 +908,30 @@ function VentilatorTab({ sessionId, isOnVentilator }: { sessionId: string; isOnV
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/ventilator", data),
-    onSuccess: () => { refetch(); toast({ title: "Ventilator Settings Saved" }); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "Ventilator Settings Saved", description: "Record saved successfully" });
+      setForm({ mode: "CMV", fio2: "", peep: "", tidalVolume: "", respiratoryRateSet: "" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save settings", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      ventilationMode: form.mode, 
+      fio2: form.fio2 ? parseInt(form.fio2) : null,
+      peepCpap: form.peep || null,
+      setTidalVolume: form.tidalVolume ? parseInt(form.tidalVolume) : null,
+      respiratoryRateSet: form.respiratoryRateSet ? parseInt(form.respiratoryRateSet) : null,
+      shift: "MORNING",
+      nurseId: "system-nurse",
+      nurseName: "ICU Nurse"
+    });
+  };
 
   if (!isOnVentilator) {
     return (
@@ -842,12 +948,15 @@ function VentilatorTab({ sessionId, isOnVentilator }: { sessionId: string; isOnV
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Ventilator Settings</CardTitle>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Record Settings</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Ventilator Settings</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Ventilator Settings</DialogTitle>
+              <DialogDescription>Record current ventilator parameters</DialogDescription>
+            </DialogHeader>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Mode</Label>
                 <Select value={form.mode} onValueChange={(v) => setForm({...form, mode: v})}>
@@ -862,18 +971,13 @@ function VentilatorTab({ sessionId, isOnVentilator }: { sessionId: string; isOnV
               <div><Label>Tidal Volume (ml)</Label><Input type="number" value={form.tidalVolume} onChange={(e) => setForm({...form, tidalVolume: e.target.value})} /></div>
               <div><Label>RR Set (/min)</Label><Input type="number" value={form.respiratoryRateSet} onChange={(e) => setForm({...form, respiratoryRateSet: e.target.value})} /></div>
             </div>
-            <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ 
-                sessionId, 
-                ventilationMode: form.mode, 
-                fio2: form.fio2 ? parseInt(form.fio2) : null,
-                peepCpap: form.peep || null,
-                setTidalVolume: form.tidalVolume ? parseInt(form.tidalVolume) : null,
-                respiratoryRateSet: form.respiratoryRateSet ? parseInt(form.respiratoryRateSet) : null,
-                shift: "MORNING",
-                nurseId: "system-nurse",
-                nurseName: "ICU Nurse"
-              })}>Save</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -914,6 +1018,7 @@ function VentilatorTab({ sessionId, isOnVentilator }: { sessionId: string; isOnV
 
 function ABGLabTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ ph: "", pco2: "", po2: "", hco3: "", lactate: "", hemoglobin: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
@@ -922,19 +1027,44 @@ function ABGLabTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/abg-lab", data),
-    onSuccess: () => { refetch(); toast({ title: "ABG/Lab Results Saved" }); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "ABG/Lab Results Saved", description: "Record added successfully" });
+      setForm({ ph: "", pco2: "", po2: "", hco3: "", lactate: "", hemoglobin: "" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save results", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      ph: form.ph || null,
+      pco2: form.pco2 || null,
+      po2: form.po2 || null,
+      hco3: form.hco3 || null,
+      lactate: form.lactate || null,
+      hb: form.hemoglobin || null,
+      nurseId: "system-nurse",
+      nurseName: "Lab Tech"
+    });
+  };
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">ABG & Lab Results</CardTitle>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Results</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>ABG / Lab Results</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>ABG / Lab Results</DialogTitle>
+              <DialogDescription>Enter blood gas and laboratory values</DialogDescription>
+            </DialogHeader>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>pH</Label><Input type="number" step="0.01" value={form.ph} onChange={(e) => setForm({...form, ph: e.target.value})} placeholder="7.35-7.45" /></div>
               <div><Label>pCO2 (mmHg)</Label><Input type="number" value={form.pco2} onChange={(e) => setForm({...form, pco2: e.target.value})} placeholder="35-45" /></div>
@@ -943,18 +1073,13 @@ function ABGLabTab({ sessionId }: { sessionId: string }) {
               <div><Label>Lactate (mmol/L)</Label><Input type="number" step="0.1" value={form.lactate} onChange={(e) => setForm({...form, lactate: e.target.value})} /></div>
               <div><Label>Hemoglobin (g/dL)</Label><Input type="number" step="0.1" value={form.hemoglobin} onChange={(e) => setForm({...form, hemoglobin: e.target.value})} /></div>
             </div>
-            <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ 
-                sessionId, 
-                ph: form.ph || null,
-                pco2: form.pco2 || null,
-                po2: form.po2 || null,
-                hco3: form.hco3 || null,
-                lactate: form.lactate || null,
-                hb: form.hemoglobin || null,
-                nurseId: "system-nurse",
-                nurseName: "Lab Tech"
-              })}>Save</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -997,6 +1122,7 @@ function ABGLabTab({ sessionId }: { sessionId: string }) {
 
 function IntakeTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [form, setForm] = useState({ ivLine1: "", oral: "", ngTube: "", bloodProducts: "" });
 
@@ -1010,8 +1136,31 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/intake", data),
-    onSuccess: () => { refetch(); queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/fluid-balance/${sessionId}`] }); toast({ title: "Intake Saved" }); }
+    onSuccess: () => { 
+      refetch(); 
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/fluid-balance/${sessionId}`] }); 
+      toast({ title: "Intake Saved", description: "Record added successfully" });
+      setForm({ ivLine1: "", oral: "", ngTube: "", bloodProducts: "" });
+      setSelectedSlot("");
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save intake", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      hourSlot: selectedSlot,
+      ivLine1: parseInt(form.ivLine1) || 0,
+      oral: parseInt(form.oral) || 0,
+      ngTube: parseInt(form.ngTube) || 0,
+      bloodProducts: parseInt(form.bloodProducts) || 0,
+      nurseId: "system-nurse",
+      nurseName: "ICU Nurse"
+    });
+  };
 
   return (
     <Card className="mt-4">
@@ -1020,12 +1169,15 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
           <CardTitle className="text-lg">Intake Chart</CardTitle>
           <CardDescription>Total Intake: <span className="font-semibold text-primary">{fluidBalance?.totalIntake || 0} ml</span></CardDescription>
         </div>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Intake</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Record Intake</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Record Intake</DialogTitle>
+              <DialogDescription>Enter fluid intake for the selected hour</DialogDescription>
+            </DialogHeader>
             <div className="space-y-3">
               <div><Label>Hour Slot</Label>
                 <Select value={selectedSlot} onValueChange={setSelectedSlot}>
@@ -1040,17 +1192,13 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
                 <div><Label>Blood Products (ml)</Label><Input type="number" value={form.bloodProducts} onChange={(e) => setForm({...form, bloodProducts: e.target.value})} /></div>
               </div>
             </div>
-            <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ 
-                sessionId, 
-                hourSlot: selectedSlot,
-                ivLine1: parseInt(form.ivLine1) || 0,
-                oral: parseInt(form.oral) || 0,
-                ngTube: parseInt(form.ngTube) || 0,
-                bloodProducts: parseInt(form.bloodProducts) || 0,
-                nurseId: "system-nurse",
-                nurseName: "ICU Nurse"
-              })} disabled={!selectedSlot}>Save</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={!selectedSlot || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1092,6 +1240,7 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
 
 function OutputTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [form, setForm] = useState({ urineOutput: "", drainOutput: "", vomitus: "", stool: "" });
 
@@ -1105,8 +1254,31 @@ function OutputTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/output", data),
-    onSuccess: () => { refetch(); queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/fluid-balance/${sessionId}`] }); toast({ title: "Output Saved" }); }
+    onSuccess: () => { 
+      refetch(); 
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/fluid-balance/${sessionId}`] }); 
+      toast({ title: "Output Saved", description: "Record added successfully" });
+      setForm({ urineOutput: "", drainOutput: "", vomitus: "", stool: "" });
+      setSelectedSlot("");
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save output", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      hourSlot: selectedSlot,
+      urineOutput: parseInt(form.urineOutput) || 0,
+      drainOutput: parseInt(form.drainOutput) || 0,
+      vomitus: parseInt(form.vomitus) || 0,
+      stool: parseInt(form.stool) || 0,
+      nurseId: "system-nurse",
+      nurseName: "ICU Nurse"
+    });
+  };
 
   return (
     <Card className="mt-4">
@@ -1115,12 +1287,15 @@ function OutputTab({ sessionId }: { sessionId: string }) {
           <CardTitle className="text-lg">Output Chart</CardTitle>
           <CardDescription>Total Output: <span className="font-semibold text-primary">{fluidBalance?.totalOutput || 0} ml</span> | Net Balance: <span className={`font-semibold ${(fluidBalance?.netBalance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{fluidBalance?.netBalance || 0} ml</span></CardDescription>
         </div>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Output</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Record Output</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Record Output</DialogTitle>
+              <DialogDescription>Enter fluid output for the selected hour</DialogDescription>
+            </DialogHeader>
             <div className="space-y-3">
               <div><Label>Hour Slot</Label>
                 <Select value={selectedSlot} onValueChange={setSelectedSlot}>
@@ -1135,17 +1310,13 @@ function OutputTab({ sessionId }: { sessionId: string }) {
                 <div><Label>Stool (ml)</Label><Input type="number" value={form.stool} onChange={(e) => setForm({...form, stool: e.target.value})} /></div>
               </div>
             </div>
-            <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ 
-                sessionId, 
-                hourSlot: selectedSlot,
-                urineOutput: parseInt(form.urineOutput) || 0,
-                drainOutput: parseInt(form.drainOutput) || 0,
-                vomitus: parseInt(form.vomitus) || 0,
-                stool: parseInt(form.stool) || 0,
-                nurseId: "system-nurse",
-                nurseName: "ICU Nurse"
-              })} disabled={!selectedSlot}>Save</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={!selectedSlot || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1187,6 +1358,7 @@ function OutputTab({ sessionId }: { sessionId: string }) {
 
 function DiabeticTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ bloodSugarLevel: "", insulinType: "", insulinDose: "", checkTime: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
@@ -1195,19 +1367,42 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/diabetic", data),
-    onSuccess: () => { refetch(); toast({ title: "Diabetic Record Saved" }); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "Diabetic Record Saved", description: "Record added successfully" });
+      setForm({ bloodSugarLevel: "", insulinType: "", insulinDose: "", checkTime: "" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save record", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      bloodSugarLevel: parseInt(form.bloodSugarLevel),
+      recordedTime: new Date().toISOString(),
+      insulinType: form.insulinType || null,
+      insulinDose: form.insulinDose || null,
+      nurseId: "system-nurse",
+      nurseName: "ICU Nurse"
+    });
+  };
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Diabetic Flow Chart</CardTitle>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Record</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Blood Sugar & Insulin</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Blood Sugar & Insulin</DialogTitle>
+              <DialogDescription>Record blood sugar level and insulin administration</DialogDescription>
+            </DialogHeader>
             <div className="space-y-3">
               <div><Label>Check Time</Label>
                 <Select value={form.checkTime} onValueChange={(v) => setForm({...form, checkTime: v})}>
@@ -1223,16 +1418,13 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
               <div><Label>Insulin Type</Label><Input value={form.insulinType} onChange={(e) => setForm({...form, insulinType: e.target.value})} placeholder="e.g., Regular, NPH, Lantus" /></div>
               <div><Label>Insulin Dose (Units)</Label><Input type="number" value={form.insulinDose} onChange={(e) => setForm({...form, insulinDose: e.target.value})} /></div>
             </div>
-            <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ 
-                sessionId, 
-                bloodSugarLevel: parseInt(form.bloodSugarLevel),
-                recordedTime: new Date().toISOString(),
-                insulinType: form.insulinType || null,
-                insulinDose: form.insulinDose || null,
-                nurseId: "system-nurse",
-                nurseName: "ICU Nurse"
-              })} disabled={!form.bloodSugarLevel}>Save</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={!form.bloodSugarLevel || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1275,6 +1467,7 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
 
 function MARTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ medicineName: "", dose: "", route: "", frequency: "", scheduledTime: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
@@ -1283,19 +1476,44 @@ function MARTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/mar", data),
-    onSuccess: () => { refetch(); toast({ title: "MAR Entry Added" }); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "MAR Entry Added", description: "Medication recorded successfully" });
+      setForm({ medicineName: "", dose: "", route: "", frequency: "", scheduledTime: "" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save medication", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      drugName: form.medicineName,
+      dose: form.dose,
+      route: form.route,
+      frequency: form.frequency || "1x",
+      scheduledTime: new Date().toISOString(),
+      status: "GIVEN",
+      nurseId: "system-nurse",
+      nurseName: "ICU Nurse"
+    });
+  };
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Medication Administration Record (MAR)</CardTitle>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Medicine</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Add MAR Entry</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Add MAR Entry</DialogTitle>
+              <DialogDescription>Record medication administration</DialogDescription>
+            </DialogHeader>
             <div className="space-y-3">
               <div><Label>Medicine Name</Label><Input value={form.medicineName} onChange={(e) => setForm({...form, medicineName: e.target.value})} /></div>
               <div className="grid grid-cols-2 gap-3">
@@ -1319,18 +1537,13 @@ function MARTab({ sessionId }: { sessionId: string }) {
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ 
-                  sessionId, 
-                  drugName: form.medicineName,
-                  dose: form.dose,
-                  route: form.route,
-                  frequency: form.frequency || "1x",
-                  scheduledTime: new Date().toISOString(),
-                  status: "GIVEN",
-                  nurseId: "system-nurse",
-                  nurseName: "ICU Nurse"
-                })} disabled={!form.medicineName || !form.dose || !form.route}>Add</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={!form.medicineName || !form.dose || !form.route || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Add"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1371,6 +1584,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
 
 function OnceOnlyTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ drugName: "", dose: "", route: "", indication: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
@@ -1379,19 +1593,42 @@ function OnceOnlyTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/once-only", data),
-    onSuccess: () => { refetch(); toast({ title: "Once-Only Drug Added" }); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "Once-Only Drug Added", description: "STAT medication recorded" });
+      setForm({ drugName: "", dose: "", route: "", indication: "" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save drug", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      drugName: form.drugName,
+      dose: form.dose,
+      route: form.route,
+      timeOrdered: new Date().toISOString(),
+      nurseId: "system-nurse",
+      nurseName: "ICU Nurse"
+    });
+  };
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Once-Only / STAT Drugs</CardTitle>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add STAT Drug</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Once-Only Drug</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Once-Only Drug</DialogTitle>
+              <DialogDescription>Add a single-dose or STAT medication</DialogDescription>
+            </DialogHeader>
             <div className="space-y-3">
               <div><Label>Drug Name</Label><Input value={form.drugName} onChange={(e) => setForm({...form, drugName: e.target.value})} /></div>
               <div className="grid grid-cols-2 gap-3">
@@ -1405,16 +1642,13 @@ function OnceOnlyTab({ sessionId }: { sessionId: string }) {
               </div>
               <div><Label>Indication</Label><Textarea value={form.indication} onChange={(e) => setForm({...form, indication: e.target.value})} /></div>
             </div>
-            <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ 
-                  sessionId, 
-                  drugName: form.drugName,
-                  dose: form.dose,
-                  route: form.route,
-                  timeOrdered: new Date().toISOString(),
-                  nurseId: "system-nurse",
-                  nurseName: "ICU Nurse"
-                })} disabled={!form.drugName || !form.dose || !form.route}>Add</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={!form.drugName || !form.dose || !form.route || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Add"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1455,6 +1689,7 @@ function OnceOnlyTab({ sessionId }: { sessionId: string }) {
 
 function ShiftNotesTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ shift: "MORNING", noteType: "ASSESSMENT", noteContent: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
@@ -1463,19 +1698,42 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/shift-notes", data),
-    onSuccess: () => { refetch(); toast({ title: "Shift Note Added" }); setForm({...form, noteContent: ""}); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "Shift Note Added", description: "Note saved successfully" }); 
+      setForm({...form, noteContent: ""});
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save note", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      shift: form.shift,
+      eventType: form.noteType,
+      observation: form.noteContent,
+      noteTime: new Date().toISOString(),
+      nurseId: "system-nurse",
+      nurseName: "ICU Nurse"
+    });
+  };
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Nursing Shift Notes</CardTitle>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Note</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Add Shift Note</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Add Shift Note</DialogTitle>
+              <DialogDescription>Record nursing observation or note</DialogDescription>
+            </DialogHeader>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Shift</Label>
@@ -1495,16 +1753,13 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
               </div>
               <div><Label>Note Content</Label><Textarea value={form.noteContent} onChange={(e) => setForm({...form, noteContent: e.target.value})} rows={4} /></div>
             </div>
-            <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ 
-                  sessionId, 
-                  shift: form.shift,
-                  eventType: form.noteType,
-                  observation: form.noteContent,
-                  noteTime: new Date().toISOString(),
-                  nurseId: "system-nurse",
-                  nurseName: "ICU Nurse"
-                })} disabled={!form.noteContent}>Save Note</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={!form.noteContent || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save Note"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1535,6 +1790,7 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
 
 function AirwayTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ 
     airwayType: "", endotrachealTubeSize: "", 
     centralLineType: "", centralLineSite: "", centralLineDate: "",
@@ -1548,7 +1804,14 @@ function AirwayTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/airway", data),
-    onSuccess: () => { refetch(); toast({ title: "Lines & Tubes Saved" }); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "Lines & Tubes Saved", description: "Record saved successfully" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save data", variant: "destructive" });
+    }
   });
 
   return (
@@ -1556,12 +1819,15 @@ function AirwayTab({ sessionId }: { sessionId: string }) {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Airway, Lines & Tubes</CardTitle>
         {!record && (
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Details</Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
-              <DialogHeader><DialogTitle>Lines & Tubes Details</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>Lines & Tubes Details</DialogTitle>
+                <DialogDescription>Record airway, lines, and tubes information</DialogDescription>
+              </DialogHeader>
               <ScrollArea className="max-h-[60vh]">
                 <div className="space-y-4 pr-4">
                   <div className="space-y-2">
@@ -1605,18 +1871,26 @@ function AirwayTab({ sessionId }: { sessionId: string }) {
                   </div>
                 </div>
               </ScrollArea>
-              <DialogFooter>
-                <Button onClick={() => saveMutation.mutate({ 
-                  sessionId, 
-                  ettSize: form.endotrachealTubeSize || null,
-                  tracheostomyDetails: form.airwayType === "Tracheostomy" ? form.airwayType : null,
-                  centralLineDetails: form.centralLineType ? `${form.centralLineType} - ${form.centralLineSite}` : null,
-                  centralLineInsertDate: form.centralLineDate || null,
-                  foleyDetails: form.urinaryCatheterSize ? `${form.urinaryCatheterSize} Fr` : null,
-                  foleyInsertDate: form.urinaryCatheterDate || null,
-                  nurseId: "system-nurse",
-                  nurseName: "ICU Nurse"
-                })}>Save</Button>
+              <DialogFooter className="gap-2">
+                <DialogClose asChild>
+                  <Button variant="outline" type="button">Cancel</Button>
+                </DialogClose>
+                <Button 
+                  onClick={() => saveMutation.mutate({ 
+                    sessionId, 
+                    ettSize: form.endotrachealTubeSize || null,
+                    tracheostomyDetails: form.airwayType === "Tracheostomy" ? form.airwayType : null,
+                    centralLineDetails: form.centralLineType ? `${form.centralLineType} - ${form.centralLineSite}` : null,
+                    centralLineInsertDate: form.centralLineDate || null,
+                    foleyDetails: form.urinaryCatheterSize ? `${form.urinaryCatheterSize} Fr` : null,
+                    foleyInsertDate: form.urinaryCatheterDate || null,
+                    nurseId: "system-nurse",
+                    nurseName: "ICU Nurse"
+                  })}
+                  disabled={saveMutation.isPending}
+                >
+                  {saveMutation.isPending ? "Saving..." : "Save"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -1662,6 +1936,7 @@ function AirwayTab({ sessionId }: { sessionId: string }) {
 
 function DutyStaffTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ staffName: "", staffRole: "NURSE", shift: "MORNING" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
@@ -1670,19 +1945,40 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/duty-staff", data),
-    onSuccess: () => { refetch(); toast({ title: "Staff Assignment Added" }); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "Staff Assignment Added", description: "Staff assigned successfully" });
+      setForm({ staffName: "", staffRole: "NURSE", shift: "MORNING" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to assign staff", variant: "destructive" });
+    }
   });
+
+  const handleSave = () => {
+    saveMutation.mutate({ 
+      sessionId, 
+      shift: form.shift,
+      nurseId: "staff-" + Date.now(),
+      nurseName: form.staffName,
+      shiftStartTime: new Date().toISOString()
+    });
+  };
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Duty Staff Assignments</CardTitle>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Staff</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Assign Duty Staff</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Assign Duty Staff</DialogTitle>
+              <DialogDescription>Add staff member to this shift</DialogDescription>
+            </DialogHeader>
             <div className="space-y-3">
               <div><Label>Staff Name</Label><Input value={form.staffName} onChange={(e) => setForm({...form, staffName: e.target.value})} /></div>
               <div className="grid grid-cols-2 gap-3">
@@ -1702,14 +1998,13 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button onClick={() => saveMutation.mutate({ 
-                  sessionId, 
-                  shift: form.shift,
-                  nurseId: "staff-" + Date.now(),
-                  nurseName: form.staffName,
-                  shiftStartTime: new Date().toISOString()
-                })} disabled={!form.staffName}>Assign</Button>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSave} disabled={!form.staffName || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Assign"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1744,6 +2039,7 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
 
 function AllergiesTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ knownAllergies: "", drugAllergies: "", foodAllergies: "", isolationPrecautions: "", fallRisk: false, pressureUlcerRisk: false });
 
   const { data: record, refetch } = useQuery<any>({
@@ -1752,7 +2048,14 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/allergies", data),
-    onSuccess: () => { refetch(); toast({ title: "Allergies & Precautions Saved" }); }
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "Allergies & Precautions Saved", description: "Record saved successfully" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save data", variant: "destructive" });
+    }
   });
 
   return (
@@ -1760,12 +2063,15 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Allergies & Precautions</CardTitle>
         {!record && (
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Details</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Patient Allergies & Precautions</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>Patient Allergies & Precautions</DialogTitle>
+                <DialogDescription>Record patient allergies and special precautions</DialogDescription>
+              </DialogHeader>
               <div className="space-y-3">
                 <div><Label>Known Allergies</Label><Textarea value={form.knownAllergies} onChange={(e) => setForm({...form, knownAllergies: e.target.value})} placeholder="List all known allergies..." /></div>
                 <div><Label>Drug Allergies</Label><Textarea value={form.drugAllergies} onChange={(e) => setForm({...form, drugAllergies: e.target.value})} placeholder="List specific drug allergies..." /></div>
@@ -1789,15 +2095,23 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
                   </div>
                 </div>
               </div>
-              <DialogFooter>
-                <Button onClick={() => saveMutation.mutate({ 
-                  sessionId, 
-                  drugAllergies: form.drugAllergies || null,
-                  foodAllergies: form.foodAllergies || null,
-                  specialPrecautions: form.isolationPrecautions || null,
-                  nurseId: "system-nurse",
-                  nurseName: "ICU Nurse"
-                })}>Save</Button>
+              <DialogFooter className="gap-2">
+                <DialogClose asChild>
+                  <Button variant="outline" type="button">Cancel</Button>
+                </DialogClose>
+                <Button 
+                  onClick={() => saveMutation.mutate({ 
+                    sessionId, 
+                    drugAllergies: form.drugAllergies || null,
+                    foodAllergies: form.foodAllergies || null,
+                    specialPrecautions: form.isolationPrecautions || null,
+                    nurseId: "system-nurse",
+                    nurseName: "ICU Nurse"
+                  })}
+                  disabled={saveMutation.isPending}
+                >
+                  {saveMutation.isPending ? "Saving..." : "Save"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
