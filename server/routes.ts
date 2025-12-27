@@ -8717,9 +8717,13 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     try {
       const session = (req.session as any);
       const user = session?.user;
-      console.log("POST /api/staff - Session user:", user?.role, user?.id);
+      console.log("POST /api/staff - Full session:", JSON.stringify(session));
+      console.log("POST /api/staff - Session user:", user);
+      console.log("POST /api/staff - User role:", user?.role, "User ID:", user?.id);
+      console.log("POST /api/staff - Allowed roles:", STAFF_MANAGEMENT_ADMIN_ROLES);
+      console.log("POST /api/staff - Role check:", user?.role, "in", STAFF_MANAGEMENT_ADMIN_ROLES, "=", user?.role && STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role));
       if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
-        console.log("POST /api/staff - Unauthorized: user role not in", STAFF_MANAGEMENT_ADMIN_ROLES);
+        console.log("POST /api/staff - Unauthorized: user role", user?.role, "not in", STAFF_MANAGEMENT_ADMIN_ROLES);
         return res.status(403).json({ error: "Unauthorized" });
       }
       console.log("POST /api/staff - Creating staff with:", req.body);
