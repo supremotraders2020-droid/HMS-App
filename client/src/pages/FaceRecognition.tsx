@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
@@ -32,10 +32,9 @@ import {
   RefreshCw,
   Download,
   Search,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
-
-declare const faceapi: any;
 
 interface FaceRecognitionStats {
   total: number;
@@ -69,10 +68,18 @@ interface DuplicateAlert {
   createdAt: string;
 }
 
+interface FaceDetection {
+  box: { x: number; y: number; width: number; height: number };
+  score: number;
+}
+
 export default function FaceRecognition() {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedFace, setCapturedFace] = useState<string | null>(null);
@@ -85,8 +92,14 @@ export default function FaceRecognition() {
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<DuplicateAlert | null>(null);
   const [resolveNotes, setResolveNotes] = useState("");
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [savedUserInfo, setSavedUserInfo] = useState<{userId: string; userType: string} | null>(null);
+  const [currentDetection, setCurrentDetection] = useState<FaceDetection | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [faceQuality, setFaceQuality] = useState(0);
 
-  const { data: stats, isLoading: statsLoading } = useQuery<FaceRecognitionStats>({
+  const { data: stats } = useQuery<FaceRecognitionStats>({
     queryKey: ["/api/face-recognition/stats"],
   });
 
@@ -119,10 +132,12 @@ export default function FaceRecognition() {
       return await apiRequest("/api/face-recognition/embeddings", "POST", data);
     },
     onSuccess: () => {
-      toast({ title: "Face data saved successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/face-recognition/stats"] });
+      setSavedUserInfo({ userId: selectedUserId, userType: selectedUserType });
+      setSuccessDialogOpen(true);
       setCapturedFace(null);
       setFaceDescriptor(null);
+      setCurrentDetection(null);
     },
     onError: (error: any) => {
       toast({ title: "Failed to save face data", description: error.message, variant: "destructive" });
@@ -146,7 +161,7 @@ export default function FaceRecognition() {
     mutationFn: async (data: any) => {
       return await apiRequest("/api/face-recognition/attendance", "POST", data);
     },
-    onSuccess: (result) => {
+    onSuccess: (result: any) => {
       toast({ 
         title: `Attendance Recorded: ${result.punchType}`, 
         description: `Staff ID: ${result.staffId}, Confidence: ${(result.confidenceScore * 100).toFixed(1)}%` 
@@ -218,6 +233,104 @@ export default function FaceRecognition() {
     loadModels();
   }, []);
 
+  const drawFaceOverlay = useCallback((detection: FaceDetection | null, isAnalyzing: boolean) => {
+    const canvas = overlayCanvasRef.current;
+    const video = videoRef.current;
+    if (!canvas || !video) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (detection) {
+      const { x, y, width, height } = detection.box;
+      const time = Date.now() / 1000;
+      
+      ctx.strokeStyle = isAnalyzing ? `hsl(${(time * 60) % 360}, 100%, 50%)` : '#22c55e';
+      ctx.lineWidth = 3;
+      
+      const cornerLength = 20;
+      ctx.beginPath();
+      ctx.moveTo(x, y + cornerLength);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x + cornerLength, y);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(x + width - cornerLength, y);
+      ctx.lineTo(x + width, y);
+      ctx.lineTo(x + width, y + cornerLength);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(x + width, y + height - cornerLength);
+      ctx.lineTo(x + width, y + height);
+      ctx.lineTo(x + width - cornerLength, y + height);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(x + cornerLength, y + height);
+      ctx.lineTo(x, y + height);
+      ctx.lineTo(x, y + height - cornerLength);
+      ctx.stroke();
+
+      if (isAnalyzing) {
+        const scanLineY = y + ((time * 100) % height);
+        const gradient = ctx.createLinearGradient(x, scanLineY - 10, x, scanLineY + 10);
+        gradient.addColorStop(0, 'rgba(34, 197, 94, 0)');
+        gradient.addColorStop(0.5, 'rgba(34, 197, 94, 0.8)');
+        gradient.addColorStop(1, 'rgba(34, 197, 94, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, scanLineY - 10, width, 20);
+      }
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(x, y - 30, 120, 25);
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(`Quality: ${(detection.score * 100).toFixed(0)}%`, x + 8, y - 12);
+    }
+  }, []);
+
+  const detectFaceContinuously = useCallback(async () => {
+    if (!videoRef.current || !isModelLoaded || !isCapturing) return;
+
+    const faceApi = (window as any).faceapi;
+    const detection = await faceApi.detectSingleFace(
+      videoRef.current, 
+      new faceApi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })
+    );
+
+    if (detection) {
+      const box = detection.box;
+      setCurrentDetection({
+        box: { x: box.x, y: box.y, width: box.width, height: box.height },
+        score: detection.score
+      });
+      setFaceQuality(detection.score * 100);
+    } else {
+      setCurrentDetection(null);
+      setFaceQuality(0);
+    }
+
+    drawFaceOverlay(currentDetection, isScanning);
+    animationFrameRef.current = requestAnimationFrame(detectFaceContinuously);
+  }, [isModelLoaded, isCapturing, currentDetection, isScanning, drawFaceOverlay]);
+
+  useEffect(() => {
+    if (isCapturing && isModelLoaded) {
+      animationFrameRef.current = requestAnimationFrame(detectFaceContinuously);
+    }
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isCapturing, isModelLoaded, detectFaceContinuously]);
+
   const startCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -239,13 +352,24 @@ export default function FaceRecognition() {
       tracks.forEach(track => track.stop());
       videoRef.current.srcObject = null;
       setIsCapturing(false);
+      setCurrentDetection(null);
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
     }
   }, []);
 
-  const captureFrame = useCallback(async () => {
+  const captureAndAnalyzeFace = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current || !isModelLoaded) return;
     
+    setIsScanning(true);
     setIsProcessing(true);
+    setScanProgress(0);
+    
+    const progressInterval = setInterval(() => {
+      setScanProgress(prev => Math.min(prev + 10, 90));
+    }, 200);
+    
     try {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -261,18 +385,31 @@ export default function FaceRecognition() {
         .withFaceLandmarks()
         .withFaceDescriptor();
       
+      clearInterval(progressInterval);
+      setScanProgress(100);
+      
       if (detection) {
         setCapturedFace(canvas.toDataURL('image/jpeg', 0.8));
         setFaceDescriptor(Array.from(detection.descriptor));
-        toast({ title: "Face captured successfully", description: `Quality: ${(detection.detection.score * 100).toFixed(1)}%` });
+        setFaceQuality(detection.detection.score * 100);
+        toast({ 
+          title: "Face Analysis Complete", 
+          description: `Quality Score: ${(detection.detection.score * 100).toFixed(1)}%` 
+        });
       } else {
         toast({ title: "No face detected", description: "Please ensure your face is clearly visible", variant: "destructive" });
       }
     } catch (error) {
       console.error("Error capturing face:", error);
+      clearInterval(progressInterval);
       toast({ title: "Face capture failed", variant: "destructive" });
     }
-    setIsProcessing(false);
+    
+    setTimeout(() => {
+      setIsScanning(false);
+      setIsProcessing(false);
+      setScanProgress(0);
+    }, 500);
   }, [isModelLoaded, toast]);
 
   const handleSaveEmbedding = () => {
@@ -291,6 +428,7 @@ export default function FaceRecognition() {
           userId: selectedUserId,
           userType: selectedUserType,
           embeddingVector: faceDescriptor,
+          faceQualityScore: faceQuality,
           captureLocation: "REGISTRATION",
         });
       },
@@ -321,6 +459,11 @@ export default function FaceRecognition() {
       embeddingVector: faceDescriptor,
       location: "MAIN_GATE",
     });
+  };
+
+  const getUserName = (userId: string) => {
+    const user = users?.find(u => u.id === userId);
+    return user?.name || user?.username || userId;
   };
 
   return (
@@ -438,31 +581,55 @@ export default function FaceRecognition() {
                     playsInline
                     className="w-full h-full object-cover"
                   />
+                  <canvas 
+                    ref={overlayCanvasRef} 
+                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  />
                   <canvas ref={canvasRef} className="hidden" />
+                  
                   {!isCapturing && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Button onClick={startCamera} disabled={!isModelLoaded} data-testid="button-start-camera">
-                        <Camera className="mr-2 h-4 w-4" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                      <Button onClick={startCamera} disabled={!isModelLoaded} size="lg" data-testid="button-start-camera">
+                        <Camera className="mr-2 h-5 w-5" />
                         Start Camera
                       </Button>
                     </div>
                   )}
-                  {isProcessing && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <RefreshCw className="h-8 w-8 animate-spin text-white" />
+                  
+                  {isScanning && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+                      <div className="bg-black/70 rounded-lg p-4 text-center">
+                        <Sparkles className="h-8 w-8 animate-pulse text-green-400 mx-auto mb-2" />
+                        <p className="text-white font-medium">Analyzing Face...</p>
+                        <Progress value={scanProgress} className="mt-2 w-32" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {currentDetection && !isScanning && (
+                    <div className="absolute bottom-4 left-4 bg-black/70 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2 text-white text-sm">
+                        <div className={`w-2 h-2 rounded-full ${faceQuality > 70 ? 'bg-green-500' : faceQuality > 40 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                        Face Detected - Quality: {faceQuality.toFixed(0)}%
+                      </div>
                     </div>
                   )}
                 </div>
 
                 <div className="flex gap-2">
                   <Button 
-                    onClick={captureFrame} 
-                    disabled={!isCapturing || isProcessing}
+                    onClick={captureAndAnalyzeFace} 
+                    disabled={!isCapturing || isProcessing || !currentDetection}
                     className="flex-1"
+                    size="lg"
                     data-testid="button-capture-face"
                   >
-                    <ScanFace className="mr-2 h-4 w-4" />
-                    Capture Face
+                    {isProcessing ? (
+                      <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <ScanFace className="mr-2 h-5 w-5" />
+                    )}
+                    {isProcessing ? "Analyzing..." : "Capture & Analyze Face"}
                   </Button>
                   <Button 
                     onClick={stopCamera} 
@@ -475,20 +642,23 @@ export default function FaceRecognition() {
                 </div>
 
                 {capturedFace && (
-                  <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                  <div className="space-y-4 p-4 border-2 border-green-500 rounded-lg bg-green-50 dark:bg-green-900/20">
                     <div className="flex items-center gap-4">
                       <img 
                         src={capturedFace} 
                         alt="Captured face" 
-                        className="w-24 h-24 rounded-lg object-cover"
+                        className="w-24 h-24 rounded-lg object-cover border-2 border-green-500"
                       />
                       <div className="flex-1">
-                        <Badge variant="secondary" className="mb-2">
+                        <Badge className="mb-2 bg-green-500">
                           <CheckCircle2 className="mr-1 h-3 w-3" />
-                          Face Captured
+                          Face Analysis Complete
                         </Badge>
                         <p className="text-sm text-muted-foreground">
-                          128-dimensional embedding generated
+                          128-dimensional face embedding generated
+                        </p>
+                        <p className="text-sm font-medium text-green-600">
+                          Quality Score: {faceQuality.toFixed(1)}%
                         </p>
                       </div>
                     </div>
@@ -558,16 +728,17 @@ export default function FaceRecognition() {
 
                 <Button 
                   onClick={handleSaveEmbedding}
-                  disabled={!faceDescriptor || !selectedUserId || embeddingMutation.isPending}
+                  disabled={!faceDescriptor || !selectedUserId || embeddingMutation.isPending || consentMutation.isPending}
                   className="w-full"
+                  size="lg"
                   data-testid="button-save-face"
                 >
-                  {embeddingMutation.isPending ? (
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  {embeddingMutation.isPending || consentMutation.isPending ? (
+                    <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
                   ) : (
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="mr-2 h-5 w-5" />
                   )}
-                  Save Face Data
+                  Save Face Data to Database
                 </Button>
               </CardContent>
             </Card>
@@ -595,8 +766,12 @@ export default function FaceRecognition() {
                     playsInline
                     className="w-full h-full object-cover"
                   />
+                  <canvas 
+                    ref={overlayCanvasRef} 
+                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  />
                   {!isCapturing && (
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                       <Button onClick={startCamera} disabled={!isModelLoaded} data-testid="button-verify-start-camera">
                         <Camera className="mr-2 h-4 w-4" />
                         Start Camera
@@ -620,7 +795,7 @@ export default function FaceRecognition() {
 
                 <div className="flex gap-2">
                   <Button 
-                    onClick={captureFrame}
+                    onClick={captureAndAnalyzeFace}
                     disabled={!isCapturing || isProcessing}
                     className="flex-1"
                     data-testid="button-verify-capture"
@@ -718,8 +893,12 @@ export default function FaceRecognition() {
                     playsInline
                     className="w-full h-full object-cover"
                   />
+                  <canvas 
+                    ref={overlayCanvasRef} 
+                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  />
                   {!isCapturing && (
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                       <Button onClick={startCamera} disabled={!isModelLoaded} data-testid="button-attendance-start">
                         <Camera className="mr-2 h-4 w-4" />
                         Start Camera
@@ -730,7 +909,7 @@ export default function FaceRecognition() {
 
                 <div className="flex gap-2">
                   <Button 
-                    onClick={captureFrame}
+                    onClick={captureAndAnalyzeFace}
                     disabled={!isCapturing || isProcessing}
                     className="flex-1"
                   >
@@ -1101,6 +1280,56 @@ export default function FaceRecognition() {
               data-testid="button-false-positive"
             >
               False Positive
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <div className="flex flex-col items-center text-center py-6">
+            <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
+              <CheckCircle2 className="h-12 w-12 text-green-600" />
+            </div>
+            <DialogTitle className="text-2xl mb-2">Face Data Stored Successfully!</DialogTitle>
+            <DialogDescription className="text-base">
+              The biometric data has been securely saved to the database.
+            </DialogDescription>
+            
+            {savedUserInfo && (
+              <div className="mt-4 p-4 bg-muted rounded-lg w-full">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">User:</span>
+                    <span className="font-medium">{getUserName(savedUserInfo.userId)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Type:</span>
+                    <Badge variant="outline">{savedUserInfo.userType}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Quality:</span>
+                    <span className="font-medium text-green-600">{faceQuality.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Status:</span>
+                    <Badge className="bg-green-500">Active</Badge>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setSuccessDialogOpen(false);
+                setSavedUserInfo(null);
+              }}
+              className="w-full"
+              size="lg"
+            >
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>
