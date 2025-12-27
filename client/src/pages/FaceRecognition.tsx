@@ -211,11 +211,12 @@ export default function FaceRecognition() {
         script.onload = async () => {
           try {
             const modelPath = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/model';
-            await (window as any).faceapi.nets.tinyFaceDetector.loadFromUri(modelPath);
+            await (window as any).faceapi.nets.ssdMobilenetv1.loadFromUri(modelPath);
             await (window as any).faceapi.nets.faceLandmark68Net.loadFromUri(modelPath);
             await (window as any).faceapi.nets.faceRecognitionNet.loadFromUri(modelPath);
+            await (window as any).faceapi.nets.faceExpressionNet.loadFromUri(modelPath);
             setIsModelLoaded(true);
-            toast({ title: "Face recognition models loaded" });
+            toast({ title: "Face recognition models loaded (SSD MobileNet)" });
           } catch (modelError) {
             console.error("Error loading face-api models:", modelError);
             toast({ title: "Failed to load face models", description: "Check console for details", variant: "destructive" });
@@ -295,13 +296,19 @@ export default function FaceRecognition() {
     }
   }, []);
 
+  const l2Normalize = useCallback((vector: number[]): number[] => {
+    const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+    if (norm === 0) return vector;
+    return vector.map(val => val / norm);
+  }, []);
+
   const detectFaceContinuously = useCallback(async () => {
     if (!videoRef.current || !isModelLoaded || !isCapturing) return;
 
     const faceApi = (window as any).faceapi;
     const detection = await faceApi.detectSingleFace(
       videoRef.current, 
-      new faceApi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })
+      new faceApi.SsdMobilenetv1Options({ minConfidence: 0.5 })
     );
 
     if (detection) {
@@ -381,7 +388,7 @@ export default function FaceRecognition() {
       
       const faceApi = (window as any).faceapi;
       const detection = await faceApi
-        .detectSingleFace(video, new faceApi.TinyFaceDetectorOptions())
+        .detectSingleFace(video, new faceApi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
         .withFaceLandmarks()
         .withFaceDescriptor();
       
@@ -389,12 +396,31 @@ export default function FaceRecognition() {
       setScanProgress(100);
       
       if (detection) {
+        const qualityScore = detection.detection.score * 100;
+        
+        if (qualityScore < 50) {
+          toast({ 
+            title: "Low quality face capture", 
+            description: "Please improve lighting and face position", 
+            variant: "destructive" 
+          });
+          setTimeout(() => {
+            setIsScanning(false);
+            setIsProcessing(false);
+            setScanProgress(0);
+          }, 500);
+          return;
+        }
+        
+        const rawDescriptor = Array.from(detection.descriptor) as number[];
+        const normalizedDescriptor = l2Normalize(rawDescriptor);
+        
         setCapturedFace(canvas.toDataURL('image/jpeg', 0.8));
-        setFaceDescriptor(Array.from(detection.descriptor));
-        setFaceQuality(detection.detection.score * 100);
+        setFaceDescriptor(normalizedDescriptor);
+        setFaceQuality(qualityScore);
         toast({ 
-          title: "Face Analysis Complete", 
-          description: `Quality Score: ${(detection.detection.score * 100).toFixed(1)}%` 
+          title: "Face Analysis Complete (SSD MobileNet)", 
+          description: `Quality: ${qualityScore.toFixed(1)}% | 128-d L2 Normalized` 
         });
       } else {
         toast({ title: "No face detected", description: "Please ensure your face is clearly visible", variant: "destructive" });
@@ -410,7 +436,7 @@ export default function FaceRecognition() {
       setIsProcessing(false);
       setScanProgress(0);
     }, 500);
-  }, [isModelLoaded, toast]);
+  }, [isModelLoaded, toast, l2Normalize]);
 
   const handleSaveEmbedding = () => {
     if (!faceDescriptor || !selectedUserId) {
@@ -542,7 +568,7 @@ export default function FaceRecognition() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
+        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-flex">
           <TabsTrigger value="capture" className="flex items-center gap-2" data-testid="tab-capture">
             <Camera className="h-4 w-4" /> Capture
           </TabsTrigger>
@@ -554,6 +580,9 @@ export default function FaceRecognition() {
           </TabsTrigger>
           <TabsTrigger value="alerts" className="flex items-center gap-2" data-testid="tab-alerts">
             <AlertTriangle className="h-4 w-4" /> Alerts
+          </TabsTrigger>
+          <TabsTrigger value="test" className="flex items-center gap-2" data-testid="tab-test">
+            <Activity className="h-4 w-4" /> Test
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2" data-testid="tab-settings">
             <Settings className="h-4 w-4" /> Settings
@@ -1040,6 +1069,172 @@ export default function FaceRecognition() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="test" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Model Testing & Validation
+              </CardTitle>
+              <CardDescription>
+                Verify face recognition model is working correctly with test scenarios
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Model Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Detection Model</span>
+                      <Badge>SSD MobileNet v1</Badge>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Recognition Model</span>
+                      <Badge>FaceRecognitionNet</Badge>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Embedding Dimensions</span>
+                      <Badge variant="secondary">128-d L2 Normalized</Badge>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Similarity Metric</span>
+                      <Badge variant="secondary">Cosine Similarity</Badge>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Match Threshold</span>
+                      <Badge variant="outline">{stats?.settings?.recognition_threshold || "0.78"}</Badge>
+                    </div>
+                    <div className="flex justify-between p-2 bg-muted rounded">
+                      <span>Model Status</span>
+                      <Badge className={isModelLoaded ? "bg-green-500" : "bg-red-500"}>
+                        {isModelLoaded ? "Loaded" : "Loading..."}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Test Checklist</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span>SSD MobileNet loaded for robust face detection</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span>L2 normalization applied to embeddings</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span>Quality threshold enforced (min 50%)</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span>Real-time face detection overlay</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span>Database storage with audit logging</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span>Consent management integrated</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-4">Quick Test</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button 
+                    onClick={() => {
+                      if (isModelLoaded) {
+                        toast({ title: "Model Test Passed", description: "SSD MobileNet v1 is loaded and ready" });
+                      } else {
+                        toast({ title: "Model Test Failed", description: "Models are still loading", variant: "destructive" });
+                      }
+                    }}
+                    variant="outline"
+                    className="h-20"
+                    data-testid="button-test-model"
+                  >
+                    <div className="text-center">
+                      <ScanFace className="h-6 w-6 mx-auto mb-1" />
+                      <span>Test Model Load</span>
+                    </div>
+                  </Button>
+                  <Button 
+                    onClick={() => setActiveTab("capture")}
+                    variant="outline"
+                    className="h-20"
+                    data-testid="button-test-capture"
+                  >
+                    <div className="text-center">
+                      <Camera className="h-6 w-6 mx-auto mb-1" />
+                      <span>Test Face Capture</span>
+                    </div>
+                  </Button>
+                  <Button 
+                    onClick={() => setActiveTab("verify")}
+                    variant="outline"
+                    className="h-20"
+                    data-testid="button-test-verify"
+                  >
+                    <div className="text-center">
+                      <UserCheck className="h-6 w-6 mx-auto mb-1" />
+                      <span>Test Face Match</span>
+                    </div>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-4">Test Scenarios to Verify</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="p-3 border rounded-lg">
+                    <h4 className="font-medium mb-2">Lighting Conditions</h4>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>- Normal indoor lighting</li>
+                      <li>- Low light conditions</li>
+                      <li>- Backlit scenarios</li>
+                      <li>- Bright direct light</li>
+                    </ul>
+                  </div>
+                  <div className="p-3 border rounded-lg">
+                    <h4 className="font-medium mb-2">Face Angles</h4>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>- Frontal face (optimal)</li>
+                      <li>- Slight left/right turn</li>
+                      <li>- Slight up/down tilt</li>
+                      <li>- Profile view (may fail)</li>
+                    </ul>
+                  </div>
+                  <div className="p-3 border rounded-lg">
+                    <h4 className="font-medium mb-2">Accessories</h4>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>- With/without glasses</li>
+                      <li>- With/without mask</li>
+                      <li>- With/without hat</li>
+                      <li>- Different hairstyles</li>
+                    </ul>
+                  </div>
+                  <div className="p-3 border rounded-lg">
+                    <h4 className="font-medium mb-2">Edge Cases</h4>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>- Multiple faces in frame</li>
+                      <li>- Partial face occlusion</li>
+                      <li>- Face too close/far</li>
+                      <li>- Motion blur</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
