@@ -9654,6 +9654,504 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ==================== INSURANCE MANAGEMENT ROUTES ====================
+  const INSURANCE_ADMIN_ROLES = ["ADMIN"];
+  const INSURANCE_VIEW_ROLES = ["ADMIN", "PATIENT", "DOCTOR", "NURSE", "OPD_MANAGER"];
+  const INSURANCE_PROCESS_ROLES = ["ADMIN"]; // Insurance Desk role can be added
+
+  // Generate unique claim number
+  function generateClaimNumber(): string {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `CLM-${timestamp}-${random}`;
+  }
+
+  // ===== INSURANCE PROVIDERS (Admin CRUD) =====
+  
+  // Get all insurance providers (Admin sees all, others see active only)
+  app.get("/api/insurance/providers", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      if (INSURANCE_ADMIN_ROLES.includes(user.role)) {
+        const providers = await storage.getAllInsuranceProviders();
+        res.json(providers);
+      } else {
+        const providers = await storage.getActiveInsuranceProviders();
+        res.json(providers);
+      }
+    } catch (error) {
+      console.error("Error fetching insurance providers:", error);
+      res.status(500).json({ error: "Failed to fetch providers" });
+    }
+  });
+
+  // Get single insurance provider
+  app.get("/api/insurance/providers/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const provider = await storage.getInsuranceProvider(req.params.id);
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+      res.json(provider);
+    } catch (error) {
+      console.error("Error fetching provider:", error);
+      res.status(500).json({ error: "Failed to fetch provider" });
+    }
+  });
+
+  // Create insurance provider (Admin only)
+  app.post("/api/insurance/providers", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !INSURANCE_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized - Admin access required" });
+      }
+      
+      const provider = await storage.createInsuranceProvider({
+        ...req.body,
+        createdByAdminId: user.id,
+      });
+      res.status(201).json(provider);
+    } catch (error) {
+      console.error("Error creating provider:", error);
+      res.status(500).json({ error: "Failed to create provider" });
+    }
+  });
+
+  // Update insurance provider (Admin only)
+  app.patch("/api/insurance/providers/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !INSURANCE_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized - Admin access required" });
+      }
+      
+      const provider = await storage.updateInsuranceProvider(req.params.id, req.body);
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+      res.json(provider);
+    } catch (error) {
+      console.error("Error updating provider:", error);
+      res.status(500).json({ error: "Failed to update provider" });
+    }
+  });
+
+  // Deactivate insurance provider (Admin only - soft delete)
+  app.delete("/api/insurance/providers/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !INSURANCE_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized - Admin access required" });
+      }
+      
+      const provider = await storage.deactivateInsuranceProvider(req.params.id);
+      if (!provider) {
+        return res.status(404).json({ error: "Provider not found" });
+      }
+      res.json({ success: true, message: "Provider deactivated" });
+    } catch (error) {
+      console.error("Error deactivating provider:", error);
+      res.status(500).json({ error: "Failed to deactivate provider" });
+    }
+  });
+
+  // ===== PATIENT INSURANCE =====
+  
+  // Get patient's insurance policies
+  app.get("/api/insurance/patient/:patientId", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Patients can only see their own, others with view role can see any
+      if (user.role === "PATIENT" && user.id !== req.params.patientId) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const insurance = await storage.getPatientInsuranceByPatient(req.params.patientId);
+      res.json(insurance);
+    } catch (error) {
+      console.error("Error fetching patient insurance:", error);
+      res.status(500).json({ error: "Failed to fetch insurance" });
+    }
+  });
+
+  // Add patient insurance
+  app.post("/api/insurance/patient", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const insurance = await storage.createPatientInsurance(req.body);
+      res.status(201).json(insurance);
+    } catch (error) {
+      console.error("Error creating patient insurance:", error);
+      res.status(500).json({ error: "Failed to add insurance" });
+    }
+  });
+
+  // Update patient insurance
+  app.patch("/api/insurance/patient/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const insurance = await storage.updatePatientInsurance(req.params.id, req.body);
+      if (!insurance) {
+        return res.status(404).json({ error: "Insurance not found" });
+      }
+      res.json(insurance);
+    } catch (error) {
+      console.error("Error updating patient insurance:", error);
+      res.status(500).json({ error: "Failed to update insurance" });
+    }
+  });
+
+  // ===== INSURANCE CLAIMS =====
+  
+  // Get all claims (Admin/Insurance Desk)
+  app.get("/api/insurance/claims", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !INSURANCE_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const { status } = req.query;
+      let claims;
+      if (status) {
+        claims = await storage.getInsuranceClaimsByStatus(status as string);
+      } else {
+        claims = await storage.getAllInsuranceClaims();
+      }
+      res.json(claims);
+    } catch (error) {
+      console.error("Error fetching claims:", error);
+      res.status(500).json({ error: "Failed to fetch claims" });
+    }
+  });
+
+  // Get patient's claims
+  app.get("/api/insurance/claims/patient/:patientId", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      if (user.role === "PATIENT" && user.id !== req.params.patientId) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const claims = await storage.getInsuranceClaimsByPatient(req.params.patientId);
+      res.json(claims);
+    } catch (error) {
+      console.error("Error fetching patient claims:", error);
+      res.status(500).json({ error: "Failed to fetch claims" });
+    }
+  });
+
+  // Get single claim with documents and logs
+  app.get("/api/insurance/claims/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const claim = await storage.getInsuranceClaim(req.params.id);
+      if (!claim) {
+        return res.status(404).json({ error: "Claim not found" });
+      }
+      
+      const documents = await storage.getClaimDocuments(req.params.id);
+      const logs = await storage.getClaimLogs(req.params.id);
+      
+      res.json({ claim, documents, logs });
+    } catch (error) {
+      console.error("Error fetching claim:", error);
+      res.status(500).json({ error: "Failed to fetch claim" });
+    }
+  });
+
+  // Create new claim
+  app.post("/api/insurance/claims", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const claimNumber = generateClaimNumber();
+      const claim = await storage.createInsuranceClaim({
+        ...req.body,
+        claimNumber,
+        submittedBy: user.id,
+      });
+      
+      // Create audit log
+      await storage.createClaimLog({
+        claimId: claim.id,
+        actionType: "CREATED",
+        performedByRole: user.role,
+        performedById: user.id,
+        performedByName: user.name || user.username,
+        newValue: JSON.stringify({ status: claim.status, claimNumber }),
+        remarks: "Claim created",
+      });
+      
+      res.status(201).json(claim);
+    } catch (error) {
+      console.error("Error creating claim:", error);
+      res.status(500).json({ error: "Failed to create claim" });
+    }
+  });
+
+  // Update claim (status changes, processing)
+  app.patch("/api/insurance/claims/:id", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const existingClaim = await storage.getInsuranceClaim(req.params.id);
+      if (!existingClaim) {
+        return res.status(404).json({ error: "Claim not found" });
+      }
+      
+      const previousStatus = existingClaim.status;
+      const updates: any = { ...req.body };
+      
+      // Set processed info for status changes
+      if (req.body.status && req.body.status !== previousStatus) {
+        updates.processedBy = user.id;
+        updates.processedAt = new Date();
+        
+        if (req.body.status === "SETTLED") {
+          updates.settledAt = new Date();
+        }
+      }
+      
+      const claim = await storage.updateInsuranceClaim(req.params.id, updates);
+      
+      // Create audit log for status change
+      if (req.body.status && req.body.status !== previousStatus) {
+        await storage.createClaimLog({
+          claimId: req.params.id,
+          actionType: "STATUS_CHANGED",
+          performedByRole: user.role,
+          performedById: user.id,
+          performedByName: user.name || user.username,
+          previousValue: previousStatus,
+          newValue: req.body.status,
+          remarks: req.body.remarks || `Status changed from ${previousStatus} to ${req.body.status}`,
+        });
+      }
+      
+      res.json(claim);
+    } catch (error) {
+      console.error("Error updating claim:", error);
+      res.status(500).json({ error: "Failed to update claim" });
+    }
+  });
+
+  // ===== CLAIM DOCUMENTS =====
+  
+  // Upload document to claim
+  app.post("/api/insurance/claims/:claimId/documents", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const claim = await storage.getInsuranceClaim(req.params.claimId);
+      if (!claim) {
+        return res.status(404).json({ error: "Claim not found" });
+      }
+      
+      const document = await storage.createClaimDocument({
+        claimId: req.params.claimId,
+        ...req.body,
+        uploadedBy: user.id,
+        uploadedByRole: user.role,
+      });
+      
+      // Create audit log
+      await storage.createClaimLog({
+        claimId: req.params.claimId,
+        actionType: "DOCUMENT_UPLOADED",
+        performedByRole: user.role,
+        performedById: user.id,
+        performedByName: user.name || user.username,
+        newValue: JSON.stringify({ documentType: req.body.documentType, documentName: req.body.documentName }),
+        remarks: `Document uploaded: ${req.body.documentType}`,
+      });
+      
+      res.status(201).json(document);
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      res.status(500).json({ error: "Failed to upload document" });
+    }
+  });
+
+  // Verify document (Admin/Insurance Desk)
+  app.patch("/api/insurance/documents/:id/verify", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !INSURANCE_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const document = await storage.verifyClaimDocument(req.params.id, user.id);
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      res.json(document);
+    } catch (error) {
+      console.error("Error verifying document:", error);
+      res.status(500).json({ error: "Failed to verify document" });
+    }
+  });
+
+  // ===== PROVIDER CHECKLISTS =====
+  
+  // Get provider checklists
+  app.get("/api/insurance/providers/:providerId/checklists", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const { claimType } = req.query;
+      let checklists;
+      if (claimType) {
+        checklists = await storage.getProviderChecklistsByType(req.params.providerId, claimType as string);
+      } else {
+        checklists = await storage.getProviderChecklists(req.params.providerId);
+      }
+      res.json(checklists);
+    } catch (error) {
+      console.error("Error fetching checklists:", error);
+      res.status(500).json({ error: "Failed to fetch checklists" });
+    }
+  });
+
+  // Update provider checklists (Admin only)
+  app.post("/api/insurance/providers/:providerId/checklists", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !INSURANCE_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized - Admin access required" });
+      }
+      
+      // Delete existing and create new
+      await storage.deleteProviderChecklists(req.params.providerId);
+      
+      const checklists = [];
+      for (const item of req.body.checklists) {
+        const checklist = await storage.createProviderChecklist({
+          providerId: req.params.providerId,
+          ...item,
+        });
+        checklists.push(checklist);
+      }
+      
+      res.status(201).json(checklists);
+    } catch (error) {
+      console.error("Error updating checklists:", error);
+      res.status(500).json({ error: "Failed to update checklists" });
+    }
+  });
+
+  // ===== INSURANCE DASHBOARD (Admin) =====
+  app.get("/api/insurance/dashboard", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user || !INSURANCE_ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const allClaims = await storage.getAllInsuranceClaims();
+      const allProviders = await storage.getAllInsuranceProviders();
+      
+      // Calculate dashboard metrics
+      const claimsByStatus = {
+        DRAFT: allClaims.filter(c => c.status === "DRAFT").length,
+        SUBMITTED: allClaims.filter(c => c.status === "SUBMITTED").length,
+        UNDER_REVIEW: allClaims.filter(c => c.status === "UNDER_REVIEW").length,
+        QUERY_RAISED: allClaims.filter(c => c.status === "QUERY_RAISED").length,
+        APPROVED: allClaims.filter(c => c.status === "APPROVED").length,
+        PARTIALLY_APPROVED: allClaims.filter(c => c.status === "PARTIALLY_APPROVED").length,
+        REJECTED: allClaims.filter(c => c.status === "REJECTED").length,
+        SETTLED: allClaims.filter(c => c.status === "SETTLED").length,
+      };
+      
+      const totalApproved = allClaims.filter(c => ["APPROVED", "PARTIALLY_APPROVED", "SETTLED"].includes(c.status || "")).length;
+      const totalRejected = allClaims.filter(c => c.status === "REJECTED").length;
+      const approvalRate = allClaims.length > 0 ? ((totalApproved / allClaims.length) * 100).toFixed(1) : 0;
+      
+      const totalSettledAmount = allClaims
+        .filter(c => c.settledAmount)
+        .reduce((sum, c) => sum + parseFloat(c.settledAmount || "0"), 0);
+      
+      const pendingClaims = allClaims.filter(c => 
+        ["SUBMITTED", "UNDER_REVIEW", "QUERY_RAISED"].includes(c.status || "")
+      ).length;
+      
+      res.json({
+        summary: {
+          totalClaims: allClaims.length,
+          pendingClaims,
+          approvalRate: `${approvalRate}%`,
+          totalSettledAmount: totalSettledAmount.toFixed(2),
+          activeProviders: allProviders.filter(p => p.activeStatus).length,
+        },
+        claimsByStatus,
+        recentClaims: allClaims.slice(0, 10),
+      });
+    } catch (error) {
+      console.error("Error fetching insurance dashboard:", error);
+      res.status(500).json({ error: "Failed to fetch dashboard" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
