@@ -3493,3 +3493,171 @@ export const insertRosterAuditLogSchema = createInsertSchema(rosterAuditLogs).om
 });
 export type InsertRosterAuditLog = z.infer<typeof insertRosterAuditLogSchema>;
 export type RosterAuditLog = typeof rosterAuditLogs.$inferSelect;
+
+// ==================== INSURANCE MANAGEMENT MODULE ====================
+
+// Insurance Providers Master - Admin managed
+export const insuranceProviders = pgTable("insurance_providers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  providerName: text("provider_name").notNull(),
+  providerType: text("provider_type").notNull(), // Cashless / Reimbursement / Both
+  tpaName: text("tpa_name"),
+  tpaContactPerson: text("tpa_contact_person"),
+  tpaPhone: text("tpa_phone"),
+  tpaEmail: text("tpa_email"),
+  networkHospitals: boolean("network_hospitals").default(true),
+  coverageType: text("coverage_type").notNull(), // IPD / OPD / Day Care / All
+  roomRentLimit: text("room_rent_limit"),
+  icuLimit: text("icu_limit"),
+  coPayPercentage: text("co_pay_percentage"),
+  exclusions: text("exclusions"),
+  preAuthRequired: boolean("pre_auth_required").default(true),
+  claimSubmissionMode: text("claim_submission_mode").default("Both"), // Online / Physical / Both
+  averageClaimTatDays: integer("average_claim_tat_days"),
+  documentsRequired: text("documents_required"), // JSON array of required documents
+  activeStatus: boolean("active_status").default(true),
+  createdByAdminId: varchar("created_by_admin_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertInsuranceProviderSchema = createInsertSchema(insuranceProviders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertInsuranceProvider = z.infer<typeof insertInsuranceProviderSchema>;
+export type InsuranceProvider = typeof insuranceProviders.$inferSelect;
+
+// Patient Insurance - Insurance details for each patient
+export const patientInsurance = pgTable("patient_insurance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  insuranceProviderId: varchar("insurance_provider_id").notNull(),
+  policyNumber: text("policy_number").notNull(),
+  policyHolderName: text("policy_holder_name").notNull(),
+  relationshipWithPatient: text("relationship_with_patient").default("Self"),
+  policyStartDate: text("policy_start_date"),
+  policyEndDate: text("policy_end_date"),
+  sumInsured: text("sum_insured"),
+  balanceSumInsured: text("balance_sum_insured"),
+  tpaReferenceNumber: text("tpa_reference_number"),
+  cashlessEligible: boolean("cashless_eligible").default(false),
+  policyCopyUrl: text("policy_copy_url"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPatientInsuranceSchema = createInsertSchema(patientInsurance).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPatientInsurance = z.infer<typeof insertPatientInsuranceSchema>;
+export type PatientInsurance = typeof patientInsurance.$inferSelect;
+
+// Insurance Claims - Claim tracking and workflow
+export const insuranceClaims = pgTable("insurance_claims", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  claimNumber: text("claim_number").notNull().unique(),
+  patientInsuranceId: varchar("patient_insurance_id").notNull(),
+  patientId: varchar("patient_id").notNull(),
+  admissionId: varchar("admission_id"), // Link to patient admission if IPD
+  appointmentId: varchar("appointment_id"), // Link to appointment if OPD
+  claimType: text("claim_type").notNull(), // Pre-Auth / Final Claim / Reimbursement
+  status: text("status").default("DRAFT"), // DRAFT, SUBMITTED, UNDER_REVIEW, QUERY_RAISED, APPROVED, PARTIALLY_APPROVED, REJECTED, SETTLED
+  diagnosis: text("diagnosis"),
+  icdCodes: text("icd_codes"), // JSON array of ICD codes
+  plannedProcedure: text("planned_procedure"),
+  estimatedCost: text("estimated_cost"),
+  approvedAmount: text("approved_amount"),
+  settledAmount: text("settled_amount"),
+  coPayAmount: text("co_pay_amount"),
+  rejectionReason: text("rejection_reason"),
+  rejectionNotes: text("rejection_notes"),
+  queryDetails: text("query_details"),
+  queryResponseDeadline: text("query_response_deadline"),
+  preAuthNumber: text("pre_auth_number"),
+  preAuthApprovedDate: text("pre_auth_approved_date"),
+  preAuthExpiryDate: text("pre_auth_expiry_date"),
+  doctorSignatureUrl: text("doctor_signature_url"),
+  submittedBy: varchar("submitted_by"),
+  submittedAt: timestamp("submitted_at"),
+  processedBy: varchar("processed_by"),
+  processedAt: timestamp("processed_at"),
+  settledAt: timestamp("settled_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertInsuranceClaimSchema = createInsertSchema(insuranceClaims).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertInsuranceClaim = z.infer<typeof insertInsuranceClaimSchema>;
+export type InsuranceClaim = typeof insuranceClaims.$inferSelect;
+
+// Insurance Claim Documents - Document attachments
+export const insuranceClaimDocuments = pgTable("insurance_claim_documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  claimId: varchar("claim_id").notNull(),
+  documentType: text("document_type").notNull(), // Policy Copy, ID Proof, Doctor Notes, Bills, Discharge Summary, Claim Form, Investigation Report, OT Notes, etc.
+  documentName: text("document_name").notNull(),
+  documentUrl: text("document_url").notNull(),
+  fileSize: text("file_size"),
+  mimeType: text("mime_type"),
+  uploadedBy: varchar("uploaded_by"),
+  uploadedByRole: text("uploaded_by_role"),
+  verified: boolean("verified").default(false),
+  verifiedBy: varchar("verified_by"),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertInsuranceClaimDocumentSchema = createInsertSchema(insuranceClaimDocuments).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertInsuranceClaimDocument = z.infer<typeof insertInsuranceClaimDocumentSchema>;
+export type InsuranceClaimDocument = typeof insuranceClaimDocuments.$inferSelect;
+
+// Insurance Claim Logs - Audit trail
+export const insuranceClaimLogs = pgTable("insurance_claim_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  claimId: varchar("claim_id").notNull(),
+  actionType: text("action_type").notNull(), // CREATED, STATUS_CHANGED, DOCUMENT_UPLOADED, QUERY_RAISED, QUERY_RESPONDED, APPROVED, REJECTED, SETTLED
+  performedByRole: text("performed_by_role"),
+  performedById: varchar("performed_by_id"),
+  performedByName: text("performed_by_name"),
+  previousValue: text("previous_value"),
+  newValue: text("new_value"),
+  remarks: text("remarks"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertInsuranceClaimLogSchema = createInsertSchema(insuranceClaimLogs).omit({
+  id: true,
+  timestamp: true,
+});
+export type InsertInsuranceClaimLog = z.infer<typeof insertInsuranceClaimLogSchema>;
+export type InsuranceClaimLog = typeof insuranceClaimLogs.$inferSelect;
+
+// Insurance Provider Checklists - Custom document checklists per provider
+export const insuranceProviderChecklists = pgTable("insurance_provider_checklists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  providerId: varchar("provider_id").notNull(),
+  claimType: text("claim_type").notNull(), // Pre-Auth / Final Claim / Reimbursement
+  documentType: text("document_type").notNull(),
+  isRequired: boolean("is_required").default(true),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertInsuranceProviderChecklistSchema = createInsertSchema(insuranceProviderChecklists).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertInsuranceProviderChecklist = z.infer<typeof insertInsuranceProviderChecklistSchema>;
+export type InsuranceProviderChecklist = typeof insuranceProviderChecklists.$inferSelect;

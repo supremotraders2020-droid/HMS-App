@@ -1,0 +1,277 @@
+# 🔐 MODULE NAME
+
+**Insurance Management & Claim Workflow Module (Patient + Admin + Insurance Team)**
+
+---
+
+## 🎯 OBJECTIVE
+
+Build a **secure, role-based Insurance Management system** where:
+
+* **Admin** can **add, edit, manage Insurance Providers & TPA details**
+* **Patients** can **view available insurance providers, policies & coverage**
+* **Doctors & Billing** can attach medical documents
+* **Insurance Team** can process **pre-auth & claims**
+* **Complete documentation & application workflow is tracked digitally**
+
+---
+
+## 👥 USER ROLES & ACCESS CONTROL (STRICT)
+
+| Role               | Access                                          |
+| ------------------ | ----------------------------------------------- |
+| **Admin**          | Full CRUD on Insurance Providers, dashboards    |
+| **Patient**        | View-only Insurance Providers, submit insurance |
+| **Doctor**         | View insurance, attach medical records          |
+| **Billing Staff**  | Upload bills, coding                            |
+| **Insurance Desk** | Process pre-auth, claims                        |
+| **Nurse**          | View insurance status only                      |
+
+> ❗ Insurance provider data **can be added/edited ONLY by Admin**
+
+---
+
+## 🧩 FEATURE 1️⃣ – Insurance Providers Master (Admin Only)
+
+### Admin Panel → Insurance Providers Management
+
+**Fields to Store (Database Schema):**
+
+```
+insurance_provider_id (UUID)
+provider_name
+provider_type (Cashless / Reimbursement / Both)
+TPA_name
+TPA_contact_person
+TPA_phone
+TPA_email
+network_hospitals (boolean)
+coverage_type (IPD / OPD / Day Care)
+room_rent_limit
+ICU_limit
+co_pay_percentage
+exclusions (text)
+pre_authorization_required (yes/no)
+claim_submission_mode (Online / Physical / Both)
+average_claim_TAT_days
+documents_required (array)
+active_status
+created_by_admin_id
+created_at
+updated_at
+```
+
+### Admin Capabilities
+
+* ➕ Add Insurance Provider
+* ✏️ Edit / Update
+* ❌ Deactivate (soft delete)
+* 📊 Insurance-wise performance dashboard
+
+---
+
+## 👀 FEATURE 2️⃣ – Patient View: Insurance Providers Directory
+
+### Patient Portal → Insurance Section
+
+Patients should be able to:
+
+* View **list of all active Insurance Providers**
+* Click & see **full details**
+* Understand:
+
+  * Coverage
+  * Cashless availability
+  * Required documents
+  * Pre-auth requirement
+* Compare providers (read-only)
+
+❌ Patients **CANNOT edit provider data**
+
+---
+
+## 📝 FEATURE 3️⃣ – Insurance Details Capture at Registration
+
+### During OPD / IPD Registration
+
+**Insurance Capture Form Fields:**
+
+```
+patient_insurance_id
+patient_id
+insurance_provider_id
+policy_number
+policy_holder_name
+relationship_with_patient
+policy_start_date
+policy_end_date
+sum_insured
+balance_sum_insured
+TPA_reference_number
+cashless_eligible (auto calculated)
+uploaded_policy_copy (PDF/Image)
+```
+
+---
+
+## 🧾 FEATURE 4️⃣ – Insurance Documentation & Application Process
+
+### Auto-Generated Insurance Application Workflow
+
+#### Step 1: Pre-Authorization (If Required)
+
+* Auto-generate **Pre-Auth Form** using:
+
+  * Patient details
+  * Diagnosis (ICD codes)
+  * Planned procedure
+  * Estimated cost
+* Doctor signs digitally
+* Time-stamped submission
+
+#### Step 2: Document Attachment Engine
+
+Attach:
+
+* Admission notes
+* Doctor prescription
+* Investigation reports
+* OT notes
+* Discharge summary
+* Itemized hospital bill
+* Final invoice
+
+> All documents must support **PDF / Image upload**
+
+---
+
+## ✅ FEATURE 5️⃣ – Checklist-Based Validation (Smart Logic)
+
+Each insurance provider has a **custom checklist**:
+
+```
+✔ Policy copy
+✔ ID proof
+✔ Doctor notes
+✔ Bills
+✔ Discharge summary
+✔ Claim form
+```
+
+System should:
+
+* Auto-validate completeness
+* Block submission if missing docs
+* Show ❌ missing items
+
+---
+
+## ⏱ FEATURE 6️⃣ – Time-Stamped Logs & Audit Trail
+
+Every action logged:
+
+```
+log_id
+claim_id
+action_type
+performed_by_role
+timestamp
+remarks
+```
+
+Example:
+
+* Pre-Auth Submitted – 12:43 PM
+* Query Raised – 2:10 PM
+* Docs Uploaded – 4:05 PM
+
+---
+
+## 🔄 FEATURE 7️⃣ – Claim Status Tracking (Real-Time)
+
+Claim lifecycle:
+
+```
+Draft
+Submitted
+Under Review
+Query Raised
+Approved
+Partially Approved
+Rejected
+Settled
+```
+
+If **Rejected** → mandatory:
+
+```
+rejection_reason
+supporting_notes
+```
+
+---
+
+## 🔔 FEATURE 8️⃣ – Follow-Up & Reminder Engine
+
+Automated reminders for:
+
+* Pending documents
+* TAT breach
+* Query follow-ups
+* Settlement delays
+
+Delivery:
+
+* Internal notification
+* Email (optional)
+* Dashboard alerts
+
+---
+
+## 📊 FEATURE 9️⃣ – Insurance-Wise Dashboards (Admin)
+
+Visual dashboards:
+
+* Claims per insurance provider
+* Approval vs rejection %
+* Average settlement time
+* Pending claims aging
+* Revenue under insurance
+
+Filters:
+
+* Date range
+* Provider
+* TPA
+* Department
+
+---
+
+## 🔐 SECURITY & COMPLIANCE
+
+* Role-based API guards
+* Insurance data encrypted at rest
+* Documents access controlled
+* No public exposure of insurance APIs
+* Audit logs non-editable
+
+---
+
+## 🛠 TECHNICAL EXPECTATIONS
+
+* Backend: Node.js / Django / Spring
+* DB: PostgreSQL / MySQL
+* Frontend: React (role-based UI)
+* File Storage: Secure object storage
+* All insurance providers fetched via **Admin-controlled master table**
+
+---
+
+## 📌 FINAL OUTPUT EXPECTED
+
+* Insurance Providers visible to **patients**
+* Providers manageable by **admin only**
+* Complete **insurance documentation & claim workflow**
+* Real-time tracking
+* Audit-ready logs
+* NABH & insurance-compliant system
