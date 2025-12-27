@@ -22,6 +22,7 @@ import {
   medicalStores, medicalStoreUsers, medicalStoreInventory, prescriptionDispensing, dispensingItems, medicalStoreAccessLogs, medicalStoreBills,
   pathologyLabs, labTestCatalog, labTestOrders, sampleCollections, labReports, labReportResults, pathologyLabAccessLogs,
   staffMaster, shiftRoster, taskLogs, attendanceLogs, leaveRequests, overtimeLogs, staffPerformanceMetrics, rosterAuditLogs,
+  insuranceProviders, patientInsurance, insuranceClaims, insuranceClaimDocuments, insuranceClaimLogs, insuranceProviderChecklists,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -97,7 +98,13 @@ import {
   type LeaveRequest, type InsertLeaveRequest,
   type OvertimeLog, type InsertOvertimeLog,
   type StaffPerformanceMetric, type InsertStaffPerformanceMetric,
-  type RosterAuditLog, type InsertRosterAuditLog
+  type RosterAuditLog, type InsertRosterAuditLog,
+  type InsuranceProvider, type InsertInsuranceProvider,
+  type PatientInsurance, type InsertPatientInsurance,
+  type InsuranceClaim, type InsertInsuranceClaim,
+  type InsuranceClaimDocument, type InsertInsuranceClaimDocument,
+  type InsuranceClaimLog, type InsertInsuranceClaimLog,
+  type InsuranceProviderChecklist, type InsertInsuranceProviderChecklist
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -3785,6 +3792,137 @@ export class DatabaseStorage implements IStorage {
   async createRosterAuditLog(log: InsertRosterAuditLog): Promise<RosterAuditLog> {
     const result = await db.insert(rosterAuditLogs).values(log).returning();
     return result[0];
+  }
+
+  // ==================== INSURANCE MANAGEMENT METHODS ====================
+
+  // ========== INSURANCE PROVIDERS METHODS ==========
+  async getAllInsuranceProviders(): Promise<InsuranceProvider[]> {
+    return await db.select().from(insuranceProviders).orderBy(insuranceProviders.providerName);
+  }
+
+  async getActiveInsuranceProviders(): Promise<InsuranceProvider[]> {
+    return await db.select().from(insuranceProviders).where(eq(insuranceProviders.activeStatus, true)).orderBy(insuranceProviders.providerName);
+  }
+
+  async getInsuranceProvider(id: string): Promise<InsuranceProvider | undefined> {
+    const result = await db.select().from(insuranceProviders).where(eq(insuranceProviders.id, id));
+    return result[0];
+  }
+
+  async createInsuranceProvider(provider: InsertInsuranceProvider): Promise<InsuranceProvider> {
+    const result = await db.insert(insuranceProviders).values(provider).returning();
+    return result[0];
+  }
+
+  async updateInsuranceProvider(id: string, updates: Partial<InsertInsuranceProvider>): Promise<InsuranceProvider | undefined> {
+    const result = await db.update(insuranceProviders).set({ ...updates, updatedAt: new Date() }).where(eq(insuranceProviders.id, id)).returning();
+    return result[0];
+  }
+
+  async deactivateInsuranceProvider(id: string): Promise<InsuranceProvider | undefined> {
+    const result = await db.update(insuranceProviders).set({ activeStatus: false, updatedAt: new Date() }).where(eq(insuranceProviders.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== PATIENT INSURANCE METHODS ==========
+  async getAllPatientInsurance(): Promise<PatientInsurance[]> {
+    return await db.select().from(patientInsurance).orderBy(desc(patientInsurance.createdAt));
+  }
+
+  async getPatientInsurance(id: string): Promise<PatientInsurance | undefined> {
+    const result = await db.select().from(patientInsurance).where(eq(patientInsurance.id, id));
+    return result[0];
+  }
+
+  async getPatientInsuranceByPatient(patientId: string): Promise<PatientInsurance[]> {
+    return await db.select().from(patientInsurance).where(eq(patientInsurance.patientId, patientId)).orderBy(desc(patientInsurance.createdAt));
+  }
+
+  async createPatientInsurance(insurance: InsertPatientInsurance): Promise<PatientInsurance> {
+    const result = await db.insert(patientInsurance).values(insurance).returning();
+    return result[0];
+  }
+
+  async updatePatientInsurance(id: string, updates: Partial<InsertPatientInsurance>): Promise<PatientInsurance | undefined> {
+    const result = await db.update(patientInsurance).set({ ...updates, updatedAt: new Date() }).where(eq(patientInsurance.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== INSURANCE CLAIMS METHODS ==========
+  async getAllInsuranceClaims(): Promise<InsuranceClaim[]> {
+    return await db.select().from(insuranceClaims).orderBy(desc(insuranceClaims.createdAt));
+  }
+
+  async getInsuranceClaim(id: string): Promise<InsuranceClaim | undefined> {
+    const result = await db.select().from(insuranceClaims).where(eq(insuranceClaims.id, id));
+    return result[0];
+  }
+
+  async getInsuranceClaimByNumber(claimNumber: string): Promise<InsuranceClaim | undefined> {
+    const result = await db.select().from(insuranceClaims).where(eq(insuranceClaims.claimNumber, claimNumber));
+    return result[0];
+  }
+
+  async getInsuranceClaimsByPatient(patientId: string): Promise<InsuranceClaim[]> {
+    return await db.select().from(insuranceClaims).where(eq(insuranceClaims.patientId, patientId)).orderBy(desc(insuranceClaims.createdAt));
+  }
+
+  async getInsuranceClaimsByStatus(status: string): Promise<InsuranceClaim[]> {
+    return await db.select().from(insuranceClaims).where(eq(insuranceClaims.status, status)).orderBy(desc(insuranceClaims.createdAt));
+  }
+
+  async createInsuranceClaim(claim: InsertInsuranceClaim): Promise<InsuranceClaim> {
+    const result = await db.insert(insuranceClaims).values(claim).returning();
+    return result[0];
+  }
+
+  async updateInsuranceClaim(id: string, updates: Partial<InsertInsuranceClaim>): Promise<InsuranceClaim | undefined> {
+    const result = await db.update(insuranceClaims).set({ ...updates, updatedAt: new Date() }).where(eq(insuranceClaims.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== INSURANCE CLAIM DOCUMENTS METHODS ==========
+  async getClaimDocuments(claimId: string): Promise<InsuranceClaimDocument[]> {
+    return await db.select().from(insuranceClaimDocuments).where(eq(insuranceClaimDocuments.claimId, claimId)).orderBy(insuranceClaimDocuments.createdAt);
+  }
+
+  async createClaimDocument(doc: InsertInsuranceClaimDocument): Promise<InsuranceClaimDocument> {
+    const result = await db.insert(insuranceClaimDocuments).values(doc).returning();
+    return result[0];
+  }
+
+  async verifyClaimDocument(id: string, verifiedBy: string): Promise<InsuranceClaimDocument | undefined> {
+    const result = await db.update(insuranceClaimDocuments).set({ verified: true, verifiedBy, verifiedAt: new Date() }).where(eq(insuranceClaimDocuments.id, id)).returning();
+    return result[0];
+  }
+
+  // ========== INSURANCE CLAIM LOGS METHODS ==========
+  async getClaimLogs(claimId: string): Promise<InsuranceClaimLog[]> {
+    return await db.select().from(insuranceClaimLogs).where(eq(insuranceClaimLogs.claimId, claimId)).orderBy(desc(insuranceClaimLogs.timestamp));
+  }
+
+  async createClaimLog(log: InsertInsuranceClaimLog): Promise<InsuranceClaimLog> {
+    const result = await db.insert(insuranceClaimLogs).values(log).returning();
+    return result[0];
+  }
+
+  // ========== INSURANCE PROVIDER CHECKLISTS METHODS ==========
+  async getProviderChecklists(providerId: string): Promise<InsuranceProviderChecklist[]> {
+    return await db.select().from(insuranceProviderChecklists).where(eq(insuranceProviderChecklists.providerId, providerId)).orderBy(insuranceProviderChecklists.displayOrder);
+  }
+
+  async getProviderChecklistsByType(providerId: string, claimType: string): Promise<InsuranceProviderChecklist[]> {
+    return await db.select().from(insuranceProviderChecklists).where(and(eq(insuranceProviderChecklists.providerId, providerId), eq(insuranceProviderChecklists.claimType, claimType))).orderBy(insuranceProviderChecklists.displayOrder);
+  }
+
+  async createProviderChecklist(checklist: InsertInsuranceProviderChecklist): Promise<InsuranceProviderChecklist> {
+    const result = await db.insert(insuranceProviderChecklists).values(checklist).returning();
+    return result[0];
+  }
+
+  async deleteProviderChecklists(providerId: string): Promise<void> {
+    await db.delete(insuranceProviderChecklists).where(eq(insuranceProviderChecklists.providerId, providerId));
   }
 }
 
