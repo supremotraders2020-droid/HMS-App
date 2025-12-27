@@ -1,0 +1,264 @@
+# 🔐 MODULE NAME
+
+**Face Recognition & Identity Verification System (Patient + Staff)**
+
+---
+
+## 🎯 CORE GOAL
+
+Build a **privacy-compliant, AI-powered face recognition system** that:
+
+* Stores **each patient’s facial biometric securely**
+* Recognizes & matches face **only within hospital system**
+* Prevents **duplicate patient records**
+* Enables **fast OPD/IPD check-in**
+* Enables **staff attendance via face scan**
+* Logs **AI confidence score for every match**
+* Works **offline-first + online sync**
+
+---
+
+## 👥 USER ROLES & PERMISSIONS
+
+| Role          | Access                             |
+| ------------- | ---------------------------------- |
+| **Admin**     | System config, model control       |
+| **Patient**   | Face captured once (consent based) |
+| **Doctor**    | Face verification (view only)      |
+| **Nurse**     | Verify patient identity            |
+| **Staff**     | Face attendance                    |
+| **IT/System** | Model monitoring                   |
+
+❌ No external access
+❌ No raw images downloadable
+
+---
+
+## 🧩 FEATURE 1️⃣ – Face Data Capture (Patient & Staff)
+
+### 📸 Capture Rules
+
+* Capture **3–5 face angles**
+* Neutral lighting
+* No sunglasses / mask (except medical exceptions)
+* Consent mandatory
+
+### Stored Data (NOT RAW IMAGE)
+
+```
+face_id (UUID)
+user_id (patient_id / staff_id)
+face_embedding_vector (encrypted)
+embedding_model_version
+face_quality_score
+consent_given (boolean)
+capture_device_id
+created_at
+```
+
+> ❗ **Do NOT store raw face images**
+> Store **encrypted face embeddings only**
+
+---
+
+## 🧠 FEATURE 2️⃣ – Face Recognition AI Model
+
+### Model Requirements
+
+* Use **FaceNet / ArcFace / MobileFaceNet**
+* Convert face → **128D / 512D embedding**
+* Normalize embeddings
+* Store embeddings securely
+
+### Matching Logic
+
+```
+input_face → embedding → cosine similarity
+IF similarity ≥ threshold → MATCH
+ELSE → NO MATCH
+```
+
+### Threshold Control
+
+* Default: `0.78`
+* Admin adjustable
+* Log every score
+
+---
+
+## 📊 FEATURE 3️⃣ – AI Confidence Score Logging
+
+Each recognition attempt logs:
+
+```
+recognition_log_id
+user_type (patient / staff)
+matched_user_id
+confidence_score (0–1)
+threshold_used
+match_status (success / failure)
+location (OPD / IPD / Gate / Lab)
+timestamp
+```
+
+Used for:
+
+* Audit
+* False match review
+* Legal compliance
+
+---
+
+## 🚫 FEATURE 4️⃣ – Duplicate Patient Prevention
+
+### During New Registration:
+
+1. Capture face
+2. Compare against **all existing embeddings**
+3. If similarity > threshold:
+
+   * Show **possible duplicate**
+   * Display masked patient info
+   * Admin approval required
+
+### Duplicate Alert Example:
+
+```
+⚠️ POSSIBLE DUPLICATE FOUND
+Match Confidence: 92%
+Existing Patient ID: ****45
+```
+
+---
+
+## 🚀 FEATURE 5️⃣ – Fast OPD / IPD Check-In
+
+### Face Scan → Auto Fetch Patient
+
+Workflow:
+
+```
+Face Scan → Match → Patient Profile → Check-in
+```
+
+* No manual search
+* Works under 2 seconds
+* Fallback to UHID / Mobile if failure
+
+---
+
+## 🕒 FEATURE 6️⃣ – Staff Attendance via Face Scan
+
+### Attendance Logic:
+
+* Entry scan → Punch In
+* Exit scan → Punch Out
+* Auto calculate:
+
+  * Shift hours
+  * Overtime
+  * Late entry
+
+### Attendance Record:
+
+```
+attendance_id
+staff_id
+punch_type (IN/OUT)
+confidence_score
+device_id
+timestamp
+```
+
+---
+
+## 🔐 FEATURE 7️⃣ – Privacy, Security & Compliance
+
+### Mandatory Controls
+
+* Face embeddings **AES-256 encrypted**
+* No external API exposure
+* No biometric sharing
+* Data stored **inside hospital infra**
+* Consent revocation supported
+
+### Consent Management
+
+```
+patient_consent_id
+patient_id
+biometric_type = FACE
+consent_status
+revoked_at
+```
+
+If revoked:
+❌ Face recognition disabled
+❌ Manual ID only
+
+---
+
+## 🌐 FEATURE 8️⃣ – Offline + Online Sync
+
+* Local edge recognition supported
+* Sync embeddings securely when online
+* Conflict resolution handled server-side
+
+---
+
+## 🧪 FEATURE 9️⃣ – Model Monitoring & Accuracy
+
+Admin dashboard:
+
+* Total recognitions
+* False positives
+* Average confidence
+* Model drift alerts
+* Re-enrollment suggestions
+
+---
+
+## 🛠 TECH STACK EXPECTATION
+
+### AI Layer
+
+* Python (FastAPI)
+* OpenCV + InsightFace
+* Torch / ONNX runtime
+
+### Backend
+
+* Node.js / Django
+* Secure REST APIs
+* Role-based middleware
+
+### Database
+
+* PostgreSQL
+* Vector storage (pgvector / FAISS)
+
+### Devices
+
+* Tablet / Webcam
+* Mobile supported
+
+---
+
+## 📌 FAILURE HANDLING
+
+If:
+
+* Face not detected → retry
+* Low confidence → manual verification
+* Model fails → fallback ID verification
+
+---
+
+## 🧾 FINAL EXPECTED OUTPUT
+
+✅ Each patient has **unique biometric identity**
+✅ No duplicate patient creation
+✅ Face recognized reliably on return visits
+✅ Staff attendance automated
+✅ AI confidence fully logged
+✅ Hospital-grade privacy compliance

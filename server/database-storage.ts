@@ -104,7 +104,14 @@ import {
   type InsuranceClaim, type InsertInsuranceClaim,
   type InsuranceClaimDocument, type InsertInsuranceClaimDocument,
   type InsuranceClaimLog, type InsertInsuranceClaimLog,
-  type InsuranceProviderChecklist, type InsertInsuranceProviderChecklist
+  type InsuranceProviderChecklist, type InsertInsuranceProviderChecklist,
+  faceEmbeddings, biometricConsent, faceRecognitionLogs, faceAttendance, faceRecognitionSettings, duplicatePatientAlerts,
+  type FaceEmbedding, type InsertFaceEmbedding,
+  type BiometricConsent, type InsertBiometricConsent,
+  type FaceRecognitionLog, type InsertFaceRecognitionLog,
+  type FaceAttendance, type InsertFaceAttendance,
+  type FaceRecognitionSetting, type InsertFaceRecognitionSetting,
+  type DuplicatePatientAlert, type InsertDuplicatePatientAlert
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -3923,6 +3930,191 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProviderChecklists(providerId: string): Promise<void> {
     await db.delete(insuranceProviderChecklists).where(eq(insuranceProviderChecklists.providerId, providerId));
+  }
+
+  // ========== FACE RECOGNITION SYSTEM ==========
+
+  // Face Embeddings
+  async createFaceEmbedding(embedding: InsertFaceEmbedding): Promise<FaceEmbedding> {
+    const result = await db.insert(faceEmbeddings).values(embedding).returning();
+    return result[0];
+  }
+
+  async getFaceEmbedding(id: string): Promise<FaceEmbedding | undefined> {
+    const result = await db.select().from(faceEmbeddings).where(eq(faceEmbeddings.id, id));
+    return result[0];
+  }
+
+  async getFaceEmbeddingByUser(userId: string, userType: string): Promise<FaceEmbedding | undefined> {
+    const result = await db.select().from(faceEmbeddings).where(
+      and(eq(faceEmbeddings.userId, userId), eq(faceEmbeddings.userType, userType), eq(faceEmbeddings.isActive, true))
+    );
+    return result[0];
+  }
+
+  async getAllActiveFaceEmbeddings(userType?: string): Promise<FaceEmbedding[]> {
+    if (userType) {
+      return await db.select().from(faceEmbeddings).where(
+        and(eq(faceEmbeddings.isActive, true), eq(faceEmbeddings.userType, userType))
+      );
+    }
+    return await db.select().from(faceEmbeddings).where(eq(faceEmbeddings.isActive, true));
+  }
+
+  async updateFaceEmbedding(id: string, updates: Partial<InsertFaceEmbedding>): Promise<FaceEmbedding | undefined> {
+    const result = await db.update(faceEmbeddings).set({ ...updates, updatedAt: new Date() }).where(eq(faceEmbeddings.id, id)).returning();
+    return result[0];
+  }
+
+  async deactivateFaceEmbedding(userId: string, userType: string): Promise<void> {
+    await db.update(faceEmbeddings).set({ isActive: false, updatedAt: new Date() }).where(
+      and(eq(faceEmbeddings.userId, userId), eq(faceEmbeddings.userType, userType))
+    );
+  }
+
+  // Biometric Consent
+  async createBiometricConsent(consent: InsertBiometricConsent): Promise<BiometricConsent> {
+    const result = await db.insert(biometricConsent).values(consent).returning();
+    return result[0];
+  }
+
+  async getBiometricConsent(userId: string, userType: string): Promise<BiometricConsent | undefined> {
+    const result = await db.select().from(biometricConsent).where(
+      and(eq(biometricConsent.userId, userId), eq(biometricConsent.userType, userType))
+    );
+    return result[0];
+  }
+
+  async updateBiometricConsent(id: string, updates: Partial<InsertBiometricConsent>): Promise<BiometricConsent | undefined> {
+    const result = await db.update(biometricConsent).set({ ...updates, updatedAt: new Date() }).where(eq(biometricConsent.id, id)).returning();
+    return result[0];
+  }
+
+  async revokeBiometricConsent(userId: string, userType: string, revokedBy: string, reason?: string): Promise<void> {
+    await db.update(biometricConsent).set({
+      consentStatus: false,
+      revokedAt: new Date(),
+      revokedBy,
+      revokedReason: reason,
+      updatedAt: new Date()
+    }).where(and(eq(biometricConsent.userId, userId), eq(biometricConsent.userType, userType)));
+  }
+
+  // Face Recognition Logs
+  async createFaceRecognitionLog(log: InsertFaceRecognitionLog): Promise<FaceRecognitionLog> {
+    const result = await db.insert(faceRecognitionLogs).values(log).returning();
+    return result[0];
+  }
+
+  async getFaceRecognitionLogs(filters?: { userType?: string; matchStatus?: string; startDate?: Date; endDate?: Date }): Promise<FaceRecognitionLog[]> {
+    let query = db.select().from(faceRecognitionLogs);
+    const conditions: any[] = [];
+    
+    if (filters?.userType) conditions.push(eq(faceRecognitionLogs.userType, filters.userType));
+    if (filters?.matchStatus) conditions.push(eq(faceRecognitionLogs.matchStatus, filters.matchStatus));
+    
+    if (conditions.length > 0) {
+      return await query.where(and(...conditions)).orderBy(desc(faceRecognitionLogs.createdAt)).limit(500);
+    }
+    return await query.orderBy(desc(faceRecognitionLogs.createdAt)).limit(500);
+  }
+
+  async getRecognitionStats(): Promise<{ total: number; successful: number; failed: number; avgConfidence: number }> {
+    const logs = await db.select().from(faceRecognitionLogs);
+    const total = logs.length;
+    const successful = logs.filter(l => l.matchStatus === 'SUCCESS').length;
+    const failed = logs.filter(l => l.matchStatus === 'FAILURE').length;
+    const avgConfidence = logs.length > 0 
+      ? logs.reduce((sum, l) => sum + parseFloat(l.confidenceScore || '0'), 0) / logs.length 
+      : 0;
+    return { total, successful, failed, avgConfidence };
+  }
+
+  // Face Attendance
+  async createFaceAttendance(attendance: InsertFaceAttendance): Promise<FaceAttendance> {
+    const result = await db.insert(faceAttendance).values(attendance).returning();
+    return result[0];
+  }
+
+  async getFaceAttendanceByStaff(staffId: string, startDate?: string, endDate?: string): Promise<FaceAttendance[]> {
+    return await db.select().from(faceAttendance).where(eq(faceAttendance.staffId, staffId)).orderBy(desc(faceAttendance.createdAt));
+  }
+
+  async getFaceAttendanceToday(staffId: string): Promise<FaceAttendance[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return await db.select().from(faceAttendance).where(
+      and(eq(faceAttendance.staffId, staffId))
+    ).orderBy(desc(faceAttendance.createdAt));
+  }
+
+  async getLatestFaceAttendance(staffId: string): Promise<FaceAttendance | undefined> {
+    const result = await db.select().from(faceAttendance).where(eq(faceAttendance.staffId, staffId)).orderBy(desc(faceAttendance.createdAt)).limit(1);
+    return result[0];
+  }
+
+  async getAllFaceAttendanceToday(): Promise<FaceAttendance[]> {
+    return await db.select().from(faceAttendance).orderBy(desc(faceAttendance.createdAt)).limit(200);
+  }
+
+  // Face Recognition Settings
+  async getFaceRecognitionSetting(key: string): Promise<FaceRecognitionSetting | undefined> {
+    const result = await db.select().from(faceRecognitionSettings).where(eq(faceRecognitionSettings.settingKey, key));
+    return result[0];
+  }
+
+  async getAllFaceRecognitionSettings(): Promise<FaceRecognitionSetting[]> {
+    return await db.select().from(faceRecognitionSettings);
+  }
+
+  async upsertFaceRecognitionSetting(key: string, value: string, description?: string, updatedBy?: string): Promise<FaceRecognitionSetting> {
+    const existing = await this.getFaceRecognitionSetting(key);
+    if (existing) {
+      const result = await db.update(faceRecognitionSettings).set({
+        settingValue: value,
+        description,
+        updatedBy,
+        updatedAt: new Date()
+      }).where(eq(faceRecognitionSettings.settingKey, key)).returning();
+      return result[0];
+    } else {
+      const result = await db.insert(faceRecognitionSettings).values({
+        settingKey: key,
+        settingValue: value,
+        description,
+        updatedBy
+      }).returning();
+      return result[0];
+    }
+  }
+
+  // Duplicate Patient Alerts
+  async createDuplicatePatientAlert(alert: InsertDuplicatePatientAlert): Promise<DuplicatePatientAlert> {
+    const result = await db.insert(duplicatePatientAlerts).values(alert).returning();
+    return result[0];
+  }
+
+  async getDuplicatePatientAlerts(status?: string): Promise<DuplicatePatientAlert[]> {
+    if (status) {
+      return await db.select().from(duplicatePatientAlerts).where(eq(duplicatePatientAlerts.alertStatus, status)).orderBy(desc(duplicatePatientAlerts.createdAt));
+    }
+    return await db.select().from(duplicatePatientAlerts).orderBy(desc(duplicatePatientAlerts.createdAt));
+  }
+
+  async updateDuplicatePatientAlert(id: string, updates: Partial<InsertDuplicatePatientAlert>): Promise<DuplicatePatientAlert | undefined> {
+    const result = await db.update(duplicatePatientAlerts).set(updates).where(eq(duplicatePatientAlerts.id, id)).returning();
+    return result[0];
+  }
+
+  async resolveDuplicateAlert(id: string, reviewedBy: string, status: string, notes?: string, mergedToId?: string): Promise<DuplicatePatientAlert | undefined> {
+    const result = await db.update(duplicatePatientAlerts).set({
+      alertStatus: status,
+      reviewedBy,
+      reviewedAt: new Date(),
+      reviewNotes: notes,
+      mergedToPatientId: mergedToId
+    }).where(eq(duplicatePatientAlerts.id, id)).returning();
+    return result[0];
   }
 }
 

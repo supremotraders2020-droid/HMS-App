@@ -3661,3 +3661,143 @@ export const insertInsuranceProviderChecklistSchema = createInsertSchema(insuran
 });
 export type InsertInsuranceProviderChecklist = z.infer<typeof insertInsuranceProviderChecklistSchema>;
 export type InsuranceProviderChecklist = typeof insuranceProviderChecklists.$inferSelect;
+
+// ===== FACE RECOGNITION & IDENTITY VERIFICATION SYSTEM =====
+
+// Face Embeddings - Stores encrypted face biometric data
+export const faceEmbeddings = pgTable("face_embeddings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(), // patient_id or staff_id
+  userType: text("user_type").notNull(), // PATIENT, STAFF, DOCTOR, NURSE
+  embeddingVector: text("embedding_vector").notNull(), // Encrypted 128D/512D embedding (JSON array)
+  embeddingModelVersion: text("embedding_model_version").default("face-api-0.22.2"),
+  faceQualityScore: decimal("face_quality_score"), // 0-1 quality score
+  captureDeviceId: text("capture_device_id"),
+  captureLocation: text("capture_location"), // OPD, Registration, Gate, etc.
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFaceEmbeddingSchema = createInsertSchema(faceEmbeddings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertFaceEmbedding = z.infer<typeof insertFaceEmbeddingSchema>;
+export type FaceEmbedding = typeof faceEmbeddings.$inferSelect;
+
+// Biometric Consent - Tracks user consent for face recognition
+export const biometricConsent = pgTable("biometric_consent", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  userType: text("user_type").notNull(), // PATIENT, STAFF
+  biometricType: text("biometric_type").default("FACE"), // FACE, FINGERPRINT
+  consentStatus: boolean("consent_status").default(false),
+  consentGivenAt: timestamp("consent_given_at"),
+  consentGivenBy: varchar("consent_given_by"), // Who witnessed/recorded consent
+  revokedAt: timestamp("revoked_at"),
+  revokedBy: varchar("revoked_by"),
+  revokedReason: text("revoked_reason"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBiometricConsentSchema = createInsertSchema(biometricConsent).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBiometricConsent = z.infer<typeof insertBiometricConsentSchema>;
+export type BiometricConsent = typeof biometricConsent.$inferSelect;
+
+// Face Recognition Logs - Audit trail for all recognition attempts
+export const faceRecognitionLogs = pgTable("face_recognition_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userType: text("user_type").notNull(), // PATIENT, STAFF
+  matchedUserId: varchar("matched_user_id"), // NULL if no match
+  confidenceScore: decimal("confidence_score").notNull(), // 0-1 similarity score
+  thresholdUsed: decimal("threshold_used").default("0.78"),
+  matchStatus: text("match_status").notNull(), // SUCCESS, FAILURE, MULTIPLE_MATCHES, LOW_QUALITY
+  location: text("location"), // OPD, IPD, Gate, Lab, Pharmacy, etc.
+  purpose: text("purpose"), // CHECK_IN, ATTENDANCE, VERIFICATION, DUPLICATE_CHECK
+  deviceId: text("device_id"),
+  inputImageQuality: decimal("input_image_quality"),
+  processingTimeMs: integer("processing_time_ms"),
+  performedBy: varchar("performed_by"), // Staff who initiated the scan
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFaceRecognitionLogSchema = createInsertSchema(faceRecognitionLogs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertFaceRecognitionLog = z.infer<typeof insertFaceRecognitionLogSchema>;
+export type FaceRecognitionLog = typeof faceRecognitionLogs.$inferSelect;
+
+// Face Attendance - Staff attendance via face scan
+export const faceAttendance = pgTable("face_attendance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull(),
+  punchType: text("punch_type").notNull(), // IN, OUT
+  confidenceScore: decimal("confidence_score").notNull(),
+  deviceId: text("device_id"),
+  location: text("location"), // Main Gate, OPD Entrance, etc.
+  recognitionLogId: varchar("recognition_log_id"), // Link to recognition log
+  shiftId: varchar("shift_id"), // Link to staff shift
+  isLateEntry: boolean("is_late_entry").default(false),
+  isEarlyExit: boolean("is_early_exit").default(false),
+  lateByMinutes: integer("late_by_minutes"),
+  overtimeMinutes: integer("overtime_minutes"),
+  notes: text("notes"),
+  verifiedManually: boolean("verified_manually").default(false),
+  verifiedBy: varchar("verified_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFaceAttendanceSchema = createInsertSchema(faceAttendance).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertFaceAttendance = z.infer<typeof insertFaceAttendanceSchema>;
+export type FaceAttendance = typeof faceAttendance.$inferSelect;
+
+// Face Recognition Settings - System configuration
+export const faceRecognitionSettings = pgTable("face_recognition_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  settingKey: text("setting_key").notNull().unique(),
+  settingValue: text("setting_value").notNull(),
+  description: text("description"),
+  updatedBy: varchar("updated_by"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFaceRecognitionSettingSchema = createInsertSchema(faceRecognitionSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+export type InsertFaceRecognitionSetting = z.infer<typeof insertFaceRecognitionSettingSchema>;
+export type FaceRecognitionSetting = typeof faceRecognitionSettings.$inferSelect;
+
+// Duplicate Patient Alerts - Tracks potential duplicate patient detections
+export const duplicatePatientAlerts = pgTable("duplicate_patient_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  newPatientId: varchar("new_patient_id").notNull(), // The newly registering patient
+  existingPatientId: varchar("existing_patient_id").notNull(), // Potential duplicate
+  confidenceScore: decimal("confidence_score").notNull(),
+  alertStatus: text("alert_status").default("PENDING"), // PENDING, CONFIRMED_DUPLICATE, FALSE_POSITIVE, MERGED
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  mergedToPatientId: varchar("merged_to_patient_id"), // If merged, which patient ID was kept
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDuplicatePatientAlertSchema = createInsertSchema(duplicatePatientAlerts).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertDuplicatePatientAlert = z.infer<typeof insertDuplicatePatientAlertSchema>;
+export type DuplicatePatientAlert = typeof duplicatePatientAlerts.$inferSelect;

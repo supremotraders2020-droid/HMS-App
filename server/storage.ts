@@ -549,6 +549,44 @@ export interface IStorage {
   
   // Doctor Time Slots (for syncing)
   getAllDoctorTimeSlots(): Promise<any[]>;
+
+  // ========== FACE RECOGNITION SYSTEM ==========
+  // Face Embeddings
+  createFaceEmbedding(embedding: any): Promise<any>;
+  getFaceEmbedding(id: string): Promise<any | undefined>;
+  getFaceEmbeddingByUser(userId: string, userType: string): Promise<any | undefined>;
+  getAllActiveFaceEmbeddings(userType?: string): Promise<any[]>;
+  updateFaceEmbedding(id: string, updates: any): Promise<any | undefined>;
+  deactivateFaceEmbedding(userId: string, userType: string): Promise<void>;
+
+  // Biometric Consent
+  createBiometricConsent(consent: any): Promise<any>;
+  getBiometricConsent(userId: string, userType: string): Promise<any | undefined>;
+  updateBiometricConsent(id: string, updates: any): Promise<any | undefined>;
+  revokeBiometricConsent(userId: string, userType: string, revokedBy: string, reason?: string): Promise<void>;
+
+  // Face Recognition Logs
+  createFaceRecognitionLog(log: any): Promise<any>;
+  getFaceRecognitionLogs(filters?: { userType?: string; matchStatus?: string; startDate?: Date; endDate?: Date }): Promise<any[]>;
+  getRecognitionStats(): Promise<{ total: number; successful: number; failed: number; avgConfidence: number }>;
+
+  // Face Attendance
+  createFaceAttendance(attendance: any): Promise<any>;
+  getFaceAttendanceByStaff(staffId: string, startDate?: string, endDate?: string): Promise<any[]>;
+  getFaceAttendanceToday(staffId: string): Promise<any[]>;
+  getLatestFaceAttendance(staffId: string): Promise<any | undefined>;
+  getAllFaceAttendanceToday(): Promise<any[]>;
+
+  // Face Recognition Settings
+  getFaceRecognitionSetting(key: string): Promise<any | undefined>;
+  getAllFaceRecognitionSettings(): Promise<any[]>;
+  upsertFaceRecognitionSetting(key: string, value: string, description?: string, updatedBy?: string): Promise<any>;
+
+  // Duplicate Patient Alerts
+  createDuplicatePatientAlert(alert: any): Promise<any>;
+  getDuplicatePatientAlerts(status?: string): Promise<any[]>;
+  updateDuplicatePatientAlert(id: string, updates: any): Promise<any | undefined>;
+  resolveDuplicateAlert(id: string, reviewedBy: string, status: string, notes?: string, mergedToId?: string): Promise<any | undefined>;
 }
 
 export class MemStorage implements IStorage {

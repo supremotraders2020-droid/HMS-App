@@ -104,6 +104,38 @@ const requireLabReportUploadAuth = (req: any, res: any, next: any) => {
   next();
 };
 
+// General authentication middleware
+const requireAuth = (req: any, res: any, next: any) => {
+  const session = req.session;
+  const user = session?.user;
+  
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized. Please log in." });
+  }
+  
+  // Populate req.user for downstream route handlers
+  req.user = user;
+  next();
+};
+
+// Role-based authorization middleware factory
+const requireRole = (allowedRoles: string[]) => {
+  return (req: any, res: any, next: any) => {
+    const session = req.session;
+    const user = session?.user;
+    
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized. Please log in." });
+    }
+    
+    if (!allowedRoles.includes(user.role)) {
+      return res.status(403).json({ error: `Access denied. Required roles: ${allowedRoles.join(", ")}` });
+    }
+    
+    next();
+  };
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static consent PDF files from server/public/consents
   app.use('/consents', express.static(path.join(process.cwd(), 'server/public/consents')));
@@ -10149,6 +10181,568 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error fetching insurance dashboard:", error);
       res.status(500).json({ error: "Failed to fetch dashboard" });
+    }
+  });
+
+  // ===== FACE RECOGNITION & IDENTITY VERIFICATION API =====
+
+  // Calculate cosine similarity between two embedding vectors
+  function cosineSimilarity(a: number[], b: number[]): number {
+    if (a.length !== b.length) return 0;
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    for (let i = 0; i < a.length; i++) {
+      dotProduct += a[i] * b[i];
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
+    }
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+
+  // Get recognition threshold setting
+  async function getRecognitionThreshold(): Promise<number> {
+    const setting = await storage.getFaceRecognitionSetting("recognition_threshold");
+    return setting ? parseFloat(setting.settingValue) : 0.78;
+  }
+
+  // Face Embeddings - Store face data (Admin, Nurse, OPD_MANAGER)
+  app.post("/api/face-recognition/embeddings", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const { userId, userType, embeddingVector, faceQualityScore, captureDeviceId, captureLocation } = req.body;
+      
+      if (!userId || !userType || !embeddingVector) {
+        return res.status(400).json({ error: "Missing required fields: userId, userType, embeddingVector" });
+      }
+      
+      // Check consent exists
+      const consent = await storage.getBiometricConsent(userId, userType);
+      if (!consent || !consent.consentStatus) {
+        return res.status(400).json({ error: "Biometric consent not given for this user" });
+      }
+      
+      // Deactivate any existing embeddings for this user
+      await storage.deactivateFaceEmbedding(userId, userType);
+      
+      const embedding = await storage.createFaceEmbedding({
+        userId,
+        userType,
+        embeddingVector: typeof embeddingVector === 'string' ? embeddingVector : JSON.stringify(embeddingVector),
+        faceQualityScore: faceQualityScore?.toString(),
+        captureDeviceId,
+        captureLocation,
+        isActive: true,
+      });
+      
+      res.status(201).json(embedding);
+    } catch (error) {
+      console.error("Error creating face embedding:", error);
+      res.status(500).json({ error: "Failed to create face embedding" });
+    }
+  });
+
+  // Get user's face embedding
+  app.get("/api/face-recognition/embeddings/user/:userId/:userType", requireAuth, async (req, res) => {
+    try {
+      const embedding = await storage.getFaceEmbeddingByUser(req.params.userId, req.params.userType);
+      if (!embedding) {
+        return res.status(404).json({ error: "Face embedding not found" });
+      }
+      // Don't return the actual embedding vector to non-admin
+      const user = req.user as any;
+      if (user.role !== "ADMIN") {
+        res.json({ ...embedding, embeddingVector: "[ENCRYPTED]" });
+      } else {
+        res.json(embedding);
+      }
+    } catch (error) {
+      console.error("Error fetching face embedding:", error);
+      res.status(500).json({ error: "Failed to fetch face embedding" });
+    }
+  });
+
+  // Biometric Consent - Record consent
+  app.post("/api/face-recognition/consent", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const { userId, userType, consentStatus, ipAddress } = req.body;
+      const user = req.user as any;
+      
+      if (!userId || !userType) {
+        return res.status(400).json({ error: "Missing required fields: userId, userType" });
+      }
+      
+      // Check if consent already exists
+      const existing = await storage.getBiometricConsent(userId, userType);
+      if (existing) {
+        const updated = await storage.updateBiometricConsent(existing.id, {
+          consentStatus: consentStatus !== false,
+          consentGivenAt: consentStatus ? new Date() : undefined,
+          consentGivenBy: user.id,
+          ipAddress,
+        });
+        return res.json(updated);
+      }
+      
+      const consent = await storage.createBiometricConsent({
+        userId,
+        userType,
+        biometricType: "FACE",
+        consentStatus: consentStatus !== false,
+        consentGivenAt: consentStatus ? new Date() : undefined,
+        consentGivenBy: user.id,
+        ipAddress,
+      });
+      
+      res.status(201).json(consent);
+    } catch (error) {
+      console.error("Error creating consent:", error);
+      res.status(500).json({ error: "Failed to create consent" });
+    }
+  });
+
+  // Get consent status
+  app.get("/api/face-recognition/consent/:userId/:userType", requireAuth, async (req, res) => {
+    try {
+      const consent = await storage.getBiometricConsent(req.params.userId, req.params.userType);
+      res.json({ consent, hasConsent: consent?.consentStatus || false });
+    } catch (error) {
+      console.error("Error fetching consent:", error);
+      res.status(500).json({ error: "Failed to fetch consent" });
+    }
+  });
+
+  // Revoke consent
+  app.post("/api/face-recognition/consent/revoke", requireAuth, requireRole(["ADMIN", "PATIENT"]), async (req, res) => {
+    try {
+      const { userId, userType, reason } = req.body;
+      const user = req.user as any;
+      
+      // Patient can only revoke their own consent
+      if (user.role === "PATIENT" && user.id !== userId) {
+        return res.status(403).json({ error: "Can only revoke your own consent" });
+      }
+      
+      await storage.revokeBiometricConsent(userId, userType, user.id, reason);
+      // Also deactivate face embeddings
+      await storage.deactivateFaceEmbedding(userId, userType);
+      
+      res.json({ success: true, message: "Consent revoked and face data deactivated" });
+    } catch (error) {
+      console.error("Error revoking consent:", error);
+      res.status(500).json({ error: "Failed to revoke consent" });
+    }
+  });
+
+  // Face Recognition - Match face against stored embeddings
+  app.post("/api/face-recognition/match", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER", "DOCTOR"]), async (req, res) => {
+    try {
+      const startTime = Date.now();
+      const { embeddingVector, userType, purpose, location, deviceId } = req.body;
+      const user = req.user as any;
+      
+      if (!embeddingVector) {
+        return res.status(400).json({ error: "Missing embeddingVector" });
+      }
+      
+      const inputVector = typeof embeddingVector === 'string' ? JSON.parse(embeddingVector) : embeddingVector;
+      const threshold = await getRecognitionThreshold();
+      
+      // Get all active embeddings of the specified type
+      const allEmbeddings = await storage.getAllActiveFaceEmbeddings(userType);
+      
+      let bestMatch: any = null;
+      let highestScore = 0;
+      const matches: any[] = [];
+      
+      for (const embedding of allEmbeddings) {
+        const storedVector = JSON.parse(embedding.embeddingVector);
+        const similarity = cosineSimilarity(inputVector, storedVector);
+        
+        if (similarity >= threshold) {
+          matches.push({ embedding, similarity });
+          if (similarity > highestScore) {
+            highestScore = similarity;
+            bestMatch = embedding;
+          }
+        }
+      }
+      
+      const processingTime = Date.now() - startTime;
+      let matchStatus = "FAILURE";
+      
+      if (matches.length === 1) {
+        matchStatus = "SUCCESS";
+      } else if (matches.length > 1) {
+        matchStatus = "MULTIPLE_MATCHES";
+      }
+      
+      // Log the recognition attempt
+      const log = await storage.createFaceRecognitionLog({
+        userType: userType || "UNKNOWN",
+        matchedUserId: bestMatch?.userId || null,
+        confidenceScore: highestScore.toString(),
+        thresholdUsed: threshold.toString(),
+        matchStatus,
+        location,
+        purpose: purpose || "VERIFICATION",
+        deviceId,
+        processingTimeMs: processingTime,
+        performedBy: user.id,
+      });
+      
+      res.json({
+        matched: matchStatus === "SUCCESS",
+        matchStatus,
+        matchedUserId: bestMatch?.userId,
+        matchedUserType: bestMatch?.userType,
+        confidenceScore: highestScore,
+        threshold,
+        multipleMatches: matches.length > 1,
+        matchCount: matches.length,
+        processingTimeMs: processingTime,
+        logId: log.id,
+      });
+    } catch (error) {
+      console.error("Error matching face:", error);
+      res.status(500).json({ error: "Failed to match face" });
+    }
+  });
+
+  // Duplicate Patient Check - During registration
+  app.post("/api/face-recognition/duplicate-check", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const { embeddingVector, newPatientId, location } = req.body;
+      const user = req.user as any;
+      
+      if (!embeddingVector) {
+        return res.status(400).json({ error: "Missing embeddingVector" });
+      }
+      
+      const inputVector = typeof embeddingVector === 'string' ? JSON.parse(embeddingVector) : embeddingVector;
+      const threshold = await getRecognitionThreshold();
+      
+      // Get all patient embeddings
+      const patientEmbeddings = await storage.getAllActiveFaceEmbeddings("PATIENT");
+      
+      const potentialDuplicates: any[] = [];
+      
+      for (const embedding of patientEmbeddings) {
+        // Skip if same patient
+        if (embedding.userId === newPatientId) continue;
+        
+        const storedVector = JSON.parse(embedding.embeddingVector);
+        const similarity = cosineSimilarity(inputVector, storedVector);
+        
+        if (similarity >= threshold) {
+          potentialDuplicates.push({
+            existingPatientId: embedding.userId,
+            confidenceScore: similarity,
+          });
+        }
+      }
+      
+      // Log the check
+      await storage.createFaceRecognitionLog({
+        userType: "PATIENT",
+        matchedUserId: potentialDuplicates[0]?.existingPatientId || null,
+        confidenceScore: (potentialDuplicates[0]?.confidenceScore || 0).toString(),
+        thresholdUsed: threshold.toString(),
+        matchStatus: potentialDuplicates.length > 0 ? "MULTIPLE_MATCHES" : "FAILURE",
+        location,
+        purpose: "DUPLICATE_CHECK",
+        performedBy: user.id,
+      });
+      
+      // Create alerts for each potential duplicate
+      for (const duplicate of potentialDuplicates) {
+        if (newPatientId) {
+          await storage.createDuplicatePatientAlert({
+            newPatientId,
+            existingPatientId: duplicate.existingPatientId,
+            confidenceScore: duplicate.confidenceScore.toString(),
+            alertStatus: "PENDING",
+          });
+        }
+      }
+      
+      res.json({
+        hasDuplicates: potentialDuplicates.length > 0,
+        duplicateCount: potentialDuplicates.length,
+        potentialDuplicates: potentialDuplicates.map(d => ({
+          existingPatientId: d.existingPatientId.slice(-4).padStart(d.existingPatientId.length, '*'),
+          confidenceScore: (d.confidenceScore * 100).toFixed(1) + '%',
+        })),
+      });
+    } catch (error) {
+      console.error("Error checking duplicates:", error);
+      res.status(500).json({ error: "Failed to check duplicates" });
+    }
+  });
+
+  // Get duplicate alerts
+  app.get("/api/face-recognition/duplicate-alerts", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const status = req.query.status as string;
+      const alerts = await storage.getDuplicatePatientAlerts(status);
+      res.json(alerts);
+    } catch (error) {
+      console.error("Error fetching duplicate alerts:", error);
+      res.status(500).json({ error: "Failed to fetch duplicate alerts" });
+    }
+  });
+
+  // Resolve duplicate alert
+  app.post("/api/face-recognition/duplicate-alerts/:id/resolve", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const { status, notes, mergedToId } = req.body;
+      const user = req.user as any;
+      
+      const alert = await storage.resolveDuplicateAlert(
+        req.params.id,
+        user.id,
+        status,
+        notes,
+        mergedToId
+      );
+      
+      res.json(alert);
+    } catch (error) {
+      console.error("Error resolving duplicate alert:", error);
+      res.status(500).json({ error: "Failed to resolve duplicate alert" });
+    }
+  });
+
+  // Face Attendance - Punch In/Out
+  app.post("/api/face-recognition/attendance", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const { embeddingVector, location, deviceId, staffId } = req.body;
+      const user = req.user as any;
+      
+      if (!embeddingVector) {
+        return res.status(400).json({ error: "Missing embeddingVector" });
+      }
+      
+      const inputVector = typeof embeddingVector === 'string' ? JSON.parse(embeddingVector) : embeddingVector;
+      const threshold = await getRecognitionThreshold();
+      
+      // Get all staff embeddings
+      const staffEmbeddings = await storage.getAllActiveFaceEmbeddings("STAFF");
+      
+      let bestMatch: any = null;
+      let highestScore = 0;
+      
+      for (const embedding of staffEmbeddings) {
+        const storedVector = JSON.parse(embedding.embeddingVector);
+        const similarity = cosineSimilarity(inputVector, storedVector);
+        
+        if (similarity >= threshold && similarity > highestScore) {
+          highestScore = similarity;
+          bestMatch = embedding;
+        }
+      }
+      
+      // Log recognition attempt
+      const log = await storage.createFaceRecognitionLog({
+        userType: "STAFF",
+        matchedUserId: bestMatch?.userId || null,
+        confidenceScore: highestScore.toString(),
+        thresholdUsed: threshold.toString(),
+        matchStatus: bestMatch ? "SUCCESS" : "FAILURE",
+        location,
+        purpose: "ATTENDANCE",
+        deviceId,
+        performedBy: user.id,
+      });
+      
+      if (!bestMatch) {
+        return res.status(404).json({ 
+          error: "Face not recognized",
+          matchStatus: "FAILURE",
+          confidenceScore: highestScore 
+        });
+      }
+      
+      // Determine punch type based on last attendance
+      const lastAttendance = await storage.getLatestFaceAttendance(bestMatch.userId);
+      const punchType = (!lastAttendance || lastAttendance.punchType === "OUT") ? "IN" : "OUT";
+      
+      // Create attendance record
+      const attendance = await storage.createFaceAttendance({
+        staffId: bestMatch.userId,
+        punchType,
+        confidenceScore: highestScore.toString(),
+        deviceId,
+        location,
+        recognitionLogId: log.id,
+      });
+      
+      res.json({
+        success: true,
+        punchType,
+        staffId: bestMatch.userId,
+        confidenceScore: highestScore,
+        attendanceId: attendance.id,
+        timestamp: attendance.createdAt,
+      });
+    } catch (error) {
+      console.error("Error recording attendance:", error);
+      res.status(500).json({ error: "Failed to record attendance" });
+    }
+  });
+
+  // Get staff attendance
+  app.get("/api/face-recognition/attendance/:staffId", requireAuth, async (req, res) => {
+    try {
+      const attendance = await storage.getFaceAttendanceByStaff(req.params.staffId);
+      res.json(attendance);
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+      res.status(500).json({ error: "Failed to fetch attendance" });
+    }
+  });
+
+  // Get today's attendance (all staff)
+  app.get("/api/face-recognition/attendance-today", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const attendance = await storage.getAllFaceAttendanceToday();
+      res.json(attendance);
+    } catch (error) {
+      console.error("Error fetching today's attendance:", error);
+      res.status(500).json({ error: "Failed to fetch today's attendance" });
+    }
+  });
+
+  // Recognition settings (Admin only)
+  app.get("/api/face-recognition/settings", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const settings = await storage.getAllFaceRecognitionSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/face-recognition/settings", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const { key, value, description } = req.body;
+      const user = req.user as any;
+      
+      const setting = await storage.upsertFaceRecognitionSetting(key, value, description, user.id);
+      res.json(setting);
+    } catch (error) {
+      console.error("Error updating setting:", error);
+      res.status(500).json({ error: "Failed to update setting" });
+    }
+  });
+
+  // Recognition logs (Admin only)
+  app.get("/api/face-recognition/logs", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const filters = {
+        userType: req.query.userType as string,
+        matchStatus: req.query.matchStatus as string,
+      };
+      const logs = await storage.getFaceRecognitionLogs(filters);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching recognition logs:", error);
+      res.status(500).json({ error: "Failed to fetch recognition logs" });
+    }
+  });
+
+  // Recognition stats dashboard (Admin only)
+  app.get("/api/face-recognition/stats", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const stats = await storage.getRecognitionStats();
+      const settings = await storage.getAllFaceRecognitionSettings();
+      const pendingAlerts = await storage.getDuplicatePatientAlerts("PENDING");
+      const allEmbeddings = await storage.getAllActiveFaceEmbeddings();
+      
+      res.json({
+        ...stats,
+        activeEmbeddings: allEmbeddings.length,
+        patientEmbeddings: allEmbeddings.filter((e: any) => e.userType === "PATIENT").length,
+        staffEmbeddings: allEmbeddings.filter((e: any) => e.userType === "STAFF").length,
+        pendingDuplicateAlerts: pendingAlerts.length,
+        settings: settings.reduce((acc: any, s: any) => ({ ...acc, [s.settingKey]: s.settingValue }), {}),
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  // Patient quick check-in via face
+  app.post("/api/face-recognition/patient-checkin", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const { embeddingVector, location, deviceId } = req.body;
+      const user = req.user as any;
+      
+      if (!embeddingVector) {
+        return res.status(400).json({ error: "Missing embeddingVector" });
+      }
+      
+      const inputVector = typeof embeddingVector === 'string' ? JSON.parse(embeddingVector) : embeddingVector;
+      const threshold = await getRecognitionThreshold();
+      const startTime = Date.now();
+      
+      // Get all patient embeddings
+      const patientEmbeddings = await storage.getAllActiveFaceEmbeddings("PATIENT");
+      
+      let bestMatch: any = null;
+      let highestScore = 0;
+      
+      for (const embedding of patientEmbeddings) {
+        const storedVector = JSON.parse(embedding.embeddingVector);
+        const similarity = cosineSimilarity(inputVector, storedVector);
+        
+        if (similarity >= threshold && similarity > highestScore) {
+          highestScore = similarity;
+          bestMatch = embedding;
+        }
+      }
+      
+      const processingTime = Date.now() - startTime;
+      
+      // Log the recognition attempt
+      await storage.createFaceRecognitionLog({
+        userType: "PATIENT",
+        matchedUserId: bestMatch?.userId || null,
+        confidenceScore: highestScore.toString(),
+        thresholdUsed: threshold.toString(),
+        matchStatus: bestMatch ? "SUCCESS" : "FAILURE",
+        location,
+        purpose: "CHECK_IN",
+        deviceId,
+        processingTimeMs: processingTime,
+        performedBy: user.id,
+      });
+      
+      if (!bestMatch) {
+        return res.json({
+          matched: false,
+          message: "Patient not recognized. Please use manual check-in with UHID or mobile number.",
+          confidenceScore: highestScore,
+          processingTimeMs: processingTime,
+        });
+      }
+      
+      // Get patient details
+      const patientProfile = await storage.getPatientProfileByPatientId(bestMatch.userId);
+      const patientUser = await storage.getUser(bestMatch.userId);
+      
+      res.json({
+        matched: true,
+        patientId: bestMatch.userId,
+        patientName: patientProfile?.fullName || patientUser?.name || "Unknown",
+        confidenceScore: highestScore,
+        processingTimeMs: processingTime,
+        patientProfile,
+      });
+    } catch (error) {
+      console.error("Error during patient check-in:", error);
+      res.status(500).json({ error: "Failed to check-in patient" });
     }
   });
 
