@@ -11,25 +11,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      (function() {
-        var reloadBlocked = false;
-        var originalReload = location.reload.bind(location);
-        Object.defineProperty(location, 'reload', {
-          value: function() {
-            if (reloadBlocked) {
-              console.log('[HMR Fix] Automatic reload blocked. Press F5 to manually reload if needed.');
-              return;
-            }
-            return originalReload.apply(this, arguments);
-          },
-          writable: true,
-          configurable: true
-        });
-        setTimeout(function() { reloadBlocked = true; }, 5000);
-        window.__allowReload = function() { reloadBlocked = false; };
-      })();
-    </script>
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
