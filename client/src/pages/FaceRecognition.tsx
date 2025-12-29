@@ -767,23 +767,41 @@ export default function FaceRecognition() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Select User</Label>
-                  <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <Label>Select User ({
+                    (users?.filter(u => {
+                      if (selectedUserType === "PATIENT") return u.role === "PATIENT";
+                      if (selectedUserType === "DOCTOR") return u.role === "DOCTOR";
+                      if (selectedUserType === "NURSE") return u.role === "NURSE";
+                      if (selectedUserType === "STAFF") return !["PATIENT", "DOCTOR", "NURSE", "ADMIN"].includes(u.role);
+                      return false;
+                    })?.length || 0)} available)</Label>
+                  <Select 
+                    value={selectedUserId || undefined} 
+                    onValueChange={(val) => setSelectedUserId(val)}
+                  >
                     <SelectTrigger data-testid="select-user">
                       <SelectValue placeholder="Select a user" />
                     </SelectTrigger>
                     <SelectContent>
-                      {users?.filter(u => {
-                        if (selectedUserType === "PATIENT") return u.role === "PATIENT";
-                        if (selectedUserType === "DOCTOR") return u.role === "DOCTOR";
-                        if (selectedUserType === "NURSE") return u.role === "NURSE";
-                        if (selectedUserType === "STAFF") return !["PATIENT", "DOCTOR", "NURSE", "ADMIN"].includes(u.role);
-                        return false;
-                      }).map(user => (
-                        <SelectItem key={user.id} value={String(user.id)}>
-                          {user.name || user.username} ({user.role}) - {String(user.id).slice(-6)}
-                        </SelectItem>
-                      ))}
+                      {(() => {
+                        const filteredUsers = users?.filter(u => {
+                          if (selectedUserType === "PATIENT") return u.role === "PATIENT";
+                          if (selectedUserType === "DOCTOR") return u.role === "DOCTOR";
+                          if (selectedUserType === "NURSE") return u.role === "NURSE";
+                          if (selectedUserType === "STAFF") return !["PATIENT", "DOCTOR", "NURSE", "ADMIN"].includes(u.role);
+                          return false;
+                        }) || [];
+                        
+                        if (filteredUsers.length === 0) {
+                          return <div className="p-4 text-center text-muted-foreground">No users found for this type</div>;
+                        }
+                        
+                        return filteredUsers.map(user => (
+                          <SelectItem key={user.id} value={String(user.id)}>
+                            {user.name || user.username} ({user.role})
+                          </SelectItem>
+                        ));
+                      })()}
                     </SelectContent>
                   </Select>
                 </div>
