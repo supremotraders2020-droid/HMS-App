@@ -573,7 +573,7 @@ export default function BiometricService() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         toast({ 
           title: "Camera not supported", 
-          description: "Your browser doesn't support camera access.", 
+          description: "Your browser doesn't support camera access. Try opening in a new browser tab.", 
           variant: "destructive" 
         });
         return;
@@ -597,7 +597,17 @@ export default function BiometricService() {
       }
     } catch (error: any) {
       console.error("Error accessing camera:", error);
-      toast({ title: "Failed to access camera", variant: "destructive" });
+      let message = "Please check camera permissions or try opening in a new browser tab.";
+      if (error.name === "NotAllowedError") {
+        message = "Camera access denied. Please allow camera permissions and try again.";
+      } else if (error.name === "NotFoundError") {
+        message = "No camera found. Please connect a camera and try again.";
+      } else if (error.name === "NotReadableError") {
+        message = "Camera is in use by another application.";
+      } else if (error.name === "OverconstrainedError") {
+        message = "Camera doesn't meet requirements. Try a different camera.";
+      }
+      toast({ title: "Failed to access camera", description: message, variant: "destructive" });
     }
   }, [toast, stopVerifyCamera]);
 
@@ -1149,6 +1159,10 @@ export default function BiometricService() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-md flex items-start gap-2 mb-2">
+                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0 text-amber-500" />
+                    <span>Camera requires browser permissions. If camera fails, try opening in a new browser tab with HTTPS.</span>
+                  </div>
                   <div className="relative bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden aspect-video">
                     <video 
                       ref={videoRef} 
@@ -1468,6 +1482,10 @@ export default function BiometricService() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-md flex items-start gap-2 mb-2">
+                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0 text-amber-500" />
+                    <span>Camera requires browser permissions. If camera fails, try opening in a new browser tab with HTTPS.</span>
+                  </div>
                   <div className="relative bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden aspect-video">
                     <video 
                       ref={verifyVideoRef} 
