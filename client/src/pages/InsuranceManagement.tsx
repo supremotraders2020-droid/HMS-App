@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -152,6 +152,32 @@ export default function InsuranceManagement() {
       toast({ title: "Failed to update claim", variant: "destructive" });
     },
   });
+
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws/notifications?userId=admin&userRole=ADMIN`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "insurance_claim_submitted") {
+          queryClient.invalidateQueries({ queryKey: ["/api/insurance/claims"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/insurance/dashboard"] });
+          toast({
+            title: "New Insurance Claim",
+            description: `Claim ${data.claimNumber} submitted (${data.claimType})`,
+          });
+        }
+      } catch (err) {
+        console.error("WebSocket message error:", err);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [toast]);
 
   const handleProviderSubmit = (formData: FormData) => {
     const data = {

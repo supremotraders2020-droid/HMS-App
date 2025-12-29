@@ -10093,6 +10093,17 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         remarks: "Claim created",
       });
       
+      // Send WebSocket notification to admins for new claim
+      notificationService.broadcast({
+        type: "insurance_claim_submitted",
+        claimId: claim.id,
+        claimNumber: claim.claimNumber,
+        patientId: claim.patientId,
+        claimType: claim.claimType,
+        status: claim.status,
+        timestamp: new Date().toISOString(),
+      });
+      
       res.status(201).json(claim);
     } catch (error) {
       console.error("Error creating claim:", error);
