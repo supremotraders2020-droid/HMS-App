@@ -177,6 +177,8 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [showLeaveRequestDialog, setShowLeaveRequestDialog] = useState(false);
+  const [attendanceRoleFilter, setAttendanceRoleFilter] = useState<string>("all");
+  const [attendancePeriodFilter, setAttendancePeriodFilter] = useState<"weekly" | "monthly" | "quarterly">("weekly");
 
   const { data: staff = [], isLoading: loadingStaff } = useQuery<StaffMember[]>({
     queryKey: ["/api/staff"],
@@ -319,6 +321,34 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
   };
 
   const getStaffById = (staffId: string) => staff.find(s => s.id === staffId);
+
+  const filteredAttendance = useMemo(() => {
+    const now = new Date();
+    let startDate: Date;
+    
+    if (attendancePeriodFilter === "weekly") {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 7);
+    } else if (attendancePeriodFilter === "monthly") {
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 1);
+    } else {
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 3);
+    }
+    
+    return attendance.filter(record => {
+      const recordDate = new Date(record.date);
+      const isInPeriod = recordDate >= startDate && recordDate <= now;
+      
+      if (!isInPeriod) return false;
+      
+      if (attendanceRoleFilter === "all") return true;
+      
+      const staffMember = staff.find(s => s.id === record.staffId);
+      return staffMember?.role === attendanceRoleFilter;
+    });
+  }, [attendance, attendanceRoleFilter, attendancePeriodFilter, staff]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -877,17 +907,49 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
         <TabsContent value="attendance" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Attendance Records</CardTitle>
-              <CardDescription>Daily attendance tracking</CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle>Attendance Records</CardTitle>
+                  <CardDescription>Daily attendance tracking</CardDescription>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={attendanceRoleFilter} onValueChange={setAttendanceRoleFilter}>
+                    <SelectTrigger className="w-[140px]" data-testid="select-attendance-role">
+                      <SelectValue placeholder="Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="DOCTOR">Doctor</SelectItem>
+                      <SelectItem value="NURSE">Nurse</SelectItem>
+                      <SelectItem value="OPD_MANAGER">OPD Manager</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select 
+                    value={attendancePeriodFilter} 
+                    onValueChange={(value: "weekly" | "monthly" | "quarterly") => setAttendancePeriodFilter(value)}
+                  >
+                    <SelectTrigger className="w-[130px]" data-testid="select-attendance-period">
+                      <SelectValue placeholder="Period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="quarterly">Quarterly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingAttendance ? (
                 <div className="text-center py-8 text-muted-foreground">Loading attendance...</div>
-              ) : attendance.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No attendance records found.</div>
+              ) : filteredAttendance.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No attendance records found for {attendanceRoleFilter === "all" ? "all roles" : attendanceRoleFilter} ({attendancePeriodFilter}).
+                </div>
               ) : (
                 <div className="space-y-2">
-                  {attendance.slice(0, 30).map(record => {
+                  {filteredAttendance.map(record => {
                     const staffMember = getStaffById(record.staffId);
                     return (
                       <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg" data-testid={`attendance-${record.id}`}>
@@ -897,7 +959,10 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                           </div>
                           <div>
                             <div className="font-medium">{staffMember?.fullName || "Unknown"}</div>
-                            <div className="text-sm text-muted-foreground">{format(parseISO(record.date), "EEEE, MMMM d, yyyy")}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {staffMember?.role && <Badge variant="outline" className="mr-2">{staffMember.role}</Badge>}
+                              {format(parseISO(record.date), "EEEE, MMMM d, yyyy")}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
