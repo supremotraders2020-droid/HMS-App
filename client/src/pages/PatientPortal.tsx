@@ -2650,37 +2650,36 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
                       </div>
                       <div className="space-y-2">
                         <Label>Your Insurance Policy</Label>
-                        <Select
-                          value={claimForm.insuranceProviderId}
-                          onValueChange={(value) => {
-                            const selected = patientInsurances.find(pi => pi.id === value);
-                            setClaimForm(prev => ({ 
-                              ...prev, 
-                              insuranceProviderId: value,
-                              policyNumber: selected?.policyNumber || ""
-                            }));
-                          }}
-                        >
-                          <SelectTrigger data-testid="select-insurance-policy">
-                            <SelectValue placeholder="Select your insurance policy" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {patientInsurances.length === 0 ? (
-                              <SelectItem value="" disabled>No insurance policies on file</SelectItem>
-                            ) : (
-                              patientInsurances.map((pi) => {
+                        {patientInsurances.length === 0 ? (
+                          <div className="text-sm text-muted-foreground p-3 border rounded-md bg-muted">
+                            No insurance policies on file. Contact the hospital to add your insurance details.
+                          </div>
+                        ) : (
+                          <Select
+                            value={claimForm.insuranceProviderId}
+                            onValueChange={(value) => {
+                              const selected = patientInsurances.find(pi => pi.id === value);
+                              setClaimForm(prev => ({ 
+                                ...prev, 
+                                insuranceProviderId: value,
+                                policyNumber: selected?.policyNumber || ""
+                              }));
+                            }}
+                          >
+                            <SelectTrigger data-testid="select-insurance-policy">
+                              <SelectValue placeholder="Select your insurance policy" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {patientInsurances.map((pi) => {
                                 const provider = insuranceProviders.find(p => p.id === pi.insuranceProviderId);
                                 return (
                                   <SelectItem key={pi.id} value={pi.id}>
                                     {provider?.providerName || "Unknown"} - {pi.policyNumber}
                                   </SelectItem>
                                 );
-                              })
-                            )}
-                          </SelectContent>
-                        </Select>
-                        {patientInsurances.length === 0 && (
-                          <p className="text-xs text-muted-foreground">Contact the hospital to add your insurance details</p>
+                              })}
+                            </SelectContent>
+                          </Select>
                         )}
                       </div>
                       <div className="space-y-2">
