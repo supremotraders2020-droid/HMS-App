@@ -11003,6 +11003,58 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // Seed demo referral sources
+  app.post("/api/referral-sources/seed", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const user = req.user as any;
+      const tenantId = user.tenantId || user.hospitalName || "default";
+      
+      // Check if sources already exist
+      const existingSources = await storage.getReferralSources();
+      if (existingSources.length > 0) {
+        return res.json({ message: "Referral sources already seeded", count: existingSources.length });
+      }
+
+      // 10 Outside Doctors for incoming referrals (REFER_FROM)
+      const outsideDoctors = [
+        { sourceName: "Dr. Rajesh Kumar", sourceType: "Doctor", contactPerson: "Dr. Rajesh Kumar", phone: "+91 98765 43210", email: "dr.rajesh@clinic.com", address: "Krishna Clinic, MG Road, Mumbai", specializations: "General Medicine", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Dr. Priya Sharma", sourceType: "Doctor", contactPerson: "Dr. Priya Sharma", phone: "+91 98765 43211", email: "dr.priya@familycare.com", address: "Family Care Center, Andheri West, Mumbai", specializations: "Family Medicine", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Dr. Amit Patel", sourceType: "Doctor", contactPerson: "Dr. Amit Patel", phone: "+91 98765 43212", email: "dr.amit@cardiocare.com", address: "Cardio Care Clinic, Bandra, Mumbai", specializations: "Cardiology", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Dr. Sunita Reddy", sourceType: "Doctor", contactPerson: "Dr. Sunita Reddy", phone: "+91 98765 43213", email: "dr.sunita@orthoclinic.com", address: "Ortho Clinic, Dadar, Mumbai", specializations: "Orthopedics", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Dr. Mohammed Khan", sourceType: "Doctor", contactPerson: "Dr. Mohammed Khan", phone: "+91 98765 43214", email: "dr.khan@neurocenter.com", address: "Neuro Center, Worli, Mumbai", specializations: "Neurology", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Dr. Anjali Desai", sourceType: "Doctor", contactPerson: "Dr. Anjali Desai", phone: "+91 98765 43215", email: "dr.anjali@pediatricare.com", address: "Pediatri Care, Powai, Mumbai", specializations: "Pediatrics", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Dr. Vikram Singh", sourceType: "Doctor", contactPerson: "Dr. Vikram Singh", phone: "+91 98765 43216", email: "dr.vikram@skinclinic.com", address: "Skin Clinic, Juhu, Mumbai", specializations: "Dermatology", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Dr. Meera Nair", sourceType: "Doctor", contactPerson: "Dr. Meera Nair", phone: "+91 98765 43217", email: "dr.meera@gynecare.com", address: "Gyne Care Clinic, Thane, Mumbai", specializations: "Gynecology", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Dr. Suresh Iyer", sourceType: "Doctor", contactPerson: "Dr. Suresh Iyer", phone: "+91 98765 43218", email: "dr.suresh@entclinic.com", address: "ENT Clinic, Malad, Mumbai", specializations: "ENT", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Dr. Kavita Joshi", sourceType: "Doctor", contactPerson: "Dr. Kavita Joshi", phone: "+91 98765 43219", email: "dr.kavita@eyecare.com", address: "Eye Care Center, Borivali, Mumbai", specializations: "Ophthalmology", isActive: true, tenantId, createdBy: user.id },
+      ];
+
+      // 10 Major Hospitals in India for outgoing referrals (REFER_TO)
+      const majorHospitals = [
+        { sourceName: "AIIMS Delhi", sourceType: "Hospital", contactPerson: "Referral Desk", phone: "+91 11 2658 8500", email: "referrals@aiims.edu", address: "Ansari Nagar, New Delhi - 110029", specializations: "Multi-Specialty", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Tata Memorial Hospital", sourceType: "Hospital", contactPerson: "Referral Coordinator", phone: "+91 22 2417 7000", email: "referrals@tmc.gov.in", address: "Dr. E Borges Road, Parel, Mumbai - 400012", specializations: "Oncology", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Apollo Hospitals Chennai", sourceType: "Hospital", contactPerson: "Patient Services", phone: "+91 44 2829 3333", email: "referrals@apollohospitals.com", address: "Greams Lane, Chennai - 600006", specializations: "Multi-Specialty", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Fortis Hospital Bangalore", sourceType: "Hospital", contactPerson: "Referral Team", phone: "+91 80 6621 4444", email: "referrals.blr@fortishealthcare.com", address: "Bannerghatta Road, Bangalore - 560076", specializations: "Multi-Specialty", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Medanta The Medicity", sourceType: "Hospital", contactPerson: "International Patient Desk", phone: "+91 124 4141 414", email: "referrals@medanta.org", address: "Sector 38, Gurgaon - 122001", specializations: "Multi-Specialty", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Kokilaben Dhirubhai Ambani Hospital", sourceType: "Hospital", contactPerson: "Referral Services", phone: "+91 22 3066 6666", email: "referrals@kokilabenhospital.com", address: "Four Bungalows, Andheri West, Mumbai - 400053", specializations: "Multi-Specialty", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Christian Medical College Vellore", sourceType: "Hospital", contactPerson: "Referral Office", phone: "+91 416 228 1000", email: "referrals@cmcvellore.ac.in", address: "Ida Scudder Road, Vellore - 632004", specializations: "Multi-Specialty", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Narayana Health Bangalore", sourceType: "Hospital", contactPerson: "Patient Coordinator", phone: "+91 80 7122 2222", email: "referrals@narayanahealth.org", address: "Bommasandra, Bangalore - 560099", specializations: "Cardiac Care", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Max Super Speciality Hospital Delhi", sourceType: "Hospital", contactPerson: "Referral Desk", phone: "+91 11 2651 5050", email: "referrals@maxhealthcare.com", address: "Saket, New Delhi - 110017", specializations: "Multi-Specialty", isActive: true, tenantId, createdBy: user.id },
+        { sourceName: "Lilavati Hospital Mumbai", sourceType: "Hospital", contactPerson: "Patient Services", phone: "+91 22 2675 1000", email: "referrals@lilavatihospital.com", address: "A-791 Bandra Reclamation, Mumbai - 400050", specializations: "Multi-Specialty", isActive: true, tenantId, createdBy: user.id },
+      ];
+
+      // Create all sources
+      for (const source of [...outsideDoctors, ...majorHospitals]) {
+        await storage.createReferralSource(source);
+      }
+
+      res.json({ message: "Demo referral sources seeded successfully", count: 20 });
+    } catch (error) {
+      console.error("Error seeding referral sources:", error);
+      res.status(500).json({ error: "Failed to seed referral sources" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service

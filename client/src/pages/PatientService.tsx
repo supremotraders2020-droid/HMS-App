@@ -105,7 +105,30 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [consentTitle, setConsentTitle] = useState("");
   const [consentDescription, setConsentDescription] = useState("");
   const [consentType, setConsentType] = useState("");
+  const [isReferredPatient, setIsReferredPatient] = useState(false);
+  const [referralSourceId, setReferralSourceId] = useState("");
+  const [referredFromName, setReferredFromName] = useState("");
+  const [referredFromDoctor, setReferredFromDoctor] = useState("");
+  const [referralDiagnosis, setReferralDiagnosis] = useState("");
+  const [referralReason, setReferralReason] = useState("");
+  const [referralUrgency, setReferralUrgency] = useState("ROUTINE");
+  const [referralClinicalHistory, setReferralClinicalHistory] = useState("");
+  const [referralSpecialInstructions, setReferralSpecialInstructions] = useState("");
   const { toast } = useToast();
+
+  // Referral sources for referred patients
+  type ReferralSource = {
+    id: string;
+    sourceName: string;
+    sourceType: string;
+    contactPerson: string | null;
+    phone: string | null;
+    specializations: string | null;
+  };
+
+  const { data: referralSources = [] } = useQuery<ReferralSource[]>({
+    queryKey: ["/api/referral-sources"],
+  });
 
   // For NURSE: fetch only assigned patients, for others: fetch all patients
   const { data: patients = [], isLoading: patientsLoading } = useQuery<ServicePatient[]>({
@@ -156,13 +179,48 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
   const createPatientMutation = useMutation({
     mutationFn: async (data: z.infer<typeof patientFormSchema>) => {
-      return await apiRequest("POST", "/api/patients/service", data);
+      const response = await apiRequest("POST", "/api/patients/service", data);
+      const patientData = await response.json();
+      
+      // If patient is referred, create a referral record
+      if (isReferredPatient && (referralSourceId || referredFromName)) {
+        await apiRequest("POST", "/api/referrals", {
+          referralType: "REFER_FROM",
+          patientId: patientData.id,
+          patientName: `${data.firstName} ${data.lastName}`,
+          patientPhone: data.phone || null,
+          patientGender: data.gender || null,
+          referredFromSourceId: referralSourceId || null,
+          referredFromName: referredFromName || null,
+          referredFromDoctor: referredFromDoctor || null,
+          diagnosis: referralDiagnosis || null,
+          reasonForReferral: referralReason || "Referred for treatment",
+          clinicalHistory: referralClinicalHistory || null,
+          urgency: referralUrgency || "ROUTINE",
+          specialInstructions: referralSpecialInstructions || null,
+          status: "ACCEPTED",
+          referralDate: new Date().toISOString(),
+        });
+      }
+      
+      return patientData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/patients/service"] });
-      toast({ title: "Patient Registered", description: "New patient has been added to the system successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/referrals"] });
+      toast({ title: "Patient Registered", description: isReferredPatient ? "Patient and referral record created successfully" : "New patient has been added to the system successfully" });
       setShowNewPatientDialog(false);
       patientForm.reset();
+      // Reset referral fields
+      setIsReferredPatient(false);
+      setReferralSourceId("");
+      setReferredFromName("");
+      setReferredFromDoctor("");
+      setReferralDiagnosis("");
+      setReferralReason("");
+      setReferralUrgency("ROUTINE");
+      setReferralClinicalHistory("");
+      setReferralSpecialInstructions("");
     },
     onError: () => {
       toast({ title: "Registration Failed", description: "Unable to register patient. Please try again.", variant: "destructive" });
@@ -779,6 +837,122 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               )}
                             />
                           </div>
+
+                          <Separator />
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Referral Information</p>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id="isReferredPatient"
+                                checked={isReferredPatient}
+                                onChange={(e) => setIsReferredPatient(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300"
+                                data-testid="checkbox-is-referred"
+                              />
+                              <label htmlFor="isReferredPatient" className="text-sm text-slate-600 dark:text-slate-300">
+                                This patient was referred from outside
+                              </label>
+                            </div>
+                          </div>
+
+                          {isReferredPatient && (
+                            <div className="space-y-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Referred From Source</label>
+                                  <Select value={referralSourceId} onValueChange={setReferralSourceId}>
+                                    <SelectTrigger className="h-11 mt-1" data-testid="select-referral-source">
+                                      <SelectValue placeholder="Select referral source" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {referralSources.filter(s => s.sourceType === "Doctor").map((source) => (
+                                        <SelectItem key={source.id} value={source.id}>
+                                          {source.sourceName} ({source.specializations || source.sourceType})
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Or Enter Manually</label>
+                                  <Input
+                                    className="h-11 mt-1"
+                                    placeholder="Referring doctor/clinic name"
+                                    value={referredFromName}
+                                    onChange={(e) => setReferredFromName(e.target.value)}
+                                    data-testid="input-referred-from-name"
+                                  />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Referring Doctor Name</label>
+                                  <Input
+                                    className="h-11 mt-1"
+                                    placeholder="Dr. Name"
+                                    value={referredFromDoctor}
+                                    onChange={(e) => setReferredFromDoctor(e.target.value)}
+                                    data-testid="input-referred-doctor"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Urgency</label>
+                                  <Select value={referralUrgency} onValueChange={setReferralUrgency}>
+                                    <SelectTrigger className="h-11 mt-1" data-testid="select-referral-urgency">
+                                      <SelectValue placeholder="Select urgency" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="ROUTINE">Routine</SelectItem>
+                                      <SelectItem value="URGENT">Urgent</SelectItem>
+                                      <SelectItem value="EMERGENCY">Emergency</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Diagnosis</label>
+                                <Input
+                                  className="h-11 mt-1"
+                                  placeholder="Primary diagnosis or suspected condition"
+                                  value={referralDiagnosis}
+                                  onChange={(e) => setReferralDiagnosis(e.target.value)}
+                                  data-testid="input-referral-diagnosis"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Reason for Referral *</label>
+                                <Textarea
+                                  className="mt-1"
+                                  placeholder="Why was the patient referred?"
+                                  value={referralReason}
+                                  onChange={(e) => setReferralReason(e.target.value)}
+                                  data-testid="input-referral-reason"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Clinical History</label>
+                                <Textarea
+                                  className="mt-1"
+                                  placeholder="Relevant clinical history and findings"
+                                  value={referralClinicalHistory}
+                                  onChange={(e) => setReferralClinicalHistory(e.target.value)}
+                                  data-testid="input-clinical-history"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Special Instructions</label>
+                                <Textarea
+                                  className="mt-1"
+                                  placeholder="Any special instructions from the referring doctor"
+                                  value={referralSpecialInstructions}
+                                  onChange={(e) => setReferralSpecialInstructions(e.target.value)}
+                                  data-testid="input-special-instructions"
+                                />
+                              </div>
+                            </div>
+                          )}
+
                           <div className="flex justify-end gap-2 pt-4">
                             <Button type="button" variant="outline" onClick={() => setShowNewPatientDialog(false)}>
                               Cancel

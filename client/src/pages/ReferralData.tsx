@@ -190,6 +190,19 @@ export default function ReferralData({ currentUser }: ReferralDataProps) {
     },
   });
 
+  const seedDemoDataMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/referral-sources/seed", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/referral-sources"] });
+      toast({ title: "Demo data seeded successfully", description: "10 doctors and 10 hospitals added" });
+    },
+    onError: () => {
+      toast({ title: "Failed to seed demo data", variant: "destructive" });
+    },
+  });
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "PENDING": return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
@@ -442,15 +455,27 @@ export default function ReferralData({ currentUser }: ReferralDataProps) {
 
         <TabsContent value="sources" className="mt-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-2">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
               <div>
                 <CardTitle>Referral Sources</CardTitle>
                 <CardDescription>Manage hospitals, clinics, and doctors you refer patients to/from</CardDescription>
               </div>
-              <Button onClick={() => { setEditingSource(null); setIsSourceDialogOpen(true); }} data-testid="button-add-source">
-                <Plus className="w-4 h-4 mr-1" />
-                Add Source
-              </Button>
+              <div className="flex gap-2 flex-wrap">
+                {sources.length === 0 && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => seedDemoDataMutation.mutate()} 
+                    disabled={seedDemoDataMutation.isPending}
+                    data-testid="button-seed-demo"
+                  >
+                    {seedDemoDataMutation.isPending ? "Seeding..." : "Seed Demo Data"}
+                  </Button>
+                )}
+                <Button onClick={() => { setEditingSource(null); setIsSourceDialogOpen(true); }} data-testid="button-add-source">
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Source
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {sourcesLoading ? (
