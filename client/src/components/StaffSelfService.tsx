@@ -115,7 +115,7 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/attendance/staff"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/staff", staffProfile?.id] });
       toast({ title: "Checked in successfully", description: `Welcome, ${userName}!` });
     },
     onError: (error: any) => {
@@ -129,7 +129,7 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/attendance/staff"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/staff", staffProfile?.id] });
       toast({ title: "Checked out successfully", description: "Have a great day!" });
     },
     onError: (error: any) => {
