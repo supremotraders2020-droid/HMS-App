@@ -262,7 +262,8 @@ export default function BiometricService() {
 
   const matchMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/face-recognition/match", data);
+      const response = await apiRequest("POST", "/api/face-recognition/match", data);
+      return response.json();
     },
     onSuccess: (result) => {
       setRecognitionResult(result);
