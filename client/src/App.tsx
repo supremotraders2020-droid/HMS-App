@@ -44,6 +44,7 @@ import PathologyLabPortal from "@/pages/PathologyLabPortal";
 import PatientBarcodePage from "@/pages/PatientBarcodePage";
 import StaffManagement from "@/pages/StaffManagement";
 import InsuranceManagement from "@/pages/InsuranceManagement";
+import ReferralData from "@/pages/ReferralData";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
@@ -370,6 +371,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Insurance management is accessible to administrators only.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/referral-data">
+        {["ADMIN"].includes(currentUser.role) ? (
+          <ReferralData currentUser={currentUser} />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Referral data management is accessible to administrators only.</p>
           </div>
         )}
       </Route>
