@@ -646,6 +646,43 @@ class NotificationService {
     console.log(`Leave status notification sent to user ${staffUserId}: ${status}`);
   }
 
+  // ========== ROSTER NOTIFICATIONS ==========
+
+  async notifyRosterUpdated(
+    staffUserId: string,
+    staffName: string,
+    action: "assigned" | "updated" | "removed",
+    shiftDate: string,
+    shiftType: string
+  ) {
+    const actionMessages = {
+      assigned: `A new ${shiftType} shift has been assigned to you on ${shiftDate}.`,
+      updated: `Your ${shiftType} shift on ${shiftDate} has been updated.`,
+      removed: `Your ${shiftType} shift on ${shiftDate} has been removed.`
+    };
+
+    await this.createAndPushNotification({
+      userId: staffUserId,
+      userRole: "STAFF",
+      type: "roster_update",
+      title: `Shift ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+      message: actionMessages[action],
+      relatedEntityType: "roster",
+      relatedEntityId: shiftDate,
+      isRead: false,
+      metadata: JSON.stringify({ action, shiftDate, shiftType })
+    });
+    
+    this.sendToUser(staffUserId, {
+      type: "roster_updated",
+      action,
+      shiftDate,
+      shiftType
+    });
+    
+    console.log(`Roster notification sent to user ${staffUserId}: ${action} shift on ${shiftDate}`);
+  }
+
   // ========== BILLING NOTIFICATIONS ==========
 
   notifyBillRequested(billId: string, patientId: string, patientName: string) {
