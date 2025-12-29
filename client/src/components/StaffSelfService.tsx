@@ -78,6 +78,7 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("attendance");
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [attendanceFilter, setAttendanceFilter] = useState<"weekly" | "monthly" | "quarterly">("weekly");
   const [leaveFormData, setLeaveFormData] = useState({
     leaveType: "",
     startDate: "",
@@ -153,6 +154,27 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
   const todayAttendance = myAttendance.find(a => a.date === todayStr);
   const isCheckedIn = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime;
   const hasCheckedOut = todayAttendance?.checkOutTime;
+
+  const filteredAttendance = useMemo(() => {
+    const now = new Date();
+    let startDate: Date;
+    
+    if (attendanceFilter === "weekly") {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 7);
+    } else if (attendanceFilter === "monthly") {
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 1);
+    } else {
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 3);
+    }
+    
+    return myAttendance.filter(record => {
+      const recordDate = new Date(record.date);
+      return recordDate >= startDate && recordDate <= now;
+    });
+  }, [myAttendance, attendanceFilter]);
 
   const checkInMutation = useMutation({
     mutationFn: async () => {
@@ -307,24 +329,41 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
         <TabsContent value="attendance" className="space-y-4 mt-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-blue-600" />
-                Attendance History
-              </CardTitle>
-              <CardDescription>Your recent attendance records</CardDescription>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarDays className="h-5 w-5 text-blue-600" />
+                    Attendance History
+                  </CardTitle>
+                  <CardDescription>Your recent attendance records</CardDescription>
+                </div>
+                <Select 
+                  value={attendanceFilter} 
+                  onValueChange={(value: "weekly" | "monthly" | "quarterly") => setAttendanceFilter(value)}
+                >
+                  <SelectTrigger className="w-[140px]" data-testid="select-attendance-filter">
+                    <SelectValue placeholder="Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingAttendance ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
-              ) : myAttendance.length === 0 ? (
+              ) : filteredAttendance.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Clock className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p>No attendance records found</p>
+                  <p>No attendance records found for {attendanceFilter} period</p>
                 </div>
               ) : (
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-3">
-                    {myAttendance.slice(0, 30).map((record) => (
+                    {filteredAttendance.map((record) => (
                       <div
                         key={record.id}
                         className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
