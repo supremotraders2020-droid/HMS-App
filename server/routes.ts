@@ -10890,6 +10890,111 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ========== REFERRAL MANAGEMENT ==========
+  
+  // Referral Sources
+  app.get("/api/referral-sources", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const sources = await storage.getReferralSources();
+      res.json(sources);
+    } catch (error) {
+      console.error("Error fetching referral sources:", error);
+      res.status(500).json({ error: "Failed to fetch referral sources" });
+    }
+  });
+
+  app.post("/api/referral-sources", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const user = req.user as any;
+      const source = await storage.createReferralSource({ ...req.body, createdBy: user.id });
+      res.status(201).json(source);
+    } catch (error) {
+      console.error("Error creating referral source:", error);
+      res.status(500).json({ error: "Failed to create referral source" });
+    }
+  });
+
+  app.patch("/api/referral-sources/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const source = await storage.updateReferralSource(req.params.id, req.body);
+      if (!source) return res.status(404).json({ error: "Referral source not found" });
+      res.json(source);
+    } catch (error) {
+      console.error("Error updating referral source:", error);
+      res.status(500).json({ error: "Failed to update referral source" });
+    }
+  });
+
+  app.delete("/api/referral-sources/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const deleted = await storage.deleteReferralSource(req.params.id);
+      if (!deleted) return res.status(404).json({ error: "Referral source not found" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting referral source:", error);
+      res.status(500).json({ error: "Failed to delete referral source" });
+    }
+  });
+
+  // Patient Referrals
+  app.get("/api/referrals", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const { referralType, status } = req.query;
+      const filters: { referralType?: string; status?: string } = {};
+      if (referralType && typeof referralType === 'string') filters.referralType = referralType;
+      if (status && typeof status === 'string') filters.status = status;
+      const referrals = await storage.getPatientReferrals(Object.keys(filters).length > 0 ? filters : undefined);
+      res.json(referrals);
+    } catch (error) {
+      console.error("Error fetching referrals:", error);
+      res.status(500).json({ error: "Failed to fetch referrals" });
+    }
+  });
+
+  app.post("/api/referrals", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const user = req.user as any;
+      const referral = await storage.createPatientReferral({ ...req.body, createdBy: user.id });
+      res.status(201).json(referral);
+    } catch (error) {
+      console.error("Error creating referral:", error);
+      res.status(500).json({ error: "Failed to create referral" });
+    }
+  });
+
+  app.get("/api/referrals/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const referral = await storage.getPatientReferral(req.params.id);
+      if (!referral) return res.status(404).json({ error: "Referral not found" });
+      res.json(referral);
+    } catch (error) {
+      console.error("Error fetching referral:", error);
+      res.status(500).json({ error: "Failed to fetch referral" });
+    }
+  });
+
+  app.patch("/api/referrals/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const referral = await storage.updatePatientReferral(req.params.id, req.body);
+      if (!referral) return res.status(404).json({ error: "Referral not found" });
+      res.json(referral);
+    } catch (error) {
+      console.error("Error updating referral:", error);
+      res.status(500).json({ error: "Failed to update referral" });
+    }
+  });
+
+  app.delete("/api/referrals/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const deleted = await storage.deletePatientReferral(req.params.id);
+      if (!deleted) return res.status(404).json({ error: "Referral not found" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting referral:", error);
+      res.status(500).json({ error: "Failed to delete referral" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service

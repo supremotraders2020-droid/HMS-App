@@ -587,6 +587,19 @@ export interface IStorage {
   getDuplicatePatientAlerts(status?: string): Promise<any[]>;
   updateDuplicatePatientAlert(id: string, updates: any): Promise<any | undefined>;
   resolveDuplicateAlert(id: string, reviewedBy: string, status: string, notes?: string, mergedToId?: string): Promise<any | undefined>;
+
+  // Referral Management
+  createReferralSource(source: any): Promise<any>;
+  getReferralSources(): Promise<any[]>;
+  getReferralSource(id: string): Promise<any | undefined>;
+  updateReferralSource(id: string, updates: any): Promise<any | undefined>;
+  deleteReferralSource(id: string): Promise<boolean>;
+  
+  createPatientReferral(referral: any): Promise<any>;
+  getPatientReferrals(filters?: { referralType?: string; status?: string }): Promise<any[]>;
+  getPatientReferral(id: string): Promise<any | undefined>;
+  updatePatientReferral(id: string, updates: any): Promise<any | undefined>;
+  deletePatientReferral(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -2758,6 +2771,72 @@ export class MemStorage implements IStorage {
 
   async deleteResolvedAlert(id: string): Promise<boolean> {
     return this.resolvedAlertsData.delete(id);
+  }
+
+  // Referral Management stub methods
+  private referralSourcesData = new Map<string, any>();
+  private patientReferralsData = new Map<string, any>();
+
+  async createReferralSource(source: any): Promise<any> {
+    const id = randomUUID();
+    const newSource = { id, ...source, createdAt: new Date(), updatedAt: new Date() };
+    this.referralSourcesData.set(id, newSource);
+    return newSource;
+  }
+
+  async getReferralSources(): Promise<any[]> {
+    return Array.from(this.referralSourcesData.values())
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
+  async getReferralSource(id: string): Promise<any | undefined> {
+    return this.referralSourcesData.get(id);
+  }
+
+  async updateReferralSource(id: string, updates: any): Promise<any | undefined> {
+    const existing = this.referralSourcesData.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.referralSourcesData.set(id, updated);
+    return updated;
+  }
+
+  async deleteReferralSource(id: string): Promise<boolean> {
+    return this.referralSourcesData.delete(id);
+  }
+
+  async createPatientReferral(referral: any): Promise<any> {
+    const id = randomUUID();
+    const newReferral = { id, ...referral, createdAt: new Date(), updatedAt: new Date() };
+    this.patientReferralsData.set(id, newReferral);
+    return newReferral;
+  }
+
+  async getPatientReferrals(filters?: { referralType?: string; status?: string }): Promise<any[]> {
+    let referrals = Array.from(this.patientReferralsData.values());
+    if (filters?.referralType) {
+      referrals = referrals.filter(r => r.referralType === filters.referralType);
+    }
+    if (filters?.status) {
+      referrals = referrals.filter(r => r.status === filters.status);
+    }
+    return referrals.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
+  async getPatientReferral(id: string): Promise<any | undefined> {
+    return this.patientReferralsData.get(id);
+  }
+
+  async updatePatientReferral(id: string, updates: any): Promise<any | undefined> {
+    const existing = this.patientReferralsData.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.patientReferralsData.set(id, updated);
+    return updated;
+  }
+
+  async deletePatientReferral(id: string): Promise<boolean> {
+    return this.patientReferralsData.delete(id);
   }
 }
 

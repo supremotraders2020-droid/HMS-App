@@ -106,12 +106,15 @@ import {
   type InsuranceClaimLog, type InsertInsuranceClaimLog,
   type InsuranceProviderChecklist, type InsertInsuranceProviderChecklist,
   faceEmbeddings, biometricConsent, faceRecognitionLogs, faceAttendance, faceRecognitionSettings, duplicatePatientAlerts,
+  referralSources, patientReferrals,
   type FaceEmbedding, type InsertFaceEmbedding,
   type BiometricConsent, type InsertBiometricConsent,
   type FaceRecognitionLog, type InsertFaceRecognitionLog,
   type FaceAttendance, type InsertFaceAttendance,
   type FaceRecognitionSetting, type InsertFaceRecognitionSetting,
-  type DuplicatePatientAlert, type InsertDuplicatePatientAlert
+  type DuplicatePatientAlert, type InsertDuplicatePatientAlert,
+  type ReferralSource, type InsertReferralSource,
+  type PatientReferral, type InsertPatientReferral
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -4115,6 +4118,66 @@ export class DatabaseStorage implements IStorage {
       mergedToPatientId: mergedToId
     }).where(eq(duplicatePatientAlerts.id, id)).returning();
     return result[0];
+  }
+
+  // ========== REFERRAL MANAGEMENT ==========
+  async createReferralSource(source: InsertReferralSource): Promise<ReferralSource> {
+    const result = await db.insert(referralSources).values(source).returning();
+    return result[0];
+  }
+
+  async getReferralSources(): Promise<ReferralSource[]> {
+    return await db.select().from(referralSources).orderBy(desc(referralSources.createdAt));
+  }
+
+  async getReferralSource(id: string): Promise<ReferralSource | undefined> {
+    const result = await db.select().from(referralSources).where(eq(referralSources.id, id));
+    return result[0];
+  }
+
+  async updateReferralSource(id: string, updates: Partial<InsertReferralSource>): Promise<ReferralSource | undefined> {
+    const result = await db.update(referralSources).set({ ...updates, updatedAt: new Date() }).where(eq(referralSources.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteReferralSource(id: string): Promise<boolean> {
+    const result = await db.delete(referralSources).where(eq(referralSources.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async createPatientReferral(referral: InsertPatientReferral): Promise<PatientReferral> {
+    const result = await db.insert(patientReferrals).values(referral).returning();
+    return result[0];
+  }
+
+  async getPatientReferrals(filters?: { referralType?: string; status?: string }): Promise<PatientReferral[]> {
+    if (filters?.referralType && filters?.status) {
+      return await db.select().from(patientReferrals).where(
+        and(eq(patientReferrals.referralType, filters.referralType), eq(patientReferrals.status, filters.status))
+      ).orderBy(desc(patientReferrals.createdAt));
+    }
+    if (filters?.referralType) {
+      return await db.select().from(patientReferrals).where(eq(patientReferrals.referralType, filters.referralType)).orderBy(desc(patientReferrals.createdAt));
+    }
+    if (filters?.status) {
+      return await db.select().from(patientReferrals).where(eq(patientReferrals.status, filters.status)).orderBy(desc(patientReferrals.createdAt));
+    }
+    return await db.select().from(patientReferrals).orderBy(desc(patientReferrals.createdAt));
+  }
+
+  async getPatientReferral(id: string): Promise<PatientReferral | undefined> {
+    const result = await db.select().from(patientReferrals).where(eq(patientReferrals.id, id));
+    return result[0];
+  }
+
+  async updatePatientReferral(id: string, updates: Partial<InsertPatientReferral>): Promise<PatientReferral | undefined> {
+    const result = await db.update(patientReferrals).set({ ...updates, updatedAt: new Date() }).where(eq(patientReferrals.id, id)).returning();
+    return result[0];
+  }
+
+  async deletePatientReferral(id: string): Promise<boolean> {
+    const result = await db.delete(patientReferrals).where(eq(patientReferrals.id, id)).returning();
+    return result.length > 0;
   }
 }
 
