@@ -354,12 +354,12 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         </div>
       </Route>
       <Route path="/staff-management">
-        {["ADMIN", "OPD_MANAGER"].includes(currentUser.role) ? (
-          <StaffManagement />
+        {["ADMIN", "OPD_MANAGER", "DOCTOR", "NURSE"].includes(currentUser.role) ? (
+          <StaffManagement currentUser={currentUser} />
         ) : (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
-            <p className="text-muted-foreground">Staff management is accessible to administrators and OPD managers only.</p>
+            <p className="text-muted-foreground">Staff management is accessible to administrators and staff only.</p>
           </div>
         )}
       </Route>

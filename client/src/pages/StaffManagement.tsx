@@ -19,6 +19,15 @@ import {
   Plus, ChevronLeft, ChevronRight, User, Building, Phone, Mail,
   Timer, CalendarDays, BarChart3, TrendingUp, Award, Briefcase
 } from "lucide-react";
+import StaffSelfService from "@/components/StaffSelfService";
+
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+
+type CurrentUser = {
+  id: string;
+  name: string;
+  role: UserRole;
+};
 
 type StaffMember = {
   id: string;
@@ -143,9 +152,25 @@ const statusColors: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
 };
 
-export default function StaffManagement() {
+interface StaffManagementProps {
+  currentUser?: CurrentUser;
+}
+
+export default function StaffManagement({ currentUser }: StaffManagementProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("roster");
+  
+  const isAdminOrManager = currentUser?.role === "ADMIN" || currentUser?.role === "OPD_MANAGER";
+  
+  if (currentUser && !isAdminOrManager) {
+    return (
+      <StaffSelfService 
+        userId={currentUser.id} 
+        userName={currentUser.name} 
+        userRole={currentUser.role} 
+      />
+    );
+  }
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [showAddStaffDialog, setShowAddStaffDialog] = useState(false);
