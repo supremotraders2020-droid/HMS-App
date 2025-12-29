@@ -284,7 +284,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {getMenuItems(currentRole).filter(item => 
-                ['OPD Service', 'Patient Service', 'Patient Tracking', 'Patient Monitoring', 'Biometric Service', 'Prescriptions'].includes(item.title)
+                ['OPD Service', 'Patient Service', 'Patient Tracking', 'Patient Monitoring', 'Biometric Service', 'Prescriptions', 'Staff Management'].includes(item.title)
               ).map((item, index) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
@@ -348,7 +348,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
                 {getMenuItems(currentRole).filter(item => 
-                  !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Patient Monitoring', 'Prescriptions', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service'].includes(item.title)
+                  !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Patient Monitoring', 'Prescriptions', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service', 'Staff Management'].includes(item.title)
                 ).map((item, index) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
