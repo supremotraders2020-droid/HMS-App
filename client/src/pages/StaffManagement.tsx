@@ -198,8 +198,10 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
     queryKey: ["/api/tasks"],
   });
 
-  const { data: attendance = [], isLoading: loadingAttendance } = useQuery<AttendanceLog[]>({
+  const { data: attendance = [], isLoading: loadingAttendance, refetch: refetchAttendance } = useQuery<AttendanceLog[]>({
     queryKey: ["/api/attendance"],
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const { data: leaves = [], isLoading: loadingLeaves } = useQuery<LeaveRequest[]>({
@@ -482,7 +484,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
             <Briefcase className="h-4 w-4" />
             <span className="hidden sm:inline">Tasks</span>
           </TabsTrigger>
-          <TabsTrigger value="attendance" data-testid="tab-attendance" className="flex items-center gap-2">
+          <TabsTrigger value="attendance" data-testid="tab-attendance" className="flex items-center gap-2" onClick={() => refetchAttendance()}>
             <Timer className="h-4 w-4" />
             <span className="hidden sm:inline">Attendance</span>
           </TabsTrigger>
