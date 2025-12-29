@@ -3801,3 +3801,87 @@ export const insertDuplicatePatientAlertSchema = createInsertSchema(duplicatePat
 });
 export type InsertDuplicatePatientAlert = z.infer<typeof insertDuplicatePatientAlertSchema>;
 export type DuplicatePatientAlert = typeof duplicatePatientAlerts.$inferSelect;
+
+// ========== REFERRAL MANAGEMENT SYSTEM ==========
+
+// Referral Sources - External hospitals/clinics that refer patients
+export const referralSources = pgTable("referral_sources", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sourceName: text("source_name").notNull(), // Hospital/Clinic name
+  sourceType: text("source_type").notNull(), // HOSPITAL, CLINIC, DOCTOR, DIAGNOSTIC_CENTER, OTHER
+  contactPerson: text("contact_person"),
+  phone: text("phone"),
+  email: text("email"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  specializations: text("specializations"), // Comma-separated specializations
+  isActive: boolean("is_active").default(true),
+  agreementDetails: text("agreement_details"), // Any referral agreement/commission details
+  notes: text("notes"),
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertReferralSourceSchema = createInsertSchema(referralSources).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertReferralSource = z.infer<typeof insertReferralSourceSchema>;
+export type ReferralSource = typeof referralSources.$inferSelect;
+
+// Patient Referrals - Tracks patient referrals (both incoming and outgoing)
+export const patientReferrals = pgTable("patient_referrals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referralType: text("referral_type").notNull(), // REFER_TO, REFER_FROM
+  patientId: varchar("patient_id"), // Link to patient if registered
+  patientName: text("patient_name").notNull(),
+  patientAge: integer("patient_age"),
+  patientGender: text("patient_gender"),
+  patientPhone: text("patient_phone"),
+  
+  // For REFER_FROM (incoming referrals)
+  referredFromSourceId: varchar("referred_from_source_id"), // Link to referral_sources
+  referredFromName: text("referred_from_name"), // Name if not in referral_sources
+  referredFromDoctor: text("referred_from_doctor"),
+  
+  // For REFER_TO (outgoing referrals)
+  referredToSourceId: varchar("referred_to_source_id"), // Link to referral_sources
+  referredToName: text("referred_to_name"), // Name if not in referral_sources
+  referredToDoctor: text("referred_to_doctor"),
+  referredToDepartment: text("referred_to_department"),
+  
+  // Common fields
+  referralDate: timestamp("referral_date").defaultNow(),
+  diagnosis: text("diagnosis"),
+  reasonForReferral: text("reason_for_referral").notNull(),
+  clinicalHistory: text("clinical_history"),
+  urgency: text("urgency").default("ROUTINE"), // EMERGENCY, URGENT, ROUTINE
+  specialInstructions: text("special_instructions"),
+  attachments: text("attachments"), // JSON array of file paths
+  
+  // Follow-up tracking
+  status: text("status").default("PENDING"), // PENDING, ACCEPTED, REJECTED, COMPLETED, CANCELLED
+  followUpRequired: boolean("follow_up_required").default(false),
+  followUpDate: timestamp("follow_up_date"),
+  followUpNotes: text("follow_up_notes"),
+  
+  // Outcome tracking (for outgoing referrals)
+  outcomeReceived: boolean("outcome_received").default(false),
+  outcomeDate: timestamp("outcome_date"),
+  outcomeSummary: text("outcome_summary"),
+  
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPatientReferralSchema = createInsertSchema(patientReferrals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPatientReferral = z.infer<typeof insertPatientReferralSchema>;
+export type PatientReferral = typeof patientReferrals.$inferSelect;
