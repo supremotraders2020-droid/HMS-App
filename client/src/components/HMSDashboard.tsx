@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,11 @@ import {
   Phone,
   Mail,
   Globe,
-  Building2
+  Building2,
+  Ambulance,
+  Pill,
+  Bed,
+  ClipboardList
 } from "lucide-react";
 import type { ActivityLog, Appointment, ServicePatient } from "@shared/schema";
 
@@ -277,40 +282,67 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50/40 via-white to-teal-50/30 dark:from-slate-900 dark:via-slate-900/98 dark:to-cyan-950/20">
-      <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-        {/* Welcome Header with Enhanced Styling */}
-        <div className="relative animate-fade-in-up">
+    <div className="min-h-screen hospital-hero hospital-scrollbar">
+      <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6 page-content">
+        {/* Welcome Header with Hospital Styling */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative"
+        >
           <div className={`absolute inset-0 bg-gradient-to-r ${getRoleColor(currentRole)} rounded-xl opacity-40 blur-sm`} />
           <div className="relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-white/60 dark:border-slate-700/60 rounded-xl p-6 md:p-8 shadow-xl shadow-primary/5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${getRoleColor(currentRole)} shadow-lg transition-transform duration-300 hover:scale-110`}>
+                <h1 className="hero-title text-foreground flex items-center gap-3 flex-wrap">
+                  <motion.div 
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                    className={`p-3 rounded-xl bg-gradient-to-br ${getRoleColor(currentRole)} shadow-lg`}
+                  >
                     {currentRole === "DOCTOR" && <Stethoscope className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />}
                     {currentRole === "NURSE" && <HeartPulse className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />}
                     {currentRole === "ADMIN" && <Shield className="h-6 w-6 text-violet-600 dark:text-violet-400" />}
                     {currentRole === "OPD_MANAGER" && <BarChart3 className="h-6 w-6 text-amber-600 dark:text-amber-400" />}
                     {currentRole === "PATIENT" && <UserCheck className="h-6 w-6 text-teal-600 dark:text-teal-400" />}
-                  </div>
+                  </motion.div>
                   Welcome back, {userName}
                 </h1>
                 <p className="text-muted-foreground text-sm md:text-base">
                   {hospitalName} • {currentRole.replace("_", " ")} Dashboard
                 </p>
               </div>
-              <div className="flex items-center gap-3 px-4 py-2 bg-emerald-50/80 dark:bg-emerald-900/30 rounded-full border border-emerald-200/50 dark:border-emerald-700/50">
-                <div className="relative flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-400">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                  </span>
-                  System Online
-                </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                  className="flex items-center gap-3 px-4 py-2 bg-emerald-50/80 dark:bg-emerald-900/30 rounded-full border border-emerald-200/50 dark:border-emerald-700/50"
+                >
+                  <div className="relative flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    System Online
+                  </div>
+                </motion.div>
+                {currentRole === "ADMIN" && (
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: "spring" }}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-50/80 dark:bg-red-900/30 rounded-full border border-red-200/50 dark:border-red-700/50 emergency-pulse"
+                  >
+                    <Ambulance className="h-4 w-4 text-red-600 dark:text-red-400" />
+                    <span className="text-sm font-medium text-red-700 dark:text-red-400">24/7 Emergency</span>
+                  </motion.div>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* OPD Info Section - Only for OPD Manager */}
         {currentRole === "OPD_MANAGER" && (
@@ -354,49 +386,79 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
           </Card>
         )}
 
-        {/* Enhanced Stats Grid with Loading State */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Enhanced Stats Grid with Motion Animations */}
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.1 }
+            }
+          }}
+          className="stats-grid"
+        >
           {dashboardStats.map((stat, index) => (
-            <Card 
-              key={index} 
-              className={`group overflow-visible border shadow-md hover:shadow-xl transition-all duration-500 ease-out hover:-translate-y-1 glass-card ${getStatCardGradient(stat.urgent, index)} stagger-item`}
-              data-testid={`card-stat-${index}`}
+            <motion.div
+              key={index}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 }
+              }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="hospital-stat-card rounded-xl"
             >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <div className={`p-2.5 rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${getStatIconColors(index, stat.urgent)}`}>
-                  <stat.icon className="h-4 w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight" data-testid={`text-stat-value-${index}`}>
-                  {stat.value}
-                </div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${
-                    stat.change.startsWith('+') 
-                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' 
-                      : stat.change.startsWith('-') 
-                      ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400' 
-                      : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                  }`}>
-                    {stat.change.startsWith('+') ? (
-                      <TrendingUp className="h-3 w-3" />
-                    ) : stat.change.startsWith('-') ? (
-                      <TrendingUp className="h-3 w-3 rotate-180" />
-                    ) : (
-                      <TrendingUp className="h-3 w-3" />
-                    )}
-                    {stat.change}
-                  </span>
-                  <span className="text-muted-foreground/70">from last week</span>
-                </p>
-              </CardContent>
-            </Card>
+              <Card 
+                className={`group overflow-visible border-0 shadow-md hover:shadow-xl transition-shadow duration-300 ${getStatCardGradient(stat.urgent, index)}`}
+                data-testid={`card-stat-${index}`}
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <motion.div 
+                    whileHover={{ scale: 1.15, rotate: 8 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                    className={`stat-icon-container p-2.5 rounded-xl ${getStatIconColors(index, stat.urgent)}`}
+                  >
+                    <stat.icon className="h-4 w-4" />
+                  </motion.div>
+                </CardHeader>
+                <CardContent>
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
+                    className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight" 
+                    data-testid={`text-stat-value-${index}`}
+                  >
+                    {stat.value}
+                  </motion.div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${
+                      stat.change.startsWith('+') 
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' 
+                        : stat.change.startsWith('-') 
+                        ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400' 
+                        : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                    }`}>
+                      {stat.change.startsWith('+') ? (
+                        <TrendingUp className="h-3 w-3" />
+                      ) : stat.change.startsWith('-') ? (
+                        <TrendingUp className="h-3 w-3 rotate-180" />
+                      ) : (
+                        <TrendingUp className="h-3 w-3" />
+                      )}
+                      {stat.change}
+                    </span>
+                    <span className="text-muted-foreground/70">from last week</span>
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Recent Activity - Full Width */}
         <Card className="glass-card border border-slate-200/60 dark:border-slate-700/60 shadow-xl stagger-item">
