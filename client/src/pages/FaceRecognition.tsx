@@ -234,6 +234,10 @@ export default function FaceRecognition() {
     loadModels();
   }, []);
 
+  useEffect(() => {
+    setSelectedUserId("");
+  }, [selectedUserType]);
+
   const drawFaceOverlay = useCallback((detection: FaceDetection | null, isAnalyzing: boolean) => {
     const canvas = overlayCanvasRef.current;
     const video = videoRef.current;
@@ -338,33 +342,73 @@ export default function FaceRecognition() {
     };
   }, [isCapturing, isModelLoaded, detectFaceContinuously]);
 
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 640, height: 480, facingMode: "user" } 
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsCapturing(true);
-      }
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      toast({ title: "Failed to access camera", variant: "destructive" });
-    }
-  }, [toast]);
-
   const stopCamera = useCallback(() => {
-    if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-      setIsCapturing(false);
-      setCurrentDetection(null);
-    }
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
+    
+    if (videoRef.current) {
+      videoRef.current.pause();
+      if (videoRef.current.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    }
+    
+    if (overlayCanvasRef.current) {
+      const ctx = overlayCanvasRef.current.getContext('2d');
+      ctx?.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
+    }
+    
+    setIsCapturing(false);
+    setCurrentDetection(null);
+    setIsScanning(false);
+    setScanProgress(0);
+    setIsProcessing(false);
   }, []);
+
+  const startCamera = useCallback(async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast({ 
+          title: "Camera not supported", 
+          description: "Your browser doesn't support camera access. Please use a modern browser.", 
+          variant: "destructive" 
+        });
+        return;
+      }
+      
+      stopCamera();
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 640 }, 
+          height: { ideal: 480 }, 
+          facingMode: "user" 
+        } 
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        setIsCapturing(true);
+        toast({ title: "Camera started", description: "Position your face in the center of the frame" });
+      }
+    } catch (error: any) {
+      console.error("Error accessing camera:", error);
+      let message = "Please check camera permissions in your browser settings.";
+      if (error.name === "NotAllowedError") {
+        message = "Camera access denied. Please allow camera permissions and try again.";
+      } else if (error.name === "NotFoundError") {
+        message = "No camera found. Please connect a camera and try again.";
+      } else if (error.name === "NotReadableError") {
+        message = "Camera is in use by another application. Please close other apps using the camera.";
+      }
+      toast({ title: "Failed to access camera", description: message, variant: "destructive" });
+    }
+  }, [toast, stopCamera]);
 
   const captureAndAnalyzeFace = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current || !isModelLoaded) return;
@@ -488,7 +532,7 @@ export default function FaceRecognition() {
   };
 
   const getUserName = (userId: string) => {
-    const user = users?.find(u => u.id === userId);
+    const user = users?.find(u => String(u.id) === String(userId));
     return user?.name || user?.username || userId;
   };
 
@@ -729,14 +773,15 @@ export default function FaceRecognition() {
                       <SelectValue placeholder="Select a user" />
                     </SelectTrigger>
                     <SelectContent>
-                      {users?.filter(u => 
-                        selectedUserType === "PATIENT" ? u.role === "PATIENT" :
-                        selectedUserType === "DOCTOR" ? u.role === "DOCTOR" :
-                        selectedUserType === "NURSE" ? u.role === "NURSE" :
-                        !["PATIENT", "ADMIN"].includes(u.role)
-                      ).map(user => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name || user.username} ({user.id.slice(-6)})
+                      {users?.filter(u => {
+                        if (selectedUserType === "PATIENT") return u.role === "PATIENT";
+                        if (selectedUserType === "DOCTOR") return u.role === "DOCTOR";
+                        if (selectedUserType === "NURSE") return u.role === "NURSE";
+                        if (selectedUserType === "STAFF") return !["PATIENT", "DOCTOR", "NURSE", "ADMIN"].includes(u.role);
+                        return false;
+                      }).map(user => (
+                        <SelectItem key={user.id} value={String(user.id)}>
+                          {user.name || user.username} ({user.role}) - {String(user.id).slice(-6)}
                         </SelectItem>
                       ))}
                     </SelectContent>
