@@ -28,7 +28,8 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format, formatDistanceToNow } from "date-fns";
-import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent, DoctorTimeSlot, PatientBill, DoctorSchedule, MedicalStore } from "@shared/schema";
+import type { Doctor, Appointment, MedicalRecord, UserNotification, Prescription, ServicePatient, PatientConsent, DoctorTimeSlot, PatientBill, DoctorSchedule, MedicalStore, InsuranceProvider, InsuranceClaim, PatientInsurance } from "@shared/schema";
+import { DialogFooter } from "@/components/ui/dialog";
 import { 
   Home,
   Calendar,
@@ -70,7 +71,11 @@ import {
   Leaf,
   Apple,
   Store,
-  Package
+  Package,
+  Shield,
+  Plus,
+  FileCheck,
+  XCircle
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -136,6 +141,16 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   const [selectedNotification, setSelectedNotification] = useState<UserNotification | null>(null);
   const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
   const [viewRecordDialogOpen, setViewRecordDialogOpen] = useState(false);
+  const [showClaimDialog, setShowClaimDialog] = useState(false);
+  const [claimForm, setClaimForm] = useState({
+    claimType: "Reimbursement",
+    insuranceProviderId: "",
+    policyNumber: "",
+    diagnosis: "",
+    plannedProcedure: "",
+    estimatedCost: "",
+    remarks: "",
+  });
   const { toast } = useToast();
 
   // Profile form state
@@ -161,6 +176,33 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     queryKey: ["/api/medical-stores"],
     queryFn: async () => {
       const response = await fetch("/api/medical-stores");
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  const { data: insuranceProviders = [] } = useQuery<InsuranceProvider[]>({
+    queryKey: ["/api/insurance/providers"],
+    queryFn: async () => {
+      const response = await fetch("/api/insurance/providers");
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  const { data: patientInsurances = [] } = useQuery<PatientInsurance[]>({
+    queryKey: ["/api/insurance/patient", patientId],
+    queryFn: async () => {
+      const response = await fetch(`/api/insurance/patient/${patientId}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  const { data: myClaims = [], refetch: refetchClaims } = useQuery<InsuranceClaim[]>({
+    queryKey: ["/api/insurance/claims/patient", patientId],
+    queryFn: async () => {
+      const response = await fetch(`/api/insurance/claims/patient/${patientId}`);
       if (!response.ok) return [];
       return response.json();
     },
@@ -217,6 +259,40 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to save profile", variant: "destructive" });
+    }
+  });
+
+  // Submit insurance claim mutation
+  const submitClaimMutation = useMutation({
+    mutationFn: async (claimData: typeof claimForm) => {
+      const payload = {
+        patientId,
+        patientInsuranceId: claimData.insuranceProviderId,
+        claimType: claimData.claimType,
+        diagnosis: claimData.diagnosis,
+        plannedProcedure: claimData.plannedProcedure,
+        estimatedCost: claimData.estimatedCost,
+        status: "SUBMITTED",
+      };
+      const response = await apiRequest('POST', '/api/insurance/claims', payload);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/insurance/claims/patient", patientId] });
+      setShowClaimDialog(false);
+      setClaimForm({
+        claimType: "Reimbursement",
+        insuranceProviderId: "",
+        policyNumber: "",
+        diagnosis: "",
+        plannedProcedure: "",
+        estimatedCost: "",
+        remarks: "",
+      });
+      toast({ title: "Claim Submitted", description: "Your insurance claim has been submitted for review" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to submit claim", variant: "destructive" });
     }
   });
 
@@ -716,6 +792,7 @@ Description: ${record.description}
     { id: "lab-reports", label: "Lab Reports", icon: TestTube },
     { id: "records", label: "Health Records", icon: FileText },
     { id: "medical-stores", label: "Medical Stores", icon: Store },
+    { id: "insurance", label: "Insurance Claims", icon: CreditCard },
     { id: "health-guide", label: "Health Guide", icon: BookOpen },
     { id: "admission", label: "Admission", icon: BedDouble },
     { id: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifications },
@@ -2511,6 +2588,264 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case "insurance":
+        const claimStatusColors: Record<string, string> = {
+          DRAFT: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+          SUBMITTED: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+          UNDER_REVIEW: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+          QUERY_RAISED: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+          APPROVED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+          PARTIALLY_APPROVED: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
+          REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+          SETTLED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+        };
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold" data-testid="text-insurance-title">Insurance Claims</h2>
+                <p className="text-muted-foreground">Submit and track your insurance claims</p>
+              </div>
+              <Dialog open={showClaimDialog} onOpenChange={setShowClaimDialog}>
+                <Button onClick={() => setShowClaimDialog(true)} data-testid="button-new-claim">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Claim
+                </Button>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      Submit Insurance Claim
+                    </DialogTitle>
+                    <DialogDescription>
+                      Fill in the details to submit a new insurance claim for review
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    submitClaimMutation.mutate(claimForm);
+                  }}>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Claim Type</Label>
+                        <Select
+                          value={claimForm.claimType}
+                          onValueChange={(value) => setClaimForm(prev => ({ ...prev, claimType: value }))}
+                        >
+                          <SelectTrigger data-testid="select-claim-type">
+                            <SelectValue placeholder="Select claim type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pre-Auth">Pre-Authorization</SelectItem>
+                            <SelectItem value="Final Claim">Final Claim</SelectItem>
+                            <SelectItem value="Reimbursement">Reimbursement</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Insurance Provider</Label>
+                        <Select
+                          value={claimForm.insuranceProviderId}
+                          onValueChange={(value) => setClaimForm(prev => ({ ...prev, insuranceProviderId: value }))}
+                        >
+                          <SelectTrigger data-testid="select-insurance-provider">
+                            <SelectValue placeholder="Select your insurance provider" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {insuranceProviders.map((provider) => (
+                              <SelectItem key={provider.id} value={provider.id}>
+                                {provider.providerName} ({provider.providerType})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Policy Number</Label>
+                        <Input
+                          placeholder="Enter your policy number"
+                          value={claimForm.policyNumber}
+                          onChange={(e) => setClaimForm(prev => ({ ...prev, policyNumber: e.target.value }))}
+                          data-testid="input-policy-number"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Diagnosis / Condition</Label>
+                        <Textarea
+                          placeholder="Describe your medical condition or diagnosis"
+                          value={claimForm.diagnosis}
+                          onChange={(e) => setClaimForm(prev => ({ ...prev, diagnosis: e.target.value }))}
+                          data-testid="input-diagnosis"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Treatment / Procedure</Label>
+                        <Input
+                          placeholder="Treatment or procedure planned/done"
+                          value={claimForm.plannedProcedure}
+                          onChange={(e) => setClaimForm(prev => ({ ...prev, plannedProcedure: e.target.value }))}
+                          data-testid="input-procedure"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Estimated Cost (INR)</Label>
+                        <Input
+                          type="number"
+                          placeholder="Enter estimated treatment cost"
+                          value={claimForm.estimatedCost}
+                          onChange={(e) => setClaimForm(prev => ({ ...prev, estimatedCost: e.target.value }))}
+                          data-testid="input-estimated-cost"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setShowClaimDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={submitClaimMutation.isPending} data-testid="button-submit-claim">
+                        {submitClaimMutation.isPending ? "Submitting..." : "Submit Claim"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3 mb-6">
+              <Card data-testid="card-total-claims">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                      <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Claims</p>
+                      <p className="text-2xl font-bold">{myClaims.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card data-testid="card-pending-claims">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                      <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Pending Review</p>
+                      <p className="text-2xl font-bold">
+                        {myClaims.filter(c => ["SUBMITTED", "UNDER_REVIEW", "QUERY_RAISED"].includes(c.status || "")).length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card data-testid="card-approved-claims">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
+                      <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Approved / Settled</p>
+                      <p className="text-2xl font-bold">
+                        {myClaims.filter(c => ["APPROVED", "PARTIALLY_APPROVED", "SETTLED"].includes(c.status || "")).length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card data-testid="card-claims-list">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileCheck className="h-5 w-5 text-primary" />
+                  Your Claims
+                </CardTitle>
+                <CardDescription>Track the status of your submitted claims</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {myClaims.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold">No Claims Yet</h3>
+                    <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
+                      You haven't submitted any insurance claims. Click "New Claim" to submit your first claim.
+                    </p>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[400px]">
+                    <div className="space-y-4">
+                      {myClaims.map((claim) => (
+                        <div key={claim.id} className="p-4 border rounded-lg hover:bg-accent/5 transition-colors" data-testid={`claim-card-${claim.id}`}>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="font-mono text-sm text-primary font-medium">
+                                  {claim.claimNumber}
+                                </span>
+                                <Badge className={claimStatusColors[claim.status || "DRAFT"]}>
+                                  {claim.status?.replace("_", " ")}
+                                </Badge>
+                                <Badge variant="outline">{claim.claimType}</Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-1">
+                                <span className="font-medium">Diagnosis:</span> {claim.diagnosis || "N/A"}
+                              </p>
+                              {claim.plannedProcedure && (
+                                <p className="text-sm text-muted-foreground mb-1">
+                                  <span className="font-medium">Procedure:</span> {claim.plannedProcedure}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-4 mt-2 text-sm">
+                                {claim.estimatedCost && (
+                                  <span className="flex items-center gap-1">
+                                    <IndianRupee className="h-3 w-3" />
+                                    Estimated: {claim.estimatedCost}
+                                  </span>
+                                )}
+                                {claim.approvedAmount && (
+                                  <span className="flex items-center gap-1 text-green-600">
+                                    <CheckCircle className="h-3 w-3" />
+                                    Approved: {claim.approvedAmount}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right text-sm text-muted-foreground">
+                              <p>Submitted</p>
+                              <p className="font-medium">
+                                {claim.submittedAt ? format(new Date(claim.submittedAt), "MMM d, yyyy") : format(new Date(claim.createdAt!), "MMM d, yyyy")}
+                              </p>
+                            </div>
+                          </div>
+                          {claim.rejectionReason && (
+                            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                              <p className="text-sm text-red-800 dark:text-red-300">
+                                <XCircle className="h-4 w-4 inline mr-2" />
+                                <span className="font-medium">Rejection Reason:</span> {claim.rejectionReason}
+                              </p>
+                            </div>
+                          )}
+                          {claim.queryDetails && (
+                            <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                              <p className="text-sm text-orange-800 dark:text-orange-300">
+                                <AlertTriangle className="h-4 w-4 inline mr-2" />
+                                <span className="font-medium">Query:</span> {claim.queryDetails}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
               </CardContent>
             </Card>
           </div>
