@@ -8693,7 +8693,18 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const user = session?.user;
       if (!user) return res.status(401).json({ error: "Unauthorized" });
       
-      const staff = await storage.getStaffMasterByUserId(user.id);
+      let staff = await storage.getStaffMasterByUserId(user.id);
+      if (!staff && STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
+        const empCode = `EMP${Date.now().toString().slice(-6)}`;
+        staff = await storage.createStaffMaster({
+          userId: user.id,
+          employeeCode: empCode,
+          fullName: user.name || user.username || "Staff Member",
+          role: user.role,
+          department: user.role === "DOCTOR" ? "OPD" : user.role === "NURSE" ? "NURSING" : "ADMIN",
+          status: "ACTIVE",
+        });
+      }
       if (!staff) return res.status(404).json({ error: "Staff profile not found" });
       res.json(staff);
     } catch (error) {
@@ -9146,9 +9157,17 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Unauthorized" });
       }
       
-      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      let staffProfile = await storage.getStaffMasterByUserId(user.id);
       if (!staffProfile) {
-        return res.status(400).json({ error: "Staff profile not found" });
+        const empCode = `EMP${Date.now().toString().slice(-6)}`;
+        staffProfile = await storage.createStaffMaster({
+          userId: user.id,
+          employeeCode: empCode,
+          fullName: user.name || user.username || "Staff Member",
+          role: user.role,
+          department: user.role === "DOCTOR" ? "OPD" : user.role === "NURSE" ? "NURSING" : "ADMIN",
+          status: "ACTIVE",
+        });
       }
       
       const today = new Date().toISOString().split('T')[0];
@@ -9181,9 +9200,17 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Unauthorized" });
       }
       
-      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      let staffProfile = await storage.getStaffMasterByUserId(user.id);
       if (!staffProfile) {
-        return res.status(400).json({ error: "Staff profile not found" });
+        const empCode = `EMP${Date.now().toString().slice(-6)}`;
+        staffProfile = await storage.createStaffMaster({
+          userId: user.id,
+          employeeCode: empCode,
+          fullName: user.name || user.username || "Staff Member",
+          role: user.role,
+          department: user.role === "DOCTOR" ? "OPD" : user.role === "NURSE" ? "NURSING" : "ADMIN",
+          status: "ACTIVE",
+        });
       }
       
       const today = new Date().toISOString().split('T')[0];
