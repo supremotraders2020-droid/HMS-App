@@ -4146,7 +4146,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPatientReferral(referral: InsertPatientReferral): Promise<PatientReferral> {
-    const result = await db.insert(patientReferrals).values(referral).returning();
+    const processedReferral = {
+      ...referral,
+      referralDate: referral.referralDate ? new Date(referral.referralDate) : new Date(),
+      appointmentDate: referral.appointmentDate ? new Date(referral.appointmentDate) : null,
+      followUpDate: referral.followUpDate ? new Date(referral.followUpDate) : null,
+    };
+    const result = await db.insert(patientReferrals).values(processedReferral).returning();
     return result[0];
   }
 
@@ -4171,7 +4177,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePatientReferral(id: string, updates: Partial<InsertPatientReferral>): Promise<PatientReferral | undefined> {
-    const result = await db.update(patientReferrals).set({ ...updates, updatedAt: new Date() }).where(eq(patientReferrals.id, id)).returning();
+    const processedUpdates = {
+      ...updates,
+      updatedAt: new Date(),
+      ...(updates.referralDate && { referralDate: new Date(updates.referralDate) }),
+      ...(updates.appointmentDate && { appointmentDate: new Date(updates.appointmentDate) }),
+      ...(updates.followUpDate && { followUpDate: new Date(updates.followUpDate) }),
+    };
+    const result = await db.update(patientReferrals).set(processedUpdates).where(eq(patientReferrals.id, id)).returning();
     return result[0];
   }
 

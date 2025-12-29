@@ -3857,6 +3857,7 @@ export const patientReferrals = pgTable("patient_referrals", {
   
   // Common fields
   referralDate: timestamp("referral_date").defaultNow(),
+  appointmentDate: timestamp("appointment_date"), // Scheduled appointment date at referred facility
   diagnosis: text("diagnosis"),
   reasonForReferral: text("reason_for_referral").notNull(),
   clinicalHistory: text("clinical_history"),
