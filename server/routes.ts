@@ -8954,6 +8954,18 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         reason: req.body.overrideReason,
       });
       
+      // Notify staff member of new shift assignment
+      const staffMember = await storage.getStaffMaster(req.body.staffId);
+      if (staffMember?.userId) {
+        await notificationService.notifyRosterUpdated(
+          staffMember.userId,
+          staffMember.fullName,
+          "assigned",
+          roster.shiftDate,
+          roster.shiftType
+        );
+      }
+      
       res.status(201).json(roster);
     } catch (error) {
       console.error("Error creating shift:", error);
@@ -8985,6 +8997,18 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         reason: req.body.updateReason,
       });
       
+      // Notify staff member of shift update
+      const staffMember = await storage.getStaffMaster(roster!.staffId);
+      if (staffMember?.userId) {
+        await notificationService.notifyRosterUpdated(
+          staffMember.userId,
+          staffMember.fullName,
+          "updated",
+          roster!.shiftDate,
+          roster!.shiftType
+        );
+      }
+      
       res.json(roster);
     } catch (error) {
       console.error("Error updating shift:", error);
@@ -9012,6 +9036,18 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         previousValue: JSON.stringify(existingRoster),
         reason: req.body.deleteReason,
       });
+      
+      // Notify staff member of shift removal
+      const staffMember = await storage.getStaffMaster(existingRoster.staffId);
+      if (staffMember?.userId) {
+        await notificationService.notifyRosterUpdated(
+          staffMember.userId,
+          staffMember.fullName,
+          "removed",
+          existingRoster.shiftDate,
+          existingRoster.shiftType
+        );
+      }
       
       const deleted = await storage.deleteShiftRoster(req.params.id);
       res.json({ success: deleted });

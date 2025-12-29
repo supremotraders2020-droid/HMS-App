@@ -54,7 +54,27 @@ type StaffProfile = {
   status: string;
 };
 
+type ShiftRoster = {
+  id: string;
+  staffId: string;
+  shiftDate: string;
+  shiftType: string;
+  startTime: string;
+  endTime: string;
+  department: string | null;
+  status: string;
+  notes: string | null;
+};
+
 const LEAVE_TYPES = ["CASUAL", "SICK", "EARNED", "MATERNITY", "PATERNITY", "EMERGENCY", "UNPAID"];
+
+const shiftColors: Record<string, string> = {
+  MORNING: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  DAY: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  EVENING: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  NIGHT: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
+  GENERAL: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
+};
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
@@ -106,6 +126,17 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
     staleTime: 0,
   });
 
+  const { data: myRoster = [], isLoading: loadingRoster, refetch: refetchRoster } = useQuery<ShiftRoster[]>({
+    queryKey: ["/api/roster/staff", staffProfile?.id],
+    enabled: !!staffProfile?.id,
+    queryFn: async () => {
+      const res = await fetch(`/api/roster/staff/${staffProfile?.id}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    staleTime: 0,
+  });
+
   const wsRef = useRef<WebSocket | null>(null);
   
   useEffect(() => {
@@ -130,6 +161,17 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
             variant: data.status === "APPROVED" ? "default" : "destructive",
           });
         }
+        if (data.type === "roster_updated") {
+          refetchRoster();
+          const actionText = data.action === "assigned" ? "New shift assigned" 
+            : data.action === "updated" ? "Shift updated" 
+            : "Shift removed";
+          toast({
+            title: actionText,
+            description: `${data.shiftType} shift on ${data.shiftDate}`,
+            variant: data.action === "removed" ? "destructive" : "default",
+          });
+        }
       } catch (e) {
         console.error("WebSocket message parse error:", e);
       }
@@ -148,7 +190,7 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
         wsRef.current.close();
       }
     };
-  }, [userId, userRole, refetchLeaves, toast]);
+  }, [userId, userRole, refetchLeaves, refetchRoster, toast]);
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayAttendance = myAttendance.find(a => a.date === todayStr);
@@ -315,10 +357,14 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="attendance" className="flex items-center gap-2" data-testid="tab-attendance">
             <Timer className="h-4 w-4" />
             Attendance
+          </TabsTrigger>
+          <TabsTrigger value="roster" className="flex items-center gap-2" data-testid="tab-roster">
+            <CalendarDays className="h-4 w-4" />
+            Roster
           </TabsTrigger>
           <TabsTrigger value="leave" className="flex items-center gap-2" data-testid="tab-leave">
             <FileText className="h-4 w-4" />
@@ -406,6 +452,97 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
                         </div>
                       </div>
                     ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="roster" className="space-y-4 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-blue-600" />
+                My Shift Schedule
+              </CardTitle>
+              <CardDescription>Your assigned shifts and work schedule</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingRoster ? (
+                <div className="text-center py-8 text-muted-foreground">Loading roster...</div>
+              ) : myRoster.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p>No shifts assigned yet</p>
+                  <p className="text-sm mt-1">Your admin will assign shifts when available</p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-3">
+                    {myRoster
+                      .sort((a, b) => new Date(a.shiftDate).getTime() - new Date(b.shiftDate).getTime())
+                      .map((shift) => {
+                        const shiftDate = new Date(shift.shiftDate);
+                        const isPast = shiftDate < new Date(new Date().toDateString());
+                        const isToday = shift.shiftDate === format(new Date(), "yyyy-MM-dd");
+                        
+                        return (
+                          <div
+                            key={shift.id}
+                            className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                              isToday 
+                                ? "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" 
+                                : isPast 
+                                  ? "bg-muted/50 opacity-70" 
+                                  : "bg-card hover:bg-accent/5"
+                            }`}
+                            data-testid={`roster-shift-${shift.id}`}
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="text-center min-w-[60px]">
+                                <p className="text-lg font-bold">{format(shiftDate, "dd")}</p>
+                                <p className="text-xs text-muted-foreground">{format(shiftDate, "MMM")}</p>
+                                <p className="text-xs text-muted-foreground">{format(shiftDate, "EEE")}</p>
+                              </div>
+                              <Separator orientation="vertical" className="h-12" />
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Badge className={shiftColors[shift.shiftType] || "bg-slate-100"}>
+                                    {shift.shiftType}
+                                  </Badge>
+                                  {isToday && (
+                                    <Badge className="bg-blue-600 text-white">TODAY</Badge>
+                                  )}
+                                  {shift.status !== "SCHEDULED" && (
+                                    <Badge className={statusColors[shift.status] || "bg-slate-100"}>
+                                      {shift.status}
+                                    </Badge>
+                                  )}
+                                </div>
+                                {shift.department && (
+                                  <p className="text-sm text-muted-foreground mt-1">{shift.department}</p>
+                                )}
+                                {shift.notes && (
+                                  <p className="text-sm text-muted-foreground mt-1 italic">{shift.notes}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center gap-4">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Start</p>
+                                  <p className="font-mono font-medium text-green-600">{shift.startTime}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">End</p>
+                                  <p className="font-mono font-medium text-red-600">{shift.endTime}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 </ScrollArea>
               )}
