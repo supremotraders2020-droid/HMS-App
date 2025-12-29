@@ -9388,6 +9388,9 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const { action } = req.body;
       let updates: any = {};
       
+      const existingLeave = await storage.getLeaveRequest(req.params.id);
+      if (!existingLeave) return res.status(404).json({ error: "Leave request not found" });
+      
       if (action === "approve") {
         if (!STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
           return res.status(403).json({ error: "Unauthorized" });
@@ -9407,9 +9410,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
           rejectionReason: req.body.reason,
         };
       } else if (action === "cancel") {
-        const leave = await storage.getLeaveRequest(req.params.id);
         const staffProfile = await storage.getStaffMasterByUserId(user.id);
-        if (!leave || !staffProfile || leave.staffId !== staffProfile.id) {
+        if (!staffProfile || existingLeave.staffId !== staffProfile.id) {
           return res.status(403).json({ error: "Cannot cancel this leave request" });
         }
         updates = { status: "CANCELLED" };
@@ -9419,6 +9421,30 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       
       const leave = await storage.updateLeaveRequest(req.params.id, updates);
       if (!leave) return res.status(404).json({ error: "Leave request not found" });
+      
+      if (action === "approve" || action === "reject") {
+        const staffProfile = await storage.getStaffMaster(existingLeave.staffId);
+        if (staffProfile?.userId) {
+          const startDate = typeof existingLeave.startDate === 'string' 
+            ? existingLeave.startDate 
+            : new Date(existingLeave.startDate).toLocaleDateString();
+          const endDate = typeof existingLeave.endDate === 'string' 
+            ? existingLeave.endDate 
+            : new Date(existingLeave.endDate).toLocaleDateString();
+          
+          await notificationService.notifyLeaveStatusUpdated(
+            staffProfile.userId,
+            staffProfile.fullName,
+            leave.id,
+            updates.status,
+            existingLeave.leaveType,
+            startDate,
+            endDate,
+            req.body.reason
+          );
+        }
+      }
+      
       res.json(leave);
     } catch (error) {
       console.error("Error updating leave request:", error);

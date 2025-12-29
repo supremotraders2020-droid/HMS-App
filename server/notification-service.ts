@@ -603,6 +603,49 @@ class NotificationService {
     });
   }
 
+  // ========== LEAVE STATUS NOTIFICATIONS ==========
+  
+  async notifyLeaveStatusUpdated(
+    staffUserId: string,
+    staffName: string,
+    leaveId: string,
+    status: string,
+    leaveType: string,
+    startDate: string,
+    endDate: string,
+    rejectionReason?: string
+  ) {
+    const statusMessage = status === "APPROVED" 
+      ? `Your ${leaveType} leave request from ${startDate} to ${endDate} has been approved.`
+      : status === "REJECTED"
+      ? `Your ${leaveType} leave request from ${startDate} to ${endDate} has been rejected.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`
+      : `Your ${leaveType} leave request status has been updated to ${status}.`;
+    
+    await this.createAndPushNotification({
+      userId: staffUserId,
+      userRole: "STAFF",
+      type: "leave_status",
+      title: `Leave Request ${status}`,
+      message: statusMessage,
+      relatedEntityType: "leave",
+      relatedEntityId: leaveId,
+      isRead: false,
+      metadata: JSON.stringify({ leaveId, status, leaveType, startDate, endDate, rejectionReason })
+    });
+    
+    this.sendToUser(staffUserId, {
+      type: "leave_status_updated",
+      leaveId,
+      status,
+      leaveType,
+      startDate,
+      endDate,
+      rejectionReason
+    });
+    
+    console.log(`Leave status notification sent to user ${staffUserId}: ${status}`);
+  }
+
   // ========== BILLING NOTIFICATIONS ==========
 
   notifyBillRequested(billId: string, patientId: string, patientName: string) {

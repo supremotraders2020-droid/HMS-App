@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -100,9 +100,54 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
     },
   });
 
-  const { data: myLeaves = [], isLoading: loadingLeaves } = useQuery<LeaveRequest[]>({
+  const { data: myLeaves = [], isLoading: loadingLeaves, refetch: refetchLeaves } = useQuery<LeaveRequest[]>({
     queryKey: ["/api/leave"],
+    staleTime: 0,
   });
+
+  const wsRef = useRef<WebSocket | null>(null);
+  
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws/notifications?userId=${userId}&userRole=${userRole}`;
+    
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+    
+    ws.onopen = () => {
+      console.log("StaffSelfService WebSocket connected");
+    };
+    
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "leave_status_updated") {
+          refetchLeaves();
+          toast({
+            title: `Leave Request ${data.status}`,
+            description: `Your ${data.leaveType} leave (${data.startDate} - ${data.endDate}) has been ${data.status.toLowerCase()}.`,
+            variant: data.status === "APPROVED" ? "default" : "destructive",
+          });
+        }
+      } catch (e) {
+        console.error("WebSocket message parse error:", e);
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+    
+    ws.onclose = () => {
+      console.log("StaffSelfService WebSocket disconnected");
+    };
+    
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [userId, userRole, refetchLeaves, toast]);
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayAttendance = myAttendance.find(a => a.date === todayStr);
