@@ -10906,7 +10906,11 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/referral-sources", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
     try {
       const user = req.user as any;
-      const source = await storage.createReferralSource({ ...req.body, createdBy: user.id });
+      const source = await storage.createReferralSource({ 
+        ...req.body, 
+        tenantId: user.tenantId,
+        createdBy: user.id 
+      });
       res.status(201).json(source);
     } catch (error) {
       console.error("Error creating referral source:", error);
@@ -10954,7 +10958,11 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/referrals", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
     try {
       const user = req.user as any;
-      const referral = await storage.createPatientReferral({ ...req.body, createdBy: user.id });
+      const referral = await storage.createPatientReferral({ 
+        ...req.body, 
+        tenantId: user.tenantId,
+        createdBy: user.id 
+      });
       res.status(201).json(referral);
     } catch (error) {
       console.error("Error creating referral:", error);

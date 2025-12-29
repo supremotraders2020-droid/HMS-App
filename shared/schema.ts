@@ -3807,6 +3807,7 @@ export type DuplicatePatientAlert = typeof duplicatePatientAlerts.$inferSelect;
 // Referral Sources - External hospitals/clinics that refer patients
 export const referralSources = pgTable("referral_sources", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull(), // Multi-tenant support
   sourceName: text("source_name").notNull(), // Hospital/Clinic name
   sourceType: text("source_type").notNull(), // HOSPITAL, CLINIC, DOCTOR, DIAGNOSTIC_CENTER, OTHER
   contactPerson: text("contact_person"),
@@ -3835,6 +3836,7 @@ export type ReferralSource = typeof referralSources.$inferSelect;
 // Patient Referrals - Tracks patient referrals (both incoming and outgoing)
 export const patientReferrals = pgTable("patient_referrals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull(), // Multi-tenant support
   referralType: text("referral_type").notNull(), // REFER_TO, REFER_FROM
   patientId: varchar("patient_id"), // Link to patient if registered
   patientName: text("patient_name").notNull(),

@@ -97,13 +97,11 @@ export default function ReferralData({ currentUser }: ReferralDataProps) {
   });
 
   const { data: outgoingReferrals = [], isLoading: outgoingLoading } = useQuery<PatientReferral[]>({
-    queryKey: ["/api/referrals", "REFER_TO"],
-    queryFn: () => fetch("/api/referrals?referralType=REFER_TO", { credentials: "include" }).then(r => r.json()),
+    queryKey: ["/api/referrals?referralType=REFER_TO"],
   });
 
   const { data: incomingReferrals = [], isLoading: incomingLoading } = useQuery<PatientReferral[]>({
-    queryKey: ["/api/referrals", "REFER_FROM"],
-    queryFn: () => fetch("/api/referrals?referralType=REFER_FROM", { credentials: "include" }).then(r => r.json()),
+    queryKey: ["/api/referrals?referralType=REFER_FROM"],
   });
 
   const createSourceMutation = useMutation({
