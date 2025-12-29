@@ -204,8 +204,10 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
     refetchOnWindowFocus: true,
   });
 
-  const { data: leaves = [], isLoading: loadingLeaves } = useQuery<LeaveRequest[]>({
+  const { data: leaves = [], isLoading: loadingLeaves, refetch: refetchLeaves } = useQuery<LeaveRequest[]>({
     queryKey: ["/api/leave"],
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const { data: overtime = [], isLoading: loadingOvertime } = useQuery<OvertimeLog[]>({
@@ -488,7 +490,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
             <Timer className="h-4 w-4" />
             <span className="hidden sm:inline">Attendance</span>
           </TabsTrigger>
-          <TabsTrigger value="leave" data-testid="tab-leave" className="flex items-center gap-2">
+          <TabsTrigger value="leave" data-testid="tab-leave" className="flex items-center gap-2" onClick={() => refetchLeaves()}>
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Leave</span>
           </TabsTrigger>

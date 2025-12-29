@@ -9345,14 +9345,31 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Unauthorized" });
       }
       
-      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      let staffProfile = await storage.getStaffMasterByUserId(user.id);
       if (!staffProfile) {
-        return res.status(400).json({ error: "Staff profile not found" });
+        const empCode = `EMP${Date.now().toString().slice(-6)}`;
+        staffProfile = await storage.createStaffMaster({
+          userId: user.id,
+          employeeCode: empCode,
+          fullName: user.name || user.username || "Staff Member",
+          role: user.role,
+          department: user.role === "DOCTOR" ? "OPD" : user.role === "NURSE" ? "NURSING" : "ADMIN",
+          status: "ACTIVE",
+        });
       }
       
+      const { startDate, endDate, leaveType, reason } = req.body;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      
       const leave = await storage.createLeaveRequest({
-        ...req.body,
         staffId: staffProfile.id,
+        leaveType,
+        startDate,
+        endDate,
+        reason,
+        totalDays,
         status: "PENDING",
       });
       res.status(201).json(leave);
