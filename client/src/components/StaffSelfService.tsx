@@ -13,10 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
+import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from "date-fns";
 import { 
   Clock, LogIn, LogOut, Calendar, FileText, 
-  CheckCircle, XCircle, AlertCircle, Timer, CalendarDays
+  CheckCircle, XCircle, AlertCircle, Timer, CalendarDays,
+  ChevronLeft, ChevronRight, User
 } from "lucide-react";
 
 type AttendanceLog = {
@@ -99,6 +100,7 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
   const [activeTab, setActiveTab] = useState("attendance");
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [attendanceFilter, setAttendanceFilter] = useState<"weekly" | "monthly" | "quarterly">("weekly");
+  const [rosterWeekStart, setRosterWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [leaveFormData, setLeaveFormData] = useState({
     leaveType: "",
     startDate: "",
@@ -196,6 +198,17 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
   const todayAttendance = myAttendance.find(a => a.date === todayStr);
   const isCheckedIn = todayAttendance?.checkInTime && !todayAttendance?.checkOutTime;
   const hasCheckedOut = todayAttendance?.checkOutTime;
+
+  const rosterWeekDays = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => addDays(rosterWeekStart, i));
+  }, [rosterWeekStart]);
+
+  const getShiftsForDay = (day: Date) => {
+    const dateStr = format(day, "yyyy-MM-dd");
+    return myRoster.filter(shift => shift.shiftDate === dateStr);
+  };
+
+  const rosterWeekEnd = addDays(rosterWeekStart, 6);
 
   const filteredAttendance = useMemo(() => {
     const now = new Date();
@@ -461,90 +474,103 @@ export default function StaffSelfService({ userId, userName, userRole }: StaffSe
 
         <TabsContent value="roster" className="space-y-4 mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-blue-600" />
-                My Shift Schedule
-              </CardTitle>
-              <CardDescription>Your assigned shifts and work schedule</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5 text-blue-600" />
+                  Weekly Shift Roster
+                </CardTitle>
+                <CardDescription>
+                  {format(rosterWeekStart, "MMMM d")} - {format(rosterWeekEnd, "MMMM d, yyyy")}
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setRosterWeekStart(subWeeks(rosterWeekStart, 1))}
+                  data-testid="button-roster-prev-week"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setRosterWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+                  data-testid="button-roster-today"
+                >
+                  Today
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setRosterWeekStart(addWeeks(rosterWeekStart, 1))}
+                  data-testid="button-roster-next-week"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingRoster ? (
                 <div className="text-center py-8 text-muted-foreground">Loading roster...</div>
-              ) : myRoster.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p>No shifts assigned yet</p>
-                  <p className="text-sm mt-1">Your admin will assign shifts when available</p>
-                </div>
               ) : (
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
-                    {myRoster
-                      .sort((a, b) => new Date(a.shiftDate).getTime() - new Date(b.shiftDate).getTime())
-                      .map((shift) => {
-                        const shiftDate = new Date(shift.shiftDate);
-                        const isPast = shiftDate < new Date(new Date().toDateString());
-                        const isToday = shift.shiftDate === format(new Date(), "yyyy-MM-dd");
-                        
-                        return (
-                          <div
-                            key={shift.id}
-                            className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
-                              isToday 
-                                ? "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" 
-                                : isPast 
-                                  ? "bg-muted/50 opacity-70" 
-                                  : "bg-card hover:bg-accent/5"
-                            }`}
-                            data-testid={`roster-shift-${shift.id}`}
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="text-center min-w-[60px]">
-                                <p className="text-lg font-bold">{format(shiftDate, "dd")}</p>
-                                <p className="text-xs text-muted-foreground">{format(shiftDate, "MMM")}</p>
-                                <p className="text-xs text-muted-foreground">{format(shiftDate, "EEE")}</p>
-                              </div>
-                              <Separator orientation="vertical" className="h-12" />
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <Badge className={shiftColors[shift.shiftType] || "bg-slate-100"}>
-                                    {shift.shiftType}
-                                  </Badge>
-                                  {isToday && (
-                                    <Badge className="bg-blue-600 text-white">TODAY</Badge>
-                                  )}
-                                  {shift.status !== "SCHEDULED" && (
-                                    <Badge className={statusColors[shift.status] || "bg-slate-100"}>
-                                      {shift.status}
-                                    </Badge>
-                                  )}
-                                </div>
-                                {shift.department && (
-                                  <p className="text-sm text-muted-foreground mt-1">{shift.department}</p>
-                                )}
-                                {shift.notes && (
-                                  <p className="text-sm text-muted-foreground mt-1 italic">{shift.notes}</p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="flex items-center gap-4">
-                                <div>
-                                  <p className="text-xs text-muted-foreground">Start</p>
-                                  <p className="font-mono font-medium text-green-600">{shift.startTime}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground">End</p>
-                                  <p className="font-mono font-medium text-red-600">{shift.endTime}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-8 bg-muted/50">
+                    <div className="p-3 font-medium text-sm border-r">Staff</div>
+                    {rosterWeekDays.map((day, i) => (
+                      <div 
+                        key={i} 
+                        className={`p-3 text-center text-sm border-r last:border-r-0 ${
+                          isSameDay(day, new Date()) ? "bg-blue-100 dark:bg-blue-950/50 font-bold" : ""
+                        }`}
+                      >
+                        <div className="font-medium">{format(day, "EEE")}</div>
+                        <div className="text-muted-foreground">{format(day, "MMM d")}</div>
+                      </div>
+                    ))}
                   </div>
-                </ScrollArea>
+                  <div className="grid grid-cols-8 border-t">
+                    <div className="p-3 border-r flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="overflow-hidden">
+                        <div className="text-sm font-medium truncate">{userName}</div>
+                        <div className="text-xs text-muted-foreground">{userRole}</div>
+                      </div>
+                    </div>
+                    {rosterWeekDays.map((day, i) => {
+                      const shifts = getShiftsForDay(day);
+                      const isToday = isSameDay(day, new Date());
+                      return (
+                        <div 
+                          key={i} 
+                          className={`p-2 border-r last:border-r-0 min-h-[80px] ${
+                            isToday ? "bg-blue-50/50 dark:bg-blue-950/20" : ""
+                          }`}
+                        >
+                          {shifts.length === 0 ? (
+                            <div className="text-center text-muted-foreground text-xs py-4">-</div>
+                          ) : (
+                            <div className="space-y-1">
+                              {shifts.map(shift => (
+                                <div 
+                                  key={shift.id}
+                                  className={`p-2 rounded text-xs ${shiftColors[shift.shiftType] || "bg-blue-600"} text-white`}
+                                  data-testid={`roster-shift-${shift.id}`}
+                                >
+                                  <div className="font-medium">{shift.shiftType}</div>
+                                  <div className="opacity-90">{shift.startTime} - {shift.endTime}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
