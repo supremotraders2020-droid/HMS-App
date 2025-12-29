@@ -890,7 +890,10 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">{task.taskDescription}</p>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
-                            <span>{staffMember?.fullName || "Unknown"}</span>
+                            <span className="flex items-center gap-1">
+                              {staffMember?.fullName || "Unknown"}
+                              {staffMember?.role && <Badge variant="outline" className="text-[10px] px-1 py-0">{staffMember.role}</Badge>}
+                            </span>
                             <span>{task.department}</span>
                             <span>{format(new Date(task.createdAt), "MMM d, h:mm a")}</span>
                           </div>
@@ -958,9 +961,11 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                             <User className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <div className="font-medium">{staffMember?.fullName || "Unknown"}</div>
+                            <div className="font-medium flex items-center gap-2">
+                              {staffMember?.fullName || "Unknown"}
+                              {staffMember?.role && <Badge variant="secondary" className="text-xs">{staffMember.role}</Badge>}
+                            </div>
                             <div className="text-sm text-muted-foreground">
-                              {staffMember?.role && <Badge variant="outline" className="mr-2">{staffMember.role}</Badge>}
                               {format(parseISO(record.date), "EEEE, MMMM d, yyyy")}
                             </div>
                           </div>
@@ -1066,6 +1071,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium">{staffMember?.fullName || "Unknown"}</span>
+                                {staffMember?.role && <Badge variant="secondary" className="text-xs">{staffMember.role}</Badge>}
                                 <Badge variant="outline">{leave.leaveType}</Badge>
                                 <Badge className={statusColors[leave.status]}>{leave.status}</Badge>
                               </div>
@@ -1123,7 +1129,8 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium">{staffMember?.fullName || "Unknown"}</span>
-                                <Badge variant="secondary">{ot.hours} hours</Badge>
+                                {staffMember?.role && <Badge variant="secondary" className="text-xs">{staffMember.role}</Badge>}
+                                <Badge variant="outline">{ot.hours} hours</Badge>
                                 <Badge className={statusColors[ot.status]}>{ot.status}</Badge>
                               </div>
                               <p className="text-sm text-muted-foreground mt-1">
@@ -1180,7 +1187,10 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                         <div key={metric.id} className="p-4 border rounded-lg" data-testid={`performance-${metric.id}`}>
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <div className="font-medium">{staffMember?.fullName || "Unknown"}</div>
+                              <div className="font-medium flex items-center gap-2">
+                                {staffMember?.fullName || "Unknown"}
+                                {staffMember?.role && <Badge variant="secondary" className="text-xs">{staffMember.role}</Badge>}
+                              </div>
                               <div className="text-sm text-muted-foreground">
                                 {format(parseISO(metric.periodStart), "MMM d")} - {format(parseISO(metric.periodEnd), "MMM d, yyyy")}
                               </div>
