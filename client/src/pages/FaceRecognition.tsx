@@ -117,7 +117,7 @@ export default function FaceRecognition() {
 
   const consentMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/face-recognition/consent", "POST", data);
+      return await apiRequest("POST", "/api/face-recognition/consent", data);
     },
     onSuccess: () => {
       toast({ title: "Consent recorded successfully" });
@@ -129,7 +129,7 @@ export default function FaceRecognition() {
 
   const embeddingMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/face-recognition/embeddings", "POST", data);
+      return await apiRequest("POST", "/api/face-recognition/embeddings", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/face-recognition/stats"] });
@@ -146,7 +146,7 @@ export default function FaceRecognition() {
 
   const matchMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/face-recognition/match", "POST", data);
+      return await apiRequest("POST", "/api/face-recognition/match", data);
     },
     onSuccess: (result) => {
       setRecognitionResult(result);
@@ -159,7 +159,7 @@ export default function FaceRecognition() {
 
   const attendanceMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/face-recognition/attendance", "POST", data);
+      return await apiRequest("POST", "/api/face-recognition/attendance", data);
     },
     onSuccess: (result: any) => {
       toast({ 
@@ -175,7 +175,7 @@ export default function FaceRecognition() {
 
   const resolveAlertMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
-      return await apiRequest(`/api/face-recognition/duplicate-alerts/${id}/resolve`, "POST", { status, notes });
+      return await apiRequest("POST", `/api/face-recognition/duplicate-alerts/${id}/resolve`, { status, notes });
     },
     onSuccess: () => {
       toast({ title: "Alert resolved successfully" });
@@ -191,7 +191,7 @@ export default function FaceRecognition() {
 
   const settingsMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/face-recognition/settings", "POST", data);
+      return await apiRequest("POST", "/api/face-recognition/settings", data);
     },
     onSuccess: () => {
       toast({ title: "Setting updated" });
