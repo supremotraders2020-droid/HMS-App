@@ -10908,7 +10908,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const user = req.user as any;
       const source = await storage.createReferralSource({ 
         ...req.body, 
-        tenantId: user.tenantId,
+        tenantId: user.tenantId || user.hospitalName || "default",
         createdBy: user.id 
       });
       res.status(201).json(source);
@@ -10960,7 +10960,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const user = req.user as any;
       const referral = await storage.createPatientReferral({ 
         ...req.body, 
-        tenantId: user.tenantId,
+        tenantId: user.tenantId || user.hospitalName || "default",
         createdBy: user.id 
       });
       res.status(201).json(referral);
