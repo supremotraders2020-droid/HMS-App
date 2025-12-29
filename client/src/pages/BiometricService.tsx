@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -41,7 +43,15 @@ import {
   HeartPulse,
   Scan,
   FileCheck,
-  RefreshCw
+  RefreshCw,
+  Camera,
+  UserCheck,
+  UserX,
+  Eye,
+  Download,
+  Sparkles,
+  Video,
+  VideoOff
 } from "lucide-react";
 import type { BiometricTemplate, BiometricVerification, ServicePatient } from "@shared/schema";
 
@@ -52,6 +62,34 @@ interface BiometricStats {
   successfulVerifications: number;
   fingerprintTemplates: number;
   faceTemplates: number;
+}
+
+interface FaceRecognitionStats {
+  total: number;
+  successful: number;
+  failed: number;
+  avgConfidence: number;
+  activeEmbeddings: number;
+  patientEmbeddings: number;
+  staffEmbeddings: number;
+  pendingDuplicateAlerts: number;
+  settings: Record<string, string>;
+}
+
+interface RecognitionLog {
+  id: string;
+  userType: string;
+  matchedUserId: string | null;
+  confidenceScore: string;
+  matchStatus: string;
+  location: string;
+  purpose: string;
+  createdAt: string;
+}
+
+interface FaceDetection {
+  box: { x: number; y: number; width: number; height: number };
+  score: number;
 }
 
 const storeFormSchema = z.object({
@@ -82,8 +120,39 @@ export default function BiometricService() {
   } | null>(null);
   const { toast } = useToast();
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  const verifyVideoRef = useRef<HTMLVideoElement>(null);
+  const verifyCanvasRef = useRef<HTMLCanvasElement>(null);
+  const verifyOverlayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const verifyAnimationFrameRef = useRef<number | null>(null);
+
+  const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [isVerifyCapturing, setIsVerifyCapturing] = useState(false);
+  const [capturedFace, setCapturedFace] = useState<string | null>(null);
+  const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserType, setSelectedUserType] = useState("PATIENT");
+  const [recognitionResult, setRecognitionResult] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentDetection, setCurrentDetection] = useState<FaceDetection | null>(null);
+  const [verifyCurrentDetection, setVerifyCurrentDetection] = useState<FaceDetection | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [faceQuality, setFaceQuality] = useState(0);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [savedUserInfo, setSavedUserInfo] = useState<{userId: string; userType: string} | null>(null);
+
   const { data: stats, isLoading: statsLoading } = useQuery<BiometricStats>({
     queryKey: ["/api/biometric/stats"],
+  });
+
+  const { data: faceStats } = useQuery<FaceRecognitionStats>({
+    queryKey: ["/api/face-recognition/stats"],
   });
 
   const { data: templates = [], isLoading: templatesLoading } = useQuery<BiometricTemplate[]>({
@@ -94,8 +163,16 @@ export default function BiometricService() {
     queryKey: ["/api/biometric/verifications"],
   });
 
+  const { data: recognitionLogs = [] } = useQuery<RecognitionLog[]>({
+    queryKey: ["/api/face-recognition/logs"],
+  });
+
   const { data: patients = [] } = useQuery<ServicePatient[]>({
     queryKey: ["/api/patients/service"],
+  });
+
+  const { data: users = [] } = useQuery<any[]>({
+    queryKey: ["/api/users"],
   });
 
   const storeForm = useForm<StoreFormData>({
@@ -112,6 +189,88 @@ export default function BiometricService() {
     defaultValues: {
       patientId: "",
       biometricType: "fingerprint",
+    },
+  });
+
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/dist/face-api.js';
+        script.async = true;
+        script.onload = async () => {
+          try {
+            const modelPath = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.14/model';
+            await (window as any).faceapi.nets.ssdMobilenetv1.loadFromUri(modelPath);
+            await (window as any).faceapi.nets.faceLandmark68Net.loadFromUri(modelPath);
+            await (window as any).faceapi.nets.faceRecognitionNet.loadFromUri(modelPath);
+            await (window as any).faceapi.nets.faceExpressionNet.loadFromUri(modelPath);
+            setIsModelLoaded(true);
+            toast({ title: "Face recognition models loaded (SSD MobileNet)" });
+          } catch (modelError) {
+            console.error("Error loading face-api models:", modelError);
+            toast({ title: "Failed to load face models", description: "Check console for details", variant: "destructive" });
+          }
+        };
+        script.onerror = () => {
+          toast({ title: "Failed to load face-api library", variant: "destructive" });
+        };
+        document.body.appendChild(script);
+      } catch (error) {
+        console.error("Error loading face-api:", error);
+        toast({ title: "Failed to load face recognition models", variant: "destructive" });
+      }
+    };
+    loadModels();
+  }, []);
+
+  useEffect(() => {
+    setSelectedUserId("");
+  }, [selectedUserType]);
+
+  const consentMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/face-recognition/consent", data);
+    },
+    onSuccess: () => {
+      toast({ title: "Consent recorded successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to record consent", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const embeddingMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/face-recognition/embeddings", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/face-recognition/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/biometric/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/biometric/templates"] });
+      setSavedUserInfo({ userId: selectedUserId, userType: selectedUserType });
+      setSuccessDialogOpen(true);
+      setCapturedFace(null);
+      setFaceDescriptor(null);
+      setCurrentDetection(null);
+      stopCamera();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to save face data", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const matchMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/face-recognition/match", data);
+    },
+    onSuccess: (result) => {
+      setRecognitionResult(result);
+      queryClient.invalidateQueries({ queryKey: ["/api/face-recognition/logs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/biometric/verifications"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Recognition failed", description: error.message, variant: "destructive" });
     },
   });
 
@@ -181,6 +340,425 @@ export default function BiometricService() {
     },
   });
 
+  const drawFaceOverlay = useCallback((detection: FaceDetection | null, isAnalyzing: boolean, overlayCanvas: HTMLCanvasElement | null, video: HTMLVideoElement | null) => {
+    if (!overlayCanvas || !video) return;
+
+    const ctx = overlayCanvas.getContext('2d');
+    if (!ctx) return;
+
+    overlayCanvas.width = video.videoWidth || 640;
+    overlayCanvas.height = video.videoHeight || 480;
+    ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    if (detection) {
+      const { x, y, width, height } = detection.box;
+      const time = Date.now() / 1000;
+      
+      ctx.strokeStyle = isAnalyzing ? `hsl(${(time * 60) % 360}, 100%, 50%)` : '#22c55e';
+      ctx.lineWidth = 3;
+      
+      const cornerLength = 20;
+      ctx.beginPath();
+      ctx.moveTo(x, y + cornerLength);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x + cornerLength, y);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(x + width - cornerLength, y);
+      ctx.lineTo(x + width, y);
+      ctx.lineTo(x + width, y + cornerLength);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(x + width, y + height - cornerLength);
+      ctx.lineTo(x + width, y + height);
+      ctx.lineTo(x + width - cornerLength, y + height);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(x + cornerLength, y + height);
+      ctx.lineTo(x, y + height);
+      ctx.lineTo(x, y + height - cornerLength);
+      ctx.stroke();
+
+      if (isAnalyzing) {
+        const scanLineY = y + ((time * 100) % height);
+        const gradient = ctx.createLinearGradient(x, scanLineY - 10, x, scanLineY + 10);
+        gradient.addColorStop(0, 'rgba(34, 197, 94, 0)');
+        gradient.addColorStop(0.5, 'rgba(34, 197, 94, 0.8)');
+        gradient.addColorStop(1, 'rgba(34, 197, 94, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, scanLineY - 10, width, 20);
+      }
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(x, y - 30, 120, 25);
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(`Quality: ${(detection.score * 100).toFixed(0)}%`, x + 8, y - 12);
+    }
+  }, []);
+
+  const l2Normalize = useCallback((vector: number[]): number[] => {
+    const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+    if (norm === 0) return vector;
+    return vector.map(val => val / norm);
+  }, []);
+
+  const detectFaceContinuously = useCallback(async () => {
+    if (!videoRef.current || !isModelLoaded || !isCapturing) return;
+
+    const faceApi = (window as any).faceapi;
+    const detection = await faceApi.detectSingleFace(
+      videoRef.current, 
+      new faceApi.SsdMobilenetv1Options({ minConfidence: 0.5 })
+    );
+
+    if (detection) {
+      const box = detection.box;
+      setCurrentDetection({
+        box: { x: box.x, y: box.y, width: box.width, height: box.height },
+        score: detection.score
+      });
+      setFaceQuality(detection.score * 100);
+    } else {
+      setCurrentDetection(null);
+      setFaceQuality(0);
+    }
+
+    drawFaceOverlay(currentDetection, isScanning, overlayCanvasRef.current, videoRef.current);
+    animationFrameRef.current = requestAnimationFrame(detectFaceContinuously);
+  }, [isModelLoaded, isCapturing, currentDetection, isScanning, drawFaceOverlay]);
+
+  const detectFaceForVerify = useCallback(async () => {
+    if (!verifyVideoRef.current || !isModelLoaded || !isVerifyCapturing) return;
+
+    const faceApi = (window as any).faceapi;
+    const detection = await faceApi.detectSingleFace(
+      verifyVideoRef.current, 
+      new faceApi.SsdMobilenetv1Options({ minConfidence: 0.5 })
+    );
+
+    if (detection) {
+      const box = detection.box;
+      setVerifyCurrentDetection({
+        box: { x: box.x, y: box.y, width: box.width, height: box.height },
+        score: detection.score
+      });
+    } else {
+      setVerifyCurrentDetection(null);
+    }
+
+    drawFaceOverlay(verifyCurrentDetection, isScanning, verifyOverlayCanvasRef.current, verifyVideoRef.current);
+    verifyAnimationFrameRef.current = requestAnimationFrame(detectFaceForVerify);
+  }, [isModelLoaded, isVerifyCapturing, verifyCurrentDetection, isScanning, drawFaceOverlay]);
+
+  useEffect(() => {
+    if (isCapturing && isModelLoaded) {
+      animationFrameRef.current = requestAnimationFrame(detectFaceContinuously);
+    }
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isCapturing, isModelLoaded, detectFaceContinuously]);
+
+  useEffect(() => {
+    if (isVerifyCapturing && isModelLoaded) {
+      verifyAnimationFrameRef.current = requestAnimationFrame(detectFaceForVerify);
+    }
+    return () => {
+      if (verifyAnimationFrameRef.current) {
+        cancelAnimationFrame(verifyAnimationFrameRef.current);
+      }
+    };
+  }, [isVerifyCapturing, isModelLoaded, detectFaceForVerify]);
+
+  const stopCamera = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    
+    if (videoRef.current) {
+      videoRef.current.pause();
+      if (videoRef.current.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    }
+    
+    if (overlayCanvasRef.current) {
+      const ctx = overlayCanvasRef.current.getContext('2d');
+      ctx?.clearRect(0, 0, overlayCanvasRef.current.width, overlayCanvasRef.current.height);
+    }
+    
+    setIsCapturing(false);
+    setCurrentDetection(null);
+    setIsScanning(false);
+    setScanProgress(0);
+    setIsProcessing(false);
+  }, []);
+
+  const stopVerifyCamera = useCallback(() => {
+    if (verifyAnimationFrameRef.current) {
+      cancelAnimationFrame(verifyAnimationFrameRef.current);
+      verifyAnimationFrameRef.current = null;
+    }
+    
+    if (verifyVideoRef.current) {
+      verifyVideoRef.current.pause();
+      if (verifyVideoRef.current.srcObject) {
+        const tracks = (verifyVideoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+        verifyVideoRef.current.srcObject = null;
+      }
+    }
+    
+    if (verifyOverlayCanvasRef.current) {
+      const ctx = verifyOverlayCanvasRef.current.getContext('2d');
+      ctx?.clearRect(0, 0, verifyOverlayCanvasRef.current.width, verifyOverlayCanvasRef.current.height);
+    }
+    
+    setIsVerifyCapturing(false);
+    setVerifyCurrentDetection(null);
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast({ 
+          title: "Camera not supported", 
+          description: "Your browser doesn't support camera access. Please use a modern browser.", 
+          variant: "destructive" 
+        });
+        return;
+      }
+      
+      stopCamera();
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 640 }, 
+          height: { ideal: 480 }, 
+          facingMode: "user" 
+        } 
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        setIsCapturing(true);
+        toast({ title: "Camera started", description: "Position your face in the center of the frame" });
+      }
+    } catch (error: any) {
+      console.error("Error accessing camera:", error);
+      let message = "Please check camera permissions in your browser settings.";
+      if (error.name === "NotAllowedError") {
+        message = "Camera access denied. Please allow camera permissions and try again.";
+      } else if (error.name === "NotFoundError") {
+        message = "No camera found. Please connect a camera and try again.";
+      } else if (error.name === "NotReadableError") {
+        message = "Camera is in use by another application. Please close other apps using the camera.";
+      }
+      toast({ title: "Failed to access camera", description: message, variant: "destructive" });
+    }
+  }, [toast, stopCamera]);
+
+  const startVerifyCamera = useCallback(async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast({ 
+          title: "Camera not supported", 
+          description: "Your browser doesn't support camera access.", 
+          variant: "destructive" 
+        });
+        return;
+      }
+      
+      stopVerifyCamera();
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 640 }, 
+          height: { ideal: 480 }, 
+          facingMode: "user" 
+        } 
+      });
+      
+      if (verifyVideoRef.current) {
+        verifyVideoRef.current.srcObject = stream;
+        await verifyVideoRef.current.play();
+        setIsVerifyCapturing(true);
+        toast({ title: "Camera started for verification" });
+      }
+    } catch (error: any) {
+      console.error("Error accessing camera:", error);
+      toast({ title: "Failed to access camera", variant: "destructive" });
+    }
+  }, [toast, stopVerifyCamera]);
+
+  const captureAndAnalyzeFace = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current || !isModelLoaded) return;
+    
+    setIsScanning(true);
+    setIsProcessing(true);
+    setScanProgress(0);
+    
+    const progressInterval = setInterval(() => {
+      setScanProgress(prev => Math.min(prev + 10, 90));
+    }, 200);
+    
+    try {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx?.drawImage(video, 0, 0);
+      
+      const faceApi = (window as any).faceapi;
+      const detection = await faceApi
+        .detectSingleFace(video, new faceApi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      
+      clearInterval(progressInterval);
+      setScanProgress(100);
+      
+      if (detection) {
+        const qualityScore = detection.detection.score * 100;
+        
+        if (qualityScore < 50) {
+          toast({ 
+            title: "Low quality face capture", 
+            description: "Please improve lighting and face position", 
+            variant: "destructive" 
+          });
+          setTimeout(() => {
+            setIsScanning(false);
+            setIsProcessing(false);
+            setScanProgress(0);
+          }, 500);
+          return;
+        }
+        
+        const rawDescriptor = Array.from(detection.descriptor) as number[];
+        const normalizedDescriptor = l2Normalize(rawDescriptor);
+        
+        setCapturedFace(canvas.toDataURL('image/jpeg', 0.8));
+        setFaceDescriptor(normalizedDescriptor);
+        setFaceQuality(qualityScore);
+        toast({ 
+          title: "Face Analysis Complete (SSD MobileNet)", 
+          description: `Quality: ${qualityScore.toFixed(1)}% | 128-d L2 Normalized` 
+        });
+      } else {
+        toast({ title: "No face detected", description: "Please ensure your face is clearly visible", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Error capturing face:", error);
+      clearInterval(progressInterval);
+      toast({ title: "Face capture failed", variant: "destructive" });
+    }
+    
+    setTimeout(() => {
+      setIsScanning(false);
+      setIsProcessing(false);
+      setScanProgress(0);
+    }, 500);
+  }, [isModelLoaded, toast, l2Normalize]);
+
+  const captureAndVerifyFace = useCallback(async () => {
+    if (!verifyVideoRef.current || !verifyCanvasRef.current || !isModelLoaded) return;
+    
+    setIsScanning(true);
+    setIsProcessing(true);
+    setScanProgress(0);
+    
+    const progressInterval = setInterval(() => {
+      setScanProgress(prev => Math.min(prev + 10, 90));
+    }, 200);
+    
+    try {
+      const video = verifyVideoRef.current;
+      const canvas = verifyCanvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx?.drawImage(video, 0, 0);
+      
+      const faceApi = (window as any).faceapi;
+      const detection = await faceApi
+        .detectSingleFace(video, new faceApi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      
+      clearInterval(progressInterval);
+      setScanProgress(100);
+      
+      if (detection) {
+        const rawDescriptor = Array.from(detection.descriptor) as number[];
+        const normalizedDescriptor = l2Normalize(rawDescriptor);
+        setFaceDescriptor(normalizedDescriptor);
+        toast({ title: "Face captured for verification" });
+      } else {
+        toast({ title: "No face detected", variant: "destructive" });
+      }
+    } catch (error) {
+      clearInterval(progressInterval);
+      toast({ title: "Face capture failed", variant: "destructive" });
+    }
+    
+    setTimeout(() => {
+      setIsScanning(false);
+      setIsProcessing(false);
+      setScanProgress(0);
+    }, 500);
+  }, [isModelLoaded, toast, l2Normalize]);
+
+  const handleSaveEmbedding = () => {
+    if (!faceDescriptor || !selectedUserId) {
+      toast({ title: "Please select a user and capture a face", variant: "destructive" });
+      return;
+    }
+    
+    consentMutation.mutate({
+      userId: selectedUserId,
+      userType: selectedUserType,
+      consentStatus: true,
+    }, {
+      onSuccess: () => {
+        embeddingMutation.mutate({
+          userId: selectedUserId,
+          userType: selectedUserType,
+          embeddingVector: faceDescriptor,
+          faceQualityScore: faceQuality,
+          captureLocation: "REGISTRATION",
+        });
+      },
+    });
+  };
+
+  const handleFaceRecognition = () => {
+    if (!faceDescriptor) {
+      toast({ title: "Please capture a face first", variant: "destructive" });
+      return;
+    }
+    
+    matchMutation.mutate({
+      embeddingVector: faceDescriptor,
+      userType: selectedUserType,
+      purpose: "VERIFICATION",
+      location: "BIOMETRIC_SERVICE",
+    });
+  };
+
   const handleStore = (data: StoreFormData) => {
     storeMutation.mutate(data);
   };
@@ -207,9 +785,25 @@ export default function BiometricService() {
     return `${patient.firstName} ${patient.lastName}`;
   };
 
+  const getUserName = (userId: string) => {
+    const user = users?.find(u => String(u.id) === String(userId));
+    return user?.name || user?.username || userId;
+  };
+
+  const getFilteredUsers = () => {
+    return users?.filter(u => {
+      if (selectedUserType === "PATIENT") return u.role === "PATIENT";
+      if (selectedUserType === "DOCTOR") return u.role === "DOCTOR";
+      if (selectedUserType === "NURSE") return u.role === "NURSE";
+      if (selectedUserType === "STAFF") return !["PATIENT", "DOCTOR", "NURSE", "ADMIN"].includes(u.role);
+      return false;
+    }) || [];
+  };
+
+  const watchedBiometricType = storeForm.watch("biometricType");
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50/50 to-white dark:from-slate-900 dark:to-slate-950 flex flex-col">
-      {/* Hospital Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white">
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -236,12 +830,18 @@ export default function BiometricService() {
                 <Lock className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">AES-256 </span>Encrypted
               </Badge>
+              <Badge 
+                className={`text-xs ${isModelLoaded ? "bg-green-500/20 text-green-100 border-green-400/30" : "bg-yellow-500/20 text-yellow-100 border-yellow-400/30"}`}
+                data-testid="badge-model-status"
+              >
+                <ScanFace className="h-3 w-3 mr-1" />
+                {isModelLoaded ? "Face AI Ready" : "Loading AI..."}
+              </Badge>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Page Title Section */}
       <div className="bg-white dark:bg-slate-900 border-b shadow-sm">
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -254,12 +854,15 @@ export default function BiometricService() {
                   Biometric Service
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                  Secure patient identification system
+                  Fingerprint & Face Recognition System
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="w-full sm:w-auto" data-testid="button-refresh">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" data-testid="button-refresh" onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/biometric/stats"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/face-recognition/stats"] });
+              }}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
@@ -268,7 +871,6 @@ export default function BiometricService() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 gap-1 bg-blue-50 dark:bg-slate-800 p-1">
@@ -310,7 +912,6 @@ export default function BiometricService() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6 mt-6">
             {statsLoading ? (
               <div className="flex items-center justify-center h-64">
@@ -318,7 +919,6 @@ export default function BiometricService() {
               </div>
             ) : (
               <>
-                {/* Stats Cards */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <Card className="border-l-4 border-l-blue-500" data-testid="card-total-patients">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
@@ -339,75 +939,69 @@ export default function BiometricService() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-l-4 border-l-green-500" data-testid="card-total-templates">
+                  <Card className="border-l-4 border-l-purple-500" data-testid="card-registered-faces">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                       <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                        Total Templates
+                        Registered Faces
                       </CardTitle>
-                      <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-lg">
-                        <Database className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <div className="bg-purple-100 dark:bg-purple-900/50 p-2 rounded-lg">
+                        <ScanFace className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                        {stats?.totalTemplates || 0}
+                        {faceStats?.activeEmbeddings || 0}
                       </div>
                       <div className="flex gap-2 mt-2">
                         <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                          <Fingerprint className="h-3 w-3 mr-1" />
-                          {stats?.fingerprintTemplates || 0}
+                          Patients: {faceStats?.patientEmbeddings || 0}
                         </Badge>
-                        <Badge variant="secondary" className="text-xs bg-purple-50 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
-                          <ScanFace className="h-3 w-3 mr-1" />
-                          {stats?.faceTemplates || 0}
+                        <Badge variant="secondary" className="text-xs bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-300">
+                          Staff: {faceStats?.staffEmbeddings || 0}
                         </Badge>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-l-4 border-l-amber-500" data-testid="card-verifications-today">
+                  <Card className="border-l-4 border-l-green-500" data-testid="card-successful-matches">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                       <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                        Today's Verifications
+                        Successful Matches
                       </CardTitle>
-                      <div className="bg-amber-100 dark:bg-amber-900/50 p-2 rounded-lg">
-                        <Activity className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-lg">
+                        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                        {stats?.verificationsToday || 0}
+                        {faceStats?.successful || 0}
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Identity checks performed
+                        Face recognition matches
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-l-4 border-l-emerald-500" data-testid="card-success-rate">
+                  <Card className="border-l-4 border-l-amber-500" data-testid="card-alerts">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                       <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                        Success Rate
+                        Pending Alerts
                       </CardTitle>
-                      <div className="bg-emerald-100 dark:bg-emerald-900/50 p-2 rounded-lg">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      <div className="bg-amber-100 dark:bg-amber-900/50 p-2 rounded-lg">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                        {stats?.verificationsToday ? 
-                          Math.round((stats.successfulVerifications / stats.verificationsToday) * 100) : 100}%
+                        {faceStats?.pendingDuplicateAlerts || 0}
                       </div>
-                      <Progress 
-                        value={stats?.verificationsToday ? 
-                          Math.round((stats.successfulVerifications / stats.verificationsToday) * 100) : 100} 
-                        className="mt-2 h-2" 
-                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Duplicate face alerts
+                      </p>
                     </CardContent>
                   </Card>
                 </div>
 
-                {/* Security Status & Recent Activity */}
                 <div className="grid gap-6 md:grid-cols-2">
                   <Card data-testid="card-security-status">
                     <CardHeader>
@@ -436,6 +1030,21 @@ export default function BiometricService() {
                       <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg border border-emerald-200 dark:border-emerald-800">
                         <div className="flex items-center gap-3">
                           <div className="bg-emerald-500 p-2 rounded-full">
+                            <ScanFace className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <span className="font-medium text-slate-900 dark:text-white">Face AI Model</span>
+                            <p className="text-xs text-slate-500">SSD MobileNet v1</p>
+                          </div>
+                        </div>
+                        <Badge className={isModelLoaded ? "bg-emerald-500 hover:bg-emerald-600" : "bg-amber-500 hover:bg-amber-600"}>
+                          {isModelLoaded ? "Loaded" : "Loading"}
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-emerald-500 p-2 rounded-full">
                             <FileCheck className="h-4 w-4 text-white" />
                           </div>
                           <div>
@@ -446,30 +1055,17 @@ export default function BiometricService() {
                         <Badge className="bg-emerald-500 hover:bg-emerald-600">Compliant</Badge>
                       </div>
 
-                      <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-emerald-500 p-2 rounded-full">
-                            <Lock className="h-4 w-4 text-white" />
-                          </div>
-                          <div>
-                            <span className="font-medium text-slate-900 dark:text-white">Secure Connection</span>
-                            <p className="text-xs text-slate-500">Transport layer security</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-emerald-500 hover:bg-emerald-600">TLS 1.3</Badge>
-                      </div>
-
                       <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
                         <div className="flex items-center gap-3">
                           <div className="bg-blue-500 p-2 rounded-full">
                             <Database className="h-4 w-4 text-white" />
                           </div>
                           <div>
-                            <span className="font-medium text-slate-900 dark:text-white">Data Storage</span>
-                            <p className="text-xs text-slate-500">At-rest encryption</p>
+                            <span className="font-medium text-slate-900 dark:text-white">Face Embeddings</span>
+                            <p className="text-xs text-slate-500">128-D L2 Normalized</p>
                           </div>
                         </div>
-                        <Badge className="bg-blue-500 hover:bg-blue-600">Encrypted</Badge>
+                        <Badge className="bg-blue-500 hover:bg-blue-600">Secure</Badge>
                       </div>
                     </CardContent>
                   </Card>
@@ -478,38 +1074,34 @@ export default function BiometricService() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg">
                         <Clock className="h-5 w-5 text-blue-600" />
-                        Recent Verifications
+                        Recent Activity
                       </CardTitle>
                       <CardDescription>
-                        Latest identity verification attempts
+                        Latest verification and recognition attempts
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {verificationsLoading ? (
-                        <div className="flex items-center justify-center h-48">
-                          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                        </div>
-                      ) : verifications.length === 0 ? (
+                      {recognitionLogs.length === 0 && verifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-48 text-slate-400">
                           <History className="h-12 w-12 mb-3" />
-                          <p className="font-medium">No Recent Verifications</p>
-                          <p className="text-sm">Verification history will appear here</p>
+                          <p className="font-medium">No Recent Activity</p>
+                          <p className="text-sm">Activity history will appear here</p>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          {verifications.slice(0, 5).map((verification) => (
+                        <div className="space-y-3 max-h-64 overflow-y-auto">
+                          {recognitionLogs.slice(0, 5).map((log) => (
                             <div 
-                              key={verification.id} 
+                              key={log.id} 
                               className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
-                              data-testid={`verification-${verification.id}`}
+                              data-testid={`log-${log.id}`}
                             >
                               <div className="flex items-center gap-3">
                                 <div className={`p-2 rounded-full ${
-                                  verification.isMatch 
+                                  log.matchStatus === "MATCHED" 
                                     ? "bg-emerald-100 dark:bg-emerald-900/50" 
                                     : "bg-red-100 dark:bg-red-900/50"
                                 }`}>
-                                  {verification.isMatch ? (
+                                  {log.matchStatus === "MATCHED" ? (
                                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                                   ) : (
                                     <XCircle className="h-4 w-4 text-red-600" />
@@ -517,24 +1109,20 @@ export default function BiometricService() {
                                 </div>
                                 <div>
                                   <p className="font-medium text-sm text-slate-900 dark:text-white">
-                                    {getPatientName(verification.patientId)}
+                                    {log.matchedUserId ? getUserName(log.matchedUserId) : "Unknown"}
                                   </p>
                                   <p className="text-xs text-slate-500 flex items-center gap-1">
-                                    {verification.biometricType === "fingerprint" ? (
-                                      <Fingerprint className="h-3 w-3" />
-                                    ) : (
-                                      <ScanFace className="h-3 w-3" />
-                                    )}
-                                    {verification.biometricType === "fingerprint" ? "Fingerprint" : "Face"} scan
+                                    <ScanFace className="h-3 w-3" />
+                                    {log.userType} - {log.purpose}
                                   </p>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <Badge variant={verification.isMatch ? "default" : "destructive"} className="mb-1">
-                                  {verification.confidenceScore}%
+                                <Badge variant={log.matchStatus === "MATCHED" ? "default" : "destructive"} className="mb-1">
+                                  {(parseFloat(log.confidenceScore) * 100).toFixed(0)}%
                                 </Badge>
                                 <p className="text-xs text-slate-400">
-                                  {formatDate(verification.verifiedAt)}
+                                  {formatDate(log.createdAt)}
                                 </p>
                               </div>
                             </div>
@@ -548,199 +1136,249 @@ export default function BiometricService() {
             )}
           </TabsContent>
 
-          {/* Store/Enroll Tab */}
           <TabsContent value="store" className="space-y-6 mt-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card data-testid="card-store-biometric">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card data-testid="card-face-capture">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Fingerprint className="h-5 w-5 text-blue-600" />
-                    Capture Biometric Data
+                    <Camera className="h-5 w-5 text-blue-600" />
+                    Face Capture
                   </CardTitle>
                   <CardDescription>
-                    Enroll patient biometric data for secure identification
+                    Capture face data using camera for biometric enrollment
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Form {...storeForm}>
-                    <form onSubmit={storeForm.handleSubmit(handleStore)} className="space-y-5">
-                      <FormField
-                        control={storeForm.control}
-                        name="patientId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-slate-700 dark:text-slate-300">Select Patient</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || ""}>
-                              <FormControl>
-                                <SelectTrigger className="h-11" data-testid="select-patient-store">
-                                  <SelectValue placeholder="Choose a patient to enroll..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {patients.map((patient) => (
-                                  <SelectItem key={patient.id} value={patient.id}>
-                                    {getPatientDisplay(patient)} ({patient.id.slice(0, 8)})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={storeForm.control}
-                        name="biometricType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-slate-700 dark:text-slate-300">Biometric Type</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || "fingerprint"}>
-                              <FormControl>
-                                <SelectTrigger className="h-11" data-testid="select-biometric-type-store">
-                                  <SelectValue placeholder="Select biometric type..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="fingerprint">
-                                  <div className="flex items-center gap-2">
-                                    <Fingerprint className="h-4 w-4 text-blue-600" />
-                                    <span>Fingerprint Scan</span>
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="face">
-                                  <div className="flex items-center gap-2">
-                                    <ScanFace className="h-4 w-4 text-purple-600" />
-                                    <span>Face Recognition</span>
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={storeForm.control}
-                        name="quality"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-slate-700 dark:text-slate-300">Quality Threshold (%)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                min={0} 
-                                max={100} 
-                                placeholder="90"
-                                className="h-11"
-                                data-testid="input-quality"
-                                {...field}
-                                value={field.value ?? ""}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <Button 
-                        type="submit" 
-                        className="w-full h-11 bg-blue-600 hover:bg-blue-700"
-                        disabled={storeMutation.isPending || scanningBiometric}
-                        data-testid="button-capture-biometric"
-                      >
-                        {scanningBiometric ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Scanning Biometric...
-                          </>
-                        ) : (
-                          <>
-                            <Fingerprint className="h-4 w-4 mr-2" />
-                            Capture & Store Biometric
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-
-              <Card data-testid="card-scanner-preview">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    {storeForm.watch("biometricType") === "face" ? (
-                      <ScanFace className="h-5 w-5 text-purple-600" />
-                    ) : (
-                      <Fingerprint className="h-5 w-5 text-blue-600" />
+                <CardContent className="space-y-4">
+                  <div className="relative bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden aspect-video">
+                    <video 
+                      ref={videoRef} 
+                      autoPlay 
+                      muted 
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <canvas 
+                      ref={overlayCanvasRef} 
+                      className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+                    
+                    {!isCapturing && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <Button onClick={startCamera} disabled={!isModelLoaded} size="lg" data-testid="button-start-camera">
+                          <Camera className="mr-2 h-5 w-5" />
+                          Start Camera
+                        </Button>
+                      </div>
                     )}
-                    Scanner Preview
-                  </CardTitle>
-                  <CardDescription>
-                    Live biometric capture interface
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="aspect-square bg-gradient-to-br from-blue-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-blue-300 dark:border-blue-700">
-                    {scanningBiometric ? (
-                      <div className="text-center space-y-4">
-                        <div className="relative">
-                          {storeForm.watch("biometricType") === "face" ? (
-                            <ScanFace className="h-24 w-24 text-blue-600 animate-pulse" />
-                          ) : (
-                            <Fingerprint className="h-24 w-24 text-blue-600 animate-pulse" />
-                          )}
-                          <div className="absolute inset-0 border-4 border-blue-500/50 rounded-lg animate-ping" />
-                        </div>
-                        <div className="space-y-2">
-                          <p className="font-semibold text-blue-600">Scanning in Progress...</p>
-                          <Progress value={66} className="w-48 h-2" />
-                          <p className="text-xs text-slate-500">
-                            Please hold still for accurate capture
-                          </p>
+                    
+                    {isScanning && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+                        <div className="bg-black/70 rounded-lg p-4 text-center">
+                          <Sparkles className="h-8 w-8 animate-pulse text-green-400 mx-auto mb-2" />
+                          <p className="text-white font-medium">Analyzing Face...</p>
+                          <Progress value={scanProgress} className="mt-2 w-32" />
                         </div>
                       </div>
-                    ) : (
-                      <div className="text-center space-y-3">
-                        {storeForm.watch("biometricType") === "face" ? (
-                          <ScanFace className="h-20 w-20 text-slate-400 mx-auto" />
-                        ) : (
-                          <Fingerprint className="h-20 w-20 text-slate-400 mx-auto" />
-                        )}
-                        <div>
-                          <p className="text-slate-600 dark:text-slate-300 font-medium">
-                            Scanner Ready
-                          </p>
-                          <p className="text-sm text-slate-400 mt-1">
-                            Select a patient and click capture to begin
-                          </p>
+                    )}
+                    
+                    {currentDetection && !isScanning && (
+                      <div className="absolute bottom-4 left-4 bg-black/70 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2 text-white text-sm">
+                          <div className={`w-2 h-2 rounded-full ${faceQuality > 70 ? 'bg-green-500' : faceQuality > 40 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                          Face Detected - Quality: {faceQuality.toFixed(0)}%
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-blue-500 p-2 rounded-full flex-shrink-0">
-                        <Shield className="h-4 w-4 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-blue-800 dark:text-blue-200 text-sm">
-                          Data Security Notice
-                        </p>
-                        <p className="text-blue-600 dark:text-blue-300 text-xs mt-1">
-                          All biometric data is encrypted using AES-256-CBC algorithm before storage.
-                          Data is never transmitted or stored in plain text. HIPAA compliant.
-                        </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={captureAndAnalyzeFace} 
+                      disabled={!isCapturing || isProcessing || !currentDetection}
+                      className="flex-1"
+                      size="lg"
+                      data-testid="button-capture-face"
+                    >
+                      {isProcessing ? (
+                        <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        <ScanFace className="mr-2 h-5 w-5" />
+                      )}
+                      {isProcessing ? "Analyzing..." : "Capture & Analyze Face"}
+                    </Button>
+                    <Button 
+                      onClick={stopCamera} 
+                      variant="outline"
+                      disabled={!isCapturing}
+                      data-testid="button-stop-camera"
+                    >
+                      <VideoOff className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {capturedFace && (
+                    <div className="space-y-4 p-4 border-2 border-green-500 rounded-lg bg-green-50 dark:bg-green-900/20">
+                      <div className="flex items-center gap-4">
+                        <img 
+                          src={capturedFace} 
+                          alt="Captured face" 
+                          className="w-24 h-24 rounded-lg object-cover border-2 border-green-500"
+                        />
+                        <div className="flex-1">
+                          <Badge className="mb-2 bg-green-500">
+                            <CheckCircle2 className="mr-1 h-3 w-3" />
+                            Face Analysis Complete
+                          </Badge>
+                          <p className="text-sm text-slate-600 dark:text-slate-300">
+                            128-dimensional face embedding generated
+                          </p>
+                          <p className="text-sm font-medium text-green-600">
+                            Quality Score: {faceQuality.toFixed(1)}%
+                          </p>
+                        </div>
                       </div>
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card data-testid="card-register-face">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Fingerprint className="h-5 w-5 text-blue-600" />
+                    Register Biometric
+                  </CardTitle>
+                  <CardDescription>
+                    Link captured face to a patient or staff member
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>User Type</Label>
+                    <Select value={selectedUserType} onValueChange={setSelectedUserType}>
+                      <SelectTrigger data-testid="select-user-type">
+                        <SelectValue placeholder="Select user type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PATIENT">Patient</SelectItem>
+                        <SelectItem value="STAFF">Staff</SelectItem>
+                        <SelectItem value="DOCTOR">Doctor</SelectItem>
+                        <SelectItem value="NURSE">Nurse</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Select User ({getFilteredUsers().length} available)</Label>
+                    <Select 
+                      value={selectedUserId || undefined} 
+                      onValueChange={(val) => setSelectedUserId(val)}
+                    >
+                      <SelectTrigger data-testid="select-user">
+                        <SelectValue placeholder="Select a user" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getFilteredUsers().length === 0 ? (
+                          <div className="p-4 text-center text-slate-500">No users found for this type</div>
+                        ) : (
+                          getFilteredUsers().map(user => (
+                            <SelectItem key={user.id} value={String(user.id)}>
+                              {user.name || user.username} ({user.role})
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium text-blue-800 dark:text-blue-200">Privacy Notice</span>
+                    </div>
+                    <p className="text-sm text-blue-600 dark:text-blue-300">
+                      By registering, consent is given for biometric data storage. 
+                      Only encrypted face embeddings are stored, not raw images.
+                    </p>
+                  </div>
+
+                  <Button 
+                    onClick={handleSaveEmbedding}
+                    disabled={!faceDescriptor || !selectedUserId || embeddingMutation.isPending || consentMutation.isPending}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    size="lg"
+                    data-testid="button-save-face"
+                  >
+                    {embeddingMutation.isPending || consentMutation.isPending ? (
+                      <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <Download className="mr-2 h-5 w-5" />
+                    )}
+                    Save Face Data to Database
+                  </Button>
+
+                  <Separator className="my-4" />
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                      <Fingerprint className="h-4 w-4" />
+                      <span className="text-sm font-medium">Or use simulated fingerprint enrollment</span>
+                    </div>
+                    
+                    <Form {...storeForm}>
+                      <form onSubmit={storeForm.handleSubmit(handleStore)} className="space-y-4">
+                        <FormField
+                          control={storeForm.control}
+                          name="patientId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-slate-700 dark:text-slate-300">Select Patient</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ""}>
+                                <FormControl>
+                                  <SelectTrigger className="h-11" data-testid="select-patient-store">
+                                    <SelectValue placeholder="Choose a patient..." />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {patients.map((patient) => (
+                                    <SelectItem key={patient.id} value={patient.id}>
+                                      {getPatientDisplay(patient)} ({patient.id.slice(0, 8)})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <Button 
+                          type="submit" 
+                          variant="outline"
+                          className="w-full h-11"
+                          disabled={storeMutation.isPending || scanningBiometric}
+                          data-testid="button-capture-fingerprint"
+                        >
+                          {scanningBiometric ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Scanning...
+                            </>
+                          ) : (
+                            <>
+                              <Fingerprint className="h-4 w-4 mr-2" />
+                              Simulate Fingerprint Capture
+                            </>
+                          )}
+                        </Button>
+                      </form>
+                    </Form>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Registered Templates */}
             <Card data-testid="card-registered-templates">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -817,22 +1455,171 @@ export default function BiometricService() {
             </Card>
           </TabsContent>
 
-          {/* Verify Tab */}
           <TabsContent value="verify" className="space-y-6 mt-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card data-testid="card-verify-identity">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card data-testid="card-face-verification">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Scan className="h-5 w-5 text-blue-600" />
-                    Verify Patient Identity
+                    <Eye className="h-5 w-5 text-blue-600" />
+                    Face Verification
                   </CardTitle>
                   <CardDescription>
-                    Authenticate patient using biometric verification
+                    Verify identity using live face recognition
                   </CardDescription>
                 </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="relative bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden aspect-video">
+                    <video 
+                      ref={verifyVideoRef} 
+                      autoPlay 
+                      muted 
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <canvas 
+                      ref={verifyOverlayCanvasRef} 
+                      className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    />
+                    <canvas ref={verifyCanvasRef} className="hidden" />
+                    
+                    {!isVerifyCapturing && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <Button onClick={startVerifyCamera} disabled={!isModelLoaded} data-testid="button-verify-start-camera">
+                          <Camera className="mr-2 h-4 w-4" />
+                          Start Camera
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {verifyCurrentDetection && (
+                      <div className="absolute bottom-4 left-4 bg-black/70 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2 text-white text-sm">
+                          <div className="w-2 h-2 rounded-full bg-green-500" />
+                          Face Detected
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Search Type</Label>
+                    <Select value={selectedUserType} onValueChange={setSelectedUserType}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PATIENT">Patient</SelectItem>
+                        <SelectItem value="STAFF">Staff</SelectItem>
+                        <SelectItem value="DOCTOR">Doctor</SelectItem>
+                        <SelectItem value="NURSE">Nurse</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={captureAndVerifyFace}
+                      disabled={!isVerifyCapturing || isProcessing}
+                      className="flex-1"
+                      data-testid="button-verify-capture"
+                    >
+                      <ScanFace className="mr-2 h-4 w-4" />
+                      Scan Face
+                    </Button>
+                    <Button 
+                      onClick={handleFaceRecognition}
+                      disabled={!faceDescriptor || matchMutation.isPending}
+                      variant="secondary"
+                      className="flex-1"
+                      data-testid="button-verify-match"
+                    >
+                      <Search className="mr-2 h-4 w-4" />
+                      Find Match
+                    </Button>
+                    <Button 
+                      onClick={stopVerifyCamera} 
+                      variant="outline"
+                      disabled={!isVerifyCapturing}
+                    >
+                      <VideoOff className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card data-testid="card-recognition-result">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                    Recognition Result
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
-                  <Form {...verifyForm}>
-                    <form onSubmit={verifyForm.handleSubmit(handleVerify)} className="space-y-5">
+                  {recognitionResult ? (
+                    <div className="space-y-4">
+                      <div className={`p-6 rounded-lg text-center ${
+                        recognitionResult.matched 
+                          ? "bg-green-100 dark:bg-green-900/30" 
+                          : "bg-red-100 dark:bg-red-900/30"
+                      }`}>
+                        {recognitionResult.matched ? (
+                          <UserCheck className="h-16 w-16 mx-auto text-green-600 mb-4" />
+                        ) : (
+                          <UserX className="h-16 w-16 mx-auto text-red-600 mb-4" />
+                        )}
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                          {recognitionResult.matched ? "Identity Verified" : "No Match Found"}
+                        </h3>
+                        <p className="text-slate-600 dark:text-slate-300 mt-2">
+                          Confidence: {(recognitionResult.confidenceScore * 100).toFixed(1)}%
+                        </p>
+                      </div>
+
+                      {recognitionResult.matched && (
+                        <div className="space-y-2 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">User ID</span>
+                            <span className="font-mono text-slate-900 dark:text-white">{recognitionResult.matchedUserId}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">User Type</span>
+                            <Badge>{recognitionResult.matchedUserType}</Badge>
+                          </div>
+                          {recognitionResult.processingTimeMs && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-500">Processing Time</span>
+                              <span className="text-slate-900 dark:text-white">{recognitionResult.processingTimeMs}ms</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="h-64 flex items-center justify-center text-slate-400">
+                      <div className="text-center">
+                        <ScanFace className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                        <p>Scan a face to see results</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card data-testid="card-fingerprint-verify">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Fingerprint className="h-5 w-5 text-blue-600" />
+                  Fingerprint Verification (Simulated)
+                </CardTitle>
+                <CardDescription>
+                  Fallback fingerprint verification option
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...verifyForm}>
+                  <form onSubmit={verifyForm.handleSubmit(handleVerify)} className="space-y-5">
+                    <div className="grid gap-4 md:grid-cols-2">
                       <FormField
                         control={verifyForm.control}
                         name="patientId"
@@ -841,7 +1628,7 @@ export default function BiometricService() {
                             <FormLabel className="text-slate-700 dark:text-slate-300">Patient ID</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="Enter patient ID or scan barcode..."
+                                placeholder="Enter patient ID..."
                                 className="h-11"
                                 data-testid="input-patient-id-verify"
                                 {...field}
@@ -862,7 +1649,7 @@ export default function BiometricService() {
                             <Select onValueChange={field.onChange} value={field.value || "fingerprint"}>
                               <FormControl>
                                 <SelectTrigger className="h-11" data-testid="select-biometric-type-verify">
-                                  <SelectValue placeholder="Select verification method..." />
+                                  <SelectValue placeholder="Select method..." />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -884,254 +1671,184 @@ export default function BiometricService() {
                           </FormItem>
                         )}
                       />
+                    </div>
 
-                      <Button 
-                        type="submit" 
-                        className="w-full h-11 bg-blue-600 hover:bg-blue-700"
-                        disabled={verifyMutation.isPending || scanningBiometric}
-                        data-testid="button-verify-identity"
-                      >
-                        {scanningBiometric ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Verifying Identity...
-                          </>
-                        ) : (
-                          <>
-                            <Scan className="h-4 w-4 mr-2" />
-                            Verify Identity
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-blue-600 hover:bg-blue-700"
+                      disabled={verifyMutation.isPending || scanningBiometric}
+                      data-testid="button-verify-identity"
+                    >
+                      {scanningBiometric ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Verifying...
+                        </>
+                      ) : (
+                        <>
+                          <Scan className="h-4 w-4 mr-2" />
+                          Verify Identity
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
 
-                  {/* Quick Patient Selection */}
-                  <div className="mt-6 pt-4 border-t">
-                    <Label className="text-sm text-slate-500">Quick Select Patient</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-3">
-                      {patients.slice(0, 4).map((patient) => (
-                        <Button
-                          key={patient.id}
-                          variant="outline"
-                          size="sm"
-                          className="justify-start"
-                          onClick={() => verifyForm.setValue("patientId", patient.id)}
-                          data-testid={`quick-select-${patient.id}`}
-                        >
-                          <Users className="h-3 w-3 mr-2" />
-                          {patient.firstName}
-                        </Button>
-                      ))}
+                {verificationResult && (
+                  <div className={`mt-6 p-4 rounded-lg ${
+                    verificationResult.verified 
+                      ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800" 
+                      : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      {verificationResult.verified ? (
+                        <CheckCircle2 className="h-8 w-8 text-green-600" />
+                      ) : (
+                        <XCircle className="h-8 w-8 text-red-600" />
+                      )}
+                      <div>
+                        <p className="font-medium text-slate-900 dark:text-white">
+                          {verificationResult.verified ? "Identity Verified" : "Verification Failed"}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          Confidence: {verificationResult.confidenceScore}%
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card data-testid="card-verification-result">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Shield className="h-5 w-5 text-blue-600" />
-                    Verification Result
-                  </CardTitle>
-                  <CardDescription>
-                    Identity verification outcome and confidence score
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {scanningBiometric ? (
-                    <div className="flex flex-col items-center justify-center h-72 space-y-4">
-                      <div className="relative">
-                        <div className="h-24 w-24 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
-                        <Fingerprint className="h-12 w-12 text-blue-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                      </div>
-                      <p className="text-slate-500 font-medium">Verifying biometric data...</p>
-                      <p className="text-xs text-slate-400">Please wait while we process your request</p>
-                    </div>
-                  ) : verificationResult ? (
-                    <div className="space-y-6">
-                      <div className={`p-6 rounded-xl text-center ${
-                        verificationResult.verified 
-                          ? "bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800" 
-                          : "bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800"
-                      }`}>
-                        {verificationResult.verified ? (
-                          <>
-                            <div className="bg-emerald-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <CheckCircle2 className="h-10 w-10 text-white" />
-                            </div>
-                            <h3 className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
-                              Identity Verified
-                            </h3>
-                            <p className="text-emerald-600 dark:text-emerald-400 text-sm mt-1">
-                              Patient identity confirmed successfully
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <div className="bg-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <XCircle className="h-10 w-10 text-white" />
-                            </div>
-                            <h3 className="text-xl font-bold text-red-700 dark:text-red-300">
-                              Verification Failed
-                            </h3>
-                            <p className="text-red-600 dark:text-red-400 text-sm mt-1">
-                              Could not verify patient identity
-                            </p>
-                          </>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border">
-                          <span className="text-slate-600 dark:text-slate-400">Confidence Score</span>
-                          <div className="flex items-center gap-2">
-                            <Progress value={verificationResult.confidenceScore} className="w-20 h-2" />
-                            <span className="font-bold text-lg text-slate-900 dark:text-white">
-                              {verificationResult.confidenceScore.toFixed(1)}%
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border">
-                          <span className="text-slate-600 dark:text-slate-400">Patient</span>
-                          <span className="font-medium text-slate-900 dark:text-white">
-                            {getPatientName(verificationResult.patientId)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border">
-                          <span className="text-slate-600 dark:text-slate-400">Security Status</span>
-                          <Badge className="bg-emerald-500 hover:bg-emerald-600">
-                            <Lock className="h-3 w-3 mr-1" />
-                            Secure
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {!verificationResult.verified && (
-                        <div className="p-4 bg-amber-50 dark:bg-amber-950/50 rounded-lg border border-amber-200 dark:border-amber-800">
-                          <div className="flex items-start gap-3">
-                            <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <p className="font-medium text-amber-800 dark:text-amber-200">
-                                Verification Alert
-                              </p>
-                              <p className="text-amber-600 dark:text-amber-300 text-sm mt-1">
-                                Patient identity could not be verified. Please try again with a different method or manually verify the patient's identity.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-72 text-slate-400">
-                      <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-full mb-4">
-                        <Shield className="h-12 w-12" />
-                      </div>
-                      <p className="text-lg font-medium text-slate-600 dark:text-slate-300">Ready to Verify</p>
-                      <p className="text-sm text-center mt-2 max-w-[250px]">
-                        Enter patient ID and select verification method to begin identity check
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          {/* Logs Tab */}
           <TabsContent value="logs" className="space-y-6 mt-6">
-            <Card data-testid="card-verification-logs">
+            <Card data-testid="card-recognition-logs">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <FileCheck className="h-5 w-5 text-blue-600" />
-                  Verification Audit Log
+                  Face Recognition Audit Logs
                 </CardTitle>
                 <CardDescription>
-                  Complete history of all biometric verification attempts
+                  All face recognition attempts with timestamps and confidence scores
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {recognitionLogs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+                    <History className="h-12 w-12 mb-3" />
+                    <p className="font-medium">No Recognition Logs</p>
+                    <p className="text-sm">Face recognition attempts will appear here</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Time</TableHead>
+                        <TableHead>User Type</TableHead>
+                        <TableHead>Matched User</TableHead>
+                        <TableHead>Purpose</TableHead>
+                        <TableHead>Confidence</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recognitionLogs.map((log) => (
+                        <TableRow key={log.id} data-testid={`log-row-${log.id}`}>
+                          <TableCell className="text-sm">
+                            {formatDate(log.createdAt)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{log.userType}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {log.matchedUserId ? getUserName(log.matchedUserId) : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-slate-500">
+                            {log.purpose}
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-medium">
+                              {(parseFloat(log.confidenceScore) * 100).toFixed(1)}%
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={log.matchStatus === "MATCHED" ? "default" : "destructive"}>
+                              {log.matchStatus}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card data-testid="card-biometric-verifications">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Fingerprint className="h-5 w-5 text-blue-600" />
+                  Biometric Verification History
+                </CardTitle>
+                <CardDescription>
+                  All fingerprint and face verification attempts
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {verificationsLoading ? (
-                  <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  <div className="flex items-center justify-center h-32">
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
                   </div>
                 ) : verifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                    <History className="h-16 w-16 mb-4" />
-                    <p className="text-lg font-medium text-slate-600 dark:text-slate-300">No Verification Logs</p>
-                    <p className="text-sm">Verification attempts will be recorded here</p>
+                  <div className="flex flex-col items-center justify-center h-32 text-slate-400">
+                    <History className="h-10 w-10 mb-2" />
+                    <p className="font-medium">No Verification History</p>
+                    <p className="text-sm">Verification attempts will appear here</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b bg-slate-50 dark:bg-slate-800/50">
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Timestamp</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Patient</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Method</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Confidence</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Result</th>
-                          <th className="text-left p-4 font-medium text-slate-600 dark:text-slate-300">Device</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {verifications.map((log) => (
-                          <tr 
-                            key={log.id} 
-                            className="border-b hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
-                            data-testid={`log-row-${log.id}`}
-                          >
-                            <td className="p-4 text-sm text-slate-600 dark:text-slate-300">
-                              {formatDate(log.verifiedAt)}
-                            </td>
-                            <td className="p-4 text-sm font-medium text-slate-900 dark:text-white">
-                              {getPatientName(log.patientId)}
-                            </td>
-                            <td className="p-4">
-                              <div className="flex items-center gap-2">
-                                {log.biometricType === "fingerprint" ? (
-                                  <div className="bg-blue-100 dark:bg-blue-900/50 p-1.5 rounded">
-                                    <Fingerprint className="h-4 w-4 text-blue-600" />
-                                  </div>
-                                ) : (
-                                  <div className="bg-purple-100 dark:bg-purple-900/50 p-1.5 rounded">
-                                    <ScanFace className="h-4 w-4 text-purple-600" />
-                                  </div>
-                                )}
-                                <span className="text-sm capitalize text-slate-600 dark:text-slate-300">
-                                  {log.biometricType}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex items-center gap-2">
-                                <Progress value={Number(log.confidenceScore)} className="w-16 h-2" />
-                                <Badge variant="outline" className="font-medium">
-                                  {log.confidenceScore}%
-                                </Badge>
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              {log.isMatch ? (
-                                <Badge className="bg-emerald-500 hover:bg-emerald-600">
-                                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                                  Verified
-                                </Badge>
+                  <div className="space-y-3">
+                    {verifications.map((verification) => (
+                      <div 
+                        key={verification.id} 
+                        className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                        data-testid={`verification-${verification.id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${
+                            verification.isMatch 
+                              ? "bg-emerald-100 dark:bg-emerald-900/50" 
+                              : "bg-red-100 dark:bg-red-900/50"
+                          }`}>
+                            {verification.isMatch ? (
+                              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-red-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-900 dark:text-white">
+                              {getPatientName(verification.patientId)}
+                            </p>
+                            <p className="text-sm text-slate-500 flex items-center gap-2">
+                              {verification.biometricType === "fingerprint" ? (
+                                <Fingerprint className="h-3 w-3" />
                               ) : (
-                                <Badge variant="destructive">
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                  Failed
-                                </Badge>
+                                <ScanFace className="h-3 w-3" />
                               )}
-                            </td>
-                            <td className="p-4 text-sm text-slate-500 max-w-[200px] truncate">
-                              {log.deviceInfo || "Unknown Device"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              {verification.biometricType === "fingerprint" ? "Fingerprint" : "Face"} verification
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={verification.isMatch ? "default" : "destructive"}>
+                            {verification.confidenceScore}%
+                          </Badge>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {formatDate(verification.verifiedAt)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
@@ -1140,66 +1857,36 @@ export default function BiometricService() {
         </Tabs>
       </div>
 
-      {/* Hospital Footer */}
-      <div className="bg-slate-900 text-white mt-auto">
-        <div className="container mx-auto px-4 py-6">
-          <div className="grid gap-6 md:grid-cols-3">
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="bg-blue-600 p-2 rounded-lg">
-                  <HeartPulse className="h-5 w-5" />
-                </div>
-                <h3 className="font-semibold text-lg">Gravity Hospital</h3>
+      <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-6 w-6 text-green-500" />
+              Face Data Saved Successfully
+            </DialogTitle>
+            <DialogDescription>
+              The face embedding has been securely stored in the database.
+            </DialogDescription>
+          </DialogHeader>
+          {savedUserInfo && (
+            <div className="space-y-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="flex justify-between">
+                <span className="text-slate-500">User ID:</span>
+                <span className="font-mono">{savedUserInfo.userId}</span>
               </div>
-              <p className="text-slate-400 text-sm">
-                Providing world-class healthcare with cutting-edge technology and compassionate care.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-blue-400" />
-                Address
-              </h4>
-              <p className="text-slate-400 text-sm" data-testid="text-footer-address">
-                Gat No, 167, Sahyog Nager,<br />
-                Triveni Nagar, Nigdi, Pimpri-Chinchwad,<br />
-                Maharashtra 411062
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium mb-3">Contact Information</h4>
-              <div className="space-y-2 text-sm text-slate-400">
-                <p className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-blue-400" />
-                  +91 20 1234 5678
-                </p>
-                <p className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-blue-400" />
-                  info@galaxyhospital.in
-                </p>
-                <p className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-blue-400" />
-                  www.galaxyhospital.in
-                </p>
+              <div className="flex justify-between">
+                <span className="text-slate-500">User Type:</span>
+                <Badge>{savedUserInfo.userType}</Badge>
               </div>
             </div>
-          </div>
-          <Separator className="my-4 bg-slate-700" />
-          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
-            <p>© 2024 Gravity Hospital. All rights reserved.</p>
-            <div className="flex items-center gap-4 mt-2 md:mt-0">
-              <Badge variant="outline" className="border-slate-600 text-slate-400">
-                <ShieldCheck className="h-3 w-3 mr-1" />
-                HIPAA Compliant
-              </Badge>
-              <Badge variant="outline" className="border-slate-600 text-slate-400">
-                <Lock className="h-3 w-3 mr-1" />
-                ISO 27001 Certified
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setSuccessDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
