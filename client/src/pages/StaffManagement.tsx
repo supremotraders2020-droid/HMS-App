@@ -577,6 +577,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       const formData = new FormData(e.currentTarget);
+                      const overrideReason = formData.get("overrideReason") as string;
                       createShiftMutation.mutate({
                         staffId: formData.get("staffId") as string,
                         department: formData.get("department") as string,
@@ -586,6 +587,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                         endTime: formData.get("endTime") as string,
                         status: "SCHEDULED",
                         notes: formData.get("notes") as string,
+                        ...(overrideReason ? { overrideReason } : {}),
                       });
                     }}>
                       <div className="space-y-4">
@@ -649,6 +651,11 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
                         <div className="space-y-2">
                           <Label>Notes</Label>
                           <Textarea name="notes" placeholder="Optional notes" data-testid="input-shift-notes" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Override Reason (for conflicts)</Label>
+                          <Input name="overrideReason" placeholder="Leave blank unless overriding a conflict" data-testid="input-override-reason" />
+                          <p className="text-xs text-muted-foreground">If this shift overlaps with an existing one, provide a reason to proceed</p>
                         </div>
                       </div>
                       <DialogFooter className="mt-6">
