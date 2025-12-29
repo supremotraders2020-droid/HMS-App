@@ -50,10 +50,15 @@ type InsuranceClaim = {
   claimType: string;
   status: string;
   diagnosis: string | null;
+  plannedProcedure: string | null;
   estimatedCost: string | null;
   approvedAmount: string | null;
   settledAmount: string | null;
   rejectionReason: string | null;
+  queryDetails: string | null;
+  remarks: string | null;
+  submittedAt: string | null;
+  processedAt: string | null;
   createdAt: string;
 };
 
@@ -93,6 +98,7 @@ export default function InsuranceManagement({ currentUser }: InsuranceManagement
   const [isProviderDialogOpen, setIsProviderDialogOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState<InsuranceProvider | null>(null);
   const [selectedClaim, setSelectedClaim] = useState<InsuranceClaim | null>(null);
+  const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
 
   const { data: providers = [], isLoading: providersLoading } = useQuery<InsuranceProvider[]>({
     queryKey: ["/api/insurance/providers"],
@@ -637,7 +643,15 @@ export default function InsuranceManagement({ currentUser }: InsuranceManagement
                           </td>
                           <td className="p-3">
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" data-testid={`button-view-claim-${claim.id}`}>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                data-testid={`button-view-claim-${claim.id}`}
+                                onClick={() => {
+                                  setSelectedClaim(claim);
+                                  setIsClaimDialogOpen(true);
+                                }}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               {["SUBMITTED", "UNDER_REVIEW", "QUERY_RAISED"].includes(claim.status) && (
@@ -667,6 +681,127 @@ export default function InsuranceManagement({ currentUser }: InsuranceManagement
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isClaimDialogOpen} onOpenChange={setIsClaimDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Claim Details - {selectedClaim?.claimNumber}
+            </DialogTitle>
+            <DialogDescription>
+              View complete information about this insurance claim
+            </DialogDescription>
+          </DialogHeader>
+          {selectedClaim && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Claim Number</Label>
+                  <p className="font-medium">{selectedClaim.claimNumber}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Claim Type</Label>
+                  <p className="font-medium">{selectedClaim.claimType}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Status</Label>
+                  <div className="mt-1">{getStatusBadge(selectedClaim.status)}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Patient ID</Label>
+                  <p className="font-medium text-sm">{selectedClaim.patientId}</p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-muted-foreground">Diagnosis</Label>
+                  <p className="font-medium">{selectedClaim.diagnosis || "Not specified"}</p>
+                </div>
+                {selectedClaim.plannedProcedure && (
+                  <div>
+                    <Label className="text-muted-foreground">Planned Procedure</Label>
+                    <p className="font-medium">{selectedClaim.plannedProcedure}</p>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Estimated Cost</Label>
+                  <p className="font-medium text-lg">
+                    {selectedClaim.estimatedCost ? `₹${selectedClaim.estimatedCost}` : "-"}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Approved Amount</Label>
+                  <p className="font-medium text-lg text-green-600">
+                    {selectedClaim.approvedAmount ? `₹${selectedClaim.approvedAmount}` : "-"}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Settled Amount</Label>
+                  <p className="font-medium text-lg text-blue-600">
+                    {selectedClaim.settledAmount ? `₹${selectedClaim.settledAmount}` : "-"}
+                  </p>
+                </div>
+              </div>
+
+              {selectedClaim.rejectionReason && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                  <Label className="text-red-700 dark:text-red-400">Rejection Reason</Label>
+                  <p className="text-red-800 dark:text-red-300">{selectedClaim.rejectionReason}</p>
+                </div>
+              )}
+
+              {selectedClaim.queryDetails && (
+                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                  <Label className="text-orange-700 dark:text-orange-400">Query Details</Label>
+                  <p className="text-orange-800 dark:text-orange-300">{selectedClaim.queryDetails}</p>
+                </div>
+              )}
+
+              {selectedClaim.remarks && (
+                <div>
+                  <Label className="text-muted-foreground">Remarks</Label>
+                  <p className="text-sm">{selectedClaim.remarks}</p>
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                <div>
+                  <span>Created: </span>
+                  <span className="font-medium">{new Date(selectedClaim.createdAt).toLocaleString()}</span>
+                </div>
+                {selectedClaim.submittedAt && (
+                  <div>
+                    <span>Submitted: </span>
+                    <span className="font-medium">{new Date(selectedClaim.submittedAt).toLocaleString()}</span>
+                  </div>
+                )}
+                {selectedClaim.processedAt && (
+                  <div>
+                    <span>Processed: </span>
+                    <span className="font-medium">{new Date(selectedClaim.processedAt).toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsClaimDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
