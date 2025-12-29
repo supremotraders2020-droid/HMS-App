@@ -95,7 +95,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Disease Knowledge", url: "/disease-knowledge", icon: BookOpen, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"] },
       { title: "Patient Monitoring", url: "/patient-monitoring", icon: Stethoscope, roles: ["ADMIN", "DOCTOR", "NURSE"] },
       { title: "Patient Barcode", url: "/patient-barcode", icon: QrCode, roles: ["ADMIN", "DOCTOR", "NURSE"] },
-      { title: "Staff Management", url: "/staff-management", icon: UserCheck, roles: ["ADMIN", "OPD_MANAGER"] },
+      { title: "Staff Management", url: "/staff-management", icon: UserCheck, roles: ["ADMIN", "OPD_MANAGER", "DOCTOR", "NURSE"] },
       { title: "Insurance", url: "/insurance-management", icon: Shield, roles: ["ADMIN"] },
       { title: "AI Analytics", url: "/ai-analytics", icon: Brain, roles: ["ADMIN"] },
       { title: "Patient Analytics", url: "/patient-analytics", icon: Activity, roles: ["ADMIN"] },

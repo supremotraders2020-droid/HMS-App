@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import PatientMonitoringPage from "./PatientMonitoringPage";
+import StaffSelfService from "@/components/StaffSelfService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,7 +78,8 @@ import {
   ExternalLink,
   MonitorCheck,
   Save,
-  Home
+  Home,
+  UserCheck
 } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import DoctorOathModal from "@/components/DoctorOathModal";
@@ -664,6 +666,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     { id: "patients", title: "Patients", icon: Users },
     { id: "prescriptions", title: "Prescriptions", icon: FileText },
     { id: "patient-monitoring", title: "Patient Monitoring", icon: MonitorCheck },
+    { id: "staff-management", title: "Staff Management", icon: UserCheck },
     { id: "notifications", title: "Notifications", icon: Bell, badge: unreadNotifications.length },
     { id: "profile", title: "Profile", icon: Settings },
   ];
@@ -2380,6 +2383,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       case "schedules": return renderSchedules();
       case "prescriptions": return renderPrescriptions();
       case "patient-monitoring": return <PatientMonitoringPage />;
+      case "staff-management": return <StaffSelfService userId={doctorId} userName={doctorName} userRole="DOCTOR" />;
       case "notifications": return renderNotifications();
       case "profile": return renderProfile();
       default: return renderDashboard();
@@ -2518,7 +2522,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Schedule & Alerts</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu className="space-y-1">
-                    {menuItems.filter(item => ['schedules', 'notifications'].includes(item.id)).map((item) => (
+                    {menuItems.filter(item => ['schedules', 'staff-management', 'notifications'].includes(item.id)).map((item) => (
                       <SidebarMenuItem key={item.id}>
                         <SidebarMenuButton asChild data-testid={`nav-${item.id}`}>
                           <Button

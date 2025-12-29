@@ -8687,6 +8687,21 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  app.get("/api/staff/me", async (req, res) => {
+    try {
+      const session = (req.session as any);
+      const user = session?.user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const staff = await storage.getStaffMasterByUserId(user.id);
+      if (!staff) return res.status(404).json({ error: "Staff profile not found" });
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff profile:", error);
+      res.status(500).json({ error: "Failed to fetch staff profile" });
+    }
+  });
+
   app.get("/api/staff/:id", async (req, res) => {
     try {
       const session = (req.session as any);
