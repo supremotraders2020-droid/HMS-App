@@ -272,6 +272,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
         diagnosis: claimData.diagnosis,
         plannedProcedure: claimData.plannedProcedure,
         estimatedCost: claimData.estimatedCost,
+        remarks: claimData.remarks || null,
         status: "SUBMITTED",
       };
       const response = await apiRequest('POST', '/api/insurance/claims', payload);
@@ -2648,29 +2649,47 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Insurance Provider</Label>
+                        <Label>Your Insurance Policy</Label>
                         <Select
                           value={claimForm.insuranceProviderId}
-                          onValueChange={(value) => setClaimForm(prev => ({ ...prev, insuranceProviderId: value }))}
+                          onValueChange={(value) => {
+                            const selected = patientInsurances.find(pi => pi.id === value);
+                            setClaimForm(prev => ({ 
+                              ...prev, 
+                              insuranceProviderId: value,
+                              policyNumber: selected?.policyNumber || ""
+                            }));
+                          }}
                         >
-                          <SelectTrigger data-testid="select-insurance-provider">
-                            <SelectValue placeholder="Select your insurance provider" />
+                          <SelectTrigger data-testid="select-insurance-policy">
+                            <SelectValue placeholder="Select your insurance policy" />
                           </SelectTrigger>
                           <SelectContent>
-                            {insuranceProviders.map((provider) => (
-                              <SelectItem key={provider.id} value={provider.id}>
-                                {provider.providerName} ({provider.providerType})
-                              </SelectItem>
-                            ))}
+                            {patientInsurances.length === 0 ? (
+                              <SelectItem value="" disabled>No insurance policies on file</SelectItem>
+                            ) : (
+                              patientInsurances.map((pi) => {
+                                const provider = insuranceProviders.find(p => p.id === pi.insuranceProviderId);
+                                return (
+                                  <SelectItem key={pi.id} value={pi.id}>
+                                    {provider?.providerName || "Unknown"} - {pi.policyNumber}
+                                  </SelectItem>
+                                );
+                              })
+                            )}
                           </SelectContent>
                         </Select>
+                        {patientInsurances.length === 0 && (
+                          <p className="text-xs text-muted-foreground">Contact the hospital to add your insurance details</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label>Policy Number</Label>
                         <Input
-                          placeholder="Enter your policy number"
+                          placeholder="Policy number"
                           value={claimForm.policyNumber}
-                          onChange={(e) => setClaimForm(prev => ({ ...prev, policyNumber: e.target.value }))}
+                          readOnly
+                          className="bg-muted"
                           data-testid="input-policy-number"
                         />
                       </div>

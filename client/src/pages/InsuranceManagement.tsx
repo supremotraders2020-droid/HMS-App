@@ -74,7 +74,20 @@ const COVERAGE_TYPES = ["IPD", "OPD", "Day Care", "All"];
 const SUBMISSION_MODES = ["Online", "Physical", "Both"];
 const CLAIM_STATUSES = ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "QUERY_RAISED", "APPROVED", "PARTIALLY_APPROVED", "REJECTED", "SETTLED"];
 
-export default function InsuranceManagement() {
+type User = {
+  id: string;
+  username: string;
+  name: string;
+  role: string;
+  tenantId: string;
+  hospitalName: string;
+};
+
+interface InsuranceManagementProps {
+  currentUser: User;
+}
+
+export default function InsuranceManagement({ currentUser }: InsuranceManagementProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isProviderDialogOpen, setIsProviderDialogOpen] = useState(false);
@@ -155,7 +168,7 @@ export default function InsuranceManagement() {
 
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws/notifications?userId=admin&userRole=ADMIN`;
+    const wsUrl = `${protocol}//${window.location.host}/ws/notifications?userId=${currentUser.id}&userRole=${currentUser.role}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onmessage = (event) => {
@@ -177,7 +190,7 @@ export default function InsuranceManagement() {
     return () => {
       ws.close();
     };
-  }, [toast]);
+  }, [currentUser.id, currentUser.role, toast]);
 
   const handleProviderSubmit = (formData: FormData) => {
     const data = {

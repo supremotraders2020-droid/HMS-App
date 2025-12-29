@@ -365,7 +365,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
       </Route>
       <Route path="/insurance-management">
         {["ADMIN"].includes(currentUser.role) ? (
-          <InsuranceManagement />
+          <InsuranceManagement currentUser={currentUser} />
         ) : (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
