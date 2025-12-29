@@ -160,9 +160,9 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("roster");
   
-  const isAdminOrManager = currentUser?.role === "ADMIN" || currentUser?.role === "OPD_MANAGER";
+  const isAdmin = currentUser?.role === "ADMIN";
   
-  if (currentUser && !isAdminOrManager) {
+  if (currentUser && !isAdmin) {
     return (
       <StaffSelfService 
         userId={currentUser.id} 
