@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -52,6 +65,16 @@ import {
   Download,
   Calendar,
   Lightbulb,
+  TestTubes,
+  Filter,
+  ChevronsUpDown,
+  Check,
+  Sparkles,
+  Microscope,
+  Droplets,
+  Heart,
+  Brain,
+  Pill,
 } from "lucide-react";
 
 interface PathologyLabPortalProps {
@@ -99,6 +122,16 @@ interface PathologyLab {
   labName: string;
   labCode: string;
   labType: string;
+  isActive: boolean;
+}
+
+interface LabTestCatalog {
+  id: number;
+  testCode: string;
+  testName: string;
+  testCategory: string;
+  sampleType: string;
+  price: string;
   isActive: boolean;
 }
 
@@ -150,6 +183,79 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
   const { data: labs = [] } = useQuery<PathologyLab[]>({
     queryKey: ["/api/pathology-labs"],
   });
+
+  // Fetch lab tests from catalog for Available Tests tab
+  const { data: labTestCatalog = [], isLoading: isLoadingLabTests } = useQuery<LabTestCatalog[]>({
+    queryKey: ['/api/lab-tests'],
+  });
+
+  // State for Available Tests feature
+  const [availableTestsSearch, setAvailableTestsSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [availableTestsOpen, setAvailableTestsOpen] = useState(false);
+
+  // Get unique categories from lab tests
+  const testCategories = useMemo(() => {
+    const categories = new Set(labTestCatalog.map(test => test.testCategory));
+    return ['all', ...Array.from(categories).sort()];
+  }, [labTestCatalog]);
+
+  // Filter lab tests by category and search
+  const filteredLabTests = useMemo(() => {
+    return labTestCatalog.filter(test => {
+      const matchesCategory = selectedCategory === 'all' || test.testCategory === selectedCategory;
+      const matchesSearch = availableTestsSearch === '' || 
+        test.testName.toLowerCase().includes(availableTestsSearch.toLowerCase()) ||
+        test.testCode.toLowerCase().includes(availableTestsSearch.toLowerCase());
+      return matchesCategory && matchesSearch && test.isActive;
+    });
+  }, [labTestCatalog, selectedCategory, availableTestsSearch]);
+
+  // Group filtered tests by category for display
+  const groupedTests = useMemo(() => {
+    const groups: Record<string, LabTestCatalog[]> = {};
+    filteredLabTests.forEach(test => {
+      if (!groups[test.testCategory]) {
+        groups[test.testCategory] = [];
+      }
+      groups[test.testCategory].push(test);
+    });
+    return groups;
+  }, [filteredLabTests]);
+
+  // Category icon mapping
+  const getCategoryIcon = (category: string) => {
+    const iconMap: Record<string, any> = {
+      'HAEMATOLOGY': Droplets,
+      'BIOCHEMISTRY': Beaker,
+      'SEROLOGY': Heart,
+      'MICROBIOLOGY': Microscope,
+      'HISTOPATHOLOGY': Microscope,
+      'CLINICAL PATHOLOGY': FlaskConical,
+      'ENDOCRINOLOGY': Activity,
+      'TUMOR MARKERS': Brain,
+      'IMMUNOLOGY': Heart,
+      'GENETICS': Brain,
+    };
+    return iconMap[category] || FlaskConical;
+  };
+
+  // Category color mapping
+  const getCategoryColor = (category: string) => {
+    const colorMap: Record<string, string> = {
+      'HAEMATOLOGY': 'from-red-500/20 to-red-600/10 border-red-500/30',
+      'BIOCHEMISTRY': 'from-blue-500/20 to-blue-600/10 border-blue-500/30',
+      'SEROLOGY': 'from-purple-500/20 to-purple-600/10 border-purple-500/30',
+      'MICROBIOLOGY': 'from-green-500/20 to-green-600/10 border-green-500/30',
+      'HISTOPATHOLOGY': 'from-orange-500/20 to-orange-600/10 border-orange-500/30',
+      'CLINICAL PATHOLOGY': 'from-teal-500/20 to-teal-600/10 border-teal-500/30',
+      'ENDOCRINOLOGY': 'from-pink-500/20 to-pink-600/10 border-pink-500/30',
+      'TUMOR MARKERS': 'from-amber-500/20 to-amber-600/10 border-amber-500/30',
+      'IMMUNOLOGY': 'from-indigo-500/20 to-indigo-600/10 border-indigo-500/30',
+      'GENETICS': 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/30',
+    };
+    return colorMap[category] || 'from-gray-500/20 to-gray-600/10 border-gray-500/30';
+  };
 
   const uploadReportMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -476,7 +582,7 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="pending-orders" data-testid="tab-pending-orders">
             <Clock className="h-4 w-4 mr-2" />
             Pending Orders ({pendingOrders.length})
@@ -484,6 +590,10 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
           <TabsTrigger value="my-reports" data-testid="tab-my-reports">
             <FileText className="h-4 w-4 mr-2" />
             Uploaded Reports ({reports.length})
+          </TabsTrigger>
+          <TabsTrigger value="available-tests" data-testid="tab-available-tests" className="bg-gradient-to-r from-primary/10 to-primary/5">
+            <FlaskConical className="h-4 w-4 mr-2" />
+            Available Tests ({labTestCatalog.length})
           </TabsTrigger>
           <TabsTrigger value="suggested-tests" data-testid="tab-suggested-tests">
             <Lightbulb className="h-4 w-4 mr-2" />
@@ -948,68 +1058,293 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
           </div>
         </TabsContent>
 
-        <TabsContent value="suggested-tests" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-yellow-500" />
-                Suggested Tests from Doctors
-              </CardTitle>
-              <CardDescription>
-                Tests recommended by doctors for additional diagnosis. These suggestions accompany lab orders to provide context for potential follow-up testing.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {ordersLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Loading suggested tests...</div>
-              ) : filteredSuggestedTestOrders.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Lightbulb className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No suggested tests from doctors</p>
-                  <p className="text-sm mt-2">When doctors order lab tests, they can suggest additional tests that appear here.</p>
+        {/* Available Tests Tab - Modern Card UI */}
+        <TabsContent value="available-tests" className="mt-4">
+          <div className="space-y-6">
+            {/* Header Card with Gradient */}
+            <Card className="border-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+              <CardHeader>
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-primary/20">
+                    <FlaskConical className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-yellow-500" />
+                      Available Tests Catalog
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Browse and search from {labTestCatalog.length}+ laboratory tests synced from the Pathology module
+                    </CardDescription>
+                  </div>
                 </div>
+              </CardHeader>
+            </Card>
+
+            {/* Filter Controls */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium">Filter by Category:</Label>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="w-[220px]" data-testid="select-available-test-category">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {testCategories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category === 'all' ? 'All Categories' : category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex-1 min-w-[250px]">
+                    <Popover open={availableTestsOpen} onOpenChange={setAvailableTestsOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={availableTestsOpen}
+                          className="w-full justify-between h-10"
+                          data-testid="button-available-tests-dropdown"
+                          disabled={isLoadingLabTests}
+                        >
+                          {isLoadingLabTests ? (
+                            <span className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 animate-spin" />
+                              Loading tests...
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              <Search className="h-4 w-4" />
+                              Search tests by name or code...
+                            </span>
+                          )}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <Command>
+                          <CommandInput 
+                            placeholder="Search tests by name or code..." 
+                            value={availableTestsSearch}
+                            onValueChange={setAvailableTestsSearch}
+                            data-testid="input-available-tests-search"
+                          />
+                          <CommandList className="max-h-[350px]">
+                            <CommandEmpty>No tests found. Try a different search.</CommandEmpty>
+                            {Object.entries(groupedTests).slice(0, 10).map(([category, tests]) => (
+                              <CommandGroup key={category} heading={category}>
+                                {tests.slice(0, 10).map((test) => {
+                                  const CategoryIcon = getCategoryIcon(category);
+                                  return (
+                                    <CommandItem
+                                      key={test.id}
+                                      value={test.testName}
+                                      onSelect={() => setAvailableTestsOpen(false)}
+                                      data-testid={`option-available-test-${test.testCode}`}
+                                      className="cursor-pointer"
+                                    >
+                                      <CategoryIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                      <div className="flex flex-col flex-1">
+                                        <span className="font-medium">{test.testName}</span>
+                                        <span className="text-xs text-muted-foreground">{test.testCode} - {test.sampleType}</span>
+                                      </div>
+                                      <Badge variant="outline" className="ml-2 text-xs">
+                                        {test.price}
+                                      </Badge>
+                                    </CommandItem>
+                                  );
+                                })}
+                              </CommandGroup>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tests Grid Display */}
+            <div className="grid gap-4">
+              {isLoadingLabTests ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <Clock className="h-12 w-12 mx-auto mb-4 opacity-50 animate-pulse" />
+                    <p className="text-muted-foreground">Loading available tests...</p>
+                  </CardContent>
+                </Card>
+              ) : Object.keys(groupedTests).length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <FlaskConical className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-muted-foreground">No tests found matching your criteria</p>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="mt-2" 
+                      onClick={() => {
+                        setSelectedCategory('all');
+                        setAvailableTestsSearch('');
+                      }}
+                      data-testid="button-clear-filters"
+                    >
+                      Clear Filters
+                    </Button>
+                  </CardContent>
+                </Card>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order #</TableHead>
-                      <TableHead>Patient</TableHead>
-                      <TableHead>Ordered Test</TableHead>
-                      <TableHead>Suggested Test</TableHead>
-                      <TableHead>Doctor</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSuggestedTestOrders.map((order) => (
-                      <TableRow key={order.id} data-testid={`row-suggested-${order.id}`}>
-                        <TableCell className="font-mono text-sm">{order.orderNumber}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            {order.patientName}
+                Object.entries(groupedTests).slice(0, 8).map(([category, tests]) => {
+                  const CategoryIcon = getCategoryIcon(category);
+                  const categoryColor = getCategoryColor(category);
+                  return (
+                    <Card key={category} className={`border bg-gradient-to-r ${categoryColor} hover-elevate transition-all duration-200`}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-background/80">
+                              <CategoryIcon className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg">{category}</CardTitle>
+                              <CardDescription>{tests.length} tests available</CardDescription>
+                            </div>
                           </div>
-                        </TableCell>
-                        <TableCell>{order.testName}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Lightbulb className="h-4 w-4 text-yellow-500" />
-                            <span className="font-medium text-primary">{order.suggestedTest}</span>
+                          <Badge variant="secondary">{tests.length} Tests</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <ScrollArea className="h-[200px]">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {tests.slice(0, 15).map((test) => (
+                              <div
+                                key={test.id}
+                                className="p-3 rounded-lg bg-background/60 border border-border/50 hover:bg-background/80 hover:border-primary/30 transition-all duration-150 cursor-default"
+                                data-testid={`card-test-${test.testCode}`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm truncate" title={test.testName}>
+                                      {test.testName}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      <span className="font-mono">{test.testCode}</span> • {test.sampleType}
+                                    </p>
+                                  </div>
+                                  <Badge variant="outline" className="text-xs shrink-0">
+                                    {test.price}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        </TableCell>
-                        <TableCell>{order.doctorName}</TableCell>
-                        <TableCell>{getStatusBadge(order.orderStatus)}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {order.createdAt ? format(new Date(order.createdAt), "dd MMM yyyy") : "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          {tests.length > 15 && (
+                            <p className="text-center text-sm text-muted-foreground mt-4">
+                              +{tests.length - 15} more tests in this category
+                            </p>
+                          )}
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Suggested Tests Tab - Enhanced Card UI */}
+        <TabsContent value="suggested-tests" className="mt-4">
+          <div className="space-y-6">
+            {/* Header Card with Gradient */}
+            <Card className="border-0 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent">
+              <CardHeader>
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-yellow-500/20">
+                    <Lightbulb className="h-8 w-8 text-yellow-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      Suggested Tests from Doctors
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Tests recommended by doctors for additional diagnosis. These suggestions accompany lab orders to provide context for potential follow-up testing.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                {ordersLoading ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Clock className="h-12 w-12 mx-auto mb-4 opacity-50 animate-pulse" />
+                    <p>Loading suggested tests...</p>
+                  </div>
+                ) : filteredSuggestedTestOrders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="p-4 rounded-full bg-yellow-500/10 w-fit mx-auto mb-4">
+                      <Lightbulb className="h-12 w-12 text-yellow-500/50" />
+                    </div>
+                    <p className="text-lg font-medium text-muted-foreground">No suggested tests from doctors</p>
+                    <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+                      When doctors order lab tests, they can suggest additional tests that will appear here for follow-up.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {filteredSuggestedTestOrders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="p-4 rounded-lg border bg-gradient-to-r from-yellow-500/5 to-transparent hover:from-yellow-500/10 transition-all duration-200"
+                        data-testid={`card-suggested-${order.id}`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-4">
+                            <div className="p-2 rounded-lg bg-yellow-500/20">
+                              <Lightbulb className="h-5 w-5 text-yellow-500" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-mono text-sm text-muted-foreground">{order.orderNumber}</span>
+                                {getStatusBadge(order.orderStatus)}
+                              </div>
+                              <p className="font-semibold text-primary text-lg">{order.suggestedTest}</p>
+                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {order.patientName}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Beaker className="h-3 w-3" />
+                                  Ordered: {order.testName}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {order.createdAt ? format(new Date(order.createdAt), "dd MMM yyyy") : "-"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Recommended by</p>
+                            <p className="font-medium">{order.doctorName}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
