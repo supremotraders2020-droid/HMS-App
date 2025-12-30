@@ -3719,9 +3719,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         patient = foundPatient;
       }
 
-      // Read the original PDF file
-      const pdfPath = path.join(process.cwd(), template.pdfPath.replace(/^\//, ''));
+      // Read the original PDF file - files are stored in server/public/consents/
+      const pdfPath = path.join(process.cwd(), 'server/public', template.pdfPath);
       if (!fs.existsSync(pdfPath)) {
+        console.error(`PDF file not found at: ${pdfPath}`);
         return res.status(404).json({ error: "PDF file not found" });
       }
 
