@@ -41,7 +41,8 @@ import {
   QrCode,
   UserCheck,
   Shield,
-  UserPlus
+  UserPlus,
+  Scissors
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -105,7 +106,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "PATIENT"] },
       { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] },
       { title: "Medical Stores", url: "/medical-stores", icon: Package, roles: ["ADMIN"] },
-      { title: "Pathology Lab", url: "/pathology-lab-portal", icon: FlaskConical, roles: ["ADMIN"] }
+      { title: "Pathology Lab", url: "/pathology-lab-portal", icon: FlaskConical, roles: ["ADMIN"] },
+      { title: "Services & Surgeries", url: "/hospital-services", icon: Scissors, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT"] }
     ];
 
     // Filter services based on user role

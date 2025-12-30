@@ -46,6 +46,7 @@ import PatientBarcodePage from "@/pages/PatientBarcodePage";
 import StaffManagement from "@/pages/StaffManagement";
 import InsuranceManagement from "@/pages/InsuranceManagement";
 import ReferralData from "@/pages/ReferralData";
+import HospitalServices from "@/pages/HospitalServices";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
@@ -318,6 +319,9 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
             <p className="text-muted-foreground">Only administrators can access Patient Analytics.</p>
           </div>
         )}
+      </Route>
+      <Route path="/hospital-services">
+        <HospitalServices />
       </Route>
 
       {/* Prescriptions Route - for OPD Manager and Doctor */}
