@@ -160,6 +160,7 @@ export default function PrescriptionCreationModal({
   const [dietAdvice, setDietAdvice] = useState('');
   const [activityAdvice, setActivityAdvice] = useState('');
   const [investigations, setInvestigations] = useState('');
+  const [suggestedTest, setSuggestedTest] = useState('');
   const [followUpDate, setFollowUpDate] = useState('');
   
   // Medicine search
@@ -333,6 +334,7 @@ export default function PrescriptionCreationModal({
     setDietAdvice('');
     setActivityAdvice('');
     setInvestigations('');
+    setSuggestedTest('');
     setFollowUpDate('');
   };
 
@@ -815,27 +817,35 @@ export default function PrescriptionCreationModal({
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Investigations Advised</Label>
-                      <Textarea
-                        data-testid="input-investigations"
-                        value={investigations}
-                        onChange={(e) => setInvestigations(e.target.value)}
-                        placeholder="e.g., CBC, Blood Sugar, X-Ray..."
-                        rows={2}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Follow-up Date</Label>
-                      <Input
-                        type="date"
-                        data-testid="input-follow-up-date"
-                        value={followUpDate}
-                        onChange={(e) => setFollowUpDate(e.target.value)}
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label>Investigations Advised</Label>
+                    <Textarea
+                      data-testid="input-investigations"
+                      value={investigations}
+                      onChange={(e) => setInvestigations(e.target.value)}
+                      placeholder="e.g., CBC, Blood Sugar, X-Ray..."
+                      rows={2}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Suggested Test</Label>
+                    <Textarea
+                      data-testid="input-suggested-test"
+                      value={suggestedTest}
+                      onChange={(e) => setSuggestedTest(e.target.value)}
+                      placeholder="e.g., ECG, Lipid Profile, HbA1c, Thyroid Panel..."
+                      rows={2}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Follow-up Date</Label>
+                    <Input
+                      type="date"
+                      data-testid="input-follow-up-date"
+                      value={followUpDate}
+                      onChange={(e) => setFollowUpDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
                   </div>
                 </CardContent>
               </Card>
