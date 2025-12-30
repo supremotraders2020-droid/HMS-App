@@ -227,6 +227,33 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const photoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  // Template Management State
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [templateForm, setTemplateForm] = useState({
+    name: '',
+    category: 'general',
+    symptoms: [] as string[],
+    medicines: [] as any[],
+    instructions: '',
+    suggestedTests: [] as string[],
+    followUpDays: 7,
+    dietAdvice: '',
+    activityAdvice: '',
+    isPublic: true
+  });
+  const [symptomInput, setSymptomInput] = useState('');
+  const [testInput, setTestInput] = useState('');
+  const [medicineInput, setMedicineInput] = useState({
+    medicineName: '',
+    dosageForm: 'Tab',
+    strength: '',
+    frequency: '1',
+    mealTiming: 'after_food',
+    duration: 5,
+    durationUnit: 'days'
+  });
+
   // Fetch patients from API - default fetcher joins query keys as path segments
   const { data: patients = [], isLoading: patientsLoading } = useQuery<DoctorPatient[]>({
     queryKey: ['/api/doctor-patients', doctorId],
@@ -266,6 +293,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   // Fetch service patients to display in Patient Records section
   const { data: servicePatients = [] } = useQuery<ServicePatient[]>({
     queryKey: ['/api/patients/service'],
+  });
+
+  // Fetch OPD templates for template management
+  const { data: opdTemplates = [] } = useQuery<any[]>({
+    queryKey: ['/api/opd-templates']
   });
 
   // Sync profile form with API data when it loads
@@ -421,6 +453,162 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     },
     onError: () => toast({ title: "Failed to update profile", variant: "destructive" }),
   });
+
+  // Template mutations
+  const createTemplateMutation = useMutation({
+    mutationFn: async (template: any) => {
+      const res = await apiRequest('POST', '/api/opd-templates', template);
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/opd-templates'] });
+      setTemplateDialogOpen(false);
+      resetTemplateForm();
+      toast({ title: 'Template created successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to create template', variant: 'destructive' });
+    }
+  });
+
+  const updateTemplateMutation = useMutation({
+    mutationFn: async ({ id, template }: { id: string; template: any }) => {
+      const res = await apiRequest('PATCH', `/api/opd-templates/${id}`, template);
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/opd-templates'] });
+      setTemplateDialogOpen(false);
+      setEditingTemplate(null);
+      resetTemplateForm();
+      toast({ title: 'Template updated successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to update template', variant: 'destructive' });
+    }
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest('DELETE', `/api/opd-templates/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/opd-templates'] });
+      toast({ title: 'Template deleted successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to delete template', variant: 'destructive' });
+    }
+  });
+
+  // Template helper functions
+  const resetTemplateForm = () => {
+    setTemplateForm({
+      name: '',
+      category: 'general',
+      symptoms: [],
+      medicines: [],
+      instructions: '',
+      suggestedTests: [],
+      followUpDays: 7,
+      dietAdvice: '',
+      activityAdvice: '',
+      isPublic: true
+    });
+    setSymptomInput('');
+    setTestInput('');
+    setMedicineInput({
+      medicineName: '',
+      dosageForm: 'Tab',
+      strength: '',
+      frequency: '1',
+      mealTiming: 'after_food',
+      duration: 5,
+      durationUnit: 'days'
+    });
+  };
+
+  const handleSaveTemplate = () => {
+    if (!templateForm.name.trim()) {
+      toast({ title: 'Please enter a template name', variant: 'destructive' });
+      return;
+    }
+    const templateData = {
+      ...templateForm,
+      slug: templateForm.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    };
+
+    if (editingTemplate) {
+      updateTemplateMutation.mutate({ id: editingTemplate.id, template: templateData });
+    } else {
+      createTemplateMutation.mutate(templateData);
+    }
+  };
+
+  const handleEditTemplate = (template: any) => {
+    setEditingTemplate(template);
+    const safeParseArray = (val: any) => {
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string') {
+        try { return JSON.parse(val); } catch { return []; }
+      }
+      return [];
+    };
+    setTemplateForm({
+      name: template.name || '',
+      category: template.category || 'general',
+      symptoms: safeParseArray(template.symptoms),
+      medicines: safeParseArray(template.medicines),
+      instructions: template.instructions || '',
+      suggestedTests: safeParseArray(template.suggestedTests),
+      followUpDays: template.followUpDays || 7,
+      dietAdvice: template.dietAdvice || '',
+      activityAdvice: template.activityAdvice || '',
+      isPublic: template.isPublic ?? true
+    });
+    setTemplateDialogOpen(true);
+  };
+
+  const addSymptom = () => {
+    if (symptomInput.trim() && !templateForm.symptoms.includes(symptomInput.trim())) {
+      setTemplateForm(prev => ({ ...prev, symptoms: [...prev.symptoms, symptomInput.trim()] }));
+      setSymptomInput('');
+    }
+  };
+
+  const removeSymptom = (symptom: string) => {
+    setTemplateForm(prev => ({ ...prev, symptoms: prev.symptoms.filter(s => s !== symptom) }));
+  };
+
+  const addTest = () => {
+    if (testInput.trim() && !templateForm.suggestedTests.includes(testInput.trim())) {
+      setTemplateForm(prev => ({ ...prev, suggestedTests: [...prev.suggestedTests, testInput.trim()] }));
+      setTestInput('');
+    }
+  };
+
+  const removeTest = (test: string) => {
+    setTemplateForm(prev => ({ ...prev, suggestedTests: prev.suggestedTests.filter(t => t !== test) }));
+  };
+
+  const addMedicine = () => {
+    if (medicineInput.medicineName.trim()) {
+      setTemplateForm(prev => ({ ...prev, medicines: [...prev.medicines, { ...medicineInput }] }));
+      setMedicineInput({
+        medicineName: '',
+        dosageForm: 'Tab',
+        strength: '',
+        frequency: '1',
+        mealTiming: 'after_food',
+        duration: 5,
+        durationUnit: 'days'
+      });
+    }
+  };
+
+  const removeMedicine = (idx: number) => {
+    setTemplateForm(prev => ({ ...prev, medicines: prev.medicines.filter((_, i) => i !== idx) }));
+  };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -667,6 +855,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     { id: "schedules", title: "Schedules", icon: CalendarDays },
     { id: "patients", title: "Patients", icon: Users },
     { id: "prescriptions", title: "Prescriptions", icon: FileText },
+    { id: "templates", title: "Rx Templates", icon: ClipboardList },
     { id: "patient-monitoring", title: "Patient Monitoring", icon: MonitorCheck },
     { id: "hospital-services", title: "Services & Surgeries", icon: Scissors },
     { id: "staff-management", title: "Staff Management", icon: UserCheck },
@@ -1961,6 +2150,398 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     </div>
   );
 
+  const renderTemplates = () => {
+    const myTemplates = opdTemplates.filter((t: any) => t.createdBy === doctorId && !t.isSystemTemplate);
+    const systemTemplates = opdTemplates.filter((t: any) => t.isSystemTemplate);
+    const otherTemplates = opdTemplates.filter((t: any) => t.createdBy !== doctorId && !t.isSystemTemplate && t.isPublic);
+
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold" data-testid="text-templates-title">Prescription Templates</h1>
+            <p className="text-muted-foreground">Create and manage quick prescription templates</p>
+          </div>
+          <Button onClick={() => { setEditingTemplate(null); resetTemplateForm(); setTemplateDialogOpen(true); }} data-testid="button-new-template">
+            <Plus className="h-4 w-4 mr-2" />
+            New Template
+          </Button>
+        </div>
+
+        <Tabs defaultValue="my-templates">
+          <TabsList data-testid="tabs-templates">
+            <TabsTrigger value="my-templates" data-testid="tab-my-templates">My Templates ({myTemplates.length})</TabsTrigger>
+            <TabsTrigger value="system" data-testid="tab-system-templates">System Templates ({systemTemplates.length})</TabsTrigger>
+            <TabsTrigger value="shared" data-testid="tab-shared-templates">Shared ({otherTemplates.length})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="my-templates" className="mt-4">
+            {myTemplates.length === 0 ? (
+              <Card className="p-8 text-center" data-testid="empty-my-templates">
+                <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-semibold mb-2">No custom templates yet</h3>
+                <p className="text-muted-foreground mb-4">Create your own prescription templates to speed up your workflow</p>
+                <Button onClick={() => { setEditingTemplate(null); resetTemplateForm(); setTemplateDialogOpen(true); }} data-testid="button-create-first-template">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Template
+                </Button>
+              </Card>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {myTemplates.map((template: any) => (
+                  <Card key={template.id} className="hover-elevate" data-testid={`template-card-${template.id}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-lg">{template.name}</CardTitle>
+                          <CardDescription className="capitalize">{template.category}</CardDescription>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" data-testid={`button-template-menu-${template.id}`}>
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditTemplate(template)} data-testid={`button-edit-template-${template.id}`}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this template?')) {
+                                  deleteTemplateMutation.mutate(template.id);
+                                }
+                              }}
+                              data-testid={`button-delete-template-${template.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex flex-wrap gap-1">
+                        {(Array.isArray(template.symptoms) ? template.symptoms : []).slice(0, 3).map((s: string, i: number) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
+                        ))}
+                        {(Array.isArray(template.symptoms) ? template.symptoms : []).length > 3 && (
+                          <Badge variant="outline" className="text-xs">+{(template.symptoms as string[]).length - 3} more</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Pill className="h-3 w-3" />
+                        <span>{(Array.isArray(template.medicines) ? template.medicines : []).length} medicines</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Activity className="h-3 w-3" />
+                        <span>Used {template.usageCount || 0} times</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="system" className="mt-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {systemTemplates.map((template: any) => (
+                <Card key={template.id} className="hover-elevate border-primary/20" data-testid={`system-template-card-${template.id}`}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">{template.name}</CardTitle>
+                          <Badge variant="default" className="text-xs">System</Badge>
+                        </div>
+                        <CardDescription className="capitalize">{template.category}</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex flex-wrap gap-1">
+                      {(Array.isArray(template.symptoms) ? template.symptoms : []).slice(0, 3).map((s: string, i: number) => (
+                        <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Pill className="h-3 w-3" />
+                      <span>{(Array.isArray(template.medicines) ? template.medicines : []).length} medicines</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Activity className="h-3 w-3" />
+                      <span>Used {template.usageCount || 0} times</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="shared" className="mt-4">
+            {otherTemplates.length === 0 ? (
+              <Card className="p-8 text-center" data-testid="empty-shared-templates">
+                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-semibold mb-2">No shared templates</h3>
+                <p className="text-muted-foreground">Templates shared by other doctors will appear here</p>
+              </Card>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {otherTemplates.map((template: any) => (
+                  <Card key={template.id} className="hover-elevate" data-testid={`shared-template-card-${template.id}`}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">{template.name}</CardTitle>
+                      <CardDescription className="capitalize">By {template.createdByName || 'Unknown'}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex flex-wrap gap-1">
+                        {(Array.isArray(template.symptoms) ? template.symptoms : []).slice(0, 3).map((s: string, i: number) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Pill className="h-3 w-3" />
+                        <span>{(Array.isArray(template.medicines) ? template.medicines : []).length} medicines</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <Dialog open={templateDialogOpen} onOpenChange={(open) => { setTemplateDialogOpen(open); if (!open) { setEditingTemplate(null); resetTemplateForm(); }}}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-template">
+            <DialogHeader>
+              <DialogTitle>{editingTemplate ? 'Edit Template' : 'Create New Template'}</DialogTitle>
+              <DialogDescription>
+                {editingTemplate ? 'Update your prescription template' : 'Create a reusable prescription template'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="templateName">Template Name *</Label>
+                  <Input
+                    id="templateName"
+                    value={templateForm.name}
+                    onChange={(e) => setTemplateForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g., Common Cold Treatment"
+                    data-testid="input-template-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="templateCategory">Category</Label>
+                  <Select value={templateForm.category} onValueChange={(v) => setTemplateForm(prev => ({ ...prev, category: v }))}>
+                    <SelectTrigger id="templateCategory" data-testid="select-template-category">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="respiratory">Respiratory</SelectItem>
+                      <SelectItem value="gastrointestinal">Gastrointestinal</SelectItem>
+                      <SelectItem value="cardiovascular">Cardiovascular</SelectItem>
+                      <SelectItem value="musculoskeletal">Musculoskeletal</SelectItem>
+                      <SelectItem value="dermatological">Dermatological</SelectItem>
+                      <SelectItem value="neurological">Neurological</SelectItem>
+                      <SelectItem value="infectious">Infectious Disease</SelectItem>
+                      <SelectItem value="endocrine">Endocrine</SelectItem>
+                      <SelectItem value="obstetric">Obstetric/Gynecological</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Symptoms</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={symptomInput}
+                    onChange={(e) => setSymptomInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSymptom())}
+                    placeholder="Add symptom and press Enter"
+                    data-testid="input-symptom"
+                  />
+                  <Button type="button" variant="outline" onClick={addSymptom} data-testid="button-add-symptom">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {templateForm.symptoms.map((s, i) => (
+                    <Badge key={i} variant="secondary" className="gap-1">
+                      {s}
+                      <XCircle className="h-3 w-3 cursor-pointer" onClick={() => removeSymptom(s)} />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label>Medicines</Label>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  <Input
+                    value={medicineInput.medicineName}
+                    onChange={(e) => setMedicineInput(prev => ({ ...prev, medicineName: e.target.value }))}
+                    placeholder="Medicine name"
+                    data-testid="input-medicine-name"
+                  />
+                  <Input
+                    value={medicineInput.strength}
+                    onChange={(e) => setMedicineInput(prev => ({ ...prev, strength: e.target.value }))}
+                    placeholder="Strength (e.g., 500mg)"
+                    data-testid="input-medicine-strength"
+                  />
+                  <Select value={medicineInput.frequency} onValueChange={(v) => setMedicineInput(prev => ({ ...prev, frequency: v }))}>
+                    <SelectTrigger data-testid="select-medicine-frequency">
+                      <SelectValue placeholder="Frequency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Once daily</SelectItem>
+                      <SelectItem value="2">Twice daily</SelectItem>
+                      <SelectItem value="3">Thrice daily</SelectItem>
+                      <SelectItem value="4">Four times daily</SelectItem>
+                      <SelectItem value="sos">SOS/As needed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" onClick={addMedicine} data-testid="button-add-medicine">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {templateForm.medicines.map((med, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Pill className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{med.medicineName}</span>
+                        {med.strength && <Badge variant="outline">{med.strength}</Badge>}
+                        <Badge variant="secondary">{med.frequency === 'sos' ? 'SOS' : `${med.frequency}x daily`}</Badge>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => removeMedicine(i)} data-testid={`button-remove-medicine-${i}`}>
+                        <XCircle className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <Label htmlFor="templateInstructions">Instructions</Label>
+                <Textarea
+                  id="templateInstructions"
+                  value={templateForm.instructions}
+                  onChange={(e) => setTemplateForm(prev => ({ ...prev, instructions: e.target.value }))}
+                  placeholder="General instructions for the patient..."
+                  rows={3}
+                  data-testid="textarea-instructions"
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="templateDiet">Diet Advice</Label>
+                  <Textarea
+                    id="templateDiet"
+                    value={templateForm.dietAdvice}
+                    onChange={(e) => setTemplateForm(prev => ({ ...prev, dietAdvice: e.target.value }))}
+                    placeholder="Dietary recommendations..."
+                    rows={2}
+                    data-testid="textarea-diet"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="templateActivity">Activity Advice</Label>
+                  <Textarea
+                    id="templateActivity"
+                    value={templateForm.activityAdvice}
+                    onChange={(e) => setTemplateForm(prev => ({ ...prev, activityAdvice: e.target.value }))}
+                    placeholder="Activity/rest recommendations..."
+                    rows={2}
+                    data-testid="textarea-activity"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Suggested Tests</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={testInput}
+                    onChange={(e) => setTestInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTest())}
+                    placeholder="Add test and press Enter"
+                    data-testid="input-test"
+                  />
+                  <Button type="button" variant="outline" onClick={addTest} data-testid="button-add-test">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {templateForm.suggestedTests.map((t, i) => (
+                    <Badge key={i} variant="secondary" className="gap-1">
+                      {t}
+                      <XCircle className="h-3 w-3 cursor-pointer" onClick={() => removeTest(t)} />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="templateFollowUp">Follow-up (days)</Label>
+                  <Input
+                    id="templateFollowUp"
+                    type="number"
+                    min={1}
+                    value={templateForm.followUpDays}
+                    onChange={(e) => setTemplateForm(prev => ({ ...prev, followUpDays: parseInt(e.target.value) || 7 }))}
+                    data-testid="input-followup-days"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Visibility</Label>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Switch
+                      checked={templateForm.isPublic}
+                      onCheckedChange={(checked) => setTemplateForm(prev => ({ ...prev, isPublic: checked }))}
+                      data-testid="switch-public"
+                    />
+                    <span className="text-sm">{templateForm.isPublic ? 'Public (visible to other doctors)' : 'Private (only you can see)'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setTemplateDialogOpen(false)} data-testid="button-cancel-template">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveTemplate} 
+                disabled={createTemplateMutation.isPending || updateTemplateMutation.isPending}
+                data-testid="button-save-template"
+              >
+                {(createTemplateMutation.isPending || updateTemplateMutation.isPending) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                <Save className="h-4 w-4 mr-2" />
+                {editingTemplate ? 'Update Template' : 'Create Template'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  };
+
   const renderNotifications = () => {
     const getNotificationBgColor = (type: string) => {
       switch (type) {
@@ -2385,6 +2966,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       case "appointments": return renderAppointments();
       case "schedules": return renderSchedules();
       case "prescriptions": return renderPrescriptions();
+      case "templates": return renderTemplates();
       case "patient-monitoring": return <PatientMonitoringPage />;
       case "hospital-services": return <HospitalServices currentUserRole="DOCTOR" />;
       case "staff-management": return <StaffSelfService userId={doctorId} userName={doctorName} userRole="DOCTOR" />;
@@ -2486,7 +3068,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Clinical Services</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu className="space-y-1">
-                    {menuItems.filter(item => ['appointments', 'patients', 'prescriptions', 'patient-monitoring', 'hospital-services'].includes(item.id)).map((item) => (
+                    {menuItems.filter(item => ['appointments', 'patients', 'prescriptions', 'templates', 'patient-monitoring', 'hospital-services'].includes(item.id)).map((item) => (
                       <SidebarMenuItem key={item.id}>
                         <SidebarMenuButton asChild data-testid={`nav-${item.id}`}>
                           <Button
