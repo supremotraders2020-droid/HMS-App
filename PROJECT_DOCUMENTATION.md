@@ -37,14 +37,16 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 - Nursing Staff
 - OPD (Outpatient Department) Managers
 - Patients
+- Pathology Lab Staff
+- Medical Store Staff
 
 ### Key Highlights
 
 | Feature | Description |
 |---------|-------------|
 | **Hospital** | Gravity Hospital (Single-Tenant) |
-| **User Roles** | 5 distinct roles with specific permissions |
-| **Internal Services** | 13 fully integrated hospital services |
+| **User Roles** | 7 distinct roles with specific permissions |
+| **Internal Services** | 24 departments with 4,830+ hospital services |
 | **Portals** | 3 specialized portals (Patient, Doctor, Staff) |
 | **Security** | AES-256 encryption, bcrypt password hashing, HIPAA compliance |
 | **Theme** | Light/Dark mode with 6 color themes |
@@ -132,6 +134,10 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 |  (Clinical care,    |  (Assigned     |  (OPD operations, |
 |   prescriptions)    |  patients only)|   scheduling)     |
 +----------------------------------------------------------+
+|   PATHOLOGY_LAB     |  MEDICAL_STORE |                   |
+|  (Lab tests,        |  (Dispensing,  |                   |
+|   sample mgmt)      |  pharmacy ops) |                   |
++----------------------------------------------------------+
 |                       PATIENT                             |
 |         (Personal health, appointments)                   |
 +----------------------------------------------------------+
@@ -211,25 +217,76 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 | Notifications | View Own |
 | Chatbot | Full Access |
 
+### 6. PATHOLOGY_LAB
+**Laboratory operations and diagnostics**
+
+| Module | Access Level |
+|--------|--------------|
+| Test Orders | Full Access |
+| Sample Collection | Full Access |
+| Result Entry | Full Access |
+| Report Generation | Full Access |
+| Quality Control | Full Access |
+| Lab Inventory | Full Access |
+| Hospital Services | View Lab Services (1,148 tests) |
+| Notifications | Lab-related only |
+
+**Capabilities:**
+- Process laboratory test orders
+- Collect and manage patient samples
+- Enter and validate test results
+- Generate lab reports
+- Maintain quality control records
+- Manage lab inventory
+
+### 7. MEDICAL_STORE
+**Pharmacy and dispensing operations**
+
+| Module | Access Level |
+|--------|--------------|
+| Prescriptions | View Hospital Prescriptions |
+| Medicine Dispensing | Full Access |
+| Billing & Invoicing | Full Access |
+| Medicine Substitution | Request/Approve |
+| Store Inventory | Full Access |
+| Medicine Database | Full Access |
+| Hospital Services | View Medicine Services |
+| Notifications | Store-related only |
+
+**Store Types:**
+- IN_HOUSE: Hospital's internal pharmacy
+- THIRD_PARTY: External pharmacy partners
+
+**Capabilities:**
+- Receive and process prescriptions
+- Dispense medications accurately
+- Generate bills with GST calculation
+- Handle medicine substitutions
+- Track stock levels and expiry
+- Payment methods: CASH, CARD, UPI, INSURANCE
+
 ### Role Permissions Matrix
 
-| Feature | ADMIN | DOCTOR | NURSE | OPD_MANAGER | PATIENT |
-|---------|:-----:|:------:|:-----:|:-----------:|:-------:|
-| User Management | Yes | No | No | No | No |
-| OPD Service | Yes | Yes | No | Yes | No |
-| Patient Service | Yes | Yes | Limited | Yes | No |
-| Inventory Service | Yes | No | Yes | Yes | No |
-| Patient Tracking | Yes | Yes | Limited | Yes | No |
-| Biometric Service | Yes | Yes | Yes | No | No |
-| Equipment Servicing | Yes | Yes | No | Yes | No |
-| Notification Service | Yes | Yes | Limited | Limited | Yes |
-| Chatbot Service | Yes | Yes | Yes | No | Yes |
-| BMW Management | Yes | No | Yes | Yes | No |
-| Oxygen Tracking | Yes | Yes | Yes | Yes | No |
-| Consent Forms | Yes | Yes | No | No | No |
-| Medicine Database | Yes | Yes | Yes | Yes | No |
-| Doctor Portal | No | Yes | No | No | No |
-| Patient Portal | No | No | No | No | Yes |
+| Feature | ADMIN | DOCTOR | NURSE | OPD_MANAGER | PATIENT | PATHOLOGY_LAB | MEDICAL_STORE |
+|---------|:-----:|:------:|:-----:|:-----------:|:-------:|:-------------:|:-------------:|
+| User Management | Yes | No | No | No | No | No | No |
+| OPD Service | Yes | Yes | No | Yes | No | No | No |
+| Patient Service | Yes | Yes | Limited | Yes | No | View | View |
+| Inventory Service | Yes | No | Yes | Yes | No | Lab Only | Store Only |
+| Patient Tracking | Yes | Yes | Limited | Yes | No | No | No |
+| Biometric Service | Yes | Yes | Yes | No | No | No | No |
+| Equipment Servicing | Yes | Yes | No | Yes | No | Lab Equipment | No |
+| Notification Service | Yes | Yes | Limited | Limited | Yes | Lab Only | Store Only |
+| Chatbot Service | Yes | Yes | Yes | No | Yes | No | No |
+| BMW Management | Yes | No | Yes | Yes | No | No | No |
+| Oxygen Tracking | Yes | Yes | Yes | Yes | No | No | No |
+| Consent Forms | Yes | Yes | No | No | No | No | No |
+| Medicine Database | Yes | Yes | Yes | Yes | No | Yes | Yes |
+| Hospital Services | Yes | Yes | Yes | Yes | No | Lab Services | Pharmacy |
+| Doctor Portal | No | Yes | No | No | No | No | No |
+| Patient Portal | No | No | No | No | Yes | No | No |
+| Lab Operations | No | No | No | No | No | Yes | No |
+| Pharmacy Operations | No | No | No | No | No | No | Yes |
 
 ---
 

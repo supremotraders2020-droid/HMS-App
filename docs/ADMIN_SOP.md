@@ -164,7 +164,7 @@ The admin sidebar provides access to ALL modules:
 ## 4. User Management
 
 ### 4.1 Purpose
-Manage all hospital staff accounts including doctors, nurses, OPD managers, and other administrators.
+Manage all hospital staff accounts including doctors, nurses, OPD managers, pathology lab staff, medical store staff, and other administrators.
 
 ### 4.2 Accessing User Management
 
@@ -189,7 +189,7 @@ Manage all hospital staff accounts including doctors, nurses, OPD managers, and 
 | Password | Yes | Initial password | Doctor@123 |
 | Email | Yes | Contact email | anil.kumar@hospital.com |
 | Phone | Yes | Contact number | +91 9876543210 |
-| Role | Yes | User role | DOCTOR, NURSE, OPD_MANAGER, ADMIN |
+| Role | Yes | User role | DOCTOR, NURSE, OPD_MANAGER, ADMIN, PATHOLOGY_LAB, MEDICAL_STORE |
 | Department | No | Hospital department | Cardiology |
 
 **Step 3: Assign Role**
@@ -200,6 +200,8 @@ Manage all hospital staff accounts including doctors, nurses, OPD managers, and 
 | NURSE | Patient care, monitoring, limited admin |
 | OPD_MANAGER | OPD operations, scheduling |
 | PATIENT | Personal records only |
+| PATHOLOGY_LAB | Lab tests, sample management, results, QC |
+| MEDICAL_STORE | Pharmacy operations, dispensing, billing |
 
 **Step 4: Save User**
 - Click "Create User"

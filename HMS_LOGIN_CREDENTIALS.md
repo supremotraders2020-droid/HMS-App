@@ -92,6 +92,30 @@
 
 ---
 
+## PATHOLOGY LAB STAFF (5)
+
+| # | Name | Username | Password | Role | Department | Phone |
+|---|------|----------|----------|------|------------|-------|
+| 1 | Dr. Ramesh Kulkarni | lab.ramesh.kulkarni | Lab@123 | PATHOLOGY_LAB | Biochemistry | +91 95201 11111 |
+| 2 | Priya Mehta | lab.priya.mehta | Lab@123 | PATHOLOGY_LAB | Hematology | +91 95201 22222 |
+| 3 | Sunil Patel | lab.sunil.patel | Lab@123 | PATHOLOGY_LAB | Microbiology | +91 95201 33333 |
+| 4 | Kavita Sharma | lab.kavita.sharma | Lab@123 | PATHOLOGY_LAB | Histopathology | +91 95201 44444 |
+| 5 | Amit Deshmukh | lab.amit.deshmukh | Lab@123 | PATHOLOGY_LAB | Clinical Pathology | +91 95201 55555 |
+
+---
+
+## MEDICAL STORE STAFF (5)
+
+| # | Name | Username | Password | Role | Store Type | Phone |
+|---|------|----------|----------|------|------------|-------|
+| 1 | Rajesh Verma | store.rajesh.verma | Store@123 | MEDICAL_STORE | IN_HOUSE | +91 94201 11111 |
+| 2 | Priya Sharma | store.priya.sharma | Store@123 | MEDICAL_STORE | IN_HOUSE | +91 94201 22222 |
+| 3 | Sunil Patil | store.sunil.patil | Store@123 | MEDICAL_STORE | IN_HOUSE | +91 94201 33333 |
+| 4 | Kavita Mehta | store.kavita.mehta | Store@123 | MEDICAL_STORE | THIRD_PARTY | +91 94201 44444 |
+| 5 | Amit Kulkarni | store.amit.kulkarni | Store@123 | MEDICAL_STORE | THIRD_PARTY | +91 94201 55555 |
+
+---
+
 ## Quick Test Accounts
 
 | Role | Username | Password |
@@ -101,6 +125,8 @@
 | Patient | rohan.patil | Patient@123 |
 | Nurse | nurse.asha.patil | Nurse@123 |
 | OPD Manager | opd.mahesh.patil | OPD@123 |
+| Pathology Lab | lab.ramesh.kulkarni | Lab@123 |
+| Medical Store | store.rajesh.verma | Store@123 |
 
 ---
 
@@ -113,6 +139,8 @@
 | PATIENT | Patient Portal | OPD Booking, Health Records, Admission Tracking, Chatbot, Profile |
 | NURSE | Staff Dashboard | Patient Tracking, Inventory, Equipment Servicing, Notifications |
 | OPD_MANAGER | Staff Dashboard | OPD Service, Patient Service, Biometric Service, Equipment Servicing |
+| PATHOLOGY_LAB | Staff Dashboard | Test Orders, Sample Collection, Result Entry, Lab Reports, QC, Lab Inventory |
+| MEDICAL_STORE | Staff Dashboard | Prescriptions, Medicine Dispensing, Billing, Stock Management, Medicine Database |
 
 ---
 
@@ -121,3 +149,5 @@
 - Passwords are case-sensitive
 - Select the correct **Role** when logging in to access the appropriate portal
 - Doctor and Patient roles have dedicated portals with specialized features
+- Pathology Lab users can access 1,148 lab tests across 10 categories
+- Medical Store supports IN_HOUSE (hospital pharmacy) and THIRD_PARTY (external) store types

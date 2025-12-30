@@ -1,7 +1,7 @@
 # HMS Core - Hospital Management System
 
 ## Overview
-HMS Core is a comprehensive Hospital Management System designed for Gravity Hospital, offering role-based access for various healthcare professionals (Administrators, Doctors, Nurses, OPD Managers, and Patients). It provides specialized dashboards and workflows tailored to each role, focusing on clinical clarity, professional trust, and efficient healthcare workflows. The system adheres to Material Design 3 principles adapted for the healthcare industry. The project aims to provide a robust, scalable, and intelligent platform for modern hospital management, integrating AI for enhanced decision-making and operational efficiency.
+HMS Core is a comprehensive Hospital Management System designed for Gravity Hospital, offering role-based access for seven user roles: ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, and MEDICAL_STORE. It provides specialized dashboards and workflows tailored to each role, focusing on clinical clarity, professional trust, and efficient healthcare workflows. The system adheres to Material Design 3 principles adapted for the healthcare industry. The project includes 24 departments with 4,830+ hospital services (including 1,148 pathology tests), integrating AI for enhanced decision-making and operational efficiency.
 
 ## User Preferences
 - Preferred communication style: Simple, everyday language
@@ -19,7 +19,7 @@ The frontend is built with React 18 and TypeScript, utilizing Radix UI and shadc
 The backend uses Node.js with Express, Drizzle ORM for type-safe database interactions, PostgreSQL (Neon) as the serverless database, bcrypt for password hashing (10 rounds), Express Sessions for authentication, and WebSockets for real-time notifications. OpenAI GPT-4o is integrated for AI services.
 
 ### Feature Specifications
-HMS Core includes 19 core modules, with a strong emphasis on role-based access control for ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, and MEDICAL_STORE roles.
+HMS Core includes 21 core modules, with a strong emphasis on role-based access control for ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, and MEDICAL_STORE roles.
 
 Key modules and features include:
 - **Authentication & RBAC**: Session-based authentication, bcrypt hashing, daily Doctor Oath requirement, and role-based UI filtering.
@@ -41,8 +41,10 @@ Key modules and features include:
 - **OT & ICU Swab Contamination Monitoring**: NABH-compliant environmental surveillance with auto-interpretation logic (PASS/ACCEPTABLE/FAIL), CAPA generation, and full audit logging.
 - **Disease Knowledge, Diet & Medication Scheduling**: AI-powered clinical knowledge for pre-seeded diseases (Diabetes Type 2, Hypertension, Tuberculosis, Dengue, Asthma), Indian diet plans, medication schedule templates, and AI-powered personalization using OpenAI GPT-4o, adhering to ICMR/MoHFW guidelines.
 - **AI Intelligence Layer**: Hospital-wide analytics and predictions including Doctor/Nurse/OPD efficiency, Hospital Health Index, Compliance Risk, and predictive analytics for ICU load and oxygen demand using AI Analytics Snapshots and Anomaly Detection.
-- **Medical Store Integration**: Prescription sharing between hospital, patients, and external pharmacies with two store types (IN_HOUSE and THIRD_PARTY), complete prescription dispensing workflow with status tracking (PENDING, PARTIALLY_DISPENSED, FULLY_DISPENSED), billing integration with GST calculation, medicine substitution approval, payment methods (CASH, CARD, UPI, INSURANCE), and full audit logging for compliance.
+- **Medical Store Integration**: Prescription sharing between hospital, patients, and external pharmacies with two store types (IN_HOUSE and THIRD_PARTY), complete prescription dispensing workflow with status tracking (PENDING, PARTIALLY_DISPENSED, FULLY_DISPENSED), billing integration with GST calculation, medicine substitution approval, payment methods (CASH, CARD, UPI, INSURANCE), and full audit logging for compliance. Available to MEDICAL_STORE role.
+- **Pathology Lab Service**: Complete laboratory operations including test order management, sample collection with barcode tracking, test processing, result entry with validation, report generation, quality control (IQC/EQAS), and lab inventory management. Supports 1,148 pathology tests across 10 categories (Hematology, Biochemistry, Microbiology, Serology, Histopathology, Clinical Pathology, Endocrinology, Tumor Markers, Immunology, Genetics). Critical value alerts and NABH-compliant workflows. Available to PATHOLOGY_LAB role.
 - **Face Recognition Identity Verification**: Privacy-compliant biometric identity verification using browser-based face detection (face-api.js), 128-dimensional embedding vectors with cosine similarity matching (0.78 threshold), encrypted storage (no raw images stored), consent-first approach with revocation support, patient duplicate detection during registration, staff attendance via face scan, recognition confidence scoring, quality checks, admin dashboard with statistics and settings, and full audit logging for all recognition attempts. Available to ADMIN, NURSE, and OPD_MANAGER roles.
+- **Hospital Services Module**: Comprehensive catalog of 4,830+ services across 24 departments including Emergency, Cardiology, Neurology, Orthopedics, Pediatrics, Oncology, Ophthalmology, ENT, Dermatology, Psychiatry, Gynecology, Urology, Nephrology, Gastroenterology, Pulmonology, Endocrinology, Rheumatology, Pathology, Radiology, Physiotherapy, Dental, General Medicine, General Surgery, and ICU. Each service includes pricing, description, duration, and department mapping.
 
 ### System Design Choices
 - **Role-Based Access Control**: Strict hierarchical permissions for all modules and data.
