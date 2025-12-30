@@ -26,8 +26,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send, Printer, ChevronsUpDown, Check, X, Lightbulb, Filter } from "lucide-react";
-import type { Prescription, Medicine, ServicePatient, LabTestCatalog } from "@shared/schema";
+import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send, Printer, ChevronsUpDown, Check, X, Lightbulb, Filter, Sparkles, FileStack } from "lucide-react";
+import type { Prescription, Medicine, ServicePatient, LabTestCatalog, OpdPrescriptionTemplate } from "@shared/schema";
 
 interface MedicineItem {
   medicineName: string;
@@ -197,6 +197,134 @@ export default function PrescriptionCreationModal({
   const { data: labTestCatalog = [], isLoading: isLoadingLabTests } = useQuery<LabTestCatalog[]>({
     queryKey: ['/api/lab-tests'],
   });
+
+  // Fetch OPD prescription templates for Quick Templates dropdown
+  const { data: opdTemplates = [], isLoading: isLoadingTemplates } = useQuery<OpdPrescriptionTemplate[]>({
+    queryKey: ['/api/opd-templates'],
+  });
+
+  // State for template selection
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState('');
+
+  // Group templates by category
+  const groupedTemplates = useMemo(() => {
+    const groups: Record<string, OpdPrescriptionTemplate[]> = {};
+    opdTemplates.forEach(template => {
+      const category = template.category || 'General';
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(template);
+    });
+    return groups;
+  }, [opdTemplates]);
+
+  // Filter templates by search
+  const filteredTemplates = useMemo(() => {
+    if (!templateSearch) return opdTemplates;
+    const search = templateSearch.toLowerCase();
+    return opdTemplates.filter(t => 
+      t.name.toLowerCase().includes(search) ||
+      t.category?.toLowerCase().includes(search) ||
+      t.description?.toLowerCase().includes(search)
+    );
+  }, [opdTemplates, templateSearch]);
+
+  // Safe JSON parsing helper
+  const safeJsonParse = (data: string | null | undefined, fallback: any = []) => {
+    if (!data) return fallback;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return fallback;
+    }
+  };
+
+  // Apply template to form
+  const applyTemplate = async (template: OpdPrescriptionTemplate) => {
+    try {
+      // Parse template data safely
+      const templateMedicines = safeJsonParse(template.medicines as string, []);
+      const templateSymptoms = safeJsonParse(template.symptoms as string, []);
+      const templateInstructions = safeJsonParse(template.instructions as string, '');
+      const templateTests = safeJsonParse(template.suggestedTests as string, []);
+
+      // Auto-fill diagnosis with template name and symptoms
+      const symptomsText = Array.isArray(templateSymptoms) ? templateSymptoms.join(', ') : '';
+      setDiagnosis(template.name);
+      setChiefComplaints(symptomsText);
+
+      // Auto-fill medicines (with deduplication based on medicineName)
+      if (Array.isArray(templateMedicines) && templateMedicines.length > 0) {
+        const newMedicines: MedicineItem[] = templateMedicines.map((med: any) => ({
+          medicineName: med.medicineName || '',
+          dosageForm: med.dosageForm || 'Tab',
+          strength: med.strength || '',
+          frequency: med.frequency || '1',
+          mealTiming: med.mealTiming || 'after_food',
+          duration: med.duration || 5,
+          durationUnit: med.durationUnit || 'days',
+          specialInstructions: med.specialInstructions || '',
+          quantity: calculateQuantity(med.frequency || '1', med.duration || 5, med.durationUnit || 'days'),
+        }));
+        
+        // Deduplicate by medicine name (case-insensitive)
+        setMedicines(prev => {
+          const existingNames = new Set(prev.map(m => m.medicineName.toLowerCase()));
+          const uniqueNewMedicines = newMedicines.filter(m => 
+            !existingNames.has(m.medicineName.toLowerCase())
+          );
+          return [...prev, ...uniqueNewMedicines];
+        });
+      }
+
+      // Auto-fill instructions
+      if (templateInstructions) {
+        setInstructions(prev => prev ? `${prev}\n${templateInstructions}` : templateInstructions);
+      }
+
+      // Auto-fill diet and activity advice
+      if (template.dietAdvice) {
+        const dietText = template.dietAdvice;
+        setDietAdvice(prev => prev ? `${prev}\n${dietText}` : dietText);
+      }
+      if (template.activityAdvice) {
+        const activityText = template.activityAdvice;
+        setActivityAdvice(prev => prev ? `${prev}\n${activityText}` : activityText);
+      }
+
+      // Auto-fill suggested tests
+      if (Array.isArray(templateTests) && templateTests.length > 0) {
+        setSuggestedTests(prev => Array.from(new Set([...prev, ...templateTests])));
+      }
+
+      // Auto-fill follow-up date if specified
+      if (template.followUpDays && template.followUpDays > 0) {
+        const followUp = new Date();
+        followUp.setDate(followUp.getDate() + template.followUpDays);
+        setFollowUpDate(followUp.toISOString().split('T')[0]);
+      }
+
+      // Increment usage count
+      await apiRequest('POST', `/api/opd-templates/${template.id}/use`);
+
+      setTemplateOpen(false);
+      setTemplateSearch('');
+
+      toast({
+        title: "Template Applied",
+        description: `"${template.name}" template has been applied. Review and modify as needed.`,
+      });
+    } catch (error) {
+      console.error("Error applying template:", error);
+      toast({
+        title: "Error",
+        description: "Failed to apply template",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Get unique categories from lab tests
   const testCategories = useMemo(() => {
@@ -554,6 +682,104 @@ export default function PrescriptionCreationModal({
 
             {/* Clinical Tab */}
             <TabsContent value="clinical" className="space-y-4">
+              {/* Quick OPD Templates */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Quick OPD Templates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Popover open={templateOpen} onOpenChange={setTemplateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={templateOpen}
+                          className="w-full justify-between"
+                          data-testid="button-quick-template"
+                        >
+                          <div className="flex items-center gap-2">
+                            <FileStack className="h-4 w-4" />
+                            <span>Select a template to auto-fill prescription...</span>
+                          </div>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[500px] p-0" align="start">
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Search templates..."
+                            value={templateSearch}
+                            onValueChange={setTemplateSearch}
+                            data-testid="input-template-search"
+                          />
+                          <CommandList>
+                            {isLoadingTemplates ? (
+                              <div className="p-4 text-center text-sm text-muted-foreground">
+                                <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+                                Loading templates...
+                              </div>
+                            ) : filteredTemplates.length === 0 ? (
+                              <CommandEmpty>No templates found.</CommandEmpty>
+                            ) : (
+                              Object.entries(groupedTemplates).map(([category, templates]) => {
+                                const categoryTemplates = templates.filter(t =>
+                                  !templateSearch ||
+                                  t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
+                                  t.description?.toLowerCase().includes(templateSearch.toLowerCase())
+                                );
+                                if (categoryTemplates.length === 0) return null;
+                                return (
+                                  <CommandGroup key={category} heading={category}>
+                                    {categoryTemplates.map((template) => (
+                                      <CommandItem
+                                        key={template.id}
+                                        value={template.id}
+                                        onSelect={() => applyTemplate(template)}
+                                        className="flex items-start gap-2 py-2"
+                                        data-testid={`template-item-${template.slug}`}
+                                      >
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-medium">{template.name}</span>
+                                            {template.isSystemTemplate && (
+                                              <Badge variant="secondary" className="text-xs">System</Badge>
+                                            )}
+                                          </div>
+                                          {template.description && (
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                              {template.description}
+                                            </p>
+                                          )}
+                                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                            {template.followUpDays && (
+                                              <span>Follow-up: {template.followUpDays} days</span>
+                                            )}
+                                            {template.usageCount && template.usageCount > 0 && (
+                                              <span>Used: {template.usageCount}x</span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                );
+                              })
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Templates will auto-fill diagnosis, medicines, instructions, diet advice, and suggested tests. You can modify after applying.
+                  </p>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardContent className="pt-6 space-y-4">
                   <div className="space-y-2">

@@ -4591,11 +4591,15 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getOpdTemplate(id);
     if (!existing) return undefined;
 
-    // Create version history entry
+    // Determine the current version number (start from 1 if null)
+    const currentVersion = existing.version || 1;
+    const nextVersion = currentVersion + 1;
+
+    // Create version history entry with the CURRENT state before updating
     if (userId) {
       await db.insert(opdTemplateVersions).values({
         templateId: id,
-        version: existing.version || 1,
+        version: currentVersion,
         name: existing.name,
         symptoms: existing.symptoms,
         medicines: existing.medicines,
@@ -4614,7 +4618,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db.update(opdPrescriptionTemplates)
       .set({ 
         ...updates, 
-        version: (existing.version || 1) + 1,
+        version: nextVersion,
         updatedAt: new Date() 
       })
       .where(eq(opdPrescriptionTemplates.id, id))

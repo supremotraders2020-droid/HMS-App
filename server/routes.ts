@@ -186,6 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await databaseStorage.seedConsentTemplates();
   await databaseStorage.seedPathologyTests();
   await databaseStorage.seedHospitalServices();
+  await databaseStorage.seedSystemTemplates();
   
   // Ensure lab test order sequence exists for concurrency-safe order numbers
   await databaseStorage.ensureLabTestOrderSequence();
@@ -11481,8 +11482,9 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Create new template (ADMIN and DOCTOR only)
   app.post("/api/opd-templates", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
     try {
-      const userId = req.headers["x-user-id"] as string;
-      const userName = req.headers["x-user-name"] as string;
+      const user = req.user as any;
+      const userId = user?.id;
+      const userName = user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username;
       
       const templateData = {
         ...req.body,
@@ -11502,9 +11504,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Update template (ADMIN can update any, DOCTOR can update their own)
   app.patch("/api/opd-templates/:id", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
     try {
-      const userId = req.headers["x-user-id"] as string;
-      const userName = req.headers["x-user-name"] as string;
-      const userRole = req.headers["x-user-role"] as string;
+      const user = req.user as any;
+      const userId = user?.id;
+      const userName = user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username;
+      const userRole = user?.role;
       
       const existing = await storage.getOpdTemplate(req.params.id);
       if (!existing) return res.status(404).json({ error: "Template not found" });
@@ -11530,8 +11533,9 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Delete template (ADMIN can delete any non-system, DOCTOR can delete their own)
   app.delete("/api/opd-templates/:id", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
     try {
-      const userId = req.headers["x-user-id"] as string;
-      const userRole = req.headers["x-user-role"] as string;
+      const user = req.user as any;
+      const userId = user?.id;
+      const userRole = user?.role;
       
       const existing = await storage.getOpdTemplate(req.params.id);
       if (!existing) return res.status(404).json({ error: "Template not found" });
