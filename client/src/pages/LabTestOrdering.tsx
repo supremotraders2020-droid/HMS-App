@@ -71,6 +71,7 @@ export default function LabTestOrdering({ currentUserId, currentUserName, curren
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [clinicalNotes, setClinicalNotes] = useState("");
+  const [suggestedTest, setSuggestedTest] = useState("");
 
   const userContext = { id: currentUserId, role: currentUserRole };
 
@@ -124,6 +125,7 @@ export default function LabTestOrdering({ currentUserId, currentUserName, curren
       queryClient.invalidateQueries({ queryKey: ["/api/lab-test-orders"] });
       setCart([]);
       setClinicalNotes("");
+      setSuggestedTest("");
       setShowOrderDialog(false);
     },
     onError: (error: Error) => {
@@ -559,6 +561,18 @@ export default function LabTestOrdering({ currentUserId, currentUserName, curren
                 placeholder="Enter any clinical notes or instructions for the lab..."
                 rows={3}
                 data-testid="input-clinical-notes"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="suggestedTest">Suggested Test (Optional)</Label>
+              <Textarea
+                id="suggestedTest"
+                value={suggestedTest}
+                onChange={(e) => setSuggestedTest(e.target.value)}
+                placeholder="e.g., ECG, Lipid Profile, HbA1c, Thyroid Panel, CBC, Blood Sugar..."
+                rows={3}
+                data-testid="input-suggested-test"
               />
             </div>
 
