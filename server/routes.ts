@@ -51,7 +51,10 @@ import { users, insertAppointmentSchema, insertInventoryItemSchema, insertInvent
   medicalStoreAccessLogs, insertMedicalStoreAccessLogSchema,
   medicalStoreBills, insertMedicalStoreBillSchema,
   prescriptions,
-  insertLabTestOrderSchema
+  insertLabTestOrderSchema,
+  // OPD Prescription Templates
+  opdPrescriptionTemplates, insertOpdPrescriptionTemplateSchema,
+  opdTemplateVersions, insertOpdTemplateVersionSchema
 } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
@@ -11429,6 +11432,159 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error bulk creating services:", error);
       res.status(500).json({ error: "Failed to bulk create services" });
+    }
+  });
+
+  // ==========================================
+  // OPD PRESCRIPTION TEMPLATES - Quick OPD Templates
+  // ==========================================
+
+  // Get all templates (accessible to ADMIN, DOCTOR, OPD_MANAGER)
+  app.get("/api/opd-templates", requireAuth, requireRole(["ADMIN", "DOCTOR", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const { category, createdBy } = req.query;
+      const templates = await storage.getOpdTemplates({
+        category: category as string,
+        createdBy: createdBy as string
+      });
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching OPD templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  // Get single template by ID
+  app.get("/api/opd-templates/:id", requireAuth, requireRole(["ADMIN", "DOCTOR", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const template = await storage.getOpdTemplate(req.params.id);
+      if (!template) return res.status(404).json({ error: "Template not found" });
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  // Get template by slug
+  app.get("/api/opd-templates/slug/:slug", requireAuth, requireRole(["ADMIN", "DOCTOR", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const template = await storage.getOpdTemplateBySlug(req.params.slug);
+      if (!template) return res.status(404).json({ error: "Template not found" });
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  // Create new template (ADMIN and DOCTOR only)
+  app.post("/api/opd-templates", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
+    try {
+      const userId = req.headers["x-user-id"] as string;
+      const userName = req.headers["x-user-name"] as string;
+      
+      const templateData = {
+        ...req.body,
+        createdBy: userId,
+        createdByName: userName,
+        isSystemTemplate: false
+      };
+      
+      const template = await storage.createOpdTemplate(templateData);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error("Error creating template:", error);
+      res.status(500).json({ error: "Failed to create template" });
+    }
+  });
+
+  // Update template (ADMIN can update any, DOCTOR can update their own)
+  app.patch("/api/opd-templates/:id", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
+    try {
+      const userId = req.headers["x-user-id"] as string;
+      const userName = req.headers["x-user-name"] as string;
+      const userRole = req.headers["x-user-role"] as string;
+      
+      const existing = await storage.getOpdTemplate(req.params.id);
+      if (!existing) return res.status(404).json({ error: "Template not found" });
+      
+      // Doctors can only update their own non-system templates
+      if (userRole === "DOCTOR" && existing.createdBy !== userId) {
+        return res.status(403).json({ error: "You can only edit your own templates" });
+      }
+      
+      // System templates can only be updated by ADMIN
+      if (existing.isSystemTemplate && userRole !== "ADMIN") {
+        return res.status(403).json({ error: "Only administrators can modify system templates" });
+      }
+      
+      const template = await storage.updateOpdTemplate(req.params.id, req.body, userId, userName);
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating template:", error);
+      res.status(500).json({ error: "Failed to update template" });
+    }
+  });
+
+  // Delete template (ADMIN can delete any non-system, DOCTOR can delete their own)
+  app.delete("/api/opd-templates/:id", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
+    try {
+      const userId = req.headers["x-user-id"] as string;
+      const userRole = req.headers["x-user-role"] as string;
+      
+      const existing = await storage.getOpdTemplate(req.params.id);
+      if (!existing) return res.status(404).json({ error: "Template not found" });
+      
+      // Cannot delete system templates
+      if (existing.isSystemTemplate) {
+        return res.status(403).json({ error: "System templates cannot be deleted" });
+      }
+      
+      // Doctors can only delete their own templates
+      if (userRole === "DOCTOR" && existing.createdBy !== userId) {
+        return res.status(403).json({ error: "You can only delete your own templates" });
+      }
+      
+      const deleted = await storage.deleteOpdTemplate(req.params.id);
+      if (!deleted) return res.status(400).json({ error: "Failed to delete template" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      res.status(500).json({ error: "Failed to delete template" });
+    }
+  });
+
+  // Increment usage count when template is applied
+  app.post("/api/opd-templates/:id/use", requireAuth, requireRole(["ADMIN", "DOCTOR", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      await storage.incrementTemplateUsage(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error incrementing usage:", error);
+      res.status(500).json({ error: "Failed to update usage" });
+    }
+  });
+
+  // Get version history for a template
+  app.get("/api/opd-templates/:id/versions", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
+    try {
+      const versions = await storage.getOpdTemplateVersions(req.params.id);
+      res.json(versions);
+    } catch (error) {
+      console.error("Error fetching versions:", error);
+      res.status(500).json({ error: "Failed to fetch versions" });
+    }
+  });
+
+  // Seed system templates (ADMIN only)
+  app.post("/api/opd-templates/seed", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      await storage.seedSystemTemplates();
+      res.json({ success: true, message: "System templates seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding templates:", error);
+      res.status(500).json({ error: "Failed to seed templates" });
     }
   });
 

@@ -1,0 +1,315 @@
+# 🔹 MASTER RULE (COMMON FOR ALL PROMPTS)
+
+> All templates must be **doctor-editable**, **auto-fill capable**, and **selectable from a dropdown called “Quick OPD Templates”**
+
+---
+
+## 🔹 PROMPT 1: ADD COMMON COLD TEMPLATE (WITH SYMPTOMS)
+
+**PROMPT TO ADD FEATURE:**
+
+```
+Create a reusable OPD prescription template named "Common Cold / Rhinitis".
+
+1. Add a SYMPTOMS section under the "Clinical" tab with multi-select + free text:
+   - Runny nose
+   - Sneezing
+   - Nasal congestion
+   - Mild fever
+   - Headache
+   - Watery eyes
+   - Sore throat (mild)
+
+2. Medicines tab (pre-filled but editable):
+   - Cetirizine | Tablet | 10 mg | Once daily | Night | 5 Days | May cause drowsiness
+   - Paracetamol | Tablet | 650 mg | SOS | After food | 3 Days | Max 3/day
+   - Steam inhalation | Therapy | — | Twice daily | Morning & Night | 5 Days
+
+3. Instructions tab:
+   - General: Adequate rest, warm fluids, steam inhalation
+   - Diet: Avoid cold drinks, prefer warm food
+   - Activity: Rest, avoid cold exposure
+
+4. Suggested Tests tab:
+   - CBC (only if symptoms persist > 3 days)
+
+5. Follow-up:
+   - 5 days
+
+Ensure doctor can modify any field before final prescription generation.
+```
+
+---
+
+## 🔹 PROMPT 2: ADD FEVER TEMPLATE (WITH SYMPTOMS)
+
+```
+Create an OPD prescription template named "Fever – Acute / Viral".
+
+1. Symptoms (Clinical tab):
+   - High body temperature
+   - Chills
+   - Body ache
+   - Headache
+   - Weakness
+   - Loss of appetite
+
+2. Medicines:
+   - Paracetamol | Tablet | 650 mg | Thrice daily | After food | 3 Days
+   - Pantoprazole | Tablet | 40 mg | Once daily | Before food | 3 Days
+
+3. Instructions:
+   - General: Monitor temperature every 6 hours
+   - Diet: Light food, increased fluids
+   - Activity: Complete bed rest
+
+4. Suggested Tests:
+   - CBC
+   - Dengue / Malaria (auto-suggest if fever > 2 days)
+
+5. Follow-up:
+   - 48 hours
+```
+
+---
+
+## 🔹 PROMPT 3: THROAT INFECTION TEMPLATE
+
+```
+Create a template named "Throat Infection / Pharyngitis".
+
+Symptoms:
+- Sore throat
+- Pain while swallowing
+- Fever
+- Hoarseness of voice
+- Redness in throat
+
+Medicines:
+- Azithromycin | Tablet | 500 mg | Once daily | After food | 5 Days
+- Paracetamol | Tablet | 650 mg | SOS | After food | 3 Days
+- Warm saline gargle | Therapy | — | Twice daily | Morning & Night | 5 Days
+
+Instructions:
+- Avoid cold beverages
+- Voice rest
+
+Diet:
+- Warm liquids, soft food
+
+Tests:
+- Throat swab (if recurrent)
+
+Follow-up:
+- 5 days
+```
+
+---
+
+## 🔹 PROMPT 4: STOMACH INFECTION / DIARRHEA
+
+```
+Create a template named "Stomach Infection / Gastroenteritis".
+
+Symptoms:
+- Loose motions
+- Abdominal pain
+- Vomiting
+- Fever
+- Dehydration
+
+Medicines:
+- Ofloxacin + Ornidazole | Tablet | — | Twice daily | After food | 5 Days
+- ORS | Sachet | — | After each stool | — | 3 Days
+- Pantoprazole | Tablet | 40 mg | Once daily | Before food | 5 Days
+
+Instructions:
+- Strict hygiene
+- Avoid outside food
+
+Diet:
+- Liquid / soft diet
+
+Tests:
+- Stool routine (conditional)
+
+Follow-up:
+- 3 days
+```
+
+---
+
+## 🔹 PROMPT 5: ACIDITY / GERD
+
+```
+Create a template named "Acidity / GERD".
+
+Symptoms:
+- Burning sensation in chest
+- Sour belching
+- Upper abdominal pain
+- Nausea
+
+Medicines:
+- Pantoprazole | Tablet | 40 mg | Once daily | Before food | 7 Days
+- Antacid syrup | Syrup | 10 ml | Twice daily | After food | 7 Days
+
+Instructions:
+- Avoid late night meals
+- No smoking/alcohol
+
+Diet:
+- Avoid spicy & oily food
+
+Tests:
+- USG Abdomen (if chronic)
+
+Follow-up:
+- 7 days
+```
+
+---
+
+## 🔹 PROMPT 6: HIGH BP (HYPERTENSION)
+
+```
+Create a template named "Hypertension".
+
+Symptoms:
+- Headache
+- Dizziness
+- Palpitations
+- Often asymptomatic
+
+Medicines:
+- Amlodipine | Tablet | 5 mg | Once daily | Morning | 30 Days
+
+Instructions:
+- Daily BP monitoring
+
+Diet:
+- Low salt diet
+
+Tests:
+- BP Chart
+- ECG
+- Lipid profile
+
+Follow-up:
+- 2 weeks
+```
+
+---
+
+## 🔹 PROMPT 7: DIABETES TYPE 2
+
+```
+Create a template named "Diabetes Mellitus – Type 2".
+
+Symptoms:
+- Increased thirst
+- Frequent urination
+- Fatigue
+- Slow wound healing
+
+Medicines:
+- Metformin | Tablet | 500 mg | Twice daily | After food | 30 Days
+
+Instructions:
+- Sugar monitoring explained
+
+Diet:
+- Diabetic diet plan
+
+Tests:
+- Fasting Sugar
+- PP Sugar
+- HbA1c
+
+Follow-up:
+- 1 month
+```
+
+---
+
+## 🔹 PROMPT 8: UTI
+
+```
+Create a template named "Urinary Tract Infection".
+
+Symptoms:
+- Burning urination
+- Frequent urination
+- Lower abdominal pain
+- Fever
+
+Medicines:
+- Nitrofurantoin | Tablet | 100 mg | Twice daily | After food | 7 Days
+- Urinary alkalizer | Syrup | 10 ml | Twice daily | After food | 5 Days
+
+Instructions:
+- Increase water intake
+
+Tests:
+- Urine routine
+- Urine culture
+
+Follow-up:
+- 7 days
+```
+
+---
+
+## 🔹 PROMPT 9: BODY PAIN / MUSCLE STRAIN
+
+```
+Create a template named "Body Pain / Muscle Strain".
+
+Symptoms:
+- Localized pain
+- Muscle stiffness
+- Reduced movement
+
+Medicines:
+- Aceclofenac | Tablet | 100 mg | Twice daily | After food | 5 Days
+- Muscle relaxant | Tablet | — | Night | After food | 5 Days
+
+Instructions:
+- Hot fomentation
+
+Tests:
+- X-ray (if injury)
+
+Follow-up:
+- 5 days
+```
+
+---
+
+## 🔹 PROMPT 10: PREGNANCY ROUTINE OPD
+
+```
+Create a template named "Pregnancy – Routine Visit".
+
+Symptoms:
+- Missed periods
+- Nausea
+- Back pain
+- Fatigue
+
+Medicines:
+- Folic Acid | Tablet | 5 mg | Once daily | After food | 30 Days
+- Iron + Calcium | Tablet | — | Once daily | Night | 30 Days
+
+Instructions:
+- Antenatal counseling
+
+Tests:
+- Sonography (USG)
+- Hb
+- Blood group
+- Sugar test
+
+Follow-up:
+- As per ANC schedule
+```

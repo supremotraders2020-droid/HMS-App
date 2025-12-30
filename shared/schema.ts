@@ -3931,3 +3931,81 @@ export const insertHospitalServiceSchema = createInsertSchema(hospitalServices).
 });
 export type InsertHospitalService = z.infer<typeof insertHospitalServiceSchema>;
 export type HospitalService = typeof hospitalServices.$inferSelect;
+
+// ==========================================
+// OPD Prescription Templates - Quick OPD Templates for auto-fill
+// ==========================================
+
+export const opdPrescriptionTemplates = pgTable("opd_prescription_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Template identification
+  name: text("name").notNull(), // e.g., "Common Cold / Rhinitis"
+  slug: text("slug").notNull().unique(), // URL-friendly identifier
+  description: text("description"),
+  category: text("category").default("General"), // Category for grouping templates
+  
+  // Template content (stored as JSON)
+  symptoms: text("symptoms"), // JSON array of symptoms with multi-select options
+  medicines: text("medicines"), // JSON array of medicine objects
+  instructions: text("instructions"), // JSON object with general, diet, activity
+  suggestedTests: text("suggested_tests"), // JSON array of test names with conditions
+  followUpDays: integer("follow_up_days"), // Number of days for follow-up
+  followUpNotes: text("follow_up_notes"),
+  dietAdvice: text("diet_advice"),
+  activityAdvice: text("activity_advice"),
+  
+  // Version control
+  version: integer("version").default(1),
+  parentTemplateId: varchar("parent_template_id"), // For tracking template lineage
+  
+  // Access control
+  isSystemTemplate: boolean("is_system_template").default(false), // System templates cannot be deleted
+  isPublic: boolean("is_public").default(true), // Public templates visible to all doctors
+  createdBy: varchar("created_by"), // Doctor who created the template
+  createdByName: text("created_by_name"),
+  
+  // Metadata
+  usageCount: integer("usage_count").default(0), // Track how often template is used
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOpdPrescriptionTemplateSchema = createInsertSchema(opdPrescriptionTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertOpdPrescriptionTemplate = z.infer<typeof insertOpdPrescriptionTemplateSchema>;
+export type OpdPrescriptionTemplate = typeof opdPrescriptionTemplates.$inferSelect;
+
+// Template Version History - For version control and rollback
+export const opdTemplateVersions = pgTable("opd_template_versions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  templateId: varchar("template_id").notNull(),
+  version: integer("version").notNull(),
+  
+  // Snapshot of template content at this version
+  name: text("name").notNull(),
+  symptoms: text("symptoms"),
+  medicines: text("medicines"),
+  instructions: text("instructions"),
+  suggestedTests: text("suggested_tests"),
+  followUpDays: integer("follow_up_days"),
+  dietAdvice: text("diet_advice"),
+  activityAdvice: text("activity_advice"),
+  
+  // Change tracking
+  changedBy: varchar("changed_by"),
+  changedByName: text("changed_by_name"),
+  changeNotes: text("change_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOpdTemplateVersionSchema = createInsertSchema(opdTemplateVersions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertOpdTemplateVersion = z.infer<typeof insertOpdTemplateVersionSchema>;
+export type OpdTemplateVersion = typeof opdTemplateVersions.$inferSelect;

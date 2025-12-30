@@ -615,6 +615,17 @@ export interface IStorage {
   updateHospitalService(id: string, updates: any): Promise<any | undefined>;
   deleteHospitalService(id: string): Promise<boolean>;
   bulkCreateHospitalServices(services: any[]): Promise<any[]>;
+
+  // ========== OPD PRESCRIPTION TEMPLATES ==========
+  createOpdTemplate(template: any): Promise<any>;
+  getOpdTemplates(filters?: { isPublic?: boolean; createdBy?: string; category?: string }): Promise<any[]>;
+  getOpdTemplate(id: string): Promise<any | undefined>;
+  getOpdTemplateBySlug(slug: string): Promise<any | undefined>;
+  updateOpdTemplate(id: string, updates: any, userId?: string, userName?: string): Promise<any | undefined>;
+  deleteOpdTemplate(id: string): Promise<boolean>;
+  incrementTemplateUsage(id: string): Promise<void>;
+  getOpdTemplateVersions(templateId: string): Promise<any[]>;
+  seedSystemTemplates(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -2852,6 +2863,70 @@ export class MemStorage implements IStorage {
 
   async deletePatientReferral(id: string): Promise<boolean> {
     return this.patientReferralsData.delete(id);
+  }
+
+  // Hospital Service stub methods
+  async createHospitalServiceDepartment(department: any): Promise<any> { return department; }
+  async getHospitalServiceDepartments(): Promise<any[]> { return []; }
+  async getHospitalServiceDepartment(id: string): Promise<any | undefined> { return undefined; }
+  async getHospitalServiceDepartmentBySlug(slug: string): Promise<any | undefined> { return undefined; }
+  async updateHospitalServiceDepartment(id: string, updates: any): Promise<any | undefined> { return undefined; }
+  async deleteHospitalServiceDepartment(id: string): Promise<boolean> { return false; }
+  async createHospitalService(service: any): Promise<any> { return service; }
+  async getHospitalServices(departmentId?: string): Promise<any[]> { return []; }
+  async getHospitalService(id: string): Promise<any | undefined> { return undefined; }
+  async updateHospitalService(id: string, updates: any): Promise<any | undefined> { return undefined; }
+  async deleteHospitalService(id: string): Promise<boolean> { return false; }
+  async bulkCreateHospitalServices(services: any[]): Promise<any[]> { return services; }
+
+  // OPD Prescription Template stub methods
+  private opdTemplatesData = new Map<string, any>();
+  
+  async createOpdTemplate(template: any): Promise<any> {
+    const id = randomUUID();
+    const newTemplate = { id, ...template, createdAt: new Date(), updatedAt: new Date() };
+    this.opdTemplatesData.set(id, newTemplate);
+    return newTemplate;
+  }
+
+  async getOpdTemplates(filters?: { isPublic?: boolean; createdBy?: string; category?: string }): Promise<any[]> {
+    return Array.from(this.opdTemplatesData.values()).filter(t => t.isActive !== false);
+  }
+
+  async getOpdTemplate(id: string): Promise<any | undefined> {
+    return this.opdTemplatesData.get(id);
+  }
+
+  async getOpdTemplateBySlug(slug: string): Promise<any | undefined> {
+    return Array.from(this.opdTemplatesData.values()).find(t => t.slug === slug);
+  }
+
+  async updateOpdTemplate(id: string, updates: any, userId?: string, userName?: string): Promise<any | undefined> {
+    const existing = this.opdTemplatesData.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.opdTemplatesData.set(id, updated);
+    return updated;
+  }
+
+  async deleteOpdTemplate(id: string): Promise<boolean> {
+    return this.opdTemplatesData.delete(id);
+  }
+
+  async incrementTemplateUsage(id: string): Promise<void> {
+    const template = this.opdTemplatesData.get(id);
+    if (template) {
+      template.usageCount = (template.usageCount || 0) + 1;
+      this.opdTemplatesData.set(id, template);
+    }
+  }
+
+  async getOpdTemplateVersions(templateId: string): Promise<any[]> {
+    return [];
+  }
+
+  async seedSystemTemplates(): Promise<void> {
+    // Stub implementation for in-memory storage
   }
 }
 

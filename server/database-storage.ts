@@ -23,6 +23,9 @@ import {
   pathologyLabs, labTestCatalog, labTestOrders, sampleCollections, labReports, labReportResults, pathologyLabAccessLogs,
   staffMaster, shiftRoster, taskLogs, attendanceLogs, leaveRequests, overtimeLogs, staffPerformanceMetrics, rosterAuditLogs,
   insuranceProviders, patientInsurance, insuranceClaims, insuranceClaimDocuments, insuranceClaimLogs, insuranceProviderChecklists,
+  opdPrescriptionTemplates, opdTemplateVersions,
+  type OpdPrescriptionTemplate, type InsertOpdPrescriptionTemplate,
+  type OpdTemplateVersion, type InsertOpdTemplateVersion,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
   type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember,
@@ -4541,6 +4544,334 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log("Hospital services seeded successfully!");
+  }
+
+  // ========== OPD PRESCRIPTION TEMPLATE METHODS ==========
+  
+  async createOpdTemplate(template: InsertOpdPrescriptionTemplate): Promise<OpdPrescriptionTemplate> {
+    const result = await db.insert(opdPrescriptionTemplates).values(template).returning();
+    return result[0];
+  }
+
+  async getOpdTemplates(filters?: { isPublic?: boolean; createdBy?: string; category?: string }): Promise<OpdPrescriptionTemplate[]> {
+    let query = db.select().from(opdPrescriptionTemplates).where(eq(opdPrescriptionTemplates.isActive, true));
+    
+    // Apply filters - return all active templates by default
+    const templates = await db.select().from(opdPrescriptionTemplates)
+      .where(eq(opdPrescriptionTemplates.isActive, true))
+      .orderBy(desc(opdPrescriptionTemplates.usageCount), opdPrescriptionTemplates.name);
+    
+    // Apply client-side filtering
+    let filteredTemplates = templates;
+    if (filters?.isPublic !== undefined) {
+      filteredTemplates = filteredTemplates.filter(t => t.isPublic === filters.isPublic);
+    }
+    if (filters?.createdBy) {
+      filteredTemplates = filteredTemplates.filter(t => t.createdBy === filters.createdBy || t.isPublic);
+    }
+    if (filters?.category) {
+      filteredTemplates = filteredTemplates.filter(t => t.category === filters.category);
+    }
+    
+    return filteredTemplates;
+  }
+
+  async getOpdTemplate(id: string): Promise<OpdPrescriptionTemplate | undefined> {
+    const result = await db.select().from(opdPrescriptionTemplates).where(eq(opdPrescriptionTemplates.id, id));
+    return result[0];
+  }
+
+  async getOpdTemplateBySlug(slug: string): Promise<OpdPrescriptionTemplate | undefined> {
+    const result = await db.select().from(opdPrescriptionTemplates).where(eq(opdPrescriptionTemplates.slug, slug));
+    return result[0];
+  }
+
+  async updateOpdTemplate(id: string, updates: Partial<InsertOpdPrescriptionTemplate>, userId?: string, userName?: string): Promise<OpdPrescriptionTemplate | undefined> {
+    // Get existing template for version control
+    const existing = await this.getOpdTemplate(id);
+    if (!existing) return undefined;
+
+    // Create version history entry
+    if (userId) {
+      await db.insert(opdTemplateVersions).values({
+        templateId: id,
+        version: existing.version || 1,
+        name: existing.name,
+        symptoms: existing.symptoms,
+        medicines: existing.medicines,
+        instructions: existing.instructions,
+        suggestedTests: existing.suggestedTests,
+        followUpDays: existing.followUpDays,
+        dietAdvice: existing.dietAdvice,
+        activityAdvice: existing.activityAdvice,
+        changedBy: userId,
+        changedByName: userName,
+        changeNotes: 'Updated template'
+      });
+    }
+
+    // Update the template with incremented version
+    const result = await db.update(opdPrescriptionTemplates)
+      .set({ 
+        ...updates, 
+        version: (existing.version || 1) + 1,
+        updatedAt: new Date() 
+      })
+      .where(eq(opdPrescriptionTemplates.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteOpdTemplate(id: string): Promise<boolean> {
+    // Check if it's a system template
+    const template = await this.getOpdTemplate(id);
+    if (template?.isSystemTemplate) {
+      return false; // Cannot delete system templates
+    }
+    
+    const result = await db.update(opdPrescriptionTemplates)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(opdPrescriptionTemplates.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async incrementTemplateUsage(id: string): Promise<void> {
+    const template = await this.getOpdTemplate(id);
+    if (template) {
+      await db.update(opdPrescriptionTemplates)
+        .set({ usageCount: (template.usageCount || 0) + 1 })
+        .where(eq(opdPrescriptionTemplates.id, id));
+    }
+  }
+
+  async getOpdTemplateVersions(templateId: string): Promise<OpdTemplateVersion[]> {
+    return await db.select().from(opdTemplateVersions)
+      .where(eq(opdTemplateVersions.templateId, templateId))
+      .orderBy(desc(opdTemplateVersions.version));
+  }
+
+  async seedSystemTemplates(): Promise<void> {
+    const existingTemplates = await db.select().from(opdPrescriptionTemplates).limit(1);
+    if (existingTemplates.length > 0) {
+      console.log("OPD templates already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding OPD prescription templates...");
+
+    const systemTemplates = [
+      {
+        name: "Common Cold / Rhinitis",
+        slug: "common-cold-rhinitis",
+        description: "Template for common cold and viral rhinitis",
+        category: "General",
+        symptoms: JSON.stringify([
+          "Runny nose", "Sneezing", "Nasal congestion", "Mild fever",
+          "Headache", "Watery eyes", "Sore throat (mild)"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Cetirizine", dosageForm: "Tab", strength: "10 mg", frequency: "1", mealTiming: "after_food", duration: 5, durationUnit: "days", specialInstructions: "May cause drowsiness" },
+          { medicineName: "Paracetamol", dosageForm: "Tab", strength: "650 mg", frequency: "SOS", mealTiming: "after_food", duration: 3, durationUnit: "days", specialInstructions: "Max 3/day" },
+          { medicineName: "Steam inhalation", dosageForm: "Therapy", strength: "", frequency: "2", mealTiming: "any", duration: 5, durationUnit: "days", specialInstructions: "Morning & Night" }
+        ]),
+        instructions: JSON.stringify("Adequate rest, warm fluids, steam inhalation"),
+        suggestedTests: JSON.stringify(["CBC (if symptoms persist > 3 days)"]),
+        followUpDays: 5,
+        dietAdvice: "Avoid cold drinks, prefer warm food",
+        activityAdvice: "Rest, avoid cold exposure",
+        isSystemTemplate: true,
+        isPublic: true
+      },
+      {
+        name: "Fever - Acute / Viral",
+        slug: "fever-acute-viral",
+        description: "Template for acute fever of viral origin",
+        category: "General",
+        symptoms: JSON.stringify([
+          "High body temperature", "Chills", "Body ache", "Headache",
+          "Weakness", "Loss of appetite"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Paracetamol", dosageForm: "Tab", strength: "650 mg", frequency: "3", mealTiming: "after_food", duration: 3, durationUnit: "days", specialInstructions: "" },
+          { medicineName: "Pantoprazole", dosageForm: "Tab", strength: "40 mg", frequency: "1", mealTiming: "before_food", duration: 3, durationUnit: "days", specialInstructions: "" }
+        ]),
+        instructions: JSON.stringify("Monitor temperature every 6 hours"),
+        suggestedTests: JSON.stringify(["CBC", "Dengue / Malaria (if fever > 2 days)"]),
+        followUpDays: 2,
+        dietAdvice: "Light food, increased fluids",
+        activityAdvice: "Complete bed rest",
+        isSystemTemplate: true,
+        isPublic: true
+      },
+      {
+        name: "Throat Infection / Pharyngitis",
+        slug: "throat-infection-pharyngitis",
+        description: "Template for sore throat and pharyngitis",
+        category: "ENT",
+        symptoms: JSON.stringify([
+          "Sore throat", "Pain while swallowing", "Fever",
+          "Hoarseness of voice", "Redness in throat"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Azithromycin", dosageForm: "Tab", strength: "500 mg", frequency: "1", mealTiming: "after_food", duration: 5, durationUnit: "days", specialInstructions: "" },
+          { medicineName: "Paracetamol", dosageForm: "Tab", strength: "650 mg", frequency: "SOS", mealTiming: "after_food", duration: 3, durationUnit: "days", specialInstructions: "" },
+          { medicineName: "Warm saline gargle", dosageForm: "Therapy", strength: "", frequency: "2", mealTiming: "any", duration: 5, durationUnit: "days", specialInstructions: "Morning & Night" }
+        ]),
+        instructions: JSON.stringify("Avoid cold beverages, Voice rest"),
+        suggestedTests: JSON.stringify(["Throat swab (if recurrent)"]),
+        followUpDays: 5,
+        dietAdvice: "Warm liquids, soft food",
+        activityAdvice: "Voice rest",
+        isSystemTemplate: true,
+        isPublic: true
+      },
+      {
+        name: "Stomach Infection / Gastroenteritis",
+        slug: "stomach-infection-gastroenteritis",
+        description: "Template for diarrhea and stomach infections",
+        category: "Gastroenterology",
+        symptoms: JSON.stringify([
+          "Loose motions", "Abdominal pain", "Vomiting", "Fever", "Dehydration"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Ofloxacin + Ornidazole", dosageForm: "Tab", strength: "", frequency: "2", mealTiming: "after_food", duration: 5, durationUnit: "days", specialInstructions: "" },
+          { medicineName: "ORS", dosageForm: "Sachet", strength: "", frequency: "SOS", mealTiming: "any", duration: 3, durationUnit: "days", specialInstructions: "After each stool" },
+          { medicineName: "Pantoprazole", dosageForm: "Tab", strength: "40 mg", frequency: "1", mealTiming: "before_food", duration: 5, durationUnit: "days", specialInstructions: "" }
+        ]),
+        instructions: JSON.stringify("Strict hygiene, Avoid outside food"),
+        suggestedTests: JSON.stringify(["Stool routine (conditional)"]),
+        followUpDays: 3,
+        dietAdvice: "Liquid / soft diet",
+        activityAdvice: "Rest at home",
+        isSystemTemplate: true,
+        isPublic: true
+      },
+      {
+        name: "Acidity / GERD",
+        slug: "acidity-gerd",
+        description: "Template for acid reflux and GERD",
+        category: "Gastroenterology",
+        symptoms: JSON.stringify([
+          "Burning sensation in chest", "Sour belching", "Upper abdominal pain", "Nausea"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Pantoprazole", dosageForm: "Tab", strength: "40 mg", frequency: "1", mealTiming: "before_food", duration: 7, durationUnit: "days", specialInstructions: "" },
+          { medicineName: "Antacid syrup", dosageForm: "Syrup", strength: "10 ml", frequency: "2", mealTiming: "after_food", duration: 7, durationUnit: "days", specialInstructions: "" }
+        ]),
+        instructions: JSON.stringify("Avoid late night meals, No smoking/alcohol"),
+        suggestedTests: JSON.stringify(["USG Abdomen (if chronic)"]),
+        followUpDays: 7,
+        dietAdvice: "Avoid spicy & oily food",
+        activityAdvice: "No lying down immediately after meals",
+        isSystemTemplate: true,
+        isPublic: true
+      },
+      {
+        name: "Hypertension",
+        slug: "hypertension",
+        description: "Template for high blood pressure management",
+        category: "Cardiology",
+        symptoms: JSON.stringify([
+          "Headache", "Dizziness", "Palpitations", "Often asymptomatic"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Amlodipine", dosageForm: "Tab", strength: "5 mg", frequency: "1", mealTiming: "any", duration: 30, durationUnit: "days", specialInstructions: "Take in morning" }
+        ]),
+        instructions: JSON.stringify("Daily BP monitoring"),
+        suggestedTests: JSON.stringify(["BP Chart", "ECG", "Lipid profile"]),
+        followUpDays: 14,
+        dietAdvice: "Low salt diet",
+        activityAdvice: "Regular light exercise",
+        isSystemTemplate: true,
+        isPublic: true
+      },
+      {
+        name: "Diabetes Mellitus - Type 2",
+        slug: "diabetes-type-2",
+        description: "Template for Type 2 Diabetes management",
+        category: "Endocrinology",
+        symptoms: JSON.stringify([
+          "Increased thirst", "Frequent urination", "Fatigue", "Slow wound healing"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Metformin", dosageForm: "Tab", strength: "500 mg", frequency: "2", mealTiming: "after_food", duration: 30, durationUnit: "days", specialInstructions: "" }
+        ]),
+        instructions: JSON.stringify("Sugar monitoring explained"),
+        suggestedTests: JSON.stringify(["Fasting Sugar", "PP Sugar", "HbA1c"]),
+        followUpDays: 30,
+        dietAdvice: "Diabetic diet plan",
+        activityAdvice: "Regular walking",
+        isSystemTemplate: true,
+        isPublic: true
+      },
+      {
+        name: "Urinary Tract Infection",
+        slug: "urinary-tract-infection",
+        description: "Template for UTI management",
+        category: "Urology",
+        symptoms: JSON.stringify([
+          "Burning urination", "Frequent urination", "Lower abdominal pain", "Fever"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Nitrofurantoin", dosageForm: "Tab", strength: "100 mg", frequency: "2", mealTiming: "after_food", duration: 7, durationUnit: "days", specialInstructions: "" },
+          { medicineName: "Urinary alkalizer", dosageForm: "Syrup", strength: "10 ml", frequency: "2", mealTiming: "after_food", duration: 5, durationUnit: "days", specialInstructions: "" }
+        ]),
+        instructions: JSON.stringify("Increase water intake"),
+        suggestedTests: JSON.stringify(["Urine routine", "Urine culture"]),
+        followUpDays: 7,
+        dietAdvice: "Plenty of water",
+        activityAdvice: "Normal activity",
+        isSystemTemplate: true,
+        isPublic: true
+      },
+      {
+        name: "Body Pain / Muscle Strain",
+        slug: "body-pain-muscle-strain",
+        description: "Template for muscle pain and strain",
+        category: "Orthopedics",
+        symptoms: JSON.stringify([
+          "Localized pain", "Muscle stiffness", "Reduced movement"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Aceclofenac", dosageForm: "Tab", strength: "100 mg", frequency: "2", mealTiming: "after_food", duration: 5, durationUnit: "days", specialInstructions: "" },
+          { medicineName: "Muscle relaxant", dosageForm: "Tab", strength: "", frequency: "1", mealTiming: "after_food", duration: 5, durationUnit: "days", specialInstructions: "Night only" }
+        ]),
+        instructions: JSON.stringify("Hot fomentation"),
+        suggestedTests: JSON.stringify(["X-ray (if injury)"]),
+        followUpDays: 5,
+        dietAdvice: "Regular diet",
+        activityAdvice: "Avoid strenuous activity",
+        isSystemTemplate: true,
+        isPublic: true
+      },
+      {
+        name: "Pregnancy - Routine Visit",
+        slug: "pregnancy-routine-visit",
+        description: "Template for routine antenatal checkup",
+        category: "Obstetrics",
+        symptoms: JSON.stringify([
+          "Missed periods", "Nausea", "Back pain", "Fatigue"
+        ]),
+        medicines: JSON.stringify([
+          { medicineName: "Folic Acid", dosageForm: "Tab", strength: "5 mg", frequency: "1", mealTiming: "after_food", duration: 30, durationUnit: "days", specialInstructions: "" },
+          { medicineName: "Iron + Calcium", dosageForm: "Tab", strength: "", frequency: "1", mealTiming: "after_food", duration: 30, durationUnit: "days", specialInstructions: "Night" }
+        ]),
+        instructions: JSON.stringify("Antenatal counseling"),
+        suggestedTests: JSON.stringify(["Sonography (USG)", "Hb", "Blood group", "Sugar test"]),
+        followUpDays: 30,
+        dietAdvice: "Balanced diet with proteins",
+        activityAdvice: "Light activity, no heavy lifting",
+        isSystemTemplate: true,
+        isPublic: true
+      }
+    ];
+
+    for (const template of systemTemplates) {
+      await db.insert(opdPrescriptionTemplates).values(template);
+    }
+
+    console.log("OPD prescription templates seeded successfully!");
   }
 }
 
