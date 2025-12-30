@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { 
   FileCheck, 
@@ -19,10 +21,12 @@ import {
   Stethoscope,
   TestTube,
   Heart,
-  Baby
+  Baby,
+  User,
+  AlertCircle
 } from "lucide-react";
 
-interface User {
+interface UserInfo {
   id: string;
   username: string;
   name: string;
@@ -32,7 +36,7 @@ interface User {
 }
 
 interface ConsentFormsProps {
-  currentUser: User;
+  currentUser: UserInfo;
 }
 
 interface ConsentTemplate {
@@ -50,6 +54,17 @@ interface ConsentTemplate {
   updatedAt: string;
 }
 
+interface Patient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+}
+
 const TEMPLATE_CATEGORIES = [
   { value: "all", label: "All Forms", icon: FileCheck },
   { value: "Legal & Administrative", label: "Legal & Administrative", icon: ClipboardList },
@@ -62,6 +77,7 @@ const TEMPLATE_CATEGORIES = [
 export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const { toast } = useToast();
 
   const { data: templates = [], isLoading } = useQuery<ConsentTemplate[]>({
@@ -80,33 +96,123 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
     },
   });
 
+  const { data: patients = [], isLoading: patientsLoading } = useQuery<Patient[]>({
+    queryKey: ['/api/service-patients'],
+    queryFn: async () => {
+      const res = await fetch('/api/service-patients', {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': currentUser.id,
+          'x-user-role': currentUser.role,
+        },
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        if (res.status === 403) {
+          return []; // Return empty array if user doesn't have access
+        }
+        throw new Error('Failed to fetch patients');
+      }
+      return res.json();
+    },
+  });
+
+  const selectedPatient = selectedPatientId && selectedPatientId !== 'none' 
+    ? patients.find(p => p.id === selectedPatientId) 
+    : null;
+
+  const getPersonalizedPdfUrl = (template: ConsentTemplate, patientId: string) => {
+    return `/api/consent-templates/${template.id}/render?patientId=${patientId}`;
+  };
+
   const handleDownload = async (template: ConsentTemplate) => {
     try {
-      const link = document.createElement('a');
-      link.href = template.pdfPath;
-      link.download = template.pdfPath.split('/').pop() || 'consent-form.pdf';
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast({ title: "Download started" });
+      if (selectedPatientId && selectedPatientId !== 'none') {
+        const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
+          headers: {
+            'x-user-id': currentUser.id,
+            'x-user-role': currentUser.role,
+          },
+        });
+        if (!response.ok) throw new Error('Failed to generate PDF');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
+        link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast({ title: "Download started", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
+      } else {
+        const link = document.createElement('a');
+        link.href = template.pdfPath;
+        link.download = template.pdfPath.split('/').pop() || 'consent-form.pdf';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Download started (blank form)" });
+      }
     } catch {
       toast({ title: "Failed to download file", variant: "destructive" });
     }
   };
 
-  const handleView = (template: ConsentTemplate) => {
-    window.open(template.pdfPath, '_blank');
+  const handleView = async (template: ConsentTemplate) => {
+    if (selectedPatientId && selectedPatientId !== 'none') {
+      try {
+        const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
+          headers: {
+            'x-user-id': currentUser.id,
+            'x-user-role': currentUser.role,
+          },
+        });
+        if (!response.ok) throw new Error('Failed to generate PDF');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      } catch {
+        toast({ title: "Failed to view consent form", variant: "destructive" });
+      }
+    } else {
+      window.open(template.pdfPath, '_blank');
+    }
   };
 
-  const handlePrint = (template: ConsentTemplate) => {
-    const printWindow = window.open(template.pdfPath, '_blank');
-    if (printWindow) {
-      printWindow.onload = () => {
-        printWindow.print();
-      };
+  const handlePrint = async (template: ConsentTemplate) => {
+    if (selectedPatientId && selectedPatientId !== 'none') {
+      try {
+        const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
+          headers: {
+            'x-user-id': currentUser.id,
+            'x-user-role': currentUser.role,
+          },
+        });
+        if (!response.ok) throw new Error('Failed to generate PDF');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const printWindow = window.open(url, '_blank');
+        if (printWindow) {
+          printWindow.onload = () => {
+            printWindow.print();
+          };
+        }
+        toast({ title: "Opening print dialog...", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
+      } catch {
+        toast({ title: "Failed to print consent form", variant: "destructive" });
+      }
+    } else {
+      const printWindow = window.open(template.pdfPath, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+      toast({ title: "Opening print dialog..." });
     }
-    toast({ title: "Opening print dialog..." });
   };
 
   const getCategoryColor = (category: string) => {
@@ -184,6 +290,76 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
           </Badge>
         </div>
       </div>
+
+      {/* Patient Selection Card */}
+      <Card className="bg-gradient-to-r from-cyan-50/50 to-teal-50/50 dark:from-cyan-950/20 dark:to-teal-950/20 border-cyan-200/50 dark:border-cyan-800/50">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Select Patient</Label>
+                <p className="text-xs text-muted-foreground">Patient details will be auto-filled in consent forms</p>
+              </div>
+            </div>
+            <div className="flex-1 max-w-md">
+              <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+                <SelectTrigger data-testid="select-patient">
+                  <SelectValue placeholder={patientsLoading ? "Loading patients..." : "Choose a patient..."} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    <span className="text-muted-foreground">No patient (blank form)</span>
+                  </SelectItem>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.firstName} {patient.lastName} - {patient.gender}, DOB: {patient.dateOfBirth}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedPatient && (
+              <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600">
+                <User className="h-3 w-3 mr-1" />
+                {selectedPatient.firstName} {selectedPatient.lastName}
+              </Badge>
+            )}
+          </div>
+          {selectedPatient && (
+            <div className="mt-3 p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground text-xs">Full Name</span>
+                  <p className="font-medium">{selectedPatient.firstName} {selectedPatient.lastName}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs">Date of Birth</span>
+                  <p className="font-medium">{selectedPatient.dateOfBirth}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs">Gender</span>
+                  <p className="font-medium">{selectedPatient.gender}</p>
+                </div>
+                {selectedPatient.phone && (
+                  <div>
+                    <span className="text-muted-foreground text-xs">Phone</span>
+                    <p className="font-medium">{selectedPatient.phone}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {(!selectedPatientId || selectedPatientId === 'none') && (
+            <div className="mt-3 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
+              <AlertCircle className="h-3 w-3" />
+              <span>Select a patient to auto-fill their details in consent forms</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

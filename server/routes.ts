@@ -3688,6 +3688,206 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Render consent template with patient data as PDF (requires authentication)
+  app.get("/api/consent-templates/:id/render", async (req, res) => {
+    try {
+      const { patientId } = req.query;
+      
+      // Check authentication via headers
+      const userId = req.headers['x-user-id'] as string;
+      const userRole = req.headers['x-user-role'] as string;
+      
+      // Only allow authenticated users with appropriate roles to access patient data
+      const allowedRoles = ['ADMIN', 'DOCTOR', 'NURSE', 'OPD_MANAGER'];
+      if (!userId || !userRole || !allowedRoles.includes(userRole)) {
+        return res.status(403).json({ error: "Access denied. Authentication required to generate consent forms." });
+      }
+      
+      // Get the template
+      const template = await databaseStorage.getConsentTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Consent template not found" });
+      }
+
+      // Get patient data if provided (scoped query by ID, not full table scan)
+      let patient = null;
+      if (patientId && typeof patientId === 'string' && patientId !== 'none') {
+        const [foundPatient] = await db.select().from(servicePatients).where(eq(servicePatients.id, patientId));
+        if (!foundPatient) {
+          return res.status(404).json({ error: "Patient not found" });
+        }
+        patient = foundPatient;
+      }
+
+      // Read the original PDF file
+      const pdfPath = path.join(process.cwd(), template.pdfPath.replace(/^\//, ''));
+      if (!fs.existsSync(pdfPath)) {
+        return res.status(404).json({ error: "PDF file not found" });
+      }
+
+      const pdfBytes = fs.readFileSync(pdfPath);
+      
+      // Use pdf-lib to modify the PDF with patient details
+      const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
+      const pdfDoc = await PDFDocument.load(pdfBytes);
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      
+      const pages = pdfDoc.getPages();
+      const firstPage = pages[0];
+      const { width, height } = firstPage.getSize();
+      
+      if (patient) {
+        // Add patient information header at the top of the first page
+        const patientName = `${patient.firstName} ${patient.lastName}`;
+        const dateOfBirth = patient.dateOfBirth || 'N/A';
+        const gender = patient.gender || 'N/A';
+        const phone = patient.phone || 'N/A';
+        const currentDate = new Date().toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short', 
+          year: 'numeric'
+        });
+        
+        // Draw patient info box at the top
+        const boxY = height - 90;
+        const boxHeight = 70;
+        
+        // Draw background rectangle
+        firstPage.drawRectangle({
+          x: 20,
+          y: boxY,
+          width: width - 40,
+          height: boxHeight,
+          color: rgb(0.95, 0.97, 1),
+          borderColor: rgb(0.2, 0.6, 0.9),
+          borderWidth: 1,
+        });
+        
+        // Add "PATIENT DETAILS" header
+        firstPage.drawText('PATIENT DETAILS', {
+          x: 30,
+          y: boxY + boxHeight - 18,
+          size: 10,
+          font: helveticaBold,
+          color: rgb(0.1, 0.4, 0.7),
+        });
+        
+        // Add patient name
+        firstPage.drawText(`Name: ${patientName}`, {
+          x: 30,
+          y: boxY + boxHeight - 35,
+          size: 11,
+          font: helveticaBold,
+          color: rgb(0, 0, 0),
+        });
+        
+        // Add date of birth
+        firstPage.drawText(`DOB: ${dateOfBirth}`, {
+          x: 250,
+          y: boxY + boxHeight - 35,
+          size: 10,
+          font: helveticaFont,
+          color: rgb(0.2, 0.2, 0.2),
+        });
+        
+        // Add gender
+        firstPage.drawText(`Gender: ${gender}`, {
+          x: 400,
+          y: boxY + boxHeight - 35,
+          size: 10,
+          font: helveticaFont,
+          color: rgb(0.2, 0.2, 0.2),
+        });
+        
+        // Add phone
+        firstPage.drawText(`Phone: ${phone}`, {
+          x: 30,
+          y: boxY + boxHeight - 55,
+          size: 10,
+          font: helveticaFont,
+          color: rgb(0.2, 0.2, 0.2),
+        });
+        
+        // Add current date
+        firstPage.drawText(`Date: ${currentDate}`, {
+          x: 250,
+          y: boxY + boxHeight - 55,
+          size: 10,
+          font: helveticaFont,
+          color: rgb(0.2, 0.2, 0.2),
+        });
+        
+        // Add hospital name
+        firstPage.drawText('Gravity Hospital, Pimpri-Chinchwad', {
+          x: 400,
+          y: boxY + boxHeight - 55,
+          size: 9,
+          font: helveticaFont,
+          color: rgb(0.3, 0.3, 0.3),
+        });
+      }
+      
+      // Save the modified PDF
+      const modifiedPdfBytes = await pdfDoc.save();
+      
+      // Send the PDF as response
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${template.title.replace(/\s+/g, '_')}.pdf"`);
+      res.send(Buffer.from(modifiedPdfBytes));
+      
+    } catch (error) {
+      console.error("Failed to render consent template:", error);
+      res.status(500).json({ error: "Failed to render consent template" });
+    }
+  });
+
+  // ========== SERVICE PATIENTS API ==========
+  
+  // Get all service patients (requires authentication)
+  app.get("/api/service-patients", async (req, res) => {
+    try {
+      // Check authentication via headers or session
+      const userId = req.headers['x-user-id'] as string;
+      const userRole = req.headers['x-user-role'] as string;
+      
+      // Only allow authenticated users with appropriate roles
+      const allowedRoles = ['ADMIN', 'DOCTOR', 'NURSE', 'OPD_MANAGER'];
+      if (!userId || !userRole || !allowedRoles.includes(userRole)) {
+        return res.status(403).json({ error: "Access denied. Insufficient permissions to view patient data." });
+      }
+      
+      const patients = await db.select().from(servicePatients).orderBy(desc(servicePatients.createdAt));
+      res.json(patients);
+    } catch (error) {
+      console.error("Failed to fetch service patients:", error);
+      res.status(500).json({ error: "Failed to fetch service patients" });
+    }
+  });
+
+  // Get single service patient by ID (requires authentication)
+  app.get("/api/service-patients/:id", async (req, res) => {
+    try {
+      // Check authentication via headers or session
+      const userId = req.headers['x-user-id'] as string;
+      const userRole = req.headers['x-user-role'] as string;
+      
+      // Only allow authenticated users with appropriate roles
+      const allowedRoles = ['ADMIN', 'DOCTOR', 'NURSE', 'OPD_MANAGER'];
+      if (!userId || !userRole || !allowedRoles.includes(userRole)) {
+        return res.status(403).json({ error: "Access denied. Insufficient permissions to view patient data." });
+      }
+      
+      const [patient] = await db.select().from(servicePatients).where(eq(servicePatients.id, req.params.id));
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch patient" });
+    }
+  });
+
   // ========== MEDICINES DATABASE API ==========
   
   // Get all medicines with optional search
