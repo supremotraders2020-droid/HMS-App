@@ -180,6 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await databaseStorage.seedEquipmentData();
   await databaseStorage.seedBmwData();
   await databaseStorage.seedConsentTemplates();
+  await databaseStorage.seedPathologyTests();
   
   // Registration endpoint - create new user with hashed password
   // Public registration is limited to PATIENT role only for security
@@ -7930,6 +7931,53 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error creating lab test order:", error);
       res.status(500).json({ error: "Failed to create lab test order" });
+    }
+  });
+
+  // Batch create lab test orders (transactional - all succeed or all fail)
+  app.post("/api/lab-test-orders/batch", async (req, res) => {
+    try {
+      const { orders } = req.body as { orders: any[] };
+      if (!Array.isArray(orders) || orders.length === 0) {
+        return res.status(400).json({ error: "Orders array is required" });
+      }
+      
+      // Validate each order against schema (excluding orderNumber which is generated)
+      const validatedOrders = orders.map((order, index) => {
+        // Basic validation - ensure required fields exist
+        if (!order.patientId || !order.patientName || !order.doctorId || !order.doctorName || !order.testId || !order.testName) {
+          throw new Error(`Order at index ${index} is missing required fields`);
+        }
+        return {
+          patientId: order.patientId,
+          patientName: order.patientName,
+          patientUhid: order.patientUhid,
+          patientAge: order.patientAge,
+          patientGender: order.patientGender,
+          doctorId: order.doctorId,
+          doctorName: order.doctorName,
+          testId: order.testId,
+          testName: order.testName,
+          testCode: order.testCode,
+          priority: order.priority || "NORMAL",
+          clinicalNotes: order.clinicalNotes,
+          orderedAt: order.orderedAt ? new Date(order.orderedAt) : new Date()
+        };
+      });
+      
+      // Use storage layer for transactional batch insert (order numbers generated inside transaction)
+      const createdOrders = await databaseStorage.createLabTestOrdersBatch(validatedOrders);
+      
+      res.status(201).json({
+        totalRequested: orders.length,
+        successCount: createdOrders.length,
+        failedCount: 0,
+        orders: createdOrders,
+        errors: []
+      });
+    } catch (error: any) {
+      console.error("Error creating batch lab test orders:", error);
+      res.status(500).json({ error: error.message || "Failed to create batch lab test orders - transaction rolled back" });
     }
   });
 

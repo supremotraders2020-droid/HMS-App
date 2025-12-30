@@ -23,6 +23,51 @@ export async function apiRequest(
   return res;
 }
 
+interface UserContext {
+  id: string;
+  role: string;
+}
+
+export async function apiRequestWithUser(
+  method: string,
+  url: string,
+  user: UserContext,
+  data?: unknown | undefined,
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    "x-user-id": user.id,
+    "x-user-role": user.role,
+  };
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
+  });
+
+  await throwIfResNotOk(res);
+  return res;
+}
+
+export function getQueryFnWithUser<T>(user: UserContext, url: string): QueryFunction<T> {
+  return async () => {
+    const res = await fetch(url, {
+      headers: {
+        "x-user-id": user.id,
+        "x-user-role": user.role,
+      },
+      credentials: "include",
+    });
+
+    await throwIfResNotOk(res);
+    return await res.json();
+  };
+}
+
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;

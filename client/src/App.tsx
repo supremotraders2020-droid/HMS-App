@@ -41,6 +41,7 @@ import BloodBankPage from "@/pages/BloodBankPage";
 import MedicalStoreManagement from "@/pages/MedicalStoreManagement";
 import MedicalStorePortal from "@/pages/MedicalStorePortal";
 import PathologyLabPortal from "@/pages/PathologyLabPortal";
+import LabTestOrdering from "@/pages/LabTestOrdering";
 import PatientBarcodePage from "@/pages/PatientBarcodePage";
 import StaffManagement from "@/pages/StaffManagement";
 import InsuranceManagement from "@/pages/InsuranceManagement";
@@ -295,6 +296,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only pathology lab staff and administrators can access this portal.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/lab-test-ordering">
+        {["DOCTOR", "ADMIN"].includes(currentUser.role) ? (
+          <LabTestOrdering currentUserId={currentUser.id} currentUserName={currentUser.name} currentUserRole={currentUser.role} />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only doctors can order lab tests.</p>
           </div>
         )}
       </Route>

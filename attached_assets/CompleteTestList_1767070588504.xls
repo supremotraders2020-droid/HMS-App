@@ -1,0 +1,1783 @@
+<table cellspacing="0" rules="all" border="1" style="border-collapse:collapse;">
+	<tr>
+		<td>TestName</td><td>DisplayName</td><td>shortName</td><td>categoryName</td><td>charges</td>
+	</tr><tr>
+		<td> HISTOPATHOLOGY EXAMINATION (HPE) - SMALL SIZE</td><td> HISTOPATHOLOGY EXAMINATION (HPE) - SMALL SIZE( HISTOPATHOLOGY EXAMINATION (HPE) - SMALL SIZE)</td><td> HISTOPATHOLOGY EXAMINATION (HPE) - SMALL SIZE</td><td>HISTOPATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td> URINARY ALBUMIN CREATINAINE RATIO </td><td> URINARY ALBUMIN CREATINAINE RATIO ( URINARY ALBUMIN CREATINAINE RATIO )</td><td> URINARY ALBUMIN CREATINAINE RATIO </td><td>URINE EXAMINATION</td><td>0</td>
+	</tr><tr>
+		<td>SARS-CoV2 (COVID-19) Rapid Antigen Test</td><td>* SARS-CoV2 (COVID-19) Rapid Antigen Test(COVID-19 ANTIGEN TEST)</td><td>COVID-19 ANTIGEN TEST</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>SARS-CoV2 (COVID-19) Real Time RT PCR Test</td><td>* SARS-CoV2 (COVID-19) Real Time RT PCR Test(COVID-19 RT PCR TEST)</td><td>COVID-19 RT PCR TEST</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>1,25 di-hydroxy Vitamin D</td><td>1,25 di-hydroxy Vitamin D(1,25 di-hydroxy Vitamin D)</td><td>1,25 di-hydroxy Vitamin D</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>100( gm Blood Glucose 2 Hr. )</td><td>100( gm Blood Glucose 2 Hr. )(100( gm Blood Glucose 2 Hr. ))</td><td>100( gm Blood Glucose 2 Hr. )</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>17 KETOSTEROIDS</td><td>17 KETOSTEROIDS(17 KETOSTEROIDS)</td><td>17 KETOSTEROIDS</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>17-OH-P</td><td>17-OH Progesterone (17-OHP)(17-OH-P)</td><td>17-OH-P</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>24 HOUR COPPER, URINE</td><td>24 HOUR COPPER, URINE(24 HOUR COPPER, URINE)</td><td>24 HOUR COPPER, URINE</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>24 hr Urinary Sodium</td><td>24 hr Urinary Sodium(24 hr Urinary Sodium)</td><td>24 hr Urinary Sodium</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>24 Hrs Urinary Cortisol</td><td>24 Hrs Urinary Cortisol(24 Hrs Urinary Cortisol)</td><td>24 Hrs Urinary Cortisol</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>24 Hrs Urinary Creatinine </td><td>24 Hrs Urinary Creatinine (24 Hrs Urinary Creatinine )</td><td>24 Hrs Urinary Creatinine </td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>24 HRS URINENARY PROTEIN</td><td>24 HRS URINENARY PROTEIN(24 HRS URINENARY PROTEIN)</td><td>24 HRS URINENARY PROTEIN</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>25-HYDROXY VITAMIN D</td><td>25-HYDROXY VITAMIN D(25-HYDROXY VITAMIN D`)</td><td>25-HYDROXY VITAMIN D`</td><td>VITAMIN ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>3 Methyl Histidine screen</td><td>3 Methyl Histidine screen(3 Methyl Histidine screen)</td><td>3 Methyl Histidine screen</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>5 Alpha DHT-Di hydro Testosterone</td><td>5 Alpha DHT-Di hydro Testosterone(5 Alpha DHT-Di hydro Testosterone)</td><td>5 Alpha DHT-Di hydro Testosterone</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>HYDROXY INDOLE ACETIC ACID</td><td>5- HIAA (HYDROXY INDOLE ACETIC ACID)(5- HIAA)</td><td>5- HIAA</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>5-HT (5-Hydroxy Tryptamine)(Serotonin)</td><td>5-HT (5-Hydroxy Tryptamine)(Serotonin)(5-HT (5-Hydroxy Tryptamine))</td><td>5-HT (5-Hydroxy Tryptamine)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ABSOLUTE CD4, CD8 COUNT, BLOOD</td><td>ABSOLUTE  CD4, CD8 COUNT, BLOOD(ABSOLUTE CD4, CD8 COUNT, BLOOD)</td><td>ABSOLUTE CD4, CD8 COUNT, BLOOD</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ABSOLUTE CD4 COUNT, BLOOD</td><td>ABSOLUTE CD4 COUNT, BLOOD(CD4 Test)</td><td>CD4 Test</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>ABSOLUTE EOSINOPHIL COUNT</td><td>ABSOLUTE EOSINOPHIL COUNT(AEC)</td><td>AEC</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ABSOLUTE LYMPHOCYTE COUNT, BLOOD</td><td>ABSOLUTE LYMPHOCYTE COUNT, BLOOD(ABSOLUTE LYMPHOCYTE COUNT, BLOOD)</td><td>ABSOLUTE LYMPHOCYTE COUNT, BLOOD</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ABSOLUTE NEUTROPHIL COUNT, WHOLE BLOOD</td><td>ABSOLUTE NEUTROPHIL COUNT, WHOLE BLOOD(ANC)</td><td>ANC</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Acetaminophen (Paracetamol)</td><td>Acetaminophen (Paracetamol)(Acetaminophen (Paracetamol))</td><td>Acetaminophen (Paracetamol)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ACETONE  (Ketone), SERUM (QUALITATIVE)</td><td>ACETONE  (Ketone), SERUM (QUALITATIVE)(ACETONE  (Ketone), SERUM (QUALITATIVE))</td><td>ACETONE  (Ketone), SERUM (QUALITATIVE)</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Acetone (Ketone)(Quantitative)</td><td>Acetone (Ketone)(Quantitative)(Acetone (Ketone)(Quantitative))</td><td>Acetone (Ketone)(Quantitative)</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ACETYLE CHOLINE RECEPTOR ANTIBODY</td><td>ACETYLE CHOLINE RECEPTOR ANTIBODY(ACETYLE CHOLINE RECEPTOR ANTIBODY)</td><td>ACETYLE CHOLINE RECEPTOR ANTIBODY</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Acid Fast Suspectibility - 5 drugs</td><td>Acid Fast Suspectibility - 5 drugs(Acid Fast Suspectibility - 5 drugs)</td><td>Acid Fast Suspectibility - 5 drugs</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Acid Hemoglobin Electrophoresis</td><td>Acid Hemoglobin Electrophoresis(Acid Hemoglobin Electrophoresis)</td><td>Acid Hemoglobin Electrophoresis</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ACID PHOSPHATASE - PROSTATIC</td><td>ACID PHOSPHATASE - PROSTATIC (PAP)(PAP)</td><td>PAP</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ACID PHOSPHATASE - TOTAL</td><td>ACID PHOSPHATASE - TOTAL(ACID PHOSPHATASE - TOTAL)</td><td>ACID PHOSPHATASE - TOTAL</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>ADENOSINE DEAMINASE </td><td>ADENOSINE DEAMINASE (ADA)(ADA)</td><td>ADA</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ADENOSINE DEAMINASE</td><td>ADENOSINE DEAMINASE (CSF)(CSF)</td><td>CSF</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Adenovirus, IgM Antibody</td><td>Adenovirus, IgM Antibody(Adenovirus, IgM Antibody)</td><td>Adenovirus, IgM Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Adenovirus, lgG Antibody</td><td>Adenovirus, lgG Antibody(Adenovirus, lgG Antibody)</td><td>Adenovirus, lgG Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Adernaline   (Epinephrine)</td><td>Adernaline   (Epinephrine)(Adernaline   (Epinephrine))</td><td>Adernaline   (Epinephrine)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>ANTI DIURETIC HORMONE (VASOPRESSIN)</td><td>ADH - ANTI DIURETIC HORMONE (VASOPRESSIN)(ADH)</td><td>ADH</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ADRENO CORTICOTROPHIC HORMONE</td><td>ADRENO CORTICOTROPHIC HORMONE (ACTH)(ACTH)</td><td>ACTH</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>AFB (ACID FAST BACILLI) STAIN</td><td>AFB (ACID FAST BACILLI) STAIN(AFB (ACID FAST BACILLI) STAIN)</td><td>AFB (ACID FAST BACILLI) STAIN</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>AFB culture</td><td>AFB culture(AFB culture)</td><td>AFB culture</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>AFB CULTURE & SENSITIVITY [ 10 DRUGS ]</td><td>AFB CULTURE & SENSITIVITY [ 10 DRUGS ](AFB CULTURE & SENSITIVITY [ 10 DRUGS ])</td><td>AFB CULTURE & SENSITIVITY [ 10 DRUGS ]</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ALPHA FETO PROTIEN (AFP)</td><td>AFP ALPHA FETO PROTIEN(AFP ALPHA FETO PROTIEN)</td><td>AFP ALPHA FETO PROTIEN</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>AHBC -IgM</td><td>AHBC -IgM(AHBC -IgM)</td><td>AHBC -IgM</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>AHBC Total</td><td>AHBC Total(AHBC Total)</td><td>AHBC Total</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>ALBERT STAIN (DIPTHERIA BACILLI)</td><td>ALBERT STAIN (DIPTHERIA BACILLI)(ALBERT STAIN (DIPTHERIA BACILLI))</td><td>ALBERT STAIN (DIPTHERIA BACILLI)</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Albumin</td><td>Albumin ,Serum(ALB)</td><td>ALB</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ALBUMIN, FLUID</td><td>ALBUMIN, FLUID(ALBUMIN, FLUID)</td><td>ALBUMIN, FLUID</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ALBUMIN/CREATININE RATIO</td><td>ALBUMIN/CREATININE RATIO(ALBUMIN/CREATININE RATIO)</td><td>ALBUMIN/CREATININE RATIO</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Alcian blue stain</td><td>Alcian blue stain(Alcian blue stain)</td><td>Alcian blue stain</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ALCOHOL (ETHANOL), QUANTITATIVE, SERUM</td><td>ALCOHOL (ETHANOL), QUANTITATIVE, SERUM(ALCOHOL (ETHANOL))</td><td>ALCOHOL (ETHANOL)</td><td>REPORT ON A.B.G.</td><td>0</td>
+	</tr><tr>
+		<td>ALDOLASE</td><td>ALDOLASE(ALDOLASE)</td><td>ALDOLASE</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ALDOSTERON</td><td>ALDOSTERON(ALDOSTERON)</td><td>ALDOSTERON</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Alkaline Hemoglobin Electrophoresis</td><td>Alkaline Hemoglobin Electrophoresis(Alkaline Hemoglobin Electrophoresis)</td><td>Alkaline Hemoglobin Electrophoresis</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ALKALINE PHOSPHATASE</td><td>ALKALINE PHOSPHATASE(ALP)</td><td>ALP</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ALP lsoenzymes</td><td>ALKALINE PHOSPHATASE ( ALP) ISOENZYMES(ALP lsoenzymes)</td><td>ALP lsoenzymes</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Alkaline Phosphatase bone fraction (OSTASE) test</td><td>Alkaline Phosphatase bone fraction (OSTASE) test(Alkaline Phosphatase bone fraction (OSTASE) test)</td><td>Alkaline Phosphatase bone fraction (OSTASE) test</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Allergy Drug</td><td>Allergy Drug(Allergy Drug)</td><td>Allergy Drug</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Allergy Food (Non-veg)</td><td>Allergy Food (Non-veg)(Allergy Food (Non-veg))</td><td>Allergy Food (Non-veg)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Allergy Food (veg)</td><td>Allergy Food (veg)(Allergy Food (veg))</td><td>Allergy Food (veg)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>allergy food intolerance maxi (220 allergens)</td><td>allergy food intolerance maxi (220 allergens)(allergy food intolerance maxi (220 allergens))</td><td>allergy food intolerance maxi (220 allergens)</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ALLERGY FOOD INTOLERANCE MINI (46 ALLERGENS)</td><td>ALLERGY FOOD INTOLERANCE MINI (46 ALLERGENS)(ALLERGY FOOD INTOLERANCE MINI (46 ALLERGENS))</td><td>ALLERGY FOOD INTOLERANCE MINI (46 ALLERGENS)</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Allergy food test (IgE)</td><td>Allergy food test (IgE)(Allergy food test (IgE))</td><td>Allergy food test (IgE)</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>allergy inhalation panel</td><td>allergy inhalation panel(allergy inhalation panel)</td><td>allergy inhalation panel</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Allergy Inhalent</td><td>Allergy Inhalent(Allergy Inhalent)</td><td>Allergy Inhalent</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Alpha  Hydroxy  butyrate dehydrogenere (HBDH)</td><td>Alpha  Hydroxy  butyrate dehydrogenere (HBDH)(Alpha  Hydroxy  butyrate dehydrogenere (HBDH))</td><td>Alpha  Hydroxy  butyrate dehydrogenere (HBDH)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Alpha 2 macroglobulin</td><td>Alpha 2 macroglobulin(Alpha 2 macroglobulin)</td><td>Alpha 2 macroglobulin</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ALPHA-1- ANTITRYPSIN, SERUM</td><td>ALPHA-1- ANTITRYPSIN, SERUM(ALPHA-1- ANTITRYPSIN, SERUM)</td><td>ALPHA-1- ANTITRYPSIN, SERUM</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ALUMINUM, SERUM</td><td>ALUMINUM, SERUM(ALUMINUM, SERUM)</td><td>ALUMINUM, SERUM</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>AMINO ACIDS (QUALITATIVE)</td><td>AMINO ACIDS (QUALITATIVE)(AMINO ACIDS (QUALITATIVE))</td><td>AMINO ACIDS (QUALITATIVE)</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>AMINOLEVULINIC ACID,QUANTITATIVE</td><td>AMINOLEVULINIC ACID (ALA),QUANTITATIVE(ALA)</td><td>ALA</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Amiodarone</td><td>Amiodarone(Amiodarone)</td><td>Amiodarone</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>AMMONIA, SERUM</td><td>AMMONIA(AMMONIA, SERUM)</td><td>AMMONIA, SERUM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Amoebiasis Antibodies -lgG</td><td>Amoebiasis Antibodies -lgG(Amoebiasis Antibodies -lgG)</td><td>Amoebiasis Antibodies -lgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>AMOEBIC SEROLOGY, IgG</td><td>AMOEBIC SEROLOGY, IgG(AMOEBIC SEROLOGY, IgG)</td><td>AMOEBIC SEROLOGY, IgG</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>AMPHETAMINE, URINE</td><td>AMPHETAMINE, URINE(AMPHETAMINE, URINE)</td><td>AMPHETAMINE, URINE</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Amylase (Fluid)</td><td>Amylase (Fluid)(Amylase (Fluid))</td><td>Amylase (Fluid)</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>AMYLASE, SERUM</td><td>AMYLASE, SERUM(AMYLASE, SERUM)</td><td>AMYLASE, SERUM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ANA (Anti nuclear Antibody)-</td><td>ANA (Anti nuclear Antibody)-(ANA-ELISA)</td><td>ANA-ELISA</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>ANA BLOT ASSAY</td><td>ANA BLOT ASSAY(ANA BLOT ASSAY)</td><td>ANA BLOT ASSAY</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>ANA IFA TITRE </td><td>ANA BY IMMUNOFLUOROSCENCE (IFA)(ANA IFA TITRE )</td><td>ANA IFA TITRE </td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>ANA Screening by IFA</td><td>ANA Screening by IFA(ANA Screening by IFA)</td><td>ANA Screening by IFA</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Anaerobic Bacterial Culture</td><td>Anaerobic Bacterial Culture(Anaerobic Bacterial Culture)</td><td>Anaerobic Bacterial Culture</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Anaerobic Pus/ Body Fluid Culture</td><td>Anaerobic Pus/ Body Fluid Culture(Anaerobic Pus/ Body Fluid Culture)</td><td>Anaerobic Pus/ Body Fluid Culture</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Anaerobic Swab Culture</td><td>Anaerobic Swab Culture(Anaerobic Swab Culture)</td><td>Anaerobic Swab Culture</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANCA - C  ( PR3 )</td><td>ANCA - C  ( PR3 )(C-ANCA )</td><td>C-ANCA </td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td> ANCA - P (MPO)</td><td>ANCA - P (MPO)(P-ANCA)</td><td>P-ANCA</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>ANCA P & C</td><td>ANCA P & C(ANCA P & C)</td><td>ANCA P & C</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANCA Screen</td><td>ANCA Screen(ANCA Screen)</td><td>ANCA Screen</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANCA Titers-Anti Neutrophilic Cytoplasmic Antibody </td><td>ANCA Titers-Anti Neutrophilic Cytoplasmic Antibody (ANCA Titers-Anti Neutrophilic Cytoplasmic Antibody )</td><td>ANCA Titers-Anti Neutrophilic Cytoplasmic Antibody </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANCA-Anti Neutrophilic Cytoplasmic Antibody</td><td>ANCA-Anti Neutrophilic Cytoplasmic Antibody(ANCA-Anti Neutrophilic Cytoplasmic Antibody)</td><td>ANCA-Anti Neutrophilic Cytoplasmic Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Free Androgen Index (FIA) (Testosterone, SHBG)</td><td>ANDROGEN INDEX(Free Androgen Index (FIA) (Testosterone, SHBG))</td><td>Free Androgen Index (FIA) (Testosterone, SHBG)</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ANDROSTEINDIONE</td><td>ANDROSTEINDIONE(ANDROSTEINDIONE)</td><td>ANDROSTEINDIONE</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ANGIOTENSIN CONVERTING ENZYME (ACE)</td><td>ANGIOTENSIN CONVERTING ENZYME (ACE)(ACE)</td><td>ACE</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>ANTI - DSDNA</td><td>ANTI - DSDNA(ANTI - DSDNA)</td><td>ANTI - DSDNA</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ANTI - dsDNA, Antibody Titre by IFA</td><td>ANTI - dsDNA, Antibody Titre by IFA(ANTI - dsDNA, Antibody Titre by IFA)</td><td>ANTI - dsDNA, Antibody Titre by IFA</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Anti  GAD antibody</td><td>Anti  GAD antibody(Anti  GAD antibody)</td><td>Anti  GAD antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI BETA 2 GLYCOPROTEIN 1 IGA/ IGG/ IGM SCREEN</td><td>ANTI BETA 2 GLYCOPROTEIN 1 IGA/ IGG/ IGM SCREEN(ANTI BETA 2 GLYCOPROTEIN 1 IGA/ IGG/ IGM SCREEN)</td><td>ANTI BETA 2 GLYCOPROTEIN 1 IGA/ IGG/ IGM SCREEN</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI C1q antibody</td><td>ANTI C1q antibody(ANTI C1q antibody)</td><td>ANTI C1q antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI CARDIOLIPIN ANTIBODY (IgG, IgM, IgA)</td><td>ANTI CARDIOLIPIN ANTIBODY (IgG, IgM, IgA)(ANTI CARDIOLIPIN ANTIBODY (IgG, IgM, IgA))</td><td>ANTI CARDIOLIPIN ANTIBODY (IgG, IgM, IgA)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI CARDIOLIPIN ANTIBODY IgG</td><td>ANTI CARDIOLIPIN ANTIBODY IgG(CARDIOLIPIN ANTIBODY IgG)</td><td>CARDIOLIPIN ANTIBODY IgG</td><td>CARDIAC MARKERS</td><td>0</td>
+	</tr><tr>
+		<td>ANTI CARDIOLIPIN ANTIBODY IgM</td><td>ANTI CARDIOLIPIN ANTIBODY IgM(CARDIOLIPIN IGM)</td><td>CARDIOLIPIN IGM</td><td>CARDIAC MARKERS</td><td>0</td>
+	</tr><tr>
+		<td>ANTI CARDIOLIPIN IgA ANTIBODIES</td><td>ANTI CARDIOLIPIN IgA ANTIBODIES(CARDIOLIPIN IgA ANTIBODIES)</td><td>CARDIOLIPIN IgA ANTIBODIES</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI CCP Antibody</td><td>ANTI CCP antibody(CCP Antibody)</td><td>CCP Antibody</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>ANTI CENTROMERE B ANTIBODY</td><td>ANTI CENTROMERE B ANTIBODY(ANTI CENTROMERE B ANTIBODY)</td><td>ANTI CENTROMERE B ANTIBODY</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti Complement Factor H Assay</td><td>Anti Complement Factor H Assay(Anti Complement Factor H Assay)</td><td>Anti Complement Factor H Assay</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Anti Dnase B</td><td>Anti Dnase B(Anti Dnase B)</td><td>Anti Dnase B</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti Glomerular Basement Membrane</td><td>Anti Glomerular Basement Membrane(Anti Glomerular Basement Membrane)</td><td>Anti Glomerular Basement Membrane</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>ANTI HAV IGM (QUANTITATIVE)</td><td>ANTI HAV IGM (QUANTITATIVE)(HAV IGM (QUANTITATIVE))</td><td>HAV IGM (QUANTITATIVE)</td><td>TORCH - IgM</td><td>0</td>
+	</tr><tr>
+		<td>HAV-lgG Antibodies to hepatitis A Virus</td><td>ANTI HAV TOTAL(HAV-lgG Antibodies to hepatitis A Virus)</td><td>HAV-lgG Antibodies to hepatitis A Virus</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti HBe</td><td>Anti HBe (HBe)</td><td>HBe</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>ANTI HEPATITIS A VIRUS TOTAL </td><td>ANTI HEPATITIS A VIRUS TOTAL (HAV Total)</td><td>HAV Total</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>ANTI HEPATITIS B ENVELOPE ANTIGEN (AHBE) -TOTAL</td><td>ANTI HEPATITIS B ENVELOPE ANTIGEN (AHBE) -TOTAL(AHBE - Total)</td><td>AHBE - Total</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>ANTI HEPATITIS B SURFACE ANTIGEN - TOTAL</td><td>ANTI HEPATITIS B SURFACE ANTIGEN - TOTAL(ANTI HEPATITIS B SURFACE ANTIGEN - TOTAL)</td><td>ANTI HEPATITIS B SURFACE ANTIGEN - TOTAL</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ANTI HEV IgG ANTIBODIES</td><td>ANTI HEV IgG ANTIBODIES(HEV IgG)</td><td>HEV IgG</td><td>HEPATITIS MARKERS</td><td>0</td>
+	</tr><tr>
+		<td>ANTI HISTONE ANTIBODY</td><td>ANTI HISTONE ANTIBODY(ANTI HISTONE ANTIBODY)</td><td>ANTI HISTONE ANTIBODY</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI MITOCHONDRIAL ANTIBODYANTI MITOCHONDRIAL ANTIBODY</td><td>ANTI MITOCHONDRIAL ANTIBODY(ANTI MITOCHONDRIAL ANTIBODY)</td><td>ANTI MITOCHONDRIAL ANTIBODY</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti Mitochondrial Antibody IN DILUTIONS</td><td>Anti Mitochondrial Antibody IN DILUTIONS(Anti Mitochondrial Antibody IN DILUTIONS)</td><td>Anti Mitochondrial Antibody IN DILUTIONS</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI MULLERIAN HORMONE ANTIBODY (AMH</td><td>ANTI MULLERIAN HORMONE ANTIBODY(AMH)</td><td>AMH</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Anti Parietal Cell Antibodies, IgG, Serum</td><td>Anti Parietal Cell Antibodies, IgG, Serum(Anti Parietal Cell Antibodies, IgG, Serum)</td><td>Anti Parietal Cell Antibodies, IgG, Serum</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI PHOSPHOLIPID ANTIBODIES IgA</td><td>ANTI PHOSPHOLIPID ANTIBODIES IgA(ANTI PHOSPHOLIPID ANTIBODIES IgA)</td><td>ANTI PHOSPHOLIPID ANTIBODIES IgA</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI PHOSPHOLIPID ANTIBODIES IgG</td><td>ANTI PHOSPHOLIPID ANTIBODIES IgG(ANTI PHOSPHOLIPID ANTIBODIES IgG)</td><td>ANTI PHOSPHOLIPID ANTIBODIES IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI PHOSPHOLIPID ANTIBODIES IgM</td><td>ANTI PHOSPHOLIPID ANTIBODIES IgM(ANTI PHOSPHOLIPID ANTIBODIES IgM)</td><td>ANTI PHOSPHOLIPID ANTIBODIES IgM</td><td>TORCH - IgM</td><td>0</td>
+	</tr><tr>
+		<td>Anti RNP-70</td><td>Anti RNP-70(Anti RNP-70)</td><td>Anti RNP-70</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI Sm ( SMITH) ANTIBODY </td><td>ANTI Sm ( SMITH) ANTIBODY (ANTI Sm ( SMITH) ANTIBODY )</td><td>ANTI Sm ( SMITH) ANTIBODY </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti Smooth Muscle Antibody-Titre (ASMA)</td><td>Anti Smooth Muscle Antibody-Titre (ASMA)(Anti Smooth Muscle Antibody-Titre (ASMA))</td><td>Anti Smooth Muscle Antibody-Titre (ASMA)</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>ANTI SPERM ANTIBODIES</td><td>ANTI SPERM ANTIBODIES(ANTI SPERM ANTIBODIES)</td><td>ANTI SPERM ANTIBODIES</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti SS-A/Ro Antibody</td><td>Anti SS-A/Ro Antibody(Anti SS-A/Ro Antibody)</td><td>Anti SS-A/Ro Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti SS-B/La Antibody</td><td>Anti SS-B/La Antibody(Anti SS-B/La Antibody)</td><td>Anti SS-B/La Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti TCR Gamma-Delta</td><td>Anti TCR Gamma-Delta(Anti TCR Gamma-Delta)</td><td>Anti TCR Gamma-Delta</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ANTI THROMBIN III ACTIVITY (Antigenic)</td><td>ANTI THROMBIN III ACTIVITY (Antigenic)(ANTI THROMBIN III ACTIVITY (Antigenic))</td><td>ANTI THROMBIN III ACTIVITY (Antigenic)</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ANTI THROMBIN III ACTIVITY (Functional)</td><td>ANTI THROMBIN III ACTIVITY (Functional)(ANTI THROMBIN III ACTIVITY (Functional))</td><td>ANTI THROMBIN III ACTIVITY (Functional)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ATG</td><td>ANTI THYROGLOBULIN ANTIBODY(ATG)</td><td>ATG</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>ANTI THYROPEROXIDASE ANTIBODY (AMA) (ANTI TPO)</td><td>ANTI THYROPEROXIDASE ANTIBODY (AMA) (ANTI TPO)(ANTI aANTI THYROPEROXANTIBODY (AMA) (ANTI TPO)ANTI)</td><td>ANTI aANTI THYROPEROXANTIBODY (AMA) (ANTI TPO)ANTI</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Anti Tubercular Drug Sensitivity test(DST) Rapid- 4 Drugs (Streptomycin,Isoniazid,Rifampicin,Ethambutol)</td><td>Anti Tubercular Drug Sensitivity test(DST) Rapid- 4 Drugs (Streptomycin,Isoniazid,Rifampicin,Ethambutol)(Anti Tubercular Drug Sensitivity test(DST) Rapid- 4 Drugs (Streptomycin,Isoniazid,Rifampicin,Ethambutol))</td><td>Anti Tubercular Drug Sensitivity test(DST) Rapid- 4 Drugs (Streptomycin,Isoniazid,Rifampicin,Ethambutol)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti Tubercular Drug Sensitivity test(DST) Rapid-Levofloxacin(Second Line)</td><td>Anti Tubercular Drug Sensitivity test(DST) Rapid-Levofloxacin(Second Line)(Anti Tubercular Drug Sensitivity test(DST) Rapid-Levofloxacin(Second Line))</td><td>Anti Tubercular Drug Sensitivity test(DST) Rapid-Levofloxacin(Second Line)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-alpha Fodrin IgA</td><td>Anti-alpha Fodrin IgA(Anti-alpha Fodrin IgA)</td><td>Anti-alpha Fodrin IgA</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-alpha Fodrin IgG</td><td>Anti-alpha Fodrin IgG(Anti-alpha Fodrin IgG)</td><td>Anti-alpha Fodrin IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Annexin V IgG</td><td>Anti-Annexin V IgG(Anti-Annexin V IgG)</td><td>Anti-Annexin V IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Annexin V IgM</td><td>Anti-Annexin V IgM(Anti-Annexin V IgM)</td><td>Anti-Annexin V IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Bacterial Permeability Increasing Protein</td><td>Anti-Bacterial Permeability Increasing Protein(Anti-Bacterial Permeability Increasing Protein)</td><td>Anti-Bacterial Permeability Increasing Protein</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Cathepsin G</td><td>Anti-Cathepsin G(Anti-Cathepsin G)</td><td>Anti-Cathepsin G</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-ds DNA IgA</td><td>Anti-ds DNA IgA(Anti-ds DNA IgA)</td><td>Anti-ds DNA IgA</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-ds DNA IgG</td><td>Anti-ds DNA IgG(Anti-ds DNA IgG)</td><td>Anti-ds DNA IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-ds DNA IgM</td><td>Anti-ds DNA IgM(Anti-ds DNA IgM)</td><td>Anti-ds DNA IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Elastase</td><td>Anti-Elastase(Anti-Elastase)</td><td>Anti-Elastase</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Gliadin IgA/IgG Screen</td><td>Anti-Gliadin IgA/IgG Screen(Anti-Gliadin IgA/IgG Screen)</td><td>Anti-Gliadin IgA/IgG Screen</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Histone</td><td>Anti-Histone(Anti-Histone)</td><td>Anti-Histone</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-insulin antibody</td><td>Anti-insulin antibody(Anti-insulin antibody)</td><td>Anti-insulin antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Jo1</td><td>Anti-Jo1(Anti-Jo1)</td><td>Anti-Jo1</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Lactoferrin</td><td>Anti-Lactoferrin(Anti-Lactoferrin)</td><td>Anti-Lactoferrin</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Lysozyme</td><td>Anti-Lysozyme(Anti-Lysozyme)</td><td>Anti-Lysozyme</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-MCV</td><td>Anti-MCV(Anti-MCV)</td><td>Anti-MCV</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Mitochondrial Antibodies-M2</td><td>Anti-Mitochondrial Antibodies-M2(Anti-Mitochondrial Antibodies-M2)</td><td>Anti-Mitochondrial Antibodies-M2</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Antimony</td><td>Antimony(Antimony)</td><td>Antimony</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Nucleosome</td><td>Anti-Nucleosome(Anti-Nucleosome)</td><td>Anti-Nucleosome</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Parietal Cell</td><td>Anti-Parietal Cell(Anti-Parietal Cell)</td><td>Anti-Parietal Cell</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Phosphatidic Acid IgG</td><td>Anti-Phosphatidic Acid IgG(Anti-Phosphatidic Acid IgG)</td><td>Anti-Phosphatidic Acid IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Phosphatidic Acid IgM</td><td>Anti-Phosphatidic Acid IgM(Anti-Phosphatidic Acid IgM)</td><td>Anti-Phosphatidic Acid IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Phosphatidyl Inositol IgG</td><td>Anti-Phosphatidyl Inositol IgG(Anti-Phosphatidyl Inositol IgG)</td><td>Anti-Phosphatidyl Inositol IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Phosphatidyl Inositol IgM</td><td>Anti-Phosphatidyl Inositol IgM(Anti-Phosphatidyl Inositol IgM)</td><td>Anti-Phosphatidyl Inositol IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Phosphatidyl Serine IgG</td><td>Anti-Phosphatidyl Serine IgG(Anti-Phosphatidyl Serine IgG)</td><td>Anti-Phosphatidyl Serine IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Phosphatidyl Serine IgM</td><td>Anti-Phosphatidyl Serine IgM(Anti-Phosphatidyl Serine IgM)</td><td>Anti-Phosphatidyl Serine IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-PR3 (high sensitivity)</td><td>Anti-PR3 (high sensitivity)(Anti-PR3 (high sensitivity))</td><td>Anti-PR3 (high sensitivity)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Prothrombin IgA</td><td>Anti-Prothrombin IgA(Anti-Prothrombin IgA)</td><td>Anti-Prothrombin IgA</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Prothrombin IgG</td><td>Anti-Prothrombin IgG(Anti-Prothrombin IgG)</td><td>Anti-Prothrombin IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Prothrombin IgG/IgM/IgA, Screen</td><td>Anti-Prothrombin IgG/IgM/IgA, Screen(Anti-Prothrombin IgG/IgM/IgA, Screen)</td><td>Anti-Prothrombin IgG/IgM/IgA, Screen</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Prothrombin IgM</td><td>Anti-Prothrombin IgM(Anti-Prothrombin IgM)</td><td>Anti-Prothrombin IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Ribosomal-P</td><td>Anti-Ribosomal-P(Anti-Ribosomal-P)</td><td>Anti-Ribosomal-P</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-RNP/Sm</td><td>Anti-RNP/Sm(Anti-RNP/Sm)</td><td>Anti-RNP/Sm</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Scl-70</td><td>Anti-Scl-70(Anti-Scl-70)</td><td>Anti-Scl-70</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-ß-2-Glycoprotein l IgA</td><td>Anti-ß-2-Glycoprotein l IgA(Anti-ß-2-Glycoprotein l IgA)</td><td>Anti-ß-2-Glycoprotein l IgA</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-SS-A-52</td><td>Anti-SS-A-52(Anti-SS-A-52)</td><td>Anti-SS-A-52</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-SS-A-60</td><td>Anti-SS-A-60(Anti-SS-A-60)</td><td>Anti-SS-A-60</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-ssDNA</td><td>Anti-ssDNA(Anti-ssDNA)</td><td>Anti-ssDNA</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Tissue-Transglutaminase IgA/IgG Screen</td><td>Anti-Tissue-Transglutaminase IgA/IgG Screen(Anti-Tissue-Transglutaminase IgA/IgG Screen)</td><td>Anti-Tissue-Transglutaminase IgA/IgG Screen</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Anti-Tissue-Transglutaminase IgG</td><td>Anti-Tissue-Transglutaminase IgG(Anti-Tissue-Transglutaminase IgG)</td><td>Anti-Tissue-Transglutaminase IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>APC- Activated protein C resistance test</td><td>APC- Activated protein C resistance test(APC- Activated protein C resistance test)</td><td>APC- Activated protein C resistance test</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>APOLIPOPROTEIN - A1 </td><td>APOLIPOPROTEIN - A1 (APOLIPOPROTEIN - A1 )</td><td>APOLIPOPROTEIN - A1 </td><td>CARDIAC MARKERS</td><td>0</td>
+	</tr><tr>
+		<td>APOLIPOPROTEIN - A1 & B Ratio</td><td>APOLIPOPROTEIN - A1 & B Ratio(APOLIPOPROTEIN - A1 & B Ratio)</td><td>APOLIPOPROTEIN - A1 & B Ratio</td><td>CARDIAC MARKERS</td><td>0</td>
+	</tr><tr>
+		<td>APOLIPOPROTEIN B ( APO B )</td><td>APOLIPOPROTEIN B ( APO B )(APOLIPOPROTEIN B ( APO B ))</td><td>APOLIPOPROTEIN B ( APO B )</td><td>CARDIAC MARKERS</td><td>0</td>
+	</tr><tr>
+		<td>Arsenic</td><td>Arsenic(Arsenic)</td><td>Arsenic</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ARTERIAL BLOOD GAS</td><td>ARTERIAL BLOOD GAS(ARTERIAL BLOOD GAS)</td><td>ARTERIAL BLOOD GAS</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>ASCA IgA</td><td>ASCA IgA(ASCA IgA)</td><td>ASCA IgA</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ASCA IgG</td><td>ASCA IgG(ASCA IgG)</td><td>ASCA IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ASKA- Skeltal Muscle (Striated Muscle) antibody</td><td>ASKA- Skeltal Muscle (Striated Muscle) antibody(ASKA- Skeltal Muscle (Striated Muscle) antibody)</td><td>ASKA- Skeltal Muscle (Striated Muscle) antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ASO (ANTI STREPTOLYSIN-O) TITRE</td><td>ASO (ANTI STREPTOLYSIN-O) TITRE(ASO (ANTI STREPTOLYSIN-O) TITRE)</td><td>ASO (ANTI STREPTOLYSIN-O) TITRE</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ASPERGILLUS ANTIBODY, IgG</td><td>ASPERGILLUS ANTIBODY, IgG(ASPERGILLUS ANTIBODY, IgG)</td><td>ASPERGILLUS ANTIBODY, IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ASPERGILLUS ANTIBODY, IgM</td><td>ASPERGILLUS ANTIBODY, IgM(ASPERGILLUS ANTIBODY, IgM)</td><td>ASPERGILLUS ANTIBODY, IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>AUTOMATED CULTURE & SENSITIVITY</td><td>AUTOMATED CULTURE & SENSITIVITY(NO GROWTH)</td><td>NO GROWTH</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Automated Culture And Sensitivity</td><td>Automated Culture And Sensitivity(No growth)</td><td>No growth</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Automated Culture and Sensitivity Report</td><td>Automated Culture and Sensitivity Report(Automated Culture and Sensitivity Report)</td><td>Automated Culture and Sensitivity Report</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Barbiturates-urine</td><td>Barbiturates-urine(Barbiturates-urine)</td><td>Barbiturates-urine</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Basophil count, Absolute</td><td>Basophil count, Absolute(Basophil count, Absolute)</td><td>Basophil count, Absolute</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>BCL-2 Oncoprotein</td><td>BCL-2 Oncoprotein(BCL-2 Oncoprotein)</td><td>BCL-2 Oncoprotein</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>BCR/ABL QUANTITATIVE (MBCR-CML)</td><td>BCR-ABL/ABL mRNA Reverse Transcription Quantitative Real Time PCR (RQ-PCR) for major transcripts(BCR/ABL QUANTITATIVE (MBCR-CML))</td><td>BCR/ABL QUANTITATIVE (MBCR-CML)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Bence Jones Immunofixation</td><td>Bence Jones Immunofixation(Bence Jones Immunofixation)</td><td>Bence Jones Immunofixation</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Benzodiazepines</td><td>Benzodiazepines(Benzodiazepines)</td><td>Benzodiazepines</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>BETA 2 GLYCOPROTEIN I - IgG</td><td>BETA 2 GLYCOPROTEIN I - IgG(BETA 2 GLYCOPROTEIN I - IgGBETA 2 GLYCOPROTEIN I )</td><td>BETA 2 GLYCOPROTEIN I - IgGBETA 2 GLYCOPROTEIN I </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>BETA 2 MICROGLOBULIN</td><td>BETA 2 MICROGLOBULIN(BETA 2 MICROGLOBULIN)</td><td>BETA 2 MICROGLOBULIN</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>BETA 2-GLYCOPROTEIN 1-IgM ANTIBODIES</td><td>BETA 2-GLYCOPROTEIN 1-IgM ANTIBODIES(BETA 2-GLYCOPROTEIN 1-IgM ANTIBODIES)</td><td>BETA 2-GLYCOPROTEIN 1-IgM ANTIBODIES</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>BETA HUMAN CHORIONIC GONADOTROPIN HORMONE</td><td>BETA HUMAN CHORIONIC GONADOTROPIN HORMONE(Beta HCG)</td><td>Beta HCG</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Bicarbonate</td><td>Bicarbonate(Bicarbonate)</td><td>Bicarbonate</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>BILIRUBIN TOTAL, DIRECT, INDIRECT</td><td>BILIRUBIN TOTAL, DIRECT, INDIRECT(BILIRUBIN)</td><td>BILIRUBIN</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Renal Function Test</td><td>BIOCHEMISTRY(RFT)</td><td>RFT</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Biopsy - Complex or Carcinoma</td><td>Biopsy - Complex or Carcinoma(Biopsy - Complex or Carcinoma)</td><td>Biopsy - Complex or Carcinoma</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Biopsy - Large Specimen (> 5cm)</td><td>Biopsy - Large Specimen (> 5cm)(Biopsy - Large Specimen (> 5cm))</td><td>Biopsy - Large Specimen (> 5cm)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Biopsy - Medium Specimen (upto 5cm)</td><td>Biopsy - Medium Specimen (upto 5cm)(Biopsy - Medium Specimen (upto 5cm))</td><td>Biopsy - Medium Specimen (upto 5cm)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Biopsy - Small Specimen (< 2cm)</td><td>Biopsy - Small Specimen (< 2cm)(Biopsy - Small Specimen (< 2cm))</td><td>Biopsy - Small Specimen (< 2cm)</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Biopsy - Uterus </td><td>Biopsy - Uterus (Biopsy - Uterus )</td><td>Biopsy - Uterus </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>BIOTINIDASE DEFICIENCY</td><td>BIOTINIDASE DEFICIENCY(BIOTINIDASE)</td><td>BIOTINIDASE</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Bismuth</td><td>Bismuth(Bismuth)</td><td>Bismuth</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Bleeding & Clotting Time</td><td>Bleeding & Clotting Time(BTCT)</td><td>BTCT</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Blood Glucose  1 hr</td><td>Blood Glucose  1 hr(Blood Glucose  1 hr)</td><td>Blood Glucose  1 hr</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>BLOOD GROUP</td><td>BLOOD GROUP(BG)</td><td>BG</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Blood sugar- fasting</td><td>Blood sugar- fasting(BSF)</td><td>BSF</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Blood sugar- fasting and postprandial</td><td>Blood sugar- fasting and postprandial(BSFP)</td><td>BSFP</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Blood sugar- postprandial</td><td>Blood sugar- postprandial(BSP)</td><td>BSP</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>BLOOD UREA LEVEL Serum</td><td>BLOOD UREA LEVEL(UREA LEVEL Serum)</td><td>UREA LEVEL Serum</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>BNP(B Type Natriuretic Peptide)</td><td>BNP(B Type Natriuretic Peptide)(BNP(B Type Natriuretic Peptide))</td><td>BNP(B Type Natriuretic Peptide)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>BODY FLUID CYTOLOGY</td><td>BODY FLUID CYTOLOGY(BODY FLUID CYTOLOGY)</td><td>BODY FLUID CYTOLOGY</td><td>HISTOPATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Bone Marrow Aspiration</td><td>Bone Marrow Aspiration(Bone Marrow Aspiration)</td><td>Bone Marrow Aspiration</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>BONE MARROW ASPIRATION CYTOLOGY</td><td>BONE MARROW ASPIRATION CYTOLOGY(BONE MARROW ASPIRATION CYTOLOGY)</td><td>BONE MARROW ASPIRATION CYTOLOGY</td><td>CYTOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Bone Marrow Biopsy & Aspiration</td><td>Bone Marrow Biopsy & Aspiration(Bone Marrow Biopsy & Aspiration)</td><td>Bone Marrow Biopsy & Aspiration</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Borrelia burgdorferi IgG (Lyme Disease)</td><td>Borrelia burgdorferi IgG (Lyme Disease)(Borrelia burgdorferi IgG)</td><td>Borrelia burgdorferi IgG</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Borrelia Burgdorferi IgM Antibodies (Lyme)</td><td>Borrelia Burgdorferi IgM Antibodies (Lyme)(Borrelia Burgdorferi IgM Antibodies (Lyme))</td><td>Borrelia Burgdorferi IgM Antibodies (Lyme)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>BRUCELLA AGGLUTINATION TEST (TUBE AGGLUTINATION)</td><td>BRUCELLA AGGLUTINATION TEST (TUBE AGGLUTINATION)(BRUCELLA AGGLUTINATION TEST (TUBE AGGLUTINATION))</td><td>BRUCELLA AGGLUTINATION TEST (TUBE AGGLUTINATION)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>BRUCELLA IgG & IgM</td><td>BRUCELLA IgG & IgM(BRUCELLA IgG & IgM)</td><td>BRUCELLA IgG & IgM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>BRUCELLA IgG ANTIBODIES</td><td>BRUCELLA IgG ANTIBODIES(BRUCELLA IgG ANTIBODIES)</td><td>BRUCELLA IgG ANTIBODIES</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>BRUCELLA IgM ANTIBODIES</td><td>BRUCELLA IgM ANTIBODIES(BRUCELLA IgM ANTIBODIES)</td><td>BRUCELLA IgM ANTIBODIES</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>BUN-Blood Urea Nitrogen</td><td>BUN-Blood Urea Nitrogen(BUN)</td><td>BUN</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>C - Peptide Fasting  </td><td>C - Peptide Fasting  (C - Peptide Fasting  )</td><td>C - Peptide Fasting  </td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>C - REACTIVE PROTEIN (hsCRP)</td><td>C - REACTIVE PROTEIN (hsCRP)(HS CRP)</td><td>HS CRP</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>C1 Esterase Inhibitor</td><td>C1 Esterase Inhibitor(C1 Esterase Inhibitor)</td><td>C1 Esterase Inhibitor</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>CA 125, CANCER MARKER</td><td>CA 125, CANCER MARKER(CA 125, CANCER MARKER)</td><td>CA 125, CANCER MARKER</td><td>TUMOUR MARKER</td><td>0</td>
+	</tr><tr>
+		<td>CA 15.3 CANCER MARKER, SERUM</td><td>CA 15.3 CANCER MARKER, SERUM(CA 15.3 CANCER MARKER, SERUM)</td><td>CA 15.3 CANCER MARKER, SERUM</td><td>TUMOUR MARKER</td><td>0</td>
+	</tr><tr>
+		<td>CA 19.9 CANCER MARKER, SERUM</td><td>CA 19.9 CANCER MARKER, SERUM(CA 19.9 CANCER MARKER, SERUM)</td><td>CA 19.9 CANCER MARKER, SERUM</td><td>TUMOUR MARKER</td><td>0</td>
+	</tr><tr>
+		<td>CA 72.4 CANCER MARKER, SERUM</td><td>CA 72.4 CANCER MARKER, SERUM(CA 72.4 CANCER MARKER, SERUM)</td><td>CA 72.4 CANCER MARKER, SERUM</td><td>TUMOUR MARKER</td><td>0</td>
+	</tr><tr>
+		<td>Cadmium</td><td>Cadmium(Cadmium)</td><td>Cadmium</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Calcitonin</td><td>Calcitonin(Calcitonin)</td><td>Calcitonin</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Calcium (24 Hrs Urine)</td><td>Calcium (24 Hrs Urine)(Calcium (24 Hrs Urine))</td><td>Calcium (24 Hrs Urine)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CALCIUM IONIZED</td><td>CALCIUM IONIZED(CALCIUM IONIZED)</td><td>CALCIUM IONIZED</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>CALCIUM, SERUM</td><td>CALCIUM, SERUM(CALCIUM, SERUM)</td><td>CALCIUM, SERUM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Calcium/creatinine ratio</td><td>Calcium/creatinine ratio(Calcium/creatinine ratio)</td><td>Calcium/creatinine ratio</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Cannabis (THC) (Marijuana) (Qualitative)</td><td>Cannabis (THC) (Marijuana) (Qualitative)(Cannabis (THC) (Marijuana) (Qualitative))</td><td>Cannabis (THC) (Marijuana) (Qualitative)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CAPD FLUID</td><td>CAPD FLUID(CAPD FLUID)</td><td>CAPD FLUID</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CARBAMAZEPINE</td><td>CARBAMAZEPINE(-1CARBAMAZEPINE)</td><td>-1CARBAMAZEPINE</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CARCINO EMBRYONIC ANTIGEN</td><td>CARCINO EMBRYONIC ANTIGEN(CEA)</td><td>CEA</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CATECHOLAMINES 24 HR URINE</td><td>CATECHOLAMINES 24 HR URINE(CATECHOLAMINES 24 HR URINE)</td><td>CATECHOLAMINES 24 HR URINE</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD 117 (Myeloid markers)</td><td>CD 117 (Myeloid markers)(CD 117 (Myeloid markers))</td><td>CD 117 (Myeloid markers)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD 11c (Hairy cell/NHL marker)</td><td>CD 11c (Hairy cell/NHL marker)(CD 11c (Hairy cell/NHL marker))</td><td>CD 11c (Hairy cell/NHL marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD 15 (Myeloid cell marker)</td><td>CD 15 (Myeloid cell marker)(CD 15 (Myeloid cell marker))</td><td>CD 15 (Myeloid cell marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD 4 counts</td><td>CD 4 counts(CD 4 counts)</td><td>CD 4 counts</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD10 (Prognostic cell marker)</td><td>CD10 (Prognostic cell marker)(CD10 (Prognostic cell marker))</td><td>CD10 (Prognostic cell marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD-13 (Myeloid cell marker)</td><td>CD-13 (Myeloid cell marker)(CD-13 (Myeloid cell marker))</td><td>CD-13 (Myeloid cell marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD-14 (Monocytic cell marker)</td><td>CD-14 (Monocytic cell marker)(CD-14 (Monocytic cell marker))</td><td>CD-14 (Monocytic cell marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD18</td><td>CD18(CD18)</td><td>CD18</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD19</td><td>CD19(CD19)</td><td>CD19</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD2 (Pan T cell marker)</td><td>CD2 (Pan T cell marker)(CD2 (Pan T cell marker))</td><td>CD2 (Pan T cell marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD20</td><td>CD20(CD20)</td><td>CD20</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD22 (Pan B cell marker)</td><td>CD22 (Pan B cell marker)(CD22 (Pan B cell marker))</td><td>CD22 (Pan B cell marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD23 (CLL segregation marker)</td><td>CD23 (CLL segregation marker)(CD23 (CLL segregation marker))</td><td>CD23 (CLL segregation marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD25 (Hairy cell/NHL Marker) cells</td><td>CD25 (Hairy cell/NHL Marker) cells(CD25 (Hairy cell/NHL Marker) cells)</td><td>CD25 (Hairy cell/NHL Marker) cells</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD3 CD4 CD8</td><td>CD3 CD4 CD8(CD3 CD4 CD8)</td><td>CD3 CD4 CD8</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD33</td><td>CD33(CD33)</td><td>CD33</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD34</td><td>CD34(CD34)</td><td>CD34</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD4/CD3 counts (FACS Count)</td><td>CD4/CD3 counts (FACS Count)(CD4/CD3 counts (FACS Count))</td><td>CD4/CD3 counts (FACS Count)</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>CD40</td><td>CD40(CD40)</td><td>CD40</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD41a (Megakaryocytic marker)</td><td>CD41a (Megakaryocytic marker)(CD41a (Megakaryocytic marker))</td><td>CD41a (Megakaryocytic marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD42a (Megakaryocytic marker)</td><td>CD42a (Megakaryocytic marker)(CD42a (Megakaryocytic marker))</td><td>CD42a (Megakaryocytic marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD5 (T cell/B Cell subset marker)</td><td>CD5 (T cell/B Cell subset marker)(CD5 (T cell/B Cell subset marker))</td><td>CD5 (T cell/B Cell subset marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD61 (Megakaryocytic marker)</td><td>CD61 (Megakaryocytic marker)(CD61 (Megakaryocytic marker))</td><td>CD61 (Megakaryocytic marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD7 (Pan T cell /early myeloid marker)</td><td>CD7 (Pan T cell /early myeloid marker)(CD7 (Pan T cell /early myeloid marker))</td><td>CD7 (Pan T cell /early myeloid marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD-79a</td><td>CD-79a(CD-79a)</td><td>CD-79a</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD-80</td><td>CD-80(CD-80)</td><td>CD-80</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD-FMC -7(Prognostic CLL/NHL marker)</td><td>CD-FMC -7(Prognostic CLL/NHL marker)(CD-FMC -7(Prognostic CLL/NHL marker))</td><td>CD-FMC -7(Prognostic CLL/NHL marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD-Glycophorin (Erythrocytes cell marker)</td><td>CD-Glycophorin (Erythrocytes cell marker)(CD-Glycophorin (Erythrocytes cell marker))</td><td>CD-Glycophorin (Erythrocytes cell marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD-MPO (Myeloid cell marker)</td><td>CD-MPO (Myeloid cell marker)(CD-MPO (Myeloid cell marker))</td><td>CD-MPO (Myeloid cell marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD-TCR-Alpha beta</td><td>CD-TCR-Alpha beta(CD-TCR-Alpha beta)</td><td>CD-TCR-Alpha beta</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CD-TCR-Gamma delta</td><td>CD-TCR-Gamma delta(CD-TCR-Gamma delta)</td><td>CD-TCR-Gamma delta</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Centromere antibody</td><td>Centromere antibody(Centromere antibody)</td><td>Centromere antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CERULOPLASMIN</td><td>CERULOPLASMIN(CERULOPLASMIN)</td><td>CERULOPLASMIN</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CH-50 (Compliment Total)</td><td>CH-50 (Compliment Total)(CH-50 (Compliment Total))</td><td>CH-50 (Compliment Total)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CHIKUNGUNYA IGG & IGM</td><td>CHIKUNGUNYA IGG & IGM(CHIKUNGUNYA IGG & IGM)</td><td>CHIKUNGUNYA IGG & IGM</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CHIKUNGUNYA IgG and IgM ANTIBODIES</td><td>CHIKUNGUNYA IgG and IgM ANTIBODIES(CHIKUNGUNYA IgG and IgM ANTIBODIES)</td><td>CHIKUNGUNYA IgG and IgM ANTIBODIES</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>CHIKUNGUNYA IgM</td><td>CHIKUNGUNYA IgM(CHIKUNGUNYA IgM)</td><td>CHIKUNGUNYA IgM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Chikungunya RTPCR</td><td>Chikungunya RTPCR(chikungunya Rtpcr )</td><td>chikungunya Rtpcr </td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CHIKUNGUNYA VIRUS ANTIBODY, IgM</td><td>CHIKUNGUNYA VIRUS ANTIBODY, IgM(CHIKUNGUNYA VIRUS ANTIBODY, IgM)</td><td>CHIKUNGUNYA VIRUS ANTIBODY, IgM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Chlamydia Pneumoniae IgG</td><td>Chlamydia Pneumoniae IgG(Chlamydia Pneumoniae IgG)</td><td>Chlamydia Pneumoniae IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Chlamydia Pneumoniae IgM</td><td>Chlamydia Pneumoniae IgM(Chlamydia Pneumoniae IgM)</td><td>Chlamydia Pneumoniae IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Chlamydia Pneumoniae IgM-Copy</td><td>Chlamydia Pneumoniae IgM-Copy(Chlamydia Pneumoniae IgM-Copy)</td><td>Chlamydia Pneumoniae IgM-Copy</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Chlamydia Qualitative PCR</td><td>Chlamydia Qualitative PCR(Chlamydia Qualitative PCR)</td><td>Chlamydia Qualitative PCR</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Chlamydia Trachomatis IgG</td><td>Chlamydia Trachomatis IgG(Chlamydia Trachomatis IgG)</td><td>Chlamydia Trachomatis IgG</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Chlamydia Trachomatis IgM</td><td>Chlamydia Trachomatis IgM(Chlamydia Trachomatis IgM)</td><td>Chlamydia Trachomatis IgM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CHLORIDE</td><td>CHLORIDE(CHLORIDE)</td><td>CHLORIDE</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>CHOLESTEROL - LDL</td><td>CHOLESTEROL - LDL(CHOLESTEROL - LDL)</td><td>CHOLESTEROL - LDL</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>CHOLESTROL - TOTAL</td><td>CHOLESTROL - TOTAL(CHOLESTROL - TOTAL)</td><td>CHOLESTROL - TOTAL</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>CHOLESTROL HDL-DIRECT</td><td>CHOLESTROL HDL-DIRECT(CHOLESTROL HDL-DIRECT)</td><td>CHOLESTROL HDL-DIRECT</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>CHOLINESTERASE</td><td>CHOLINESTERASE(CHOLINESTERASE)</td><td>CHOLINESTERASE</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Chromium</td><td>Chromium(Chromium)</td><td>Chromium</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CHROMOGRANIN - A</td><td>CHROMOGRANIN - A(CHROMOGRANIN - A)</td><td>CHROMOGRANIN - A</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Chromogranin A</td><td>Chromogranin A(Chromogranin A)</td><td>Chromogranin A</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Chromosome 13 & 21</td><td>Chromosome 13 & 21(Chromosome 13 & 21)</td><td>Chromosome 13 & 21</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Chromosome 13, 18, 21, X & Y</td><td>Chromosome 13, 18, 21, X & Y(Chromosome 13, 18, 21, X & Y)</td><td>Chromosome 13, 18, 21, X & Y</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Chromosome 18, X & Y (Amniotic Fluid)</td><td>Chromosome 18, X & Y (Amniotic Fluid)(Chromosome 18, X & Y (Amniotic Fluid))</td><td>Chromosome 18, X & Y (Amniotic Fluid)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Chromosome 21</td><td>Chromosome 21(Chromosome 21)</td><td>Chromosome 21</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CHYLOMICRONS</td><td>CHYLOMICRONS(CHYLOMICRONS)</td><td>CHYLOMICRONS</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CK lsoenzyme</td><td>CK lsoenzyme(CK lsoenzyme)</td><td>CK lsoenzyme</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>URINE PORPHOBILINOGEN</td><td>CLINICAL PATHOLOGY(URINE - PORPHOBILINOGEN)</td><td>URINE - PORPHOBILINOGEN</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Clozapine</td><td>Clozapine(Clozapine)</td><td>Clozapine</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CMV Avidity</td><td>CMV Avidity(CMV Avidity)</td><td>CMV Avidity</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>COAGULATION PROFILE</td><td>COAGULATION PROFILE(COAGULATION PROFILE)</td><td>COAGULATION PROFILE</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>Cobalt</td><td>Cobalt(Cobalt)</td><td>Cobalt</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Cocaine (Qualitative)</td><td>Cocaine (Qualitative)(Cocaine (Qualitative))</td><td>Cocaine (Qualitative)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Cocaine (Quantitative)</td><td>Cocaine (Quantitative)(Cocaine (Quantitative))</td><td>Cocaine (Quantitative)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>COCAINE URINE</td><td>COCAINE URINE(COCAINE URINE)</td><td>COCAINE URINE</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>COMPLEMENT 3 (C3)</td><td>COMPLEMENT 3 (C3)(COMPLEMENT 3 (C3))</td><td>COMPLEMENT 3 (C3)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>COMPLEMENT-4 (C4),SERUM</td><td>COMPLEMENT-4 (C4),SERUM(COMPLEMENT-4 (C4),SERUM)</td><td>COMPLEMENT-4 (C4),SERUM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Complete Blood Count</td><td>Complete Blood Count(CBC)</td><td>CBC</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>COOMBS DIRECT (DCT), BLOOD</td><td>COOMBS DIRECT (DCT), BLOOD(COOMBS DIRECT (DCT), BLOOD)</td><td>COOMBS DIRECT (DCT), BLOOD</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>COOMBS INDIRECT TEST (ICT)</td><td>COOMBS INDIRECT TEST (ICT)(COOMBS INDIRECT TEST (ICT))</td><td>COOMBS INDIRECT TEST (ICT)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>COPPER,SERUM</td><td>COPPER,SERUM(COPPER,SERUM)</td><td>COPPER,SERUM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CORTISOL SERUM (3 to 5 PM)</td><td>CORTISOL SERUM (3 to 5 PM)(CORTISOL SERUM (3 to 5 PM))</td><td>CORTISOL SERUM (3 to 5 PM)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CORTISOL SERUM (7 to 9 AM)</td><td>CORTISOL SERUM (7 to 9 AM)(CORTISOL SERUM (7 to 9 AM))</td><td>CORTISOL SERUM (7 to 9 AM)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Cortisol Urine  Total </td><td>Cortisol Urine  Total (Cortisol Urine  Total )</td><td>Cortisol Urine  Total </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Cotinine Metabolite</td><td>Cotinine Metabolite(Cotinine Metabolite)</td><td>Cotinine Metabolite</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Covid IgG (Spike Protine)</td><td>Covid IgG (Spike Protine)(Covid IgG (Spike Protine))</td><td>Covid IgG (Spike Protine)</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>COVID-19 Antibody</td><td>COVID-19 Antibody(COVID-19 Antibody)</td><td>COVID-19 Antibody</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Coxiella Burnetii IgG (Q fever)</td><td>Coxiella Burnetii IgG (Q fever)(Coxiella Burnetii IgG (Q fever))</td><td>Coxiella Burnetii IgG (Q fever)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Coxiella Burnetii IgM (Q fever)</td><td>Coxiella Burnetii IgM (Q fever)(Coxiella Burnetii IgM (Q fever))</td><td>Coxiella Burnetii IgM (Q fever)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>C-PEPTIDE</td><td>C-PEPTIDE(C-PEPTIDE)</td><td>C-PEPTIDE</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>C-Peptide Fasting / Post Prandial</td><td>C-Peptide Fasting / Post Prandial(C-Peptide Fasting / Post Prandial)</td><td>C-Peptide Fasting / Post Prandial</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>C-Peptide Post Prandial  </td><td>C-Peptide Post Prandial  (C-Peptide Post Prandial  )</td><td>C-Peptide Post Prandial  </td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Creatinine clearance test</td><td>Creatinine clearance test(Creatinine clearance test)</td><td>Creatinine clearance test</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CREATININE, Random URINE</td><td>CREATININE, Random URINE(CREATININE, Random URINE)</td><td>CREATININE, Random URINE</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CRP (C- REACTIVE PROTEIN)</td><td>CRP (C- REACTIVE PROTEIN)(CRP)</td><td>CRP</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CRYOGLOBULINS-dhande</td><td>CRYOGLOBULINS(CRYOGLOBULINS-dhande)</td><td>CRYOGLOBULINS-dhande</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>CRYOGLOBULINS</td><td>CRYOGLOBULINS(CRYOGLOBULINS)</td><td>CRYOGLOBULINS</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CRYPTOCOCCAL ANTIGEN, CSF</td><td>CRYPTOCOCCAL ANTIGEN, CSF(CRYPTOCOCCAL ANTIGEN, CSF)</td><td>CRYPTOCOCCAL ANTIGEN, CSF</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CRYPTOCOCCAL ANTIGEN, SERUM</td><td>CRYPTOCOCCAL ANTIGEN, SERUM(CRYPTOCOCCAL ANTIGEN, SERUM)</td><td>CRYPTOCOCCAL ANTIGEN, SERUM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CRYPTOSPORIDIUM / ISOSPORA IDENTIFICATION, Stool</td><td>CRYPTOSPORIDIUM / ISOSPORA IDENTIFICATION, Stool(CRYPTOSPORIDIUM / ISOSPORA IDENTIFICATION, Stool)</td><td>CRYPTOSPORIDIUM / ISOSPORA IDENTIFICATION, Stool</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CSF EXAMINATION</td><td>CSF EXAMINATION(CSF )</td><td>CSF </td><td>REPORT ON BODY FLUID EXAMINATION</td><td>0</td>
+	</tr><tr>
+		<td>CSF Protein Electrophoresis (concentrated)</td><td>CSF Protein Electrophoresis (concentrated)(CSF Protein Electrophoresis (concentrated))</td><td>CSF Protein Electrophoresis (concentrated)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CSF Routine</td><td>CSF Routine(CSF Routine)</td><td>CSF Routine</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture & Sensitivity Report-Other</td><td>Culture & Sensitivity Report-Other(Culture & Sensitivity Report-Other)</td><td>Culture & Sensitivity Report-Other</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture Aerobic, Blood </td><td>Culture Aerobic, Blood (Culture Aerobic, Blood )</td><td>Culture Aerobic, Blood </td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture And Sensitivity</td><td>Culture And Sensitivity(Cotamination )</td><td>Cotamination </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY - BLOOD(BATEC)</td><td>CULTURE AND SENSITIVITY - BLOOD(BATEC)(CULTURE AND SENSITIVITY - BLOOD(BATEC))</td><td>CULTURE AND SENSITIVITY - BLOOD(BATEC)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY (AUTOMATED)</td><td>CULTURE AND SENSITIVITY URINE CANDIDA AUTOMATED(CULTURE AND SENSITIVITY URINE CANDIDA AUTOMATED)</td><td>CULTURE AND SENSITIVITY URINE CANDIDA AUTOMATED</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY (MANUAL)</td><td>CULTURE AND SENSITIVITY URINE CANDIDA MANUAL(CULTURE AND SENSITIVITY URINE CANDIDA MANUAL)</td><td>CULTURE AND SENSITIVITY URINE CANDIDA MANUAL</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Culture And Sensitivity(Final)</td><td>Culture And Sensitivity(Final)(Blood Final)</td><td>Blood Final</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Culture And Sensitivity(Preliminary)</td><td>Culture And Sensitivity(Preliminary)(Blood Preliminary)</td><td>Blood Preliminary</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY, BLOOD</td><td>CULTURE AND SENSITIVITY, BLOOD(CULTURE AND SENSITIVITY, BLOOD)</td><td>CULTURE AND SENSITIVITY, BLOOD</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY, BODY FLUIDS</td><td>CULTURE AND SENSITIVITY, BODY FLUIDS(BODY FLUIDS C/S)</td><td>BODY FLUIDS C/S</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY, BODY FLUIDS</td><td>CULTURE AND SENSITIVITY, BODY FLUIDS(Body Fluid C/S)</td><td>Body Fluid C/S</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY, PUS</td><td>CULTURE AND SENSITIVITY, PUS(PUS C/S)</td><td>PUS C/S</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture And Sensitivity Manual</td><td>Culture And Sensitivity, PUS GNB(Culture And Sensitivity, PUS GNB)</td><td>Culture And Sensitivity, PUS GNB</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture And Sensitivity, Manual</td><td>Culture And Sensitivity, PUS GPC(Culture And Sensitivity, PUS GPC)</td><td>Culture And Sensitivity, PUS GPC</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY, STOOL</td><td>CULTURE AND SENSITIVITY, STOOL(STOOL C/S)</td><td>STOOL C/S</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY, STOOL</td><td>CULTURE AND SENSITIVITY, STOOL(CULTURE AND SENSITIVITY, STOOL)</td><td>CULTURE AND SENSITIVITY, STOOL</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE AND SENSITIVITY, URINE</td><td>CULTURE AND SENSITIVITY, URINE(URINE C/S)</td><td>URINE C/S</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture And Sensitivity,  Manual</td><td>Culture And Sensitivity, Urine (Culture And Sensitivity, PUS (GPC Manual)GPC Manual)-Copy(Culture And Sensitivity, PUS (GPC Manual))</td><td>Culture And Sensitivity, PUS (GPC Manual)</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture And Sensitivity, Urine </td><td>Culture And Sensitivity, Urine (GNB Manual)(Culture And Sensitivity, Urine (GNB Manual))</td><td>Culture And Sensitivity, Urine (GNB Manual)</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture And Sensitivity, Urine </td><td>Culture And Sensitivity, Urine (GPC Manual)(Culture And Sensitivity, Urine (GPC Manual))</td><td>Culture And Sensitivity, Urine (GPC Manual)</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture Anerobic, Blood</td><td>Culture Anerobic, Blood(Culture Anerobic, Blood)</td><td>Culture Anerobic, Blood</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>CULTURE NO GROWTH</td><td>CULTURE NO GROWTH(CULTURE NO GROWTH)</td><td>CULTURE NO GROWTH</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Culture, Aerobic, Body Fluids</td><td>Culture, Aerobic, Body Fluids(Culture, Aerobic, Body Fluids)</td><td>Culture, Aerobic, Body Fluids</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Cyclospora</td><td>Cyclospora(Cyclospora)</td><td>Cyclospora</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CYSTATIN C</td><td>CYSTATIN C(CYSTATIN C)</td><td>CYSTATIN C</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Cysticercosis (IgG) Antibody </td><td>Cysticercosis (IgG) Antibody (Cysticercosis (IgG) Antibody )</td><td>Cysticercosis (IgG) Antibody </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Cytology For Liver Abscess</td><td>Cytology For Liver Abscess(Cytology)</td><td>Cytology</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Cytology Neck Abscess </td><td>Cytology Neck Abscess (Cytology )</td><td>Cytology </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>CYTOLOGY REPORT </td><td>CYTOLOGY REPORT (CYTOLOGY REPORT )</td><td>CYTOLOGY REPORT </td><td>REPORT ON CYTOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Cytomegalo Virus (CMV) - IgG</td><td>Cytomegalo Virus (CMV) - IgG(CMV-IGG)</td><td>CMV-IGG</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CYTOMEGALO VIRUS (CMV) - IgM</td><td>CYTOMEGALO VIRUS (CMV) - IgM(CMV - IgM)</td><td>CMV - IgM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CYTOMEGALO VIRUS(CMV) - IgG & IgM</td><td>CYTOMEGALO VIRUS(CMV) - IgG & IgM(CMV-IgG & IgM)</td><td>CMV-IgG & IgM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>D-Dimer Quantitative Test</td><td>D-Dimer Quantitative Test(DIMER)</td><td>DIMER</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Dehydroepiandrosterone (DHEA)</td><td>Dehydroepiandrosterone (DHEA)(DHEA)</td><td>DHEA</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Dehydroepiandrosterone Sulphate (DHEAS)</td><td>Dehydroepiandrosterone Sulphate (DHEAS)(DHEAS)</td><td>DHEAS</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>demo test</td><td>demo test(demo test)</td><td>demo test</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>DENGUE ANTIBODIES (IgG + IgM)</td><td>DENGUE ANTIBODIES (IgG + IgM)(Dengue Rapid)</td><td>Dengue Rapid</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>DENGUE ANTIBODIES (IGG + IGM) ELISA</td><td>DENGUE ANTIBODIES (IGG + IGM) ELISA(Dengue ABS- ELISA)</td><td>Dengue ABS- ELISA</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Dengue NS1 Antigen</td><td>Dengue NS1 Antigen(Dengue NS1 Rapid)</td><td>Dengue NS1 Rapid</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>DENGUE NS1 ANTIGEN (ELISA)</td><td>DENGUE NS1 ANTIGEN (ELISA)(DENGUE NS1 ANTIGEN (ELISA))</td><td>DENGUE NS1 ANTIGEN (ELISA)</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>DENGUE PROFILE</td><td>DENGUE PROFILE - Rapid(DENGUE PROFILE - Rapid)</td><td>DENGUE PROFILE - Rapid</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>DENGUE PROFILE -ELISA</td><td>DENGUE PROFILE -ELISA(DENGUE PROFILE -ELISA)</td><td>DENGUE PROFILE -ELISA</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>DESMOGLEIN (DSG1 ) </td><td>DESMOGLEIN (DSG1 )(DSG)</td><td>DSG</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Desmoglein 3 (DSG3), IgG Antibodies</td><td>Desmoglein 3 (DSG3), IgG Antibodies(DSG)</td><td>DSG</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>DIGOXINE</td><td>DIGOXINE(DIGOXINE)</td><td>DIGOXINE</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>DNPH Test</td><td>DNPH Test(DNPH Test)</td><td>DNPH Test</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>DOUBLE MARKER WITH GRAPH (1st Trimester) Report</td><td>DOUBLE MARKER WITH GRAPH (1st Trimester) Report(DOUBLE MARKER WITH GRAPH (1st Trimester) Report)</td><td>DOUBLE MARKER WITH GRAPH (1st Trimester) Report</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>DPD-Deoxypryridinolie (Pyrillinks D)</td><td>DPD-Deoxypryridinolie (Pyrillinks D)(DPD-Deoxypryridinolie (Pyrillinks D))</td><td>DPD-Deoxypryridinolie (Pyrillinks D)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Drug Allergy Test (each Drug)</td><td>Drug Allergy Test (each Drug)(Drug Allergy Test (each Drug))</td><td>Drug Allergy Test (each Drug)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>DRUG OF ABUSE [5 PANEL]</td><td>DRUG OF ABUSE [5 PANEL](DRUG)</td><td>DRUG</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>DRVVT Screen Ratio</td><td>DRVVT Screen Ratio(DRVVT)</td><td>DRVVT</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>Dummy PS</td><td>Dummy PS(Dummy PS)</td><td>Dummy PS</td><td>HISTOPATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Dummy SARS</td><td>Dummy SARS(Dummy SARS)</td><td>Dummy SARS</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>D-Xylose test</td><td>D-Xylose test(D-Xylose test)</td><td>D-Xylose test</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>UNCONJUCATED ESTRIOL (E3)</td><td>E3 UNCONJUCATED ESTRIOL(E3 UNCONJUCATED ESTRIOL)</td><td>E3 UNCONJUCATED ESTRIOL</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>EBV (VCA) - IgM ANTIBODIES</td><td>EBV (VCA) - IgM ANTIBODIES(EBV)</td><td>EBV</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ECG</td><td>ECG(ECG)</td><td>ECG</td><td>Histo Path</td><td>0</td>
+	</tr><tr>
+		<td>Echinococcus Antibody, IgG (Hydatid serology)  </td><td>Echinococcus Antibody, IgG (Hydatid serology)  (Echinococcus Antibody, IgG (Hydatid serology)  )</td><td>Echinococcus Antibody, IgG (Hydatid serology)  </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>EGF (Epidermal Growth Factor)</td><td>EGF (Epidermal Growth Factor)(EGF (Epidermal Growth Factor))</td><td>EGF (Epidermal Growth Factor)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ELECTROLYTES, SERUM</td><td>ELECTROLYTES(ELECTROLYTES, SERUM)</td><td>ELECTROLYTES, SERUM</td><td>ELECTROLYTE</td><td>0</td>
+	</tr><tr>
+		<td>ELECTROLYTES 24 HRS URINE</td><td>ELECTROLYTES 24 HRS URINE(ELECTROLYTES)</td><td>ELECTROLYTES</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>ELECTROLYTES, RANDOM URINE</td><td>ELECTROLYTES, RANDOM URINE(ELECTROLYTES, RANDOM URINE)</td><td>ELECTROLYTES, RANDOM URINE</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ELISA for Clostridium difficile</td><td>ELISA for Clostridium difficile(ELISA for Clostridium difficile)</td><td>ELISA for Clostridium difficile</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ENA Screen</td><td>ENA Screen(ENA Screen)</td><td>ENA Screen</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Endomysial antibody</td><td>Endomysial antibody(Endomysial antibody)</td><td>Endomysial antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Entamoeba Histolytica (Amebiasis) IgG</td><td>Entamoeba Histolytica (Amebiasis) IgG(Entamoeba Histolytica (Amebiasis) IgG)</td><td>Entamoeba Histolytica (Amebiasis) IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Epidermal Antibody</td><td>Epidermal Antibody(Epidermal Antibody)</td><td>Epidermal Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>EPSTEIN BARR VIRUS (EBV) Quantitative ( PCR )</td><td>EPSTEIN BARR VIRUS (EBV) Quantitative ( PCR )(EPSTEIN BARR VIRUS (EBV) Quantitative ( PCR ))</td><td>EPSTEIN BARR VIRUS (EBV) Quantitative ( PCR )</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>EPSTEIN BARR VIRUS (EBV), QUALITATIVE PCR</td><td>EPSTEIN BARR VIRUS (EBV), QUALITATIVE PCR(EBV)</td><td>EBV</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Epstein Barr Virus IgG</td><td>Epstein Barr Virus IgG(Epstein Barr Virus IgG)</td><td>Epstein Barr Virus IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ER, PR</td><td>ER, PR(ER, PR)</td><td>ER, PR</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ER, PR, HER2</td><td>ER, PR, HER2(ER, PR, HER2)</td><td>ER, PR, HER2</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ER, PR, HER2, MIB1</td><td>ER, PR, HER2, MIB1(ER, PR, HER2, MIB1)</td><td>ER, PR, HER2, MIB1</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Erythrocyte Count (RBC Count)</td><td>Erythrocyte Count (RBC Count)(Erythrocyte Count (RBC Count))</td><td>Erythrocyte Count (RBC Count)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Erythropoietin EPO</td><td>Erythropoietin EPO(Erythropoietin EPO)</td><td>Erythropoietin EPO</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>ESR (ERYTHROCYTE SEDIMENTATION RATE)</td><td>ESR (ERYTHROCYTE SEDIMENTATION RATE)(ESR)</td><td>ESR</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>ESTRADIOL (E2)</td><td>ESTRADIOL (E2)(ESTRADIOL (E2))</td><td>ESTRADIOL (E2)</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Estriol (E3)</td><td>Estriol (E3)(Estriol (E3))</td><td>Estriol (E3)</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Ethanol Quantitative</td><td>Ethanol Quantitative(Ethanol Quantitative)</td><td>Ethanol Quantitative</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FACTOR - II (PROTHROMBIN) MUTATION DETECTION PCR</td><td>FACTOR - II (PROTHROMBIN) MUTATION DETECTION PCR(FACTOR - II (PROTHROMBIN) MUTATION DETECTION PCR)</td><td>FACTOR - II (PROTHROMBIN) MUTATION DETECTION PCR</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FACTOR IX</td><td>FACTOR IX(FACTOR IX)</td><td>FACTOR IX</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Factor V Leiden</td><td>FACTOR V LEIDEN(FACTOR V)</td><td>FACTOR V</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>Factor V Leiden Mutation</td><td>Factor V Leiden Mutation(FACTOR V Mutation)</td><td>FACTOR V Mutation</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>FACTOR VII</td><td>FACTOR VII(FACTOR VII)</td><td>FACTOR VII</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>FACTOR VIII ACTIVITY, CLOTTING</td><td>FACTOR VIII ACTIVITY, CLOTTING(FACTOR VIII ACTIVITY, CLOTTING)</td><td>FACTOR VIII ACTIVITY, CLOTTING</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>Factor-Xlll</td><td>Factor-Xlll(Factor-Xlll)</td><td>Factor-Xlll</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Fanconis Anemia</td><td>Fanconis Anemia(Fanconis Anemia)</td><td>Fanconis Anemia</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Ferric Chloride Test </td><td>Ferric Chloride Test (Ferric Chloride Test )</td><td>Ferric Chloride Test </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FERRITIN REPORT</td><td>FERRITIN REPORT(FERRITIN REPORT)</td><td>FERRITIN REPORT</td><td>Inflammatory Panel</td><td>0</td>
+	</tr><tr>
+		<td>Fetal  Hemoglobin (HbF)</td><td>Fetal  Hemoglobin (HbF)(Fetal  Hemoglobin (HbF))</td><td>Fetal  Hemoglobin (HbF)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FIBRINOGEN CLOTTING ACTIVITY</td><td>FIBRINOGEN CLOTTING ACTIVITY(FIBRINOGEN CLOTTING ACTIVITY)</td><td>FIBRINOGEN CLOTTING ACTIVITY</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>Fibrinogen Degradation Product (FDP LEVEL)</td><td>Fibrinogen Degradation Product (FDP LEVEL)(FDP)</td><td>FDP</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>Fibrinogen Level</td><td>Fibrinogen Level(Fibrinogen Level)</td><td>Fibrinogen Level</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>FILARIA ANTIGEN (WUCHERERIA BANCROFTI)</td><td>FILARIA ANTIGEN (WUCHERERIA BANCROFTI)(FILARIA ANTIGEN (WUCHERERIA BANCROFTI))</td><td>FILARIA ANTIGEN (WUCHERERIA BANCROFTI)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Film Array for Blood Culture ID Panel</td><td>Film Array for Blood Culture ID Panel(Film Array for Blood Culture ID Panel)</td><td>Film Array for Blood Culture ID Panel</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Film Array for Gastrointestinal Panel</td><td>Film Array for Gastrointestinal Panel(Film Array for Gastrointestinal Panel)</td><td>Film Array for Gastrointestinal Panel</td><td>ADRENAL CORTEX</td><td>0</td>
+	</tr><tr>
+		<td>Film Array for Meningitis/Encephalitis Panel</td><td>Film Array for Meningitis/Encephalitis Panel(Film Array for Meningitis/Encephalitis Panel)</td><td>Film Array for Meningitis/Encephalitis Panel</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Film Array for Pneumonia Plus Panel</td><td>Film Array for Pneumonia Plus Panel(Film Array for Pneumonia Plus Panel)</td><td>Film Array for Pneumonia Plus Panel</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Film Array for Respiratory Panela</td><td>Film Array for Respiratory Panel(Film Array for Respiratory Panel)</td><td>Film Array for Respiratory Panel</td><td>MOLECULAR LABORATORY - NAT REPORT</td><td>0</td>
+	</tr><tr>
+		<td>FISH FOR CLL PANEL</td><td>FISH FOR CLL PANEL(FISH FOR CLL PANEL)</td><td>FISH FOR CLL PANEL</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FISH FOR DEL 13Q</td><td>FISH FOR DEL 13Q(FISH FOR DEL 13Q)</td><td>FISH FOR DEL 13Q</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FISH FOR INV(16) OR LSI CBFB</td><td>FISH FOR INV(16) OR LSI CBFB(FISH FOR INV(16) OR LSI CBFB)</td><td>FISH FOR INV(16) OR LSI CBFB</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FISH FOR MDS PANEL</td><td>FISH FOR MDS PANEL(FISH FOR MDS PANEL)</td><td>FISH FOR MDS PANEL</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FISH FOR T(9:22) PHILADELPHIA TRANSLOCATION OR BCR/ABL</td><td>FISH FOR T(9:22) PHILADELPHIA TRANSLOCATION OR BCR/ABL(FISH FOR T(9:22) PHILADELPHIA TRANSLOCATION OR BCR)</td><td>FISH FOR T(9:22) PHILADELPHIA TRANSLOCATION OR BCR</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FLP Profile</td><td>FLP Profile(FLP Profile)</td><td>FLP Profile</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>FLT-3 GENOTYPING TEST</td><td>FLT-3 GENOTYPING TEST(FLT-3 GENOTYPING TEST)</td><td>FLT-3 GENOTYPING TEST</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FLUID ROUTINE EXAMINATION</td><td>FLUID ROUTINE EXAMINATION(FLUID ROUTINE EXAMINATION)</td><td>FLUID ROUTINE EXAMINATION</td><td>REPORT ON BODY FLUID EXAMINATION</td><td>0</td>
+	</tr><tr>
+		<td>Fnac</td><td>FNAC Cytology(FNAC Cytology)</td><td>FNAC Cytology</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FNAC from Thyroid swelling</td><td>FNAC from Thyroid swelling(FNAC)</td><td>FNAC</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FOLIC ACID, SERUM</td><td>FOLIC ACID, SERUM(FOLIC ACID)</td><td>FOLIC ACID</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Food Intolerance</td><td>Food Intolerance(Food Intolerance)</td><td>Food Intolerance</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>FREE BETA HCG</td><td>FREE BETA HCG(FREE BETA HCG)</td><td>FREE BETA HCG</td><td>TUMOUR MARKER</td><td>0</td>
+	</tr><tr>
+		<td>FREE LIGHT CHAINS</td><td>FREE LIGHT CHAINS(FREE LIGHT CHAINS)</td><td>FREE LIGHT CHAINS</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Free Metanephrin</td><td>Free Metanephrin(Free Metanephrin)</td><td>Free Metanephrin</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>FREE PSA ( PROSTATIC SPECIFIC ANTIGEN ), SERUM</td><td>FREE PSA ( PROSTATIC SPECIFIC ANTIGEN ), SERUM(FreePSA)</td><td>FreePSA</td><td>TUMOUR MARKER</td><td>0</td>
+	</tr><tr>
+		<td>FREE T3</td><td>FREE T3(FT3)</td><td>FT3</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>FREE TESTO</td><td>FREE TESTOSTERONE(FREE TESTO )</td><td>FREE TESTO </td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>FREE THYROXINE (FT4)</td><td>FREE THYROXINE (FT4)(FT4)</td><td>FT4</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>FRUCTOSAMINE</td><td>FRUCTOSAMINE(FRUCTOSAMINE)</td><td>FRUCTOSAMINE</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>FSH ( FOLLICLE STIMULATING HORMONE )</td><td>FSH ( FOLLICLE STIMULATING HORMONE )(FSH)</td><td>FSH</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>FSH/LH RATIO</td><td>FSH/LH RATIO(FSH/LH RATIO)</td><td>FSH/LH RATIO</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>FT3, FT4 & TSH</td><td>FT3, FT4 & TSH(FT3, FT4 & TSH)</td><td>FT3, FT4 & TSH</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Fungal Culture</td><td>Fungal Culture(Culture)</td><td>Culture</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>FUNGAL STAIN (PAS/SM)</td><td>FUNGAL STAIN (PAS/SM)(FUNGAL STAIN (PAS/SM))</td><td>FUNGAL STAIN (PAS/SM)</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>G6PD (Quantitative)</td><td>G6PD (Quantitative)(G6PD)</td><td>G6PD</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>GALACTOMANNAN (ASPERGILLUS ANTIGEN)</td><td>GALACTOMANNAN (ASPERGILLUS ANTIGEN)(GALACTOM)</td><td>GALACTOM</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Ganglioside GQ1b Antibody</td><td>Ganglioside GQ1b Antibody(Ganglioside Antibody)</td><td>Ganglioside Antibody</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Gastric Parietal cell antibody</td><td>Gastric Parietal cell antibody(Gastric Parietal cell antibody)</td><td>Gastric Parietal cell antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>GASTRIN LEVEL</td><td>GASTRIN LEVEL(GASTRIN LEVEL)</td><td>GASTRIN LEVEL</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>GENEXPERT MTB RIFAMPICIN RESISTANCE DETECTION</td><td>GENEXPERT MTB RIFAMPICIN RESISTANCE DETECTION(Genexpert)</td><td>Genexpert</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>GGT ( GAMMA GLUTAMYL TRANFERASE )</td><td>GGT ( GAMMA GLUTAMYL TRANFERASE )(GGT)</td><td>GGT</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Giardia antigen</td><td>Giardia antigen(Giardia antigen)</td><td>Giardia antigen</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>GIARDIA ANTIGEN (Stool)</td><td>GIARDIA ANTIGEN (Stool)(GIARDIA ANTIGEN (Stool))</td><td>GIARDIA ANTIGEN (Stool)</td><td>REPORT ON STOOL</td><td>0</td>
+	</tr><tr>
+		<td>GLIADIN ANTIBODY (IgA)</td><td>GLIADIN ANTIBODY (IgA)(Gliadin)</td><td>Gliadin</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>GLIADIN ANTIBODY (IgG)</td><td>GLIADIN ANTIBODY (IgG)(Gliadin)</td><td>Gliadin</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Globulin</td><td>Globulin(Globulin)</td><td>Globulin</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>GLOMERULAR FILTRATION RATE ( EGFR )</td><td>GLOMERULAR FILTRATION RATE ( EGFR )(eGFR)</td><td>eGFR</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Glucagon stimulation test for C Peptide</td><td>Glucagon stimulation test for C Peptide(Glucagon stimulation test for C Peptide)</td><td>Glucagon stimulation test for C Peptide</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Glucose Tolerence Test (GTT) - Modified </td><td>Glucose Tolerence Test (GTT) - Modified (GTT-Modified)</td><td>GTT-Modified</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Glucose Tolerence Test (Prolonged)</td><td>Glucose Tolerence Test (Prolonged)(GTT (Prolonged))</td><td>GTT (Prolonged)</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Glutamic Acid Decarboxylase (GAD65) Antibody</td><td>Glutamic Acid Decarboxylase (GAD65) Antibody(Glutamic (GAD65))</td><td>Glutamic (GAD65)</td><td>REPORT ON IMMUNOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>GRAM STAIN</td><td>GRAM STAIN(GRAM )</td><td>GRAM </td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>GROWTH HORMONE </td><td>GROWTH HORMONE (GROWTH HORMONE )</td><td>GROWTH HORMONE </td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>H1N1 (SWINE FLU) QUALITATIVE PCR </td><td>H1N1 (SWINE FLU) QUALITATIVE PCR (H1N1 (SWINE FLU) QUALITATIVE PCR H1N1 (SWINE FLU) )</td><td>H1N1 (SWINE FLU) QUALITATIVE PCR H1N1 (SWINE FLU) </td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Haemoglobin</td><td>Haemoglobin(HB)</td><td>HB</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Haemophilus Influnza B Antigen</td><td>Haemophilus Influnza B Antigen(Haemophilus Influnza B Antigen)</td><td>Haemophilus Influnza B Antigen</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HAINS MYCOBACTERIUM TUBERCULOSIS FIRST LINE DRUG RESISTANCE PROFILE </td><td>HAINS MYCOBACTERIUM TUBERCULOSIS FIRST LINE DRUG RESISTANCE PROFILE (HAINS MYCOBACTERIUM TUBERCULOSIS FIRST LINE DRUG R)</td><td>HAINS MYCOBACTERIUM TUBERCULOSIS FIRST LINE DRUG R</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Hams test (acidified serum test)(PNH)</td><td>Hams test (acidified serum test)(PNH)(Hams test (acidified serum test)(PNH))</td><td>Hams test (acidified serum test)(PNH)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Hanta virus  igM antibodies</td><td>Hanta virus  igM antibodies(Hanta virus  igM antibodies)</td><td>Hanta virus  igM antibodies</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Haptoglobin</td><td>Haptoglobin(Haptoglobin)</td><td>Haptoglobin</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>HB ELECTROPHORESIS</td><td>Hb Electrophoresis by HPLC method(HB ELECTROPHORESIS)</td><td>HB ELECTROPHORESIS</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>HbA1C (GLYCOSYLATED HAEMOGLOBIN)</td><td>HbA1C (GLYCOSYLATED HAEMOGLOBIN)(HBA1C)</td><td>HBA1C</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>HBDH -Total antibodies to hepatitis B core Antigen</td><td>HBDH -Total antibodies to hepatitis B core Antigen(HBDH -Total antibodies to hepatitis B core Antigen)</td><td>HBDH -Total antibodies to hepatitis B core Antigen</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HbsAg  ELISA</td><td>HbsAg  ELISA(HbsAg  ELISA)</td><td>HbsAg  ELISA</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>HBsAg (Australia Antigen)  - Rapid</td><td>HbsAg - Rapid(HBsAg (Australia Antigen)  - Rapid)</td><td>HBsAg (Australia Antigen)  - Rapid</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>HCG Stimulation test for Testosterone test</td><td>HCG Stimulation test for Testosterone test(HCG Stimulation test for Testosterone test)</td><td>HCG Stimulation test for Testosterone test</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HCV antibody</td><td>HCV antibody(HCV antibody)</td><td>HCV antibody</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>HCV IgM Antibody</td><td>HCV IgM Antibody(HCV IgM Antibody)</td><td>HCV IgM Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HDV Antibodies</td><td>HDV Antibodies(HDV Antibodies)</td><td>HDV Antibodies</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HE4 ( Human Epididymis Protein 4)</td><td>HE4 ( Human Epididymis Protein 4)(HE4 ( Human Epididymis Protein 4))</td><td>HE4 ( Human Epididymis Protein 4)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Helicobacter Pylori - IgA</td><td>Helicobacter Pylori - IgA(H. Pylori - IgA)</td><td>H. Pylori - IgA</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Helicobacter Pylori - IgG</td><td>Helicobacter Pylori - IgG(H. Pylori - IgG)</td><td>H. Pylori - IgG</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Hemoglobinureia   and Myoglobinuria</td><td>Hemoglobinureia   and Myoglobinuria(Hemoglobinureia   and Myoglobinuria)</td><td>Hemoglobinureia   and Myoglobinuria</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Hemophilus   influenza B.lgG</td><td>Hemophilus   influenza B.lgG(Hemophilus   influenza B.lgG)</td><td>Hemophilus   influenza B.lgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Hemosiderin Urine</td><td>Hemosiderin Urine(Hemosiderin Urine)</td><td>Hemosiderin Urine</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Hepatitis B DNA Viral Load PCR</td><td>Hepatitis B DNA Viral Load PCR(HBVDNA PCR)</td><td>HBVDNA PCR</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>HEPATITIS B SURFACE ANTIBODY (ANTI HBS)</td><td>HEPATITIS B SURFACE ANTIBODY (ANTI HBS)(HEPATITIS B SURFACE ANTIBODY (ANTI HBS))</td><td>HEPATITIS B SURFACE ANTIBODY (ANTI HBS)</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>HEPATITIS B VIRUS ENVELOPE ANTIGEN ( HBeAg )</td><td>HEPATITIS B VIRUS ENVELOPE ANTIGEN ( HBeAg )(HbeAg  )</td><td>HbeAg  </td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>HEPATITIS C ANTIBODY (ANTI HCV), SERUM</td><td>HEPATITIS C ANTIBODY (ANTI HCV), SERUM(HEPATITIS C ANTIBODY (ANTI HCV), SERUM)</td><td>HEPATITIS C ANTIBODY (ANTI HCV), SERUM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HCV (Rapid)</td><td>Hepatitis C Virus (HCV) - Rapid(HCV - Rapid)</td><td>HCV - Rapid</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>HEPATITIS C VIRUS QUANTITATIVE REALTIME PCR</td><td>HEPATITIS C VIRUS QUANTITATIVE REALTIME PCR(HEPATITIS C VIRUS QUANTITATIVE REALTIME PCR)</td><td>HEPATITIS C VIRUS QUANTITATIVE REALTIME PCR</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Hepatitis C Virus-Genotyping </td><td>Hepatitis C Virus-Genotyping (Hepatitis C Virus-Genotyping )</td><td>Hepatitis C Virus-Genotyping </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Hepatitis D Virus Total (Delta Virus)</td><td>Hepatitis D Virus Total (Delta Virus)(Hepatitis D Virus Total (Delta Virus))</td><td>Hepatitis D Virus Total (Delta Virus)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Hepatitis E virus - IgG (HEV IgG)</td><td>Hepatitis E virus - IgG (HEV IgG)(Hepatitis E virus - IgG (HEV IgG))</td><td>Hepatitis E virus - IgG (HEV IgG)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HEPATITIS E VIRUS - IgM (HEV IgM)</td><td>HEPATITIS E VIRUS - IgM (HEV IgM)(HEV-IgM)</td><td>HEV-IgM</td><td>HEPATITIS MARKERS</td><td>0</td>
+	</tr><tr>
+		<td>HERPES SIMPLEX VIRUS (HSV 1 & 2) IgG</td><td>HERPES SIMPLEX VIRUS (HSV 1 & 2) IgG(HSV 1 & 2 IGG)</td><td>HSV 1 & 2 IGG</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>HERPES SIMPLEX VIRUS (HSV 1 & 2) IgG & IgM</td><td>HERPES SIMPLEX VIRUS (HSV 1 & 2) IgG & IgM(HSV-IgG & IgM)</td><td>HSV-IgG & IgM</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>HERPES SIMPLEX VIRUS (HSV 1 & 2) IgM</td><td>HERPES SIMPLEX VIRUS (HSV 1 & 2) IgM(HSV 1 & 2 IGM)</td><td>HSV 1 & 2 IGM</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>HERPES SIMPLEX VIRUS 1 IgG</td><td>HERPES SIMPLEX VIRUS 1 IgG(HSV-IGG)</td><td>HSV-IGG</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>HERPES SIMPLEX VIRUS 1 IgM</td><td>HERPES SIMPLEX VIRUS 1 IgM(HSV-IGM)</td><td>HSV-IGM</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>HERPES SIMPLEX VIRUS 2 IgG</td><td>HERPES SIMPLEX VIRUS 2 IgG(HSV-IgG)</td><td>HSV-IgG</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>HERPES SIMPLEX VIRUS 2 IgM</td><td>HERPES SIMPLEX VIRUS 2 IgM(HSV-IGM)</td><td>HSV-IGM</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>HIGH RESOLUTION CHROMOSOME STUDY (COUPLE)</td><td>HIGH RESOLUTION CHROMOSOME STUDY (COUPLE)(HIGH RESOLUTION CHROMOSOME STUDY (COUPLE))</td><td>HIGH RESOLUTION CHROMOSOME STUDY (COUPLE)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HIGH RESOLUTION CHROMOSOME STUDY (SINGLE)</td><td>HIGH RESOLUTION CHROMOSOME STUDY (SINGLE)(HIGH RESOLUTION CHROMOSOME STUDY (SINGLE))</td><td>HIGH RESOLUTION CHROMOSOME STUDY (SINGLE)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>High Resolution Protein Electrophoresis</td><td>High Resolution Protein Electrophoresis(High Resolution Protein Electrophoresis)</td><td>High Resolution Protein Electrophoresis</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Histopathology Large</td><td>Histopathology Large(Histopathology Large)</td><td>Histopathology Large</td><td>HISTOPATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Histopathology Medium</td><td>Histopathology Medium(Histopathology Medium)</td><td>Histopathology Medium</td><td>HISTOPATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Histopathology Small</td><td>Histopathology Small(Histopathology Small)</td><td>Histopathology Small</td><td>HISTOPATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>HIV 1& 2 antibodies</td><td>HIV 1& 2 antibodies(HIV 1& 2 antibodies)</td><td>HIV 1& 2 antibodies</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>HIV COMBI- Elisa</td><td>HIV COMBI- Elisa(HIV COMBI- Elisa)</td><td>HIV COMBI- Elisa</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HIV I & II - Rapid/Tridot</td><td>HIV I & II - Rapid/Tridot(HIV I & II - Rapid/Tridot)</td><td>HIV I & II - Rapid/Tridot</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>HIV P24 Antigen</td><td>HIV P24 Antigen(HIV P24 Antigen)</td><td>HIV P24 Antigen</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>HIV Viral load -Taqman</td><td>HIV Viral load -Taqman(HIV Viral load -Taqman)</td><td>HIV Viral load -Taqman</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HIV Viral load-GeneXpert</td><td>HIV Viral load-GeneXpert(HIV Viral load-GeneXpert)</td><td>HIV Viral load-GeneXpert</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HLA TYPING (A,B,DR)</td><td>HLA TYPING (A,B,DR)(HLA TYPING (A,B,DR))</td><td>HLA TYPING (A,B,DR)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HOMA IR; INSULIN RESISTANCE INDEX</td><td>HOMA IR; INSULIN RESISTANCE INDEX(HOMA IR; INSULIN RESISTANCE INDEX)</td><td>HOMA IR; INSULIN RESISTANCE INDEX</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Homocysteine, Serum </td><td>Homocysteine		(Homocysteine, Serum )</td><td>Homocysteine, Serum </td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Homogenestic acid(Alkaptanuria)</td><td>Homogenestic acid(Alkaptanuria)(Homogenestic acid(Alkaptanuria))</td><td>Homogenestic acid(Alkaptanuria)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>HTLV 1and 2 antibodies</td><td>HTLV 1and 2 antibodies(HTLV 1and 2 antibodies)</td><td>HTLV 1and 2 antibodies</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>IGF BP3</td><td>IGF BP3(IGF BP3)</td><td>IGF BP3</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>IHC 5 Marker Panel</td><td>IHC 5 Marker Panel(IHC 5 Marker Panel)</td><td>IHC 5 Marker Panel</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>IHC 8 Marker Panel</td><td>IHC 8 Marker Panel(IHC 8 Marker Panel)</td><td>IHC 8 Marker Panel</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>IHC Common Markers (each marker)</td><td>IHC Common Markers (each marker)(IHC Common Markers (each marker))</td><td>IHC Common Markers (each marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>IHC Rare Markers (each marker)</td><td>IHC Rare Markers (each marker)(IHC Rare Markers (each marker))</td><td>IHC Rare Markers (each marker)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Immature Platelet Fraction</td><td>Immature Platelet Fraction(Immature Platelet Fraction)</td><td>Immature Platelet Fraction</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>immunofixation electrophoresis 1.1 (protein electrophoresis, IgM, IgA, IgG</td><td>immunofixation electrophoresis 1.1 (protein electrophoresis, IgM, IgA, IgG(immunofixation electrophoresis 1.1 (protein electr)</td><td>immunofixation electrophoresis 1.1 (protein electr</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>immunofixation electrophoresis 1.2 (immunofixation electrophoresis 1.1, free light chains kappa & lambada)</td><td>immunofixation electrophoresis 1.2 (immunofixation electrophoresis 1.1, free light chains kappa & lambada)(immunofixation electrophoresis 1.2 (immunofixation)</td><td>immunofixation electrophoresis 1.2 (immunofixation</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>immunofixation electrophoresis 1.3 (immunofixation 1.2  + immunofixation)</td><td>immunofixation electrophoresis 1.3 (immunofixation 1.2  + immunofixation)(immunofixation electrophoresis 1.3 (immunofixation)</td><td>immunofixation electrophoresis 1.3 (immunofixation</td><td>REPORT ON A.B.G.</td><td>0</td>
+	</tr><tr>
+		<td>immunofixation electrophoresis 1.4 (qualitative)</td><td>immunofixation electrophoresis 1.4 (qualitative)(immunofixation electrophoresis 1.4 (qualitative))</td><td>immunofixation electrophoresis 1.4 (qualitative)</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Immunoglobulin A (IgA)</td><td>Immunoglobulin A (IgA)(Immunoglobulin A (IgA))</td><td>Immunoglobulin A (IgA)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Immunoglobulin G (IgG)</td><td>Immunoglobulin G (IgG)(Immunoglobulin G (IgG))</td><td>Immunoglobulin G (IgG)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Immunoglobulin M (IgM)</td><td>Immunoglobulin M (IgM)(Immunoglobulin M (IgM))</td><td>Immunoglobulin M (IgM)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ALK 1</td><td>IMMUNOHISTOCHEMISTRY, ALK-1(ALK 1)</td><td>ALK 1</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>India Ink Preparation</td><td>India Ink Preparation(India Ink Preparation)</td><td>India Ink Preparation</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ICT BIRLA</td><td>INDIRECT COOMBS TEST (ICT)(ICT BIRLA)</td><td>ICT BIRLA</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>INHIBIN A, SERUM</td><td>INHIBIN A, SERUM(INHIBIN A, SERUM)</td><td>INHIBIN A, SERUM</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Inhibin B</td><td>Inhibin B(Inhibin B)</td><td>Inhibin B</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Insulin - Like Growth Factor-I (IGF-I)</td><td>Insulin - Like Growth Factor-I (IGF-I)(Insulin - Like Growth Factor-I (IGF-I))</td><td>Insulin - Like Growth Factor-I (IGF-I)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Insulin (Fasting)</td><td>Insulin (Fasting)(Insulin (Fasting))</td><td>Insulin (Fasting)</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Insulin fasting & post meal</td><td>Insulin fasting & post meal(Insulin fasting & post meal)</td><td>Insulin fasting & post meal</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>INSULIN RANDOM</td><td>INSULIN RANDOM(INSULIN RANDOM)</td><td>INSULIN RANDOM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Insulin,post prandial</td><td>Insulin,post prandial(Insulin,post prandial)</td><td>Insulin,post prandial</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Interleukin 6</td><td>Interleukin 6(IL-6)</td><td>IL-6</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Intrinsic factor </td><td>Intrinsic factor (Intrinsic factor )</td><td>Intrinsic factor </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Intrinsic Factor Blocking Antibody</td><td>Intrinsic Factor Blocking Antibody(Intrinsic Factor Blocking Antibody)</td><td>Intrinsic Factor Blocking Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Ionic Calcium</td><td>Ionic Calcium(Ionic Calcium)</td><td>Ionic Calcium</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>IRMA TEST (IMATINIB RESISTANCE -MUTATION ANALYSIS)</td><td>IRMA TEST (IMATINIB RESISTANCE -MUTATION ANALYSIS)(IRMA TEST (IMATINIB RESISTANCE -MUTATION ANALYSIS))</td><td>IRMA TEST (IMATINIB RESISTANCE -MUTATION ANALYSIS)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>IRON,TIBC & % TSA</td><td>IRON STUDY(IRON,TIBC & % TSA)</td><td>IRON,TIBC & % TSA</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>ISLET CELL ANTIBODY</td><td>ISLET CELL ANTIBODY(ISLET CELL ANTIBODY)</td><td>ISLET CELL ANTIBODY</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>JAK 2 MUTATION BY PCR</td><td>JAK 2 MUTATION BY PCR(JAK 2 MUTATION BY PCR)</td><td>JAK 2 MUTATION BY PCR</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>JC VIRUS DETECTION PCR, CSF</td><td>JC VIRUS DETECTION PCR, CSF(JC VIRUS DETECTION PCR, CSF)</td><td>JC VIRUS DETECTION PCR, CSF</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>KARYOTYPING (COUPLE)</td><td>KARYOTYPING (COUPLE)(KARYOTYPING (COUPLE))</td><td>KARYOTYPING (COUPLE)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>KARYOTYPING (SINGLE)</td><td>KARYOTYPING (SINGLE)(KARYOTYPING (SINGLE))</td><td>KARYOTYPING (SINGLE)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Karyotyping for Amniotic Fluid</td><td>Karyotyping for Amniotic Fluid(Karyotyping for Amniotic Fluid)</td><td>Karyotyping for Amniotic Fluid</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Karyotyping for Bone Marrow</td><td>Karyotyping for Bone Marrow(Karyotyping for Bone Marrow)</td><td>Karyotyping for Bone Marrow</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Karyotyping for Buccal Mucosa for X-Y Study</td><td>Karyotyping for Buccal Mucosa for X-Y Study(Karyotyping for Buccal Mucosa for X-Y Study)</td><td>Karyotyping for Buccal Mucosa for X-Y Study</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Karyotyping for Chorionic Villus Sample</td><td>Karyotyping for Chorionic Villus Sample(Karyotyping for Chorionic Villus Sample)</td><td>Karyotyping for Chorionic Villus Sample</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Karyotyping for Chromosome Breakage Syndrome</td><td>Karyotyping for Chromosome Breakage Syndrome(Karyotyping for Chromosome Breakage Syndrome)</td><td>Karyotyping for Chromosome Breakage Syndrome</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Karyotyping for Fetal Blood sample</td><td>Karyotyping for Fetal Blood sample(Karyotyping for Fetal Blood sample)</td><td>Karyotyping for Fetal Blood sample</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Karyotyping for Fragile X Syndrome</td><td>Karyotyping for Fragile X Syndrome(Karyotyping for Fragile X Syndrome)</td><td>Karyotyping for Fragile X Syndrome</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Karyotyping for Genetic Study of Couple + Product of Conception</td><td>Karyotyping for Genetic Study of Couple + Product of Conception(Karyotyping for Genetic Study of Couple + Product of Conception)</td><td>Karyotyping for Genetic Study of Couple + Product of Conception</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Karyotyping for Products of Conception (POC)</td><td>Karyotyping for Products of Conception (POC)(Karyotyping for Products of Conception (POC))</td><td>Karyotyping for Products of Conception (POC)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>KOH Mount</td><td>KOH Mount(KOH Mount)</td><td>KOH Mount</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Lactate</td><td>Lactate(Lactate)</td><td>Lactate</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Lap Score</td><td>Lap Score(Lap Score)</td><td>Lap Score</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>LDH, FLUID</td><td>LDH (Lactate Dehydrogenase)(Fluid LDH)</td><td>Fluid LDH</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>LDH lsoenzyme</td><td>LDH lsoenzyme(LDH lsoenzyme)</td><td>LDH lsoenzyme</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Lactate Dehydrogenase-Serum</td><td>LDH(Lactate Dehydrogenase) (Serum L.D.H. )</td><td>Serum L.D.H. </td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>LE Cell Detection</td><td>LE Cell Detection(LE Cell Detection)</td><td>LE Cell Detection</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>LE Cells</td><td>LE Cells(LE Cells)</td><td>LE Cells</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>LEAD LEVEL - BLOOD</td><td>LEAD LEVEL - BLOOD(LEAD LEVEL - BLOOD)</td><td>LEAD LEVEL - BLOOD</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Leishmania antibody -lgG(Kala  Azar)</td><td>Leishmania antibody -lgG(Kala  Azar)(Leishmania antibody -lgG(Kala  Azar))</td><td>Leishmania antibody -lgG(Kala  Azar)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>LEPTIN, SERUM</td><td>LEPTIN, SERUM(LEPTIN, SERUM)</td><td>LEPTIN, SERUM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>LEPTOSPIRA (URINE)</td><td>LEPTOSPIRA (URINE)(LEPTOSPIRA (URINE))</td><td>LEPTOSPIRA (URINE)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>LEPTOSPIRA IgG </td><td>LEPTOSPIRA IgG (LEPTOSPIRA IgG )</td><td>LEPTOSPIRA IgG </td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>LEPTOSPIRA IgG IgM </td><td>LEPTOSPIRA IgG IgM (LEPTOSPIRA IgG IgM )</td><td>LEPTOSPIRA IgG IgM </td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>LEPTOSPIRA IgM </td><td>LEPTOSPIRA IgM(LEPTOSPIRA IgM)</td><td>LEPTOSPIRA IgM</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Leucocyte Count</td><td>Leucocyte Count(Leucocyte Count)</td><td>Leucocyte Count</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Leukemia marker - AML1/ETO (AML - M2)</td><td>Leukemia marker - AML1/ETO (AML - M2)(Leukemia marker - AML1/ETO (AML - M2))</td><td>Leukemia marker - AML1/ETO (AML - M2)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Leukemia marker - BCR/ABL (CML, AML, ALL)</td><td>Leukemia marker - BCR/ABL (CML, AML, ALL)(Leukemia marker - BCR/ABL (CML, AML, ALL))</td><td>Leukemia marker - BCR/ABL (CML, AML, ALL)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Leukemia marker - C MYC (ALL, NHL)</td><td>Leukemia marker - C MYC (ALL, NHL)(Leukemia marker - C MYC (ALL, NHL))</td><td>Leukemia marker - C MYC (ALL, NHL)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Leukemia marker - Chq 13q (MM, CLL)</td><td>Leukemia marker - Chq 13q (MM, CLL)(Leukemia marker - Chq 13q (MM, CLL))</td><td>Leukemia marker - Chq 13q (MM, CLL)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Leukemia marker - PML/RARA (AML - M3) (APML)</td><td>Leukemia marker - PML/RARA (AML - M3) (APML)(Leukemia marker - PML/RARA (AML - M3) (APML))</td><td>Leukemia marker - PML/RARA (AML - M3) (APML)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Leukemia marker - TEL/AML1 (ALL)</td><td>Leukemia marker - TEL/AML1 (ALL)(Leukemia marker - TEL/AML1 (ALL))</td><td>Leukemia marker - TEL/AML1 (ALL)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Leukemia marker - Trisomy 12 (CLL)</td><td>Leukemia marker - Trisomy 12 (CLL)(Leukemia marker - Trisomy 12 (CLL))</td><td>Leukemia marker - Trisomy 12 (CLL)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Leukemia marker - Trisomy 8</td><td>Leukemia marker - Trisomy 8(Leukemia marker - Trisomy 8)</td><td>Leukemia marker - Trisomy 8</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>LH-Leutinising Hormone</td><td>LH-Leutinising Hormone(LH)</td><td>LH</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>LIPASE, SERUM</td><td>LIPASE, SERUM(LIPASE, SERUM)</td><td>LIPASE, SERUM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>LIPID PROFILE REPORT </td><td>LIPID PROFILE REPORT (LIPID PROFILE REPORT )</td><td>LIPID PROFILE REPORT </td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>LIPOPROTEIN (A) [LP(A)]</td><td>LIPOPROTEIN (A) [LP(A)](LIPOPROTEIN)</td><td>LIPOPROTEIN</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Lipoprotein Associated Phospholipase A2 (LP-PLA2)</td><td>Lipoprotein Associated Phospholipase A2 (LP-PLA2)(-Lipoprotein Associated Phospholipase A2 (LP-PLA2))</td><td>-Lipoprotein Associated Phospholipase A2 (LP-PLA2)</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Lipoprotein Electrophoresis</td><td>Lipoprotein Electrophoresis(Lipoprotein Electrophoresis)</td><td>Lipoprotein Electrophoresis</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>LITHIUM</td><td>LITHIUM(LITHIUM)</td><td>LITHIUM</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>LFT (Liver Function Test)</td><td>LIVER FUNCTION TEST(LFT)</td><td>LFT</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Liver-Kidney Microsome (LKM) - 1 Antibody  </td><td>Liver-Kidney Microsome (LKM) - 1 Antibody  (Liver-Kidney Microsome (LKM) - 1 Antibody  )</td><td>Liver-Kidney Microsome (LKM) - 1 Antibody  </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>LKM-1 ANTIBODIES</td><td>LKM-1 ANTIBODIES(LKM-1 ANTIBODIES)</td><td>LKM-1 ANTIBODIES</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>LUPUS ANTICOAGULANT  </td><td>LUPUS ANTICOAGULANT  (LA)</td><td>LA</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>LUPUS ANTICOAGULANT TEST (DRVVT)</td><td>LUPUS ANTICOAGULANT TEST (DRVVT)(LUPUS ANTICOAGULANT TEST (DRVVT))</td><td>LUPUS ANTICOAGULANT TEST (DRVVT)</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>MAGNESIUM , SERUM </td><td>MAGNESIUM (MAGNESIUM , SERUM )</td><td>MAGNESIUM , SERUM </td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Magnesium (24 hrs urine)</td><td>Magnesium (24 hrs urine)(Magnesium (24 hrs urine))</td><td>Magnesium (24 hrs urine)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Malaria By PCR</td><td>Malaria By PCR(Malaria By PCR)</td><td>Malaria By PCR</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Malerial Antigen (Vivax and Falciparum Rapid)</td><td>Malerial Antigen (Vivax and Falciparum Rapid)(Malerial Antigen (Vivax and Falciparum Rapid))</td><td>Malerial Antigen (Vivax and Falciparum Rapid)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Manganese</td><td>Manganese(Manganese)</td><td>Manganese</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>MANTOUX TEST (Tuberculin Test)</td><td>MANTOUX TEST (Tuberculin Test)(MANTOUX TEST (Tuberculin Test))</td><td>MANTOUX TEST (Tuberculin Test)</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>MATERNAL SCREENING - DUAL MARKER</td><td>MATERNAL SCREENING - DUAL MARKER(MATERNAL SCREENING - DUAL MARKER)</td><td>MATERNAL SCREENING - DUAL MARKER</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>MEAN PLATELET VOLUME</td><td>MEAN PLATELET VOLUME(MEAN PLATELET VOLUME)</td><td>MEAN PLATELET VOLUME</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>MEASLES ( RUBEOLA) IgG ANTIBODY</td><td>MEASLES ( RUBEOLA) IgG ANTIBODY(MEASLES ( RUBEOLA) IgG ANTIBODY)</td><td>MEASLES ( RUBEOLA) IgG ANTIBODY</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Measles (Rubeola) Antibody IgM </td><td>Measles (Rubeola) Antibody IgM (Measles (Rubeola) Antibody IgM )</td><td>Measles (Rubeola) Antibody IgM </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Mercury</td><td>Mercury(Mercury)</td><td>Mercury</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>METANEPHRINE (QUANTITATIVE)</td><td>METANEPHRINE (QUANTITATIVE)(METANEPHRINE (QUANTITATIVE))</td><td>METANEPHRINE (QUANTITATIVE)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Methadone (Qualitative)</td><td>Methadone (Qualitative)(Methadone (Qualitative))</td><td>Methadone (Qualitative)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>METHADONE /DOLOPHINE (QUANTITATIVE)</td><td>METHADONE /DOLOPHINE (QUANTITATIVE)(METHADONE /DOLOPHINE (QUANTITATIVE))</td><td>METHADONE /DOLOPHINE (QUANTITATIVE)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>METHAEMPHETAMINE (QUANTITATIVE)</td><td>METHAEMPHETAMINE (QUANTITATIVE)(METHAEMPHETAMINE (QUANTITATIVE))</td><td>METHAEMPHETAMINE (QUANTITATIVE)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>MethaHemoglobine  Detection</td><td>MethaHemoglobine  Detection(MethaHemoglobine  Detection)</td><td>MethaHemoglobine  Detection</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Methamphetamine (Qualitative)</td><td>Methamphetamine (Qualitative)(Methamphetamine (Qualitative))</td><td>Methamphetamine (Qualitative)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Methylmalonic acid</td><td>Methylmalonic acid(Methylmalonic acid)</td><td>Methylmalonic acid</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>MICROALBUMIN URINE (Spot)</td><td>MICROALBUMIN URINE (Spot)(MICROALBUMIN URINE (Spot))</td><td>MICROALBUMIN URINE (Spot)</td><td>URINE EXAMINATION</td><td>0</td>
+	</tr><tr>
+		<td>Microbiological Surveillance Of Operation Theater</td><td>Microbiological Surveillance Of Operation Theater(Spore Swab)</td><td>Spore Swab</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>MICROFILARIA SMEAR,BLOOD</td><td>MICROFILARIA SMEAR,BLOOD(MICROFILARIA SMEAR,BLOOD)</td><td>MICROFILARIA SMEAR,BLOOD</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>MICROPROTEIN,CSF</td><td>MICROPROTEIN,CSF(MICROPROTEIN,CSF)</td><td>MICROPROTEIN,CSF</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Microspordium</td><td>Microspordium(Microspordium)</td><td>Microspordium</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>MONO TEST (INFECTIOUS MONONUCLEOSIS),</td><td>MONO TEST (INFECTIOUS MONONUCLEOSIS),(MONO TEST (INFECTIOUS MONONUCLEOSIS),)</td><td>MONO TEST (INFECTIOUS MONONUCLEOSIS),</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Morphine(opiates) (Quantitative)</td><td>Morphine(opiates) (Quantitative)(Morphine(opiates) (Quantitative))</td><td>Morphine(opiates) (Quantitative)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Morphine(Qualitative)</td><td>Morphine(Qualitative)(Morphine(Qualitative))</td><td>Morphine(Qualitative)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>MTB RNA Qualitative PCR (mRNA TB PCR)</td><td>MTB RNA Qualitative PCR (mRNA TB PCR)(MTB RNA Qualitative PCR (mRNA TB PCR))</td><td>MTB RNA Qualitative PCR (mRNA TB PCR)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>MTHFR</td><td>MTHFR(MTHFR)</td><td>MTHFR</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Mucopolysacchaireds(MPS)</td><td>Mucopolysacchaireds(MPS)(Mucopolysacchaireds(MPS))</td><td>Mucopolysacchaireds(MPS)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Mumps Virus Antibody IgG </td><td>Mumps Virus Antibody IgG (Mumps Virus Antibody IgG )</td><td>Mumps Virus Antibody IgG </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Mumps Virus Antibody IgM</td><td>Mumps Virus Antibody IgM(Mumps Virus Antibody IgM)</td><td>Mumps Virus Antibody IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Mumps Virus Qualitative PCR</td><td>Mumps Virus Qualitative PCR(Mumps Virus Qualitative PCR)</td><td>Mumps Virus Qualitative PCR</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Mycoplasma Antibody IgG</td><td>Mycoplasma Antibody IgG(Mycoplasma Antibody IgG)</td><td>Mycoplasma Antibody IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Mycoplasma Pneumoniae IgM</td><td>Mycoplasma Pneumoniae IgM(Mycoplasma Pneumoniae IgM)</td><td>Mycoplasma Pneumoniae IgM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Myeloperoxidase ( MPO)</td><td>Myeloperoxidase ( MPO)(Myeloperoxidase ( MPO))</td><td>Myeloperoxidase ( MPO)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Myoglobulin</td><td>Myoglobulin(Myoglobulin)</td><td>Myoglobulin</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Myoglobulin, Urine</td><td>Myoglobulin, Urine(Myoglobulin, Urine)</td><td>Myoglobulin, Urine</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>N Methyl D Aspartate Receptor Antibody (NR1)</td><td>N Methyl D Aspartate Receptor Antibody (NR1)(N Methyl D Aspartate Receptor Antibody (NR1))</td><td>N Methyl D Aspartate Receptor Antibody (NR1)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Natural killer cells (NKC)(CD3/CD16/CD56)</td><td>Natural killer cells (NKC)(CD3/CD16/CD56)(Natural killer cells (NKC)(CD3/CD16/CD56))</td><td>Natural killer cells (NKC)(CD3/CD16/CD56)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NBS 11 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase, Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia</td><td>NBS 11 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase, Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia(NBS 11 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase, Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia)</td><td>NBS 11 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase, Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NBS 111 GCMS Conditions - Urine</td><td>NBS 111 GCMS Conditions - Urine(NBS 111 GCMS Conditions - Urine)</td><td>NBS 111 GCMS Conditions - Urine</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NBS 4 Conditions - Heel Prick - Congenital hypothyroidism (CH) , Congenital adrenal hyperplasia (CAH), G6PD and Galactosemia</td><td>NBS 4 Conditions - Heel Prick - Congenital hypothyroidism (CH) , Congenital adrenal hyperplasia (CAH), G6PD and Galactosemia(NBS 4 Conditions - Heel Prick - Congenital hypothyroidism (CH) , Congenital adrenal hyperplasia (CAH), G6PD and Galactosemia)</td><td>NBS 4 Conditions - Heel Prick - Congenital hypothyroidism (CH) , Congenital adrenal hyperplasia (CAH), G6PD and Galactosemia</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NBS 6 Conditions - Heel Prick: CH, G6PD & Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, BThalassemia) </td><td>NBS 6 Conditions - Heel Prick: CH, G6PD & Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, BThalassemia) (NBS 6 Conditions - Heel Prick: CH, G6PD & Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, BThalassemia) )</td><td>NBS 6 Conditions - Heel Prick: CH, G6PD & Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, BThalassemia) </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NBS 7 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase</td><td>NBS 7 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase(NBS 7 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase)</td><td>NBS 7 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NBS TMS 47 Conditions</td><td>NBS TMS 47 Conditions(NBS TMS 47 Conditions)</td><td>NBS TMS 47 Conditions</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase) </td><td>NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase) (NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase) )</td><td>NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase) </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase) + Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia)</td><td>NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase) + Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia)(NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase) + Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia))</td><td>NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase) + Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Nickel</td><td>Nickel(Nickel)</td><td>Nickel</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NMDA RECEPTOR / ANTI-GLUTAMATE ANTIBODY</td><td>NMDA RECEPTOR / ANTI-GLUTAMATE ANTIBODY(NMDA RECEPTOR / ANTI-GLUTAMATE ANTIBODY)</td><td>NMDA RECEPTOR / ANTI-GLUTAMATE ANTIBODY</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NMO Neuromyelitis Optica Antibodies IgG (Aquaporin 4) (Serum)</td><td>NMO Neuromyelitis Optica Antibodies IgG (Aquaporin 4) (Serum)(NMO Neuromyelitis Optica Antibodies IgG (Aquaporin)</td><td>NMO Neuromyelitis Optica Antibodies IgG (Aquaporin</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>NT-Pro BNP</td><td>NT-Pro BNP(NT-Pro BNP)</td><td>NT-Pro BNP</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>OCCULT BLOOD</td><td>OCCULT BLOOD STOOL EXAMINATION(OCCULT)</td><td>OCCULT</td><td>REPORT ON STOOL ROUTINE</td><td>0</td>
+	</tr><tr>
+		<td>OGCT Oral Glucose Challenge Test</td><td>OGCT(OGCT Oral Glucose Challenge Test)</td><td>OGCT Oral Glucose Challenge Test</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Oligoclonal band</td><td>Oligoclonal band(Oligoclonal band)</td><td>Oligoclonal band</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Oligoclonal bands in CSF</td><td>Oligoclonal bands in CSF(Oligoclonal bands in CSF)</td><td>Oligoclonal bands in CSF</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Opiates (Qualitative)</td><td>Opiates (Qualitative)(Opiates (Qualitative))</td><td>Opiates (Qualitative)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Osmatic Fragility </td><td>Osmatic Fragility (Osmatic Fragility )</td><td>Osmatic Fragility </td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Osteocalcin(BGP-BoneG1a protein)</td><td>Osteocalcin(BGP-BoneG1a protein)(Osteocalcin(BGP-BoneG1a protein))</td><td>Osteocalcin(BGP-BoneG1a protein)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Other Test</td><td>Other Test(Other Test)</td><td>Other Test</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Oxalates </td><td>Oxalates (Oxalates )</td><td>Oxalates </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>P S For Microfialaria</td><td>P S For Microfialaria(P S For Microfialaria)</td><td>P S For Microfialaria</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>P.C.V.</td><td>P.C.V.(P.C.V.)</td><td>P.C.V.</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Pap smear by LBC</td><td>Pap smear by LBC(Pap smear LBC)</td><td>Pap smear LBC</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>PAP Smear Cytology</td><td>PAP Smear Cytology(Cytology -PAP)</td><td>Cytology -PAP</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>PAPP-A</td><td>PAPP-A(PAPP-A)</td><td>PAPP-A</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>PAP-Prostatic Acid Phosphatase (CLIA)</td><td>PAP-Prostatic Acid Phosphatase (CLIA)(PAP-Prostatic Acid Phosphatase (CLIA))</td><td>PAP-Prostatic Acid Phosphatase (CLIA)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>PAP-Prostatic Acid Phosphatase (IHC)</td><td>PAP-Prostatic Acid Phosphatase (IHC)(PAP-Prostatic Acid Phosphatase (IHC))</td><td>PAP-Prostatic Acid Phosphatase (IHC)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Parvovirus  IgG</td><td>Parvovirus  IgG(Parvovirus  IgG)</td><td>Parvovirus  IgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Parvovirus  IgM</td><td>Parvovirus  IgM(Parvovirus  IgM)</td><td>Parvovirus  IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>PAS stain</td><td>PAS stain(PAS stain)</td><td>PAS stain</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>PBS FOR MALARIAL PARASITE </td><td>PBS FOR MALARIAL PARASITE (PBS MP)</td><td>PBS MP</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>PCP-Phencyclidine  phophate (Qualitative)</td><td>PCP-Phencyclidine  phophate (Qualitative)(PCP-Phencyclidine  phophate (Qualitative))</td><td>PCP-Phencyclidine  phophate (Qualitative)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>PS FOR MP</td><td>PERIPHERAL SMEAR FOR MALARIAL PARASITE(MP)</td><td>MP</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Peripherial Smear Eaxmination ( PS )</td><td>Peripherial Smear Eaxmination ( PS )(PS)</td><td>PS</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>pH</td><td>pH(pH)</td><td>pH</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Phenobarbitone (Gardinal)</td><td>Phenobarbitone (Gardinal)(Phenobarbitone (Gardinal))</td><td>Phenobarbitone (Gardinal)</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Phenylethyl alcohol agar test</td><td>Phenylethyl alcohol agar test(Phenylethyl alcohol agar test)</td><td>Phenylethyl alcohol agar test</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>PHENYTOIN / DILANTIN / EPTOIN</td><td>PHENYTOIN / DILANTIN / EPTOIN(PHENYTOIN / DILANTIN / EPTOIN)</td><td>PHENYTOIN / DILANTIN / EPTOIN</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Phosphorus Urine </td><td>Phosphorus Urine (Phosphorus Urine )</td><td>Phosphorus Urine </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>PHOSPHORUS, SERUM</td><td>PHOSPHORUS, SERUM(PHOSPHORUS, SERUM)</td><td>PHOSPHORUS, SERUM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Platelet Antibodies</td><td>Platelet Antibodies(Platelet Antibodies)</td><td>Platelet Antibodies</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Platelet Count</td><td>Platelet Count(Platelet Count)</td><td>Platelet Count</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>PNH test</td><td>PNH test(PNH test)</td><td>PNH test</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Porphobilinogen (PBG), (Quantitative)</td><td>Porphobilinogen (PBG), (Quantitative)(Porphobilinogen (PBG), (Quantitative))</td><td>Porphobilinogen (PBG), (Quantitative)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>PORPHYRINS TOTAL, QUANTITATIVE</td><td>PORPHYRINS TOTAL, QUANTITATIVE(PORPHYRINS TOTAL, QUANTITATIVE)</td><td>PORPHYRINS TOTAL, QUANTITATIVE</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>POTASSIUM, SERUM</td><td>POTASSIUM, SERUM(POTASSIUM, SERUM)</td><td>POTASSIUM, SERUM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>PR3 - ANCA (C-ANCA) ( C-ANCA  )</td><td>PR3 - ANCA (C-ANCA) ( C-ANCA  )(PR3 - ANCA (C-ANCA) ( C-ANCA  ))</td><td>PR3 - ANCA (C-ANCA) ( C-ANCA  )</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Pro Insulin</td><td>Pro Insulin(Pro Insulin)</td><td>Pro Insulin</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>PROCALCITONIN </td><td>PROCALCITONIN(PROCALC)</td><td>PROCALC</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Progesterone ( Progesterone )</td><td>Progesterone ( Progesterone )(Progesterone ( Progesterone ))</td><td>Progesterone ( Progesterone )</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Prolactin</td><td>Prolactin(Prolactin)</td><td>Prolactin</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Protein C</td><td>Protein C(Protein C)</td><td>Protein C</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>PROTEIN ELECTROPHORESIS </td><td>PROTEIN ELECTROPHORESIS (PROTEIN ELECTROPHORESIS )</td><td>PROTEIN ELECTROPHORESIS </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Protein Electrophoresis (with B1-B2)</td><td>Protein Electrophoresis (with B1-B2)(Protein Electrophoresis (with B1-B2))</td><td>Protein Electrophoresis (with B1-B2)</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Protein S</td><td>Protein S(Protein S)</td><td>Protein S</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Prothrombin Gene mutation</td><td>Prothrombin (Factor II) gene Mutation(Prothrombin Gene mutation)</td><td>Prothrombin Gene mutation</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>PROTHROMBIN TIME </td><td>PROTHROMBIN TIME (PT)</td><td>PT</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>Pseudo Cholinesterase (OPC poisoning)</td><td>Pseudo Cholinesterase (OPC poisoning)(Pseudo Cholinesterase (OPC poisoning))</td><td>Pseudo Cholinesterase (OPC poisoning)</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>PTH Intact Molecule - Parathyroid Hormone</td><td>PTH Intact Molecule - Parathyroid Hormone(PTH)</td><td>PTH</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>PTTK (APTT)</td><td>PTTK (APTT)(PTTK (APTT))</td><td>PTTK (APTT)</td><td>COAGULATION PROFILE</td><td>0</td>
+	</tr><tr>
+		<td>Pyrilinks D-Deoxypyridinoline (DPD)</td><td>Pyrilinks D-Deoxypyridinoline (DPD)(Pyrilinks D-Deoxypyridinoline (DPD))</td><td>Pyrilinks D-Deoxypyridinoline (DPD)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>QBC for malaria</td><td>QBC for malaria(QBC for malaria)</td><td>QBC for malaria</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>QUADRAPLE MARKER</td><td>QUADRAPLE MARKER(QUADRAPLE MARKER)</td><td>QUADRAPLE MARKER</td><td>TUMOUR MARKER</td><td>0</td>
+	</tr><tr>
+		<td>RA Test (Rheumatoid Factor )</td><td>RA Test (Rheumatoid Factor )(RA Test (Rheumatoid Factor ))</td><td>RA Test (Rheumatoid Factor )</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Random Blood Sugar</td><td>Random Blood Sugar(RBS)</td><td>RBS</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Rapid Maleria Test</td><td>Rapid Maleria Test(RMT)</td><td>RMT</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>RAPID TYPHI IgG/ IgM (CARD TEST)</td><td>RAPID TYPHI IGG/ IGM (CARD TEST)(WIDAL IgG & IgM)</td><td>WIDAL IgG & IgM</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>RBC - Folate Level</td><td>RBC FOLATE(RBC FOLATE)</td><td>RBC FOLATE</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR Chikungunya Virus Qualitative</td><td>Real Time PCR Chikungunya  Virus Qualitative(Real Time PCR Chikungunya Virus Qualitative)</td><td>Real Time PCR Chikungunya Virus Qualitative</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>REAL TIME PCR CMV QUALITATIVE</td><td>REAL TIME PCR CMV QUALITATIVE(REAL TIME PCR CMV QUALITATIVE)</td><td>REAL TIME PCR CMV QUALITATIVE</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR Dengue Virus Qualitative </td><td>Real Time PCR Dengue Virus Qualitative (Real Time PCR Dengue Virus Qualitative )</td><td>Real Time PCR Dengue Virus Qualitative </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real time PCR for Mycobacterium Tuberculosis Complex</td><td>Real time PCR for Mycobacterium Tuberculosis Complex(TBPCR)</td><td>TBPCR</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR HBV Quantitative </td><td>Real Time PCR HBV Quantitative (Real Time PCR HBV Quantitative )</td><td>Real Time PCR HBV Quantitative </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR HCV Qualitative </td><td>Real Time PCR HCV Qualitative (Real Time PCR HCV Qualitative )</td><td>Real Time PCR HCV Qualitative </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR HIV DRUG RESISTANCE TEST</td><td>Real Time PCR HIV DRUG RESISTANCE TEST(Real Time PCR HIV DRUG RESISTANCE TEST)</td><td>Real Time PCR HIV DRUG RESISTANCE TEST</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR HIV Proviral DNA  Qualitative </td><td>Real Time PCR HIV Proviral DNA  Qualitative (Real Time PCR HIV Proviral DNA  Qualitative )</td><td>Real Time PCR HIV Proviral DNA  Qualitative </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real time PCR HIV RNA quantitative</td><td>Real time PCR HIV RNA quantitative(Real time PCR HIV RNA quantitative)</td><td>Real time PCR HIV RNA quantitative</td><td>TORCH - IgM</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR HPV 16/18 Qualitative </td><td>Real Time PCR HPV 16/18 Qualitative (Real Time PCR HPV 16/18 Qualitative )</td><td>Real Time PCR HPV 16/18 Qualitative </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR HSV I & II Qualitative </td><td>Real Time PCR HSV I & II Qualitative (Real Time PCR HSV I & II Qualitative )</td><td>Real Time PCR HSV I & II Qualitative </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real time PCR MTB qualitative</td><td>Real time PCR MTB qualitative(Real time PCR MTB qualitative)</td><td>Real time PCR MTB qualitative</td><td>MICRO BIOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR MTB Quantitative</td><td>Real Time PCR MTB Quantitative(Real Time PCR MTB Quantitative)</td><td>Real Time PCR MTB Quantitative</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR Rubella Qualitative </td><td>Real Time PCR Rubella Qualitative (Real Time PCR Rubella Qualitative )</td><td>Real Time PCR Rubella Qualitative </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real time PCR test for HLA-B27</td><td>Real time PCR test for HLA-B27(HLAB27)</td><td>HLAB27</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR Torch Qualitative </td><td>Real Time PCR Torch Qualitative (Real Time PCR Torch Qualitative )</td><td>Real Time PCR Torch Qualitative </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Real Time PCR Toxoplasma Qualitative </td><td>Real Time PCR Toxoplasma Qualitative (Real Time PCR Toxoplasma Qualitative )</td><td>Real Time PCR Toxoplasma Qualitative </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Reticulocytes Count</td><td>Reticulocytes Count(Reticulocytes Count)</td><td>Reticulocytes Count</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>RH ANTIBODY TITRE SERUM</td><td>RH ANTIBODY TITRE SERUM(RH ANTIBODY TITRE SERUM)</td><td>RH ANTIBODY TITRE SERUM</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Rheumatoid Factor IgA</td><td>Rheumatoid Factor IgA(Rheumatoid Factor IgA)</td><td>Rheumatoid Factor IgA</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Rheumatoid Factor IgG </td><td>Rheumatoid Factor IgG (Rheumatoid Factor IgG )</td><td>Rheumatoid Factor IgG </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Rheumatoid Factor IgG/M/A Screen</td><td>Rheumatoid Factor IgG/M/A Screen(Rheumatoid Factor IgG/M/A Screen)</td><td>Rheumatoid Factor IgG/M/A Screen</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Rheumatoid Factor IgM </td><td>Rheumatoid Factor IgM(Rheumatoid Factor IgM)</td><td>Rheumatoid Factor IgM</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>ROMA (Risk of Ovarian Malignancy)</td><td>ROMA (RISK OF OVARIAN MALIGNANCY)(ROMA (Risk of Ovarian Malignancy))</td><td>ROMA (Risk of Ovarian Malignancy)</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>ROS 1</td><td>ROS 1(ROS 1)</td><td>ROS 1</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Rubella IGG</td><td>Rubella IGG(Rubella IGG)</td><td>Rubella IGG</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Rubella IGM</td><td>Rubella IGM(Rubella IGM)</td><td>Rubella IGM</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Rubella Virus - Avidity</td><td>Rubella Virus - Avidity(Rubella Virus - Avidity)</td><td>Rubella Virus - Avidity</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Schilling Test </td><td>Schilling Test (Schilling Test )</td><td>Schilling Test </td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>SCRUB TYPHUS  IgG & IGM</td><td>SCRUB TYPHUS  IgG & IGM(SCRUB TYPHUS  IgG & IGM)</td><td>SCRUB TYPHUS  IgG & IGM</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>SDS Proteinuria Electrophoresis</td><td>SDS Proteinuria Electrophoresis(SDS Proteinuria Electrophoresis)</td><td>SDS Proteinuria Electrophoresis</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Selenium</td><td>Selenium(Selenium)</td><td>Selenium</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Semen Analysis</td><td>Semen Analysis(Semen Analysis)</td><td>Semen Analysis</td><td>REPORT ON SEMEN ANALYSIS</td><td>0</td>
+	</tr><tr>
+		<td>ASCITES ALBUMIN GRADIENT (SAAG)</td><td>SERUM ASCITES ALBUMIN GRADIENT (SAAG)(ASCITES ALBUMIN GRADIENT (SAAG))</td><td>ASCITES ALBUMIN GRADIENT (SAAG)</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Bile acid  - Total</td><td>SERUM BILE ACIDS (TOTAL)(Bile acid- Total)</td><td>Bile acid- Total</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Serum CPK MB </td><td>Serum CPK MB (CK-MB)</td><td>CK-MB</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>CREATININE</td><td>SERUM CREATININE(CREAT)</td><td>CREAT</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Serum electrolytes</td><td>Serum electrolytes(Serum electrolytes)</td><td>Serum electrolytes</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>IGE  </td><td>SERUM IgE(IGE)</td><td>IGE</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Serum Immunofixation Electrophoresis (Acid Blue)</td><td>Serum Immunofixation Electrophoresis (Acid Blue)(Serum Immunofixation Electrophoresis (Acid Blue))</td><td>Serum Immunofixation Electrophoresis (Acid Blue)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>IRON, SERUM</td><td>SERUM IRON(IRON, SERUM)</td><td>IRON, SERUM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Serum Osmolality </td><td>Serum Osmolality (Serum Osmolality )</td><td>Serum Osmolality </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Serum S.G.O.T.</td><td>Serum S.G.O.T.(SGOT)</td><td>SGOT</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Serum S.G.P.T.</td><td>Serum S.G.P.T.(SGPT)</td><td>SGPT</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Serum Sodium</td><td>Serum Sodium(Serum Sodium)</td><td>Serum Sodium</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>TIBC SERUM</td><td>SERUM TIBC(TIBC SERUM)</td><td>TIBC SERUM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Serum Total CPK</td><td>Serum Total CPK(CPK)</td><td>CPK</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Sex Hormone Binding Globulin</td><td>Sex Hormone Binding Globulin(SHBG)(SHBG)</td><td>SHBG</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Sickle Cell Anemia Mutation Analysis</td><td>Sickle Cell Anemia Mutation Analysis(Sickle Cell Anemia Mutation Analysis)</td><td>Sickle Cell Anemia Mutation Analysis</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Sickling Test</td><td>Sickling Test(Sickling Test)</td><td>Sickling Test</td><td>HAEMATOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>SIROLIMUS BLOOD </td><td>SIROLIMUS TEST(SIROLIMUS TEST)</td><td>SIROLIMUS TEST</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Somatomedin C (IGF-1)</td><td>Somatomedin C (IGF-1)(Somatomedin C (IGF-1))</td><td>Somatomedin C (IGF-1)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>SPECIFIC GRAVITY(URINE)</td><td>SPECIFIC GRAVITY(URINE)(SPECIFIC GRAVITY(URINE))</td><td>SPECIFIC GRAVITY(URINE)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>SPORE STRIP REPORT</td><td>SPORE STRIP REPORT(Indicators Jumbo)</td><td>Indicators Jumbo</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>SPORE STRIP REPORT</td><td>SPORE STRIP REPORT(Indicators Small)</td><td>Indicators Small</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>SPORE STRIP REPORT</td><td>SPORE STRIP REPORT(Indicators ETO)</td><td>Indicators ETO</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Sputum for Malignant Cells</td><td>Sputum for Malignant Cells(Sputum for Malignant Cells)</td><td>Sputum for Malignant Cells</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>SPUTUM ROUTINE</td><td>SPUTUM ROUTINE(SPUTUM ROUTINE)</td><td>SPUTUM ROUTINE</td><td>SPUTUM ROUTINE EXAMINATION</td><td>0</td>
+	</tr><tr>
+		<td>Stone Analysis</td><td>Stone Analysis(Stone Analysis)</td><td>Stone Analysis</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>STOOL EXAMINATION</td><td>STOOL EXAMINATION(HANGING DROP)(STOOLHANG)</td><td>STOOLHANG</td><td>REPORT ON STOOL</td><td>0</td>
+	</tr><tr>
+		<td>STOOL FOR CALPROTECTIN</td><td>STOOL FOR CALPROTECTIN(STOOL FOR CALPROTECTIN)</td><td>STOOL FOR CALPROTECTIN</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>STOOL FOR CLOSTRIDIUM DIFFICILE TOXIN (A&B)</td><td>STOOL FOR CLOSTRIDIUM DIFFICILE TOXIN (A&B)(STOOL FOR CLOSTRIDIUM DIFFICILE TOXIN (A&B))</td><td>STOOL FOR CLOSTRIDIUM DIFFICILE TOXIN (A&B)</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>STOOL FOR H. PYLORI ANTIGEN</td><td>STOOL FOR H. PYLORI ANTIGEN(STOOL FOR H. PYLORI ANTIGEN)</td><td>STOOL FOR H. PYLORI ANTIGEN</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>STOOL FOR REDUCING SUBSTANCES</td><td>STOOL FOR REDUCING SUBSTANCES(STOOL FOR REDUCING SUBSTANCES)</td><td>STOOL FOR REDUCING SUBSTANCES</td><td>REPORT ON STOOL ROUTINE</td><td>0</td>
+	</tr><tr>
+		<td>STOOL ROUTINE</td><td>STOOL ROUTINE EXAMINATION (Stool)</td><td>Stool</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>SUDAN STAIN FOR STOOL FAT</td><td>SUDAN STAIN FOR STOOL FAT(SUDAN STAIN FOR STOOL FAT)</td><td>SUDAN STAIN FOR STOOL FAT</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Syphillis Antibody</td><td>Syphillis Antibody(Syphillis Antibody)</td><td>Syphillis Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Tacrolimus</td><td>Tacrolimus(Tacrolimus)</td><td>Tacrolimus</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Taenia Solium (Cysticercus) lgG</td><td>Taenia Solium (Cysticercus) lgG(Taenia Solium (Cysticercus) lgG)</td><td>Taenia Solium (Cysticercus) lgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Taenia Solium (Cysticercus) lgG</td><td>Taenia Solium (Cysticercus) lgG(Taenia Solium (Cysticercus) lgG)</td><td>Taenia Solium (Cysticercus) lgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>TB GOLD-Interferon Gamma for TB (Qunatiferon) </td><td>TB GOLD-Interferon Gamma for TB (Qunatiferon) (TB GOLD-Interferon Gamma for TB (Qunatiferon) )</td><td>TB GOLD-Interferon Gamma for TB (Qunatiferon) </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>TDS</td><td>TDS(-1)</td><td>-1</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>TESTOSTERONE TOTAL</td><td>TESTOSTERONE TOTAL, SERUM(TESTOSTERONE TOTAL)</td><td>TESTOSTERONE TOTAL</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Tetanus Toxid lgG</td><td>Tetanus Toxid lgG(Tetanus Toxid lgG)</td><td>Tetanus Toxid lgG</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Thallium</td><td>Thallium(Thallium)</td><td>Thallium</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Theophyline</td><td>Theophyline(Theophyline)</td><td>Theophyline</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Thyroglobulin</td><td>Thyroglobulin(Thyroglobulin)</td><td>Thyroglobulin</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>T3+T4+TSH</td><td>THYROID FUNCTION TEST(TFT)</td><td>TFT</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Tissue Pathology Report</td><td>Tissue Pathology Report(Appendix Recurrent Appendicitis)</td><td>Appendix Recurrent Appendicitis</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Acute Appendicitis</td><td>Tissue Pathology Report(Acute Appendicitis)</td><td>Acute Appendicitis</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Tissue Transglutaminase - IgA </td><td>Tissue Transglutaminase - IgA (TTG-IgA)</td><td>TTG-IgA</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>TMPT enzyme activity thiopurine methyl transferase</td><td>TMPT enzyme activity thiopurine methyl transferase(TMPT enzyme activity thiopurine methyl transferase)</td><td>TMPT enzyme activity thiopurine methyl transferase</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>TMPT genotype</td><td>TMPT genotype(TMPT genotype)</td><td>TMPT genotype</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>TMPT genotype (Thiopurine methyltransferase)</td><td>TMPT genotype (Thiopurine methyltransferase)(TMPT genotype (Thiopurine methyltransferase))</td><td>TMPT genotype (Thiopurine methyltransferase)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>TNF-Alpha (Tumour Necrosis Factor)</td><td>TNF-Alpha (Tumour Necrosis Factor)(TNF-Alpha (Tumour Necrosis Factor))</td><td>TNF-Alpha (Tumour Necrosis Factor)</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>TORCH PANEL IgG (4 PARAMETER) </td><td>TORCH PANEL IgG (4 PARAMETER) (TORCH PANEL IgG (4 PARAMETER) )</td><td>TORCH PANEL IgG (4 PARAMETER) </td><td>TORCH-IgG</td><td>0</td>
+	</tr><tr>
+		<td>TORCH PANEL IgM & IgG (10 PARAMETER) </td><td>TORCH PANEL IgM & IgG (10 PARAMETER) (TORCH PANEL IgM & IgG (10 PARAMETER) )</td><td>TORCH PANEL IgM & IgG (10 PARAMETER) </td><td>TORCH-IgM & TORCH-IgG</td><td>0</td>
+	</tr><tr>
+		<td>TORCH PANEL IgM & IgG (8 PARAMETER) </td><td>TORCH PANEL IgM & IgG (8 PARAMETER) (TORCH PANEL IgM & IgG (8 PARAMETER) )</td><td>TORCH PANEL IgM & IgG (8 PARAMETER) </td><td>TORCH-IgM & TORCH-IgG</td><td>0</td>
+	</tr><tr>
+		<td>TORCH PANEL IgM (4 PARAMETER) </td><td>TORCH PANEL IgM (4 PARAMETER) (TORCH PANEL IgM (4 PARAMETER) )</td><td>TORCH PANEL IgM (4 PARAMETER) </td><td>TORCH - IgM</td><td>0</td>
+	</tr><tr>
+		<td>Torch Qualitative PCR</td><td>Torch Qualitative PCR(Torch Qualitative PCR)</td><td>Torch Qualitative PCR</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Total Bilirubin</td><td>Total Bilirubin(Total Bilirubin)</td><td>Total Bilirubin</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Total Protein </td><td>Total Protein (PROTEIN)</td><td>PROTEIN</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Total Protein with Albumin</td><td>Total Protein with Albumin(PROTEIN)</td><td>PROTEIN</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>TOTAL PSA</td><td>TOTAL PSA(PSA)</td><td>PSA</td><td>TUMOUR MARKER</td><td>0</td>
+	</tr><tr>
+		<td>Total T3</td><td>Total T3(T3)</td><td>T3</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Total T4</td><td>Total T4(T4)</td><td>T4</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>TOXO GONDII - IGG</td><td>TOXO GONDII - IGG(TOXO GONDII - IGG)</td><td>TOXO GONDII - IGG</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>TOXO GONDII - IGM</td><td>TOXO GONDII - IGM(TOXO GONDII - IGM)</td><td>TOXO GONDII - IGM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Toxoplasma gondii - Avidity</td><td>Toxoplasma gondii - Avidity(Toxoplasma gondii - Avidity)</td><td>Toxoplasma gondii - Avidity</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>TPHA (TREPONEMA PALLDUM HAEMAGGLUEINATION ASSAY)</td><td>TPHA (TREPONEMA PALLDUM HAEMAGGLUEINATION ASSAY)(TPHA)</td><td>TPHA</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Transferrin</td><td>Transferrin(Transferrin)</td><td>Transferrin</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Triglycerides </td><td>Triglycerides (Triglycerides )</td><td>Triglycerides </td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Triple Marker (Second Trimester) Report </td><td>Triple Marker (Second Trimester) Report (Triple Marker (Second Trimester) Report )</td><td>Triple Marker (Second Trimester) Report </td><td>TUMOUR MARKER</td><td>0</td>
+	</tr><tr>
+		<td>Troponin -I Quantitative</td><td>Troponin -I Quantitative(TROP I)</td><td>TROP I</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>TROPONIN T</td><td>TROPONIN T(TROP T)</td><td>TROP T</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>TSH</td><td>TSH (THYROID STIMULATING HORMONE), SERUM(TSH)</td><td>TSH</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>TSH Receptor Antibody</td><td>TSH Receptor Antibody(TSH Receptor Antibody)</td><td>TSH Receptor Antibody</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Typhoid IgG & IgM</td><td>Typhoid IgG & IgM(Typhoid IgG & IgM)</td><td>Typhoid IgG & IgM</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>U1RNP ANTIBODIES</td><td>U1RNP ANTIBODIES(U1RNP ANTIBODIES)</td><td>U1RNP ANTIBODIES</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>UNCONJUCATED ESTRIOL (E3)</td><td>UNCONJUCATED ESTRIOL (E3)(E3 UNCONJUCATED ESTRIOL)</td><td>E3 UNCONJUCATED ESTRIOL</td><td>HORMONES</td><td>0</td>
+	</tr><tr>
+		<td>Urea clearence test</td><td>Urea clearence test(Urea clearence test)</td><td>Urea clearence test</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>UREA RANDOM URINE</td><td>UREA RANDOM URINE(UREA RANDOM URINE)</td><td>UREA RANDOM URINE</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Uric Acid (24 Hrs Urine) </td><td>Uric Acid (24 Hrs Urine) (Uric Acid (24 Hrs Urine) )</td><td>Uric Acid (24 Hrs Urine) </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>URIC ACID, SERUM</td><td>URIC ACID, SERUM(Uric Acid)</td><td>Uric Acid</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Urinary Homocystein</td><td>Urinary Homocystein(Urinary Homocystein)</td><td>Urinary Homocystein</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Urinary Microprotein (Spot) </td><td>Urinary Microprotein (Spot) (Urinary Microprotein (Spot) )</td><td>Urinary Microprotein (Spot) </td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>URINE BS BP</td><td>URINE BILE SALE BILE PIGMENT EXAMINATION(BSBP)</td><td>BSBP</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Urine Creatinine</td><td>Urine Creatinine(Urine Creat)</td><td>Urine Creat</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>URINE DIPSTICK</td><td>URINE DIPSTICK(URINE DIPSTICK)</td><td>URINE DIPSTICK</td><td>REPORT ON URINE ROUTINE</td><td>0</td>
+	</tr><tr>
+		<td>Urine for BJ Protein</td><td>Urine for BJ Protein(Urine for BJ Protein)</td><td>Urine for BJ Protein</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Urine for Porphobilinogen ( Porphobilinogen ) qualitative</td><td>Urine for Porphobilinogen ( Porphobilinogen ) qualitative(Urine for Porphobilinogen ( Porphobilinogen ) qualitative)</td><td>Urine for Porphobilinogen ( Porphobilinogen ) qualitative</td><td>REPORT ON URINE ROUTINE</td><td>0</td>
+	</tr><tr>
+		<td>Urine for Urobilinogen</td><td>Urine for Urobilinogen(Urine for Urobilinogen)</td><td>Urine for Urobilinogen</td><td>URINE EXAMINATION</td><td>0</td>
+	</tr><tr>
+		<td>Urine Nicotine</td><td>Urine Nicotine(Urine Nicotine)</td><td>Urine Nicotine</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>URINE OSMOLALITY</td><td>URINE OSMOLALITY(URINE OSMOLALITY)</td><td>URINE OSMOLALITY</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Urine PREGNANCY TEST</td><td>URINE PREGNANCY TEST(UPT)</td><td>UPT</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>URINE PROTEIN CREAT RATIO</td><td>URINE PROTEIN/CREATININE RATIO(URINE PROTEIN CREAT RATIO)</td><td>URINE PROTEIN CREAT RATIO</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>URINE ROUTINE COMPLETE</td><td>URINE ROUTINE COMPLETE(URINE ROUTINE COMPLETE)</td><td>URINE ROUTINE COMPLETE</td><td>REPORT ON URINE ROUTINE</td><td>0</td>
+	</tr><tr>
+		<td>URINE SODIUM</td><td>URINE SODIUM(URINE SODIUM)</td><td>URINE SODIUM</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Urine Sugar/Ketone Quantitative</td><td>Urine Sugar/Ketone Quantitative(Urine Sugar/Ketone Quantitative)</td><td>Urine Sugar/Ketone Quantitative</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Urinery Protein Electrophoresis  (concentrated)</td><td>Urinery Protein Electrophoresis  (concentrated)(Urinery Protein Electrophoresis  (concentrated))</td><td>Urinery Protein Electrophoresis  (concentrated)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>USG- Abdomen</td><td>USG- Abdomen(USG- Abdomen)</td><td>USG- Abdomen</td><td>Histo Path</td><td>0</td>
+	</tr><tr>
+		<td>Valporic Acid (Sodium Valproate)</td><td>Valporic Acid (Sodium Valproate)(Valporic Acid (Sodium Valproate))</td><td>Valporic Acid (Sodium Valproate)</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr><tr>
+		<td>Vancomycin</td><td>Vancomycin(Vancomycin)</td><td>Vancomycin</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>VARICELLA ZOSTER IgG ANTIBODY</td><td>VARICELLA ZOSTER IgG ANTIBODY(VZV (IgG))</td><td>VZV (IgG)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>Varicella Zoster IgM (Chicken Pox)</td><td>Varicella Zoster IgM (Chicken Pox)(Varicella Zoster IgM (Chicken Pox))</td><td>Varicella Zoster IgM (Chicken Pox)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>VDRL (RPR Titre), SERUM</td><td>VDRL (RPR Titre), SERUM(VDRL (RPR Titre), SERUM)</td><td>VDRL (RPR Titre), SERUM</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>VDRL</td><td>VDRL Rapid(VDRL)</td><td>VDRL</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>VENOUS BLOOD GAS</td><td>VENOUS BLOOD GAS(VENOUS BLOOD GAS)</td><td>VENOUS BLOOD GAS</td><td>REPORT</td><td>0</td>
+	</tr><tr>
+		<td>Vitamin A (Retinol)</td><td>Vitamin A (Retinol)(Vitamin A (Retinol))</td><td>Vitamin A (Retinol)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Vitamin B1 (Thiamine)</td><td>Vitamin B1 (Thiamine)(Vitamin B1 (Thiamine))</td><td>Vitamin B1 (Thiamine)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Vitamin B12</td><td>Vitamin B12 (VitB12)</td><td>VitB12</td><td>IMMUNO ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Vitamin B2 (Riboflavin)</td><td>Vitamin B2 (Riboflavin)(Vitamin B2 (Riboflavin))</td><td>Vitamin B2 (Riboflavin)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Vitamin B3 (Niacin)</td><td>Vitamin B3 (Niacin)(Vitamin B3 (Niacin))</td><td>Vitamin B3 (Niacin)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Vitamin B6 (Pyridoxine)</td><td>Vitamin B6 (Pyridoxine)(Vitamin B6 (Pyridoxine))</td><td>Vitamin B6 (Pyridoxine)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Vitamin C (Ascorbic Acid)</td><td>Vitamin C (Ascorbic Acid)(Vitamin C (Ascorbic Acid))</td><td>Vitamin C (Ascorbic Acid)</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>Vitamin D3</td><td>Vitamin D3(Vitamin D3)</td><td>Vitamin D3</td><td>VITAMIN ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>VITAMIN E</td><td>VITAMIN E(VITAMIN E)</td><td>VITAMIN E</td><td>VITAMIN ASSAY</td><td>0</td>
+	</tr><tr>
+		<td>Vitamin K</td><td>Vitamin K(Vitamin K)</td><td>Vitamin K</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>VMA (Vanillyl Mandelic Acid) - SPOT</td><td>VMA (Vanillyl Mandelic Acid) - SPOT(VMA (Vanillyl Mandelic Acid) - SPOT)</td><td>VMA (Vanillyl Mandelic Acid) - SPOT</td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>VMA (Vanillyl Mandelic Acid)-(24 hrs)</td><td>VMA (VANILMANDELIC ACID), 24 HOUR URINE (VMA (Vanillyl Mandelic Acid)-(24 hrs))</td><td>VMA (Vanillyl Mandelic Acid)-(24 hrs)</td><td>CLINICAL PATHOLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Voltage Gated Potassium channel Antibody</td><td>Voltage Gated Potassium channel Antibody(Voltage Gated Potassium channel Antibody)</td><td>Voltage Gated Potassium channel Antibody</td><td>REPORT ON A.B.G.</td><td>0</td>
+	</tr><tr>
+		<td>Von Willebrand factor (VWF) </td><td>Von Willebrand factor (VWF)(Von Willebrand factor (VWF))</td><td>Von Willebrand factor (VWF)</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>WEIL FELIX TEST </td><td>WEIL FELIX TEST (WEIL FELIX TEST )</td><td>WEIL FELIX TEST </td><td>&nbsp;</td><td>0</td>
+	</tr><tr>
+		<td>WESTERN BLOT TEST ( HIV )</td><td>WESTERN BLOT TEST ( HIV )(WESTERN BLOT TEST ( HIV ))</td><td>WESTERN BLOT TEST ( HIV )</td><td>SPECIAL REPORTS</td><td>0</td>
+	</tr><tr>
+		<td>WIDAL SLIDE TEST</td><td>WIDAL SLIDE TEST(Widalslide)</td><td>Widalslide</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>WIDAL TUBE  TEST</td><td>WIDAL TUBE  TEST(WIDAL TUBE  TEST)</td><td>WIDAL TUBE  TEST</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Wuchereria Bancrofti (Filaria) Antigen</td><td>Wuchereria Bancrofti (Filaria) Antigen(Wuchereria Bancrofti (Filaria) Antigen)</td><td>Wuchereria Bancrofti (Filaria) Antigen</td><td>SEROLOGY</td><td>0</td>
+	</tr><tr>
+		<td>Xray Chest</td><td>Xray Chest(Xray Chest)</td><td>Xray Chest</td><td>Histo Path</td><td>0</td>
+	</tr><tr>
+		<td>Zeil Nielson Stain</td><td>Zeil Nielson Stain(Zeil Nielson Stain)</td><td>Zeil Nielson Stain</td><td>REPORT ON A.B.G.</td><td>0</td>
+	</tr><tr>
+		<td>Zinc Serum</td><td>Zinc Serum(Zinc Serum)</td><td>Zinc Serum</td><td>BIOCHEMISTRY</td><td>0</td>
+	</tr>
+</table>

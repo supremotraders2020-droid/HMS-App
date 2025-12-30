@@ -2759,6 +2759,123 @@ export class DatabaseStorage implements IStorage {
     console.log("Consent templates seeded successfully with 13 comprehensive forms");
   }
 
+  // ========== PATHOLOGY TESTS SEEDING ==========
+  async seedPathologyTests(): Promise<void> {
+    const existingTests = await db.select().from(labTestCatalog);
+    if (existingTests.length >= 888) {
+      console.log(`Pathology tests already exist (${existingTests.length} tests), skipping seed...`);
+      return;
+    }
+
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    const filePath = path.join(process.cwd(), "attached_assets/CompleteTestList_1767070588504.xls");
+    
+    if (!fs.existsSync(filePath)) {
+      console.log("Pathology tests file not found, skipping...");
+      return;
+    }
+
+    console.log("Starting pathology tests seeding...");
+    const content = fs.readFileSync(filePath, "utf-8");
+    
+    const rowRegex = /<tr>([\s\S]*?)<\/tr>/g;
+    const cellRegex = /<td>([^<]*)<\/td>/g;
+    
+    interface TestData {
+      testName: string;
+      displayName: string;
+      shortName: string;
+      categoryName: string;
+      charges: number;
+    }
+    
+    const tests: TestData[] = [];
+    let rowMatch;
+    let isFirstRow = true;
+    
+    while ((rowMatch = rowRegex.exec(content)) !== null) {
+      const rowContent = rowMatch[1];
+      const cells: string[] = [];
+      let cellMatch;
+      
+      while ((cellMatch = cellRegex.exec(rowContent)) !== null) {
+        cells.push(cellMatch[1].trim());
+      }
+      
+      if (isFirstRow) {
+        isFirstRow = false;
+        continue;
+      }
+      
+      if (cells.length >= 5) {
+        const testName = cells[0] || "";
+        const displayName = cells[1] || "";
+        const shortName = cells[2] || "";
+        const categoryName = cells[3] || "GENERAL";
+        const charges = parseFloat(cells[4]) || 0;
+        
+        if (testName && testName !== "&nbsp;") {
+          tests.push({
+            testName: testName.trim(),
+            displayName: displayName.trim(),
+            shortName: shortName.trim(),
+            categoryName: categoryName === "&nbsp;" ? "GENERAL" : categoryName.trim(),
+            charges
+          });
+        }
+      }
+    }
+    
+    console.log(`Parsed ${tests.length} tests from Excel file`);
+    
+    const existingCodes = new Set(existingTests.map(t => t.testCode));
+    let inserted = 0;
+    
+    for (let i = 0; i < tests.length; i++) {
+      const test = tests[i];
+      const prefix = test.testName.replace(/[^a-zA-Z0-9]/g, "").substring(0, 6).toUpperCase();
+      const testCode = `PT-${prefix}-${String(i + 1).padStart(4, "0")}`;
+      
+      if (existingCodes.has(testCode)) continue;
+      
+      const categoryLower = test.categoryName.toLowerCase();
+      let sampleType = "Blood/Serum";
+      if (categoryLower.includes("urine")) sampleType = "Urine";
+      else if (categoryLower.includes("blood") || categoryLower.includes("haematology")) sampleType = "Blood";
+      else if (categoryLower.includes("serology")) sampleType = "Serum";
+      else if (categoryLower.includes("micro") || categoryLower.includes("culture")) sampleType = "Swab/Culture";
+      else if (categoryLower.includes("stool")) sampleType = "Stool";
+      else if (categoryLower.includes("csf") || categoryLower.includes("fluid")) sampleType = "Body Fluid";
+      else if (categoryLower.includes("histopathology") || categoryLower.includes("biopsy")) sampleType = "Tissue";
+      else if (categoryLower.includes("biochemistry")) sampleType = "Serum";
+      else if (categoryLower.includes("hormone")) sampleType = "Serum";
+      else if (categoryLower.includes("vitamin")) sampleType = "Serum";
+      else if (categoryLower.includes("immuno")) sampleType = "Serum";
+      
+      try {
+        await db.insert(labTestCatalog).values({
+          testCode,
+          testName: test.displayName || test.testName,
+          testCategory: test.categoryName,
+          sampleType,
+          description: `${test.testName} - ${test.shortName}`,
+          price: String(test.charges || 0),
+          turnaroundTime: "24-48 hours",
+          isActive: true
+        });
+        inserted++;
+      } catch (error: any) {
+        if (!error.message?.includes("duplicate")) {
+          console.error(`Error inserting test ${test.testName}:`, error.message);
+        }
+      }
+    }
+    
+    console.log(`Pathology tests seeding complete: ${inserted} tests inserted`);
+  }
+
   // ========== RESOLVED ALERTS METHODS ==========
   async getResolvedAlerts(): Promise<ResolvedAlert[]> {
     return await db.select().from(resolvedAlerts).orderBy(desc(resolvedAlerts.resolvedAt));
@@ -3461,6 +3578,26 @@ export class DatabaseStorage implements IStorage {
   async createLabTestOrder(order: InsertLabTestOrder): Promise<LabTestOrder> {
     const result = await db.insert(labTestOrders).values(order).returning();
     return result[0];
+  }
+
+  async createLabTestOrdersBatch(ordersWithoutNumbers: Omit<InsertLabTestOrder, "orderNumber">[]): Promise<LabTestOrder[]> {
+    // Use transaction for atomic batch insert - all succeed or all fail
+    // Order numbers are generated inside transaction to ensure uniqueness
+    const createdOrders = await db.transaction(async (tx) => {
+      // Count existing orders inside transaction to ensure accurate numbering
+      const [countResult] = await tx.select({ count: sql<number>`count(*)::int` }).from(labTestOrders);
+      let orderCount = countResult?.count ?? 0;
+      
+      const results: LabTestOrder[] = [];
+      for (const order of ordersWithoutNumbers) {
+        orderCount++;
+        const orderNumber = `LAB-${new Date().getFullYear()}-${String(orderCount).padStart(4, '0')}`;
+        const [created] = await tx.insert(labTestOrders).values({ ...order, orderNumber }).returning();
+        results.push(created);
+      }
+      return results;
+    });
+    return createdOrders;
   }
 
   async updateLabTestOrder(id: string, updates: Partial<InsertLabTestOrder>): Promise<LabTestOrder | undefined> {

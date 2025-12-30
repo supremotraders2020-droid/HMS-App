@@ -120,7 +120,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       DOCTOR: [
         { title: "Appointments", url: "/appointments", icon: Calendar },
         { title: "Medical Records", url: "/records", icon: FileText },
-        { title: "Prescriptions", url: "/prescriptions", icon: Stethoscope }
+        { title: "Prescriptions", url: "/prescriptions", icon: Stethoscope },
+        { title: "Order Lab Tests", url: "/lab-test-ordering", icon: FlaskConical }
       ],
       NURSE: [
         { title: "Patient Care", url: "/patient-care", icon: Activity },
