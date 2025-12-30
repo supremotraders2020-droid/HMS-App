@@ -10793,7 +10793,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       });
       
       res.json({
-        matched: matchStatus === "SUCCESS",
+        matched: matchStatus === "SUCCESS" || matchStatus === "MULTIPLE_MATCHES",
         matchStatus,
         matchedUserId: bestMatch?.userId,
         matchedUserType: bestMatch?.userType,

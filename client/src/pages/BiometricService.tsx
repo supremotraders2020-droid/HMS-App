@@ -1626,6 +1626,14 @@ export default function BiometricService() {
 
                       {recognitionResult.matched && (
                         <div className="space-y-2 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                          {recognitionResult.multipleMatches && (
+                            <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded border border-amber-300 dark:border-amber-700 mb-3">
+                              <p className="text-sm text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4" />
+                                Multiple matches found ({recognitionResult.matchCount}). Showing best match.
+                              </p>
+                            </div>
+                          )}
                           <div className="flex justify-between">
                             <span className="text-slate-500">User ID</span>
                             <span className="font-mono text-slate-900 dark:text-white">{recognitionResult.matchedUserId}</span>
