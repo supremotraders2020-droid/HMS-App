@@ -1,0 +1,890 @@
+TestName
+HISTOPATHOLOGY EXAMINATION (HPE) - SMALL SIZE
+URINARY ALBUMIN CREATINAINE RATIO
+SARS-CoV2 (COVID-19) Rapid Antigen Test
+SARS-CoV2 (COVID-19) Real Time RT PCR Test
+1,25 di-hydroxy Vitamin D
+100( gm Blood Glucose 2 Hr. )
+17 KETOSTEROIDS
+17-OH-P
+24 HOUR COPPER, URINE
+24 hr Urinary Sodium
+24 Hrs Urinary Cortisol
+24 Hrs Urinary Creatinine
+24 HRS URINENARY PROTEIN
+25-HYDROXY VITAMIN D
+3 Methyl Histidine screen
+5 Alpha DHT-Di hydro Testosterone
+HYDROXY INDOLE ACETIC ACID
+5-HT (5-Hydroxy Tryptamine)(Serotonin)
+ABSOLUTE CD4, CD8 COUNT, BLOOD
+ABSOLUTE CD4 COUNT, BLOOD
+ABSOLUTE EOSINOPHIL COUNT
+ABSOLUTE LYMPHOCYTE COUNT, BLOOD
+ABSOLUTE NEUTROPHIL COUNT, WHOLE BLOOD
+Acetaminophen (Paracetamol)
+ACETONE (Ketone), SERUM (QUALITATIVE)
+Acetone (Ketone)(Quantitative)
+ACETYLE CHOLINE RECEPTOR ANTIBODY
+Acid Fast Suspectibility - 5 drugs
+Acid Hemoglobin Electrophoresis
+ACID PHOSPHATASE - PROSTATIC
+ACID PHOSPHATASE - TOTAL
+ADENOSINE DEAMINASE
+ADENOSINE DEAMINASE
+Adenovirus, IgM Antibody
+Adenovirus, lgG Antibody
+Adernaline (Epinephrine)
+ANTI DIURETIC HORMONE (VASOPRESSIN)
+ADRENO CORTICOTROPHIC HORMONE
+AFB (ACID FAST BACILLI) STAIN
+AFB culture
+AFB CULTURE & SENSITIVITY [ 10 DRUGS ]
+ALPHA FETO PROTIEN (AFP)
+AHBC -IgM
+AHBC Total
+ALBERT STAIN (DIPTHERIA BACILLI)
+Albumin
+ALBUMIN, FLUID
+ALBUMIN/CREATININE RATIO
+Alcian blue stain
+ALCOHOL (ETHANOL), QUANTITATIVE, SERUM
+ALDOLASE
+ALDOSTERON
+Alkaline Hemoglobin Electrophoresis
+ALKALINE PHOSPHATASE
+ALP lsoenzymes
+Alkaline Phosphatase bone fraction (OSTASE) test
+Allergy Drug
+Allergy Food (Non-veg)
+Allergy Food (veg)
+allergy food intolerance maxi (220 allergens)
+ALLERGY FOOD INTOLERANCE MINI (46 ALLERGENS)
+Allergy food test (IgE)
+allergy inhalation panel
+Allergy Inhalent
+Alpha Hydroxy butyrate dehydrogenere (HBDH)
+Alpha 2 macroglobulin
+ALPHA-1- ANTITRYPSIN, SERUM
+ALUMINUM, SERUM
+AMINO ACIDS (QUALITATIVE)
+AMINOLEVULINIC ACID,QUANTITATIVE
+Amiodarone
+AMMONIA, SERUM
+Amoebiasis Antibodies -lgG
+AMOEBIC SEROLOGY, IgG
+AMPHETAMINE, URINE
+Amylase (Fluid)
+AMYLASE, SERUM
+ANA (Anti nuclear Antibody)-
+ANA BLOT ASSAY
+ANA IFA TITRE
+ANA Screening by IFA
+Anaerobic Bacterial Culture
+Anaerobic Pus/ Body Fluid Culture
+Anaerobic Swab Culture
+ANCA - C ( PR3 )
+ANCA - P (MPO)
+ANCA P & C
+ANCA Screen
+ANCA Titers-Anti Neutrophilic Cytoplasmic Antibody
+ANCA-Anti Neutrophilic Cytoplasmic Antibody
+Free Androgen Index (FIA) (Testosterone, SHBG)
+ANDROSTEINDIONE
+ANGIOTENSIN CONVERTING ENZYME (ACE)
+ANTI - DSDNA
+ANTI - dsDNA, Antibody Titre by IFA
+Anti GAD antibody
+ANTI BETA 2 GLYCOPROTEIN 1 IGA/ IGG/ IGM SCREEN
+ANTI C1q antibody
+ANTI CARDIOLIPIN ANTIBODY (IgG, IgM, IgA)
+ANTI CARDIOLIPIN ANTIBODY IgG
+ANTI CARDIOLIPIN ANTIBODY IgM
+ANTI CARDIOLIPIN IgA ANTIBODIES
+ANTI CCP Antibody
+ANTI CENTROMERE B ANTIBODY
+Anti Complement Factor H Assay
+Anti Dnase B
+Anti Glomerular Basement Membrane
+ANTI HAV IGM (QUANTITATIVE)
+HAV-lgG Antibodies to hepatitis A Virus
+Anti HBe
+ANTI HEPATITIS A VIRUS TOTAL
+ANTI HEPATITIS B ENVELOPE ANTIGEN (AHBE) -TOTAL
+ANTI HEPATITIS B SURFACE ANTIGEN - TOTAL
+ANTI HEV IgG ANTIBODIES
+ANTI HISTONE ANTIBODY
+ANTI MITOCHONDRIAL ANTIBODYANTI MITOCHONDRIAL ANTIBODY
+Anti Mitochondrial Antibody IN DILUTIONS
+ANTI MULLERIAN HORMONE ANTIBODY (AMH
+Anti Parietal Cell Antibodies, IgG, Serum
+ANTI PHOSPHOLIPID ANTIBODIES IgA
+ANTI PHOSPHOLIPID ANTIBODIES IgG
+ANTI PHOSPHOLIPID ANTIBODIES IgM
+Anti RNP-70
+ANTI Sm ( SMITH) ANTIBODY
+Anti Smooth Muscle Antibody-Titre (ASMA)
+ANTI SPERM ANTIBODIES
+Anti SS-A/Ro Antibody
+Anti SS-B/La Antibody
+Anti TCR Gamma-Delta
+ANTI THROMBIN III ACTIVITY (Antigenic)
+ANTI THROMBIN III ACTIVITY (Functional)
+ATG
+ANTI THYROPEROXIDASE ANTIBODY (AMA) (ANTI TPO)
+Anti Tubercular Drug Sensitivity test(DST) Rapid- 4 Drugs (Streptomycin,Isoniazid,Rifampicin,Ethambutol)
+Anti Tubercular Drug Sensitivity test(DST) Rapid-Levofloxacin(Second Line)
+Anti-alpha Fodrin IgA
+Anti-alpha Fodrin IgG
+Anti-Annexin V IgG
+Anti-Annexin V IgM
+Anti-Bacterial Permeability Increasing Protein
+Anti-Cathepsin G
+Anti-ds DNA IgA
+Anti-ds DNA IgG
+Anti-ds DNA IgM
+Anti-Elastase
+Anti-Gliadin IgA/IgG Screen
+Anti-Histone
+Anti-insulin antibody
+Anti-Jo1
+Anti-Lactoferrin
+Anti-Lysozyme
+Anti-MCV
+Anti-Mitochondrial Antibodies-M2
+Antimony
+Anti-Nucleosome
+Anti-Parietal Cell
+Anti-Phosphatidic Acid IgG
+Anti-Phosphatidic Acid IgM
+Anti-Phosphatidyl Inositol IgG
+Anti-Phosphatidyl Inositol IgM
+Anti-Phosphatidyl Serine IgG
+Anti-Phosphatidyl Serine IgM
+Anti-PR3 (high sensitivity)
+Anti-Prothrombin IgA
+Anti-Prothrombin IgG
+Anti-Prothrombin IgG/IgM/IgA, Screen
+Anti-Prothrombin IgM
+Anti-Ribosomal-P
+Anti-RNP/Sm
+Anti-Scl-70
+Anti-ß-2-Glycoprotein l IgA
+Anti-SS-A-52
+Anti-SS-A-60
+Anti-ssDNA
+Anti-Tissue-Transglutaminase IgA/IgG Screen
+Anti-Tissue-Transglutaminase IgG
+APC- Activated protein C resistance test
+APOLIPOPROTEIN - A1
+APOLIPOPROTEIN - A1 & B Ratio
+APOLIPOPROTEIN B ( APO B )
+Arsenic
+ARTERIAL BLOOD GAS
+ASCA IgA
+ASCA IgG
+ASKA- Skeltal Muscle (Striated Muscle) antibody
+ASO (ANTI STREPTOLYSIN-O) TITRE
+ASPERGILLUS ANTIBODY, IgG
+ASPERGILLUS ANTIBODY, IgM
+AUTOMATED CULTURE & SENSITIVITY
+Automated Culture And Sensitivity
+Automated Culture and Sensitivity Report
+Barbiturates-urine
+Basophil count, Absolute
+BCL-2 Oncoprotein
+BCR/ABL QUANTITATIVE (MBCR-CML)
+Bence Jones Immunofixation
+Benzodiazepines
+BETA 2 GLYCOPROTEIN I - IgG
+BETA 2 MICROGLOBULIN
+BETA 2-GLYCOPROTEIN 1-IgM ANTIBODIES
+BETA HUMAN CHORIONIC GONADOTROPIN HORMONE
+Bicarbonate
+BILIRUBIN TOTAL, DIRECT, INDIRECT
+Renal Function Test
+Biopsy - Complex or Carcinoma
+Biopsy - Large Specimen (> 5cm)
+Biopsy - Medium Specimen (upto 5cm)
+Biopsy - Small Specimen (< 2cm)
+Biopsy - Uterus
+BIOTINIDASE DEFICIENCY
+Bismuth
+Bleeding & Clotting Time
+Blood Glucose 1 hr
+BLOOD GROUP
+Blood sugar- fasting
+Blood sugar- fasting and postprandial
+Blood sugar- postprandial
+BLOOD UREA LEVEL Serum
+BNP(B Type Natriuretic Peptide)
+BODY FLUID CYTOLOGY
+Bone Marrow Aspiration
+BONE MARROW ASPIRATION CYTOLOGY
+Bone Marrow Biopsy & Aspiration
+Borrelia burgdorferi IgG (Lyme Disease)
+Borrelia Burgdorferi IgM Antibodies (Lyme)
+BRUCELLA AGGLUTINATION TEST (TUBE AGGLUTINATION)
+BRUCELLA IgG & IgM
+BRUCELLA IgG ANTIBODIES
+BRUCELLA IgM ANTIBODIES
+BUN-Blood Urea Nitrogen
+C - Peptide Fasting
+C - REACTIVE PROTEIN (hsCRP)
+C1 Esterase Inhibitor
+CA 125, CANCER MARKER
+CA 15.3 CANCER MARKER, SERUM
+CA 19.9 CANCER MARKER, SERUM
+CA 72.4 CANCER MARKER, SERUM
+Cadmium
+Calcitonin
+Calcium (24 Hrs Urine)
+CALCIUM IONIZED
+CALCIUM, SERUM
+Calcium/creatinine ratio
+Cannabis (THC) (Marijuana) (Qualitative)
+CAPD FLUID
+CARBAMAZEPINE
+CARCINO EMBRYONIC ANTIGEN
+CATECHOLAMINES 24 HR URINE
+CD 117 (Myeloid markers)
+CD 11c (Hairy cell/NHL marker)
+CD 15 (Myeloid cell marker)
+CD 4 counts
+CD10 (Prognostic cell marker)
+CD-13 (Myeloid cell marker)
+CD-14 (Monocytic cell marker)
+CD18
+CD19
+CD2 (Pan T cell marker)
+CD20
+CD22 (Pan B cell marker)
+CD23 (CLL segregation marker)
+CD25 (Hairy cell/NHL Marker) cells
+CD3 CD4 CD8
+CD33
+CD34
+CD4/CD3 counts (FACS Count)
+CD40
+CD41a (Megakaryocytic marker)
+CD42a (Megakaryocytic marker)
+CD5 (T cell/B Cell subset marker)
+CD61 (Megakaryocytic marker)
+CD7 (Pan T cell /early myeloid marker)
+CD-79a
+CD-80
+CD-FMC -7(Prognostic CLL/NHL marker)
+CD-Glycophorin (Erythrocytes cell marker)
+CD-MPO (Myeloid cell marker)
+CD-TCR-Alpha beta
+CD-TCR-Gamma delta
+Centromere antibody
+CERULOPLASMIN
+CH-50 (Compliment Total)
+CHIKUNGUNYA IGG & IGM
+CHIKUNGUNYA IgG and IgM ANTIBODIES
+CHIKUNGUNYA IgM
+Chikungunya RTPCR
+CHIKUNGUNYA VIRUS ANTIBODY, IgM
+Chlamydia Pneumoniae IgG
+Chlamydia Pneumoniae IgM
+Chlamydia Pneumoniae IgM-Copy
+Chlamydia Qualitative PCR
+Chlamydia Trachomatis IgG
+Chlamydia Trachomatis IgM
+CHLORIDE
+CHOLESTEROL - LDL
+CHOLESTROL - TOTAL
+CHOLESTROL HDL-DIRECT
+CHOLINESTERASE
+Chromium
+CHROMOGRANIN - A
+Chromogranin A
+Chromosome 13 & 21
+Chromosome 13, 18, 21, X & Y
+Chromosome 18, X & Y (Amniotic Fluid)
+Chromosome 21
+CHYLOMICRONS
+CK lsoenzyme
+URINE PORPHOBILINOGEN
+Clozapine
+CMV Avidity
+COAGULATION PROFILE
+Cobalt
+Cocaine (Qualitative)
+Cocaine (Quantitative)
+COCAINE URINE
+COMPLEMENT 3 (C3)
+COMPLEMENT-4 (C4),SERUM
+Complete Blood Count
+COOMBS DIRECT (DCT), BLOOD
+COOMBS INDIRECT TEST (ICT)
+COPPER,SERUM
+CORTISOL SERUM (3 to 5 PM)
+CORTISOL SERUM (7 to 9 AM)
+Cortisol Urine Total
+Cotinine Metabolite
+Covid IgG (Spike Protine)
+COVID-19 Antibody
+Coxiella Burnetii IgG (Q fever)
+Coxiella Burnetii IgM (Q fever)
+C-PEPTIDE
+C-Peptide Fasting / Post Prandial
+C-Peptide Post Prandial
+Creatinine clearance test
+CREATININE, Random URINE
+CRP (C- REACTIVE PROTEIN)
+CRYOGLOBULINS-dhande
+CRYOGLOBULINS
+CRYPTOCOCCAL ANTIGEN, CSF
+CRYPTOCOCCAL ANTIGEN, SERUM
+CRYPTOSPORIDIUM / ISOSPORA IDENTIFICATION, Stool
+CSF EXAMINATION
+CSF Protein Electrophoresis (concentrated)
+CSF Routine
+Culture & Sensitivity Report-Other
+Culture Aerobic, Blood
+Culture And Sensitivity
+CULTURE AND SENSITIVITY - BLOOD(BATEC)
+CULTURE AND SENSITIVITY (AUTOMATED)
+CULTURE AND SENSITIVITY (MANUAL)
+Culture And Sensitivity(Final)
+Culture And Sensitivity(Preliminary)
+CULTURE AND SENSITIVITY, BLOOD
+CULTURE AND SENSITIVITY, BODY FLUIDS
+CULTURE AND SENSITIVITY, BODY FLUIDS
+CULTURE AND SENSITIVITY, PUS
+Culture And Sensitivity Manual
+Culture And Sensitivity, Manual
+CULTURE AND SENSITIVITY, STOOL
+CULTURE AND SENSITIVITY, STOOL
+CULTURE AND SENSITIVITY, URINE
+Culture And Sensitivity, Manual
+Culture And Sensitivity, Urine
+Culture And Sensitivity, Urine
+Culture Anerobic, Blood
+CULTURE NO GROWTH
+Culture, Aerobic, Body Fluids
+Cyclospora
+CYSTATIN C
+Cysticercosis (IgG) Antibody
+Cytology For Liver Abscess
+Cytology Neck Abscess
+CYTOLOGY REPORT
+Cytomegalo Virus (CMV) - IgG
+CYTOMEGALO VIRUS (CMV) - IgM
+CYTOMEGALO VIRUS(CMV) - IgG & IgM
+D-Dimer Quantitative Test
+Dehydroepiandrosterone (DHEA)
+Dehydroepiandrosterone Sulphate (DHEAS)
+demo test
+DENGUE ANTIBODIES (IgG + IgM)
+DENGUE ANTIBODIES (IGG + IGM) ELISA
+Dengue NS1 Antigen
+DENGUE NS1 ANTIGEN (ELISA)
+DENGUE PROFILE
+DENGUE PROFILE -ELISA
+DESMOGLEIN (DSG1 )
+Desmoglein 3 (DSG3), IgG Antibodies
+DIGOXINE
+DNPH Test
+DOUBLE MARKER WITH GRAPH (1st Trimester) Report
+DPD-Deoxypryridinolie (Pyrillinks D)
+Drug Allergy Test (each Drug)
+DRUG OF ABUSE [5 PANEL]
+DRVVT Screen Ratio
+Dummy PS
+Dummy SARS
+D-Xylose test
+UNCONJUCATED ESTRIOL (E3)
+EBV (VCA) - IgM ANTIBODIES
+ECG
+Echinococcus Antibody, IgG (Hydatid serology)
+EGF (Epidermal Growth Factor)
+ELECTROLYTES, SERUM
+ELECTROLYTES 24 HRS URINE
+ELECTROLYTES, RANDOM URINE
+ELISA for Clostridium difficile
+ENA Screen
+Endomysial antibody
+Entamoeba Histolytica (Amebiasis) IgG
+Epidermal Antibody
+EPSTEIN BARR VIRUS (EBV) Quantitative ( PCR )
+EPSTEIN BARR VIRUS (EBV), QUALITATIVE PCR
+Epstein Barr Virus IgG
+ER, PR
+ER, PR, HER2
+ER, PR, HER2, MIB1
+Erythrocyte Count (RBC Count)
+Erythropoietin EPO
+ESR (ERYTHROCYTE SEDIMENTATION RATE)
+ESTRADIOL (E2)
+Estriol (E3)
+Ethanol Quantitative
+FACTOR - II (PROTHROMBIN) MUTATION DETECTION PCR
+FACTOR IX
+Factor V Leiden
+Factor V Leiden Mutation
+FACTOR VII
+FACTOR VIII ACTIVITY, CLOTTING
+Factor-Xlll
+Fanconis Anemia
+Ferric Chloride Test
+FERRITIN REPORT
+Fetal Hemoglobin (HbF)
+FIBRINOGEN CLOTTING ACTIVITY
+Fibrinogen Degradation Product (FDP LEVEL)
+Fibrinogen Level
+FILARIA ANTIGEN (WUCHERERIA BANCROFTI)
+Film Array for Blood Culture ID Panel
+Film Array for Gastrointestinal Panel
+Film Array for Meningitis/Encephalitis Panel
+Film Array for Pneumonia Plus Panel
+Film Array for Respiratory Panela
+FISH FOR CLL PANEL
+FISH FOR DEL 13Q
+FISH FOR INV(16) OR LSI CBFB
+FISH FOR MDS PANEL
+FISH FOR T(9:22) PHILADELPHIA TRANSLOCATION OR BCR/ABL
+FLP Profile
+FLT-3 GENOTYPING TEST
+FLUID ROUTINE EXAMINATION
+Fnac
+FNAC from Thyroid swelling
+FOLIC ACID, SERUM
+Food Intolerance
+FREE BETA HCG
+FREE LIGHT CHAINS
+Free Metanephrin
+FREE PSA ( PROSTATIC SPECIFIC ANTIGEN ), SERUM
+FREE T3
+FREE TESTO
+FREE THYROXINE (FT4)
+FRUCTOSAMINE
+FSH ( FOLLICLE STIMULATING HORMONE )
+FSH/LH RATIO
+FT3, FT4 & TSH
+Fungal Culture
+FUNGAL STAIN (PAS/SM)
+G6PD (Quantitative)
+GALACTOMANNAN (ASPERGILLUS ANTIGEN)
+Ganglioside GQ1b Antibody
+Gastric Parietal cell antibody
+GASTRIN LEVEL
+GENEXPERT MTB RIFAMPICIN RESISTANCE DETECTION
+GGT ( GAMMA GLUTAMYL TRANFERASE )
+Giardia antigen
+GIARDIA ANTIGEN (Stool)
+GLIADIN ANTIBODY (IgA)
+GLIADIN ANTIBODY (IgG)
+Globulin
+GLOMERULAR FILTRATION RATE ( EGFR )
+Glucagon stimulation test for C Peptide
+Glucose Tolerence Test (GTT) - Modified
+Glucose Tolerence Test (Prolonged)
+Glutamic Acid Decarboxylase (GAD65) Antibody
+GRAM STAIN
+GROWTH HORMONE
+H1N1 (SWINE FLU) QUALITATIVE PCR
+Haemoglobin
+Haemophilus Influnza B Antigen
+HAINS MYCOBACTERIUM TUBERCULOSIS FIRST LINE DRUG RESISTANCE PROFILE
+Hams test (acidified serum test)(PNH)
+Hanta virus igM antibodies
+Haptoglobin
+HB ELECTROPHORESIS
+HbA1C (GLYCOSYLATED HAEMOGLOBIN)
+HBDH -Total antibodies to hepatitis B core Antigen
+HbsAg ELISA
+HBsAg (Australia Antigen) - Rapid
+HCG Stimulation test for Testosterone test
+HCV antibody
+HCV IgM Antibody
+HDV Antibodies
+HE4 ( Human Epididymis Protein 4)
+Helicobacter Pylori - IgA
+Helicobacter Pylori - IgG
+Hemoglobinureia and Myoglobinuria
+Hemophilus influenza B.lgG
+Hemosiderin Urine
+Hepatitis B DNA Viral Load PCR
+HEPATITIS B SURFACE ANTIBODY (ANTI HBS)
+HEPATITIS B VIRUS ENVELOPE ANTIGEN ( HBeAg )
+HEPATITIS C ANTIBODY (ANTI HCV), SERUM
+HCV (Rapid)
+HEPATITIS C VIRUS QUANTITATIVE REALTIME PCR
+Hepatitis C Virus-Genotyping
+Hepatitis D Virus Total (Delta Virus)
+Hepatitis E virus - IgG (HEV IgG)
+HEPATITIS E VIRUS - IgM (HEV IgM)
+HERPES SIMPLEX VIRUS (HSV 1 & 2) IgG
+HERPES SIMPLEX VIRUS (HSV 1 & 2) IgG & IgM
+HERPES SIMPLEX VIRUS (HSV 1 & 2) IgM
+HERPES SIMPLEX VIRUS 1 IgG
+HERPES SIMPLEX VIRUS 1 IgM
+HERPES SIMPLEX VIRUS 2 IgG
+HERPES SIMPLEX VIRUS 2 IgM
+HIGH RESOLUTION CHROMOSOME STUDY (COUPLE)
+HIGH RESOLUTION CHROMOSOME STUDY (SINGLE)
+High Resolution Protein Electrophoresis
+Histopathology Large
+Histopathology Medium
+Histopathology Small
+HIV 1& 2 antibodies
+HIV COMBI- Elisa
+HIV I & II - Rapid/Tridot
+HIV P24 Antigen
+HIV Viral load -Taqman
+HIV Viral load-GeneXpert
+HLA TYPING (A,B,DR)
+HOMA IR; INSULIN RESISTANCE INDEX
+Homocysteine, Serum
+Homogenestic acid(Alkaptanuria)
+HTLV 1and 2 antibodies
+IGF BP3
+IHC 5 Marker Panel
+IHC 8 Marker Panel
+IHC Common Markers (each marker)
+IHC Rare Markers (each marker)
+Immature Platelet Fraction
+immunofixation electrophoresis 1.1 (protein electrophoresis, IgM, IgA, IgG
+immunofixation electrophoresis 1.2 (immunofixation electrophoresis 1.1, free light chains kappa & lambada)
+immunofixation electrophoresis 1.3 (immunofixation 1.2 + immunofixation)
+immunofixation electrophoresis 1.4 (qualitative)
+Immunoglobulin A (IgA)
+Immunoglobulin G (IgG)
+Immunoglobulin M (IgM)
+ALK 1
+India Ink Preparation
+ICT BIRLA
+INHIBIN A, SERUM
+Inhibin B
+Insulin - Like Growth Factor-I (IGF-I)
+Insulin (Fasting)
+Insulin fasting & post meal
+INSULIN RANDOM
+Insulin,post prandial
+Interleukin 6
+Intrinsic factor
+Intrinsic Factor Blocking Antibody
+Ionic Calcium
+IRMA TEST (IMATINIB RESISTANCE -MUTATION ANALYSIS)
+IRON,TIBC & % TSA
+ISLET CELL ANTIBODY
+JAK 2 MUTATION BY PCR
+JC VIRUS DETECTION PCR, CSF
+KARYOTYPING (COUPLE)
+KARYOTYPING (SINGLE)
+Karyotyping for Amniotic Fluid
+Karyotyping for Bone Marrow
+Karyotyping for Buccal Mucosa for X-Y Study
+Karyotyping for Chorionic Villus Sample
+Karyotyping for Chromosome Breakage Syndrome
+Karyotyping for Fetal Blood sample
+Karyotyping for Fragile X Syndrome
+Karyotyping for Genetic Study of Couple + Product of Conception
+Karyotyping for Products of Conception (POC)
+KOH Mount
+Lactate
+Lap Score
+LDH, FLUID
+LDH lsoenzyme
+Lactate Dehydrogenase-Serum
+LE Cell Detection
+LE Cells
+LEAD LEVEL - BLOOD
+Leishmania antibody -lgG(Kala Azar)
+LEPTIN, SERUM
+LEPTOSPIRA (URINE)
+LEPTOSPIRA IgG
+LEPTOSPIRA IgG IgM
+LEPTOSPIRA IgM
+Leucocyte Count
+Leukemia marker - AML1/ETO (AML - M2)
+Leukemia marker - BCR/ABL (CML, AML, ALL)
+Leukemia marker - C MYC (ALL, NHL)
+Leukemia marker - Chq 13q (MM, CLL)
+Leukemia marker - PML/RARA (AML - M3) (APML)
+Leukemia marker - TEL/AML1 (ALL)
+Leukemia marker - Trisomy 12 (CLL)
+Leukemia marker - Trisomy 8
+LH-Leutinising Hormone
+LIPASE, SERUM
+LIPID PROFILE REPORT
+LIPOPROTEIN (A) [LP(A)]
+Lipoprotein Associated Phospholipase A2 (LP-PLA2)
+Lipoprotein Electrophoresis
+LITHIUM
+LFT (Liver Function Test)
+Liver-Kidney Microsome (LKM) - 1 Antibody
+LKM-1 ANTIBODIES
+LUPUS ANTICOAGULANT
+LUPUS ANTICOAGULANT TEST (DRVVT)
+MAGNESIUM , SERUM
+Magnesium (24 hrs urine)
+Malaria By PCR
+Malerial Antigen (Vivax and Falciparum Rapid)
+Manganese
+MANTOUX TEST (Tuberculin Test)
+MATERNAL SCREENING - DUAL MARKER
+MEAN PLATELET VOLUME
+MEASLES ( RUBEOLA) IgG ANTIBODY
+Measles (Rubeola) Antibody IgM
+Mercury
+METANEPHRINE (QUANTITATIVE)
+Methadone (Qualitative)
+METHADONE /DOLOPHINE (QUANTITATIVE)
+METHAEMPHETAMINE (QUANTITATIVE)
+MethaHemoglobine Detection
+Methamphetamine (Qualitative)
+Methylmalonic acid
+MICROALBUMIN URINE (Spot)
+Microbiological Surveillance Of Operation Theater
+MICROFILARIA SMEAR,BLOOD
+MICROPROTEIN,CSF
+Microspordium
+MONO TEST (INFECTIOUS MONONUCLEOSIS),
+Morphine(opiates) (Quantitative)
+Morphine(Qualitative)
+MTB RNA Qualitative PCR (mRNA TB PCR)
+MTHFR
+Mucopolysacchaireds(MPS)
+Mumps Virus Antibody IgG
+Mumps Virus Antibody IgM
+Mumps Virus Qualitative PCR
+Mycoplasma Antibody IgG
+Mycoplasma Pneumoniae IgM
+Myeloperoxidase ( MPO)
+Myoglobulin
+Myoglobulin, Urine
+N Methyl D Aspartate Receptor Antibody (NR1)
+Natural killer cells (NKC)(CD3/CD16/CD56)
+NBS 11 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase, Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia
+NBS 111 GCMS Conditions - Urine
+NBS 4 Conditions - Heel Prick - Congenital hypothyroidism (CH) , Congenital adrenal hyperplasia (CAH), G6PD and Galactosemia
+NBS 6 Conditions - Heel Prick: CH, G6PD & Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, BThalassemia)
+NBS 7 Conditions - Heel Prick: CH, CAH, G6PD, CF, PKU, Galactosemia and Biotinidase
+NBS TMS 47 Conditions
+NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase)
+NBS TMS 47 Conditions + 6 Conditions (CH, CAH, G6PD, CF, Galactosemia and Biotinidase) + Haemoglobinopathies (Sickle Cell Disease, Sickle Cell trait, Hb Variants, B Thalassemia)
+Nickel
+NMDA RECEPTOR / ANTI-GLUTAMATE ANTIBODY
+NMO Neuromyelitis Optica Antibodies IgG (Aquaporin 4) (Serum)
+NT-Pro BNP
+OCCULT BLOOD
+OGCT Oral Glucose Challenge Test
+Oligoclonal band
+Oligoclonal bands in CSF
+Opiates (Qualitative)
+Osmatic Fragility
+Osteocalcin(BGP-BoneG1a protein)
+Other Test
+Oxalates
+P S For Microfialaria
+P.C.V.
+Pap smear by LBC
+PAP Smear Cytology
+PAPP-A
+PAP-Prostatic Acid Phosphatase (CLIA)
+PAP-Prostatic Acid Phosphatase (IHC)
+Parvovirus IgG
+Parvovirus IgM
+PAS stain
+PBS FOR MALARIAL PARASITE
+PCP-Phencyclidine phophate (Qualitative)
+PS FOR MP
+Peripherial Smear Eaxmination ( PS )
+pH
+Phenobarbitone (Gardinal)
+Phenylethyl alcohol agar test
+PHENYTOIN / DILANTIN / EPTOIN
+Phosphorus Urine
+PHOSPHORUS, SERUM
+Platelet Antibodies
+Platelet Count
+PNH test
+Porphobilinogen (PBG), (Quantitative)
+PORPHYRINS TOTAL, QUANTITATIVE
+POTASSIUM, SERUM
+PR3 - ANCA (C-ANCA) ( C-ANCA )
+Pro Insulin
+PROCALCITONIN
+Progesterone ( Progesterone )
+Prolactin
+Protein C
+PROTEIN ELECTROPHORESIS
+Protein Electrophoresis (with B1-B2)
+Protein S
+Prothrombin Gene mutation
+PROTHROMBIN TIME
+Pseudo Cholinesterase (OPC poisoning)
+PTH Intact Molecule - Parathyroid Hormone
+PTTK (APTT)
+Pyrilinks D-Deoxypyridinoline (DPD)
+QBC for malaria
+QUADRAPLE MARKER
+RA Test (Rheumatoid Factor )
+Random Blood Sugar
+Rapid Maleria Test
+RAPID TYPHI IgG/ IgM (CARD TEST)
+RBC - Folate Level
+Real Time PCR Chikungunya Virus Qualitative
+REAL TIME PCR CMV QUALITATIVE
+Real Time PCR Dengue Virus Qualitative
+Real time PCR for Mycobacterium Tuberculosis Complex
+Real Time PCR HBV Quantitative
+Real Time PCR HCV Qualitative
+Real Time PCR HIV DRUG RESISTANCE TEST
+Real Time PCR HIV Proviral DNA Qualitative
+Real time PCR HIV RNA quantitative
+Real Time PCR HPV 16/18 Qualitative
+Real Time PCR HSV I & II Qualitative
+Real time PCR MTB qualitative
+Real Time PCR MTB Quantitative
+Real Time PCR Rubella Qualitative
+Real time PCR test for HLA-B27
+Real Time PCR Torch Qualitative
+Real Time PCR Toxoplasma Qualitative
+Reticulocytes Count
+RH ANTIBODY TITRE SERUM
+Rheumatoid Factor IgA
+Rheumatoid Factor IgG
+Rheumatoid Factor IgG/M/A Screen
+Rheumatoid Factor IgM
+ROMA (Risk of Ovarian Malignancy)
+ROS 1
+Rubella IGG
+Rubella IGM
+Rubella Virus - Avidity
+Schilling Test
+SCRUB TYPHUS IgG & IGM
+SDS Proteinuria Electrophoresis
+Selenium
+Semen Analysis
+ASCITES ALBUMIN GRADIENT (SAAG)
+Bile acid - Total
+Serum CPK MB
+CREATININE
+Serum electrolytes
+IGE
+Serum Immunofixation Electrophoresis (Acid Blue)
+IRON, SERUM
+Serum Osmolality
+Serum S.G.O.T.
+Serum S.G.P.T.
+Serum Sodium
+TIBC SERUM
+Serum Total CPK
+Sex Hormone Binding Globulin
+Sickle Cell Anemia Mutation Analysis
+Sickling Test
+SIROLIMUS BLOOD
+Somatomedin C (IGF-1)
+SPECIFIC GRAVITY(URINE)
+SPORE STRIP REPORT
+SPORE STRIP REPORT
+SPORE STRIP REPORT
+Sputum for Malignant Cells
+SPUTUM ROUTINE
+Stone Analysis
+STOOL EXAMINATION
+STOOL FOR CALPROTECTIN
+STOOL FOR CLOSTRIDIUM DIFFICILE TOXIN (A&B)
+STOOL FOR H. PYLORI ANTIGEN
+STOOL FOR REDUCING SUBSTANCES
+STOOL ROUTINE
+SUDAN STAIN FOR STOOL FAT
+Syphillis Antibody
+Tacrolimus
+Taenia Solium (Cysticercus) lgG
+Taenia Solium (Cysticercus) lgG
+TB GOLD-Interferon Gamma for TB (Qunatiferon)
+TDS
+TESTOSTERONE TOTAL
+Tetanus Toxid lgG
+Thallium
+Theophyline
+Thyroglobulin
+T3+T4+TSH
+Tissue Pathology Report
+Acute Appendicitis
+Tissue Transglutaminase - IgA
+TMPT enzyme activity thiopurine methyl transferase
+TMPT genotype
+TMPT genotype (Thiopurine methyltransferase)
+TNF-Alpha (Tumour Necrosis Factor)
+TORCH PANEL IgG (4 PARAMETER)
+TORCH PANEL IgM & IgG (10 PARAMETER)
+TORCH PANEL IgM & IgG (8 PARAMETER)
+TORCH PANEL IgM (4 PARAMETER)
+Torch Qualitative PCR
+Total Bilirubin
+Total Protein
+Total Protein with Albumin
+TOTAL PSA
+Total T3
+Total T4
+TOXO GONDII - IGG
+TOXO GONDII - IGM
+Toxoplasma gondii - Avidity
+TPHA (TREPONEMA PALLDUM HAEMAGGLUEINATION ASSAY)
+Transferrin
+Triglycerides
+Triple Marker (Second Trimester) Report
+Troponin -I Quantitative
+TROPONIN T
+TSH
+TSH Receptor Antibody
+Typhoid IgG & IgM
+U1RNP ANTIBODIES
+UNCONJUCATED ESTRIOL (E3)
+Urea clearence test
+UREA RANDOM URINE
+Uric Acid (24 Hrs Urine)
+URIC ACID, SERUM
+Urinary Homocystein
+Urinary Microprotein (Spot)
+URINE BS BP
+Urine Creatinine
+URINE DIPSTICK
+Urine for BJ Protein
+Urine for Porphobilinogen ( Porphobilinogen ) qualitative
+Urine for Urobilinogen
+Urine Nicotine
+URINE OSMOLALITY
+Urine PREGNANCY TEST
+URINE PROTEIN CREAT RATIO
+URINE ROUTINE COMPLETE
+URINE SODIUM
+Urine Sugar/Ketone Quantitative
+Urinery Protein Electrophoresis (concentrated)
+USG- Abdomen
+Valporic Acid (Sodium Valproate)
+Vancomycin
+VARICELLA ZOSTER IgG ANTIBODY
+Varicella Zoster IgM (Chicken Pox)
+VDRL (RPR Titre), SERUM
+VDRL
+VENOUS BLOOD GAS
+Vitamin A (Retinol)
+Vitamin B1 (Thiamine)
+Vitamin B12
+Vitamin B2 (Riboflavin)
+Vitamin B3 (Niacin)
+Vitamin B6 (Pyridoxine)
+Vitamin C (Ascorbic Acid)
+Vitamin D3
+VITAMIN E
+Vitamin K
+VMA (Vanillyl Mandelic Acid) - SPOT
+VMA (Vanillyl Mandelic Acid)-(24 hrs)
+Voltage Gated Potassium channel Antibody
+Von Willebrand factor (VWF)
+WEIL FELIX TEST
+WESTERN BLOT TEST ( HIV )
+WIDAL SLIDE TEST
+WIDAL TUBE TEST
+Wuchereria Bancrofti (Filaria) Antigen
+Xray Chest
+Zeil Nielson Stain
+Zinc Serum
