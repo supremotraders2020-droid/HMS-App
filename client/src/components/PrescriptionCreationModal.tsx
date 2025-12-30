@@ -26,407 +26,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send, Printer, ChevronsUpDown, Check, X, Lightbulb } from "lucide-react";
-import type { Prescription, Medicine, ServicePatient } from "@shared/schema";
-
-// Comprehensive list of all available lab tests for suggestions
-const SUGGESTED_TESTS_LIST = [
-  "HISTOPATHOLOGY EXAMINATION (HPE) - SMALL SIZE",
-  "URINARY ALBUMIN CREATINAINE RATIO",
-  "SARS-CoV2 (COVID-19) Rapid Antigen Test",
-  "SARS-CoV2 (COVID-19) Real Time RT PCR Test",
-  "1,25 di-hydroxy Vitamin D",
-  "25-HYDROXY VITAMIN D",
-  "17 KETOSTEROIDS",
-  "17-OH-P",
-  "24 HOUR COPPER, URINE",
-  "24 hr Urinary Sodium",
-  "24 Hrs Urinary Cortisol",
-  "24 Hrs Urinary Creatinine",
-  "24 HRS URINARY PROTEIN",
-  "ABSOLUTE CD4, CD8 COUNT, BLOOD",
-  "ABSOLUTE CD4 COUNT, BLOOD",
-  "ABSOLUTE EOSINOPHIL COUNT",
-  "ABSOLUTE LYMPHOCYTE COUNT, BLOOD",
-  "ABSOLUTE NEUTROPHIL COUNT, WHOLE BLOOD",
-  "Acetaminophen (Paracetamol)",
-  "ACETONE (Ketone), SERUM",
-  "ACETYLE CHOLINE RECEPTOR ANTIBODY",
-  "ACID PHOSPHATASE - PROSTATIC",
-  "ACID PHOSPHATASE - TOTAL",
-  "ADENOSINE DEAMINASE",
-  "ADRENO CORTICOTROPHIC HORMONE",
-  "AFB (ACID FAST BACILLI) STAIN",
-  "AFB CULTURE & SENSITIVITY",
-  "ALPHA FETO PROTEIN (AFP)",
-  "Albumin",
-  "ALBUMIN, FLUID",
-  "ALBUMIN/CREATININE RATIO",
-  "ALKALINE PHOSPHATASE",
-  "Allergy Drug Panel",
-  "Allergy Food Panel (Non-veg)",
-  "Allergy Food Panel (veg)",
-  "Allergy Inhalation Panel",
-  "ALPHA-1-ANTITRYPSIN, SERUM",
-  "ALUMINUM, SERUM",
-  "AMMONIA, SERUM",
-  "AMYLASE, SERUM",
-  "ANA (Anti Nuclear Antibody)",
-  "ANA BLOT ASSAY",
-  "ANA IFA TITRE",
-  "ANCA - C (PR3)",
-  "ANCA - P (MPO)",
-  "ANCA Screen",
-  "ANDROSTEINDIONE",
-  "ANGIOTENSIN CONVERTING ENZYME (ACE)",
-  "ANTI - DSDNA",
-  "Anti GAD antibody",
-  "ANTI CCP Antibody",
-  "ANTI HAV IGM",
-  "Anti HBe",
-  "ANTI HEPATITIS A VIRUS TOTAL",
-  "ANTI HEPATITIS B SURFACE ANTIGEN - TOTAL",
-  "ANTI HISTONE ANTIBODY",
-  "ANTI MITOCHONDRIAL ANTIBODY",
-  "ANTI MULLERIAN HORMONE (AMH)",
-  "ANTI PHOSPHOLIPID ANTIBODIES",
-  "ANTI THROMBIN III ACTIVITY",
-  "ANTI THYROPEROXIDASE ANTIBODY (ANTI TPO)",
-  "APOLIPOPROTEIN - A1",
-  "APOLIPOPROTEIN B",
-  "ARTERIAL BLOOD GAS",
-  "ASO (ANTI STREPTOLYSIN-O) TITRE",
-  "ASPERGILLUS ANTIBODY, IgG",
-  "ASPERGILLUS ANTIBODY, IgM",
-  "AUTOMATED CULTURE & SENSITIVITY",
-  "Basophil count, Absolute",
-  "BCR/ABL QUANTITATIVE",
-  "BETA 2 MICROGLOBULIN",
-  "BETA HCG",
-  "Bicarbonate",
-  "BILIRUBIN TOTAL, DIRECT, INDIRECT",
-  "Renal Function Test",
-  "Biopsy - Complex or Carcinoma",
-  "Biopsy - Large Specimen",
-  "Biopsy - Medium Specimen",
-  "Biopsy - Small Specimen",
-  "Bleeding & Clotting Time",
-  "Blood Glucose 1 hr",
-  "BLOOD GROUP",
-  "Blood sugar - fasting",
-  "Blood sugar - fasting and postprandial",
-  "Blood sugar - postprandial",
-  "BLOOD UREA LEVEL Serum",
-  "BNP (B Type Natriuretic Peptide)",
-  "BODY FLUID CYTOLOGY",
-  "Bone Marrow Aspiration",
-  "BONE MARROW ASPIRATION CYTOLOGY",
-  "BRUCELLA AGGLUTINATION TEST",
-  "BRUCELLA IgG & IgM",
-  "BUN - Blood Urea Nitrogen",
-  "C - Peptide Fasting",
-  "C - REACTIVE PROTEIN (hsCRP)",
-  "C1 Esterase Inhibitor",
-  "CA 125, CANCER MARKER",
-  "CA 15.3 CANCER MARKER",
-  "CA 19.9 CANCER MARKER",
-  "CA 72.4 CANCER MARKER",
-  "Calcitonin",
-  "Calcium (24 Hrs Urine)",
-  "CALCIUM IONIZED",
-  "CALCIUM, SERUM",
-  "CAPD FLUID",
-  "CARBAMAZEPINE",
-  "CARCINO EMBRYONIC ANTIGEN",
-  "CATECHOLAMINES 24 HR URINE",
-  "CD 4 counts",
-  "CD3 CD4 CD8",
-  "CERULOPLASMIN",
-  "CH-50 (Complement Total)",
-  "CHIKUNGUNYA IgG & IgM",
-  "CHIKUNGUNYA IgM",
-  "Chlamydia Qualitative PCR",
-  "Chlamydia Trachomatis IgG",
-  "Chlamydia Trachomatis IgM",
-  "CHLORIDE",
-  "CHOLESTEROL - LDL",
-  "CHOLESTEROL - TOTAL",
-  "CHOLESTEROL HDL-DIRECT",
-  "CHOLINESTERASE",
-  "CHROMOGRANIN - A",
-  "Chromosome Study",
-  "COAGULATION PROFILE",
-  "COMPLEMENT 3 (C3)",
-  "COMPLEMENT-4 (C4), SERUM",
-  "Complete Blood Count (CBC)",
-  "COOMBS DIRECT (DCT), BLOOD",
-  "COOMBS INDIRECT TEST (ICT)",
-  "COPPER, SERUM",
-  "CORTISOL SERUM (3 to 5 PM)",
-  "CORTISOL SERUM (7 to 9 AM)",
-  "COVID-19 Antibody",
-  "C-PEPTIDE",
-  "C-Peptide Fasting / Post Prandial",
-  "Creatinine clearance test",
-  "CREATININE, Random URINE",
-  "CRP (C-REACTIVE PROTEIN)",
-  "CRYOGLOBULINS",
-  "CRYPTOCOCCAL ANTIGEN, CSF",
-  "CRYPTOCOCCAL ANTIGEN, SERUM",
-  "CSF EXAMINATION",
-  "CSF Routine",
-  "CULTURE AND SENSITIVITY - BLOOD",
-  "CULTURE AND SENSITIVITY, BODY FLUIDS",
-  "CULTURE AND SENSITIVITY, PUS",
-  "CULTURE AND SENSITIVITY, STOOL",
-  "CULTURE AND SENSITIVITY, URINE",
-  "CYSTATIN C",
-  "CYTOLOGY REPORT",
-  "Cytomegalo Virus (CMV) - IgG",
-  "CYTOMEGALO VIRUS (CMV) - IgM",
-  "D-Dimer Quantitative Test",
-  "Dehydroepiandrosterone (DHEA)",
-  "Dehydroepiandrosterone Sulphate (DHEAS)",
-  "DENGUE ANTIBODIES (IgG + IgM)",
-  "Dengue NS1 Antigen",
-  "DENGUE PROFILE",
-  "DIGOXINE",
-  "DOUBLE MARKER (1st Trimester)",
-  "ECG",
-  "ELECTROLYTES, SERUM",
-  "ELECTROLYTES 24 HRS URINE",
-  "ENA Screen",
-  "EPSTEIN BARR VIRUS (EBV) PCR",
-  "ER, PR",
-  "ER, PR, HER2",
-  "ER, PR, HER2, MIB1",
-  "Erythrocyte Count (RBC Count)",
-  "Erythropoietin EPO",
-  "ESR (ERYTHROCYTE SEDIMENTATION RATE)",
-  "ESTRADIOL (E2)",
-  "Estriol (E3)",
-  "FACTOR IX",
-  "Factor V Leiden",
-  "FACTOR VII",
-  "FACTOR VIII ACTIVITY, CLOTTING",
-  "FERRITIN REPORT",
-  "Fetal Hemoglobin (HbF)",
-  "FIBRINOGEN CLOTTING ACTIVITY",
-  "Fibrinogen Degradation Product (FDP)",
-  "FILARIA ANTIGEN",
-  "FISH FOR CLL PANEL",
-  "FLUID ROUTINE EXAMINATION",
-  "FNAC",
-  "FNAC from Thyroid swelling",
-  "FOLIC ACID, SERUM",
-  "FREE BETA HCG",
-  "FREE LIGHT CHAINS",
-  "FREE PSA",
-  "FREE T3",
-  "FREE TESTOSTERONE",
-  "FREE THYROXINE (FT4)",
-  "FRUCTOSAMINE",
-  "FSH (FOLLICLE STIMULATING HORMONE)",
-  "FSH/LH RATIO",
-  "FT3, FT4 & TSH",
-  "Fungal Culture",
-  "FUNGAL STAIN (PAS/SM)",
-  "G6PD (Quantitative)",
-  "GALACTOMANNAN (ASPERGILLUS ANTIGEN)",
-  "GASTRIN LEVEL",
-  "GENEXPERT MTB RIFAMPICIN RESISTANCE",
-  "GGT (GAMMA GLUTAMYL TRANSFERASE)",
-  "GLIADIN ANTIBODY (IgA)",
-  "GLIADIN ANTIBODY (IgG)",
-  "Globulin",
-  "GLOMERULAR FILTRATION RATE (EGFR)",
-  "Glucose Tolerance Test (GTT)",
-  "GRAM STAIN",
-  "GROWTH HORMONE",
-  "H1N1 (SWINE FLU) PCR",
-  "Haemoglobin",
-  "HB ELECTROPHORESIS",
-  "HbA1C (GLYCOSYLATED HAEMOGLOBIN)",
-  "HBsAg (Australia Antigen)",
-  "HCV antibody",
-  "Helicobacter Pylori - IgG",
-  "Helicobacter Pylori - IgA",
-  "Hepatitis B DNA Viral Load PCR",
-  "HEPATITIS B SURFACE ANTIBODY",
-  "HEPATITIS B VIRUS ENVELOPE ANTIGEN (HBeAg)",
-  "HEPATITIS C ANTIBODY (ANTI HCV)",
-  "HEPATITIS C VIRUS QUANTITATIVE PCR",
-  "Hepatitis C Virus-Genotyping",
-  "HEPATITIS E VIRUS - IgM (HEV IgM)",
-  "HERPES SIMPLEX VIRUS (HSV 1 & 2) IgG",
-  "HERPES SIMPLEX VIRUS (HSV 1 & 2) IgM",
-  "HIGH RESOLUTION CHROMOSOME STUDY",
-  "Histopathology",
-  "HIV 1 & 2 antibodies",
-  "HIV COMBI-Elisa",
-  "HIV I & II - Rapid/Tridot",
-  "HIV Viral load",
-  "HLA TYPING (A,B,DR)",
-  "HOMA IR (INSULIN RESISTANCE INDEX)",
-  "Homocysteine, Serum",
-  "IGF BP3",
-  "IHC Markers Panel",
-  "Immunofixation Electrophoresis",
-  "Immunoglobulin A (IgA)",
-  "Immunoglobulin G (IgG)",
-  "Immunoglobulin M (IgM)",
-  "INHIBIN A, SERUM",
-  "Inhibin B",
-  "Insulin-Like Growth Factor-I (IGF-I)",
-  "Insulin (Fasting)",
-  "Insulin (Random)",
-  "Insulin (post prandial)",
-  "Interleukin 6",
-  "IRON, TIBC & % TSA",
-  "ISLET CELL ANTIBODY",
-  "JAK 2 MUTATION BY PCR",
-  "KARYOTYPING",
-  "Karyotyping for Amniotic Fluid",
-  "Karyotyping for Bone Marrow",
-  "KOH Mount",
-  "Lactate",
-  "Lactate Dehydrogenase (LDH)",
-  "LDH, FLUID",
-  "LE Cell Detection",
-  "LEAD LEVEL - BLOOD",
-  "Leishmania antibody (Kala Azar)",
-  "LEPTIN, SERUM",
-  "LEPTOSPIRA IgG IgM",
-  "Leucocyte Count",
-  "LH (Luteinising Hormone)",
-  "LIPASE, SERUM",
-  "LIPID PROFILE REPORT",
-  "LIPOPROTEIN (A)",
-  "LITHIUM",
-  "LFT (Liver Function Test)",
-  "Liver-Kidney Microsome (LKM) Antibody",
-  "LUPUS ANTICOAGULANT",
-  "MAGNESIUM, SERUM",
-  "Magnesium (24 hrs urine)",
-  "Malaria By PCR",
-  "Malarial Antigen (Vivax and Falciparum Rapid)",
-  "MANTOUX TEST (Tuberculin Test)",
-  "MATERNAL SCREENING - DUAL MARKER",
-  "MEAN PLATELET VOLUME",
-  "MEASLES (RUBEOLA) IgG ANTIBODY",
-  "Measles (Rubeola) Antibody IgM",
-  "METANEPHRINE (QUANTITATIVE)",
-  "MICROALBUMIN URINE (Spot)",
-  "MICROFILARIA SMEAR, BLOOD",
-  "MICROPROTEIN, CSF",
-  "MONO TEST (INFECTIOUS MONONUCLEOSIS)",
-  "MTB RNA Qualitative PCR",
-  "MTHFR",
-  "Mumps Virus Antibody IgG",
-  "Mumps Virus Antibody IgM",
-  "Mycoplasma Antibody IgG",
-  "Mycoplasma Pneumoniae IgM",
-  "Myeloperoxidase (MPO)",
-  "Myoglobin",
-  "Natural killer cells (NKC)",
-  "NT-Pro BNP",
-  "OCCULT BLOOD",
-  "OGCT Oral Glucose Challenge Test",
-  "Oligoclonal bands in CSF",
-  "Osmatic Fragility",
-  "Osteocalcin",
-  "PAP Smear Cytology",
-  "PAPP-A",
-  "PAP-Prostatic Acid Phosphatase",
-  "Parvovirus IgG",
-  "Parvovirus IgM",
-  "PBS FOR MALARIAL PARASITE",
-  "Peripheral Smear Examination (PS)",
-  "pH",
-  "PHENYTOIN / DILANTIN",
-  "PHOSPHORUS, SERUM",
-  "Platelet Antibodies",
-  "Platelet Count",
-  "PNH test",
-  "PORPHYRINS TOTAL, QUANTITATIVE",
-  "POTASSIUM, SERUM",
-  "PROCALCITONIN",
-  "Progesterone",
-  "Prolactin",
-  "Protein C",
-  "PROTEIN ELECTROPHORESIS",
-  "Protein S",
-  "PROTHROMBIN TIME",
-  "Pseudo Cholinesterase",
-  "PTH Intact Molecule - Parathyroid Hormone",
-  "PTTK (APTT)",
-  "QBC for malaria",
-  "QUADRUPLE MARKER",
-  "RA Test (Rheumatoid Factor)",
-  "Random Blood Sugar",
-  "Rapid Malaria Test",
-  "RAPID TYPHI IgG/IgM",
-  "RBC - Folate Level",
-  "Real Time PCR HBV Quantitative",
-  "Real Time PCR HCV Qualitative",
-  "Real time PCR HIV RNA quantitative",
-  "Real Time PCR HPV 16/18",
-  "Real Time PCR HSV I & II",
-  "Reticulocytes Count",
-  "RH ANTIBODY TITRE",
-  "Rheumatoid Factor IgA",
-  "Rheumatoid Factor IgG",
-  "Rheumatoid Factor IgM",
-  "ROMA (Risk of Ovarian Malignancy)",
-  "Rubella IgG",
-  "Rubella IgM",
-  "SCRUB TYPHUS IgG & IgM",
-  "Selenium",
-  "Semen Analysis",
-  "ASCITES ALBUMIN GRADIENT (SAAG)",
-  "Bile acid - Total",
-  "Serum CPK MB",
-  "CREATININE",
-  "Serum electrolytes",
-  "IgE",
-  "Serum Immunofixation Electrophoresis",
-  "IRON, SERUM",
-  "Serum Osmolality",
-  "Serum S.G.O.T.",
-  "Serum S.G.P.T.",
-  "Serum Sodium",
-  "TIBC SERUM",
-  "Serum Total CPK",
-  "Sex Hormone Binding Globulin (SHBG)",
-  "Sickle cell Screening",
-  "Sodium, Serum",
-  "Stool Routine",
-  "T3 (Triiodothyronine)",
-  "T4 (Thyroxine)",
-  "TESTOSTERONE",
-  "THYROGLOBULIN",
-  "THYROID PROFILE (T3, T4, TSH)",
-  "Tissue Transglutaminase Antibody",
-  "TORCH Panel - IgG",
-  "TORCH Panel - IgM",
-  "Total Protein",
-  "Toxoplasma IgG",
-  "Toxoplasma IgM",
-  "Transferrin",
-  "Triglycerides",
-  "Triple Marker",
-  "Troponin I",
-  "Troponin T",
-  "TSH (Thyroid Stimulating Hormone)",
-  "URIC ACID",
-  "Urine Routine",
-  "Urine Culture",
-  "VDRL",
-  "VMA (Vanillyl Mandelic Acid)",
-  "Vitamin B12",
-  "Widal Test",
-  "Zinc",
-];
+import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send, Printer, ChevronsUpDown, Check, X, Lightbulb, Filter } from "lucide-react";
+import type { Prescription, Medicine, ServicePatient, LabTestCatalog } from "@shared/schema";
 
 interface MedicineItem {
   medicineName: string;
@@ -575,6 +176,7 @@ export default function PrescriptionCreationModal({
   const [suggestedTests, setSuggestedTests] = useState<string[]>([]);
   const [suggestedTestsOpen, setSuggestedTestsOpen] = useState(false);
   const [suggestedTestsSearch, setSuggestedTestsSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [followUpDate, setFollowUpDate] = useState('');
   
   // Medicine search
@@ -590,6 +192,40 @@ export default function PrescriptionCreationModal({
     queryKey: ['/api/medicines'],
     enabled: medicineSearch.length > 1
   });
+
+  // Fetch all lab tests from the pathology module for suggested tests
+  const { data: labTestCatalog = [], isLoading: isLoadingLabTests } = useQuery<LabTestCatalog[]>({
+    queryKey: ['/api/lab-tests'],
+  });
+
+  // Get unique categories from lab tests
+  const testCategories = useMemo(() => {
+    const categories = new Set(labTestCatalog.map(test => test.testCategory));
+    return ['all', ...Array.from(categories).sort()];
+  }, [labTestCatalog]);
+
+  // Filter lab tests by category and search
+  const filteredLabTests = useMemo(() => {
+    return labTestCatalog.filter(test => {
+      const matchesCategory = selectedCategory === 'all' || test.testCategory === selectedCategory;
+      const matchesSearch = suggestedTestsSearch === '' || 
+        test.testName.toLowerCase().includes(suggestedTestsSearch.toLowerCase()) ||
+        test.testCode.toLowerCase().includes(suggestedTestsSearch.toLowerCase());
+      return matchesCategory && matchesSearch && test.isActive;
+    });
+  }, [labTestCatalog, selectedCategory, suggestedTestsSearch]);
+
+  // Group filtered tests by category for display
+  const groupedTests = useMemo(() => {
+    const groups: Record<string, LabTestCatalog[]> = {};
+    filteredLabTests.forEach(test => {
+      if (!groups[test.testCategory]) {
+        groups[test.testCategory] = [];
+      }
+      groups[test.testCategory].push(test);
+    });
+    return groups;
+  }, [filteredLabTests]);
 
   // Filter medicines based on search
   const filteredMedicines = medicineDatabase.filter(med => 
@@ -749,7 +385,9 @@ export default function PrescriptionCreationModal({
     setDietAdvice('');
     setActivityAdvice('');
     setInvestigations('');
-    setSuggestedTest('');
+    setSuggestedTests([]);
+    setSuggestedTestsSearch('');
+    setSelectedCategory('all');
     setFollowUpDate('');
   };
 
@@ -1269,8 +907,26 @@ export default function PrescriptionCreationModal({
                       <Label className="text-base font-medium">Suggested Tests</Label>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
-                      Select lab tests to recommend for additional diagnosis. Search from {SUGGESTED_TESTS_LIST.length}+ available tests.
+                      Select lab tests to recommend for additional diagnosis. Search from {labTestCatalog.length}+ available tests synced from Pathology module.
                     </p>
+
+                    {/* Category Filter */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <Filter className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-sm">Filter by Category:</Label>
+                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger className="w-[200px]" data-testid="select-test-category">
+                          <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {testCategories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category === 'all' ? 'All Categories' : category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     
                     <Popover open={suggestedTestsOpen} onOpenChange={setSuggestedTestsOpen}>
                       <PopoverTrigger asChild>
@@ -1280,51 +936,64 @@ export default function PrescriptionCreationModal({
                           aria-expanded={suggestedTestsOpen}
                           className="w-full justify-between h-auto min-h-[40px] text-left"
                           data-testid="button-suggested-tests-dropdown"
+                          disabled={isLoadingLabTests}
                         >
-                          {suggestedTests.length > 0 
-                            ? `${suggestedTests.length} test${suggestedTests.length > 1 ? 's' : ''} selected`
-                            : "Search and select tests..."}
+                          {isLoadingLabTests ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Loading tests...
+                            </span>
+                          ) : suggestedTests.length > 0 ? (
+                            `${suggestedTests.length} test${suggestedTests.length > 1 ? 's' : ''} selected`
+                          ) : (
+                            "Search and select tests..."
+                          )}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
                         <Command>
                           <CommandInput 
-                            placeholder="Search tests..." 
+                            placeholder="Search tests by name or code..." 
                             value={suggestedTestsSearch}
                             onValueChange={setSuggestedTestsSearch}
                             data-testid="input-suggested-tests-search"
                           />
-                          <CommandList className="max-h-[300px]">
-                            <CommandEmpty>No tests found.</CommandEmpty>
-                            <CommandGroup>
-                              {SUGGESTED_TESTS_LIST
-                                .filter(test => 
-                                  test.toLowerCase().includes(suggestedTestsSearch.toLowerCase())
-                                )
-                                .slice(0, 50)
-                                .map((test) => (
+                          <CommandList className="max-h-[350px]">
+                            <CommandEmpty>No tests found. Try a different search or category.</CommandEmpty>
+                            {Object.entries(groupedTests).slice(0, 10).map(([category, tests]) => (
+                              <CommandGroup key={category} heading={category}>
+                                {tests.slice(0, 15).map((test) => (
                                   <CommandItem
-                                    key={test}
-                                    value={test}
+                                    key={test.id}
+                                    value={test.testName}
                                     onSelect={() => {
                                       setSuggestedTests(prev => 
-                                        prev.includes(test)
-                                          ? prev.filter(t => t !== test)
-                                          : [...prev, test]
+                                        prev.includes(test.testName)
+                                          ? prev.filter(t => t !== test.testName)
+                                          : [...prev, test.testName]
                                       );
                                     }}
-                                    data-testid={`option-test-${test.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
+                                    data-testid={`option-test-${test.testCode}`}
                                   >
                                     <Check
                                       className={`mr-2 h-4 w-4 ${
-                                        suggestedTests.includes(test) ? "opacity-100" : "opacity-0"
+                                        suggestedTests.includes(test.testName) ? "opacity-100" : "opacity-0"
                                       }`}
                                     />
-                                    <span className="truncate">{test}</span>
+                                    <div className="flex flex-col">
+                                      <span className="truncate font-medium">{test.testName}</span>
+                                      <span className="text-xs text-muted-foreground">{test.testCode} - {test.sampleType}</span>
+                                    </div>
                                   </CommandItem>
                                 ))}
-                            </CommandGroup>
+                              </CommandGroup>
+                            ))}
+                            {Object.keys(groupedTests).length === 0 && filteredLabTests.length === 0 && !isLoadingLabTests && (
+                              <div className="p-4 text-center text-sm text-muted-foreground">
+                                No tests match your search criteria
+                              </div>
+                            )}
                           </CommandList>
                         </Command>
                       </PopoverContent>
@@ -1336,21 +1005,21 @@ export default function PrescriptionCreationModal({
                           Selected Tests ({suggestedTests.length}):
                         </Label>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {suggestedTests.map((test) => (
+                          {suggestedTests.map((testName) => (
                             <Badge
-                              key={test}
+                              key={testName}
                               variant="secondary"
                               className="flex items-center gap-1 px-2 py-1"
-                              data-testid={`badge-selected-test-${test.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
+                              data-testid={`badge-selected-test-${testName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
                             >
-                              <span className="truncate max-w-[200px]">{test}</span>
+                              <span className="truncate max-w-[200px]">{testName}</span>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
                                 className="h-4 w-4 p-0 ml-1"
-                                onClick={() => setSuggestedTests(prev => prev.filter(t => t !== test))}
-                                data-testid={`button-remove-test-${test.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
+                                onClick={() => setSuggestedTests(prev => prev.filter(t => t !== testName))}
+                                data-testid={`button-remove-test-${testName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
                               >
                                 <X className="h-3 w-3" />
                               </Button>
