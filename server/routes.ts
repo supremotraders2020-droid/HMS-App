@@ -245,7 +245,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login endpoint - fetch user by username, verify hashed password
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { username, password, role } = req.body;
+      const { username: rawUsername, password, role } = req.body;
+      const username = rawUsername?.trim();
       
       if (!username || !role) {
         return res.status(400).json({ error: "Username and role are required" });
@@ -255,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Password is required" });
       }
       
-      // Find user in database
+      // Find user in database (trimmed username)
       const user = await databaseStorage.getUserByUsername(username);
       
       if (!user) {
