@@ -3580,18 +3580,28 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async ensureLabTestOrderSequence(): Promise<void> {
+    // Create sequence if it doesn't exist - safe to call multiple times
+    await db.execute(sql`CREATE SEQUENCE IF NOT EXISTS lab_test_order_seq START 1`);
+  }
+
   async createLabTestOrdersBatch(ordersWithoutNumbers: Omit<InsertLabTestOrder, "orderNumber">[]): Promise<LabTestOrder[]> {
     // Use transaction for atomic batch insert - all succeed or all fail
-    // Order numbers are generated inside transaction to ensure uniqueness
+    // Uses PostgreSQL sequence for concurrency-safe unique order numbers
     const createdOrders = await db.transaction(async (tx) => {
-      // Count existing orders inside transaction to ensure accurate numbering
-      const [countResult] = await tx.select({ count: sql<number>`count(*)::int` }).from(labTestOrders);
-      let orderCount = countResult?.count ?? 0;
-      
       const results: LabTestOrder[] = [];
+      const year = new Date().getFullYear();
+      
       for (const order of ordersWithoutNumbers) {
-        orderCount++;
-        const orderNumber = `LAB-${new Date().getFullYear()}-${String(orderCount).padStart(4, '0')}`;
+        // Use nextval() for guaranteed unique sequential numbers under concurrency
+        // Drizzle execute returns { rows: [...] } format
+        const seqResult = await tx.execute(sql`SELECT nextval('lab_test_order_seq') as seq_num`);
+        const seqNum = Number((seqResult.rows as any[])[0]?.seq_num ?? 0);
+        if (!seqNum) {
+          throw new Error("Failed to generate order number from sequence");
+        }
+        const orderNumber = `LAB-${year}-${String(seqNum).padStart(6, '0')}`;
+        
         const [created] = await tx.insert(labTestOrders).values({ ...order, orderNumber }).returning();
         results.push(created);
       }
