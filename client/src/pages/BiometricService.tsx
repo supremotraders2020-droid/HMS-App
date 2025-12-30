@@ -690,6 +690,7 @@ export default function BiometricService() {
     setIsScanning(true);
     setIsProcessing(true);
     setScanProgress(0);
+    setRecognitionResult(null);
     
     const progressInterval = setInterval(() => {
       setScanProgress(prev => Math.min(prev + 10, 90));
@@ -717,7 +718,14 @@ export default function BiometricService() {
         const rawDescriptor = Array.from(detection.descriptor) as number[];
         const normalizedDescriptor = l2Normalize(rawDescriptor);
         setFaceDescriptor(normalizedDescriptor);
-        toast({ title: "Face captured for verification" });
+        toast({ title: "Face captured, searching for match..." });
+        
+        matchMutation.mutate({
+          embeddingVector: normalizedDescriptor,
+          userType: selectedUserType,
+          purpose: "VERIFICATION",
+          location: "BIOMETRIC_SERVICE",
+        });
       } else {
         toast({ title: "No face detected", variant: "destructive" });
       }
@@ -731,7 +739,7 @@ export default function BiometricService() {
       setIsProcessing(false);
       setScanProgress(0);
     }, 500);
-  }, [isModelLoaded, toast, l2Normalize]);
+  }, [isModelLoaded, toast, l2Normalize, selectedUserType, matchMutation]);
 
   const handleSaveEmbedding = () => {
     if (!faceDescriptor || !selectedUserId) {
@@ -1538,12 +1546,26 @@ export default function BiometricService() {
                   <div className="flex gap-2">
                     <Button 
                       onClick={captureAndVerifyFace}
-                      disabled={!isVerifyCapturing || isProcessing}
-                      className="flex-1"
+                      disabled={!isVerifyCapturing || isProcessing || matchMutation.isPending}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
                       data-testid="button-verify-capture"
                     >
-                      <ScanFace className="mr-2 h-4 w-4" />
-                      Scan Face
+                      {matchMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Matching...
+                        </>
+                      ) : isProcessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Scanning...
+                        </>
+                      ) : (
+                        <>
+                          <ScanFace className="mr-2 h-4 w-4" />
+                          Scan Face
+                        </>
+                      )}
                     </Button>
                     <Button 
                       onClick={handleFaceRecognition}
@@ -1574,7 +1596,15 @@ export default function BiometricService() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {recognitionResult ? (
+                  {matchMutation.isPending ? (
+                    <div className="h-64 flex items-center justify-center">
+                      <div className="text-center">
+                        <Loader2 className="h-16 w-16 mx-auto mb-4 text-blue-600 animate-spin" />
+                        <p className="text-slate-600 dark:text-slate-300 font-medium">Searching database...</p>
+                        <p className="text-sm text-slate-400 mt-1">Comparing face against {selectedUserType.toLowerCase()} records</p>
+                      </div>
+                    </div>
+                  ) : recognitionResult ? (
                     <div className="space-y-4">
                       <div className={`p-6 rounded-lg text-center ${
                         recognitionResult.matched 
