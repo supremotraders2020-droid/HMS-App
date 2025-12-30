@@ -321,7 +321,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         )}
       </Route>
       <Route path="/hospital-services">
-        <HospitalServices />
+        <HospitalServices currentUserRole={currentUser.role} currentUserId={currentUser.id} />
       </Route>
 
       {/* Prescriptions Route - for OPD Manager and Doctor */}
