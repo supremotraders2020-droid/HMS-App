@@ -897,150 +897,208 @@ export default function PrescriptionCreationModal({
               </Card>
             </TabsContent>
 
-            {/* Suggested Test Tab */}
+            {/* Suggested Test Tab - Modern Card UI */}
             <TabsContent value="suggested-test" className="space-y-4">
-              <Card>
-                <CardContent className="pt-6 space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Lightbulb className="h-4 w-4 text-yellow-500" />
-                      <Label className="text-base font-medium">Suggested Tests</Label>
+              {/* Header Card with Gradient */}
+              <Card className="border-0 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-yellow-500/20">
+                      <Lightbulb className="h-5 w-5 text-yellow-500" />
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Select lab tests to recommend for additional diagnosis. Search from {labTestCatalog.length}+ available tests synced from Pathology module.
-                    </p>
-
-                    {/* Category Filter */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <Filter className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-sm">Filter by Category:</Label>
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger className="w-[200px]" data-testid="select-test-category">
-                          <SelectValue placeholder="All Categories" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {testCategories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category === 'all' ? 'All Categories' : category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div>
+                      <h3 className="text-lg font-semibold">Suggested Tests</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Select lab tests to recommend for additional diagnosis. Search from {labTestCatalog.length}+ available tests synced from Pathology module.
+                      </p>
                     </div>
-                    
-                    <Popover open={suggestedTestsOpen} onOpenChange={setSuggestedTestsOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={suggestedTestsOpen}
-                          className="w-full justify-between h-auto min-h-[40px] text-left"
-                          data-testid="button-suggested-tests-dropdown"
-                          disabled={isLoadingLabTests}
-                        >
-                          {isLoadingLabTests ? (
-                            <span className="flex items-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Loading tests...
-                            </span>
-                          ) : suggestedTests.length > 0 ? (
-                            `${suggestedTests.length} test${suggestedTests.length > 1 ? 's' : ''} selected`
-                          ) : (
-                            "Search and select tests..."
-                          )}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
-                        <Command>
-                          <CommandInput 
-                            placeholder="Search tests by name or code..." 
-                            value={suggestedTestsSearch}
-                            onValueChange={setSuggestedTestsSearch}
-                            data-testid="input-suggested-tests-search"
-                          />
-                          <CommandList className="max-h-[350px]">
-                            <CommandEmpty>No tests found. Try a different search or category.</CommandEmpty>
-                            {Object.entries(groupedTests).slice(0, 10).map(([category, tests]) => (
-                              <CommandGroup key={category} heading={category}>
-                                {tests.slice(0, 15).map((test) => (
-                                  <CommandItem
-                                    key={test.id}
-                                    value={test.testName}
-                                    onSelect={() => {
-                                      setSuggestedTests(prev => 
-                                        prev.includes(test.testName)
-                                          ? prev.filter(t => t !== test.testName)
-                                          : [...prev, test.testName]
-                                      );
-                                    }}
-                                    data-testid={`option-test-${test.testCode}`}
-                                  >
-                                    <Check
-                                      className={`mr-2 h-4 w-4 ${
-                                        suggestedTests.includes(test.testName) ? "opacity-100" : "opacity-0"
-                                      }`}
-                                    />
-                                    <div className="flex flex-col">
-                                      <span className="truncate font-medium">{test.testName}</span>
-                                      <span className="text-xs text-muted-foreground">{test.testCode} - {test.sampleType}</span>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            ))}
-                            {Object.keys(groupedTests).length === 0 && filteredLabTests.length === 0 && !isLoadingLabTests && (
-                              <div className="p-4 text-center text-sm text-muted-foreground">
-                                No tests match your search criteria
-                              </div>
-                            )}
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-
-                    {suggestedTests.length > 0 && (
-                      <div className="mt-4">
-                        <Label className="text-sm text-muted-foreground mb-2 block">
-                          Selected Tests ({suggestedTests.length}):
-                        </Label>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {suggestedTests.map((testName) => (
-                            <Badge
-                              key={testName}
-                              variant="secondary"
-                              className="flex items-center gap-1 px-2 py-1"
-                              data-testid={`badge-selected-test-${testName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
-                            >
-                              <span className="truncate max-w-[200px]">{testName}</span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-4 w-4 p-0 ml-1"
-                                onClick={() => setSuggestedTests(prev => prev.filter(t => t !== testName))}
-                                data-testid={`button-remove-test-${testName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </Badge>
-                          ))}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="mt-2"
-                          onClick={() => setSuggestedTests([])}
-                          data-testid="button-clear-all-tests"
-                        >
-                          Clear All
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Filter & Search Card */}
+              <Card>
+                <CardContent className="pt-4 space-y-4">
+                  {/* Category Filter */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-md bg-muted">
+                        <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                      <Label className="text-sm font-medium">Filter by Category:</Label>
+                    </div>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="w-[200px]" data-testid="select-test-category">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {testCategories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category === 'all' ? 'All Categories' : category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedCategory !== 'all' && (
+                      <Badge variant="outline" className="bg-primary/10">
+                        {filteredLabTests.length} tests in category
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {/* Search Dropdown */}
+                  <Popover open={suggestedTestsOpen} onOpenChange={setSuggestedTestsOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={suggestedTestsOpen}
+                        className="w-full justify-between h-auto min-h-[44px] text-left border-dashed hover:border-primary/50 transition-colors"
+                        data-testid="button-suggested-tests-dropdown"
+                        disabled={isLoadingLabTests}
+                      >
+                        {isLoadingLabTests ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Loading tests...
+                          </span>
+                        ) : suggestedTests.length > 0 ? (
+                          <span className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            {suggestedTests.length} test{suggestedTests.length > 1 ? 's' : ''} selected
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2 text-muted-foreground">
+                            <Plus className="h-4 w-4" />
+                            Click to search and select tests...
+                          </span>
+                        )}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search tests by name or code..." 
+                          value={suggestedTestsSearch}
+                          onValueChange={setSuggestedTestsSearch}
+                          data-testid="input-suggested-tests-search"
+                        />
+                        <CommandList className="max-h-[350px]">
+                          <CommandEmpty>No tests found. Try a different search or category.</CommandEmpty>
+                          {Object.entries(groupedTests).slice(0, 10).map(([category, tests]) => (
+                            <CommandGroup key={category} heading={category}>
+                              {tests.slice(0, 15).map((test) => (
+                                <CommandItem
+                                  key={test.id}
+                                  value={test.testName}
+                                  onSelect={() => {
+                                    setSuggestedTests(prev => 
+                                      prev.includes(test.testName)
+                                        ? prev.filter(t => t !== test.testName)
+                                        : [...prev, test.testName]
+                                    );
+                                  }}
+                                  data-testid={`option-test-${test.testCode}`}
+                                  className="cursor-pointer"
+                                >
+                                  <div className={`mr-2 h-4 w-4 rounded-sm border flex items-center justify-center ${
+                                    suggestedTests.includes(test.testName) 
+                                      ? "bg-primary border-primary" 
+                                      : "border-muted-foreground/30"
+                                  }`}>
+                                    {suggestedTests.includes(test.testName) && (
+                                      <Check className="h-3 w-3 text-primary-foreground" />
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col flex-1">
+                                    <span className="truncate font-medium">{test.testName}</span>
+                                    <span className="text-xs text-muted-foreground">{test.testCode} - {test.sampleType}</span>
+                                  </div>
+                                  <Badge variant="outline" className="ml-2 text-xs shrink-0">
+                                    {test.price}
+                                  </Badge>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          ))}
+                          {Object.keys(groupedTests).length === 0 && filteredLabTests.length === 0 && !isLoadingLabTests && (
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              No tests match your search criteria
+                            </div>
+                          )}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </CardContent>
+              </Card>
+
+              {/* Selected Tests Display */}
+              {suggestedTests.length > 0 && (
+                <Card className="border-green-500/30 bg-gradient-to-r from-green-500/5 to-transparent">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-md bg-green-500/20">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        </div>
+                        <CardTitle className="text-base">Selected Tests ({suggestedTests.length})</CardTitle>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSuggestedTests([])}
+                        data-testid="button-clear-all-tests"
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-3 w-3 mr-1" />
+                        Clear All
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-2">
+                    <div className="flex flex-wrap gap-2">
+                      {suggestedTests.map((testName) => (
+                        <Badge
+                          key={testName}
+                          variant="secondary"
+                          className="flex items-center gap-1 px-3 py-1.5 bg-background border hover:bg-muted transition-colors"
+                          data-testid={`badge-selected-test-${testName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
+                        >
+                          <span className="truncate max-w-[200px]">{testName}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 p-0 ml-1 hover:bg-destructive/20 rounded-full"
+                            onClick={() => setSuggestedTests(prev => prev.filter(t => t !== testName))}
+                            data-testid={`button-remove-test-${testName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Empty State */}
+              {suggestedTests.length === 0 && !isLoadingLabTests && (
+                <Card className="border-dashed">
+                  <CardContent className="py-8 text-center">
+                    <div className="p-3 rounded-full bg-muted w-fit mx-auto mb-3">
+                      <Lightbulb className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground">No tests selected yet</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Use the search above to find and select lab tests to recommend
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         </ScrollArea>
