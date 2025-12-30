@@ -1635,8 +1635,12 @@ export default function BiometricService() {
                             </div>
                           )}
                           <div className="flex justify-between">
+                            <span className="text-slate-500">User Name</span>
+                            <span className="font-semibold text-slate-900 dark:text-white">{getUserName(recognitionResult.matchedUserId)}</span>
+                          </div>
+                          <div className="flex justify-between">
                             <span className="text-slate-500">User ID</span>
-                            <span className="font-mono text-slate-900 dark:text-white">{recognitionResult.matchedUserId}</span>
+                            <span className="font-mono text-slate-900 dark:text-white text-xs">{recognitionResult.matchedUserId}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-slate-500">User Type</span>
