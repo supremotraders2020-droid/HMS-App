@@ -3888,3 +3888,44 @@ export const insertPatientReferralSchema = createInsertSchema(patientReferrals).
 });
 export type InsertPatientReferral = z.infer<typeof insertPatientReferralSchema>;
 export type PatientReferral = typeof patientReferrals.$inferSelect;
+
+// Hospital Service Departments - Categories of hospital services
+export const hospitalServiceDepartments = pgTable("hospital_service_departments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  iconKey: text("icon_key").default("Stethoscope"),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertHospitalServiceDepartmentSchema = createInsertSchema(hospitalServiceDepartments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHospitalServiceDepartment = z.infer<typeof insertHospitalServiceDepartmentSchema>;
+export type HospitalServiceDepartment = typeof hospitalServiceDepartments.$inferSelect;
+
+// Hospital Services - Individual services offered by each department
+export const hospitalServices = pgTable("hospital_services", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  departmentId: varchar("department_id").notNull(),
+  name: text("name").notNull(),
+  code: text("code"),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertHospitalServiceSchema = createInsertSchema(hospitalServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHospitalService = z.infer<typeof insertHospitalServiceSchema>;
+export type HospitalService = typeof hospitalServices.$inferSelect;

@@ -107,6 +107,7 @@ import {
   type InsuranceProviderChecklist, type InsertInsuranceProviderChecklist,
   faceEmbeddings, biometricConsent, faceRecognitionLogs, faceAttendance, faceRecognitionSettings, duplicatePatientAlerts,
   referralSources, patientReferrals,
+  hospitalServiceDepartments, hospitalServices,
   type FaceEmbedding, type InsertFaceEmbedding,
   type BiometricConsent, type InsertBiometricConsent,
   type FaceRecognitionLog, type InsertFaceRecognitionLog,
@@ -114,7 +115,9 @@ import {
   type FaceRecognitionSetting, type InsertFaceRecognitionSetting,
   type DuplicatePatientAlert, type InsertDuplicatePatientAlert,
   type ReferralSource, type InsertReferralSource,
-  type PatientReferral, type InsertPatientReferral
+  type PatientReferral, type InsertPatientReferral,
+  type HospitalServiceDepartment, type InsertHospitalServiceDepartment,
+  type HospitalService, type InsertHospitalService
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -4338,6 +4341,206 @@ export class DatabaseStorage implements IStorage {
   async deletePatientReferral(id: string): Promise<boolean> {
     const result = await db.delete(patientReferrals).where(eq(patientReferrals.id, id)).returning();
     return result.length > 0;
+  }
+
+  // ========== HOSPITAL SERVICE DEPARTMENT METHODS ==========
+  async createHospitalServiceDepartment(department: InsertHospitalServiceDepartment): Promise<HospitalServiceDepartment> {
+    const result = await db.insert(hospitalServiceDepartments).values(department).returning();
+    return result[0];
+  }
+
+  async getHospitalServiceDepartments(): Promise<HospitalServiceDepartment[]> {
+    return await db.select().from(hospitalServiceDepartments).orderBy(hospitalServiceDepartments.displayOrder);
+  }
+
+  async getHospitalServiceDepartment(id: string): Promise<HospitalServiceDepartment | undefined> {
+    const result = await db.select().from(hospitalServiceDepartments).where(eq(hospitalServiceDepartments.id, id));
+    return result[0];
+  }
+
+  async getHospitalServiceDepartmentBySlug(slug: string): Promise<HospitalServiceDepartment | undefined> {
+    const result = await db.select().from(hospitalServiceDepartments).where(eq(hospitalServiceDepartments.slug, slug));
+    return result[0];
+  }
+
+  async updateHospitalServiceDepartment(id: string, updates: Partial<InsertHospitalServiceDepartment>): Promise<HospitalServiceDepartment | undefined> {
+    const result = await db.update(hospitalServiceDepartments).set({ ...updates, updatedAt: new Date() }).where(eq(hospitalServiceDepartments.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteHospitalServiceDepartment(id: string): Promise<boolean> {
+    const result = await db.delete(hospitalServiceDepartments).where(eq(hospitalServiceDepartments.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ========== HOSPITAL SERVICE METHODS ==========
+  async createHospitalService(service: InsertHospitalService): Promise<HospitalService> {
+    const result = await db.insert(hospitalServices).values(service).returning();
+    return result[0];
+  }
+
+  async getHospitalServices(departmentId?: string): Promise<HospitalService[]> {
+    if (departmentId) {
+      return await db.select().from(hospitalServices).where(eq(hospitalServices.departmentId, departmentId)).orderBy(hospitalServices.name);
+    }
+    return await db.select().from(hospitalServices).orderBy(hospitalServices.name);
+  }
+
+  async getHospitalService(id: string): Promise<HospitalService | undefined> {
+    const result = await db.select().from(hospitalServices).where(eq(hospitalServices.id, id));
+    return result[0];
+  }
+
+  async updateHospitalService(id: string, updates: Partial<InsertHospitalService>): Promise<HospitalService | undefined> {
+    const result = await db.update(hospitalServices).set({ ...updates, updatedAt: new Date() }).where(eq(hospitalServices.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteHospitalService(id: string): Promise<boolean> {
+    const result = await db.delete(hospitalServices).where(eq(hospitalServices.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async bulkCreateHospitalServices(services: InsertHospitalService[]): Promise<HospitalService[]> {
+    if (services.length === 0) return [];
+    const result = await db.insert(hospitalServices).values(services).returning();
+    return result;
+  }
+
+  async seedHospitalServices(): Promise<void> {
+    const existingDepts = await db.select().from(hospitalServiceDepartments).limit(1);
+    if (existingDepts.length > 0) {
+      console.log("Hospital services already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding hospital service departments and services...");
+
+    const departmentsData = [
+      { slug: "blood-bank", name: "Blood Bank Services", description: "Blood bank facilities and services", iconKey: "TestTube", displayOrder: 1 },
+      { slug: "cardiothoracic-surgery", name: "Cardiothoracic Surgery", description: "Heart and chest surgical procedures", iconKey: "Heart", displayOrder: 2 },
+      { slug: "cardiovascular-surgery", name: "Cardiovascular Surgery", description: "Blood vessel and heart surgical procedures", iconKey: "Activity", displayOrder: 3 },
+      { slug: "cathlab", name: "Cathlab Procedures", description: "Catheterization laboratory procedures", iconKey: "Stethoscope", displayOrder: 4 },
+      { slug: "vascular-surgery", name: "Vascular Surgery", description: "Blood vessel surgical procedures", iconKey: "Activity", displayOrder: 5 }
+    ];
+
+    const servicesData: Record<string, string[]> = {
+      "blood-bank": [
+        "Apheresis - Pediatric Apheresis", "Apheresis - Pediatric Red Cell Exchange", "Apheresis - Plasma Exchange (Adults)",
+        "Apheresis - Plasma Exchange (Children)", "Apheresis - Plateletpheresis - Single Dose", "Apheresis - Plateletpheresis - Double Dose",
+        "Apheresis - Red Blood Cell Exchange", "Apheresis - Stem Cell Collection", "Apheresis Disposable Set - Adult",
+        "Apheresis Disposable Set - Pediatric", "Blood Component - Cryoprecipitate (Single Unit)", "Blood Component - FFP (Single Unit)",
+        "Blood Component - Leukocyte Depleted PRBC", "Blood Component - PRBC (Single Unit)", "Blood Component - Platelet Rich Plasma",
+        "Blood Component - Random Donor Platelets", "Blood Component - Saline Washed RBC", "Blood Component - Single Donor Platelets",
+        "Blood Component - Whole Blood", "Blood Group & Rh Typing", "Cross Match - Major", "Cross Match - Minor",
+        "Coombs Test - Direct", "Coombs Test - Indirect", "Antibody Screening", "Antibody Identification",
+        "Cold Agglutinin Titer", "Hemoglobin Electrophoresis", "G6PD Screening", "Kleihauer-Betke Test",
+        "Irradiated Blood Products", "CMV Negative Blood Products", "Extended Phenotyping", "HLA Typing",
+        "Platelet Crossmatch", "Platelet Antibody Testing", "Red Cell Alloantibody Testing", "Warm Autoantibody Investigation",
+        "Cold Autoantibody Investigation", "Transfusion Reaction Investigation", "DAT Follow-up Panel", "Elution Testing",
+        "Adsorption Testing", "Titration Studies", "Antigen Typing - Rh", "Antigen Typing - Kell",
+        "Antigen Typing - Duffy", "Antigen Typing - Kidd", "Antigen Typing - MNS", "Antigen Typing - Lewis",
+        "Antigen Typing - P1PK", "Antigen Typing - Lutheran", "Therapeutic Phlebotomy", "Autologous Blood Donation",
+        "Directed Donation Processing", "Blood Warming Service", "Emergency Blood Release"
+      ],
+      "cardiothoracic-surgery": [
+        "CABG - On Pump (Single Vessel)", "CABG - On Pump (Double Vessel)", "CABG - On Pump (Triple Vessel)",
+        "CABG - Off Pump (OPCAB)", "CABG - Redo Surgery", "Valve Replacement - Aortic (Mechanical)",
+        "Valve Replacement - Aortic (Bioprosthetic)", "Valve Replacement - Mitral (Mechanical)",
+        "Valve Replacement - Mitral (Bioprosthetic)", "Valve Repair - Mitral", "Valve Repair - Tricuspid",
+        "Double Valve Replacement", "Triple Valve Surgery", "CABG + Valve Combined Surgery",
+        "Aortic Root Replacement (Bentall)", "Ascending Aortic Replacement", "Aortic Arch Replacement",
+        "Ross Procedure", "David Procedure", "Pericardiectomy", "Pericardial Window",
+        "Myxoma Excision", "Ventricular Septal Defect Repair (Adult)", "Atrial Septal Defect Repair (Adult)",
+        "LVAD Implantation", "RVAD Implantation", "BiVAD Implantation", "ECMO Cannulation",
+        "Heart Transplant", "Lung Transplant", "Heart-Lung Transplant", "Thymectomy (Open)"
+      ],
+      "cardiovascular-surgery": [
+        "Carotid Endarterectomy", "Carotid Artery Stenting", "Carotid Body Tumor Excision",
+        "Subclavian Artery Bypass", "Axillo-Bifemoral Bypass", "Aorto-Bifemoral Bypass",
+        "Femoro-Popliteal Bypass", "Femoro-Tibial Bypass", "Femoro-Femoral Crossover Bypass",
+        "Ilio-Femoral Bypass", "Infra-Inguinal Bypass", "Abdominal Aortic Aneurysm Repair (Open)",
+        "Thoracic Aortic Aneurysm Repair", "Thoracoabdominal Aneurysm Repair", "Iliac Aneurysm Repair",
+        "Popliteal Aneurysm Repair", "Femoral Aneurysm Repair", "Visceral Artery Aneurysm Repair",
+        "Renal Artery Bypass", "Mesenteric Artery Bypass", "Celiac Artery Bypass",
+        "Splenic Artery Aneurysm Repair", "Hepatic Artery Aneurysm Repair", "Thromboendarterectomy",
+        "Embolectomy - Upper Limb", "Embolectomy - Lower Limb", "Fasciotomy", "Amputation - Below Knee",
+        "Amputation - Above Knee", "Amputation - Toe", "Amputation - Forefoot", "Amputation - Transmetatarsal",
+        "Arteriovenous Fistula Creation", "Arteriovenous Fistula Revision", "AV Graft Placement",
+        "AV Graft Thrombectomy", "Dialysis Catheter Placement", "Dialysis Catheter Removal",
+        "IVC Filter Placement", "IVC Filter Retrieval", "Varicose Vein Surgery - Stripping",
+        "Varicose Vein Surgery - EVLT"
+      ],
+      "cathlab": [
+        "Diagnostic Coronary Angiography", "Coronary Angiography with LV Gram", "Right Heart Catheterization",
+        "Left Heart Catheterization", "Combined Heart Catheterization", "Coronary Angioplasty - Single Vessel",
+        "Coronary Angioplasty - Double Vessel", "Coronary Angioplasty - Triple Vessel",
+        "Primary PCI (STEMI)", "Rescue PCI", "Facilitated PCI", "Staged PCI",
+        "CTO PCI (Chronic Total Occlusion)", "Bifurcation PCI", "Left Main PCI",
+        "Rotational Atherectomy", "Orbital Atherectomy", "Cutting Balloon Angioplasty",
+        "Scoring Balloon Angioplasty", "Drug-Coated Balloon Angioplasty", "Bare Metal Stent Implantation",
+        "Drug-Eluting Stent Implantation", "Bioresorbable Scaffold Implantation", "Covered Stent Implantation",
+        "IVUS (Intravascular Ultrasound)", "OCT (Optical Coherence Tomography)", "FFR (Fractional Flow Reserve)",
+        "iFR (Instantaneous Wave-free Ratio)", "Coronary Flow Reserve", "Carotid Angiography",
+        "Carotid Stenting", "Renal Angiography", "Renal Artery Stenting", "Peripheral Angiography - Lower Limb",
+        "Peripheral Angiography - Upper Limb", "Peripheral Angioplasty - Iliac", "Peripheral Angioplasty - Femoral",
+        "Peripheral Angioplasty - Popliteal", "Peripheral Angioplasty - Tibial", "Peripheral Stenting - Iliac",
+        "Peripheral Stenting - Femoral", "Peripheral Stenting - Popliteal", "Subclavian Angioplasty",
+        "Subclavian Stenting", "Vertebral Angiography", "Vertebral Stenting",
+        "Pulmonary Angiography", "Pulmonary Artery Stenting", "Aortography",
+        "TAVI (Transcatheter Aortic Valve Implantation)", "TMVR (Transcatheter Mitral Valve Repair)",
+        "MitraClip Implantation", "WATCHMAN Device Implantation", "LAA Closure Device",
+        "ASD Closure (Device)", "VSD Closure (Device)", "PDA Closure (Device)",
+        "PFO Closure (Device)", "Coarctation Stenting", "Pulmonary Valve Replacement (Transcatheter)",
+        "BPV (Balloon Pulmonary Valvuloplasty)", "BMV (Balloon Mitral Valvuloplasty)",
+        "BAV (Balloon Aortic Valvuloplasty)", "Septal Ablation (Alcohol)", "Pericardiocentesis",
+        "Temporary Pacemaker Insertion", "Permanent Pacemaker - Single Chamber",
+        "Permanent Pacemaker - Dual Chamber", "ICD Implantation - Single Chamber",
+        "ICD Implantation - Dual Chamber", "CRT-P Implantation", "CRT-D Implantation",
+        "Leadless Pacemaker Implantation", "Lead Extraction", "Device Upgrade",
+        "Device Replacement", "EP Study", "RF Ablation - SVT", "RF Ablation - Atrial Flutter",
+        "RF Ablation - AF", "Cryoablation", "VT Ablation", "Cardiac Biopsy"
+      ],
+      "vascular-surgery": [
+        "Varicose Vein Surgery - EVLT (Endovenous Laser)", "Varicose Vein Surgery - RFA (Radiofrequency)",
+        "Varicose Vein Surgery - Foam Sclerotherapy", "Varicose Vein Surgery - Glue Ablation",
+        "Varicose Vein Surgery - Mechanochemical Ablation", "Varicose Vein Surgery - Phlebectomy",
+        "Deep Vein Thrombosis - Catheter Directed Thrombolysis", "DVT - Mechanical Thrombectomy",
+        "DVT - Pharmacomechanical Thrombectomy", "DVT - IVC Filter Placement", "DVT - IVC Filter Retrieval",
+        "Chronic Venous Insufficiency - Iliac Vein Stenting", "May-Thurner Syndrome Treatment",
+        "Pelvic Congestion Syndrome - Embolization", "Nutcracker Syndrome Treatment",
+        "Venous Malformation Sclerotherapy", "Venous Malformation Excision", "Arteriovenous Malformation Embolization",
+        "AVM Excision", "Lymphedema Surgery - LVA", "Lymphedema Surgery - VLNT",
+        "Thoracic Outlet Syndrome Surgery", "Popliteal Entrapment Syndrome Surgery",
+        "Diabetic Foot - Debridement", "Diabetic Foot - Revascularization", "Diabetic Foot - Amputation",
+        "Diabetic Foot - Skin Grafting", "Critical Limb Ischemia - Endovascular", "CLI - Surgical Bypass",
+        "CLI - Hybrid Procedure", "Acute Limb Ischemia - Thrombectomy", "ALI - Thrombolysis",
+        "ALI - Bypass Surgery", "Peripheral Artery Disease - Angioplasty", "PAD - Stenting",
+        "PAD - Atherectomy", "PAD - Drug-Coated Balloon", "Renal Artery Stenosis - Angioplasty",
+        "Renal Artery Stenosis - Stenting", "Mesenteric Ischemia - Endovascular", "Mesenteric Ischemia - Surgical",
+        "Aortic Dissection - TEVAR", "Aortic Dissection - Open Repair", "EVAR (Endovascular Aneurysm Repair)",
+        "FEVAR (Fenestrated EVAR)", "Branched EVAR", "Iliac Branch Device", "Chimney/Snorkel EVAR",
+        "Aortic Stent Graft", "Vascular Access Creation", "Vascular Access Revision",
+        "Hemodialysis Catheter Insertion", "Hemodialysis Catheter Exchange", "Peritoneal Dialysis Catheter",
+        "Central Venous Catheter - PICC", "Central Venous Catheter - Tunneled", "Port-A-Cath Insertion",
+        "Vascular Trauma Repair", "Pseudoaneurysm Repair", "Vascular Graft Infection Treatment"
+      ]
+    };
+
+    for (const deptData of departmentsData) {
+      const [dept] = await db.insert(hospitalServiceDepartments).values(deptData).returning();
+      
+      const services = servicesData[deptData.slug] || [];
+      if (services.length > 0) {
+        const servicesToInsert = services.map(name => ({
+          departmentId: dept.id,
+          name
+        }));
+        await db.insert(hospitalServices).values(servicesToInsert);
+      }
+    }
+
+    console.log("Hospital services seeded successfully!");
   }
 }
 

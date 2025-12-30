@@ -182,6 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await databaseStorage.seedBmwData();
   await databaseStorage.seedConsentTemplates();
   await databaseStorage.seedPathologyTests();
+  await databaseStorage.seedHospitalServices();
   
   // Ensure lab test order sequence exists for concurrency-safe order numbers
   await databaseStorage.ensureLabTestOrderSequence();
@@ -11309,6 +11310,124 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error seeding referral sources:", error);
       res.status(500).json({ error: "Failed to seed referral sources" });
+    }
+  });
+
+  // ========== HOSPITAL SERVICES API ==========
+  
+  // Get all departments with their services
+  app.get("/api/hospital-service-departments", async (req, res) => {
+    try {
+      const departments = await storage.getHospitalServiceDepartments();
+      const allServices = await storage.getHospitalServices();
+      
+      // Group services by department
+      const departmentsWithServices = departments.map(dept => ({
+        ...dept,
+        services: allServices.filter(s => s.departmentId === dept.id)
+      }));
+      
+      res.json(departmentsWithServices);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      res.status(500).json({ error: "Failed to fetch departments" });
+    }
+  });
+
+  // Create a new department (Admin only)
+  app.post("/api/hospital-service-departments", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const department = await storage.createHospitalServiceDepartment(req.body);
+      res.status(201).json(department);
+    } catch (error) {
+      console.error("Error creating department:", error);
+      res.status(500).json({ error: "Failed to create department" });
+    }
+  });
+
+  // Update department (Admin only)
+  app.patch("/api/hospital-service-departments/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const department = await storage.updateHospitalServiceDepartment(req.params.id, req.body);
+      if (!department) return res.status(404).json({ error: "Department not found" });
+      res.json(department);
+    } catch (error) {
+      console.error("Error updating department:", error);
+      res.status(500).json({ error: "Failed to update department" });
+    }
+  });
+
+  // Delete department (Admin only)
+  app.delete("/api/hospital-service-departments/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const deleted = await storage.deleteHospitalServiceDepartment(req.params.id);
+      if (!deleted) return res.status(404).json({ error: "Department not found" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting department:", error);
+      res.status(500).json({ error: "Failed to delete department" });
+    }
+  });
+
+  // Get services for a department
+  app.get("/api/hospital-services", async (req, res) => {
+    try {
+      const departmentId = req.query.departmentId as string | undefined;
+      const services = await storage.getHospitalServices(departmentId);
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      res.status(500).json({ error: "Failed to fetch services" });
+    }
+  });
+
+  // Create a new service (Admin only)
+  app.post("/api/hospital-services", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const service = await storage.createHospitalService(req.body);
+      res.status(201).json(service);
+    } catch (error) {
+      console.error("Error creating service:", error);
+      res.status(500).json({ error: "Failed to create service" });
+    }
+  });
+
+  // Update service (Admin only)
+  app.patch("/api/hospital-services/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const service = await storage.updateHospitalService(req.params.id, req.body);
+      if (!service) return res.status(404).json({ error: "Service not found" });
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating service:", error);
+      res.status(500).json({ error: "Failed to update service" });
+    }
+  });
+
+  // Delete service (Admin only)
+  app.delete("/api/hospital-services/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const deleted = await storage.deleteHospitalService(req.params.id);
+      if (!deleted) return res.status(404).json({ error: "Service not found" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      res.status(500).json({ error: "Failed to delete service" });
+    }
+  });
+
+  // Bulk create services (Admin only) - for seeding
+  app.post("/api/hospital-services/bulk", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const { services } = req.body;
+      if (!Array.isArray(services)) {
+        return res.status(400).json({ error: "Services must be an array" });
+      }
+      const createdServices = await storage.bulkCreateHospitalServices(services);
+      res.status(201).json(createdServices);
+    } catch (error) {
+      console.error("Error bulk creating services:", error);
+      res.status(500).json({ error: "Failed to bulk create services" });
     }
   });
 

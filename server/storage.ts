@@ -600,6 +600,21 @@ export interface IStorage {
   getPatientReferral(id: string): Promise<any | undefined>;
   updatePatientReferral(id: string, updates: any): Promise<any | undefined>;
   deletePatientReferral(id: string): Promise<boolean>;
+
+  // ========== HOSPITAL SERVICES ==========
+  createHospitalServiceDepartment(department: any): Promise<any>;
+  getHospitalServiceDepartments(): Promise<any[]>;
+  getHospitalServiceDepartment(id: string): Promise<any | undefined>;
+  getHospitalServiceDepartmentBySlug(slug: string): Promise<any | undefined>;
+  updateHospitalServiceDepartment(id: string, updates: any): Promise<any | undefined>;
+  deleteHospitalServiceDepartment(id: string): Promise<boolean>;
+  
+  createHospitalService(service: any): Promise<any>;
+  getHospitalServices(departmentId?: string): Promise<any[]>;
+  getHospitalService(id: string): Promise<any | undefined>;
+  updateHospitalService(id: string, updates: any): Promise<any | undefined>;
+  deleteHospitalService(id: string): Promise<boolean>;
+  bulkCreateHospitalServices(services: any[]): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
