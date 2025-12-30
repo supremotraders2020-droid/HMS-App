@@ -278,6 +278,7 @@ export default function PrescriptionCreationModal({
         dietAdvice,
         activityAdvice,
         investigations,
+        suggestedTest,
         prescriptionDate: new Date().toISOString().split('T')[0],
         followUpDate: followUpDate || undefined,
         prescriptionStatus: finalize ? 'finalized' : 'draft',
@@ -367,11 +368,12 @@ export default function PrescriptionCreationModal({
 
         <ScrollArea className="flex-1 px-1">
           <Tabs defaultValue="patient" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-4">
+            <TabsList className="grid w-full grid-cols-5 mb-4">
               <TabsTrigger value="patient" data-testid="tab-patient">Patient Info</TabsTrigger>
               <TabsTrigger value="clinical" data-testid="tab-clinical">Clinical</TabsTrigger>
               <TabsTrigger value="medicines" data-testid="tab-medicines">Medicines</TabsTrigger>
               <TabsTrigger value="instructions" data-testid="tab-instructions">Instructions</TabsTrigger>
+              <TabsTrigger value="suggested-test" data-testid="tab-suggested-test">Suggested Test</TabsTrigger>
             </TabsList>
 
             {/* Patient Info Tab */}
@@ -817,16 +819,36 @@ export default function PrescriptionCreationModal({
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Investigations Advised</Label>
-                    <Textarea
-                      data-testid="input-investigations"
-                      value={investigations}
-                      onChange={(e) => setInvestigations(e.target.value)}
-                      placeholder="e.g., CBC, Blood Sugar, X-Ray..."
-                      rows={2}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Investigations Advised</Label>
+                      <Textarea
+                        data-testid="input-investigations"
+                        value={investigations}
+                        onChange={(e) => setInvestigations(e.target.value)}
+                        placeholder="e.g., CBC, Blood Sugar, X-Ray..."
+                        rows={2}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Follow-up Date</Label>
+                      <Input
+                        type="date"
+                        data-testid="input-follow-up-date"
+                        value={followUpDate}
+                        onChange={(e) => setFollowUpDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Suggested Test Tab */}
+            <TabsContent value="suggested-test" className="space-y-4">
+              <Card>
+                <CardContent className="pt-6 space-y-4">
                   <div className="space-y-2">
                     <Label>Suggested Test</Label>
                     <Textarea
@@ -834,17 +856,7 @@ export default function PrescriptionCreationModal({
                       value={suggestedTest}
                       onChange={(e) => setSuggestedTest(e.target.value)}
                       placeholder="e.g., ECG, Lipid Profile, HbA1c, Thyroid Panel..."
-                      rows={2}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Follow-up Date</Label>
-                    <Input
-                      type="date"
-                      data-testid="input-follow-up-date"
-                      value={followUpDate}
-                      onChange={(e) => setFollowUpDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
+                      rows={4}
                     />
                   </div>
                 </CardContent>

@@ -697,6 +697,7 @@ export const prescriptions = pgTable("prescriptions", {
   dietAdvice: text("diet_advice"),
   activityAdvice: text("activity_advice"),
   investigations: text("investigations"),
+  suggestedTest: text("suggested_test"),
   patientRecordId: varchar("patient_record_id"), // Link to medical record uploaded by admin
   prescriptionDate: text("prescription_date").notNull(),
   followUpDate: text("follow_up_date"),
