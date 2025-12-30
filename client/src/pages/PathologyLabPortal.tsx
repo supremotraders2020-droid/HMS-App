@@ -71,6 +71,7 @@ interface LabTestOrder {
   priority: string;
   orderStatus: string;
   clinicalNotes?: string;
+  suggestedTest?: string;
   createdAt: string;
 }
 
@@ -569,6 +570,12 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
                                     <p className="text-sm text-muted-foreground">Referring Doctor</p>
                                     <p className="font-medium">{order.doctorName}</p>
                                   </div>
+                                  {order.suggestedTest && (
+                                    <div className="col-span-2">
+                                      <p className="text-sm text-muted-foreground">Suggested Test</p>
+                                      <p className="font-medium text-primary">{order.suggestedTest}</p>
+                                    </div>
+                                  )}
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-4">

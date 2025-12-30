@@ -3097,6 +3097,7 @@ export const labTestOrders = pgTable("lab_test_orders", {
   assignedLabName: text("assigned_lab_name"),
   priority: text("priority").default("NORMAL"), // NORMAL, URGENT, CRITICAL
   clinicalNotes: text("clinical_notes"),
+  suggestedTest: text("suggested_test"),
   orderStatus: text("order_status").default("PENDING"), // PENDING, ASSIGNED, SAMPLE_COLLECTED, IN_PROGRESS, COMPLETED
   orderedAt: timestamp("ordered_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),

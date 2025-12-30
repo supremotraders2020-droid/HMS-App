@@ -188,6 +188,7 @@ export default function LabTestOrdering({ currentUserId, currentUserName, curren
       testCode: item.test.testCode ?? undefined,
       priority: item.priority,
       clinicalNotes: item.notes || clinicalNotes,
+      suggestedTest: suggestedTest || undefined,
       orderedAt: new Date().toISOString(),
     }));
 
