@@ -75,8 +75,10 @@ import {
   Shield,
   Plus,
   FileCheck,
-  XCircle
+  XCircle,
+  Scissors
 } from "lucide-react";
+import HospitalServices from "@/pages/HospitalServices";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -796,6 +798,7 @@ Description: ${record.description}
     { id: "insurance", label: "Insurance Claims", icon: CreditCard },
     { id: "health-guide", label: "Health Guide", icon: BookOpen },
     { id: "admission", label: "Admission", icon: BedDouble },
+    { id: "hospital-services", label: "Services & Surgeries", icon: Scissors },
     { id: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifications },
     { id: "team", label: "Our Doctors", icon: Users },
     { id: "chatbot", label: "Health Assistant", icon: MessageCircle },
@@ -1884,6 +1887,9 @@ Description: ${record.description}
             </div>
           </div>
         );
+
+      case "hospital-services":
+        return <HospitalServices currentUserRole="PATIENT" />;
 
       case "notifications":
         const parseMetadata = (metadata: string | null) => {

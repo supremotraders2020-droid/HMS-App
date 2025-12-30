@@ -79,8 +79,10 @@ import {
   MonitorCheck,
   Save,
   Home,
-  UserCheck
+  UserCheck,
+  Scissors
 } from "lucide-react";
+import HospitalServices from "@/pages/HospitalServices";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import DoctorOathModal from "@/components/DoctorOathModal";
 import PrescriptionCreationModal from "@/components/PrescriptionCreationModal";
@@ -666,6 +668,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     { id: "patients", title: "Patients", icon: Users },
     { id: "prescriptions", title: "Prescriptions", icon: FileText },
     { id: "patient-monitoring", title: "Patient Monitoring", icon: MonitorCheck },
+    { id: "hospital-services", title: "Services & Surgeries", icon: Scissors },
     { id: "staff-management", title: "Staff Management", icon: UserCheck },
     { id: "notifications", title: "Notifications", icon: Bell, badge: unreadNotifications.length },
     { id: "profile", title: "Profile", icon: Settings },
@@ -2383,6 +2386,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       case "schedules": return renderSchedules();
       case "prescriptions": return renderPrescriptions();
       case "patient-monitoring": return <PatientMonitoringPage />;
+      case "hospital-services": return <HospitalServices currentUserRole="DOCTOR" />;
       case "staff-management": return <StaffSelfService userId={doctorId} userName={doctorName} userRole="DOCTOR" />;
       case "notifications": return renderNotifications();
       case "profile": return renderProfile();
@@ -2482,7 +2486,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Clinical Services</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu className="space-y-1">
-                    {menuItems.filter(item => ['appointments', 'patients', 'prescriptions', 'patient-monitoring'].includes(item.id)).map((item) => (
+                    {menuItems.filter(item => ['appointments', 'patients', 'prescriptions', 'patient-monitoring', 'hospital-services'].includes(item.id)).map((item) => (
                       <SidebarMenuItem key={item.id}>
                         <SidebarMenuButton asChild data-testid={`nav-${item.id}`}>
                           <Button
