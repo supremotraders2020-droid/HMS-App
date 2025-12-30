@@ -51,6 +51,7 @@ import {
   Eye,
   Download,
   Calendar,
+  Lightbulb,
 } from "lucide-react";
 
 interface PathologyLabPortalProps {
@@ -331,10 +332,20 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
   );
   const completedOrders = orders.filter(o => o.orderStatus === "COMPLETED");
 
+  // Orders with suggested tests (from doctor recommendations)
+  const suggestedTestOrders = orders.filter(o => o.suggestedTest && o.suggestedTest.trim() !== "");
+
   const filteredPendingOrders = pendingOrders.filter(o =>
     o.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.testName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredSuggestedTestOrders = suggestedTestOrders.filter(o =>
+    o.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.testName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.suggestedTest?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredReports = reports.filter(r =>
@@ -473,6 +484,10 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
           <TabsTrigger value="my-reports" data-testid="tab-my-reports">
             <FileText className="h-4 w-4 mr-2" />
             Uploaded Reports ({reports.length})
+          </TabsTrigger>
+          <TabsTrigger value="suggested-tests" data-testid="tab-suggested-tests">
+            <Lightbulb className="h-4 w-4 mr-2" />
+            Suggested Tests ({suggestedTestOrders.length})
           </TabsTrigger>
         </TabsList>
 
@@ -931,6 +946,70 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="suggested-tests" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-yellow-500" />
+                Suggested Tests from Doctors
+              </CardTitle>
+              <CardDescription>
+                Tests recommended by doctors for additional diagnosis. These suggestions accompany lab orders to provide context for potential follow-up testing.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {ordersLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading suggested tests...</div>
+              ) : filteredSuggestedTestOrders.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Lightbulb className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No suggested tests from doctors</p>
+                  <p className="text-sm mt-2">When doctors order lab tests, they can suggest additional tests that appear here.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order #</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Ordered Test</TableHead>
+                      <TableHead>Suggested Test</TableHead>
+                      <TableHead>Doctor</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSuggestedTestOrders.map((order) => (
+                      <TableRow key={order.id} data-testid={`row-suggested-${order.id}`}>
+                        <TableCell className="font-mono text-sm">{order.orderNumber}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            {order.patientName}
+                          </div>
+                        </TableCell>
+                        <TableCell>{order.testName}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Lightbulb className="h-4 w-4 text-yellow-500" />
+                            <span className="font-medium text-primary">{order.suggestedTest}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{order.doctorName}</TableCell>
+                        <TableCell>{getStatusBadge(order.orderStatus)}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {order.createdAt ? format(new Date(order.createdAt), "dd MMM yyyy") : "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
