@@ -52,7 +52,15 @@ import {
   Activity,
   ClipboardList,
   Bell,
-  X
+  X,
+  Building2,
+  Phone,
+  Mail,
+  MapPin,
+  Globe,
+  Users,
+  Scissors,
+  HeartPulse
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -283,6 +291,18 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
       return response.json();
     },
     enabled: !!storeInfo?.store?.id,
+  });
+
+  const { data: doctors = [] } = useQuery<any[]>({
+    queryKey: ["/api/doctors"],
+  });
+
+  const { data: hospitalServices = [] } = useQuery<any[]>({
+    queryKey: ["/api/hospital-services"],
+  });
+
+  const { data: hospitalDepartments = [] } = useQuery<any[]>({
+    queryKey: ["/api/hospital-service-departments"],
   });
 
   const handleSearch = async () => {
@@ -803,6 +823,18 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
             <Receipt className="h-4 w-4 mr-2" />
             Bills
           </TabsTrigger>
+          <TabsTrigger value="hospital" data-testid="tab-hospital">
+            <Building2 className="h-4 w-4 mr-2" />
+            Hospital Details
+          </TabsTrigger>
+          <TabsTrigger value="opd" data-testid="tab-opd">
+            <Users className="h-4 w-4 mr-2" />
+            OPD Details
+          </TabsTrigger>
+          <TabsTrigger value="services" data-testid="tab-services">
+            <HeartPulse className="h-4 w-4 mr-2" />
+            Surgery & Services
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="notifications" className="space-y-4">
@@ -1156,6 +1188,236 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
                     ))}
                   </TableBody>
                 </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="hospital" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                Gravity Hospital - Details
+              </CardTitle>
+              <CardDescription>Hospital information and contact details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="font-medium">Address</p>
+                      <p className="text-muted-foreground">
+                        Plot No. 123, Gravity Healthcare Complex<br />
+                        Karve Nagar, Near City Mall<br />
+                        Pune, Maharashtra - 411052
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Phone className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="font-medium">Contact Numbers</p>
+                      <p className="text-muted-foreground">
+                        Reception: +91 20 2545 6789<br />
+                        Emergency: +91 20 2545 9999<br />
+                        Ambulance: 108 / +91 98765 43210
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Mail className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="font-medium">Email</p>
+                      <p className="text-muted-foreground">
+                        info@gravityhospital.in<br />
+                        appointments@gravityhospital.in
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Globe className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="font-medium">Website</p>
+                      <p className="text-muted-foreground">www.gravityhospital.in</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Clock className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="font-medium">Working Hours</p>
+                      <p className="text-muted-foreground">
+                        OPD: 8:00 AM - 8:00 PM (Mon-Sat)<br />
+                        Emergency: 24 Hours / 7 Days<br />
+                        Pharmacy: 8:00 AM - 10:00 PM
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Activity className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="font-medium">Facilities</p>
+                      <p className="text-muted-foreground">
+                        100+ Beds | 24x7 ICU | Operation Theaters<br />
+                        Pathology Lab | Radiology | Pharmacy<br />
+                        Ambulance Service | Cafeteria | Parking
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Stethoscope className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="font-medium">Accreditations</p>
+                      <p className="text-muted-foreground">
+                        NABH Accredited<br />
+                        ISO 9001:2015 Certified<br />
+                        NABL Certified Lab
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="opd" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                OPD Doctors & Consultation
+              </CardTitle>
+              <CardDescription>Available doctors and their specializations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {doctors.length === 0 ? (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    No doctors available
+                  </div>
+                ) : (
+                  doctors.map((doctor: any) => (
+                    <Card key={doctor.id} className="border" data-testid={`doctor-card-${doctor.id}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-primary font-bold">{doctor.avatarInitials || doctor.name?.substring(0, 2).toUpperCase()}</span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold">{doctor.name}</p>
+                            <Badge variant="secondary" className="mt-1">{doctor.specialty}</Badge>
+                            <p className="text-sm text-muted-foreground mt-2">{doctor.qualification}</p>
+                            <p className="text-sm text-muted-foreground">{doctor.experience} years experience</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="outline">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {doctor.availableDays || "Mon-Sat"}
+                              </Badge>
+                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                Rs. {doctor.consultationFee || "500"}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+              <Separator className="my-6" />
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">OPD Timings</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <p className="font-medium">Morning</p>
+                    <p className="text-muted-foreground">8:00 AM - 12:00 PM</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Afternoon</p>
+                    <p className="text-muted-foreground">12:00 PM - 4:00 PM</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Evening</p>
+                    <p className="text-muted-foreground">4:00 PM - 8:00 PM</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Emergency</p>
+                    <p className="text-muted-foreground">24 Hours</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="services" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HeartPulse className="h-5 w-5 text-primary" />
+                Surgery & Hospital Services
+              </CardTitle>
+              <CardDescription>Complete list of medical services and procedures</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {hospitalDepartments.length === 0 && hospitalServices.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No services available
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {hospitalDepartments.map((dept: any) => {
+                    const deptServices = hospitalServices.filter((s: any) => s.departmentId === dept.id);
+                    if (deptServices.length === 0) return null;
+                    return (
+                      <div key={dept.id} className="border rounded-lg p-4" data-testid={`dept-card-${dept.id}`}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Scissors className="h-5 w-5 text-primary" />
+                          <h3 className="font-semibold text-lg">{dept.name}</h3>
+                          <Badge variant="secondary">{deptServices.length} services</Badge>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {deptServices.slice(0, 9).map((service: any) => (
+                            <div key={service.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm" data-testid={`service-item-${service.id}`}>
+                              <span>{service.name}</span>
+                              {service.price && (
+                                <Badge variant="outline" className="ml-2">Rs. {service.price}</Badge>
+                              )}
+                            </div>
+                          ))}
+                          {deptServices.length > 9 && (
+                            <div className="p-2 text-center text-muted-foreground text-sm">
+                              +{deptServices.length - 9} more services
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {hospitalServices.filter((s: any) => !s.departmentId).length > 0 && (
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Activity className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold text-lg">General Services</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {hospitalServices.filter((s: any) => !s.departmentId).slice(0, 12).map((service: any) => (
+                          <div key={service.id} className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm">
+                            <span>{service.name}</span>
+                            {service.price && (
+                              <Badge variant="outline" className="ml-2">Rs. {service.price}</Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
