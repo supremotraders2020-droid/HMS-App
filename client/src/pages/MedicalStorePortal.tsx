@@ -60,11 +60,15 @@ import {
   Globe,
   Users,
   Scissors,
-  HeartPulse
+  HeartPulse,
+  Plus,
+  Pencil,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Prescription, PrescriptionDispensing, MedicalStore, MedicalStoreBill } from "@shared/schema";
+import type { Prescription, PrescriptionDispensing, MedicalStore, MedicalStoreBill, MedicalStoreInventory } from "@shared/schema";
 
 interface MedicalStorePortalProps {
   currentUserId: string;
@@ -84,6 +88,662 @@ interface PrescriptionNotification {
   prescriptionDate: string;
   signedByName?: string;
   receivedAt: Date;
+}
+
+interface InventoryFormData {
+  medicineName: string;
+  genericName: string;
+  brandName: string;
+  strength: string;
+  dosageForm: string;
+  batchNumber: string;
+  expiryDate: string;
+  quantity: number;
+  unitPrice: string;
+  mrp: string;
+  gstPercentage: string;
+  isAvailable: boolean;
+}
+
+function MedicineInventoryTab({ storeId }: { storeId: string }) {
+  const { toast } = useToast();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MedicalStoreInventory | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [formData, setFormData] = useState<InventoryFormData>({
+    medicineName: "",
+    genericName: "",
+    brandName: "",
+    strength: "",
+    dosageForm: "Tablet",
+    batchNumber: "",
+    expiryDate: "",
+    quantity: 0,
+    unitPrice: "",
+    mrp: "",
+    gstPercentage: "12",
+    isAvailable: true
+  });
+
+  const { data: inventory = [], isLoading } = useQuery<MedicalStoreInventory[]>({
+    queryKey: ["/api/medical-stores", storeId, "inventory"],
+    queryFn: async () => {
+      if (!storeId) return [];
+      const response = await fetch(`/api/medical-stores/${storeId}/inventory`);
+      if (!response.ok) throw new Error("Failed to fetch inventory");
+      return response.json();
+    },
+    enabled: !!storeId
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async (data: InventoryFormData) => {
+      return apiRequest("POST", `/api/medical-stores/${storeId}/inventory`, {
+        ...data,
+        quantity: Number(data.quantity)
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/medical-stores", storeId, "inventory"] });
+      toast({ title: "Success", description: "Medicine added to inventory" });
+      setIsAddDialogOpen(false);
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to add medicine", variant: "destructive" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InventoryFormData> }) => {
+      return apiRequest("PATCH", `/api/medical-stores/inventory/${id}`, {
+        ...data,
+        quantity: data.quantity !== undefined ? Number(data.quantity) : undefined
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/medical-stores", storeId, "inventory"] });
+      toast({ title: "Success", description: "Medicine updated successfully" });
+      setIsEditDialogOpen(false);
+      setSelectedItem(null);
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update medicine", variant: "destructive" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/medical-stores/inventory/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/medical-stores", storeId, "inventory"] });
+      toast({ title: "Success", description: "Medicine removed from inventory" });
+      setIsDeleteDialogOpen(false);
+      setSelectedItem(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete medicine", variant: "destructive" });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({
+      medicineName: "",
+      genericName: "",
+      brandName: "",
+      strength: "",
+      dosageForm: "Tablet",
+      batchNumber: "",
+      expiryDate: "",
+      quantity: 0,
+      unitPrice: "",
+      mrp: "",
+      gstPercentage: "12",
+      isAvailable: true
+    });
+  };
+
+  const handleEdit = (item: MedicalStoreInventory) => {
+    setSelectedItem(item);
+    setFormData({
+      medicineName: item.medicineName || "",
+      genericName: item.genericName || "",
+      brandName: item.brandName || "",
+      strength: item.strength || "",
+      dosageForm: item.dosageForm || "Tablet",
+      batchNumber: item.batchNumber || "",
+      expiryDate: item.expiryDate || "",
+      quantity: item.quantity || 0,
+      unitPrice: item.unitPrice || "",
+      mrp: item.mrp || "",
+      gstPercentage: item.gstPercentage || "12",
+      isAvailable: item.isAvailable ?? true
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (item: MedicalStoreInventory) => {
+    setSelectedItem(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const filteredInventory = inventory.filter(item =>
+    item.medicineName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.genericName?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (item.brandName?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const lowStockItems = inventory.filter(item => item.quantity < 10);
+  const expiringSoonItems = inventory.filter(item => {
+    if (!item.expiryDate) return false;
+    const expiry = new Date(item.expiryDate);
+    const threeMonthsFromNow = new Date();
+    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+    return expiry <= threeMonthsFromNow;
+  });
+
+  const dosageForms = ["Tablet", "Capsule", "Syrup", "Injection", "Cream", "Ointment", "Drops", "Powder", "Suspension", "Gel", "Inhaler", "Patch"];
+
+  if (!storeId) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-muted-foreground">
+          Store information not available
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {(lowStockItems.length > 0 || expiringSoonItems.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {lowStockItems.length > 0 && (
+            <Card className="border-yellow-500/50 bg-yellow-500/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+                  <AlertTriangle className="h-4 w-4" />
+                  Low Stock Alert
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">{lowStockItems.length} item(s) have stock below 10 units</p>
+              </CardContent>
+            </Card>
+          )}
+          {expiringSoonItems.length > 0 && (
+            <Card className="border-red-500/50 bg-red-500/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-red-600 dark:text-red-400">
+                  <AlertCircle className="h-4 w-4" />
+                  Expiry Alert
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">{expiringSoonItems.length} item(s) expiring within 3 months</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
+                Medicine Inventory
+              </CardTitle>
+              <CardDescription>Manage your store's medicine stock</CardDescription>
+            </div>
+            <Button onClick={() => { resetForm(); setIsAddDialogOpen(true); }} data-testid="button-add-medicine">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Medicine
+            </Button>
+          </div>
+          <div className="flex items-center gap-4 mt-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search medicines..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+                data-testid="input-search-inventory"
+              />
+            </div>
+            <Badge variant="secondary">{inventory.length} items</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredInventory.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {searchTerm ? "No medicines found matching your search" : "No medicines in inventory. Add your first medicine to get started."}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Medicine Name</TableHead>
+                    <TableHead>Brand</TableHead>
+                    <TableHead>Strength</TableHead>
+                    <TableHead>Form</TableHead>
+                    <TableHead>Batch</TableHead>
+                    <TableHead>Expiry</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">MRP</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredInventory.map((item) => {
+                    const isLowStock = item.quantity < 10;
+                    const isExpiringSoon = item.expiryDate && new Date(item.expiryDate) <= new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+                    return (
+                      <TableRow key={item.id} data-testid={`inventory-row-${item.id}`}>
+                        <TableCell>
+                          <div>
+                            <span className="font-medium">{item.medicineName}</span>
+                            {item.genericName && (
+                              <p className="text-xs text-muted-foreground">{item.genericName}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{item.brandName || "-"}</TableCell>
+                        <TableCell>{item.strength || "-"}</TableCell>
+                        <TableCell>{item.dosageForm || "-"}</TableCell>
+                        <TableCell className="font-mono text-sm">{item.batchNumber || "-"}</TableCell>
+                        <TableCell>
+                          {item.expiryDate ? (
+                            <span className={isExpiringSoon ? "text-red-600 dark:text-red-400 font-medium" : ""}>
+                              {item.expiryDate}
+                            </span>
+                          ) : "-"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={isLowStock ? "text-yellow-600 dark:text-yellow-400 font-medium" : ""}>
+                            {item.quantity}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {item.mrp ? `Rs. ${item.mrp}` : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {item.isAvailable ? (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Available</Badge>
+                          ) : (
+                            <Badge variant="secondary">Unavailable</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleEdit(item)}
+                              data-testid={`button-edit-${item.id}`}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleDelete(item)}
+                              data-testid={`button-delete-${item.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Medicine to Inventory</DialogTitle>
+            <DialogDescription>Enter the medicine details to add to your store inventory</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="medicineName">Medicine Name *</Label>
+              <Input
+                id="medicineName"
+                value={formData.medicineName}
+                onChange={(e) => setFormData({ ...formData, medicineName: e.target.value })}
+                placeholder="e.g., Paracetamol"
+                data-testid="input-medicine-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="genericName">Generic Name</Label>
+              <Input
+                id="genericName"
+                value={formData.genericName}
+                onChange={(e) => setFormData({ ...formData, genericName: e.target.value })}
+                placeholder="e.g., Acetaminophen"
+                data-testid="input-generic-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="brandName">Brand Name</Label>
+              <Input
+                id="brandName"
+                value={formData.brandName}
+                onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+                placeholder="e.g., Crocin"
+                data-testid="input-brand-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="strength">Strength</Label>
+              <Input
+                id="strength"
+                value={formData.strength}
+                onChange={(e) => setFormData({ ...formData, strength: e.target.value })}
+                placeholder="e.g., 500mg"
+                data-testid="input-strength"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dosageForm">Dosage Form</Label>
+              <Select value={formData.dosageForm} onValueChange={(v) => setFormData({ ...formData, dosageForm: v })}>
+                <SelectTrigger data-testid="select-dosage-form">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {dosageForms.map(form => (
+                    <SelectItem key={form} value={form}>{form}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="batchNumber">Batch Number</Label>
+              <Input
+                id="batchNumber"
+                value={formData.batchNumber}
+                onChange={(e) => setFormData({ ...formData, batchNumber: e.target.value })}
+                placeholder="e.g., BATCH-2025-001"
+                data-testid="input-batch-number"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expiryDate">Expiry Date</Label>
+              <Input
+                id="expiryDate"
+                type="month"
+                value={formData.expiryDate}
+                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                data-testid="input-expiry-date"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity *</Label>
+              <Input
+                id="quantity"
+                type="number"
+                min="0"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                data-testid="input-quantity"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unitPrice">Unit Price (Rs.) *</Label>
+              <Input
+                id="unitPrice"
+                value={formData.unitPrice}
+                onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
+                placeholder="0.00"
+                data-testid="input-unit-price"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mrp">MRP (Rs.)</Label>
+              <Input
+                id="mrp"
+                value={formData.mrp}
+                onChange={(e) => setFormData({ ...formData, mrp: e.target.value })}
+                placeholder="0.00"
+                data-testid="input-mrp"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gstPercentage">GST %</Label>
+              <Select value={formData.gstPercentage} onValueChange={(v) => setFormData({ ...formData, gstPercentage: v })}>
+                <SelectTrigger data-testid="select-gst">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0%</SelectItem>
+                  <SelectItem value="5">5%</SelectItem>
+                  <SelectItem value="12">12%</SelectItem>
+                  <SelectItem value="18">18%</SelectItem>
+                  <SelectItem value="28">28%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 pt-6">
+              <input
+                type="checkbox"
+                id="isAvailable"
+                checked={formData.isAvailable}
+                onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
+                className="h-4 w-4"
+                data-testid="checkbox-available"
+              />
+              <Label htmlFor="isAvailable">Available for sale</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => addMutation.mutate(formData)}
+              disabled={!formData.medicineName || !formData.unitPrice || addMutation.isPending}
+              data-testid="button-save-medicine"
+            >
+              {addMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+              Add Medicine
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Medicine</DialogTitle>
+            <DialogDescription>Update the medicine details</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-medicineName">Medicine Name *</Label>
+              <Input
+                id="edit-medicineName"
+                value={formData.medicineName}
+                onChange={(e) => setFormData({ ...formData, medicineName: e.target.value })}
+                data-testid="input-edit-medicine-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-genericName">Generic Name</Label>
+              <Input
+                id="edit-genericName"
+                value={formData.genericName}
+                onChange={(e) => setFormData({ ...formData, genericName: e.target.value })}
+                data-testid="input-edit-generic-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-brandName">Brand Name</Label>
+              <Input
+                id="edit-brandName"
+                value={formData.brandName}
+                onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+                data-testid="input-edit-brand-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-strength">Strength</Label>
+              <Input
+                id="edit-strength"
+                value={formData.strength}
+                onChange={(e) => setFormData({ ...formData, strength: e.target.value })}
+                data-testid="input-edit-strength"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-dosageForm">Dosage Form</Label>
+              <Select value={formData.dosageForm} onValueChange={(v) => setFormData({ ...formData, dosageForm: v })}>
+                <SelectTrigger data-testid="select-edit-dosage-form">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {dosageForms.map(form => (
+                    <SelectItem key={form} value={form}>{form}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-batchNumber">Batch Number</Label>
+              <Input
+                id="edit-batchNumber"
+                value={formData.batchNumber}
+                onChange={(e) => setFormData({ ...formData, batchNumber: e.target.value })}
+                data-testid="input-edit-batch-number"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-expiryDate">Expiry Date</Label>
+              <Input
+                id="edit-expiryDate"
+                type="month"
+                value={formData.expiryDate}
+                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                data-testid="input-edit-expiry-date"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-quantity">Quantity *</Label>
+              <Input
+                id="edit-quantity"
+                type="number"
+                min="0"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                data-testid="input-edit-quantity"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-unitPrice">Unit Price (Rs.) *</Label>
+              <Input
+                id="edit-unitPrice"
+                value={formData.unitPrice}
+                onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
+                data-testid="input-edit-unit-price"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-mrp">MRP (Rs.)</Label>
+              <Input
+                id="edit-mrp"
+                value={formData.mrp}
+                onChange={(e) => setFormData({ ...formData, mrp: e.target.value })}
+                data-testid="input-edit-mrp"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-gstPercentage">GST %</Label>
+              <Select value={formData.gstPercentage} onValueChange={(v) => setFormData({ ...formData, gstPercentage: v })}>
+                <SelectTrigger data-testid="select-edit-gst">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0%</SelectItem>
+                  <SelectItem value="5">5%</SelectItem>
+                  <SelectItem value="12">12%</SelectItem>
+                  <SelectItem value="18">18%</SelectItem>
+                  <SelectItem value="28">28%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 pt-6">
+              <input
+                type="checkbox"
+                id="edit-isAvailable"
+                checked={formData.isAvailable}
+                onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
+                className="h-4 w-4"
+                data-testid="checkbox-edit-available"
+              />
+              <Label htmlFor="edit-isAvailable">Available for sale</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => selectedItem && updateMutation.mutate({ id: selectedItem.id, data: formData })}
+              disabled={!formData.medicineName || !formData.unitPrice || updateMutation.isPending}
+              data-testid="button-update-medicine"
+            >
+              {updateMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+              Update Medicine
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Medicine</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this medicine from inventory? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="py-4">
+              <p className="font-medium">{selectedItem.medicineName}</p>
+              {selectedItem.brandName && <p className="text-sm text-muted-foreground">Brand: {selectedItem.brandName}</p>}
+              <p className="text-sm text-muted-foreground">Quantity: {selectedItem.quantity}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => selectedItem && deleteMutation.mutate(selectedItem.id)}
+              disabled={deleteMutation.isPending}
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
 
 export default function MedicalStorePortal({ currentUserId }: MedicalStorePortalProps) {
@@ -835,6 +1495,10 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
             <HeartPulse className="h-4 w-4 mr-2" />
             Surgery & Services
           </TabsTrigger>
+          <TabsTrigger value="inventory" data-testid="tab-inventory">
+            <Package className="h-4 w-4 mr-2" />
+            Medicine Inventory
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="notifications" className="space-y-4">
@@ -1421,6 +2085,10 @@ ${prescription.signedByName ? `Signed by: ${prescription.signedByName}` : ''}
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="inventory" className="space-y-4">
+          <MedicineInventoryTab storeId={storeInfo?.store?.id || ""} />
         </TabsContent>
       </Tabs>
 
