@@ -75,6 +75,13 @@ import {
   Heart,
   Brain,
   Pill,
+  ChevronDown,
+  ChevronRight,
+  User,
+  Phone,
+  MapPin,
+  Info,
+  Loader2,
 } from "lucide-react";
 
 interface PathologyLabPortalProps {
@@ -126,12 +133,16 @@ interface PathologyLab {
 }
 
 interface LabTestCatalog {
-  id: number;
+  id: string;
   testCode: string;
   testName: string;
   testCategory: string;
   sampleType: string;
+  description?: string;
   price: string;
+  turnaroundTime?: string;
+  normalRange?: string;
+  instructions?: string;
   isActive: boolean;
 }
 
@@ -193,6 +204,23 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
   const [availableTestsSearch, setAvailableTestsSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [availableTestsOpen, setAvailableTestsOpen] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [selectedTestDetails, setSelectedTestDetails] = useState<LabTestCatalog | null>(null);
+  const [isTestDetailsOpen, setIsTestDetailsOpen] = useState(false);
+  
+  // State for Walk-in Patient Report
+  const [isWalkInReportOpen, setIsWalkInReportOpen] = useState(false);
+  const [walkInPatientData, setWalkInPatientData] = useState({
+    patientName: '',
+    patientAge: '',
+    patientGender: 'Male',
+    patientPhone: '',
+    patientAddress: '',
+    referredBy: '',
+  });
+  const [selectedTestForWalkIn, setSelectedTestForWalkIn] = useState<LabTestCatalog | null>(null);
+  const [walkInTestSearch, setWalkInTestSearch] = useState('');
+  const [isWalkInTestSelectOpen, setIsWalkInTestSelectOpen] = useState(false);
 
   // Get unique categories from lab tests
   const testCategories = useMemo(() => {
@@ -256,6 +284,36 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
     };
     return colorMap[category] || 'from-gray-500/20 to-gray-600/10 border-gray-500/30';
   };
+
+  // Toggle category expansion
+  const toggleCategoryExpansion = (category: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
+
+  // View test details
+  const handleViewTestDetails = (test: LabTestCatalog) => {
+    setSelectedTestDetails(test);
+    setIsTestDetailsOpen(true);
+  };
+
+  // Filter tests for walk-in selection
+  const filteredWalkInTests = useMemo(() => {
+    if (!walkInTestSearch) return labTestCatalog.filter(t => t.isActive).slice(0, 50);
+    return labTestCatalog.filter(test => 
+      test.isActive && (
+        test.testName.toLowerCase().includes(walkInTestSearch.toLowerCase()) ||
+        test.testCode.toLowerCase().includes(walkInTestSearch.toLowerCase())
+      )
+    ).slice(0, 50);
+  }, [labTestCatalog, walkInTestSearch]);
 
   const uploadReportMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -1171,8 +1229,16 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
               </CardContent>
             </Card>
 
-            {/* Tests Grid Display */}
-            <div className="grid gap-4">
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-2">
+              <Button onClick={() => setIsWalkInReportOpen(true)} data-testid="button-walk-in-report">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Walk-in Patient Report
+              </Button>
+            </div>
+
+            {/* Tests Grid Display - All Departments */}
+            <div className="space-y-4">
               {isLoadingLabTests ? (
                 <Card>
                   <CardContent className="py-12 text-center">
@@ -1200,12 +1266,17 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
                   </CardContent>
                 </Card>
               ) : (
-                Object.entries(groupedTests).slice(0, 8).map(([category, tests]) => {
+                Object.entries(groupedTests).map(([category, tests]) => {
                   const CategoryIcon = getCategoryIcon(category);
                   const categoryColor = getCategoryColor(category);
+                  const isExpanded = expandedCategories.has(category);
                   return (
-                    <Card key={category} className={`border bg-gradient-to-r ${categoryColor} hover-elevate transition-all duration-200`}>
-                      <CardHeader className="pb-3">
+                    <Card key={category} className={`border bg-gradient-to-r ${categoryColor} transition-all duration-200`}>
+                      <CardHeader 
+                        className="pb-3 cursor-pointer hover-elevate"
+                        onClick={() => toggleCategoryExpansion(category)}
+                        data-testid={`category-header-${category.replace(/\s+/g, '-').toLowerCase()}`}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-background/80">
@@ -1216,46 +1287,76 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
                               <CardDescription>{tests.length} tests available</CardDescription>
                             </div>
                           </div>
-                          <Badge variant="secondary">{tests.length} Tests</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{tests.length} Tests</Badge>
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <ScrollArea className="h-[200px]">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {tests.slice(0, 15).map((test) => (
-                              <div
-                                key={test.id}
-                                className="p-3 rounded-lg bg-background/60 border border-border/50 hover:bg-background/80 hover:border-primary/30 transition-all duration-150 cursor-default"
-                                data-testid={`card-test-${test.testCode}`}
-                              >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm truncate" title={test.testName}>
-                                      {test.testName}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      <span className="font-mono">{test.testCode}</span> • {test.sampleType}
-                                    </p>
+                      {isExpanded && (
+                        <CardContent>
+                          <ScrollArea className="max-h-[400px]">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                              {tests.map((test) => (
+                                <div
+                                  key={test.id}
+                                  className="p-3 rounded-lg bg-background/60 border border-border/50 hover:bg-background/80 hover:border-primary/30 transition-all duration-150 cursor-pointer"
+                                  onClick={() => handleViewTestDetails(test)}
+                                  data-testid={`card-test-${test.testCode}`}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm truncate" title={test.testName}>
+                                        {test.testName}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        <span className="font-mono">{test.testCode}</span> • {test.sampleType}
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                      <Badge variant="outline" className="text-xs shrink-0">
+                                        Rs. {test.price}
+                                      </Badge>
+                                      <Eye className="h-3 w-3 text-muted-foreground" />
+                                    </div>
                                   </div>
-                                  <Badge variant="outline" className="text-xs shrink-0">
-                                    {test.price}
-                                  </Badge>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                          {tests.length > 15 && (
-                            <p className="text-center text-sm text-muted-foreground mt-4">
-                              +{tests.length - 15} more tests in this category
-                            </p>
-                          )}
-                        </ScrollArea>
-                      </CardContent>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </CardContent>
+                      )}
                     </Card>
                   );
                 })
               )}
             </div>
+
+            {/* Summary Stats */}
+            <Card className="mt-4">
+              <CardContent className="py-4">
+                <div className="flex items-center justify-center gap-8 text-sm">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">{labTestCatalog.filter(t => t.isActive).length}</p>
+                    <p className="text-muted-foreground">Total Tests</p>
+                  </div>
+                  <Separator orientation="vertical" className="h-10" />
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">{Object.keys(groupedTests).length}</p>
+                    <p className="text-muted-foreground">Departments</p>
+                  </div>
+                  <Separator orientation="vertical" className="h-10" />
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">{filteredLabTests.length}</p>
+                    <p className="text-muted-foreground">Filtered Results</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
@@ -1347,6 +1448,442 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Test Details Dialog */}
+      <Dialog open={isTestDetailsOpen} onOpenChange={setIsTestDetailsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FlaskConical className="h-5 w-5 text-primary" />
+              Test Details
+            </DialogTitle>
+            <DialogDescription>
+              Complete information about the selected test
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTestDetails && (
+            <div className="space-y-6">
+              <div className="bg-primary/5 p-4 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xl font-semibold">{selectedTestDetails.testName}</h3>
+                  <Badge variant="outline" className="font-mono">{selectedTestDetails.testCode}</Badge>
+                </div>
+                <Badge className="bg-primary/20 text-primary">{selectedTestDetails.testCategory}</Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground flex items-center gap-1">
+                    <Droplets className="h-3 w-3" />
+                    Sample Type
+                  </Label>
+                  <p className="font-medium">{selectedTestDetails.sampleType}</p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Turnaround Time
+                  </Label>
+                  <p className="font-medium">{selectedTestDetails.turnaroundTime || 'Not specified'}</p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">Price</Label>
+                  <p className="font-medium text-lg text-primary">Rs. {selectedTestDetails.price}</p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">Status</Label>
+                  <Badge className={selectedTestDetails.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                    {selectedTestDetails.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </div>
+              </div>
+
+              {selectedTestDetails.normalRange && (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">Normal Range / Reference Values</Label>
+                  <p className="bg-muted/50 p-3 rounded-lg text-sm">{selectedTestDetails.normalRange}</p>
+                </div>
+              )}
+
+              {selectedTestDetails.description && (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground">Description</Label>
+                  <p className="bg-muted/50 p-3 rounded-lg text-sm">{selectedTestDetails.description}</p>
+                </div>
+              )}
+
+              {selectedTestDetails.instructions && (
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground flex items-center gap-1">
+                    <Info className="h-3 w-3" />
+                    Patient Instructions
+                  </Label>
+                  <p className="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-lg text-sm">
+                    {selectedTestDetails.instructions}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => setIsTestDetailsOpen(false)}>
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  setSelectedTestForWalkIn(selectedTestDetails);
+                  setIsTestDetailsOpen(false);
+                  setIsWalkInReportOpen(true);
+                }} data-testid="button-create-report-from-details">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Report for Walk-in Patient
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Walk-in Patient Report Dialog */}
+      <Dialog open={isWalkInReportOpen} onOpenChange={setIsWalkInReportOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Create Walk-in Patient Report
+            </DialogTitle>
+            <DialogDescription>
+              Create a lab report for a walk-in patient (not registered in the system)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Patient Information */}
+            <div className="space-y-4">
+              <h4 className="font-semibold flex items-center gap-2 text-lg">
+                <User className="h-4 w-4" />
+                Patient Information
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="walkInPatientName">Patient Name *</Label>
+                  <Input
+                    id="walkInPatientName"
+                    value={walkInPatientData.patientName}
+                    onChange={(e) => setWalkInPatientData({ ...walkInPatientData, patientName: e.target.value })}
+                    placeholder="Enter patient name"
+                    data-testid="input-walkin-patient-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="walkInPatientAge">Age *</Label>
+                  <Input
+                    id="walkInPatientAge"
+                    value={walkInPatientData.patientAge}
+                    onChange={(e) => setWalkInPatientData({ ...walkInPatientData, patientAge: e.target.value })}
+                    placeholder="e.g., 35 Years"
+                    data-testid="input-walkin-patient-age"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="walkInPatientGender">Gender *</Label>
+                  <Select 
+                    value={walkInPatientData.patientGender} 
+                    onValueChange={(v) => setWalkInPatientData({ ...walkInPatientData, patientGender: v })}
+                  >
+                    <SelectTrigger data-testid="select-walkin-gender">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="walkInPatientPhone">Phone Number</Label>
+                  <Input
+                    id="walkInPatientPhone"
+                    value={walkInPatientData.patientPhone}
+                    onChange={(e) => setWalkInPatientData({ ...walkInPatientData, patientPhone: e.target.value })}
+                    placeholder="Enter phone number"
+                    data-testid="input-walkin-patient-phone"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="walkInPatientAddress">Address</Label>
+                  <Input
+                    id="walkInPatientAddress"
+                    value={walkInPatientData.patientAddress}
+                    onChange={(e) => setWalkInPatientData({ ...walkInPatientData, patientAddress: e.target.value })}
+                    placeholder="Enter patient address"
+                    data-testid="input-walkin-patient-address"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="walkInReferredBy">Referred By (Doctor/Self)</Label>
+                  <Input
+                    id="walkInReferredBy"
+                    value={walkInPatientData.referredBy}
+                    onChange={(e) => setWalkInPatientData({ ...walkInPatientData, referredBy: e.target.value })}
+                    placeholder="e.g., Dr. Smith or Self"
+                    data-testid="input-walkin-referred-by"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Test Selection */}
+            <div className="space-y-4">
+              <h4 className="font-semibold flex items-center gap-2 text-lg">
+                <FlaskConical className="h-4 w-4" />
+                Select Test *
+              </h4>
+              {selectedTestForWalkIn ? (
+                <div className="p-4 border rounded-lg bg-primary/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">{selectedTestForWalkIn.testName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedTestForWalkIn.testCode} • {selectedTestForWalkIn.sampleType} • Rs. {selectedTestForWalkIn.price}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedTestForWalkIn(null)}>
+                      Change
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Popover open={isWalkInTestSelectOpen} onOpenChange={setIsWalkInTestSelectOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between" data-testid="button-select-walkin-test">
+                      <span className="flex items-center gap-2">
+                        <Search className="h-4 w-4" />
+                        Search and select a test...
+                      </span>
+                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[500px] p-0" align="start">
+                    <Command>
+                      <CommandInput
+                        placeholder="Search tests by name or code..."
+                        value={walkInTestSearch}
+                        onValueChange={setWalkInTestSearch}
+                        data-testid="input-search-walkin-test"
+                      />
+                      <CommandList className="max-h-[300px]">
+                        <CommandEmpty>No tests found.</CommandEmpty>
+                        <CommandGroup heading="Available Tests">
+                          {filteredWalkInTests.map((test) => {
+                            const CategoryIcon = getCategoryIcon(test.testCategory);
+                            return (
+                              <CommandItem
+                                key={test.id}
+                                value={test.testName}
+                                onSelect={() => {
+                                  setSelectedTestForWalkIn(test);
+                                  setIsWalkInTestSelectOpen(false);
+                                  setWalkInTestSearch('');
+                                }}
+                                className="cursor-pointer"
+                                data-testid={`option-walkin-test-${test.testCode}`}
+                              >
+                                <CategoryIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <div className="flex flex-col flex-1">
+                                  <span className="font-medium">{test.testName}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {test.testCode} • {test.testCategory} • {test.sampleType}
+                                  </span>
+                                </div>
+                                <Badge variant="outline" className="ml-2">Rs. {test.price}</Badge>
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Report Details */}
+            <div className="space-y-4">
+              <h4 className="font-semibold flex items-center gap-2 text-lg">
+                <FileText className="h-4 w-4" />
+                Report Details
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="walkInResultValue">Result Value *</Label>
+                  <Input
+                    id="walkInResultValue"
+                    value={reportData.resultValue}
+                    onChange={(e) => setReportData({ ...reportData, resultValue: e.target.value })}
+                    placeholder="Enter result value"
+                    data-testid="input-walkin-result-value"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="walkInResultUnit">Unit</Label>
+                  <Input
+                    id="walkInResultUnit"
+                    value={reportData.resultUnit}
+                    onChange={(e) => setReportData({ ...reportData, resultUnit: e.target.value })}
+                    placeholder="e.g., mg/dL, cells/μL"
+                    data-testid="input-walkin-result-unit"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="walkInNormalRange">Normal Range</Label>
+                  <Input
+                    id="walkInNormalRange"
+                    value={reportData.normalRange}
+                    onChange={(e) => setReportData({ ...reportData, normalRange: e.target.value })}
+                    placeholder="e.g., 70-100"
+                    data-testid="input-walkin-normal-range"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="walkInInterpretation">Interpretation *</Label>
+                  <Select 
+                    value={reportData.interpretation} 
+                    onValueChange={(v) => setReportData({ ...reportData, interpretation: v as any })}
+                  >
+                    <SelectTrigger data-testid="select-walkin-interpretation">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NORMAL">Normal</SelectItem>
+                      <SelectItem value="ABNORMAL">Abnormal</SelectItem>
+                      <SelectItem value="CRITICAL">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="walkInFindings">Findings</Label>
+                  <Textarea
+                    id="walkInFindings"
+                    value={reportData.findings}
+                    onChange={(e) => setReportData({ ...reportData, findings: e.target.value })}
+                    placeholder="Enter detailed findings..."
+                    rows={3}
+                    data-testid="textarea-walkin-findings"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="walkInConclusion">Conclusion</Label>
+                  <Textarea
+                    id="walkInConclusion"
+                    value={reportData.conclusion}
+                    onChange={(e) => setReportData({ ...reportData, conclusion: e.target.value })}
+                    placeholder="Enter conclusion..."
+                    rows={2}
+                    data-testid="textarea-walkin-conclusion"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => {
+              setIsWalkInReportOpen(false);
+              setSelectedTestForWalkIn(null);
+              setWalkInPatientData({
+                patientName: '',
+                patientAge: '',
+                patientGender: 'Male',
+                patientPhone: '',
+                patientAddress: '',
+                referredBy: '',
+              });
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (!walkInPatientData.patientName || !walkInPatientData.patientAge || !selectedTestForWalkIn || !reportData.resultValue) {
+                  toast({
+                    title: "Missing Information",
+                    description: "Please fill in all required fields (Patient Name, Age, Test, and Result Value)",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                const lab = labs.find(l => l.isActive) || { id: currentUserId, labName: "Hospital Lab", labCode: "HL001" };
+
+                uploadReportMutation.mutate({
+                  patientId: `WALKIN-${Date.now()}`,
+                  patientName: walkInPatientData.patientName,
+                  patientAge: walkInPatientData.patientAge,
+                  patientGender: walkInPatientData.patientGender,
+                  patientPhone: walkInPatientData.patientPhone,
+                  patientAddress: walkInPatientData.patientAddress,
+                  referredBy: walkInPatientData.referredBy || 'Self',
+                  isWalkIn: true,
+                  testId: selectedTestForWalkIn.id,
+                  testName: selectedTestForWalkIn.testName,
+                  testCode: selectedTestForWalkIn.testCode,
+                  testCategory: selectedTestForWalkIn.testCategory,
+                  sampleType: selectedTestForWalkIn.sampleType,
+                  labId: lab.id,
+                  labName: lab.labName,
+                  reportStatus: "COMPLETED",
+                  resultValue: reportData.resultValue,
+                  resultUnit: reportData.resultUnit,
+                  normalRange: reportData.normalRange || selectedTestForWalkIn.normalRange || '',
+                  interpretation: reportData.interpretation,
+                  findings: reportData.findings,
+                  conclusion: reportData.conclusion,
+                  labTechnicianName: currentUserName,
+                  uploadedBy: currentUserId,
+                  uploadedByName: currentUserName,
+                });
+
+                setIsWalkInReportOpen(false);
+                setSelectedTestForWalkIn(null);
+                setWalkInPatientData({
+                  patientName: '',
+                  patientAge: '',
+                  patientGender: 'Male',
+                  patientPhone: '',
+                  patientAddress: '',
+                  referredBy: '',
+                });
+                setReportData({
+                  testName: "",
+                  resultValue: "",
+                  resultUnit: "",
+                  normalRange: "",
+                  interpretation: "NORMAL",
+                  findings: "",
+                  conclusion: "",
+                  labTechnicianName: currentUserName,
+                });
+              }}
+              disabled={uploadReportMutation.isPending}
+              data-testid="button-submit-walkin-report"
+            >
+              {uploadReportMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating Report...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Create Report
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

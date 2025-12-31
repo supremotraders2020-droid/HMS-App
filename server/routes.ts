@@ -8163,6 +8163,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Create lab report with notifications - Restricted to PATHOLOGY_LAB and ADMIN
+  // Supports both order-based reports and walk-in patient reports
   app.post("/api/lab-reports", async (req, res) => {
     try {
       const session = (req.session as any);
@@ -8180,32 +8181,64 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       
       const allReports = await databaseStorage.getAllLabReports();
       const reportNumber = `RPT-${new Date().getFullYear()}-${String(allReports.length + 1).padStart(4, '0')}`;
-      const report = await databaseStorage.createLabReport({ ...req.body, reportNumber });
-
-      await databaseStorage.updateLabTestOrder(req.body.orderId, { orderStatus: "COMPLETED" });
-
-      const notificationData = {
-        title: "Lab Report Available",
-        message: `New lab report uploaded: ${report.testName} for patient ${report.patientName}`,
-        type: "lab_report",
-        priority: req.body.interpretation === "CRITICAL" ? "critical" : "normal",
-        channel: "push",
-        isRead: false,
-        referenceId: report.id,
-        referenceType: "lab_report",
+      
+      // Handle walk-in patient reports (no order required)
+      const isWalkIn = req.body.isWalkIn === true;
+      const orderNumber = isWalkIn 
+        ? `WALKIN-${new Date().getFullYear()}-${String(allReports.length + 1).padStart(4, '0')}`
+        : (req.body.orderNumber || `ORD-${Date.now()}`);
+      
+      // Build report data with walk-in support
+      const reportData = {
+        ...req.body,
+        reportNumber,
+        orderNumber,
+        orderId: isWalkIn ? null : req.body.orderId,
+        doctorId: isWalkIn ? null : req.body.doctorId,
+        doctorName: isWalkIn ? (req.body.referredBy || 'Self') : req.body.doctorName,
+        reportDate: new Date(),
+        reportType: req.body.reportType || "STRUCTURED",
+        verifiedBy: user.firstName + ' ' + user.lastName,
+        verifiedAt: new Date(),
       };
+      
+      const report = await databaseStorage.createLabReport(reportData);
 
-      await databaseStorage.createUserNotification({ ...notificationData, userId: report.patientId, targetRole: "PATIENT" });
-      await databaseStorage.createUserNotification({ ...notificationData, userId: report.doctorId, targetRole: "DOCTOR" });
+      // Only update order status if this is not a walk-in patient and orderId exists
+      if (!isWalkIn && req.body.orderId) {
+        await databaseStorage.updateLabTestOrder(req.body.orderId, { orderStatus: "COMPLETED" });
+      }
 
+      // Send notifications based on walk-in status
+      const notificationData = {
+        title: isWalkIn ? "Walk-in Lab Report Created" : "Lab Report Available",
+        message: `${isWalkIn ? 'Walk-in' : 'New'} lab report: ${report.testName} for patient ${report.patientName}`,
+        type: "lab_report",
+        isRead: false,
+        relatedEntityId: report.id,
+        relatedEntityType: "lab_report",
+      };
+      
+      // For non-walk-in patients, notify patient and doctor
+      if (!isWalkIn) {
+        // Notify patient
+        await databaseStorage.createUserNotification({ ...notificationData, userId: report.patientId, userRole: "PATIENT" });
+        
+        // Notify doctor if exists
+        if (report.doctorId) {
+          await databaseStorage.createUserNotification({ ...notificationData, userId: report.doctorId, userRole: "DOCTOR" });
+        }
+      }
+      
+      // Always notify admins and nurses (staff) for all reports including walk-in
       const admins = await databaseStorage.getUsersByRole("ADMIN");
       for (const admin of admins) {
-        await databaseStorage.createUserNotification({ ...notificationData, userId: admin.id, targetRole: "ADMIN" });
+        await databaseStorage.createUserNotification({ ...notificationData, userId: admin.id, userRole: "ADMIN" });
       }
 
       const nurses = await databaseStorage.getUsersByRole("NURSE");
       for (const nurse of nurses) {
-        await databaseStorage.createUserNotification({ ...notificationData, userId: nurse.id, targetRole: "NURSE" });
+        await databaseStorage.createUserNotification({ ...notificationData, userId: nurse.id, userRole: "NURSE" });
       }
 
       await databaseStorage.createPathologyLabAccessLog({
