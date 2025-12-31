@@ -111,7 +111,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [referredFromDoctor, setReferredFromDoctor] = useState("");
   const [referralDiagnosis, setReferralDiagnosis] = useState("");
   const [referralReason, setReferralReason] = useState("");
-  const [referralUrgency, setReferralUrgency] = useState("ROUTINE");
+  const [referralUrgency, setReferralUrgency] = useState("CRITICAL");
   const [referralClinicalHistory, setReferralClinicalHistory] = useState("");
   const [referralSpecialInstructions, setReferralSpecialInstructions] = useState("");
   const { toast } = useToast();
@@ -903,8 +903,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                       <SelectValue placeholder="Select urgency" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="ROUTINE">Routine</SelectItem>
-                                      <SelectItem value="URGENT">Urgent</SelectItem>
+                                      <SelectItem value="CRITICAL">Critical</SelectItem>
                                       <SelectItem value="EMERGENCY">Emergency</SelectItem>
                                     </SelectContent>
                                   </Select>
