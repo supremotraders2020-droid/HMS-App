@@ -3432,6 +3432,11 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async deleteMedicalStoreInventoryItem(id: string): Promise<boolean> {
+    const result = await db.delete(medicalStoreInventory).where(eq(medicalStoreInventory.id, id)).returning();
+    return result.length > 0;
+  }
+
   // ========== PRESCRIPTION DISPENSING ==========
   async getAllPrescriptionDispensing(): Promise<PrescriptionDispensing[]> {
     return await db.select().from(prescriptionDispensing).orderBy(desc(prescriptionDispensing.createdAt));

@@ -7793,6 +7793,20 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // Delete inventory item
+  app.delete("/api/medical-stores/inventory/:id", async (req, res) => {
+    try {
+      const deleted = await databaseStorage.deleteMedicalStoreInventoryItem(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Inventory item not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting inventory item:", error);
+      res.status(500).json({ error: "Failed to delete inventory item" });
+    }
+  });
+
   // ==================== PATHOLOGY LAB ROUTES ====================
 
   // Get all pathology labs
