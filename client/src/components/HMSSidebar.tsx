@@ -230,8 +230,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Notifications Section - Shown for SUPER_ADMIN, DOCTOR, OPD_MANAGER, PATIENT */}
-        {(currentRole === "SUPER_ADMIN" || currentRole === "DOCTOR" || currentRole === "OPD_MANAGER" || currentRole === "PATIENT") && (
+        {/* Notifications Section - Hidden from ADMIN, NURSE, MEDICAL_STORE, PATHOLOGY_LAB roles */}
+        {currentRole !== "NURSE" && currentRole !== "ADMIN" && currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Notifications</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -269,8 +269,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           </SidebarGroup>
         )}
 
-        {/* Dashboard Section - Hidden from MEDICAL_STORE, PATHOLOGY_LAB, and SUPER_ADMIN roles */}
-        {currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && currentRole !== "SUPER_ADMIN" && (
+        {/* Dashboard Section - Hidden from MEDICAL_STORE and PATHOLOGY_LAB roles */}
+        {currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Dashboard</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -294,8 +294,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           </SidebarGroup>
         )}
 
-        {/* Core Services Section - Hidden from MEDICAL_STORE, PATHOLOGY_LAB, and SUPER_ADMIN roles */}
-        {currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && currentRole !== "SUPER_ADMIN" && (
+        {/* Core Services Section - Hidden from MEDICAL_STORE and PATHOLOGY_LAB roles */}
+        {currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && (
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Core Services</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -326,8 +326,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
         </SidebarGroup>
         )}
 
-        {/* Support Services - Hidden for OPD_MANAGER, MEDICAL_STORE, PATHOLOGY_LAB, and SUPER_ADMIN */}
-        {currentRole !== "OPD_MANAGER" && currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && currentRole !== "SUPER_ADMIN" && (
+        {/* Support Services - Hidden for OPD_MANAGER, MEDICAL_STORE and PATHOLOGY_LAB */}
+        {currentRole !== "OPD_MANAGER" && currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Support Services</SidebarGroupLabel>
             <SidebarGroupContent>
