@@ -53,7 +53,7 @@ import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/s
 import type { ServicePatient, MedicalRecord, PatientConsent, Doctor, IdCardScan, CriticalAlert } from "@shared/schema";
 import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, ImageIcon } from "lucide-react";
+import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, ImageIcon, ExternalLink } from "lucide-react";
 
 const patientFormSchema = insertServicePatientSchema.extend({
   firstName: z.string().min(1, "First name is required"),
@@ -2678,56 +2678,151 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
             </div>
           )}
           
-          {/* Camera Mode - Primary: Native Camera Capture for reliability */}
+          {/* Camera Mode - Live webcam with fallback */}
           {captureMode === "camera" && (
-            <div className="flex flex-col items-center justify-center py-10 bg-gradient-to-b from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/10 border-2 border-dashed border-green-300 dark:border-green-600 rounded-xl">
-              <div className="bg-green-100 dark:bg-green-800/50 p-4 rounded-full mb-4">
-                <Camera className="h-10 w-10 text-green-600 dark:text-green-400" />
-              </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-5 text-center px-6">
-                Take a clear photo of the <strong>{cameraTarget === "front" ? "front" : "back"}</strong> side of your ID card
-              </p>
-              <label className="cursor-pointer">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  capture="environment"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        const imageData = ev.target?.result as string;
-                        if (cameraTarget === "front") {
-                          setFrontImage(imageData);
-                        } else {
-                          setBackImage(imageData);
-                        }
-                        stopCamera();
-                        setShowCameraDialog(false);
-                        toast({
-                          title: "Photo Captured",
-                          description: `${cameraTarget === "front" ? "Front" : "Back"} side captured successfully.`
-                        });
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  data-testid="input-camera-capture"
+            <div className="space-y-4">
+              {/* Live Camera Preview Area */}
+              <div className="relative bg-black rounded-xl overflow-hidden" style={{ minHeight: "280px" }}>
+                <video 
+                  ref={videoRef}
+                  autoPlay 
+                  playsInline 
+                  muted
+                  className="w-full h-72 object-cover"
+                  data-testid="video-camera-preview"
                 />
-                <Button size="lg" className="bg-green-600 hover:bg-green-700 px-8" asChild>
-                  <span><Camera className="h-5 w-5 mr-2" /> Open Camera</span>
+                
+                {/* Camera frame guide */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute inset-4 border-2 border-dashed border-green-400/60 rounded-lg" />
+                  <div className="absolute bottom-3 left-0 right-0 text-center">
+                    <span className="bg-black/60 text-white text-xs px-3 py-1 rounded-full">
+                      Position ID card within the frame
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Status overlay */}
+                {!isVideoReady && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800">
+                    <div className="text-center text-white px-6">
+                      {isCameraLoading ? (
+                        <>
+                          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-3 text-green-400" />
+                          <p className="text-sm font-medium">Starting camera...</p>
+                          <p className="text-xs text-slate-400 mt-1">Please allow camera access if prompted</p>
+                        </>
+                      ) : cameraError ? (
+                        <>
+                          <div className="bg-amber-500/20 p-4 rounded-full inline-block mb-3">
+                            <AlertTriangle className="h-10 w-10 text-amber-400" />
+                          </div>
+                          <p className="text-sm font-medium text-amber-300 mb-2">Camera Not Available</p>
+                          <p className="text-xs text-slate-400 mb-4 max-w-xs">
+                            Camera access is blocked in this preview. Open the app in a new browser tab for live camera.
+                          </p>
+                          <div className="flex flex-col gap-2">
+                            <Button 
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => window.open(window.location.href, '_blank')}
+                            >
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Open in New Tab
+                            </Button>
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              className="text-white border-white/30 hover:bg-white/10"
+                              onClick={() => {
+                                setCameraError(null);
+                                startCamera();
+                              }}
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Retry Camera
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-10 w-10 mx-auto mb-3 text-slate-500" />
+                          <p className="text-sm text-slate-400">Camera initializing...</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Live indicator */}
+                {isVideoReady && (
+                  <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                    LIVE
+                  </div>
+                )}
+              </div>
+              
+              {/* Capture button */}
+              <div className="flex justify-center">
+                <Button 
+                  size="lg"
+                  className="bg-green-600 hover:bg-green-700 px-10 h-12"
+                  onClick={capturePhoto}
+                  disabled={!isVideoReady}
+                  data-testid="button-camera-capture"
+                >
+                  <Camera className="h-5 w-5 mr-2" />
+                  {isVideoReady ? "Capture Photo" : "Waiting for Camera..."}
                 </Button>
-              </label>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 text-center px-4">
-                Opens your device camera to capture photo
-              </p>
+              </div>
+              
+              {/* Fallback option for desktop */}
+              {cameraError && (
+                <div className="border-t pt-4">
+                  <p className="text-xs text-center text-slate-500 dark:text-slate-400 mb-3">
+                    Or select an existing photo from your files:
+                  </p>
+                  <div className="flex justify-center">
+                    <label className="cursor-pointer">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              const imageData = ev.target?.result as string;
+                              if (cameraTarget === "front") {
+                                setFrontImage(imageData);
+                              } else {
+                                setBackImage(imageData);
+                              }
+                              stopCamera();
+                              setShowCameraDialog(false);
+                              toast({
+                                title: "Image Selected",
+                                description: `${cameraTarget === "front" ? "Front" : "Back"} side added.`
+                              });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        data-testid="input-camera-fallback"
+                      />
+                      <Button variant="outline" size="sm" asChild>
+                        <span><Upload className="h-4 w-4 mr-2" /> Choose from Files</span>
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
           <canvas ref={canvasRef} className="hidden" />
-          <video ref={videoRef} className="hidden" autoPlay playsInline muted />
         </DialogContent>
       </Dialog>
 
