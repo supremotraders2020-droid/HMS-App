@@ -340,6 +340,16 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   useEffect(() => {
     if (showCameraDialog) {
       startCamera();
+      
+      // Add timeout - if camera doesn't become ready in 5 seconds, show error
+      const timeoutId = setTimeout(() => {
+        if (!isVideoReady && !cameraError) {
+          setCameraError("Camera access timed out. This may be due to browser restrictions in web-based environments. Please use the Upload option instead.");
+          stopCamera();
+        }
+      }, 5000);
+      
+      return () => clearTimeout(timeoutId);
     } else {
       stopCamera();
     }
@@ -2663,55 +2673,60 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 
                 <canvas ref={canvasRef} className="hidden" />
                 
-                <div className="flex justify-center gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowCameraDialog(false)}
-                    data-testid="button-camera-cancel"
-                  >
-                    Cancel
-                  </Button>
-                  <label className="cursor-pointer">
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (ev) => {
-                            const imageData = ev.target?.result as string;
-                            if (cameraTarget === "front") {
-                              setFrontImage(imageData);
-                            } else {
-                              setBackImage(imageData);
-                            }
-                            stopCamera();
-                            setShowCameraDialog(false);
-                            toast({
-                              title: "Image Uploaded",
-                              description: `${cameraTarget === "front" ? "Front" : "Back"} side of ID card uploaded successfully.`
-                            });
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      data-testid="input-upload-image"
-                    />
-                    <Button variant="outline" asChild>
-                      <span><Upload className="h-4 w-4 mr-1" /> Upload</span>
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-center gap-3">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowCameraDialog(false)}
+                      data-testid="button-camera-cancel"
+                    >
+                      Cancel
                     </Button>
-                  </label>
-                  <Button 
-                    className="bg-blue-600 hover:bg-blue-700"
-                    onClick={capturePhoto}
-                    disabled={isCameraLoading || !isVideoReady}
-                    data-testid="button-camera-capture"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    {isVideoReady ? "Capture Photo" : "Waiting for camera..."}
-                  </Button>
+                    <label className="cursor-pointer">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              const imageData = ev.target?.result as string;
+                              if (cameraTarget === "front") {
+                                setFrontImage(imageData);
+                              } else {
+                                setBackImage(imageData);
+                              }
+                              stopCamera();
+                              setShowCameraDialog(false);
+                              toast({
+                                title: "Image Uploaded",
+                                description: `${cameraTarget === "front" ? "Front" : "Back"} side of ID card uploaded successfully.`
+                              });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        data-testid="input-upload-image"
+                      />
+                      <Button className="bg-green-600 hover:bg-green-700" asChild>
+                        <span><Upload className="h-4 w-4 mr-1" /> Upload Image</span>
+                      </Button>
+                    </label>
+                    <Button 
+                      variant="outline"
+                      onClick={capturePhoto}
+                      disabled={isCameraLoading || !isVideoReady}
+                      data-testid="button-camera-capture"
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      {isVideoReady ? "Capture" : "Waiting..."}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Camera may not work in web-based environments. Use Upload for best results.
+                  </p>
                 </div>
               </>
             )}
