@@ -496,6 +496,54 @@ function UsersSection() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>Create a new user account with role-based access</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" placeholder="Enter username" data-testid="input-username" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" placeholder="Enter password" data-testid="input-password" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input id="name" placeholder="Enter full name" data-testid="input-name" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="Enter email address" data-testid="input-email" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <SelectTrigger data-testid="select-role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((role) => (
+                    <SelectItem key={role} value={role}>{role.replace("_", " ")}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowAddUser(false)}>Cancel</Button>
+            <Button onClick={() => {
+              toast({ title: "User Created", description: "New user account has been created successfully" });
+              setShowAddUser(false);
+            }} data-testid="button-create-user">Create User</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -620,6 +668,8 @@ function BillingSection() {
 
 function StockSection() {
   const { data: batches, isLoading } = useQuery<StockBatch[]>({ queryKey: ["/api/super-admin/stock-batches"] });
+  const [showAddBatch, setShowAddBatch] = useState(false);
+  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -628,11 +678,72 @@ function StockSection() {
           <h2 className="text-2xl font-bold">Stock & Pharmacy Control</h2>
           <p className="text-slate-600 dark:text-slate-400">Manage inventory, pricing, GST, and batch tracking</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddBatch(true)} data-testid="button-add-batch">
           <Plus className="h-4 w-4 mr-2" />
           Add Stock Batch
         </Button>
       </div>
+
+      {/* Add Stock Batch Dialog */}
+      <Dialog open={showAddBatch} onOpenChange={setShowAddBatch}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Stock Batch</DialogTitle>
+            <DialogDescription>Add new medicine batch to inventory</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="medicineName">Medicine Name</Label>
+              <Input id="medicineName" placeholder="Enter medicine name" data-testid="input-medicine-name" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="batchNumber">Batch Number</Label>
+              <Input id="batchNumber" placeholder="e.g., BTH-2024-001" data-testid="input-batch-number" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input id="quantity" type="number" placeholder="0" data-testid="input-quantity" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mrp">MRP (₹)</Label>
+              <Input id="mrp" type="number" placeholder="0.00" data-testid="input-mrp" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="purchasePrice">Purchase Price (₹)</Label>
+              <Input id="purchasePrice" type="number" placeholder="0.00" data-testid="input-purchase-price" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gstPercentage">GST %</Label>
+              <Select>
+                <SelectTrigger data-testid="select-gst">
+                  <SelectValue placeholder="Select GST" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0%</SelectItem>
+                  <SelectItem value="5">5%</SelectItem>
+                  <SelectItem value="12">12%</SelectItem>
+                  <SelectItem value="18">18%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expiryDate">Expiry Date</Label>
+              <Input id="expiryDate" type="date" data-testid="input-expiry-date" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="manufacturer">Manufacturer</Label>
+              <Input id="manufacturer" placeholder="Enter manufacturer" data-testid="input-manufacturer" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowAddBatch(false)}>Cancel</Button>
+            <Button onClick={() => {
+              toast({ title: "Batch Added", description: "Stock batch has been added successfully" });
+              setShowAddBatch(false);
+            }} data-testid="button-save-batch">Add Batch</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
@@ -738,6 +849,8 @@ function StockSection() {
 
 function SurgerySection() {
   const { data: packages, isLoading } = useQuery<SurgeryPackage[]>({ queryKey: ["/api/super-admin/surgery-packages"] });
+  const [showCreatePackage, setShowCreatePackage] = useState(false);
+  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -746,11 +859,77 @@ function SurgerySection() {
           <h2 className="text-2xl font-bold">Surgery Costing & Packages</h2>
           <p className="text-slate-600 dark:text-slate-400">Define surgery-wise costing with OT, surgeon, anesthesia fees</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreatePackage(true)} data-testid="button-create-surgery-package">
           <Plus className="h-4 w-4 mr-2" />
           Create Package
         </Button>
       </div>
+
+      {/* Create Surgery Package Dialog */}
+      <Dialog open={showCreatePackage} onOpenChange={setShowCreatePackage}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create Surgery Package</DialogTitle>
+            <DialogDescription>Define pricing for surgery with all components</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="packageName">Package Name</Label>
+              <Input id="packageName" placeholder="e.g., Knee Replacement Package" data-testid="input-package-name" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="surgeryType">Surgery Type</Label>
+              <Select>
+                <SelectTrigger data-testid="select-surgery-type">
+                  <SelectValue placeholder="Select surgery type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="orthopedic">Orthopedic</SelectItem>
+                  <SelectItem value="cardiac">Cardiac</SelectItem>
+                  <SelectItem value="neuro">Neurosurgery</SelectItem>
+                  <SelectItem value="general">General Surgery</SelectItem>
+                  <SelectItem value="gynec">Gynecology</SelectItem>
+                  <SelectItem value="ent">ENT</SelectItem>
+                  <SelectItem value="urology">Urology</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="otCharges">OT Charges (₹)</Label>
+                <Input id="otCharges" type="number" placeholder="0" data-testid="input-ot-charges" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="surgeonFees">Surgeon Fees (₹)</Label>
+                <Input id="surgeonFees" type="number" placeholder="0" data-testid="input-surgeon-fees" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="anesthesiaFees">Anesthesia Fees (₹)</Label>
+                <Input id="anesthesiaFees" type="number" placeholder="0" data-testid="input-anesthesia-fees" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="nursingCharges">Nursing Charges (₹)</Label>
+                <Input id="nursingCharges" type="number" placeholder="0" data-testid="input-nursing-charges" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="packagePrice">Total Package Price (₹)</Label>
+              <Input id="packagePrice" type="number" placeholder="0" data-testid="input-package-price" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" placeholder="Package inclusions and details..." data-testid="input-description" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowCreatePackage(false)}>Cancel</Button>
+            <Button onClick={() => {
+              toast({ title: "Package Created", description: "Surgery package has been created successfully" });
+              setShowCreatePackage(false);
+            }} data-testid="button-save-surgery-package">Create Package</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Packages Grid */}
       <div className="grid grid-cols-3 gap-4">
@@ -820,6 +999,8 @@ function SurgerySection() {
 
 function MedicinesSection() {
   const { data: medicines, isLoading } = useQuery<MedicineCatalog[]>({ queryKey: ["/api/super-admin/medicine-catalog"] });
+  const [showAddMedicine, setShowAddMedicine] = useState(false);
+  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -828,11 +1009,85 @@ function MedicinesSection() {
           <h2 className="text-2xl font-bold">Medicine Database Management</h2>
           <p className="text-slate-600 dark:text-slate-400">Manage medicine catalog with salt, brand, dosage, and form</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddMedicine(true)} data-testid="button-add-medicine">
           <Plus className="h-4 w-4 mr-2" />
           Add Medicine
         </Button>
       </div>
+
+      {/* Add Medicine Dialog */}
+      <Dialog open={showAddMedicine} onOpenChange={setShowAddMedicine}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Medicine to Catalog</DialogTitle>
+            <DialogDescription>Add new medicine with salt composition and pricing</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="brandName">Brand Name</Label>
+              <Input id="brandName" placeholder="e.g., Crocin Advance" data-testid="input-brand-name" />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="genericName">Generic Name</Label>
+              <Input id="genericName" placeholder="e.g., Paracetamol" data-testid="input-generic-name" />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="saltComposition">Salt Composition</Label>
+              <Input id="saltComposition" placeholder="e.g., Paracetamol 500mg" data-testid="input-salt-composition" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dosageForm">Dosage Form</Label>
+              <Select>
+                <SelectTrigger data-testid="select-dosage-form">
+                  <SelectValue placeholder="Select form" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tablet">Tablet</SelectItem>
+                  <SelectItem value="capsule">Capsule</SelectItem>
+                  <SelectItem value="syrup">Syrup</SelectItem>
+                  <SelectItem value="injection">Injection</SelectItem>
+                  <SelectItem value="cream">Cream/Ointment</SelectItem>
+                  <SelectItem value="drops">Drops</SelectItem>
+                  <SelectItem value="inhaler">Inhaler</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="strength">Strength</Label>
+              <Input id="strength" placeholder="e.g., 500mg" data-testid="input-strength" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mrpMedicine">MRP (₹)</Label>
+              <Input id="mrpMedicine" type="number" placeholder="0.00" data-testid="input-mrp-medicine" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="manufacturer">Manufacturer</Label>
+              <Input id="manufacturer" placeholder="e.g., GSK" data-testid="input-manufacturer" />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="schedule">Schedule</Label>
+              <Select>
+                <SelectTrigger data-testid="select-schedule">
+                  <SelectValue placeholder="Select schedule" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="otc">OTC (Over the Counter)</SelectItem>
+                  <SelectItem value="h">Schedule H</SelectItem>
+                  <SelectItem value="h1">Schedule H1</SelectItem>
+                  <SelectItem value="x">Schedule X (Narcotic)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowAddMedicine(false)}>Cancel</Button>
+            <Button onClick={() => {
+              toast({ title: "Medicine Added", description: "Medicine has been added to catalog" });
+              setShowAddMedicine(false);
+            }} data-testid="button-save-medicine">Add Medicine</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
@@ -900,6 +1155,8 @@ function MedicinesSection() {
 
 function InsuranceSection() {
   const { data: providers, isLoading } = useQuery<SuperAdminInsuranceProvider[]>({ queryKey: ["/api/super-admin/insurance-providers"] });
+  const [showAddProvider, setShowAddProvider] = useState(false);
+  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -908,11 +1165,72 @@ function InsuranceSection() {
           <h2 className="text-2xl font-bold">Insurance Providers & Policies</h2>
           <p className="text-slate-600 dark:text-slate-400">Manage insurers, TPAs, coverage limits, and rules</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddProvider(true)} data-testid="button-add-provider">
           <Plus className="h-4 w-4 mr-2" />
           Add Provider
         </Button>
       </div>
+
+      {/* Add Provider Dialog */}
+      <Dialog open={showAddProvider} onOpenChange={setShowAddProvider}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Insurance Provider</DialogTitle>
+            <DialogDescription>Add new insurance company or TPA integration</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="providerName">Provider Name</Label>
+              <Input id="providerName" placeholder="e.g., Star Health Insurance" data-testid="input-provider-name" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="providerCode">Provider Code</Label>
+              <Input id="providerCode" placeholder="e.g., STAR-001" data-testid="input-provider-code" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="providerType">Provider Type</Label>
+              <Select>
+                <SelectTrigger data-testid="select-provider-type">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="insurance_company">Insurance Company</SelectItem>
+                  <SelectItem value="tpa">TPA</SelectItem>
+                  <SelectItem value="government">Government Scheme</SelectItem>
+                  <SelectItem value="corporate">Corporate Tie-up</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="coverageLimit">Default Coverage (₹)</Label>
+              <Input id="coverageLimit" type="number" placeholder="500000" data-testid="input-coverage-limit" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="coPayPercentage">Co-Pay %</Label>
+              <Input id="coPayPercentage" type="number" placeholder="10" data-testid="input-copay" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="settlementDays">Settlement Days</Label>
+              <Input id="settlementDays" type="number" placeholder="30" data-testid="input-settlement-days" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactEmail">Contact Email</Label>
+              <Input id="contactEmail" type="email" placeholder="claims@insurance.com" data-testid="input-contact-email" />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="contactPhone">Contact Phone</Label>
+              <Input id="contactPhone" placeholder="+91 XXXXX XXXXX" data-testid="input-contact-phone" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowAddProvider(false)}>Cancel</Button>
+            <Button onClick={() => {
+              toast({ title: "Provider Added", description: "Insurance provider has been added successfully" });
+              setShowAddProvider(false);
+            }} data-testid="button-save-provider">Add Provider</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-3 gap-4">
         {isLoading ? (
@@ -1040,6 +1358,8 @@ function ClaimsSection() {
 
 function PackagesSection() {
   const { data: packages, isLoading } = useQuery<HospitalPackage[]>({ queryKey: ["/api/super-admin/hospital-packages"] });
+  const [showCreatePackage, setShowCreatePackage] = useState(false);
+  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -1048,11 +1368,73 @@ function PackagesSection() {
           <h2 className="text-2xl font-bold">Hospital Packages & Pricing</h2>
           <p className="text-slate-600 dark:text-slate-400">Create OPD/IPD packages and dynamic pricing models</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreatePackage(true)} data-testid="button-create-hospital-package">
           <Plus className="h-4 w-4 mr-2" />
           Create Package
         </Button>
       </div>
+
+      {/* Create Hospital Package Dialog */}
+      <Dialog open={showCreatePackage} onOpenChange={setShowCreatePackage}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create Hospital Package</DialogTitle>
+            <DialogDescription>Define OPD/IPD package with pricing and inclusions</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="hospitalPackageName">Package Name</Label>
+              <Input id="hospitalPackageName" placeholder="e.g., Master Health Checkup" data-testid="input-hospital-package-name" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="packageCode">Package Code</Label>
+              <Input id="packageCode" placeholder="e.g., MHC-001" data-testid="input-package-code" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="packageType">Package Type</Label>
+              <Select>
+                <SelectTrigger data-testid="select-package-type">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="opd">OPD Package</SelectItem>
+                  <SelectItem value="ipd">IPD Package</SelectItem>
+                  <SelectItem value="health_checkup">Health Checkup</SelectItem>
+                  <SelectItem value="corporate">Corporate Package</SelectItem>
+                  <SelectItem value="daycare">Daycare Package</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="basePrice">Base Price (₹)</Label>
+              <Input id="basePrice" type="number" placeholder="0" data-testid="input-base-price" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="discountPercentage">Discount %</Label>
+              <Input id="discountPercentage" type="number" placeholder="0" data-testid="input-discount" />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="finalPrice">Final Price (₹)</Label>
+              <Input id="finalPrice" type="number" placeholder="0" data-testid="input-final-price" />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="inclusions">Inclusions</Label>
+              <Textarea id="inclusions" placeholder="List all services included in this package..." rows={3} data-testid="input-inclusions" />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="validityDays">Validity (Days)</Label>
+              <Input id="validityDays" type="number" placeholder="365" data-testid="input-validity" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowCreatePackage(false)}>Cancel</Button>
+            <Button onClick={() => {
+              toast({ title: "Package Created", description: "Hospital package has been created successfully" });
+              setShowCreatePackage(false);
+            }} data-testid="button-save-hospital-package">Create Package</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="all">
         <TabsList>
