@@ -139,6 +139,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [cameraTarget, setCameraTarget] = useState<"front" | "back">("front");
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isCameraLoading, setIsCameraLoading] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -154,6 +155,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+    setIsVideoReady(false);
   }, []);
   
   // Start camera function
@@ -163,6 +165,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     
     setCameraError(null);
     setIsCameraLoading(true);
+    setIsVideoReady(false);
     
     // Check for secure context (HTTPS or localhost)
     if (!window.isSecureContext) {
@@ -209,6 +212,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
             videoRef.current.play()
               .then(() => {
                 setIsCameraLoading(false);
+                setIsVideoReady(true);
               })
               .catch(err => {
                 console.error("Error playing video:", err);
@@ -256,10 +260,27 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   
   // Capture photo from video stream
   const capturePhoto = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current) {
+      toast({
+        title: "Capture Failed",
+        description: "Camera not ready. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     const video = videoRef.current;
     const canvas = canvasRef.current;
+    
+    // Validate video has valid dimensions
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      toast({
+        title: "Capture Failed",
+        description: "Video stream not ready. Please wait for camera to initialize.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
@@ -267,12 +288,29 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     
     // Draw current video frame to canvas
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      toast({
+        title: "Capture Failed",
+        description: "Unable to capture image. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     // Convert to data URL
     const imageData = canvas.toDataURL("image/jpeg", 0.9);
+    
+    // Validate the image data is not empty
+    if (!imageData || imageData === "data:," || imageData.length < 100) {
+      toast({
+        title: "Capture Failed", 
+        description: "Image capture failed. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Set the appropriate image based on target
     if (cameraTarget === "front") {
@@ -2606,6 +2644,21 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                     data-testid="video-camera-preview"
                   />
                   <div className="absolute inset-0 border-2 border-dashed border-white/30 m-4 rounded pointer-events-none" />
+                  {!isVideoReady && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                      <div className="text-center text-white">
+                        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                        <p className="text-sm">Waiting for camera stream...</p>
+                        <p className="text-xs text-white/60 mt-1">If camera doesn't appear, use Upload option</p>
+                      </div>
+                    </div>
+                  )}
+                  {isVideoReady && (
+                    <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                      Live
+                    </div>
+                  )}
                 </div>
                 
                 <canvas ref={canvasRef} className="hidden" />
@@ -2653,11 +2706,11 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   <Button 
                     className="bg-blue-600 hover:bg-blue-700"
                     onClick={capturePhoto}
-                    disabled={isCameraLoading}
+                    disabled={isCameraLoading || !isVideoReady}
                     data-testid="button-camera-capture"
                   >
                     <Camera className="h-4 w-4 mr-2" />
-                    Capture Photo
+                    {isVideoReady ? "Capture Photo" : "Waiting for camera..."}
                   </Button>
                 </div>
               </>
