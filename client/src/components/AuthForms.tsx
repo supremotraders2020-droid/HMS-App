@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserPlus, LogIn } from "lucide-react";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface AuthFormsProps {
   onLogin?: (username: string, password: string, role: UserRole) => void;
@@ -29,6 +29,7 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
 
   // All roles available for login
   const allRoles: { value: UserRole; label: string; description: string }[] = [
+    { value: "SUPER_ADMIN", label: "Super Admin", description: "Enterprise control & audit" },
     { value: "ADMIN", label: "Administrator", description: "Full system access" },
     { value: "DOCTOR", label: "Doctor", description: "Patient care & diagnosis" },
     { value: "NURSE", label: "Nurse", description: "Patient care & monitoring" },
