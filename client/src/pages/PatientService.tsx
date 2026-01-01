@@ -179,24 +179,57 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     }
     
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false
-      });
+      // Try with environment-facing camera first (for mobile)
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+      } catch {
+        // Fallback to any available camera
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+      }
       
       streamRef.current = stream;
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(err => {
-          console.error("Error playing video:", err);
-        });
+        
+        // Wait for video metadata to load before playing
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play()
+              .then(() => {
+                setIsCameraLoading(false);
+              })
+              .catch(err => {
+                console.error("Error playing video:", err);
+                setCameraError("Failed to start video playback. Please try again.");
+                setIsCameraLoading(false);
+              });
+          }
+        };
+        
+        // Timeout fallback in case metadata doesn't load
+        const timeoutId = setTimeout(() => {
+          setIsCameraLoading(false);
+        }, 3000);
+        
+        // Clear timeout when video loads
+        videoRef.current.oncanplay = () => {
+          clearTimeout(timeoutId);
+        };
+      } else {
+        setIsCameraLoading(false);
       }
-      setIsCameraLoading(false);
     } catch (err: unknown) {
       console.error("Camera access error:", err);
       setIsCameraLoading(false);
@@ -205,32 +238,18 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
         if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
           setCameraError("Camera permission denied. Please allow camera access in your browser settings and try again.");
         } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-          setCameraError("No camera found. Please connect a camera and try again.");
+          setCameraError("No camera found. Please connect a camera or use the Upload option.");
         } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
-          setCameraError("Camera is in use by another application. Please close other apps using the camera and try again.");
+          setCameraError("Camera is in use by another application. Please close other apps using the camera.");
         } else if (err.name === "OverconstrainedError") {
-          setCameraError("Camera does not meet requirements. Trying with default settings...");
-          // Try again with basic constraints
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              video: true,
-              audio: false
-            });
-            streamRef.current = stream;
-            if (videoRef.current) {
-              videoRef.current.srcObject = stream;
-              videoRef.current.play();
-            }
-            setCameraError(null);
-            setIsCameraLoading(false);
-          } catch {
-            setCameraError("Unable to access camera with any settings.");
-          }
+          setCameraError("Camera configuration error. Please use the Upload option.");
+        } else if (err.name === "AbortError") {
+          setCameraError("Camera request was aborted. Please try again.");
         } else {
-          setCameraError(`Camera error: ${err.message}`);
+          setCameraError(`Camera error: ${err.message}. Please use the Upload option.`);
         }
       } else {
-        setCameraError("An unknown error occurred while accessing the camera.");
+        setCameraError("Unable to access camera. Please use the Upload option instead.");
       }
     }
   }, [stopCamera]);
