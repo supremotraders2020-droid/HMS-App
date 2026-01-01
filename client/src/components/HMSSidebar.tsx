@@ -115,6 +115,10 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
     const accessibleServices = services.filter(service => service.roles.includes(role));
 
     const roleSpecificItems: Record<UserRole, any[]> = {
+      SUPER_ADMIN: [
+        { title: "Super Admin Portal", url: "/super-admin", icon: Shield },
+        { title: "System Settings", url: "/settings", icon: Settings }
+      ],
       ADMIN: [
         { title: "User Management", url: "/users", icon: UserCog },
         { title: "Hospital Settings", url: "/hospitals", icon: Building2 },
@@ -154,6 +158,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
 
   const getRoleBadgeVariant = (role: UserRole) => {
     switch (role) {
+      case "SUPER_ADMIN": return "destructive";
       case "ADMIN": return "destructive";
       case "DOCTOR": return "default";
       case "NURSE": return "secondary";
@@ -167,6 +172,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
 
   const getRoleGradient = (role: UserRole) => {
     switch (role) {
+      case "SUPER_ADMIN": return "from-red-100 via-rose-50 to-pink-50 dark:from-red-900/40 dark:via-rose-800/30 dark:to-pink-900/20";
       case "ADMIN": return "from-violet-100 via-purple-50 to-fuchsia-50 dark:from-violet-900/40 dark:via-purple-800/30 dark:to-fuchsia-900/20";
       case "DOCTOR": return "from-cyan-100 via-blue-50 to-sky-50 dark:from-cyan-900/40 dark:via-blue-800/30 dark:to-sky-900/20";
       case "NURSE": return "from-emerald-100 via-green-50 to-teal-50 dark:from-emerald-900/40 dark:via-green-800/30 dark:to-teal-900/20";
