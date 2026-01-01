@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -133,7 +133,164 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [idCardVisitReason, setIdCardVisitReason] = useState("");
   const [idCardVisitType, setIdCardVisitType] = useState("");
   
+  // Camera capture states
+  const [showCameraDialog, setShowCameraDialog] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState<"front" | "back">("front");
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isCameraLoading, setIsCameraLoading] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
   const { toast } = useToast();
+  
+  // Camera cleanup function
+  const stopCamera = useCallback(() => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, [cameraStream]);
+  
+  // Start camera function
+  const startCamera = useCallback(async () => {
+    setCameraError(null);
+    setIsCameraLoading(true);
+    
+    // Check for secure context (HTTPS or localhost)
+    if (!window.isSecureContext) {
+      setCameraError("Camera access requires a secure connection (HTTPS). Please use HTTPS or localhost.");
+      setIsCameraLoading(false);
+      return;
+    }
+    
+    // Check if getUserMedia is supported
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError("Camera is not supported in this browser. Please use a modern browser like Chrome, Firefox, or Edge.");
+      setIsCameraLoading(false);
+      return;
+    }
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      });
+      
+      setCameraStream(stream);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(err => {
+          console.error("Error playing video:", err);
+        });
+      }
+      setIsCameraLoading(false);
+    } catch (err: unknown) {
+      console.error("Camera access error:", err);
+      setIsCameraLoading(false);
+      
+      if (err instanceof Error) {
+        if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+          setCameraError("Camera permission denied. Please allow camera access in your browser settings and try again.");
+        } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+          setCameraError("No camera found. Please connect a camera and try again.");
+        } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+          setCameraError("Camera is in use by another application. Please close other apps using the camera and try again.");
+        } else if (err.name === "OverconstrainedError") {
+          setCameraError("Camera does not meet requirements. Trying with default settings...");
+          // Try again with basic constraints
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: false
+            });
+            setCameraStream(stream);
+            if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+              videoRef.current.play();
+            }
+            setCameraError(null);
+          } catch {
+            setCameraError("Unable to access camera with any settings.");
+          }
+        } else {
+          setCameraError(`Camera error: ${err.message}`);
+        }
+      } else {
+        setCameraError("An unknown error occurred while accessing the camera.");
+      }
+    }
+  }, []);
+  
+  // Capture photo from video stream
+  const capturePhoto = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return;
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw current video frame to canvas
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Convert to data URL
+    const imageData = canvas.toDataURL("image/jpeg", 0.9);
+    
+    // Set the appropriate image based on target
+    if (cameraTarget === "front") {
+      setFrontImage(imageData);
+    } else {
+      setBackImage(imageData);
+    }
+    
+    // Close camera dialog
+    stopCamera();
+    setShowCameraDialog(false);
+    
+    toast({
+      title: "Photo Captured",
+      description: `${cameraTarget === "front" ? "Front" : "Back"} side of ID card captured successfully.`
+    });
+  }, [cameraTarget, stopCamera, toast]);
+  
+  // Open camera dialog
+  const openCameraDialog = useCallback((target: "front" | "back") => {
+    setCameraTarget(target);
+    setCameraError(null);
+    setShowCameraDialog(true);
+  }, []);
+  
+  // Effect to start camera when dialog opens
+  useEffect(() => {
+    if (showCameraDialog) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+  }, [showCameraDialog, startCamera, stopCamera]);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
 
   // Referral sources for referred patients
   type ReferralSource = {
@@ -1825,28 +1982,14 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                         <span><Upload className="h-4 w-4 mr-1" /> Upload</span>
                                       </Button>
                                     </label>
-                                    <label className="cursor-pointer">
-                                      <input 
-                                        type="file" 
-                                        accept="image/*" 
-                                        capture="environment"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0];
-                                          if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (ev) => {
-                                              setFrontImage(ev.target?.result as string);
-                                            };
-                                            reader.readAsDataURL(file);
-                                          }
-                                        }}
-                                        data-testid="input-front-image-camera"
-                                      />
-                                      <Button variant="outline" size="sm" asChild>
-                                        <span><Camera className="h-4 w-4 mr-1" /> Camera</span>
-                                      </Button>
-                                    </label>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => openCameraDialog("front")}
+                                      data-testid="button-front-image-camera"
+                                    >
+                                      <Camera className="h-4 w-4 mr-1" /> Camera
+                                    </Button>
                                   </div>
                                 </div>
                               )}
@@ -1896,28 +2039,14 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                         <span><Upload className="h-4 w-4 mr-1" /> Upload</span>
                                       </Button>
                                     </label>
-                                    <label className="cursor-pointer">
-                                      <input 
-                                        type="file" 
-                                        accept="image/*" 
-                                        capture="environment"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0];
-                                          if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (ev) => {
-                                              setBackImage(ev.target?.result as string);
-                                            };
-                                            reader.readAsDataURL(file);
-                                          }
-                                        }}
-                                        data-testid="input-back-image-camera"
-                                      />
-                                      <Button variant="outline" size="sm" asChild>
-                                        <span><Camera className="h-4 w-4 mr-1" /> Camera</span>
-                                      </Button>
-                                    </label>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => openCameraDialog("back")}
+                                      data-testid="button-back-image-camera"
+                                    >
+                                      <Camera className="h-4 w-4 mr-1" /> Camera
+                                    </Button>
                                   </div>
                                 </div>
                               )}
@@ -2646,6 +2775,87 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Camera Capture Dialog */}
+      <Dialog open={showCameraDialog} onOpenChange={(open) => {
+        if (!open) {
+          stopCamera();
+        }
+        setShowCameraDialog(open);
+      }}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              Capture {cameraTarget === "front" ? "Front" : "Back"} Side of ID Card
+            </DialogTitle>
+            <DialogDescription>
+              Position the ID card within the camera view and click capture.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {isCameraLoading && (
+              <div className="flex flex-col items-center justify-center py-12 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-2" />
+                <p className="text-sm text-slate-600 dark:text-slate-400">Starting camera...</p>
+              </div>
+            )}
+            
+            {cameraError && (
+              <div className="flex flex-col items-center justify-center py-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <AlertTriangle className="h-10 w-10 text-red-500 mb-3" />
+                <p className="text-sm text-red-600 dark:text-red-400 text-center px-4">{cameraError}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4"
+                  onClick={startCamera}
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" /> Retry
+                </Button>
+              </div>
+            )}
+            
+            {!isCameraLoading && !cameraError && (
+              <>
+                <div className="relative bg-black rounded-lg overflow-hidden">
+                  <video 
+                    ref={videoRef}
+                    autoPlay 
+                    playsInline 
+                    muted
+                    className="w-full h-64 object-cover"
+                    data-testid="video-camera-preview"
+                  />
+                  <div className="absolute inset-0 border-2 border-dashed border-white/30 m-4 rounded pointer-events-none" />
+                </div>
+                
+                <canvas ref={canvasRef} className="hidden" />
+                
+                <div className="flex justify-center gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowCameraDialog(false)}
+                    data-testid="button-camera-cancel"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={capturePhoto}
+                    disabled={!cameraStream}
+                    data-testid="button-camera-capture"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Capture Photo
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
