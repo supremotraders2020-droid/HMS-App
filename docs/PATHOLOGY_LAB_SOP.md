@@ -463,6 +463,52 @@ Generate and distribute lab reports to patients and doctors.
 | Portal | Available in patient portal |
 | SMS | Notification with link |
 
+### 8.5 Walk-in Patient Reports (NEW)
+
+Walk-in patient reports allow lab staff to create reports for patients who visit the lab directly without a prior order from a hospital doctor.
+
+**Step 1: Navigate to Available Tests Tab**
+- Click "Available Tests" in the Pathology Lab Portal
+- Browse all departments (expandable sections)
+- Use search to find specific tests
+
+**Step 2: Select Test for Walk-in Report**
+- Click on a test to view details
+- Click "Create Walk-in Report" button
+
+**Step 3: Enter Patient Information**
+| Field | Required | Description |
+|-------|----------|-------------|
+| Patient Name | Yes | Full name of walk-in patient |
+| Age | Yes | Patient age in years |
+| Gender | Yes | Male/Female/Other |
+| Phone | Yes | Contact number |
+| Address | No | Patient address |
+| Referred By | No | Referring doctor/clinic name |
+
+**Step 4: Enter Report Details**
+| Field | Required | Description |
+|-------|----------|-------------|
+| Result Value | Yes | Test result |
+| Result Unit | No | Measurement unit |
+| Normal Range | No | Reference range (auto-filled) |
+| Interpretation | No | Normal/Abnormal/Critical |
+| Findings | No | Detailed findings |
+| Conclusion | No | Final conclusion |
+
+**Step 5: Submit Report**
+- Click "Create Walk-in Report"
+- System generates WALKIN-prefixed order number
+- Report created with lab technician as uploader
+- Admin and nursing staff notified
+
+**Walk-in Report Characteristics:**
+- Order number format: `WALKIN-TIMESTAMP`
+- No associated hospital order ID
+- No doctor ID linked
+- Staff notifications sent (Admin, Nurse)
+- Available in lab reports list
+
 ---
 
 ## 9. Quality Control
@@ -751,6 +797,7 @@ The HMS Core Hospital Services module includes 1,148 pathology tests:
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | December 2024 | Initial release |
+| 1.1 | January 2026 | Added Walk-in Patient Reports feature (Section 8.5), Expanded Available Tests tab with all departments visible |
 
 ---
 

@@ -1,7 +1,9 @@
 # HMS Core - Complete Feature Documentation
 
 ## System Overview
-HMS Core is a comprehensive Hospital Management System for Gravity Hospital with 20+ specialized modules. The system supports 5 user roles with role-based access control.
+HMS Core is a comprehensive Hospital Management System for Gravity Hospital with 21+ specialized modules. The system supports 7 user roles with role-based access control, 24 departments with 4,830+ hospital services including 1,148 pathology tests.
+
+**Last Updated:** January 2026
 
 ---
 
@@ -14,6 +16,8 @@ HMS Core is a comprehensive Hospital Management System for Gravity Hospital with
 | NURSE | Clinical | Patient monitoring, medication administration |
 | OPD_MANAGER | Operational | OPD operations, appointments, scheduling |
 | PATIENT | Limited | View own records, book appointments |
+| PATHOLOGY_LAB | Lab Operations | Test orders, sample collection, result entry, reports |
+| MEDICAL_STORE | Pharmacy | Prescriptions, dispensing, billing, stock management |
 
 ---
 
@@ -471,6 +475,109 @@ All forms available in English, Hindi, and Marathi
 - AES-256 encryption
 - HIPAA compliance
 - Verification logging
+
+---
+
+## Module 23: Pathology Lab Portal
+
+### Features
+- Complete test order management
+- Sample collection with barcode tracking
+- Test processing and result entry
+- Report generation with validation
+- Quality control (IQC/EQAS)
+- Lab inventory management
+- Walk-in patient report creation
+
+### Test Catalog
+- 1,148 pathology tests across 10 categories
+- All departments visible with expandable sections
+- Test details dialog with complete information:
+  - Sample type and turnaround time
+  - Price and normal range
+  - Description and patient instructions
+- Searchable test selection
+
+### Walk-in Patient Reports
+- Patient information form (name, age, gender, phone, address)
+- Referred by field for external referrals
+- Searchable test selection from full catalog
+- Report details entry (result value, unit, interpretation, findings, conclusion)
+- Auto-generated WALKIN-prefixed order numbers
+- Staff notifications for admin/nurse
+
+### Report Status Workflow
+```
+ORDERED → SAMPLE_COLLECTED → PROCESSING → COMPLETED → VERIFIED → DELIVERED
+```
+
+---
+
+## Module 24: Medical Store Portal
+
+### Features
+- Prescription viewing from hospital doctors
+- Medicine dispensing workflow
+- Billing with GST calculation
+- Medicine substitution approval
+- Store inventory management
+- Stock level and expiry tracking
+
+### Store Types
+| Type | Description |
+|------|-------------|
+| IN_HOUSE | Hospital's internal pharmacy |
+| THIRD_PARTY | External pharmacy partners |
+
+### Dispensing Status
+```
+PENDING → PARTIALLY_DISPENSED → FULLY_DISPENSED
+```
+
+### Payment Methods
+- CASH
+- CARD
+- UPI
+- INSURANCE
+
+---
+
+## Module 25: Hospital Services Catalog
+
+### Overview
+Comprehensive catalog of 4,830+ services across 24 departments.
+
+### Departments (24)
+1. Emergency
+2. Cardiology
+3. Neurology
+4. Orthopedics
+5. Pediatrics
+6. Oncology
+7. Ophthalmology
+8. ENT
+9. Dermatology
+10. Psychiatry
+11. Gynecology
+12. Urology
+13. Nephrology
+14. Gastroenterology
+15. Pulmonology
+16. Endocrinology
+17. Rheumatology
+18. Pathology (1,148 tests)
+19. Radiology
+20. Physiotherapy
+21. Dental
+22. General Medicine
+23. General Surgery
+24. ICU
+
+### Service Information
+- Service code and name
+- Department mapping
+- Price and duration
+- Description
 
 ---
 

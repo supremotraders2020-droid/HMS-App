@@ -45,8 +45,8 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 | Feature | Description |
 |---------|-------------|
 | **Hospital** | Gravity Hospital (Single-Tenant) |
-| **User Roles** | 7 distinct roles with specific permissions |
-| **Internal Services** | 24 departments with 4,830+ hospital services |
+| **User Roles** | 7 roles: ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE |
+| **Internal Services** | 24 departments with 4,830+ services (including 1,148 pathology tests) |
 | **Portals** | 3 specialized portals (Patient, Doctor, Staff) |
 | **Security** | AES-256 encryption, bcrypt password hashing, HIPAA compliance |
 | **Theme** | Light/Dark mode with 6 color themes |
@@ -109,7 +109,7 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 
 | Feature | Description |
 |---------|-------------|
-| Role-Based Access | 5 distinct user roles with customized dashboards |
+| Role-Based Access | 7 distinct user roles with customized dashboards |
 | Multi-Theme Support | 6 color themes (Healthcare Blue, Medical Teal, Clinical Green, Warm Coral, Purple, Indigo) |
 | Dark/Light Mode | Full dark mode support for reduced eye strain |
 | Real-time Notifications | WebSocket-powered instant updates |
