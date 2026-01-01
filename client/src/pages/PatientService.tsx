@@ -136,27 +136,30 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   // Camera capture states
   const [showCameraDialog, setShowCameraDialog] = useState(false);
   const [cameraTarget, setCameraTarget] = useState<"front" | "back">("front");
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isCameraLoading, setIsCameraLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   
   const { toast } = useToast();
   
-  // Camera cleanup function
+  // Camera cleanup function (ref-based to avoid dependency issues)
   const stopCamera = useCallback(() => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
-      setCameraStream(null);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-  }, [cameraStream]);
+  }, []);
   
   // Start camera function
   const startCamera = useCallback(async () => {
+    // Stop any existing stream first
+    stopCamera();
+    
     setCameraError(null);
     setIsCameraLoading(true);
     
@@ -184,7 +187,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
         audio: false
       });
       
-      setCameraStream(stream);
+      streamRef.current = stream;
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -212,12 +215,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               video: true,
               audio: false
             });
-            setCameraStream(stream);
+            streamRef.current = stream;
             if (videoRef.current) {
               videoRef.current.srcObject = stream;
               videoRef.current.play();
             }
             setCameraError(null);
+            setIsCameraLoading(false);
           } catch {
             setCameraError("Unable to access camera with any settings.");
           }
@@ -228,7 +232,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
         setCameraError("An unknown error occurred while accessing the camera.");
       }
     }
-  }, []);
+  }, [stopCamera]);
   
   // Capture photo from video stream
   const capturePhoto = useCallback(() => {
@@ -274,23 +278,24 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     setShowCameraDialog(true);
   }, []);
   
-  // Effect to start camera when dialog opens
+  // Effect to start camera when dialog opens (stable dependencies)
   useEffect(() => {
     if (showCameraDialog) {
       startCamera();
     } else {
       stopCamera();
     }
-  }, [showCameraDialog, startCamera, stopCamera]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCameraDialog]);
   
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, [cameraStream]);
+  }, []);
 
   // Referral sources for referred patients
   type ReferralSource = {
@@ -2846,7 +2851,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   <Button 
                     className="bg-blue-600 hover:bg-blue-700"
                     onClick={capturePhoto}
-                    disabled={!cameraStream}
+                    disabled={isCameraLoading}
                     data-testid="button-camera-capture"
                   >
                     <Camera className="h-4 w-4 mr-2" />
