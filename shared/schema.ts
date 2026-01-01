@@ -4009,3 +4009,107 @@ export const insertOpdTemplateVersionSchema = createInsertSchema(opdTemplateVers
 });
 export type InsertOpdTemplateVersion = z.infer<typeof insertOpdTemplateVersionSchema>;
 export type OpdTemplateVersion = typeof opdTemplateVersions.$inferSelect;
+
+// ==========================================
+// ID Card Scanning & Alert System
+// ==========================================
+
+// ID Card Types
+export const idCardTypeEnum = pgEnum("id_card_type", ["AADHAAR", "PAN", "DRIVING_LICENSE", "VOTER_ID", "PASSPORT", "OTHER"]);
+
+// ID Card Scans - Stores scanned ID card data
+export const idCardScans = pgTable("id_card_scans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // ID Card Information
+  idCardType: text("id_card_type").notNull(), // AADHAAR, PAN, DRIVING_LICENSE, VOTER_ID, PASSPORT, OTHER
+  idNumber: text("id_number"),
+  
+  // Extracted Information
+  extractedName: text("extracted_name"),
+  extractedDob: text("extracted_dob"),
+  extractedGender: text("extracted_gender"),
+  extractedAddress: text("extracted_address"),
+  calculatedAge: integer("calculated_age"),
+  
+  // Image Data (base64)
+  frontImageData: text("front_image_data"),
+  backImageData: text("back_image_data"),
+  
+  // OCR/QR Raw Data
+  ocrRawData: text("ocr_raw_data"),
+  qrRawData: text("qr_raw_data"),
+  
+  // Processing Status
+  processingStatus: text("processing_status").default("pending"), // pending, processing, completed, failed
+  processingNotes: text("processing_notes"),
+  
+  // Link to patient if registered
+  patientId: varchar("patient_id"),
+  
+  // Metadata
+  scannedBy: varchar("scanned_by"),
+  scannedByName: text("scanned_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIdCardScanSchema = createInsertSchema(idCardScans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertIdCardScan = z.infer<typeof insertIdCardScanSchema>;
+export type IdCardScan = typeof idCardScans.$inferSelect;
+
+// Critical Alerts - For underage pregnancy and other critical conditions
+export const criticalAlerts = pgTable("critical_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Alert Type
+  alertType: text("alert_type").notNull(), // UNDERAGE_PREGNANCY, EMERGENCY, CRITICAL_CONDITION
+  severity: text("severity").notNull().default("critical"), // critical, high, medium
+  
+  // Patient Information
+  patientId: varchar("patient_id"),
+  patientName: text("patient_name").notNull(),
+  patientAge: integer("patient_age"),
+  patientGender: text("patient_gender"),
+  
+  // Visit Details
+  department: text("department"),
+  visitReason: text("visit_reason"),
+  visitType: text("visit_type"), // pregnancy_related, routine, emergency
+  
+  // Alert Details
+  alertTitle: text("alert_title").notNull(),
+  alertMessage: text("alert_message").notNull(),
+  additionalNotes: text("additional_notes"),
+  
+  // ID Card Reference
+  idCardScanId: varchar("id_card_scan_id"),
+  
+  // Status
+  status: text("status").notNull().default("active"), // active, acknowledged, resolved, dismissed
+  acknowledgedBy: varchar("acknowledged_by"),
+  acknowledgedByName: text("acknowledged_by_name"),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  resolvedBy: varchar("resolved_by"),
+  resolvedByName: text("resolved_by_name"),
+  resolvedAt: timestamp("resolved_at"),
+  resolutionNotes: text("resolution_notes"),
+  
+  // Metadata
+  createdBy: varchar("created_by"),
+  createdByName: text("created_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCriticalAlertSchema = createInsertSchema(criticalAlerts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertCriticalAlert = z.infer<typeof insertCriticalAlertSchema>;
+export type CriticalAlert = typeof criticalAlerts.$inferSelect;

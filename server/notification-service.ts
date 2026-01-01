@@ -95,6 +95,22 @@ class NotificationService {
     });
   }
 
+  // Public method to broadcast to a specific role (for critical alerts)
+  broadcastToRole(role: string, data: any) {
+    const message = JSON.stringify({
+      category: 'critical_alert',
+      ...data
+    });
+    this.clients.forEach((clients) => {
+      clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN && client.userRole === role) {
+          client.send(message);
+        }
+      });
+    });
+    console.log(`Critical alert broadcast to ${role}: ${data.title}`);
+  }
+
   // Broadcast slot updates to all connected clients for real-time sync
   broadcastSlotUpdate(slotUpdate: {
     type: 'slot.booked' | 'slot.cancelled' | 'slots.generated';

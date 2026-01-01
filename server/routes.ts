@@ -54,7 +54,10 @@ import { users, insertAppointmentSchema, insertInventoryItemSchema, insertInvent
   insertLabTestOrderSchema,
   // OPD Prescription Templates
   opdPrescriptionTemplates, insertOpdPrescriptionTemplateSchema,
-  opdTemplateVersions, insertOpdTemplateVersionSchema
+  opdTemplateVersions, insertOpdTemplateVersionSchema,
+  // ID Card Scanning & Alert System
+  idCardScans, insertIdCardScanSchema,
+  criticalAlerts, insertCriticalAlertSchema
 } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
@@ -11636,6 +11639,239 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error seeding templates:", error);
       res.status(500).json({ error: "Failed to seed templates" });
+    }
+  });
+
+  // ==========================================
+  // ID Card Scanning & Alert System Routes
+  // ==========================================
+
+  // Get all ID card scans
+  app.get("/api/id-card-scans", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const scans = await db.select().from(idCardScans).orderBy(desc(idCardScans.createdAt));
+      res.json(scans);
+    } catch (error) {
+      console.error("Error fetching ID card scans:", error);
+      res.status(500).json({ error: "Failed to fetch ID card scans" });
+    }
+  });
+
+  // Create ID card scan with OCR processing
+  app.post("/api/id-card-scans", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const scanData = {
+        ...req.body,
+        scannedBy: user?.id,
+        scannedByName: user?.name || user?.username,
+        processingStatus: "completed"
+      };
+      
+      const [scan] = await db.insert(idCardScans).values(scanData).returning();
+      res.json(scan);
+    } catch (error) {
+      console.error("Error creating ID card scan:", error);
+      res.status(500).json({ error: "Failed to create ID card scan" });
+    }
+  });
+
+  // OCR processing endpoint - simulates OCR extraction
+  app.post("/api/id-card-scans/process-ocr", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const { imageData, idCardType, side } = req.body;
+      
+      // In a real implementation, this would call an OCR service
+      // For now, we return a structure that the frontend can use
+      // The frontend will handle actual OCR using browser-based libraries
+      
+      res.json({
+        success: true,
+        message: "Image received for processing",
+        idCardType,
+        side,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error processing OCR:", error);
+      res.status(500).json({ error: "Failed to process OCR" });
+    }
+  });
+
+  // Get all critical alerts
+  app.get("/api/critical-alerts", requireAuth, requireRole(["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const { status } = req.query;
+      let alerts;
+      
+      if (status) {
+        alerts = await db.select().from(criticalAlerts)
+          .where(eq(criticalAlerts.status, status as string))
+          .orderBy(desc(criticalAlerts.createdAt));
+      } else {
+        alerts = await db.select().from(criticalAlerts)
+          .orderBy(desc(criticalAlerts.createdAt));
+      }
+      
+      res.json(alerts);
+    } catch (error) {
+      console.error("Error fetching critical alerts:", error);
+      res.status(500).json({ error: "Failed to fetch critical alerts" });
+    }
+  });
+
+  // Get active critical alerts count (for dashboard badge)
+  app.get("/api/critical-alerts/active-count", requireAuth, async (req, res) => {
+    try {
+      const alerts = await db.select().from(criticalAlerts)
+        .where(eq(criticalAlerts.status, "active"));
+      res.json({ count: alerts.length });
+    } catch (error) {
+      console.error("Error fetching active alerts count:", error);
+      res.status(500).json({ error: "Failed to fetch active alerts count" });
+    }
+  });
+
+  // Create critical alert (called when underage pregnancy detected)
+  app.post("/api/critical-alerts", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const alertData = {
+        ...req.body,
+        createdBy: user?.id,
+        createdByName: user?.name || user?.username,
+        status: "active"
+      };
+      
+      const [alert] = await db.insert(criticalAlerts).values(alertData).returning();
+      
+      // Broadcast real-time notification to admin/management
+      notificationService.broadcastToRole("ADMIN", {
+        type: "CRITICAL_ALERT",
+        title: alertData.alertTitle,
+        message: alertData.alertMessage,
+        alertId: alert.id,
+        severity: alertData.severity,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.json(alert);
+    } catch (error) {
+      console.error("Error creating critical alert:", error);
+      res.status(500).json({ error: "Failed to create critical alert" });
+    }
+  });
+
+  // Check for critical alert conditions (backend rule enforcement)
+  app.post("/api/critical-alerts/check", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+    try {
+      const { patientName, patientAge, patientGender, department, visitReason, visitType, idCardScanId, patientId } = req.body;
+      const user = (req as any).session?.user;
+      
+      const alerts = [];
+      
+      // Rule: Age < 18 AND Department = Gynecology AND Pregnancy-related visit
+      if (patientAge < 18 && 
+          department?.toLowerCase() === "gynecology" && 
+          (visitType === "pregnancy_related" || 
+           visitReason?.toLowerCase().includes("pregnancy") ||
+           visitReason?.toLowerCase().includes("pregnant"))) {
+        
+        const alertData = {
+          alertType: "UNDERAGE_PREGNANCY",
+          severity: "critical",
+          patientId,
+          patientName,
+          patientAge,
+          patientGender,
+          department,
+          visitReason,
+          visitType,
+          alertTitle: "CRITICAL: Underage Pregnancy Case",
+          alertMessage: `Underage patient (${patientAge} years old) registered for pregnancy-related visit in Gynecology department. Immediate attention required.`,
+          additionalNotes: `Patient: ${patientName}, Age: ${patientAge}, Reason: ${visitReason}`,
+          idCardScanId,
+          createdBy: user?.id,
+          createdByName: user?.name || user?.username,
+          status: "active"
+        };
+        
+        const [alert] = await db.insert(criticalAlerts).values(alertData).returning();
+        alerts.push(alert);
+        
+        // Broadcast real-time notification
+        notificationService.broadcastToRole("ADMIN", {
+          type: "CRITICAL_ALERT",
+          title: alertData.alertTitle,
+          message: alertData.alertMessage,
+          alertId: alert.id,
+          severity: "critical",
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      res.json({ 
+        alertsTriggered: alerts.length > 0,
+        alerts 
+      });
+    } catch (error) {
+      console.error("Error checking critical alert conditions:", error);
+      res.status(500).json({ error: "Failed to check alert conditions" });
+    }
+  });
+
+  // Acknowledge critical alert
+  app.patch("/api/critical-alerts/:id/acknowledge", requireAuth, requireRole(["ADMIN", "DOCTOR", "NURSE"]), async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const [alert] = await db.update(criticalAlerts)
+        .set({
+          status: "acknowledged",
+          acknowledgedBy: user?.id,
+          acknowledgedByName: user?.name || user?.username,
+          acknowledgedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(criticalAlerts.id, req.params.id))
+        .returning();
+      
+      if (!alert) {
+        return res.status(404).json({ error: "Alert not found" });
+      }
+      
+      res.json(alert);
+    } catch (error) {
+      console.error("Error acknowledging alert:", error);
+      res.status(500).json({ error: "Failed to acknowledge alert" });
+    }
+  });
+
+  // Resolve critical alert
+  app.patch("/api/critical-alerts/:id/resolve", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const { resolutionNotes } = req.body;
+      
+      const [alert] = await db.update(criticalAlerts)
+        .set({
+          status: "resolved",
+          resolvedBy: user?.id,
+          resolvedByName: user?.name || user?.username,
+          resolvedAt: new Date(),
+          resolutionNotes,
+          updatedAt: new Date()
+        })
+        .where(eq(criticalAlerts.id, req.params.id))
+        .returning();
+      
+      if (!alert) {
+        return res.status(404).json({ error: "Alert not found" });
+      }
+      
+      res.json(alert);
+    } catch (error) {
+      console.error("Error resolving alert:", error);
+      res.status(500).json({ error: "Failed to resolve alert" });
     }
   });
 

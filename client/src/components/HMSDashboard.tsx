@@ -29,9 +29,15 @@ import {
   Ambulance,
   Pill,
   Bed,
-  ClipboardList
+  ClipboardList,
+  CheckCircle,
+  XCircle,
+  Bell,
+  Eye
 } from "lucide-react";
-import type { ActivityLog, Appointment, ServicePatient } from "@shared/schema";
+import type { ActivityLog, Appointment, ServicePatient, CriticalAlert } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
@@ -40,6 +46,143 @@ interface HMSDashboardProps {
   userName: string;
   hospitalName: string;
   userId: string;
+}
+
+function CriticalAlertsPanel() {
+  const { data: criticalAlerts = [], isLoading } = useQuery<CriticalAlert[]>({
+    queryKey: ['/api/critical-alerts'],
+    refetchInterval: 10000, 
+  });
+
+  const activeAlerts = criticalAlerts.filter(alert => alert.status === 'active');
+
+  const handleAcknowledge = async (alertId: number) => {
+    try {
+      await apiRequest("PATCH", `/api/critical-alerts/${alertId}/acknowledge`, {});
+      queryClient.invalidateQueries({ queryKey: ['/api/critical-alerts'] });
+    } catch (error) {
+      console.error("Failed to acknowledge alert:", error);
+    }
+  };
+
+  const handleResolve = async (alertId: number) => {
+    try {
+      await apiRequest("PATCH", `/api/critical-alerts/${alertId}/resolve`, { resolutionNotes: "Resolved by admin" });
+      queryClient.invalidateQueries({ queryKey: ['/api/critical-alerts'] });
+    } catch (error) {
+      console.error("Failed to resolve alert:", error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-6 w-6" />
+            <Skeleton className="h-6 w-40" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-20 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (activeAlerts.length === 0) {
+    return (
+      <Card className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20">
+        <CardContent className="py-6">
+          <div className="flex items-center justify-center gap-3 text-green-700 dark:text-green-400">
+            <CheckCircle className="h-6 w-6" />
+            <span className="text-lg font-medium">No Active Critical Alerts</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-4"
+    >
+      <Card className="border-2 border-red-400 dark:border-red-700 bg-red-50/80 dark:bg-red-950/30 shadow-lg shadow-red-500/10">
+        <CardHeader className="pb-3 border-b border-red-200 dark:border-red-800">
+          <CardTitle className="flex items-center gap-3 text-red-700 dark:text-red-400">
+            <div className="relative">
+              <AlertTriangle className="h-6 w-6" />
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-ping" />
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full" />
+            </div>
+            Critical Alerts ({activeAlerts.length})
+          </CardTitle>
+          <CardDescription className="text-red-600/80 dark:text-red-400/80">
+            Immediate attention required for the following alerts
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-3">
+          {activeAlerts.map((alert) => (
+            <motion.div
+              key={alert.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-red-200 dark:border-red-800 shadow-sm"
+              data-testid={`critical-alert-${alert.id}`}
+            >
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-2">
+                  <Badge 
+                    variant="destructive" 
+                    className="uppercase text-xs"
+                    data-testid={`alert-severity-${alert.id}`}
+                  >
+                    {alert.severity}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {alert.alertType.replace(/_/g, ' ')}
+                  </Badge>
+                </div>
+                <p className="font-semibold text-slate-900 dark:text-white">
+                  {alert.alertTitle}
+                </p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {alert.alertMessage}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-500 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {alert.createdAt ? new Date(alert.createdAt).toLocaleString() : 'Just now'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleAcknowledge(alert.id)}
+                  className="text-amber-600 border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950"
+                  data-testid={`button-acknowledge-${alert.id}`}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  Acknowledge
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handleResolve(alert.id)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  data-testid={`button-resolve-${alert.id}`}
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Resolve
+                </Button>
+              </div>
+            </motion.div>
+          ))}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 }
 
 export default function HMSDashboard({ currentRole, userName, hospitalName, userId }: HMSDashboardProps) {
@@ -459,6 +602,9 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
             </motion.div>
           ))}
         </motion.div>
+
+        {/* Critical Alerts Panel - ADMIN Only */}
+        {currentRole === "ADMIN" && <CriticalAlertsPanel />}
 
         {/* Recent Activity - Full Width */}
         <Card className="glass-card border border-slate-200/60 dark:border-slate-700/60 shadow-xl stagger-item">

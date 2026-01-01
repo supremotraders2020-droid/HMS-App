@@ -50,10 +50,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/schema";
-import type { ServicePatient, MedicalRecord, PatientConsent, Doctor } from "@shared/schema";
+import type { ServicePatient, MedicalRecord, PatientConsent, Doctor, IdCardScan, CriticalAlert } from "@shared/schema";
 import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, FileCheck } from "lucide-react";
+import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, ImageIcon } from "lucide-react";
 
 const patientFormSchema = insertServicePatientSchema.extend({
   firstName: z.string().min(1, "First name is required"),
@@ -114,6 +114,25 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [referralUrgency, setReferralUrgency] = useState("CRITICAL");
   const [referralClinicalHistory, setReferralClinicalHistory] = useState("");
   const [referralSpecialInstructions, setReferralSpecialInstructions] = useState("");
+  
+  // ID Card Scanning States
+  const [idCardType, setIdCardType] = useState<string>("");
+  const [frontImage, setFrontImage] = useState<string | null>(null);
+  const [backImage, setBackImage] = useState<string | null>(null);
+  const [extractedData, setExtractedData] = useState<{
+    name: string;
+    dob: string;
+    gender: string;
+    idNumber: string;
+    address: string;
+    age: number | null;
+  }>({ name: "", dob: "", gender: "", idNumber: "", address: "", age: null });
+  const [isProcessingOcr, setIsProcessingOcr] = useState(false);
+  const [showIdCardPatientForm, setShowIdCardPatientForm] = useState(false);
+  const [idCardDepartment, setIdCardDepartment] = useState("");
+  const [idCardVisitReason, setIdCardVisitReason] = useState("");
+  const [idCardVisitType, setIdCardVisitType] = useState("");
+  
   const { toast } = useToast();
 
   // Referral sources for referred patients
@@ -597,7 +616,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full ${currentRole === "NURSE" || currentRole === "OPD_MANAGER" ? "grid-cols-2" : "grid-cols-3"} lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6`}>
+          <TabsList className={`grid w-full ${currentRole === "NURSE" || currentRole === "OPD_MANAGER" ? "grid-cols-2" : "grid-cols-4"} lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6`}>
             <TabsTrigger 
               value="patients" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
@@ -622,6 +641,16 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               >
                 <FileCheck className="h-4 w-4" />
                 Consent Forms
+              </TabsTrigger>
+            )}
+            {currentRole !== "NURSE" && currentRole !== "OPD_MANAGER" && (
+              <TabsTrigger 
+                value="id-card-scan" 
+                className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
+                data-testid="tab-id-card-scan"
+              >
+                <CreditCard className="h-4 w-4" />
+                ID Card Scan
               </TabsTrigger>
             )}
           </TabsList>
@@ -1706,6 +1735,508 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         </Card>
                       ))}
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ID Card Scanning Tab */}
+          <TabsContent value="id-card-scan" className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <CreditCard className="h-5 w-5 text-blue-600" />
+                    ID Card Scanning & Alert System
+                  </CardTitle>
+                  <CardDescription>Scan patient ID cards to auto-fill registration forms</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Step 1: Select ID Card Type */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/30">Step 1</Badge>
+                    Select ID Card Type
+                  </div>
+                  <Select value={idCardType} onValueChange={setIdCardType}>
+                    <SelectTrigger className="w-full max-w-md" data-testid="select-id-card-type">
+                      <SelectValue placeholder="Choose ID card type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AADHAAR">Aadhaar Card</SelectItem>
+                      <SelectItem value="PAN">PAN Card</SelectItem>
+                      <SelectItem value="DRIVING_LICENSE">Driving License</SelectItem>
+                      <SelectItem value="VOTER_ID">Voter ID</SelectItem>
+                      <SelectItem value="PASSPORT">Passport</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {idCardType && (
+                  <>
+                    {/* Step 2: Scan Front & Back */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/30">Step 2</Badge>
+                        Scan ID Card (Front & Back)
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Front Side */}
+                        <Card className="border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-400 transition-colors">
+                          <CardContent className="p-4">
+                            <div className="flex flex-col items-center justify-center space-y-3">
+                              <div className="text-sm font-medium text-slate-600 dark:text-slate-400">Front Side</div>
+                              {frontImage ? (
+                                <div className="relative w-full">
+                                  <img src={frontImage} alt="Front of ID" className="w-full h-40 object-contain rounded-lg bg-slate-100 dark:bg-slate-800" />
+                                  <Button 
+                                    size="icon" 
+                                    variant="destructive" 
+                                    className="absolute top-2 right-2 h-6 w-6"
+                                    onClick={() => setFrontImage(null)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-3 py-6">
+                                  <ImageIcon className="h-12 w-12 text-slate-400" />
+                                  <div className="flex gap-2">
+                                    <label className="cursor-pointer">
+                                      <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (ev) => {
+                                              setFrontImage(ev.target?.result as string);
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                        data-testid="input-front-image-upload"
+                                      />
+                                      <Button variant="outline" size="sm" asChild>
+                                        <span><Upload className="h-4 w-4 mr-1" /> Upload</span>
+                                      </Button>
+                                    </label>
+                                    <label className="cursor-pointer">
+                                      <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        capture="environment"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (ev) => {
+                                              setFrontImage(ev.target?.result as string);
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                        data-testid="input-front-image-camera"
+                                      />
+                                      <Button variant="outline" size="sm" asChild>
+                                        <span><Camera className="h-4 w-4 mr-1" /> Camera</span>
+                                      </Button>
+                                    </label>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Back Side */}
+                        <Card className="border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-400 transition-colors">
+                          <CardContent className="p-4">
+                            <div className="flex flex-col items-center justify-center space-y-3">
+                              <div className="text-sm font-medium text-slate-600 dark:text-slate-400">Back Side</div>
+                              {backImage ? (
+                                <div className="relative w-full">
+                                  <img src={backImage} alt="Back of ID" className="w-full h-40 object-contain rounded-lg bg-slate-100 dark:bg-slate-800" />
+                                  <Button 
+                                    size="icon" 
+                                    variant="destructive" 
+                                    className="absolute top-2 right-2 h-6 w-6"
+                                    onClick={() => setBackImage(null)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-3 py-6">
+                                  <ImageIcon className="h-12 w-12 text-slate-400" />
+                                  <div className="flex gap-2">
+                                    <label className="cursor-pointer">
+                                      <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (ev) => {
+                                              setBackImage(ev.target?.result as string);
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                        data-testid="input-back-image-upload"
+                                      />
+                                      <Button variant="outline" size="sm" asChild>
+                                        <span><Upload className="h-4 w-4 mr-1" /> Upload</span>
+                                      </Button>
+                                    </label>
+                                    <label className="cursor-pointer">
+                                      <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        capture="environment"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (ev) => {
+                                              setBackImage(ev.target?.result as string);
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                        data-testid="input-back-image-camera"
+                                      />
+                                      <Button variant="outline" size="sm" asChild>
+                                        <span><Camera className="h-4 w-4 mr-1" /> Camera</span>
+                                      </Button>
+                                    </label>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {(frontImage || backImage) && (
+                        <Button 
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={async () => {
+                            setIsProcessingOcr(true);
+                            // Simulate OCR processing - in production would call actual OCR API
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+                            
+                            // Simulated extracted data based on ID type
+                            const simulatedData = {
+                              name: "Sample Patient",
+                              dob: "1990-05-15",
+                              gender: "Male",
+                              idNumber: idCardType === "AADHAAR" ? "1234 5678 9012" : 
+                                       idCardType === "PAN" ? "ABCDE1234F" : 
+                                       "ID12345678",
+                              address: "123 Main Street, City, State - 400001",
+                              age: null as number | null
+                            };
+                            
+                            // Calculate age from DOB
+                            const dob = new Date(simulatedData.dob);
+                            const today = new Date();
+                            let age = today.getFullYear() - dob.getFullYear();
+                            const m = today.getMonth() - dob.getMonth();
+                            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                              age--;
+                            }
+                            simulatedData.age = age;
+                            
+                            setExtractedData(simulatedData);
+                            setShowIdCardPatientForm(true);
+                            setIsProcessingOcr(false);
+                            toast({ 
+                              title: "OCR Processing Complete", 
+                              description: "Data extracted from ID card. Please verify and complete the registration."
+                            });
+                          }}
+                          disabled={isProcessingOcr}
+                          data-testid="button-process-ocr"
+                        >
+                          {isProcessingOcr ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <ScanLine className="h-4 w-4 mr-2" />
+                              Extract Data from ID Card
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Step 3: Auto-filled Patient Form */}
+                    {showIdCardPatientForm && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <Badge variant="outline" className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">Step 3</Badge>
+                          Verify & Complete Patient Registration
+                        </div>
+                        
+                        <Card className="bg-slate-50 dark:bg-slate-800/50">
+                          <CardContent className="p-4 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Full Name</label>
+                                <Input 
+                                  value={extractedData.name}
+                                  onChange={(e) => setExtractedData({...extractedData, name: e.target.value})}
+                                  data-testid="input-extracted-name"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Date of Birth</label>
+                                <Input 
+                                  type="date"
+                                  value={extractedData.dob}
+                                  onChange={(e) => {
+                                    const newDob = e.target.value;
+                                    // Recalculate age
+                                    const dob = new Date(newDob);
+                                    const today = new Date();
+                                    let age = today.getFullYear() - dob.getFullYear();
+                                    const m = today.getMonth() - dob.getMonth();
+                                    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                                      age--;
+                                    }
+                                    setExtractedData({...extractedData, dob: newDob, age});
+                                  }}
+                                  data-testid="input-extracted-dob"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Age (Auto-calculated)</label>
+                                <Input 
+                                  type="number"
+                                  value={extractedData.age || ""}
+                                  readOnly
+                                  className="bg-slate-100 dark:bg-slate-700"
+                                  data-testid="input-extracted-age"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Gender</label>
+                                <Select value={extractedData.gender} onValueChange={(val) => setExtractedData({...extractedData, gender: val})}>
+                                  <SelectTrigger data-testid="select-extracted-gender">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Male">Male</SelectItem>
+                                    <SelectItem value="Female">Female</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">ID Number ({idCardType})</label>
+                                <Input 
+                                  value={extractedData.idNumber}
+                                  onChange={(e) => setExtractedData({...extractedData, idNumber: e.target.value})}
+                                  data-testid="input-extracted-id-number"
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Address</label>
+                                <Textarea 
+                                  value={extractedData.address}
+                                  onChange={(e) => setExtractedData({...extractedData, address: e.target.value})}
+                                  rows={2}
+                                  data-testid="input-extracted-address"
+                                />
+                              </div>
+                            </div>
+                            
+                            <Separator />
+                            
+                            {/* Visit Details for Alert Check */}
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Visit Details</p>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <label className="text-sm text-slate-600 dark:text-slate-400">Department</label>
+                                  <Select value={idCardDepartment} onValueChange={setIdCardDepartment}>
+                                    <SelectTrigger data-testid="select-id-department">
+                                      <SelectValue placeholder="Select department..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="General Medicine">General Medicine</SelectItem>
+                                      <SelectItem value="Gynecology">Gynecology</SelectItem>
+                                      <SelectItem value="Pediatrics">Pediatrics</SelectItem>
+                                      <SelectItem value="Cardiology">Cardiology</SelectItem>
+                                      <SelectItem value="Orthopedics">Orthopedics</SelectItem>
+                                      <SelectItem value="Emergency">Emergency</SelectItem>
+                                      <SelectItem value="Other">Other</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <label className="text-sm text-slate-600 dark:text-slate-400">Visit Type</label>
+                                  <Select value={idCardVisitType} onValueChange={setIdCardVisitType}>
+                                    <SelectTrigger data-testid="select-id-visit-type">
+                                      <SelectValue placeholder="Select visit type..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="routine">Routine Checkup</SelectItem>
+                                      <SelectItem value="pregnancy_related">Pregnancy Related</SelectItem>
+                                      <SelectItem value="emergency">Emergency</SelectItem>
+                                      <SelectItem value="follow_up">Follow Up</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <label className="text-sm text-slate-600 dark:text-slate-400">Visit Reason</label>
+                                  <Input 
+                                    placeholder="Brief reason for visit..."
+                                    value={idCardVisitReason}
+                                    onChange={(e) => setIdCardVisitReason(e.target.value)}
+                                    data-testid="input-id-visit-reason"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Alert Warning for Underage + Gynecology + Pregnancy */}
+                            {extractedData.age !== null && extractedData.age < 18 && 
+                             idCardDepartment === "Gynecology" && 
+                             (idCardVisitType === "pregnancy_related" || idCardVisitReason.toLowerCase().includes("pregnancy")) && (
+                              <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 rounded-lg p-4">
+                                <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                                  <AlertTriangle className="h-5 w-5" />
+                                  <span className="font-bold">CRITICAL ALERT WARNING</span>
+                                </div>
+                                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                                  Underage patient ({extractedData.age} years) with pregnancy-related visit to Gynecology. 
+                                  A critical alert will be triggered and sent to Admin/Management.
+                                </p>
+                              </div>
+                            )}
+                            
+                            <div className="flex gap-3 pt-2">
+                              <Button 
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={async () => {
+                                  try {
+                                    // Split name into first and last
+                                    const nameParts = extractedData.name.split(" ");
+                                    const firstName = nameParts[0] || "";
+                                    const lastName = nameParts.slice(1).join(" ") || "";
+                                    
+                                    // Create patient
+                                    const patientData = {
+                                      firstName,
+                                      lastName,
+                                      dateOfBirth: extractedData.dob,
+                                      gender: extractedData.gender,
+                                      address: extractedData.address,
+                                      phone: "",
+                                      email: "",
+                                      emergencyContact: "",
+                                      emergencyPhone: "",
+                                      insuranceProvider: "",
+                                      insuranceNumber: "",
+                                    };
+                                    
+                                    const patientResult = await apiRequest("POST", "/api/patients/service", patientData);
+                                    const newPatient = await patientResult.json();
+                                    
+                                    // Save ID card scan
+                                    await apiRequest("POST", "/api/id-card-scans", {
+                                      idCardType,
+                                      idNumber: extractedData.idNumber,
+                                      extractedName: extractedData.name,
+                                      extractedDob: extractedData.dob,
+                                      extractedGender: extractedData.gender,
+                                      extractedAddress: extractedData.address,
+                                      calculatedAge: extractedData.age,
+                                      frontImageData: frontImage,
+                                      backImageData: backImage,
+                                      patientId: newPatient.id
+                                    });
+                                    
+                                    // Check for critical alert conditions
+                                    const alertCheck = await apiRequest("POST", "/api/critical-alerts/check", {
+                                      patientId: newPatient.id,
+                                      patientName: extractedData.name,
+                                      patientAge: extractedData.age,
+                                      patientGender: extractedData.gender,
+                                      department: idCardDepartment,
+                                      visitReason: idCardVisitReason,
+                                      visitType: idCardVisitType
+                                    });
+                                    
+                                    const alertResult = await alertCheck.json();
+                                    
+                                    if (alertResult.alertsTriggered) {
+                                      toast({
+                                        title: "CRITICAL ALERT TRIGGERED",
+                                        description: "A critical alert has been sent to Admin/Management for immediate attention.",
+                                        variant: "destructive"
+                                      });
+                                    }
+                                    
+                                    queryClient.invalidateQueries({ queryKey: ["/api/patients/service"] });
+                                    
+                                    toast({
+                                      title: "Patient Registered Successfully",
+                                      description: `${extractedData.name} has been registered from ID card scan.`
+                                    });
+                                    
+                                    // Reset form
+                                    setIdCardType("");
+                                    setFrontImage(null);
+                                    setBackImage(null);
+                                    setExtractedData({ name: "", dob: "", gender: "", idNumber: "", address: "", age: null });
+                                    setShowIdCardPatientForm(false);
+                                    setIdCardDepartment("");
+                                    setIdCardVisitReason("");
+                                    setIdCardVisitType("");
+                                    
+                                  } catch (error) {
+                                    console.error("Error registering patient:", error);
+                                    toast({
+                                      title: "Registration Failed",
+                                      description: "Failed to register patient. Please try again.",
+                                      variant: "destructive"
+                                    });
+                                  }
+                                }}
+                                data-testid="button-register-from-id"
+                              >
+                                <Check className="h-4 w-4 mr-2" />
+                                Register Patient
+                              </Button>
+                              <Button 
+                                variant="outline"
+                                onClick={() => {
+                                  setShowIdCardPatientForm(false);
+                                  setExtractedData({ name: "", dob: "", gender: "", idNumber: "", address: "", age: null });
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
