@@ -2813,14 +2813,49 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               <div className="flex flex-col items-center justify-center py-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                 <AlertTriangle className="h-10 w-10 text-red-500 mb-3" />
                 <p className="text-sm text-red-600 dark:text-red-400 text-center px-4">{cameraError}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-4"
-                  onClick={startCamera}
-                >
-                  <RefreshCw className="h-4 w-4 mr-1" /> Retry
-                </Button>
+                <p className="text-xs text-slate-500 dark:text-slate-500 text-center px-4 mt-2">
+                  If you're using a cloud environment or a device without a camera, please use the Upload button instead.
+                </p>
+                <div className="flex gap-2 mt-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={startCamera}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" /> Retry
+                  </Button>
+                  <label className="cursor-pointer">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            const imageData = ev.target?.result as string;
+                            if (cameraTarget === "front") {
+                              setFrontImage(imageData);
+                            } else {
+                              setBackImage(imageData);
+                            }
+                            setShowCameraDialog(false);
+                            toast({
+                              title: "Image Uploaded",
+                              description: `${cameraTarget === "front" ? "Front" : "Back"} side of ID card uploaded successfully.`
+                            });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      data-testid="input-camera-fallback-upload"
+                    />
+                    <Button variant="default" size="sm" asChild className="bg-blue-600 hover:bg-blue-700">
+                      <span><Upload className="h-4 w-4 mr-1" /> Upload Instead</span>
+                    </Button>
+                  </label>
+                </div>
               </div>
             )}
             
