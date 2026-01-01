@@ -53,7 +53,7 @@ interface Notification {
   status?: string;
 }
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface HMSSidebarProps {
   currentRole: UserRole;
@@ -107,8 +107,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] },
       { title: "Medical Stores", url: "/medical-stores", icon: Package, roles: ["ADMIN"] },
       { title: "Pathology Lab", url: "/pathology-lab-portal", icon: FlaskConical, roles: ["ADMIN"] },
-      { title: "Services & Surgeries", url: "/hospital-services", icon: Scissors, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "PATHOLOGY_LAB", "MEDICAL_STORE", "SUPER_ADMIN"] },
-      { title: "Super Admin Portal", url: "/super-admin", icon: Shield, roles: ["SUPER_ADMIN"] }
+      { title: "Services & Surgeries", url: "/hospital-services", icon: Scissors, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "PATHOLOGY_LAB", "MEDICAL_STORE", "SUPER_ADMIN"] }
     ];
 
     // Filter services based on user role
