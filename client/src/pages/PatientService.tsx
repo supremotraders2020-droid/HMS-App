@@ -116,9 +116,10 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [referralSpecialInstructions, setReferralSpecialInstructions] = useState("");
   
   // ID Card Scanning States
-  const [idCardType, setIdCardType] = useState<string>("");
+  const [selectedIdCardType, setSelectedIdCardType] = useState<string>("");
   const [frontImage, setFrontImage] = useState<string | null>(null);
   const [backImage, setBackImage] = useState<string | null>(null);
+  const [extractedAge, setExtractedAge] = useState<number | null>(null);
   const [extractedData, setExtractedData] = useState<{
     name: string;
     dob: string;
@@ -857,74 +858,198 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         </DialogDescription>
                       </DialogHeader>
                       
-                      {/* ID Card Scan Button */}
-                      <div className="mb-4">
-                        <Button 
-                          type="button"
-                          variant="outline"
-                          className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                          onClick={() => {
-                            setCameraTarget("front");
-                            setCameraError(null);
-                            setShowCameraDialog(true);
-                          }}
-                          data-testid="button-id-card-scan"
-                        >
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          ID Card Scan
-                        </Button>
-                        {(frontImage || backImage) && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
-                              <Check className="h-3 w-3 mr-1" />
-                              ID Card captured - Click "Process OCR" to auto-fill
-                            </Badge>
+                      {/* ID Card Scanning & Alert System */}
+                      <div className="mb-4 p-4 border border-blue-200 dark:border-blue-800 rounded-lg bg-blue-50/50 dark:bg-blue-900/20">
+                        <div className="flex items-center gap-2 mb-3">
+                          <CreditCard className="h-5 w-5 text-blue-600" />
+                          <h3 className="font-semibold text-blue-900 dark:text-blue-100">ID Card Scanning & Alert System</h3>
+                        </div>
+                        
+                        {/* ID Card Type Dropdown */}
+                        <div className="mb-3">
+                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">ID Card Type</label>
+                          <Select value={selectedIdCardType} onValueChange={setSelectedIdCardType}>
+                            <SelectTrigger className="w-full h-10" data-testid="select-id-card-type">
+                              <SelectValue placeholder="Select ID card type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="aadhaar">Aadhaar Card</SelectItem>
+                              <SelectItem value="pan">PAN Card</SelectItem>
+                              <SelectItem value="driving_license">Driving License</SelectItem>
+                              <SelectItem value="voter_id">Voter ID</SelectItem>
+                              <SelectItem value="passport">Passport</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {/* Front and Back Scan Buttons */}
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div>
                             <Button 
                               type="button"
-                              size="sm"
                               variant="outline"
-                              onClick={async () => {
-                                setIsProcessingOcr(true);
-                                await new Promise(resolve => setTimeout(resolve, 1500));
-                                
-                                const simulatedData = {
-                                  firstName: "Sample",
-                                  lastName: "Patient",
-                                  dob: "1990-05-15",
-                                  gender: "Male",
-                                  address: "123 Main Street, City, State - 400001"
-                                };
-                                
-                                patientForm.setValue("firstName", simulatedData.firstName);
-                                patientForm.setValue("lastName", simulatedData.lastName);
-                                patientForm.setValue("dateOfBirth", simulatedData.dob);
-                                patientForm.setValue("gender", simulatedData.gender);
-                                patientForm.setValue("address", simulatedData.address);
-                                
-                                setIsProcessingOcr(false);
-                                setFrontImage(null);
-                                setBackImage(null);
-                                
-                                toast({
-                                  title: "OCR Complete",
-                                  description: "Patient details extracted and auto-filled successfully."
-                                });
+                              className={`w-full ${frontImage ? 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900/30 dark:border-green-600 dark:text-green-400' : 'bg-white dark:bg-slate-800'}`}
+                              onClick={() => {
+                                setCameraTarget("front");
+                                setCameraError(null);
+                                setShowCameraDialog(true);
                               }}
-                              disabled={isProcessingOcr}
-                              data-testid="button-process-ocr"
+                              data-testid="button-scan-front"
                             >
-                              {isProcessingOcr ? (
+                              {frontImage ? (
                                 <>
-                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                  Processing...
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Front Captured
                                 </>
                               ) : (
                                 <>
-                                  <ScanLine className="h-4 w-4 mr-1" />
-                                  Process OCR
+                                  <Camera className="h-4 w-4 mr-2" />
+                                  Scan Front Side
                                 </>
                               )}
                             </Button>
+                          </div>
+                          <div>
+                            <Button 
+                              type="button"
+                              variant="outline"
+                              className={`w-full ${backImage ? 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900/30 dark:border-green-600 dark:text-green-400' : 'bg-white dark:bg-slate-800'}`}
+                              onClick={() => {
+                                setCameraTarget("back");
+                                setCameraError(null);
+                                setShowCameraDialog(true);
+                              }}
+                              data-testid="button-scan-back"
+                            >
+                              {backImage ? (
+                                <>
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Back Captured
+                                </>
+                              ) : (
+                                <>
+                                  <Camera className="h-4 w-4 mr-2" />
+                                  Scan Back Side
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Image Previews */}
+                        {(frontImage || backImage) && (
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                            {frontImage && (
+                              <div className="relative">
+                                <img src={frontImage} alt="Front of ID" className="w-full h-20 object-cover rounded border" />
+                                <Badge variant="secondary" className="absolute top-1 left-1 text-xs">Front</Badge>
+                                <Button 
+                                  type="button"
+                                  size="icon"
+                                  variant="destructive"
+                                  className="absolute top-1 right-1 h-5 w-5"
+                                  onClick={() => setFrontImage(null)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                            {backImage && (
+                              <div className="relative">
+                                <img src={backImage} alt="Back of ID" className="w-full h-20 object-cover rounded border" />
+                                <Badge variant="secondary" className="absolute top-1 left-1 text-xs">Back</Badge>
+                                <Button 
+                                  type="button"
+                                  size="icon"
+                                  variant="destructive"
+                                  className="absolute top-1 right-1 h-5 w-5"
+                                  onClick={() => setBackImage(null)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Process OCR Button */}
+                        {(frontImage || backImage) && (
+                          <Button 
+                            type="button"
+                            className="w-full bg-blue-600 hover:bg-blue-700"
+                            onClick={async () => {
+                              if (!selectedIdCardType) {
+                                toast({
+                                  title: "Select ID Type",
+                                  description: "Please select an ID card type before processing.",
+                                  variant: "destructive"
+                                });
+                                return;
+                              }
+                              
+                              setIsProcessingOcr(true);
+                              await new Promise(resolve => setTimeout(resolve, 1500));
+                              
+                              const simulatedData = {
+                                firstName: "Priya",
+                                lastName: "Sharma",
+                                dob: "2008-03-15",
+                                gender: "Female",
+                                address: "45 Gandhi Nagar, Pune, Maharashtra - 411001",
+                                idNumber: selectedIdCardType === "aadhaar" ? "1234 5678 9012" : 
+                                          selectedIdCardType === "pan" ? "ABCDE1234F" :
+                                          selectedIdCardType === "passport" ? "J1234567" : "DL-1234567890"
+                              };
+                              
+                              const today = new Date();
+                              const birthDate = new Date(simulatedData.dob);
+                              let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+                              const monthDiff = today.getMonth() - birthDate.getMonth();
+                              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                                calculatedAge--;
+                              }
+                              setExtractedAge(calculatedAge);
+                              
+                              patientForm.setValue("firstName", simulatedData.firstName);
+                              patientForm.setValue("lastName", simulatedData.lastName);
+                              patientForm.setValue("dateOfBirth", simulatedData.dob);
+                              patientForm.setValue("gender", simulatedData.gender);
+                              patientForm.setValue("address", simulatedData.address);
+                              
+                              setIsProcessingOcr(false);
+                              
+                              toast({
+                                title: "OCR Complete",
+                                description: `Extracted: ${simulatedData.firstName} ${simulatedData.lastName}, Age: ${calculatedAge} years, ID: ${simulatedData.idNumber}`
+                              });
+                            }}
+                            disabled={isProcessingOcr}
+                            data-testid="button-process-ocr"
+                          >
+                            {isProcessingOcr ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Processing OCR...
+                              </>
+                            ) : (
+                              <>
+                                <ScanLine className="h-4 w-4 mr-2" />
+                                Process OCR & Auto-Fill
+                              </>
+                            )}
+                          </Button>
+                        )}
+                        
+                        {/* Extracted Age Display */}
+                        {extractedAge !== null && (
+                          <div className="mt-3 p-2 bg-white dark:bg-slate-800 rounded border">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-slate-600 dark:text-slate-400">Calculated Age:</span>
+                              <Badge variant={extractedAge < 18 ? "destructive" : "secondary"}>
+                                {extractedAge} years {extractedAge < 18 && "(Minor)"}
+                              </Badge>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1994,7 +2119,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                     <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/30">Step 1</Badge>
                     Select ID Card Type
                   </div>
-                  <Select value={idCardType} onValueChange={setIdCardType}>
+                  <Select value={selectedIdCardType} onValueChange={setSelectedIdCardType}>
                     <SelectTrigger className="w-full max-w-md" data-testid="select-id-card-type">
                       <SelectValue placeholder="Choose ID card type..." />
                     </SelectTrigger>
@@ -2009,7 +2134,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   </Select>
                 </div>
 
-                {idCardType && (
+                {selectedIdCardType && (
                   <>
                     {/* Step 2: Scan Front & Back */}
                     <div className="space-y-4">
@@ -2146,8 +2271,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               name: "Sample Patient",
                               dob: "1990-05-15",
                               gender: "Male",
-                              idNumber: idCardType === "AADHAAR" ? "1234 5678 9012" : 
-                                       idCardType === "PAN" ? "ABCDE1234F" : 
+                              idNumber: selectedIdCardType === "AADHAAR" ? "1234 5678 9012" : 
+                                       selectedIdCardType === "PAN" ? "ABCDE1234F" : 
                                        "ID12345678",
                               address: "123 Main Street, City, State - 400001",
                               age: null as number | null
@@ -2252,7 +2377,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                 </Select>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">ID Number ({idCardType})</label>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-400">ID Number ({selectedIdCardType})</label>
                                 <Input 
                                   value={extractedData.idNumber}
                                   onChange={(e) => setExtractedData({...extractedData, idNumber: e.target.value})}
@@ -2365,7 +2490,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                     
                                     // Save ID card scan
                                     await apiRequest("POST", "/api/id-card-scans", {
-                                      idCardType,
+                                      selectedIdCardType,
                                       idNumber: extractedData.idNumber,
                                       extractedName: extractedData.name,
                                       extractedDob: extractedData.dob,
@@ -2406,7 +2531,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                     });
                                     
                                     // Reset form
-                                    setIdCardType("");
+                                    setSelectedIdCardType("");
                                     setFrontImage(null);
                                     setBackImage(null);
                                     setExtractedData({ name: "", dob: "", gender: "", idNumber: "", address: "", age: null });
