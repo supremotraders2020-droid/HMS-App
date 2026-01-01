@@ -121,51 +121,54 @@ const ROLES = [
   "PATHOLOGY_LAB",
 ] as const;
 
-export default function SuperAdminPortal() {
-  const [activeSection, setActiveSection] = useState<SuperAdminSection>("dashboard");
-  const [searchQuery, setSearchQuery] = useState("");
+interface SuperAdminPortalProps {
+  section?: SuperAdminSection;
+}
+
+export default function SuperAdminPortal({ section = "dashboard" }: SuperAdminPortalProps) {
   const { toast } = useToast();
 
-  const sections = [
-    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "users", label: "User Roles & Permissions", icon: Users },
-    { id: "billing", label: "Billing Finalization", icon: Receipt },
-    { id: "stock", label: "Stock & Pharmacy", icon: Pill },
-    { id: "surgery", label: "Surgery Packages", icon: Stethoscope },
-    { id: "medicines", label: "Medicine Database", icon: Syringe },
-    { id: "insurance", label: "Insurance Providers", icon: Building2 },
-    { id: "claims", label: "Claims Management", icon: ClipboardList },
-    { id: "packages", label: "Hospital Packages", icon: Package },
-    { id: "audit", label: "Audit Logs", icon: History },
-    { id: "settings", label: "System Settings", icon: Settings },
-  ];
+  const sectionTitles: Record<SuperAdminSection, { title: string; description: string }> = {
+    dashboard: { title: "Dashboard", description: "System-wide statistics and pending actions" },
+    users: { title: "User Roles & Permissions", description: "Manage user accounts and access control" },
+    billing: { title: "Billing Finalization", description: "Review, approve, and lock OPD/IPD bills" },
+    stock: { title: "Stock & Pharmacy Control", description: "Manage inventory, pricing, GST, and batch tracking" },
+    surgery: { title: "Surgery Costing & Packages", description: "Define surgery-wise costing with fees" },
+    medicines: { title: "Medicine Database", description: "Manage medicine catalog with salt, brand, dosage" },
+    insurance: { title: "Insurance Providers", description: "Manage insurers, TPAs, coverage limits" },
+    claims: { title: "Claims Management", description: "Process and track insurance claims" },
+    packages: { title: "Hospital Packages", description: "Create OPD/IPD packages and pricing models" },
+    audit: { title: "Audit Logs", description: "Immutable audit trail of all critical actions" },
+    settings: { title: "System Settings", description: "Configure hospital system parameters" },
+  };
+
+  const currentSection = sectionTitles[section] || sectionTitles.dashboard;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-rose-50/30 to-purple-50/30 dark:from-slate-900 dark:via-rose-950/20 dark:to-purple-950/20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 text-white">
-        <div className="container mx-auto px-4 py-6">
+      <div className="bg-gradient-to-r from-rose-900 via-purple-800 to-indigo-900 text-white shadow-lg">
+        <div className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl">
-                <Crown className="h-8 w-8 text-yellow-400" />
+              <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20">
+                <Crown className="h-7 w-7 text-yellow-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  Super Admin Portal
-                  <Badge className="bg-yellow-500 text-black">Enterprise</Badge>
+                <h1 className="text-xl font-bold flex items-center gap-2">
+                  {currentSection.title}
                 </h1>
                 <p className="text-purple-200 text-sm">
-                  Complete hospital system control & administration
+                  {currentSection.description}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant="outline" className="border-green-400 text-green-400">
+              <Badge variant="outline" className="border-green-400 text-green-400 bg-green-500/10">
                 <ShieldCheck className="h-3 w-3 mr-1" />
                 HIPAA Compliant
               </Badge>
-              <Badge variant="outline" className="border-blue-400 text-blue-400">
+              <Badge variant="outline" className="border-blue-400 text-blue-400 bg-blue-500/10">
                 <Shield className="h-3 w-3 mr-1" />
                 NABH Certified
               </Badge>
@@ -174,57 +177,19 @@ export default function SuperAdminPortal() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-12 gap-6">
-          {/* Sidebar */}
-          <div className="col-span-3">
-            <Card className="sticky top-6">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Control Panel
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-2">
-                <nav className="space-y-1">
-                  {sections.map((section) => (
-                    <button
-                      key={section.id}
-                      onClick={() => setActiveSection(section.id as SuperAdminSection)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
-                        activeSection === section.id
-                          ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
-                          : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                      }`}
-                      data-testid={`nav-${section.id}`}
-                    >
-                      <section.icon className="h-5 w-5" />
-                      <span className="text-sm font-medium">{section.label}</span>
-                      {activeSection === section.id && (
-                        <ChevronRight className="h-4 w-4 ml-auto" />
-                      )}
-                    </button>
-                  ))}
-                </nav>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content */}
-          <div className="col-span-9">
-            {activeSection === "dashboard" && <DashboardSection />}
-            {activeSection === "users" && <UsersSection />}
-            {activeSection === "billing" && <BillingSection />}
-            {activeSection === "stock" && <StockSection />}
-            {activeSection === "surgery" && <SurgerySection />}
-            {activeSection === "medicines" && <MedicinesSection />}
-            {activeSection === "insurance" && <InsuranceSection />}
-            {activeSection === "claims" && <ClaimsSection />}
-            {activeSection === "packages" && <PackagesSection />}
-            {activeSection === "audit" && <AuditSection />}
-            {activeSection === "settings" && <SettingsSection />}
-          </div>
-        </div>
+      {/* Main Content - Full Width */}
+      <div className="p-6">
+        {section === "dashboard" && <DashboardSection />}
+        {section === "users" && <UsersSection />}
+        {section === "billing" && <BillingSection />}
+        {section === "stock" && <StockSection />}
+        {section === "surgery" && <SurgerySection />}
+        {section === "medicines" && <MedicinesSection />}
+        {section === "insurance" && <InsuranceSection />}
+        {section === "claims" && <ClaimsSection />}
+        {section === "packages" && <PackagesSection />}
+        {section === "audit" && <AuditSection />}
+        {section === "settings" && <SettingsSection />}
       </div>
     </div>
   );

@@ -42,7 +42,13 @@ import {
   UserCheck,
   Shield,
   UserPlus,
-  Scissors
+  Scissors,
+  Crown,
+  BarChart3,
+  Receipt,
+  Pill,
+  Syringe,
+  History
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -352,8 +358,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           </SidebarGroup>
         )}
 
-        {/* Management - Hidden for OPD_MANAGER and NURSE */}
-        {currentRole !== "OPD_MANAGER" && currentRole !== "NURSE" && (
+        {/* Management - Hidden for OPD_MANAGER, NURSE, and SUPER_ADMIN */}
+        {currentRole !== "OPD_MANAGER" && currentRole !== "NURSE" && currentRole !== "SUPER_ADMIN" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Management</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -375,6 +381,51 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                           <item.icon className="h-3.5 w-3.5" />
                         </div>
                         <span className="font-medium transition-colors duration-200 group-hover:text-amber-700 dark:group-hover:text-amber-400">{item.title}</span>
+                      </Button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Super Admin Control Panel - Only for SUPER_ADMIN */}
+        {currentRole === "SUPER_ADMIN" && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1 flex items-center gap-2">
+              <Crown className="h-3 w-3 text-yellow-500" />
+              Control Panel
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                {[
+                  { title: "Dashboard", url: "/super-admin/dashboard", icon: BarChart3 },
+                  { title: "User Roles", url: "/super-admin/users", icon: Users },
+                  { title: "Billing", url: "/super-admin/billing", icon: Receipt },
+                  { title: "Stock & Pharmacy", url: "/super-admin/stock", icon: Pill },
+                  { title: "Surgery Packages", url: "/super-admin/surgery", icon: Stethoscope },
+                  { title: "Medicine Database", url: "/super-admin/medicines", icon: Syringe },
+                  { title: "Insurance", url: "/super-admin/insurance", icon: Building2 },
+                  { title: "Claims", url: "/super-admin/claims", icon: ClipboardList },
+                  { title: "Hospital Packages", url: "/super-admin/packages", icon: Package },
+                  { title: "Audit Logs", url: "/super-admin/audit", icon: History },
+                  { title: "Settings", url: "/super-admin/settings", icon: Settings },
+                ].map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild
+                      data-testid={`link-super-admin-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start group relative overflow-visible hover:bg-gradient-to-r hover:from-rose-50/80 hover:to-pink-50/60 dark:hover:from-rose-900/30 dark:hover:to-pink-900/20 rounded-xl transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5 hover:border-rose-200/50 dark:hover:border-rose-700/30"
+                        onClick={() => handleMenuClick(item.url)}
+                      >
+                        <div className="p-1.5 rounded-lg bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-800/50 dark:to-pink-800/40 text-rose-600 dark:text-rose-400 mr-3 transition-all duration-300 group-hover:from-rose-500 group-hover:to-pink-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md group-hover:shadow-rose-500/20">
+                          <item.icon className="h-3.5 w-3.5" />
+                        </div>
+                        <span className="font-medium transition-colors duration-200 group-hover:text-rose-700 dark:group-hover:text-rose-400">{item.title}</span>
                       </Button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
