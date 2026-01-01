@@ -137,12 +137,36 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   // Camera capture states
   const [showCameraDialog, setShowCameraDialog] = useState(false);
   const [cameraTarget, setCameraTarget] = useState<"front" | "back">("front");
+  const [captureMode, setCaptureMode] = useState<"upload" | "camera">("upload");
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isCameraLoading, setIsCameraLoading] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [hasCameraSupport, setHasCameraSupport] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  
+  // Check camera availability on mount
+  useEffect(() => {
+    const checkCameraSupport = async () => {
+      try {
+        if (!window.isSecureContext) {
+          setHasCameraSupport(false);
+          return;
+        }
+        if (!navigator.mediaDevices?.enumerateDevices) {
+          setHasCameraSupport(false);
+          return;
+        }
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const hasVideoInput = devices.some(device => device.kind === 'videoinput');
+        setHasCameraSupport(hasVideoInput);
+      } catch {
+        setHasCameraSupport(false);
+      }
+    };
+    checkCameraSupport();
+  }, []);
   
   const { toast } = useToast();
   
@@ -336,11 +360,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     setShowCameraDialog(true);
   }, []);
   
-  // Effect to start camera when dialog opens (stable dependencies)
+  // Effect to handle camera timeout when in camera mode
   useEffect(() => {
-    if (showCameraDialog) {
-      startCamera();
-      
+    if (showCameraDialog && captureMode === "camera") {
       // Add timeout - if camera doesn't become ready in 5 seconds, show error
       const timeoutId = setTimeout(() => {
         if (!isVideoReady && !cameraError) {
@@ -350,11 +372,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       }, 5000);
       
       return () => clearTimeout(timeoutId);
-    } else {
-      stopCamera();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCameraDialog]);
+  }, [showCameraDialog, captureMode]);
   
   // Cleanup on unmount
   useEffect(() => {
@@ -2569,81 +2589,201 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       <Dialog open={showCameraDialog} onOpenChange={(open) => {
         if (!open) {
           stopCamera();
+          setCaptureMode("upload");
         }
         setShowCameraDialog(open);
       }}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Upload {cameraTarget === "front" ? "Front" : "Back"} Side of ID Card
+              {captureMode === "upload" ? <Upload className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
+              Capture {cameraTarget === "front" ? "Front" : "Back"} Side of ID Card
             </DialogTitle>
             <DialogDescription>
-              Select an image file of the ID card from your device.
+              Choose how to capture the ID card image.
             </DialogDescription>
           </DialogHeader>
           
+          {/* Mode Toggle Buttons */}
+          <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+            <Button
+              type="button"
+              variant={captureMode === "upload" ? "default" : "ghost"}
+              className={`flex-1 ${captureMode === "upload" ? "bg-blue-600" : ""}`}
+              onClick={() => {
+                setCaptureMode("upload");
+                stopCamera();
+              }}
+              data-testid="button-mode-upload"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload File
+            </Button>
+            <Button
+              type="button"
+              variant={captureMode === "camera" ? "default" : "ghost"}
+              className={`flex-1 ${captureMode === "camera" ? "bg-green-600" : ""}`}
+              onClick={() => {
+                setCaptureMode("camera");
+                startCamera();
+              }}
+              data-testid="button-mode-camera"
+            >
+              <Camera className="h-4 w-4 mr-2" />
+              Use Camera
+            </Button>
+          </div>
+          
           <div className="space-y-4">
-            {/* Primary Upload Option */}
-            <div className="flex flex-col items-center justify-center py-8 bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg">
-              <Upload className="h-12 w-12 text-blue-500 mb-3" />
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 text-center px-4">
-                Click below to select an image of the {cameraTarget === "front" ? "front" : "back"} side of the ID card
-              </p>
-              <label className="cursor-pointer">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        const imageData = ev.target?.result as string;
-                        if (cameraTarget === "front") {
-                          setFrontImage(imageData);
-                        } else {
-                          setBackImage(imageData);
-                        }
-                        stopCamera();
-                        setShowCameraDialog(false);
-                        toast({
-                          title: "Image Uploaded",
-                          description: `${cameraTarget === "front" ? "Front" : "Back"} side of ID card uploaded successfully.`
-                        });
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  data-testid="input-upload-id-card"
-                />
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700" asChild>
-                  <span><Upload className="h-5 w-5 mr-2" /> Choose Image File</span>
-                </Button>
-              </label>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
-                Supports JPG, PNG, WebP formats
-              </p>
-            </div>
+            {/* Upload Mode */}
+            {captureMode === "upload" && (
+              <div className="flex flex-col items-center justify-center py-8 bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg">
+                <Upload className="h-12 w-12 text-blue-500 mb-3" />
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 text-center px-4">
+                  Click below to select an image of the {cameraTarget === "front" ? "front" : "back"} side of the ID card
+                </p>
+                <label className="cursor-pointer">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const imageData = ev.target?.result as string;
+                          if (cameraTarget === "front") {
+                            setFrontImage(imageData);
+                          } else {
+                            setBackImage(imageData);
+                          }
+                          stopCamera();
+                          setShowCameraDialog(false);
+                          toast({
+                            title: "Image Uploaded",
+                            description: `${cameraTarget === "front" ? "Front" : "Back"} side of ID card uploaded successfully.`
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    data-testid="input-upload-id-card"
+                  />
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700" asChild>
+                    <span><Upload className="h-5 w-5 mr-2" /> Choose Image File</span>
+                  </Button>
+                </label>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+                  Supports JPG, PNG, WebP formats
+                </p>
+              </div>
+            )}
+            
+            {/* Camera Mode */}
+            {captureMode === "camera" && (
+              <>
+                {isCameraLoading && (
+                  <div className="flex flex-col items-center justify-center py-12 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <Loader2 className="h-8 w-8 animate-spin text-green-500 mb-2" />
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Starting camera...</p>
+                  </div>
+                )}
+                
+                {cameraError && (
+                  <div className="flex flex-col items-center justify-center py-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <AlertTriangle className="h-10 w-10 text-red-500 mb-3" />
+                    <p className="text-sm text-red-600 dark:text-red-400 text-center px-4">{cameraError}</p>
+                    <div className="flex gap-2 mt-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={startCamera}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-1" /> Retry
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setCaptureMode("upload");
+                          stopCamera();
+                        }}
+                      >
+                        <Upload className="h-4 w-4 mr-1" /> Use Upload
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                {!isCameraLoading && !cameraError && (
+                  <>
+                    <div className="relative bg-black rounded-lg overflow-hidden">
+                      <video 
+                        ref={videoRef}
+                        autoPlay 
+                        playsInline 
+                        muted
+                        className="w-full h-64 object-cover"
+                        data-testid="video-camera-preview"
+                      />
+                      <div className="absolute inset-0 border-2 border-dashed border-white/30 m-4 rounded pointer-events-none" />
+                      {!isVideoReady && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                          <div className="text-center text-white">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                            <p className="text-sm">Connecting to camera...</p>
+                          </div>
+                        </div>
+                      )}
+                      {isVideoReady && (
+                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                          Live
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex justify-center">
+                      <Button 
+                        size="lg"
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={capturePhoto}
+                        disabled={!isVideoReady}
+                        data-testid="button-camera-capture"
+                      >
+                        <Camera className="h-5 w-5 mr-2" />
+                        {isVideoReady ? "Capture Photo" : "Waiting for camera..."}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
 
             <canvas ref={canvasRef} className="hidden" />
             
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center">
               <Button 
                 variant="outline" 
-                onClick={() => setShowCameraDialog(false)}
-                data-testid="button-upload-cancel"
+                onClick={() => {
+                  stopCamera();
+                  setShowCameraDialog(false);
+                }}
+                data-testid="button-capture-cancel"
               >
                 Cancel
               </Button>
             </div>
+            
+            {!hasCameraSupport && captureMode === "camera" && (
+              <p className="text-xs text-center text-amber-600 dark:text-amber-400">
+                Camera may not be available in this environment. Try using Upload instead.
+              </p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Hidden video ref for potential camera use */}
-      <video ref={videoRef} className="hidden" autoPlay playsInline muted />
 
       {/* Hospital Footer */}
       <div className="bg-slate-900 text-white mt-auto">
