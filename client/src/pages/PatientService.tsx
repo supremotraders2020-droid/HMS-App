@@ -2886,6 +2886,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               <div className="flex flex-col items-center justify-center py-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                 <AlertTriangle className="h-10 w-10 text-red-500 mb-3" />
                 <p className="text-sm text-red-600 dark:text-red-400 text-center px-4">{cameraError}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center px-4">
+                  You can upload an image file instead of using the camera.
+                </p>
                 <div className="flex gap-2 mt-4">
                   <Button 
                     variant="outline" 
@@ -2910,6 +2913,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                             } else {
                               setBackImage(imageData);
                             }
+                            stopCamera();
                             setShowCameraDialog(false);
                             toast({
                               title: "Image Uploaded",
