@@ -360,21 +360,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     setShowCameraDialog(true);
   }, []);
   
-  // Effect to handle camera timeout when in camera mode
-  useEffect(() => {
-    if (showCameraDialog && captureMode === "camera") {
-      // Add timeout - if camera doesn't become ready in 5 seconds, show error
-      const timeoutId = setTimeout(() => {
-        if (!isVideoReady && !cameraError) {
-          setCameraError("Camera access timed out. This may be due to browser restrictions in web-based environments. Please use the Upload option instead.");
-          stopCamera();
-        }
-      }, 5000);
-      
-      return () => clearTimeout(timeoutId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showCameraDialog, captureMode]);
+  // Camera mode now uses native capture attribute, no timeout needed
   
   // Cleanup on unmount
   useEffect(() => {
@@ -2680,85 +2666,53 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               </div>
             )}
             
-            {/* Camera Mode */}
+            {/* Camera Mode - Uses native camera capture for reliability */}
             {captureMode === "camera" && (
-              <>
-                {isCameraLoading && (
-                  <div className="flex flex-col items-center justify-center py-12 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                    <Loader2 className="h-8 w-8 animate-spin text-green-500 mb-2" />
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Starting camera...</p>
-                  </div>
-                )}
-                
-                {cameraError && (
-                  <div className="flex flex-col items-center justify-center py-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <AlertTriangle className="h-10 w-10 text-red-500 mb-3" />
-                    <p className="text-sm text-red-600 dark:text-red-400 text-center px-4">{cameraError}</p>
-                    <div className="flex gap-2 mt-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={startCamera}
-                      >
-                        <RefreshCw className="h-4 w-4 mr-1" /> Retry
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                          setCaptureMode("upload");
+              <div className="flex flex-col items-center justify-center py-8 bg-green-50 dark:bg-green-900/20 border-2 border-dashed border-green-300 dark:border-green-700 rounded-lg">
+                <Camera className="h-12 w-12 text-green-500 mb-3" />
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 text-center px-4">
+                  Click below to open your device camera and take a photo of the {cameraTarget === "front" ? "front" : "back"} side of the ID card
+                </p>
+                <label className="cursor-pointer">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const imageData = ev.target?.result as string;
+                          if (cameraTarget === "front") {
+                            setFrontImage(imageData);
+                          } else {
+                            setBackImage(imageData);
+                          }
                           stopCamera();
-                        }}
-                      >
-                        <Upload className="h-4 w-4 mr-1" /> Use Upload
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                
-                {!isCameraLoading && !cameraError && (
-                  <>
-                    <div className="relative bg-black rounded-lg overflow-hidden">
-                      <video 
-                        ref={videoRef}
-                        autoPlay 
-                        playsInline 
-                        muted
-                        className="w-full h-64 object-cover"
-                        data-testid="video-camera-preview"
-                      />
-                      <div className="absolute inset-0 border-2 border-dashed border-white/30 m-4 rounded pointer-events-none" />
-                      {!isVideoReady && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-                          <div className="text-center text-white">
-                            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                            <p className="text-sm">Connecting to camera...</p>
-                          </div>
-                        </div>
-                      )}
-                      {isVideoReady && (
-                        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                          Live
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex justify-center">
-                      <Button 
-                        size="lg"
-                        className="bg-green-600 hover:bg-green-700"
-                        onClick={capturePhoto}
-                        disabled={!isVideoReady}
-                        data-testid="button-camera-capture"
-                      >
-                        <Camera className="h-5 w-5 mr-2" />
-                        {isVideoReady ? "Capture Photo" : "Waiting for camera..."}
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </>
+                          setShowCameraDialog(false);
+                          toast({
+                            title: "Photo Captured",
+                            description: `${cameraTarget === "front" ? "Front" : "Back"} side of ID card captured successfully.`
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    data-testid="input-camera-capture"
+                  />
+                  <Button size="lg" className="bg-green-600 hover:bg-green-700" asChild>
+                    <span><Camera className="h-5 w-5 mr-2" /> Open Camera & Capture</span>
+                  </Button>
+                </label>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+                  Opens your device camera to take a photo
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 text-center px-4">
+                  Note: Works best on mobile devices. On desktop, you may see a file picker instead.
+                </p>
+              </div>
             )}
 
             <canvas ref={canvasRef} className="hidden" />
@@ -2775,12 +2729,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 Cancel
               </Button>
             </div>
-            
-            {!hasCameraSupport && captureMode === "camera" && (
-              <p className="text-xs text-center text-amber-600 dark:text-amber-400">
-                Camera may not be available in this environment. Try using Upload instead.
-              </p>
-            )}
           </div>
         </DialogContent>
       </Dialog>
