@@ -47,8 +47,9 @@ import StaffManagement from "@/pages/StaffManagement";
 import InsuranceManagement from "@/pages/InsuranceManagement";
 import ReferralData from "@/pages/ReferralData";
 import HospitalServices from "@/pages/HospitalServices";
+import SuperAdminPortal from "@/pages/SuperAdminPortal";
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface User {
   id: string;
@@ -324,6 +325,18 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         <HospitalServices currentUserRole={currentUser.role} currentUserId={currentUser.id} />
       </Route>
 
+      {/* Super Admin Portal - highest authority */}
+      <Route path="/super-admin">
+        {currentUser.role === "SUPER_ADMIN" ? (
+          <SuperAdminPortal />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only Super Administrators can access this portal.</p>
+          </div>
+        )}
+      </Route>
+
       {/* Prescriptions Route - for OPD Manager and Doctor */}
       <Route path="/prescriptions">
         {["ADMIN", "DOCTOR", "OPD_MANAGER"].includes(currentUser.role) ? (
@@ -509,6 +522,7 @@ function AppContent() {
   const getDisplayName = (username: string, role: UserRole) => {
     // Mock display names based on role
     const names: Record<UserRole, string> = {
+      SUPER_ADMIN: "System Administrator",
       ADMIN: "Dr. Michael Chen",
       DOCTOR: "Dr. Sarah Wilson", 
       NURSE: "Nurse Jennifer Adams",

@@ -3,8 +3,8 @@ import { pgTable, text, varchar, integer, timestamp, boolean, decimal, pgEnum } 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User Role Enum
-export const userRoleEnum = pgEnum("user_role", ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"]);
+// User Role Enum - SUPER_ADMIN is the highest authority
+export const userRoleEnum = pgEnum("user_role", ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"]);
 
 // Inventory Enums
 export const inventoryCategoryEnum = pgEnum("inventory_category", ["disposables", "syringes", "gloves", "medicines", "equipment"]);
@@ -21,7 +21,7 @@ export const users = pgTable("users", {
   dateOfBirth: text("date_of_birth"),
 });
 
-const validRoles = ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"] as const;
+const validRoles = ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"] as const;
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -4113,3 +4113,417 @@ export const insertCriticalAlertSchema = createInsertSchema(criticalAlerts).omit
 });
 export type InsertCriticalAlert = z.infer<typeof insertCriticalAlertSchema>;
 export type CriticalAlert = typeof criticalAlerts.$inferSelect;
+
+// ==========================================
+// SUPER ADMIN PORTAL - Enterprise Controls
+// ==========================================
+
+// Audit Logs - Immutable system-wide audit trail
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Action Details
+  action: text("action").notNull(), // CREATE, UPDATE, DELETE, APPROVE, LOCK, UNLOCK, LOGIN, LOGOUT
+  module: text("module").notNull(), // BILLING, STOCK, SURGERY, MEDICINE, INSURANCE, CLAIMS, PACKAGES, USERS
+  entityType: text("entity_type").notNull(), // bill, stock_item, surgery_package, medicine, etc.
+  entityId: varchar("entity_id"),
+  
+  // User Information
+  userId: varchar("user_id").notNull(),
+  userName: text("user_name").notNull(),
+  userRole: text("user_role").notNull(),
+  
+  // Change Details
+  previousValue: text("previous_value"), // JSON stringified
+  newValue: text("new_value"), // JSON stringified
+  changeDescription: text("change_description"),
+  
+  // Context
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  sessionId: varchar("session_id"),
+  
+  // Metadata
+  severity: text("severity").default("info"), // info, warning, critical
+  isFinancial: boolean("is_financial").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = typeof auditLogs.$inferSelect;
+
+// Financial Locks - Track locked financial records
+export const financialLocks = pgTable("financial_locks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Lock Target
+  entityType: text("entity_type").notNull(), // BILL, CLAIM, SETTLEMENT, PACKAGE_PRICE
+  entityId: varchar("entity_id").notNull(),
+  
+  // Lock Status
+  isLocked: boolean("is_locked").notNull().default(true),
+  lockReason: text("lock_reason"),
+  
+  // Lock History
+  lockedBy: varchar("locked_by").notNull(),
+  lockedByName: text("locked_by_name").notNull(),
+  lockedAt: timestamp("locked_at").defaultNow(),
+  
+  // Unlock (if applicable)
+  unlockedBy: varchar("unlocked_by"),
+  unlockedByName: text("unlocked_by_name"),
+  unlockedAt: timestamp("unlocked_at"),
+  unlockReason: text("unlock_reason"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFinancialLockSchema = createInsertSchema(financialLocks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertFinancialLock = z.infer<typeof insertFinancialLockSchema>;
+export type FinancialLock = typeof financialLocks.$inferSelect;
+
+// Role Permissions - Fine-grained permission matrix
+export const rolePermissions = pgTable("role_permissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  role: text("role").notNull(),
+  module: text("module").notNull(), // BILLING, STOCK, SURGERY, MEDICINE, INSURANCE, CLAIMS, PACKAGES, USERS, REPORTS
+  
+  // Permission Flags
+  canView: boolean("can_view").default(false),
+  canCreate: boolean("can_create").default(false),
+  canEdit: boolean("can_edit").default(false),
+  canDelete: boolean("can_delete").default(false),
+  canApprove: boolean("can_approve").default(false),
+  canLock: boolean("can_lock").default(false),
+  canUnlock: boolean("can_unlock").default(false),
+  canExport: boolean("can_export").default(false),
+  
+  // Metadata
+  description: text("description"),
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+
+// Billing Records - OPD & IPD Bills with finalization
+export const billingRecords = pgTable("billing_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Bill Information
+  billNumber: text("bill_number").notNull().unique(),
+  billType: text("bill_type").notNull(), // OPD, IPD
+  patientId: varchar("patient_id"),
+  patientName: text("patient_name").notNull(),
+  
+  // Services & Charges
+  services: text("services"), // JSON array of services
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
+  tax: decimal("tax", { precision: 10, scale: 2 }).default("0"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  
+  // Payment Details
+  paymentStatus: text("payment_status").default("pending"), // pending, partial, paid
+  paymentMethod: text("payment_method"), // CASH, CARD, UPI, INSURANCE
+  paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }).default("0"),
+  
+  // Finalization Status
+  status: text("status").default("draft"), // draft, pending_approval, approved, finalized, cancelled
+  isLocked: boolean("is_locked").default(false),
+  
+  // Approval Workflow
+  createdBy: varchar("created_by"),
+  createdByName: text("created_by_name"),
+  approvedBy: varchar("approved_by"),
+  approvedByName: text("approved_by_name"),
+  approvedAt: timestamp("approved_at"),
+  finalizedBy: varchar("finalized_by"),
+  finalizedByName: text("finalized_by_name"),
+  finalizedAt: timestamp("finalized_at"),
+  
+  // Metadata
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBillingRecordSchema = createInsertSchema(billingRecords).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBillingRecord = z.infer<typeof insertBillingRecordSchema>;
+export type BillingRecord = typeof billingRecords.$inferSelect;
+
+// Stock Batches - Pharmacy inventory with batch tracking
+export const stockBatches = pgTable("stock_batches", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Medicine/Item Reference
+  medicineId: varchar("medicine_id"),
+  medicineName: text("medicine_name").notNull(),
+  
+  // Batch Information
+  batchNumber: text("batch_number").notNull(),
+  manufacturingDate: text("manufacturing_date"),
+  expiryDate: text("expiry_date").notNull(),
+  
+  // Quantity & Pricing
+  quantity: integer("quantity").notNull(),
+  availableQuantity: integer("available_quantity").notNull(),
+  purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }).notNull(),
+  sellingPrice: decimal("selling_price", { precision: 10, scale: 2 }).notNull(),
+  mrp: decimal("mrp", { precision: 10, scale: 2 }).notNull(),
+  gstPercentage: decimal("gst_percentage", { precision: 5, scale: 2 }).default("18"),
+  
+  // Supplier
+  supplierId: varchar("supplier_id"),
+  supplierName: text("supplier_name"),
+  invoiceNumber: text("invoice_number"),
+  
+  // Status
+  status: text("status").default("active"), // active, expired, depleted, recalled
+  isLocked: boolean("is_locked").default(false),
+  
+  // Metadata
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertStockBatchSchema = createInsertSchema(stockBatches).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertStockBatch = z.infer<typeof insertStockBatchSchema>;
+export type StockBatch = typeof stockBatches.$inferSelect;
+
+// Surgery Packages - Surgery costing and packages
+export const surgeryPackages = pgTable("surgery_packages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Package Information
+  packageCode: text("package_code").notNull().unique(),
+  packageName: text("package_name").notNull(),
+  surgeryType: text("surgery_type").notNull(),
+  department: text("department"),
+  
+  // Cost Breakdown
+  otCharges: decimal("ot_charges", { precision: 10, scale: 2 }).default("0"),
+  surgeonFees: decimal("surgeon_fees", { precision: 10, scale: 2 }).default("0"),
+  anesthesiaFees: decimal("anesthesia_fees", { precision: 10, scale: 2 }).default("0"),
+  consumablesCost: decimal("consumables_cost", { precision: 10, scale: 2 }).default("0"),
+  roomCharges: decimal("room_charges", { precision: 10, scale: 2 }).default("0"),
+  nursingCharges: decimal("nursing_charges", { precision: 10, scale: 2 }).default("0"),
+  medicinesCost: decimal("medicines_cost", { precision: 10, scale: 2 }).default("0"),
+  diagnosticsCost: decimal("diagnostics_cost", { precision: 10, scale: 2 }).default("0"),
+  miscCharges: decimal("misc_charges", { precision: 10, scale: 2 }).default("0"),
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
+  
+  // Package Pricing
+  packagePrice: decimal("package_price", { precision: 10, scale: 2 }).notNull(),
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }).default("0"),
+  
+  // Duration & Stay
+  estimatedDuration: text("estimated_duration"), // e.g., "2-3 hours"
+  expectedStayDays: integer("expected_stay_days"),
+  
+  // Status
+  status: text("status").default("draft"), // draft, active, inactive
+  isLocked: boolean("is_locked").default(false),
+  effectiveFrom: text("effective_from"),
+  effectiveTo: text("effective_to"),
+  
+  // Approval
+  approvedBy: varchar("approved_by"),
+  approvedByName: text("approved_by_name"),
+  approvedAt: timestamp("approved_at"),
+  
+  // Metadata
+  description: text("description"),
+  inclusions: text("inclusions"), // JSON array
+  exclusions: text("exclusions"), // JSON array
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSurgeryPackageSchema = createInsertSchema(surgeryPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSurgeryPackage = z.infer<typeof insertSurgeryPackageSchema>;
+export type SurgeryPackage = typeof surgeryPackages.$inferSelect;
+
+// Hospital Packages - OPD/IPD pricing packages
+export const hospitalPackages = pgTable("hospital_packages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Package Information
+  packageCode: text("package_code").notNull().unique(),
+  packageName: text("package_name").notNull(),
+  packageType: text("package_type").notNull(), // OPD, IPD, HEALTH_CHECKUP, DAYCARE
+  department: text("department"),
+  
+  // Pricing
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }).default("0"),
+  finalPrice: decimal("final_price", { precision: 10, scale: 2 }).notNull(),
+  
+  // Inclusions
+  includedServices: text("included_services"), // JSON array
+  includedTests: text("included_tests"), // JSON array
+  includedConsultations: integer("included_consultations").default(1),
+  
+  // Validity
+  effectiveFrom: text("effective_from"),
+  effectiveTo: text("effective_to"),
+  validityDays: integer("validity_days"), // Package validity after purchase
+  
+  // Status
+  status: text("status").default("draft"), // draft, active, inactive, expired
+  isLocked: boolean("is_locked").default(false),
+  
+  // Approval
+  approvedBy: varchar("approved_by"),
+  approvedByName: text("approved_by_name"),
+  approvedAt: timestamp("approved_at"),
+  
+  // Metadata
+  description: text("description"),
+  termsConditions: text("terms_conditions"),
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertHospitalPackageSchema = createInsertSchema(hospitalPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertHospitalPackage = z.infer<typeof insertHospitalPackageSchema>;
+export type HospitalPackage = typeof hospitalPackages.$inferSelect;
+
+// Override Requests - Track all override requests requiring Super Admin approval
+export const overrideRequests = pgTable("override_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Request Information
+  requestType: text("request_type").notNull(), // UNLOCK_BILL, UNLOCK_STOCK, MODIFY_LOCKED, NEGATIVE_STOCK, PRICE_CHANGE
+  entityType: text("entity_type").notNull(),
+  entityId: varchar("entity_id").notNull(),
+  
+  // Requester
+  requestedBy: varchar("requested_by").notNull(),
+  requestedByName: text("requested_by_name").notNull(),
+  requestedByRole: text("requested_by_role").notNull(),
+  requestReason: text("request_reason").notNull(),
+  
+  // Current vs Proposed Values
+  currentValue: text("current_value"), // JSON
+  proposedValue: text("proposed_value"), // JSON
+  
+  // Status
+  status: text("status").default("pending"), // pending, approved, rejected
+  priority: text("priority").default("normal"), // low, normal, high, urgent
+  
+  // Resolution
+  resolvedBy: varchar("resolved_by"),
+  resolvedByName: text("resolved_by_name"),
+  resolvedAt: timestamp("resolved_at"),
+  resolutionNotes: text("resolution_notes"),
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOverrideRequestSchema = createInsertSchema(overrideRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertOverrideRequest = z.infer<typeof insertOverrideRequestSchema>;
+export type OverrideRequest = typeof overrideRequests.$inferSelect;
+
+// Medicine Catalog - Master medicine database
+export const medicineCatalog = pgTable("medicine_catalog", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Medicine Information
+  medicineCode: text("medicine_code").notNull().unique(),
+  brandName: text("brand_name").notNull(),
+  genericName: text("generic_name").notNull(),
+  saltComposition: text("salt_composition"),
+  
+  // Classification
+  category: text("category"), // Antibiotic, Analgesic, etc.
+  subCategory: text("sub_category"),
+  therapeuticClass: text("therapeutic_class"),
+  
+  // Form & Strength
+  dosageForm: text("dosage_form").notNull(), // Tablet, Capsule, Syrup, etc.
+  strength: text("strength"), // 500mg, 10ml, etc.
+  packSize: text("pack_size"), // 10 tablets, 100ml, etc.
+  
+  // Manufacturer
+  manufacturer: text("manufacturer"),
+  countryOfOrigin: text("country_of_origin").default("India"),
+  
+  // Pricing
+  mrp: decimal("mrp", { precision: 10, scale: 2 }),
+  purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }),
+  gstPercentage: decimal("gst_percentage", { precision: 5, scale: 2 }).default("12"),
+  
+  // Prescription Control
+  isScheduled: boolean("is_scheduled").default(false),
+  scheduleType: text("schedule_type"), // H, H1, X, G
+  requiresPrescription: boolean("requires_prescription").default(true),
+  
+  // Status
+  status: text("status").default("active"), // active, discontinued, banned
+  isLocked: boolean("is_locked").default(false),
+  
+  // Version Control
+  version: integer("version").default(1),
+  approvedBy: varchar("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  
+  // Metadata
+  description: text("description"),
+  sideEffects: text("side_effects"),
+  contraindications: text("contraindications"),
+  storageInstructions: text("storage_instructions"),
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMedicineCatalogSchema = createInsertSchema(medicineCatalog).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertMedicineCatalog = z.infer<typeof insertMedicineCatalogSchema>;
+export type MedicineCatalog = typeof medicineCatalog.$inferSelect;

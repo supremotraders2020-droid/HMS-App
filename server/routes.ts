@@ -9,7 +9,7 @@ import multer from "multer";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { users, insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
   patientBarcodes, insertPatientBarcodeSchema, barcodeScanLogs, insertBarcodeScanLogSchema, servicePatients,
   patientMonitoringSessions, insertPatientMonitoringSessionSchema,
@@ -57,7 +57,19 @@ import { users, insertAppointmentSchema, insertInventoryItemSchema, insertInvent
   opdTemplateVersions, insertOpdTemplateVersionSchema,
   // ID Card Scanning & Alert System
   idCardScans, insertIdCardScanSchema,
-  criticalAlerts, insertCriticalAlertSchema
+  criticalAlerts, insertCriticalAlertSchema,
+  // Super Admin Tables
+  auditLogs, insertAuditLogSchema,
+  financialLocks, insertFinancialLockSchema,
+  rolePermissions, insertRolePermissionSchema,
+  billingRecords, insertBillingRecordSchema,
+  stockBatches, insertStockBatchSchema,
+  surgeryPackages, insertSurgeryPackageSchema,
+  insuranceProviders, insertInsuranceProviderSchema,
+  insuranceClaims, insertInsuranceClaimSchema,
+  hospitalPackages, insertHospitalPackageSchema,
+  overrideRequests, insertOverrideRequestSchema,
+  medicineCatalog, insertMedicineCatalogSchema
 } from "@shared/schema";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
@@ -11872,6 +11884,382 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error resolving alert:", error);
       res.status(500).json({ error: "Failed to resolve alert" });
+    }
+  });
+
+  // ============================================
+  // SUPER ADMIN API ROUTES
+  // ============================================
+
+  // Require SUPER_ADMIN role middleware
+  const requireSuperAdmin = (req: any, res: any, next: any) => {
+    const user = req.session?.user;
+    if (!user || user.role !== "SUPER_ADMIN") {
+      return res.status(403).json({ error: "Super Admin access required" });
+    }
+    next();
+  };
+
+  // Get Super Admin Dashboard Stats
+  app.get("/api/super-admin/dashboard", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const [usersCount] = await db.execute(sql`SELECT COUNT(*) as count FROM users`);
+      const [billingCount] = await db.execute(sql`SELECT COUNT(*) as count FROM billing_records`);
+      const [claimsCount] = await db.execute(sql`SELECT COUNT(*) as count FROM insurance_claims WHERE status = 'pending'`);
+      const [auditCount] = await db.execute(sql`SELECT COUNT(*) as count FROM audit_logs WHERE timestamp > NOW() - INTERVAL '24 hours'`);
+      
+      res.json({
+        totalUsers: usersCount?.count || 0,
+        totalBillingRecords: billingCount?.count || 0,
+        pendingClaims: claimsCount?.count || 0,
+        recentAuditLogs: auditCount?.count || 0
+      });
+    } catch (error) {
+      console.error("Error fetching super admin dashboard:", error);
+      res.status(500).json({ error: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  // Audit Logs
+  app.get("/api/super-admin/audit-logs", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const logs = await db.select().from(auditLogs).orderBy(desc(auditLogs.timestamp)).limit(100);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+
+  app.post("/api/super-admin/audit-logs", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const log = insertAuditLogSchema.parse({
+        ...req.body,
+        userId: user?.id,
+        userName: user?.name || user?.username,
+        userRole: user?.role
+      });
+      const [newLog] = await db.insert(auditLogs).values(log).returning();
+      res.json(newLog);
+    } catch (error) {
+      console.error("Error creating audit log:", error);
+      res.status(500).json({ error: "Failed to create audit log" });
+    }
+  });
+
+  // Financial Locks
+  app.get("/api/super-admin/financial-locks", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const locks = await db.select().from(financialLocks).orderBy(desc(financialLocks.createdAt));
+      res.json(locks);
+    } catch (error) {
+      console.error("Error fetching financial locks:", error);
+      res.status(500).json({ error: "Failed to fetch financial locks" });
+    }
+  });
+
+  app.post("/api/super-admin/financial-locks", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const lock = insertFinancialLockSchema.parse({
+        ...req.body,
+        lockedBy: user?.id
+      });
+      const [newLock] = await db.insert(financialLocks).values(lock).returning();
+      
+      // Create audit log
+      await db.insert(auditLogs).values({
+        id: crypto.randomUUID(),
+        action: "FINANCIAL_LOCK_CREATED",
+        module: "BILLING",
+        userId: user?.id,
+        userName: user?.name || user?.username,
+        userRole: user?.role,
+        resourceType: "financial_lock",
+        resourceId: newLock.id,
+        details: { lockType: lock.lockType, period: lock.period },
+        ipAddress: req.ip
+      });
+      
+      res.json(newLock);
+    } catch (error) {
+      console.error("Error creating financial lock:", error);
+      res.status(500).json({ error: "Failed to create financial lock" });
+    }
+  });
+
+  // Role Permissions
+  app.get("/api/super-admin/permissions", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const permissions = await db.select().from(rolePermissions);
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+      res.status(500).json({ error: "Failed to fetch permissions" });
+    }
+  });
+
+  app.post("/api/super-admin/permissions", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const permission = insertRolePermissionSchema.parse({
+        ...req.body,
+        grantedBy: user?.id
+      });
+      const [newPermission] = await db.insert(rolePermissions).values(permission).returning();
+      res.json(newPermission);
+    } catch (error) {
+      console.error("Error creating permission:", error);
+      res.status(500).json({ error: "Failed to create permission" });
+    }
+  });
+
+  app.patch("/api/super-admin/permissions/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const [permission] = await db.update(rolePermissions)
+        .set(req.body)
+        .where(eq(rolePermissions.id, req.params.id))
+        .returning();
+      res.json(permission);
+    } catch (error) {
+      console.error("Error updating permission:", error);
+      res.status(500).json({ error: "Failed to update permission" });
+    }
+  });
+
+  // Billing Records
+  app.get("/api/super-admin/billing-records", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const records = await db.select().from(billingRecords).orderBy(desc(billingRecords.createdAt)).limit(100);
+      res.json(records);
+    } catch (error) {
+      console.error("Error fetching billing records:", error);
+      res.status(500).json({ error: "Failed to fetch billing records" });
+    }
+  });
+
+  // Stock Batches
+  app.get("/api/super-admin/stock-batches", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const batches = await db.select().from(stockBatches).orderBy(desc(stockBatches.createdAt));
+      res.json(batches);
+    } catch (error) {
+      console.error("Error fetching stock batches:", error);
+      res.status(500).json({ error: "Failed to fetch stock batches" });
+    }
+  });
+
+  app.post("/api/super-admin/stock-batches", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const batch = insertStockBatchSchema.parse(req.body);
+      const [newBatch] = await db.insert(stockBatches).values(batch).returning();
+      res.json(newBatch);
+    } catch (error) {
+      console.error("Error creating stock batch:", error);
+      res.status(500).json({ error: "Failed to create stock batch" });
+    }
+  });
+
+  // Surgery Packages
+  app.get("/api/super-admin/surgery-packages", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const packages = await db.select().from(surgeryPackages).orderBy(desc(surgeryPackages.createdAt));
+      res.json(packages);
+    } catch (error) {
+      console.error("Error fetching surgery packages:", error);
+      res.status(500).json({ error: "Failed to fetch surgery packages" });
+    }
+  });
+
+  app.post("/api/super-admin/surgery-packages", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const pkg = insertSurgeryPackageSchema.parse({
+        ...req.body,
+        createdBy: user?.id
+      });
+      const [newPackage] = await db.insert(surgeryPackages).values(pkg).returning();
+      res.json(newPackage);
+    } catch (error) {
+      console.error("Error creating surgery package:", error);
+      res.status(500).json({ error: "Failed to create surgery package" });
+    }
+  });
+
+  // Medicine Catalog
+  app.get("/api/super-admin/medicine-catalog", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const medicines = await db.select().from(medicineCatalog).orderBy(medicineCatalog.brandName);
+      res.json(medicines);
+    } catch (error) {
+      console.error("Error fetching medicine catalog:", error);
+      res.status(500).json({ error: "Failed to fetch medicine catalog" });
+    }
+  });
+
+  app.post("/api/super-admin/medicine-catalog", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const medicine = insertMedicineCatalogSchema.parse({
+        ...req.body,
+        createdBy: user?.id
+      });
+      const [newMedicine] = await db.insert(medicineCatalog).values(medicine).returning();
+      res.json(newMedicine);
+    } catch (error) {
+      console.error("Error creating medicine:", error);
+      res.status(500).json({ error: "Failed to create medicine" });
+    }
+  });
+
+  // Insurance Providers
+  app.get("/api/super-admin/insurance-providers", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const providers = await db.select().from(insuranceProviders).orderBy(insuranceProviders.name);
+      res.json(providers);
+    } catch (error) {
+      console.error("Error fetching insurance providers:", error);
+      res.status(500).json({ error: "Failed to fetch insurance providers" });
+    }
+  });
+
+  app.post("/api/super-admin/insurance-providers", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const provider = insertInsuranceProviderSchema.parse({
+        ...req.body,
+        createdBy: user?.id
+      });
+      const [newProvider] = await db.insert(insuranceProviders).values(provider).returning();
+      res.json(newProvider);
+    } catch (error) {
+      console.error("Error creating insurance provider:", error);
+      res.status(500).json({ error: "Failed to create insurance provider" });
+    }
+  });
+
+  // Insurance Claims
+  app.get("/api/super-admin/claims", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const claims = await db.select().from(insuranceClaims).orderBy(desc(insuranceClaims.filedAt));
+      res.json(claims);
+    } catch (error) {
+      console.error("Error fetching claims:", error);
+      res.status(500).json({ error: "Failed to fetch claims" });
+    }
+  });
+
+  app.patch("/api/super-admin/claims/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const updateData = {
+        ...req.body,
+        updatedAt: new Date()
+      };
+      
+      if (req.body.status === "approved" || req.body.status === "rejected") {
+        updateData.reviewedBy = user?.id;
+        updateData.reviewedAt = new Date();
+      }
+      
+      const [claim] = await db.update(insuranceClaims)
+        .set(updateData)
+        .where(eq(insuranceClaims.id, req.params.id))
+        .returning();
+      res.json(claim);
+    } catch (error) {
+      console.error("Error updating claim:", error);
+      res.status(500).json({ error: "Failed to update claim" });
+    }
+  });
+
+  // Hospital Packages
+  app.get("/api/super-admin/hospital-packages", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const packages = await db.select().from(hospitalPackages).orderBy(hospitalPackages.packageName);
+      res.json(packages);
+    } catch (error) {
+      console.error("Error fetching hospital packages:", error);
+      res.status(500).json({ error: "Failed to fetch hospital packages" });
+    }
+  });
+
+  app.post("/api/super-admin/hospital-packages", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const pkg = insertHospitalPackageSchema.parse({
+        ...req.body,
+        createdBy: user?.id
+      });
+      const [newPackage] = await db.insert(hospitalPackages).values(pkg).returning();
+      res.json(newPackage);
+    } catch (error) {
+      console.error("Error creating hospital package:", error);
+      res.status(500).json({ error: "Failed to create hospital package" });
+    }
+  });
+
+  // Override Requests
+  app.get("/api/super-admin/override-requests", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const requests = await db.select().from(overrideRequests).orderBy(desc(overrideRequests.requestedAt));
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching override requests:", error);
+      res.status(500).json({ error: "Failed to fetch override requests" });
+    }
+  });
+
+  app.patch("/api/super-admin/override-requests/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const [request] = await db.update(overrideRequests)
+        .set({
+          ...req.body,
+          reviewedBy: user?.id,
+          reviewedAt: new Date()
+        })
+        .where(eq(overrideRequests.id, req.params.id))
+        .returning();
+      res.json(request);
+    } catch (error) {
+      console.error("Error updating override request:", error);
+      res.status(500).json({ error: "Failed to update override request" });
+    }
+  });
+
+  // Users Management for Super Admin
+  app.get("/api/super-admin/users", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const allUsers = await db.select({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        status: users.status,
+        lastLogin: users.lastLogin,
+        createdAt: users.createdAt
+      }).from(users).orderBy(desc(users.createdAt));
+      res.json(allUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/super-admin/users/:id/status", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const { status } = req.body;
+      const [user] = await db.update(users)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(users.id, parseInt(req.params.id)))
+        .returning();
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ error: "Failed to update user status" });
     }
   });
 

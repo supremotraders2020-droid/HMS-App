@@ -1,0 +1,109 @@
+✅ MASTER PROMPT – SUPER ADMIN (USER ROLES & ACCESS CONTROL)
+
+Implement a Super Admin role as the highest authority in the system with complete and irreversible control over critical hospital operations, financials, and security.
+
+Scope & Permissions
+
+The Super Admin must have exclusive access to:
+
+Billing Finalization (OPD & IPD)
+
+Review, approve, and finalize bills
+
+Lock finalized bills to prevent edits by any role
+
+Allow controlled reopen only by Super Admin with reason logging
+
+Stock & Pharmacy Control
+
+Full CRUD on medicine stock, pricing, GST, expiry, batch tracking
+
+Lock stock adjustments post audit
+
+Approve negative stock or emergency overrides
+
+Surgery Costing & Packages
+
+Define surgery-wise costing (OT, surgeon, anesthesia, consumables)
+
+Create/edit bundled surgery packages
+
+Lock package pricing once activated
+
+Medicinal Database Management
+
+Add/edit/delete medicines (salt, brand, dosage, form)
+
+Control prescription availability
+
+Lock approved medicine master versions
+
+Insurance Providers & Policies
+
+Manage insurers, TPAs, policy rules, coverage limits
+
+Define exclusions, pre-authorization rules
+
+Set claim submission & settlement timelines
+
+Claims Rules & Settlement Control
+
+Configure claim approval workflows
+
+Track claim status, delays, rejections
+
+Lock claim decisions after settlement
+
+Hospital Packages & Pricing
+
+Create OPD/IPD packages and dynamic pricing models
+
+Set effective dates and auto-expiry
+
+Prevent edits after activation without Super Admin override
+
+User Roles & Permissions
+
+Create and manage all roles (Admin, Doctor, Nurse, Staff, OPD Manager)
+
+Fine-grained permission matrix (view, add, edit, delete, approve)
+
+Restrict privilege escalation
+
+Audit Logs & Financial Locking
+
+Log every critical action with:
+
+User ID
+
+Timestamp
+
+Action type
+
+Before/After values
+
+IP / device info
+
+Ensure logs are immutable and non-editable
+
+System Rules
+
+No role can override or bypass Super Admin decisions
+
+All finalized financial records must be read-only
+
+Any unlock action requires Super Admin approval + reason
+
+Enforce role-based access checks at API and UI level
+
+Compliance & Security
+
+Ensure NABH / HIPAA-style compliance
+
+Encrypt sensitive financial and insurance data
+
+Maintain complete traceability for audits
+
+Expected Outcome
+
+A secure, enterprise-grade Super Admin control layer with irreversible financial locking, strict RBAC enforcement, full auditability, and zero unauthorized access.
