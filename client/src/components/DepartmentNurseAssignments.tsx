@@ -178,7 +178,17 @@ export default function DepartmentNurseAssignments() {
       return;
     }
 
-    saveMutation.mutate(formData);
+    const normalizedData = {
+      departmentName: formData.departmentName,
+      primaryNurseId: formData.primaryNurseId || null,
+      primaryNurseName: formData.primaryNurseId ? formData.primaryNurseName : null,
+      secondaryNurseId: formData.secondaryNurseId || null,
+      secondaryNurseName: formData.secondaryNurseId ? formData.secondaryNurseName : null,
+      tertiaryNurseId: formData.tertiaryNurseId || null,
+      tertiaryNurseName: formData.tertiaryNurseId ? formData.tertiaryNurseName : null
+    };
+
+    saveMutation.mutate(normalizedData as any);
   };
 
   const filteredAssignments = assignments.filter(a => 

@@ -12535,11 +12535,11 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const result = await storage.upsertDepartmentNurseAssignment({
         departmentName,
         primaryNurseId: primaryNurseId || null,
-        primaryNurseName: primaryNurseName || null,
+        primaryNurseName: primaryNurseId ? (primaryNurseName || null) : null,
         secondaryNurseId: secondaryNurseId || null,
-        secondaryNurseName: secondaryNurseName || null,
+        secondaryNurseName: secondaryNurseId ? (secondaryNurseName || null) : null,
         tertiaryNurseId: tertiaryNurseId || null,
-        tertiaryNurseName: tertiaryNurseName || null
+        tertiaryNurseName: tertiaryNurseId ? (tertiaryNurseName || null) : null
       });
       
       res.json(result);
