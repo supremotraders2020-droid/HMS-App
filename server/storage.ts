@@ -626,6 +626,13 @@ export interface IStorage {
   incrementTemplateUsage(id: string): Promise<void>;
   getOpdTemplateVersions(templateId: string): Promise<any[]>;
   seedSystemTemplates(): Promise<void>;
+
+  // ========== NURSE DEPARTMENT PREFERENCES ==========
+  getAllNurseDepartmentPreferences(): Promise<any[]>;
+  getNurseDepartmentPreferences(nurseId: string): Promise<any | undefined>;
+  upsertNurseDepartmentPreferences(preferences: any): Promise<any>;
+  deleteNurseDepartmentPreferences(nurseId: string): Promise<boolean>;
+  seedNurseDepartmentPreferences(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -2926,6 +2933,43 @@ export class MemStorage implements IStorage {
   }
 
   async seedSystemTemplates(): Promise<void> {
+    // Stub implementation for in-memory storage
+  }
+
+  // ========== NURSE DEPARTMENT PREFERENCES (Stub) ==========
+  private nurseDepartmentPreferencesData = new Map<string, any>();
+  
+  async getAllNurseDepartmentPreferences(): Promise<any[]> {
+    return Array.from(this.nurseDepartmentPreferencesData.values());
+  }
+
+  async getNurseDepartmentPreferences(nurseId: string): Promise<any | undefined> {
+    return Array.from(this.nurseDepartmentPreferencesData.values()).find(p => p.nurseId === nurseId);
+  }
+
+  async upsertNurseDepartmentPreferences(preferences: any): Promise<any> {
+    const existing = await this.getNurseDepartmentPreferences(preferences.nurseId);
+    if (existing) {
+      const updated = { ...existing, ...preferences, updatedAt: new Date() };
+      this.nurseDepartmentPreferencesData.set(existing.id, updated);
+      return updated;
+    } else {
+      const id = randomUUID();
+      const newPrefs = { id, ...preferences, createdAt: new Date(), updatedAt: new Date() };
+      this.nurseDepartmentPreferencesData.set(id, newPrefs);
+      return newPrefs;
+    }
+  }
+
+  async deleteNurseDepartmentPreferences(nurseId: string): Promise<boolean> {
+    const prefs = await this.getNurseDepartmentPreferences(nurseId);
+    if (prefs) {
+      return this.nurseDepartmentPreferencesData.delete(prefs.id);
+    }
+    return false;
+  }
+
+  async seedNurseDepartmentPreferences(): Promise<void> {
     // Stub implementation for in-memory storage
   }
 }
