@@ -63,11 +63,7 @@ export default function DepartmentNurseAssignments() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      return apiRequest("/api/department-nurse-assignments", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" }
-      });
+      return apiRequest("POST", "/api/department-nurse-assignments", data);
     },
     onSuccess: () => {
       toast({
@@ -89,9 +85,7 @@ export default function DepartmentNurseAssignments() {
 
   const initializeMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("/api/department-nurse-assignments/initialize", {
-        method: "POST"
-      });
+      return apiRequest("POST", "/api/department-nurse-assignments/initialize");
     },
     onSuccess: () => {
       toast({
