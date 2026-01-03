@@ -12490,6 +12490,88 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ========== DEPARTMENT NURSE ASSIGNMENTS ==========
+  app.get("/api/department-nurse-assignments", requireAuth, async (req, res) => {
+    try {
+      const assignments = await storage.getAllDepartmentNurseAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching department nurse assignments:", error);
+      res.status(500).json({ error: "Failed to fetch department nurse assignments" });
+    }
+  });
+
+  app.get("/api/department-nurse-assignments/:departmentName", requireAuth, async (req, res) => {
+    try {
+      const assignment = await storage.getDepartmentNurseAssignment(req.params.departmentName);
+      if (!assignment) {
+        return res.status(404).json({ error: "Department assignment not found" });
+      }
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error fetching department assignment:", error);
+      res.status(500).json({ error: "Failed to fetch department assignment" });
+    }
+  });
+
+  app.post("/api/department-nurse-assignments", requireAuth, requireRole(["ADMIN", "SUPER_ADMIN"]), async (req, res) => {
+    try {
+      const { departmentName, primaryNurseId, primaryNurseName, secondaryNurseId, secondaryNurseName, tertiaryNurseId, tertiaryNurseName } = req.body;
+      
+      if (!departmentName) {
+        return res.status(400).json({ error: "Department name is required" });
+      }
+
+      if (!HOSPITAL_DEPARTMENTS.includes(departmentName)) {
+        return res.status(400).json({ error: `Invalid department: ${departmentName}` });
+      }
+
+      const nurseIds = [primaryNurseId, secondaryNurseId, tertiaryNurseId].filter(Boolean);
+      const uniqueNurseIds = new Set(nurseIds);
+      if (uniqueNurseIds.size !== nurseIds.length) {
+        return res.status(400).json({ error: "Each nurse can only occupy one priority per department" });
+      }
+
+      const result = await storage.upsertDepartmentNurseAssignment({
+        departmentName,
+        primaryNurseId: primaryNurseId || null,
+        primaryNurseName: primaryNurseName || null,
+        secondaryNurseId: secondaryNurseId || null,
+        secondaryNurseName: secondaryNurseName || null,
+        tertiaryNurseId: tertiaryNurseId || null,
+        tertiaryNurseName: tertiaryNurseName || null
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error saving department nurse assignment:", error);
+      res.status(500).json({ error: "Failed to save department nurse assignment" });
+    }
+  });
+
+  app.delete("/api/department-nurse-assignments/:departmentName", requireAuth, requireRole(["ADMIN", "SUPER_ADMIN"]), async (req, res) => {
+    try {
+      const deleted = await storage.deleteDepartmentNurseAssignment(req.params.departmentName);
+      if (!deleted) {
+        return res.status(404).json({ error: "Department assignment not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting department assignment:", error);
+      res.status(500).json({ error: "Failed to delete department assignment" });
+    }
+  });
+
+  app.post("/api/department-nurse-assignments/initialize", requireAuth, requireRole(["ADMIN", "SUPER_ADMIN"]), async (req, res) => {
+    try {
+      await storage.initializeDepartmentNurseAssignments();
+      res.json({ success: true, message: "Department nurse assignments initialized successfully" });
+    } catch (error) {
+      console.error("Error initializing department nurse assignments:", error);
+      res.status(500).json({ error: "Failed to initialize department nurse assignments" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
