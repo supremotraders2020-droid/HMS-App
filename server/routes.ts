@@ -12252,14 +12252,131 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.patch("/api/super-admin/users/:id/status", requireAuth, requireSuperAdmin, async (req, res) => {
     try {
       const { status } = req.body;
-      const [user] = await db.update(users)
-        .set({ status, updatedAt: new Date() })
-        .where(eq(users.id, parseInt(req.params.id)))
-        .returning();
-      res.json(user);
+      const updated = await storage.updateUserStatus(req.params.id, status);
+      if (!updated) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json(updated);
     } catch (error) {
       console.error("Error updating user status:", error);
       res.status(500).json({ error: "Failed to update user status" });
+    }
+  });
+
+  // Create new user with auto-generated username and password
+  app.post("/api/super-admin/users", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const { name, email, role, dateOfBirth } = req.body;
+      const currentUser = (req as any).session?.user;
+      
+      if (!name || !role) {
+        return res.status(400).json({ error: "Name and role are required" });
+      }
+
+      const validRoles = ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"];
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({ error: "Invalid role specified" });
+      }
+
+      // Generate username: role prefix + name slug + random suffix
+      const rolePrefix = role.toLowerCase().replace(/_/g, '').slice(0, 3);
+      const nameSlug = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8);
+      const randomSuffix = Math.random().toString(36).substring(2, 6);
+      const username = `${rolePrefix}_${nameSlug}_${randomSuffix}`;
+
+      // Check if username exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Generated username conflict, please try again" });
+      }
+
+      // Generate secure random password (12 characters)
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+      let plainPassword = '';
+      for (let i = 0; i < 12; i++) {
+        plainPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      // Hash password before storing
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+      // Create user
+      const newUser = await storage.createUser({
+        username,
+        password: hashedPassword,
+        name,
+        email: email || null,
+        role,
+        dateOfBirth: dateOfBirth || null,
+      });
+
+      // Log audit action
+      await db.insert(auditLogs).values({
+        userId: currentUser?.id || 'system',
+        action: 'USER_CREATED',
+        entity: 'user',
+        entityId: newUser.id,
+        details: JSON.stringify({ username, role, createdBy: currentUser?.username }),
+        ipAddress: req.ip || 'unknown'
+      });
+
+      // Return user with plain password (only shown once)
+      res.json({
+        ...newUser,
+        generatedPassword: plainPassword, // Only returned once for display
+        password: undefined // Don't return hashed password
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "Failed to create user" });
+    }
+  });
+
+  // Delete user
+  app.delete("/api/super-admin/users/:id", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      const userId = req.params.id;
+
+      // Prevent self-deletion
+      if (currentUser?.id === userId) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+
+      // Get user before deletion for audit
+      const userToDelete = await storage.getUser(userId);
+      if (!userToDelete) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Prevent deleting other Super Admins (safety measure)
+      if (userToDelete.role === 'SUPER_ADMIN' && currentUser?.role !== 'SUPER_ADMIN') {
+        return res.status(403).json({ error: "Cannot delete Super Admin accounts" });
+      }
+
+      const deleted = await storage.deleteUser(userId);
+      if (!deleted) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Log audit action
+      await db.insert(auditLogs).values({
+        userId: currentUser?.id || 'system',
+        action: 'USER_DELETED',
+        entity: 'user',
+        entityId: userId,
+        details: JSON.stringify({ 
+          deletedUsername: userToDelete.username, 
+          deletedRole: userToDelete.role,
+          deletedBy: currentUser?.username 
+        }),
+        ipAddress: req.ip || 'unknown'
+      });
+
+      res.json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ error: "Failed to delete user" });
     }
   });
 
