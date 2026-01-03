@@ -12322,9 +12322,13 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       await db.insert(auditLogs).values({
         userId: currentUser?.id || 'system',
         action: 'USER_CREATED',
-        entity: 'user',
+        module: 'USERS',
+        entityType: 'user',
         entityId: newUser.id,
-        details: JSON.stringify({ username, role, createdBy: currentUser?.username }),
+        userName: currentUser?.name || 'System',
+        userRole: currentUser?.role || 'SUPER_ADMIN',
+        newValue: JSON.stringify({ username, role, name, email }),
+        changeDescription: `Created new ${role} user: ${name} (${username})`,
         ipAddress: req.ip || 'unknown'
       });
 
@@ -12371,13 +12375,17 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       await db.insert(auditLogs).values({
         userId: currentUser?.id || 'system',
         action: 'USER_DELETED',
-        entity: 'user',
+        module: 'USERS',
+        entityType: 'user',
         entityId: userId,
-        details: JSON.stringify({ 
-          deletedUsername: userToDelete.username, 
-          deletedRole: userToDelete.role,
-          deletedBy: currentUser?.username 
+        userName: currentUser?.name || 'System',
+        userRole: currentUser?.role || 'SUPER_ADMIN',
+        previousValue: JSON.stringify({ 
+          username: userToDelete.username, 
+          role: userToDelete.role,
+          name: userToDelete.name
         }),
+        changeDescription: `Deleted ${userToDelete.role} user: ${userToDelete.name} (${userToDelete.username})`,
         ipAddress: req.ip || 'unknown'
       });
 
