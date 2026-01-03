@@ -12347,7 +12347,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.post("/api/nurse-department-preferences/seed", requireAuth, requireAdmin, async (req, res) => {
+  app.post("/api/nurse-department-preferences/seed", requireAuth, requireRole(["ADMIN", "SUPER_ADMIN"]), async (req, res) => {
     try {
       await storage.seedNurseDepartmentPreferences();
       res.json({ success: true, message: "Nurse department preferences seeded successfully" });
