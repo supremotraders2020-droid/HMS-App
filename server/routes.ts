@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import bwipjs from "bwip-js";
 import multer from "multer";
+import { z } from "zod";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db } from "./db";
@@ -12264,19 +12265,26 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Create new user with auto-generated username and password
+  const createUserSchema = z.object({
+    name: z.string().min(1, "Name is required").max(100),
+    email: z.string().email().optional().nullable(),
+    role: z.enum(["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"]),
+    dateOfBirth: z.string().optional().nullable()
+  });
+
   app.post("/api/super-admin/users", requireAuth, requireSuperAdmin, async (req, res) => {
     try {
-      const { name, email, role, dateOfBirth } = req.body;
       const currentUser = (req as any).session?.user;
       
-      if (!name || !role) {
-        return res.status(400).json({ error: "Name and role are required" });
+      // Validate request body with Zod
+      const parseResult = createUserSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: parseResult.error.errors[0]?.message || "Invalid request data"
+        });
       }
-
-      const validRoles = ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"];
-      if (!validRoles.includes(role)) {
-        return res.status(400).json({ error: "Invalid role specified" });
-      }
+      
+      const { name, email, role, dateOfBirth } = parseResult.data;
 
       // Generate username: role prefix + name slug + random suffix
       const rolePrefix = role.toLowerCase().replace(/_/g, '').slice(0, 3);
