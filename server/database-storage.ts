@@ -23,7 +23,7 @@ import {
   pathologyLabs, labTestCatalog, labTestOrders, sampleCollections, labReports, labReportResults, pathologyLabAccessLogs,
   staffMaster, shiftRoster, taskLogs, attendanceLogs, leaveRequests, overtimeLogs, staffPerformanceMetrics, rosterAuditLogs,
   insuranceProviders, patientInsurance, insuranceClaims, insuranceClaimDocuments, insuranceClaimLogs, insuranceProviderChecklists,
-  opdPrescriptionTemplates, opdTemplateVersions, nurseDepartmentPreferences,
+  opdPrescriptionTemplates, opdTemplateVersions, nurseDepartmentPreferences, departmentNurseAssignments,
   type OpdPrescriptionTemplate, type InsertOpdPrescriptionTemplate,
   type NurseDepartmentPreferences, type InsertNurseDepartmentPreferences,
   type OpdTemplateVersion, type InsertOpdTemplateVersion,
@@ -5009,6 +5009,81 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log(`Seeded ${nursePreferences.length} nurse department preferences successfully!`);
+  }
+
+  // ========== DEPARTMENT NURSE ASSIGNMENTS ==========
+  async getAllDepartmentNurseAssignments(): Promise<any[]> {
+    return await db.select().from(departmentNurseAssignments).orderBy(departmentNurseAssignments.departmentName);
+  }
+
+  async getDepartmentNurseAssignment(departmentName: string): Promise<any | undefined> {
+    const result = await db.select().from(departmentNurseAssignments).where(eq(departmentNurseAssignments.departmentName, departmentName));
+    return result[0];
+  }
+
+  async upsertDepartmentNurseAssignment(assignment: any): Promise<any> {
+    const existing = await this.getDepartmentNurseAssignment(assignment.departmentName);
+    
+    if (existing) {
+      const result = await db.update(departmentNurseAssignments)
+        .set({
+          primaryNurseId: assignment.primaryNurseId || null,
+          primaryNurseName: assignment.primaryNurseName || null,
+          secondaryNurseId: assignment.secondaryNurseId || null,
+          secondaryNurseName: assignment.secondaryNurseName || null,
+          tertiaryNurseId: assignment.tertiaryNurseId || null,
+          tertiaryNurseName: assignment.tertiaryNurseName || null,
+          updatedAt: new Date()
+        })
+        .where(eq(departmentNurseAssignments.departmentName, assignment.departmentName))
+        .returning();
+      return result[0];
+    } else {
+      const result = await db.insert(departmentNurseAssignments)
+        .values({
+          departmentName: assignment.departmentName,
+          primaryNurseId: assignment.primaryNurseId || null,
+          primaryNurseName: assignment.primaryNurseName || null,
+          secondaryNurseId: assignment.secondaryNurseId || null,
+          secondaryNurseName: assignment.secondaryNurseName || null,
+          tertiaryNurseId: assignment.tertiaryNurseId || null,
+          tertiaryNurseName: assignment.tertiaryNurseName || null
+        })
+        .returning();
+      return result[0];
+    }
+  }
+
+  async deleteDepartmentNurseAssignment(departmentName: string): Promise<boolean> {
+    const result = await db.delete(departmentNurseAssignments)
+      .where(eq(departmentNurseAssignments.departmentName, departmentName));
+    return true;
+  }
+
+  async initializeDepartmentNurseAssignments(): Promise<void> {
+    const existing = await db.select().from(departmentNurseAssignments).limit(1);
+    if (existing.length > 0) {
+      console.log("Department nurse assignments already initialized, skipping...");
+      return;
+    }
+
+    console.log("Initializing department nurse assignments...");
+
+    const HOSPITAL_DEPARTMENTS = [
+      "Emergency", "Cardiology", "Neurology", "Orthopedics", "Pediatrics",
+      "Oncology", "Ophthalmology", "ENT", "Dermatology", "Psychiatry",
+      "Gynecology", "Urology", "Nephrology", "Gastroenterology", "Pulmonology",
+      "Endocrinology", "Rheumatology", "Pathology", "Radiology", "Physiotherapy",
+      "Dental", "General Medicine", "General Surgery", "ICU"
+    ];
+
+    for (const dept of HOSPITAL_DEPARTMENTS) {
+      await db.insert(departmentNurseAssignments).values({
+        departmentName: dept
+      });
+    }
+
+    console.log(`Initialized ${HOSPITAL_DEPARTMENTS.length} departments for nurse assignments!`);
   }
 }
 

@@ -636,6 +636,13 @@ export interface IStorage {
   upsertNurseDepartmentPreferences(preferences: any): Promise<any>;
   deleteNurseDepartmentPreferences(nurseId: string): Promise<boolean>;
   seedNurseDepartmentPreferences(): Promise<void>;
+
+  // ========== DEPARTMENT NURSE ASSIGNMENTS ==========
+  getAllDepartmentNurseAssignments(): Promise<any[]>;
+  getDepartmentNurseAssignment(departmentName: string): Promise<any | undefined>;
+  upsertDepartmentNurseAssignment(assignment: any): Promise<any>;
+  deleteDepartmentNurseAssignment(departmentName: string): Promise<boolean>;
+  initializeDepartmentNurseAssignments(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -2999,6 +3006,43 @@ export class MemStorage implements IStorage {
   }
 
   async seedNurseDepartmentPreferences(): Promise<void> {
+    // Stub implementation for in-memory storage
+  }
+
+  // ========== DEPARTMENT NURSE ASSIGNMENTS (Stub) ==========
+  private departmentNurseAssignmentsData = new Map<string, any>();
+
+  async getAllDepartmentNurseAssignments(): Promise<any[]> {
+    return Array.from(this.departmentNurseAssignmentsData.values());
+  }
+
+  async getDepartmentNurseAssignment(departmentName: string): Promise<any | undefined> {
+    return Array.from(this.departmentNurseAssignmentsData.values()).find(a => a.departmentName === departmentName);
+  }
+
+  async upsertDepartmentNurseAssignment(assignment: any): Promise<any> {
+    const existing = await this.getDepartmentNurseAssignment(assignment.departmentName);
+    if (existing) {
+      const updated = { ...existing, ...assignment, updatedAt: new Date() };
+      this.departmentNurseAssignmentsData.set(existing.id, updated);
+      return updated;
+    } else {
+      const id = randomUUID();
+      const newAssignment = { id, ...assignment, createdAt: new Date(), updatedAt: new Date() };
+      this.departmentNurseAssignmentsData.set(id, newAssignment);
+      return newAssignment;
+    }
+  }
+
+  async deleteDepartmentNurseAssignment(departmentName: string): Promise<boolean> {
+    const assignment = await this.getDepartmentNurseAssignment(departmentName);
+    if (assignment) {
+      return this.departmentNurseAssignmentsData.delete(assignment.id);
+    }
+    return false;
+  }
+
+  async initializeDepartmentNurseAssignments(): Promise<void> {
     // Stub implementation for in-memory storage
   }
 }
