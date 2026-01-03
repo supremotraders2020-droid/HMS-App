@@ -4592,3 +4592,34 @@ export const insertNurseDepartmentPreferencesSchema = createInsertSchema(nurseDe
 
 export type InsertNurseDepartmentPreferences = z.infer<typeof insertNurseDepartmentPreferencesSchema>;
 export type NurseDepartmentPreferences = typeof nurseDepartmentPreferences.$inferSelect;
+
+// Department Nurse Assignments - department-centric view where each department has up to 3 nurses
+export const departmentNurseAssignments = pgTable("department_nurse_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  departmentName: text("department_name").notNull().unique(),
+  primaryNurseId: varchar("primary_nurse_id"),
+  primaryNurseName: text("primary_nurse_name"),
+  secondaryNurseId: varchar("secondary_nurse_id"),
+  secondaryNurseName: text("secondary_nurse_name"),
+  tertiaryNurseId: varchar("tertiary_nurse_id"),
+  tertiaryNurseName: text("tertiary_nurse_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDepartmentNurseAssignmentsSchema = createInsertSchema(departmentNurseAssignments)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .refine(
+    (data) => {
+      const nurses = [data.primaryNurseId, data.secondaryNurseId, data.tertiaryNurseId].filter(Boolean);
+      return new Set(nurses).size === nurses.length;
+    },
+    { message: "Each nurse can only occupy one priority per department" }
+  );
+
+export type InsertDepartmentNurseAssignments = z.infer<typeof insertDepartmentNurseAssignmentsSchema>;
+export type DepartmentNurseAssignments = typeof departmentNurseAssignments.$inferSelect;
