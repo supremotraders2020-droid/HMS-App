@@ -39,7 +39,7 @@ import type { ActivityLog, Appointment, ServicePatient, CriticalAlert } from "@s
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 
-type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
 interface HMSDashboardProps {
   currentRole: UserRole;
@@ -285,12 +285,6 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
     ];
 
     const roleSpecificStats: Record<UserRole, any[]> = {
-      SUPER_ADMIN: [
-        { title: "Total Users", value: "156", change: "+12", icon: Users, urgent: false },
-        { title: "System Health", value: "99.9%", change: "+0.1%", icon: Shield, urgent: false },
-        { title: "Pending Approvals", value: "8", change: "+3", icon: Clock, urgent: false },
-        { title: "Audit Events", value: "1,234", change: "+45", icon: Activity, urgent: false }
-      ],
       ADMIN: [
         ...commonStats,
         { title: "System Uptime", value: "99.9%", change: "+0.1%", icon: Shield, urgent: false },
@@ -361,7 +355,6 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
 
   const getRoleColor = (role: UserRole) => {
     switch (role) {
-      case "SUPER_ADMIN": return "from-red-500/25 to-rose-600/15";
       case "ADMIN": return "from-violet-500/25 to-purple-600/15";
       case "DOCTOR": return "from-cyan-500/25 to-blue-600/15";
       case "NURSE": return "from-emerald-500/25 to-green-600/15";

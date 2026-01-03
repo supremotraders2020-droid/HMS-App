@@ -121,54 +121,51 @@ const ROLES = [
   "PATHOLOGY_LAB",
 ] as const;
 
-interface SuperAdminPortalProps {
-  section?: SuperAdminSection;
-}
-
-export default function SuperAdminPortal({ section = "dashboard" }: SuperAdminPortalProps) {
+export default function SuperAdminPortal() {
+  const [activeSection, setActiveSection] = useState<SuperAdminSection>("dashboard");
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
-  const sectionTitles: Record<SuperAdminSection, { title: string; description: string }> = {
-    dashboard: { title: "Dashboard", description: "System-wide statistics and pending actions" },
-    users: { title: "User Roles & Permissions", description: "Manage user accounts and access control" },
-    billing: { title: "Billing Finalization", description: "Review, approve, and lock OPD/IPD bills" },
-    stock: { title: "Stock & Pharmacy Control", description: "Manage inventory, pricing, GST, and batch tracking" },
-    surgery: { title: "Surgery Costing & Packages", description: "Define surgery-wise costing with fees" },
-    medicines: { title: "Medicine Database", description: "Manage medicine catalog with salt, brand, dosage" },
-    insurance: { title: "Insurance Providers", description: "Manage insurers, TPAs, coverage limits" },
-    claims: { title: "Claims Management", description: "Process and track insurance claims" },
-    packages: { title: "Hospital Packages", description: "Create OPD/IPD packages and pricing models" },
-    audit: { title: "Audit Logs", description: "Immutable audit trail of all critical actions" },
-    settings: { title: "System Settings", description: "Configure hospital system parameters" },
-  };
-
-  const currentSection = sectionTitles[section] || sectionTitles.dashboard;
+  const sections = [
+    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+    { id: "users", label: "User Roles & Permissions", icon: Users },
+    { id: "billing", label: "Billing Finalization", icon: Receipt },
+    { id: "stock", label: "Stock & Pharmacy", icon: Pill },
+    { id: "surgery", label: "Surgery Packages", icon: Stethoscope },
+    { id: "medicines", label: "Medicine Database", icon: Syringe },
+    { id: "insurance", label: "Insurance Providers", icon: Building2 },
+    { id: "claims", label: "Claims Management", icon: ClipboardList },
+    { id: "packages", label: "Hospital Packages", icon: Package },
+    { id: "audit", label: "Audit Logs", icon: History },
+    { id: "settings", label: "System Settings", icon: Settings },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-rose-50/30 to-purple-50/30 dark:from-slate-900 dark:via-rose-950/20 dark:to-purple-950/20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
-      <div className="bg-gradient-to-r from-rose-900 via-purple-800 to-indigo-900 text-white shadow-lg">
-        <div className="px-6 py-5">
+      <div className="bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 text-white">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20">
-                <Crown className="h-7 w-7 text-yellow-400" />
+              <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl">
+                <Crown className="h-8 w-8 text-yellow-400" />
               </div>
               <div>
-                <h1 className="text-xl font-bold flex items-center gap-2">
-                  {currentSection.title}
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  Super Admin Portal
+                  <Badge className="bg-yellow-500 text-black">Enterprise</Badge>
                 </h1>
                 <p className="text-purple-200 text-sm">
-                  {currentSection.description}
+                  Complete hospital system control & administration
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant="outline" className="border-green-400 text-green-400 bg-green-500/10">
+              <Badge variant="outline" className="border-green-400 text-green-400">
                 <ShieldCheck className="h-3 w-3 mr-1" />
                 HIPAA Compliant
               </Badge>
-              <Badge variant="outline" className="border-blue-400 text-blue-400 bg-blue-500/10">
+              <Badge variant="outline" className="border-blue-400 text-blue-400">
                 <Shield className="h-3 w-3 mr-1" />
                 NABH Certified
               </Badge>
@@ -177,19 +174,57 @@ export default function SuperAdminPortal({ section = "dashboard" }: SuperAdminPo
         </div>
       </div>
 
-      {/* Main Content - Full Width */}
-      <div className="p-6">
-        {section === "dashboard" && <DashboardSection />}
-        {section === "users" && <UsersSection />}
-        {section === "billing" && <BillingSection />}
-        {section === "stock" && <StockSection />}
-        {section === "surgery" && <SurgerySection />}
-        {section === "medicines" && <MedicinesSection />}
-        {section === "insurance" && <InsuranceSection />}
-        {section === "claims" && <ClaimsSection />}
-        {section === "packages" && <PackagesSection />}
-        {section === "audit" && <AuditSection />}
-        {section === "settings" && <SettingsSection />}
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-12 gap-6">
+          {/* Sidebar */}
+          <div className="col-span-3">
+            <Card className="sticky top-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Control Panel
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2">
+                <nav className="space-y-1">
+                  {sections.map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id as SuperAdminSection)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                        activeSection === section.id
+                          ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                          : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      }`}
+                      data-testid={`nav-${section.id}`}
+                    >
+                      <section.icon className="h-5 w-5" />
+                      <span className="text-sm font-medium">{section.label}</span>
+                      {activeSection === section.id && (
+                        <ChevronRight className="h-4 w-4 ml-auto" />
+                      )}
+                    </button>
+                  ))}
+                </nav>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content */}
+          <div className="col-span-9">
+            {activeSection === "dashboard" && <DashboardSection />}
+            {activeSection === "users" && <UsersSection />}
+            {activeSection === "billing" && <BillingSection />}
+            {activeSection === "stock" && <StockSection />}
+            {activeSection === "surgery" && <SurgerySection />}
+            {activeSection === "medicines" && <MedicinesSection />}
+            {activeSection === "insurance" && <InsuranceSection />}
+            {activeSection === "claims" && <ClaimsSection />}
+            {activeSection === "packages" && <PackagesSection />}
+            {activeSection === "audit" && <AuditSection />}
+            {activeSection === "settings" && <SettingsSection />}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -304,120 +339,14 @@ function DashboardSection() {
   );
 }
 
-interface CreatedUserCredentials {
-  username: string;
-  password: string;
-  name: string;
-  role: string;
-}
-
 function UsersSection() {
   const { toast } = useToast();
   const [showAddUser, setShowAddUser] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showCredentials, setShowCredentials] = useState(false);
-  const [createdCredentials, setCreatedCredentials] = useState<CreatedUserCredentials | null>(null);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("ADMIN");
   const [showPermissions, setShowPermissions] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  // Form state for new user
-  const [newUserName, setNewUserName] = useState("");
-  const [newUserEmail, setNewUserEmail] = useState("");
 
-  const { data: users, isLoading, refetch } = useQuery<User[]>({ queryKey: ["/api/super-admin/users"] });
+  const { data: users, isLoading } = useQuery<User[]>({ queryKey: ["/api/super-admin/users"] });
   const { data: permissions } = useQuery<RolePermission[]>({ queryKey: ["/api/super-admin/permissions"] });
-
-  // Create user mutation
-  const createUserMutation = useMutation({
-    mutationFn: async (userData: { name: string; email: string; role: string }) => {
-      const response = await apiRequest("POST", "/api/super-admin/users", userData);
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setCreatedCredentials({
-        username: data.username,
-        password: data.generatedPassword,
-        name: data.name,
-        role: data.role
-      });
-      setShowAddUser(false);
-      setShowCredentials(true);
-      setNewUserName("");
-      setNewUserEmail("");
-      setSelectedRole("ADMIN");
-      queryClient.invalidateQueries({ queryKey: ["/api/super-admin/users"] });
-      toast({ title: "User Created", description: "New user account has been created successfully" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message || "Failed to create user", variant: "destructive" });
-    }
-  });
-
-  // Delete user mutation
-  const deleteUserMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      const response = await apiRequest("DELETE", `/api/super-admin/users/${userId}`);
-      return response.json();
-    },
-    onSuccess: () => {
-      setShowDeleteConfirm(false);
-      setUserToDelete(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/super-admin/users"] });
-      toast({ title: "User Deleted", description: "User account has been deleted successfully" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message || "Failed to delete user", variant: "destructive" });
-    }
-  });
-
-  // Update user status mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      const response = await apiRequest("PATCH", `/api/super-admin/users/${userId}/status`, { status });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/super-admin/users"] });
-      toast({ title: "Status Updated", description: "User status has been updated" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message || "Failed to update status", variant: "destructive" });
-    }
-  });
-
-  const handleCreateUser = () => {
-    if (!newUserName.trim()) {
-      toast({ title: "Error", description: "Name is required", variant: "destructive" });
-      return;
-    }
-    createUserMutation.mutate({ name: newUserName, email: newUserEmail, role: selectedRole });
-  };
-
-  const handleDeleteUser = (user: User) => {
-    setUserToDelete(user);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = () => {
-    if (userToDelete) {
-      deleteUserMutation.mutate(userToDelete.id);
-    }
-  };
-
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copied", description: `${label} copied to clipboard` });
-  };
-
-  // Filter users by search query
-  const filteredUsers = users?.filter(user => 
-    user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.role?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
 
   return (
     <div className="space-y-6">
@@ -431,7 +360,7 @@ function UsersSection() {
             <Shield className="h-4 w-4 mr-2" />
             Permission Matrix
           </Button>
-          <Button onClick={() => setShowAddUser(true)} data-testid="button-add-user">
+          <Button onClick={() => setShowAddUser(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add User
           </Button>
@@ -464,18 +393,9 @@ function UsersSection() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>All Users ({filteredUsers.length})</CardTitle>
+            <CardTitle>All Users</CardTitle>
             <div className="flex items-center gap-2">
-              <Input 
-                placeholder="Search users..." 
-                className="w-64" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                data-testid="input-search-users"
-              />
-              <Button variant="outline" size="icon" onClick={() => refetch()}>
-                <RefreshCw className="h-4 w-4" />
-              </Button>
+              <Input placeholder="Search users..." className="w-64" />
             </div>
           </div>
         </CardHeader>
@@ -497,8 +417,8 @@ function UsersSection() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id} data-testid={`row-user-${user.id}`}>
+                {users?.map((user) => (
+                  <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.username}</TableCell>
                     <TableCell>{user.name || "-"}</TableCell>
                     <TableCell>
@@ -508,34 +428,19 @@ function UsersSection() {
                     </TableCell>
                     <TableCell>{user.email || "-"}</TableCell>
                     <TableCell>
-                      <Badge 
-                        variant="outline" 
-                        className={user.status === "active" ? "text-green-600 border-green-600" : "text-red-600 border-red-600"}
-                      >
-                        {user.status || "active"}
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        Active
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => updateStatusMutation.mutate({ 
-                            userId: user.id, 
-                            status: user.status === "active" ? "inactive" : "active" 
-                          })}
-                          data-testid={`button-toggle-status-${user.id}`}
-                        >
-                          {user.status === "active" ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                        <Button variant="ghost" size="icon">
+                          <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-red-600"
-                          onClick={() => handleDeleteUser(user)}
-                          disabled={user.role === "SUPER_ADMIN"}
-                          data-testid={`button-delete-user-${user.id}`}
-                        >
+                        <Button variant="ghost" size="icon">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -588,190 +493,6 @@ function UsersSection() {
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setShowPermissions(false)}>Cancel</Button>
             <Button>Save Permissions</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add User Dialog - Auto-generates credentials */}
-      <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-            <DialogDescription>
-              Create a new user account. Username and password will be automatically generated.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input 
-                id="name" 
-                placeholder="Enter full name" 
-                value={newUserName}
-                onChange={(e) => setNewUserName(e.target.value)}
-                data-testid="input-new-user-name" 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email (Optional)</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="Enter email address" 
-                value={newUserEmail}
-                onChange={(e) => setNewUserEmail(e.target.value)}
-                data-testid="input-new-user-email" 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Role *</Label>
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                <SelectTrigger data-testid="select-new-user-role">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROLES.map((role) => (
-                    <SelectItem key={role} value={role}>{role.replace("_", " ")}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                Username and password will be auto-generated and displayed after creation. 
-                Make sure to save these credentials as the password cannot be retrieved later.
-              </p>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setShowAddUser(false)}>Cancel</Button>
-            <Button 
-              onClick={handleCreateUser} 
-              disabled={createUserMutation.isPending}
-              data-testid="button-create-user"
-            >
-              {createUserMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create User"
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Generated Credentials Dialog */}
-      <Dialog open={showCredentials} onOpenChange={setShowCredentials}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              User Created Successfully
-            </DialogTitle>
-            <DialogDescription>
-              Save these credentials securely. The password cannot be retrieved later.
-            </DialogDescription>
-          </DialogHeader>
-          {createdCredentials && (
-            <div className="space-y-4">
-              <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-500">Name</p>
-                    <p className="font-medium">{createdCredentials.name}</p>
-                  </div>
-                  <Badge>{createdCredentials.role.replace("_", " ")}</Badge>
-                </div>
-                <Separator />
-                <div>
-                  <p className="text-sm text-slate-500">Username</p>
-                  <div className="flex items-center justify-between">
-                    <code className="font-mono bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded">
-                      {createdCredentials.username}
-                    </code>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => copyToClipboard(createdCredentials.username, "Username")}
-                    >
-                      Copy
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Password</p>
-                  <div className="flex items-center justify-between">
-                    <code className="font-mono bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded">
-                      {createdCredentials.password}
-                    </code>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => copyToClipboard(createdCredentials.password, "Password")}
-                    >
-                      Copy
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md">
-                <p className="text-sm text-amber-700 dark:text-amber-300 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  Save these credentials now. They will not be shown again.
-                </p>
-              </div>
-            </div>
-          )}
-          <div className="flex justify-end mt-4">
-            <Button onClick={() => {
-              setShowCredentials(false);
-              setCreatedCredentials(null);
-            }}>
-              Done
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="h-5 w-5" />
-              Confirm User Deletion
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this user? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {userToDelete && (
-            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-              <p className="font-medium">{userToDelete.name || userToDelete.username}</p>
-              <p className="text-sm text-slate-500">Username: {userToDelete.username}</p>
-              <p className="text-sm text-slate-500">Role: {userToDelete.role?.replace("_", " ")}</p>
-            </div>
-          )}
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
-            <Button 
-              variant="destructive" 
-              onClick={confirmDelete}
-              disabled={deleteUserMutation.isPending}
-              data-testid="button-confirm-delete"
-            >
-              {deleteUserMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete User"
-              )}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -899,8 +620,6 @@ function BillingSection() {
 
 function StockSection() {
   const { data: batches, isLoading } = useQuery<StockBatch[]>({ queryKey: ["/api/super-admin/stock-batches"] });
-  const [showAddBatch, setShowAddBatch] = useState(false);
-  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -909,72 +628,11 @@ function StockSection() {
           <h2 className="text-2xl font-bold">Stock & Pharmacy Control</h2>
           <p className="text-slate-600 dark:text-slate-400">Manage inventory, pricing, GST, and batch tracking</p>
         </div>
-        <Button onClick={() => setShowAddBatch(true)} data-testid="button-add-batch">
+        <Button>
           <Plus className="h-4 w-4 mr-2" />
           Add Stock Batch
         </Button>
       </div>
-
-      {/* Add Stock Batch Dialog */}
-      <Dialog open={showAddBatch} onOpenChange={setShowAddBatch}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add Stock Batch</DialogTitle>
-            <DialogDescription>Add new medicine batch to inventory</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="medicineName">Medicine Name</Label>
-              <Input id="medicineName" placeholder="Enter medicine name" data-testid="input-medicine-name" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="batchNumber">Batch Number</Label>
-              <Input id="batchNumber" placeholder="e.g., BTH-2024-001" data-testid="input-batch-number" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
-              <Input id="quantity" type="number" placeholder="0" data-testid="input-quantity" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="mrp">MRP (₹)</Label>
-              <Input id="mrp" type="number" placeholder="0.00" data-testid="input-mrp" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="purchasePrice">Purchase Price (₹)</Label>
-              <Input id="purchasePrice" type="number" placeholder="0.00" data-testid="input-purchase-price" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="gstPercentage">GST %</Label>
-              <Select>
-                <SelectTrigger data-testid="select-gst">
-                  <SelectValue placeholder="Select GST" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">0%</SelectItem>
-                  <SelectItem value="5">5%</SelectItem>
-                  <SelectItem value="12">12%</SelectItem>
-                  <SelectItem value="18">18%</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="expiryDate">Expiry Date</Label>
-              <Input id="expiryDate" type="date" data-testid="input-expiry-date" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="manufacturer">Manufacturer</Label>
-              <Input id="manufacturer" placeholder="Enter manufacturer" data-testid="input-manufacturer" />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setShowAddBatch(false)}>Cancel</Button>
-            <Button onClick={() => {
-              toast({ title: "Batch Added", description: "Stock batch has been added successfully" });
-              setShowAddBatch(false);
-            }} data-testid="button-save-batch">Add Batch</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
@@ -1080,8 +738,6 @@ function StockSection() {
 
 function SurgerySection() {
   const { data: packages, isLoading } = useQuery<SurgeryPackage[]>({ queryKey: ["/api/super-admin/surgery-packages"] });
-  const [showCreatePackage, setShowCreatePackage] = useState(false);
-  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -1090,77 +746,11 @@ function SurgerySection() {
           <h2 className="text-2xl font-bold">Surgery Costing & Packages</h2>
           <p className="text-slate-600 dark:text-slate-400">Define surgery-wise costing with OT, surgeon, anesthesia fees</p>
         </div>
-        <Button onClick={() => setShowCreatePackage(true)} data-testid="button-create-surgery-package">
+        <Button>
           <Plus className="h-4 w-4 mr-2" />
           Create Package
         </Button>
       </div>
-
-      {/* Create Surgery Package Dialog */}
-      <Dialog open={showCreatePackage} onOpenChange={setShowCreatePackage}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create Surgery Package</DialogTitle>
-            <DialogDescription>Define pricing for surgery with all components</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="packageName">Package Name</Label>
-              <Input id="packageName" placeholder="e.g., Knee Replacement Package" data-testid="input-package-name" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="surgeryType">Surgery Type</Label>
-              <Select>
-                <SelectTrigger data-testid="select-surgery-type">
-                  <SelectValue placeholder="Select surgery type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="orthopedic">Orthopedic</SelectItem>
-                  <SelectItem value="cardiac">Cardiac</SelectItem>
-                  <SelectItem value="neuro">Neurosurgery</SelectItem>
-                  <SelectItem value="general">General Surgery</SelectItem>
-                  <SelectItem value="gynec">Gynecology</SelectItem>
-                  <SelectItem value="ent">ENT</SelectItem>
-                  <SelectItem value="urology">Urology</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="otCharges">OT Charges (₹)</Label>
-                <Input id="otCharges" type="number" placeholder="0" data-testid="input-ot-charges" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="surgeonFees">Surgeon Fees (₹)</Label>
-                <Input id="surgeonFees" type="number" placeholder="0" data-testid="input-surgeon-fees" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="anesthesiaFees">Anesthesia Fees (₹)</Label>
-                <Input id="anesthesiaFees" type="number" placeholder="0" data-testid="input-anesthesia-fees" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="nursingCharges">Nursing Charges (₹)</Label>
-                <Input id="nursingCharges" type="number" placeholder="0" data-testid="input-nursing-charges" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="packagePrice">Total Package Price (₹)</Label>
-              <Input id="packagePrice" type="number" placeholder="0" data-testid="input-package-price" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="Package inclusions and details..." data-testid="input-description" />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setShowCreatePackage(false)}>Cancel</Button>
-            <Button onClick={() => {
-              toast({ title: "Package Created", description: "Surgery package has been created successfully" });
-              setShowCreatePackage(false);
-            }} data-testid="button-save-surgery-package">Create Package</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Packages Grid */}
       <div className="grid grid-cols-3 gap-4">
@@ -1230,8 +820,6 @@ function SurgerySection() {
 
 function MedicinesSection() {
   const { data: medicines, isLoading } = useQuery<MedicineCatalog[]>({ queryKey: ["/api/super-admin/medicine-catalog"] });
-  const [showAddMedicine, setShowAddMedicine] = useState(false);
-  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -1240,85 +828,11 @@ function MedicinesSection() {
           <h2 className="text-2xl font-bold">Medicine Database Management</h2>
           <p className="text-slate-600 dark:text-slate-400">Manage medicine catalog with salt, brand, dosage, and form</p>
         </div>
-        <Button onClick={() => setShowAddMedicine(true)} data-testid="button-add-medicine">
+        <Button>
           <Plus className="h-4 w-4 mr-2" />
           Add Medicine
         </Button>
       </div>
-
-      {/* Add Medicine Dialog */}
-      <Dialog open={showAddMedicine} onOpenChange={setShowAddMedicine}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add Medicine to Catalog</DialogTitle>
-            <DialogDescription>Add new medicine with salt composition and pricing</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="brandName">Brand Name</Label>
-              <Input id="brandName" placeholder="e.g., Crocin Advance" data-testid="input-brand-name" />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="genericName">Generic Name</Label>
-              <Input id="genericName" placeholder="e.g., Paracetamol" data-testid="input-generic-name" />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="saltComposition">Salt Composition</Label>
-              <Input id="saltComposition" placeholder="e.g., Paracetamol 500mg" data-testid="input-salt-composition" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dosageForm">Dosage Form</Label>
-              <Select>
-                <SelectTrigger data-testid="select-dosage-form">
-                  <SelectValue placeholder="Select form" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tablet">Tablet</SelectItem>
-                  <SelectItem value="capsule">Capsule</SelectItem>
-                  <SelectItem value="syrup">Syrup</SelectItem>
-                  <SelectItem value="injection">Injection</SelectItem>
-                  <SelectItem value="cream">Cream/Ointment</SelectItem>
-                  <SelectItem value="drops">Drops</SelectItem>
-                  <SelectItem value="inhaler">Inhaler</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="strength">Strength</Label>
-              <Input id="strength" placeholder="e.g., 500mg" data-testid="input-strength" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="mrpMedicine">MRP (₹)</Label>
-              <Input id="mrpMedicine" type="number" placeholder="0.00" data-testid="input-mrp-medicine" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="manufacturer">Manufacturer</Label>
-              <Input id="manufacturer" placeholder="e.g., GSK" data-testid="input-manufacturer" />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="schedule">Schedule</Label>
-              <Select>
-                <SelectTrigger data-testid="select-schedule">
-                  <SelectValue placeholder="Select schedule" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="otc">OTC (Over the Counter)</SelectItem>
-                  <SelectItem value="h">Schedule H</SelectItem>
-                  <SelectItem value="h1">Schedule H1</SelectItem>
-                  <SelectItem value="x">Schedule X (Narcotic)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setShowAddMedicine(false)}>Cancel</Button>
-            <Button onClick={() => {
-              toast({ title: "Medicine Added", description: "Medicine has been added to catalog" });
-              setShowAddMedicine(false);
-            }} data-testid="button-save-medicine">Add Medicine</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Card>
         <CardHeader>
@@ -1386,8 +900,6 @@ function MedicinesSection() {
 
 function InsuranceSection() {
   const { data: providers, isLoading } = useQuery<SuperAdminInsuranceProvider[]>({ queryKey: ["/api/super-admin/insurance-providers"] });
-  const [showAddProvider, setShowAddProvider] = useState(false);
-  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -1396,72 +908,11 @@ function InsuranceSection() {
           <h2 className="text-2xl font-bold">Insurance Providers & Policies</h2>
           <p className="text-slate-600 dark:text-slate-400">Manage insurers, TPAs, coverage limits, and rules</p>
         </div>
-        <Button onClick={() => setShowAddProvider(true)} data-testid="button-add-provider">
+        <Button>
           <Plus className="h-4 w-4 mr-2" />
           Add Provider
         </Button>
       </div>
-
-      {/* Add Provider Dialog */}
-      <Dialog open={showAddProvider} onOpenChange={setShowAddProvider}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add Insurance Provider</DialogTitle>
-            <DialogDescription>Add new insurance company or TPA integration</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="providerName">Provider Name</Label>
-              <Input id="providerName" placeholder="e.g., Star Health Insurance" data-testid="input-provider-name" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="providerCode">Provider Code</Label>
-              <Input id="providerCode" placeholder="e.g., STAR-001" data-testid="input-provider-code" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="providerType">Provider Type</Label>
-              <Select>
-                <SelectTrigger data-testid="select-provider-type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="insurance_company">Insurance Company</SelectItem>
-                  <SelectItem value="tpa">TPA</SelectItem>
-                  <SelectItem value="government">Government Scheme</SelectItem>
-                  <SelectItem value="corporate">Corporate Tie-up</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="coverageLimit">Default Coverage (₹)</Label>
-              <Input id="coverageLimit" type="number" placeholder="500000" data-testid="input-coverage-limit" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="coPayPercentage">Co-Pay %</Label>
-              <Input id="coPayPercentage" type="number" placeholder="10" data-testid="input-copay" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="settlementDays">Settlement Days</Label>
-              <Input id="settlementDays" type="number" placeholder="30" data-testid="input-settlement-days" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contactEmail">Contact Email</Label>
-              <Input id="contactEmail" type="email" placeholder="claims@insurance.com" data-testid="input-contact-email" />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="contactPhone">Contact Phone</Label>
-              <Input id="contactPhone" placeholder="+91 XXXXX XXXXX" data-testid="input-contact-phone" />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setShowAddProvider(false)}>Cancel</Button>
-            <Button onClick={() => {
-              toast({ title: "Provider Added", description: "Insurance provider has been added successfully" });
-              setShowAddProvider(false);
-            }} data-testid="button-save-provider">Add Provider</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <div className="grid grid-cols-3 gap-4">
         {isLoading ? (
@@ -1589,8 +1040,6 @@ function ClaimsSection() {
 
 function PackagesSection() {
   const { data: packages, isLoading } = useQuery<HospitalPackage[]>({ queryKey: ["/api/super-admin/hospital-packages"] });
-  const [showCreatePackage, setShowCreatePackage] = useState(false);
-  const { toast } = useToast();
 
   return (
     <div className="space-y-6">
@@ -1599,73 +1048,11 @@ function PackagesSection() {
           <h2 className="text-2xl font-bold">Hospital Packages & Pricing</h2>
           <p className="text-slate-600 dark:text-slate-400">Create OPD/IPD packages and dynamic pricing models</p>
         </div>
-        <Button onClick={() => setShowCreatePackage(true)} data-testid="button-create-hospital-package">
+        <Button>
           <Plus className="h-4 w-4 mr-2" />
           Create Package
         </Button>
       </div>
-
-      {/* Create Hospital Package Dialog */}
-      <Dialog open={showCreatePackage} onOpenChange={setShowCreatePackage}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create Hospital Package</DialogTitle>
-            <DialogDescription>Define OPD/IPD package with pricing and inclusions</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="hospitalPackageName">Package Name</Label>
-              <Input id="hospitalPackageName" placeholder="e.g., Master Health Checkup" data-testid="input-hospital-package-name" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="packageCode">Package Code</Label>
-              <Input id="packageCode" placeholder="e.g., MHC-001" data-testid="input-package-code" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="packageType">Package Type</Label>
-              <Select>
-                <SelectTrigger data-testid="select-package-type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="opd">OPD Package</SelectItem>
-                  <SelectItem value="ipd">IPD Package</SelectItem>
-                  <SelectItem value="health_checkup">Health Checkup</SelectItem>
-                  <SelectItem value="corporate">Corporate Package</SelectItem>
-                  <SelectItem value="daycare">Daycare Package</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="basePrice">Base Price (₹)</Label>
-              <Input id="basePrice" type="number" placeholder="0" data-testid="input-base-price" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="discountPercentage">Discount %</Label>
-              <Input id="discountPercentage" type="number" placeholder="0" data-testid="input-discount" />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="finalPrice">Final Price (₹)</Label>
-              <Input id="finalPrice" type="number" placeholder="0" data-testid="input-final-price" />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="inclusions">Inclusions</Label>
-              <Textarea id="inclusions" placeholder="List all services included in this package..." rows={3} data-testid="input-inclusions" />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="validityDays">Validity (Days)</Label>
-              <Input id="validityDays" type="number" placeholder="365" data-testid="input-validity" />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setShowCreatePackage(false)}>Cancel</Button>
-            <Button onClick={() => {
-              toast({ title: "Package Created", description: "Hospital package has been created successfully" });
-              setShowCreatePackage(false);
-            }} data-testid="button-save-hospital-package">Create Package</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Tabs defaultValue="all">
         <TabsList>

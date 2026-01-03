@@ -19,11 +19,6 @@ export const users = pgTable("users", {
   name: text("name"),
   email: text("email"),
   dateOfBirth: text("date_of_birth"),
-  status: text("status").notNull().default("active"),
-  lastLogin: timestamp("last_login"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  createdBy: varchar("created_by"),
 });
 
 const validRoles = ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"] as const;
@@ -4532,94 +4527,3 @@ export const insertMedicineCatalogSchema = createInsertSchema(medicineCatalog).o
 });
 export type InsertMedicineCatalog = z.infer<typeof insertMedicineCatalogSchema>;
 export type MedicineCatalog = typeof medicineCatalog.$inferSelect;
-
-// Hospital Departments List
-export const HOSPITAL_DEPARTMENTS = [
-  "Emergency",
-  "Cardiology", 
-  "Neurology",
-  "Orthopedics",
-  "Pediatrics",
-  "Oncology",
-  "Ophthalmology",
-  "ENT",
-  "Dermatology",
-  "Psychiatry",
-  "Gynecology",
-  "Urology",
-  "Nephrology",
-  "Gastroenterology",
-  "Pulmonology",
-  "Endocrinology",
-  "Rheumatology",
-  "Pathology",
-  "Radiology",
-  "Physiotherapy",
-  "Dental",
-  "General Medicine",
-  "General Surgery",
-  "ICU"
-] as const;
-
-export type HospitalDepartment = typeof HOSPITAL_DEPARTMENTS[number];
-
-// Nurse Department Preferences - for scheduling and assignment
-export const nurseDepartmentPreferences = pgTable("nurse_department_preferences", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  nurseId: varchar("nurse_id").notNull().unique(), // References staff_members.id where role = NURSE
-  nurseName: text("nurse_name").notNull(),
-  primaryDepartment: text("primary_department").notNull(),
-  secondaryDepartment: text("secondary_department").notNull(),
-  tertiaryDepartment: text("tertiary_department").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertNurseDepartmentPreferencesSchema = createInsertSchema(nurseDepartmentPreferences)
-  .omit({
-    id: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-  .refine(
-    (data) => {
-      // Ensure all three departments are different
-      const depts = [data.primaryDepartment, data.secondaryDepartment, data.tertiaryDepartment];
-      return new Set(depts).size === 3;
-    },
-    { message: "All three department preferences must be unique" }
-  );
-
-export type InsertNurseDepartmentPreferences = z.infer<typeof insertNurseDepartmentPreferencesSchema>;
-export type NurseDepartmentPreferences = typeof nurseDepartmentPreferences.$inferSelect;
-
-// Department Nurse Assignments - department-centric view where each department has up to 3 nurses
-export const departmentNurseAssignments = pgTable("department_nurse_assignments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  departmentName: text("department_name").notNull().unique(),
-  primaryNurseId: varchar("primary_nurse_id"),
-  primaryNurseName: text("primary_nurse_name"),
-  secondaryNurseId: varchar("secondary_nurse_id"),
-  secondaryNurseName: text("secondary_nurse_name"),
-  tertiaryNurseId: varchar("tertiary_nurse_id"),
-  tertiaryNurseName: text("tertiary_nurse_name"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertDepartmentNurseAssignmentsSchema = createInsertSchema(departmentNurseAssignments)
-  .omit({
-    id: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-  .refine(
-    (data) => {
-      const nurses = [data.primaryNurseId, data.secondaryNurseId, data.tertiaryNurseId].filter(Boolean);
-      return new Set(nurses).size === nurses.length;
-    },
-    { message: "Each nurse can only occupy one priority per department" }
-  );
-
-export type InsertDepartmentNurseAssignments = z.infer<typeof insertDepartmentNurseAssignmentsSchema>;
-export type DepartmentNurseAssignments = typeof departmentNurseAssignments.$inferSelect;
