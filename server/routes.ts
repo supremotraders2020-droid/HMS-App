@@ -12263,6 +12263,100 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ========== NURSE DEPARTMENT PREFERENCES API ==========
+  const HOSPITAL_DEPARTMENTS = [
+    "Emergency", "Cardiology", "Neurology", "Orthopedics", "Pediatrics",
+    "Oncology", "Ophthalmology", "ENT", "Dermatology", "Psychiatry",
+    "Gynecology", "Urology", "Nephrology", "Gastroenterology", "Pulmonology",
+    "Endocrinology", "Rheumatology", "Pathology", "Radiology", "Physiotherapy",
+    "Dental", "General Medicine", "General Surgery", "ICU"
+  ];
+
+  app.get("/api/nurse-department-preferences/departments", async (req, res) => {
+    res.json(HOSPITAL_DEPARTMENTS);
+  });
+
+  app.get("/api/nurse-department-preferences", requireAuth, async (req, res) => {
+    try {
+      const allPreferences = await storage.getAllNurseDepartmentPreferences();
+      res.json(allPreferences);
+    } catch (error) {
+      console.error("Error fetching nurse preferences:", error);
+      res.status(500).json({ error: "Failed to fetch nurse preferences" });
+    }
+  });
+
+  app.get("/api/nurse-department-preferences/:nurseId", requireAuth, async (req, res) => {
+    try {
+      const prefs = await storage.getNurseDepartmentPreferences(req.params.nurseId);
+      if (!prefs) {
+        return res.status(404).json({ error: "Preferences not found" });
+      }
+      res.json(prefs);
+    } catch (error) {
+      console.error("Error fetching nurse preferences:", error);
+      res.status(500).json({ error: "Failed to fetch nurse preferences" });
+    }
+  });
+
+  app.post("/api/nurse-department-preferences", requireAuth, async (req, res) => {
+    try {
+      const { nurseId, nurseName, primaryDepartment, secondaryDepartment, tertiaryDepartment } = req.body;
+      
+      if (!nurseId || !nurseName || !primaryDepartment || !secondaryDepartment || !tertiaryDepartment) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      const departments = [primaryDepartment, secondaryDepartment, tertiaryDepartment];
+      const uniqueDepartments = new Set(departments);
+      if (uniqueDepartments.size !== 3) {
+        return res.status(400).json({ error: "All three department preferences must be unique" });
+      }
+
+      for (const dept of departments) {
+        if (!HOSPITAL_DEPARTMENTS.includes(dept)) {
+          return res.status(400).json({ error: `Invalid department: ${dept}` });
+        }
+      }
+
+      const result = await storage.upsertNurseDepartmentPreferences({
+        nurseId,
+        nurseName,
+        primaryDepartment,
+        secondaryDepartment,
+        tertiaryDepartment
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error saving nurse preferences:", error);
+      res.status(500).json({ error: "Failed to save nurse preferences" });
+    }
+  });
+
+  app.delete("/api/nurse-department-preferences/:nurseId", requireAuth, async (req, res) => {
+    try {
+      const deleted = await storage.deleteNurseDepartmentPreferences(req.params.nurseId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Preferences not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting nurse preferences:", error);
+      res.status(500).json({ error: "Failed to delete nurse preferences" });
+    }
+  });
+
+  app.post("/api/nurse-department-preferences/seed", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      await storage.seedNurseDepartmentPreferences();
+      res.json({ success: true, message: "Nurse department preferences seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding nurse preferences:", error);
+      res.status(500).json({ error: "Failed to seed nurse preferences" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
