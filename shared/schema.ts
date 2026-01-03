@@ -4527,3 +4527,63 @@ export const insertMedicineCatalogSchema = createInsertSchema(medicineCatalog).o
 });
 export type InsertMedicineCatalog = z.infer<typeof insertMedicineCatalogSchema>;
 export type MedicineCatalog = typeof medicineCatalog.$inferSelect;
+
+// Hospital Departments List
+export const HOSPITAL_DEPARTMENTS = [
+  "Emergency",
+  "Cardiology", 
+  "Neurology",
+  "Orthopedics",
+  "Pediatrics",
+  "Oncology",
+  "Ophthalmology",
+  "ENT",
+  "Dermatology",
+  "Psychiatry",
+  "Gynecology",
+  "Urology",
+  "Nephrology",
+  "Gastroenterology",
+  "Pulmonology",
+  "Endocrinology",
+  "Rheumatology",
+  "Pathology",
+  "Radiology",
+  "Physiotherapy",
+  "Dental",
+  "General Medicine",
+  "General Surgery",
+  "ICU"
+] as const;
+
+export type HospitalDepartment = typeof HOSPITAL_DEPARTMENTS[number];
+
+// Nurse Department Preferences - for scheduling and assignment
+export const nurseDepartmentPreferences = pgTable("nurse_department_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nurseId: varchar("nurse_id").notNull().unique(), // References staff_members.id where role = NURSE
+  nurseName: text("nurse_name").notNull(),
+  primaryDepartment: text("primary_department").notNull(),
+  secondaryDepartment: text("secondary_department").notNull(),
+  tertiaryDepartment: text("tertiary_department").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertNurseDepartmentPreferencesSchema = createInsertSchema(nurseDepartmentPreferences)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .refine(
+    (data) => {
+      // Ensure all three departments are different
+      const depts = [data.primaryDepartment, data.secondaryDepartment, data.tertiaryDepartment];
+      return new Set(depts).size === 3;
+    },
+    { message: "All three department preferences must be unique" }
+  );
+
+export type InsertNurseDepartmentPreferences = z.infer<typeof insertNurseDepartmentPreferencesSchema>;
+export type NurseDepartmentPreferences = typeof nurseDepartmentPreferences.$inferSelect;
