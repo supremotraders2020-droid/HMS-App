@@ -9,6 +9,9 @@ export interface IStorage {
   getUserByName(name: string): Promise<User | undefined>;
   getStaffMembers(): Promise<StaffMember[]>;
   createUser(user: InsertUser): Promise<User>;
+  deleteUser(id: string): Promise<boolean>;
+  updateUserStatus(id: string, status: string): Promise<User | undefined>;
+  updateUserLastLogin(id: string): Promise<User | undefined>;
   
   getDoctors(): Promise<Doctor[]>;
   getDoctor(id: string): Promise<Doctor | undefined>;
@@ -626,6 +629,20 @@ export interface IStorage {
   incrementTemplateUsage(id: string): Promise<void>;
   getOpdTemplateVersions(templateId: string): Promise<any[]>;
   seedSystemTemplates(): Promise<void>;
+
+  // ========== NURSE DEPARTMENT PREFERENCES ==========
+  getAllNurseDepartmentPreferences(): Promise<any[]>;
+  getNurseDepartmentPreferences(nurseId: string): Promise<any | undefined>;
+  upsertNurseDepartmentPreferences(preferences: any): Promise<any>;
+  deleteNurseDepartmentPreferences(nurseId: string): Promise<boolean>;
+  seedNurseDepartmentPreferences(): Promise<void>;
+
+  // ========== DEPARTMENT NURSE ASSIGNMENTS ==========
+  getAllDepartmentNurseAssignments(): Promise<any[]>;
+  getDepartmentNurseAssignment(departmentName: string): Promise<any | undefined>;
+  upsertDepartmentNurseAssignment(assignment: any): Promise<any>;
+  deleteDepartmentNurseAssignment(departmentName: string): Promise<boolean>;
+  initializeDepartmentNurseAssignments(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -837,9 +854,35 @@ export class MemStorage implements IStorage {
       role: insertUser.role ?? "PATIENT",
       name: insertUser.name ?? null,
       email: insertUser.email ?? null,
+      dateOfBirth: insertUser.dateOfBirth ?? null,
+      status: "active",
+      lastLogin: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: null,
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    return this.users.delete(id);
+  }
+
+  async updateUserStatus(id: string, status: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const updated = { ...user, status, updatedAt: new Date() };
+    this.users.set(id, updated);
+    return updated;
+  }
+
+  async updateUserLastLogin(id: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const updated = { ...user, lastLogin: new Date(), updatedAt: new Date() };
+    this.users.set(id, updated);
+    return updated;
   }
 
   async getDoctors(): Promise<Doctor[]> {
@@ -2926,6 +2969,80 @@ export class MemStorage implements IStorage {
   }
 
   async seedSystemTemplates(): Promise<void> {
+    // Stub implementation for in-memory storage
+  }
+
+  // ========== NURSE DEPARTMENT PREFERENCES (Stub) ==========
+  private nurseDepartmentPreferencesData = new Map<string, any>();
+  
+  async getAllNurseDepartmentPreferences(): Promise<any[]> {
+    return Array.from(this.nurseDepartmentPreferencesData.values());
+  }
+
+  async getNurseDepartmentPreferences(nurseId: string): Promise<any | undefined> {
+    return Array.from(this.nurseDepartmentPreferencesData.values()).find(p => p.nurseId === nurseId);
+  }
+
+  async upsertNurseDepartmentPreferences(preferences: any): Promise<any> {
+    const existing = await this.getNurseDepartmentPreferences(preferences.nurseId);
+    if (existing) {
+      const updated = { ...existing, ...preferences, updatedAt: new Date() };
+      this.nurseDepartmentPreferencesData.set(existing.id, updated);
+      return updated;
+    } else {
+      const id = randomUUID();
+      const newPrefs = { id, ...preferences, createdAt: new Date(), updatedAt: new Date() };
+      this.nurseDepartmentPreferencesData.set(id, newPrefs);
+      return newPrefs;
+    }
+  }
+
+  async deleteNurseDepartmentPreferences(nurseId: string): Promise<boolean> {
+    const prefs = await this.getNurseDepartmentPreferences(nurseId);
+    if (prefs) {
+      return this.nurseDepartmentPreferencesData.delete(prefs.id);
+    }
+    return false;
+  }
+
+  async seedNurseDepartmentPreferences(): Promise<void> {
+    // Stub implementation for in-memory storage
+  }
+
+  // ========== DEPARTMENT NURSE ASSIGNMENTS (Stub) ==========
+  private departmentNurseAssignmentsData = new Map<string, any>();
+
+  async getAllDepartmentNurseAssignments(): Promise<any[]> {
+    return Array.from(this.departmentNurseAssignmentsData.values());
+  }
+
+  async getDepartmentNurseAssignment(departmentName: string): Promise<any | undefined> {
+    return Array.from(this.departmentNurseAssignmentsData.values()).find(a => a.departmentName === departmentName);
+  }
+
+  async upsertDepartmentNurseAssignment(assignment: any): Promise<any> {
+    const existing = await this.getDepartmentNurseAssignment(assignment.departmentName);
+    if (existing) {
+      const updated = { ...existing, ...assignment, updatedAt: new Date() };
+      this.departmentNurseAssignmentsData.set(existing.id, updated);
+      return updated;
+    } else {
+      const id = randomUUID();
+      const newAssignment = { id, ...assignment, createdAt: new Date(), updatedAt: new Date() };
+      this.departmentNurseAssignmentsData.set(id, newAssignment);
+      return newAssignment;
+    }
+  }
+
+  async deleteDepartmentNurseAssignment(departmentName: string): Promise<boolean> {
+    const assignment = await this.getDepartmentNurseAssignment(departmentName);
+    if (assignment) {
+      return this.departmentNurseAssignmentsData.delete(assignment.id);
+    }
+    return false;
+  }
+
+  async initializeDepartmentNurseAssignments(): Promise<void> {
     // Stub implementation for in-memory storage
   }
 }

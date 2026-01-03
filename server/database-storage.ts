@@ -23,8 +23,9 @@ import {
   pathologyLabs, labTestCatalog, labTestOrders, sampleCollections, labReports, labReportResults, pathologyLabAccessLogs,
   staffMaster, shiftRoster, taskLogs, attendanceLogs, leaveRequests, overtimeLogs, staffPerformanceMetrics, rosterAuditLogs,
   insuranceProviders, patientInsurance, insuranceClaims, insuranceClaimDocuments, insuranceClaimLogs, insuranceProviderChecklists,
-  opdPrescriptionTemplates, opdTemplateVersions,
+  opdPrescriptionTemplates, opdTemplateVersions, nurseDepartmentPreferences, departmentNurseAssignments,
   type OpdPrescriptionTemplate, type InsertOpdPrescriptionTemplate,
+  type NurseDepartmentPreferences, type InsertNurseDepartmentPreferences,
   type OpdTemplateVersion, type InsertOpdTemplateVersion,
   type User, type InsertUser, type Doctor, type InsertDoctor,
   type Schedule, type InsertSchedule, type Appointment, type InsertAppointment,
@@ -185,6 +186,27 @@ export class DatabaseStorage implements IStorage {
 
   async getStaffMembers(): Promise<StaffMember[]> {
     return await db.select().from(staffMembers);
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async updateUserStatus(id: string, status: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateUserLastLogin(id: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({ lastLogin: new Date(), updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
   }
 
   // ========== DOCTOR METHODS ==========
@@ -4881,6 +4903,187 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log("OPD prescription templates seeded successfully!");
+  }
+
+  // ========== NURSE DEPARTMENT PREFERENCES ==========
+  async getAllNurseDepartmentPreferences(): Promise<any[]> {
+    return await db.select().from(nurseDepartmentPreferences).orderBy(nurseDepartmentPreferences.nurseName);
+  }
+
+  async getNurseDepartmentPreferences(nurseId: string): Promise<any | undefined> {
+    const result = await db.select().from(nurseDepartmentPreferences)
+      .where(eq(nurseDepartmentPreferences.nurseId, nurseId))
+      .limit(1);
+    return result[0];
+  }
+
+  async upsertNurseDepartmentPreferences(preferences: any): Promise<any> {
+    const existing = await this.getNurseDepartmentPreferences(preferences.nurseId);
+    
+    if (existing) {
+      const result = await db.update(nurseDepartmentPreferences)
+        .set({
+          nurseName: preferences.nurseName,
+          primaryDepartment: preferences.primaryDepartment,
+          secondaryDepartment: preferences.secondaryDepartment,
+          tertiaryDepartment: preferences.tertiaryDepartment,
+          updatedAt: new Date()
+        })
+        .where(eq(nurseDepartmentPreferences.nurseId, preferences.nurseId))
+        .returning();
+      return result[0];
+    } else {
+      const result = await db.insert(nurseDepartmentPreferences)
+        .values({
+          nurseId: preferences.nurseId,
+          nurseName: preferences.nurseName,
+          primaryDepartment: preferences.primaryDepartment,
+          secondaryDepartment: preferences.secondaryDepartment,
+          tertiaryDepartment: preferences.tertiaryDepartment
+        })
+        .returning();
+      return result[0];
+    }
+  }
+
+  async deleteNurseDepartmentPreferences(nurseId: string): Promise<boolean> {
+    const result = await db.delete(nurseDepartmentPreferences)
+      .where(eq(nurseDepartmentPreferences.nurseId, nurseId))
+      .returning();
+    return result.length > 0;
+  }
+
+  async seedNurseDepartmentPreferences(): Promise<void> {
+    const existing = await db.select().from(nurseDepartmentPreferences).limit(1);
+    if (existing.length > 0) {
+      console.log("Nurse department preferences already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding nurse department preferences...");
+
+    const HOSPITAL_DEPARTMENTS = [
+      "Emergency", "Cardiology", "Neurology", "Orthopedics", "Pediatrics",
+      "Oncology", "Ophthalmology", "ENT", "Dermatology", "Psychiatry",
+      "Gynecology", "Urology", "Nephrology", "Gastroenterology", "Pulmonology",
+      "Endocrinology", "Rheumatology", "Pathology", "Radiology", "Physiotherapy",
+      "Dental", "General Medicine", "General Surgery", "ICU"
+    ];
+
+    // Create nurse test data with department preferences
+    const nursePreferences = [
+      { nurseId: "nurse-001", nurseName: "Sister Priya Sharma", primary: "Emergency", secondary: "ICU", tertiary: "General Medicine" },
+      { nurseId: "nurse-002", nurseName: "Sister Anjali Patel", primary: "Cardiology", secondary: "ICU", tertiary: "Emergency" },
+      { nurseId: "nurse-003", nurseName: "Sister Meena Gupta", primary: "Neurology", secondary: "Emergency", tertiary: "ICU" },
+      { nurseId: "nurse-004", nurseName: "Sister Kavita Singh", primary: "Orthopedics", secondary: "Physiotherapy", tertiary: "Emergency" },
+      { nurseId: "nurse-005", nurseName: "Sister Sunita Rao", primary: "Pediatrics", secondary: "General Medicine", tertiary: "Emergency" },
+      { nurseId: "nurse-006", nurseName: "Sister Rekha Verma", primary: "Oncology", secondary: "ICU", tertiary: "General Medicine" },
+      { nurseId: "nurse-007", nurseName: "Sister Deepa Joshi", primary: "Ophthalmology", secondary: "ENT", tertiary: "General Medicine" },
+      { nurseId: "nurse-008", nurseName: "Sister Neha Kulkarni", primary: "ENT", secondary: "Ophthalmology", tertiary: "Dermatology" },
+      { nurseId: "nurse-009", nurseName: "Sister Pooja Desai", primary: "Dermatology", secondary: "General Medicine", tertiary: "Rheumatology" },
+      { nurseId: "nurse-010", nurseName: "Sister Swati Nair", primary: "Psychiatry", secondary: "Neurology", tertiary: "General Medicine" },
+      { nurseId: "nurse-011", nurseName: "Sister Rashmi Pillai", primary: "Gynecology", secondary: "Pediatrics", tertiary: "General Medicine" },
+      { nurseId: "nurse-012", nurseName: "Sister Lakshmi Iyer", primary: "Urology", secondary: "Nephrology", tertiary: "General Surgery" },
+      { nurseId: "nurse-013", nurseName: "Sister Vidya Menon", primary: "Nephrology", secondary: "ICU", tertiary: "General Medicine" },
+      { nurseId: "nurse-014", nurseName: "Sister Shweta Patil", primary: "Gastroenterology", secondary: "General Medicine", tertiary: "Emergency" },
+      { nurseId: "nurse-015", nurseName: "Sister Pallavi Reddy", primary: "Pulmonology", secondary: "ICU", tertiary: "Emergency" },
+      { nurseId: "nurse-016", nurseName: "Sister Anita Saxena", primary: "Endocrinology", secondary: "General Medicine", tertiary: "Cardiology" },
+      { nurseId: "nurse-017", nurseName: "Sister Divya Chopra", primary: "Rheumatology", secondary: "Orthopedics", tertiary: "General Medicine" },
+      { nurseId: "nurse-018", nurseName: "Sister Manisha Jain", primary: "Pathology", secondary: "General Medicine", tertiary: "Oncology" },
+      { nurseId: "nurse-019", nurseName: "Sister Ritu Agarwal", primary: "Radiology", secondary: "Emergency", tertiary: "Neurology" },
+      { nurseId: "nurse-020", nurseName: "Sister Geeta Bhat", primary: "Physiotherapy", secondary: "Orthopedics", tertiary: "Neurology" },
+      { nurseId: "nurse-021", nurseName: "Sister Sarita Mishra", primary: "Dental", secondary: "ENT", tertiary: "General Medicine" },
+      { nurseId: "nurse-022", nurseName: "Sister Archana Tiwari", primary: "General Medicine", secondary: "Emergency", tertiary: "Cardiology" },
+      { nurseId: "nurse-023", nurseName: "Sister Bhavana Kumar", primary: "General Surgery", secondary: "ICU", tertiary: "Emergency" },
+      { nurseId: "nurse-024", nurseName: "Sister Chitra Shetty", primary: "ICU", secondary: "Emergency", tertiary: "Cardiology" },
+    ];
+
+    for (const nurse of nursePreferences) {
+      await db.insert(nurseDepartmentPreferences).values({
+        nurseId: nurse.nurseId,
+        nurseName: nurse.nurseName,
+        primaryDepartment: nurse.primary,
+        secondaryDepartment: nurse.secondary,
+        tertiaryDepartment: nurse.tertiary
+      });
+    }
+
+    console.log(`Seeded ${nursePreferences.length} nurse department preferences successfully!`);
+  }
+
+  // ========== DEPARTMENT NURSE ASSIGNMENTS ==========
+  async getAllDepartmentNurseAssignments(): Promise<any[]> {
+    return await db.select().from(departmentNurseAssignments).orderBy(departmentNurseAssignments.departmentName);
+  }
+
+  async getDepartmentNurseAssignment(departmentName: string): Promise<any | undefined> {
+    const result = await db.select().from(departmentNurseAssignments).where(eq(departmentNurseAssignments.departmentName, departmentName));
+    return result[0];
+  }
+
+  async upsertDepartmentNurseAssignment(assignment: any): Promise<any> {
+    const existing = await this.getDepartmentNurseAssignment(assignment.departmentName);
+    
+    if (existing) {
+      const result = await db.update(departmentNurseAssignments)
+        .set({
+          primaryNurseId: assignment.primaryNurseId || null,
+          primaryNurseName: assignment.primaryNurseName || null,
+          secondaryNurseId: assignment.secondaryNurseId || null,
+          secondaryNurseName: assignment.secondaryNurseName || null,
+          tertiaryNurseId: assignment.tertiaryNurseId || null,
+          tertiaryNurseName: assignment.tertiaryNurseName || null,
+          updatedAt: new Date()
+        })
+        .where(eq(departmentNurseAssignments.departmentName, assignment.departmentName))
+        .returning();
+      return result[0];
+    } else {
+      const result = await db.insert(departmentNurseAssignments)
+        .values({
+          departmentName: assignment.departmentName,
+          primaryNurseId: assignment.primaryNurseId || null,
+          primaryNurseName: assignment.primaryNurseName || null,
+          secondaryNurseId: assignment.secondaryNurseId || null,
+          secondaryNurseName: assignment.secondaryNurseName || null,
+          tertiaryNurseId: assignment.tertiaryNurseId || null,
+          tertiaryNurseName: assignment.tertiaryNurseName || null
+        })
+        .returning();
+      return result[0];
+    }
+  }
+
+  async deleteDepartmentNurseAssignment(departmentName: string): Promise<boolean> {
+    const result = await db.delete(departmentNurseAssignments)
+      .where(eq(departmentNurseAssignments.departmentName, departmentName));
+    return true;
+  }
+
+  async initializeDepartmentNurseAssignments(): Promise<void> {
+    const existing = await db.select().from(departmentNurseAssignments).limit(1);
+    if (existing.length > 0) {
+      console.log("Department nurse assignments already initialized, skipping...");
+      return;
+    }
+
+    console.log("Initializing department nurse assignments...");
+
+    const HOSPITAL_DEPARTMENTS = [
+      "Emergency", "Cardiology", "Neurology", "Orthopedics", "Pediatrics",
+      "Oncology", "Ophthalmology", "ENT", "Dermatology", "Psychiatry",
+      "Gynecology", "Urology", "Nephrology", "Gastroenterology", "Pulmonology",
+      "Endocrinology", "Rheumatology", "Pathology", "Radiology", "Physiotherapy",
+      "Dental", "General Medicine", "General Surgery", "ICU"
+    ];
+
+    for (const dept of HOSPITAL_DEPARTMENTS) {
+      await db.insert(departmentNurseAssignments).values({
+        departmentName: dept
+      });
+    }
+
+    console.log(`Initialized ${HOSPITAL_DEPARTMENTS.length} departments for nurse assignments!`);
   }
 }
 
