@@ -188,6 +188,27 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(staffMembers);
   }
 
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async updateUserStatus(id: string, status: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateUserLastLogin(id: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({ lastLogin: new Date(), updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+
   // ========== DOCTOR METHODS ==========
   async getDoctors(): Promise<Doctor[]> {
     return await db.select().from(doctors);

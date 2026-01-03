@@ -19,6 +19,11 @@ export const users = pgTable("users", {
   name: text("name"),
   email: text("email"),
   dateOfBirth: text("date_of_birth"),
+  status: text("status").notNull().default("active"),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"),
 });
 
 const validRoles = ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"] as const;

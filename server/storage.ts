@@ -9,6 +9,9 @@ export interface IStorage {
   getUserByName(name: string): Promise<User | undefined>;
   getStaffMembers(): Promise<StaffMember[]>;
   createUser(user: InsertUser): Promise<User>;
+  deleteUser(id: string): Promise<boolean>;
+  updateUserStatus(id: string, status: string): Promise<User | undefined>;
+  updateUserLastLogin(id: string): Promise<User | undefined>;
   
   getDoctors(): Promise<Doctor[]>;
   getDoctor(id: string): Promise<Doctor | undefined>;
@@ -844,9 +847,35 @@ export class MemStorage implements IStorage {
       role: insertUser.role ?? "PATIENT",
       name: insertUser.name ?? null,
       email: insertUser.email ?? null,
+      dateOfBirth: insertUser.dateOfBirth ?? null,
+      status: "active",
+      lastLogin: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: null,
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    return this.users.delete(id);
+  }
+
+  async updateUserStatus(id: string, status: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const updated = { ...user, status, updatedAt: new Date() };
+    this.users.set(id, updated);
+    return updated;
+  }
+
+  async updateUserLastLogin(id: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const updated = { ...user, lastLogin: new Date(), updatedAt: new Date() };
+    this.users.set(id, updated);
+    return updated;
   }
 
   async getDoctors(): Promise<Doctor[]> {
