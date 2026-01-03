@@ -17,10 +17,11 @@ import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay, parseISO }
 import { 
   Calendar, Users, Clock, FileText, AlertCircle, CheckCircle, 
   Plus, ChevronLeft, ChevronRight, User, Building, Phone, Mail,
-  Timer, CalendarDays, BarChart3, TrendingUp, Award, Briefcase, Stethoscope
+  Timer, CalendarDays, BarChart3, TrendingUp, Award, Briefcase, Stethoscope, Building2
 } from "lucide-react";
 import StaffSelfService from "@/components/StaffSelfService";
 import NurseDepartmentPreferences from "@/components/NurseDepartmentPreferences";
+import DepartmentNurseAssignments from "@/components/DepartmentNurseAssignments";
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
 
@@ -504,7 +505,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="roster" data-testid="tab-roster" className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4" />
             <span className="hidden sm:inline">Roster</span>
@@ -515,7 +516,11 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
           </TabsTrigger>
           <TabsTrigger value="nurse-prefs" data-testid="tab-nurse-prefs" className="flex items-center gap-2">
             <Stethoscope className="h-4 w-4" />
-            <span className="hidden sm:inline">Nurse Depts</span>
+            <span className="hidden sm:inline">Nurse Prefs</span>
+          </TabsTrigger>
+          <TabsTrigger value="dept-assignments" data-testid="tab-dept-assignments" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Dept Nurses</span>
           </TabsTrigger>
           <TabsTrigger value="tasks" data-testid="tab-tasks" className="flex items-center gap-2">
             <Briefcase className="h-4 w-4" />
@@ -791,6 +796,10 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
 
         <TabsContent value="nurse-prefs" className="space-y-4">
           <NurseDepartmentPreferences />
+        </TabsContent>
+
+        <TabsContent value="dept-assignments" className="space-y-4">
+          <DepartmentNurseAssignments />
         </TabsContent>
 
         <TabsContent value="tasks" className="space-y-4">
