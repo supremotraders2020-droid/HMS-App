@@ -11437,7 +11437,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Create a new department (Admin only)
-  app.post("/api/hospital-service-departments", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  app.post("/api/hospital-service-departments", requireAuth, requireRole(["SUPER_ADMIN"]), async (req, res) => {
     try {
       const department = await storage.createHospitalServiceDepartment(req.body);
       res.status(201).json(department);
@@ -11448,7 +11448,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Update department (Admin only)
-  app.patch("/api/hospital-service-departments/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  app.patch("/api/hospital-service-departments/:id", requireAuth, requireRole(["SUPER_ADMIN"]), async (req, res) => {
     try {
       const department = await storage.updateHospitalServiceDepartment(req.params.id, req.body);
       if (!department) return res.status(404).json({ error: "Department not found" });
@@ -11459,8 +11459,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  // Delete department (Admin only)
-  app.delete("/api/hospital-service-departments/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  // Delete department (Super Admin only)
+  app.delete("/api/hospital-service-departments/:id", requireAuth, requireRole(["SUPER_ADMIN"]), async (req, res) => {
     try {
       const deleted = await storage.deleteHospitalServiceDepartment(req.params.id);
       if (!deleted) return res.status(404).json({ error: "Department not found" });
@@ -11483,8 +11483,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  // Create a new service (Admin only)
-  app.post("/api/hospital-services", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  // Create a new service (Super Admin only)
+  app.post("/api/hospital-services", requireAuth, requireRole(["SUPER_ADMIN"]), async (req, res) => {
     try {
       const service = await storage.createHospitalService(req.body);
       res.status(201).json(service);
@@ -11494,8 +11494,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  // Update service (Admin only)
-  app.patch("/api/hospital-services/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  // Update service (Super Admin only)
+  app.patch("/api/hospital-services/:id", requireAuth, requireRole(["SUPER_ADMIN"]), async (req, res) => {
     try {
       const service = await storage.updateHospitalService(req.params.id, req.body);
       if (!service) return res.status(404).json({ error: "Service not found" });
@@ -11506,8 +11506,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  // Delete service (Admin only)
-  app.delete("/api/hospital-services/:id", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  // Delete service (Super Admin only)
+  app.delete("/api/hospital-services/:id", requireAuth, requireRole(["SUPER_ADMIN"]), async (req, res) => {
     try {
       const deleted = await storage.deleteHospitalService(req.params.id);
       if (!deleted) return res.status(404).json({ error: "Service not found" });
@@ -11518,8 +11518,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  // Bulk create services (Admin only) - for seeding
-  app.post("/api/hospital-services/bulk", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  // Bulk create services (Super Admin only) - for seeding
+  app.post("/api/hospital-services/bulk", requireAuth, requireRole(["SUPER_ADMIN"]), async (req, res) => {
     try {
       const { services } = req.body;
       if (!Array.isArray(services)) {

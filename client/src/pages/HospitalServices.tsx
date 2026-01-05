@@ -87,7 +87,7 @@ export default function HospitalServices({ currentUserRole = "ADMIN", currentUse
   const [newServiceName, setNewServiceName] = useState("");
   const [editServiceName, setEditServiceName] = useState("");
 
-  const isAdmin = currentUserRole === "ADMIN";
+  const isSuperAdmin = currentUserRole === "SUPER_ADMIN";
 
   const { data: departments = [], isLoading, refetch } = useQuery<HospitalServiceDepartment[]>({
     queryKey: ["/api/hospital-service-departments"],
@@ -211,9 +211,9 @@ export default function HospitalServices({ currentUserRole = "ADMIN", currentUse
                 Browse all available surgeries and services by department
               </p>
             </div>
-            {isAdmin && (
+            {isSuperAdmin && (
               <Badge variant="secondary" className="text-sm">
-                Admin Mode - Click on a department to manage services
+                Super Admin Mode - Click on a department to manage services
               </Badge>
             )}
           </div>
@@ -274,7 +274,7 @@ export default function HospitalServices({ currentUserRole = "ADMIN", currentUse
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {isAdmin && (
+                        {isSuperAdmin && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -333,7 +333,7 @@ export default function HospitalServices({ currentUserRole = "ADMIN", currentUse
                                     </span>
                                     <span className="text-sm">{service.name}</span>
                                   </div>
-                                  {isAdmin && (
+                                  {isSuperAdmin && (
                                     <div className="flex items-center gap-1">
                                       <Button
                                         size="icon"
