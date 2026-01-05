@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -11,8 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
 import { 
-  Building2, Users, Edit2, Search, Check, AlertCircle, Database, UserPlus, X
+  Building2, Users, Edit2, Search, Check, AlertCircle, Database, UserPlus, X, 
+  BarChart3, TrendingUp, Activity
 } from "lucide-react";
 
 type DepartmentNurseAssignment = {
@@ -49,17 +51,52 @@ export default function DepartmentNurseAssignments() {
   });
 
   const { data: assignments = [], isLoading } = useQuery<DepartmentNurseAssignment[]>({
-    queryKey: ["/api/department-nurse-assignments"]
+    queryKey: ["/api/department-nurse-assignments"],
+    refetchInterval: 5000
   });
 
   const { data: nursePreferences = [] } = useQuery<any[]>({
-    queryKey: ["/api/nurse-department-preferences"]
+    queryKey: ["/api/nurse-department-preferences"],
+    refetchInterval: 5000
   });
 
   const nurses: NurseOption[] = nursePreferences.map(p => ({
     id: p.nurseId,
     name: p.nurseName
   }));
+
+  const analytics = useMemo(() => {
+    const totalDepartments = assignments.length;
+    const fullyStaffed = assignments.filter(a => 
+      a.primaryNurseId && a.secondaryNurseId && a.tertiaryNurseId
+    ).length;
+    const partiallyStaffed = assignments.filter(a => 
+      (a.primaryNurseId || a.secondaryNurseId || a.tertiaryNurseId) &&
+      !(a.primaryNurseId && a.secondaryNurseId && a.tertiaryNurseId)
+    ).length;
+    const unstaffed = assignments.filter(a => 
+      !a.primaryNurseId && !a.secondaryNurseId && !a.tertiaryNurseId
+    ).length;
+    const totalNursesAssigned = assignments.reduce((sum, a) => {
+      let count = 0;
+      if (a.primaryNurseId) count++;
+      if (a.secondaryNurseId) count++;
+      if (a.tertiaryNurseId) count++;
+      return sum + count;
+    }, 0);
+    const maxCapacity = totalDepartments * 3;
+    const utilizationRate = maxCapacity > 0 ? Math.round((totalNursesAssigned / maxCapacity) * 100) : 0;
+
+    return {
+      totalDepartments,
+      fullyStaffed,
+      partiallyStaffed,
+      unstaffed,
+      totalNursesAssigned,
+      maxCapacity,
+      utilizationRate
+    };
+  }, [assignments]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -166,7 +203,7 @@ export default function DepartmentNurseAssignments() {
     if (uniqueNurseIds.size !== selectedNurseIds.length) {
       toast({
         title: "Validation Error",
-        description: "Each nurse can only occupy one priority per department",
+        description: "Each nurse can only be assigned once per department",
         variant: "destructive"
       });
       return;
@@ -196,7 +233,7 @@ export default function DepartmentNurseAssignments() {
     return nurses.filter(n => !excludeIds.includes(n.id));
   };
 
-  const getAssignmentCount = (assignment: DepartmentNurseAssignment) => {
+  const getNurseCount = (assignment: DepartmentNurseAssignment) => {
     let count = 0;
     if (assignment.primaryNurseId) count++;
     if (assignment.secondaryNurseId) count++;
@@ -204,29 +241,94 @@ export default function DepartmentNurseAssignments() {
     return count;
   };
 
-  const getNurseBadge = (name: string | null, priority: number) => {
-    if (!name) {
-      return (
-        <Badge variant="outline" className="text-muted-foreground">
-          <UserPlus className="h-3 w-3 mr-1" />
-          Unassigned
-        </Badge>
-      );
-    }
-    const colors = [
-      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-      "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
-    ];
-    return (
-      <Badge className={colors[priority]}>
-        {name}
-      </Badge>
-    );
+  const getNursesList = (assignment: DepartmentNurseAssignment) => {
+    const nurseNames: string[] = [];
+    if (assignment.primaryNurseName) nurseNames.push(assignment.primaryNurseName);
+    if (assignment.secondaryNurseName) nurseNames.push(assignment.secondaryNurseName);
+    if (assignment.tertiaryNurseName) nurseNames.push(assignment.tertiaryNurseName);
+    return nurseNames;
   };
 
   return (
     <div className="space-y-6">
+      {/* Analytics Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Departments</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{analytics.totalDepartments}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50">
+                <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Fully Staffed</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-300">{analytics.fullyStaffed}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/50">
+                <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Partially Staffed</p>
+                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{analytics.partiallyStaffed}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/50">
+                <Activity className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border-red-200 dark:border-red-800">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Unstaffed</p>
+                <p className="text-2xl font-bold text-red-700 dark:text-red-300">{analytics.unstaffed}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/50">
+                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Utilization Progress */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <span className="font-medium">Overall Staffing Utilization</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium">{analytics.totalNursesAssigned}/{analytics.maxCapacity} nurses assigned</span>
+            </div>
+          </div>
+          <Progress value={analytics.utilizationRate} className="h-3" />
+          <p className="text-xs text-muted-foreground mt-1">{analytics.utilizationRate}% capacity utilized</p>
+        </CardContent>
+      </Card>
+
+      {/* Main Table */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -237,7 +339,7 @@ export default function DepartmentNurseAssignments() {
               <div>
                 <CardTitle>Department Nurse Assignments</CardTitle>
                 <CardDescription>
-                  Assign up to 3 nurses per department (Primary, Secondary, Tertiary)
+                  Manage nurse assignments by department with real-time updates
                 </CardDescription>
               </div>
             </div>
@@ -289,38 +391,72 @@ export default function DepartmentNurseAssignments() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Primary Nurse</TableHead>
-                    <TableHead>Secondary Nurse</TableHead>
-                    <TableHead>Tertiary Nurse</TableHead>
-                    <TableHead className="text-center">Assigned</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[200px]">Department</TableHead>
+                    <TableHead>Nurses</TableHead>
+                    <TableHead className="text-right w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAssignments.map((assignment) => (
-                    <TableRow key={assignment.id} data-testid={`row-dept-${assignment.departmentName.replace(/\s+/g, '-').toLowerCase()}`}>
-                      <TableCell className="font-medium">{assignment.departmentName}</TableCell>
-                      <TableCell>{getNurseBadge(assignment.primaryNurseName, 0)}</TableCell>
-                      <TableCell>{getNurseBadge(assignment.secondaryNurseName, 1)}</TableCell>
-                      <TableCell>{getNurseBadge(assignment.tertiaryNurseName, 2)}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={getAssignmentCount(assignment) === 3 ? "default" : "secondary"}>
-                          {getAssignmentCount(assignment)}/3
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => openEditDialog(assignment)}
-                          data-testid={`button-edit-${assignment.departmentName.replace(/\s+/g, '-').toLowerCase()}`}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredAssignments.map((assignment) => {
+                    const nursesList = getNursesList(assignment);
+                    const nurseCount = getNurseCount(assignment);
+                    return (
+                      <TableRow key={assignment.id} data-testid={"row-dept-" + assignment.departmentName.replace(/\s+/g, '-').toLowerCase()}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{assignment.departmentName}</span>
+                            <Badge 
+                              variant={nurseCount === 3 ? "default" : nurseCount > 0 ? "secondary" : "outline"}
+                              className={
+                                nurseCount === 3 
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" 
+                                  : nurseCount > 0 
+                                    ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
+                                    : "text-muted-foreground"
+                              }
+                            >
+                              {nurseCount}/3
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {nursesList.length === 0 ? (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <UserPlus className="h-4 w-4" />
+                              <span className="text-sm">No nurses assigned</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {nursesList.map((name, idx) => (
+                                <Badge 
+                                  key={idx}
+                                  className={
+                                    idx === 0 
+                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                      : idx === 1
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                        : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
+                                  }
+                                >
+                                  {name}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => openEditDialog(assignment)}
+                            data-testid={"button-edit-" + assignment.departmentName.replace(/\s+/g, '-').toLowerCase()}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </ScrollArea>
@@ -328,6 +464,7 @@ export default function DepartmentNurseAssignments() {
         </CardContent>
       </Card>
 
+      {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
@@ -336,14 +473,14 @@ export default function DepartmentNurseAssignments() {
               Assign Nurses to {formData.departmentName}
             </DialogTitle>
             <DialogDescription>
-              Assign up to 3 nurses with different priorities. Each nurse can only hold one priority.
+              Add up to 3 nurses to this department. Changes are saved automatically and update in real-time.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
-                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">1st</Badge>
-                Primary Nurse
+                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">1</Badge>
+                First Nurse
               </Label>
               <div className="flex gap-2">
                 <Select
@@ -351,7 +488,7 @@ export default function DepartmentNurseAssignments() {
                   onValueChange={(value) => handleNurseSelect("primary", value)}
                 >
                   <SelectTrigger className="flex-1" data-testid="select-primary-nurse">
-                    <SelectValue placeholder="Select primary nurse" />
+                    <SelectValue placeholder="Select nurse" />
                   </SelectTrigger>
                   <SelectContent>
                     {getAvailableNurses([formData.secondaryNurseId, formData.tertiaryNurseId]).map((nurse) => (
@@ -371,8 +508,8 @@ export default function DepartmentNurseAssignments() {
 
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
-                <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">2nd</Badge>
-                Secondary Nurse
+                <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">2</Badge>
+                Second Nurse
               </Label>
               <div className="flex gap-2">
                 <Select
@@ -380,7 +517,7 @@ export default function DepartmentNurseAssignments() {
                   onValueChange={(value) => handleNurseSelect("secondary", value)}
                 >
                   <SelectTrigger className="flex-1" data-testid="select-secondary-nurse">
-                    <SelectValue placeholder="Select secondary nurse" />
+                    <SelectValue placeholder="Select nurse" />
                   </SelectTrigger>
                   <SelectContent>
                     {getAvailableNurses([formData.primaryNurseId, formData.tertiaryNurseId]).map((nurse) => (
@@ -400,8 +537,8 @@ export default function DepartmentNurseAssignments() {
 
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
-                <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">3rd</Badge>
-                Tertiary Nurse
+                <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">3</Badge>
+                Third Nurse
               </Label>
               <div className="flex gap-2">
                 <Select
@@ -409,7 +546,7 @@ export default function DepartmentNurseAssignments() {
                   onValueChange={(value) => handleNurseSelect("tertiary", value)}
                 >
                   <SelectTrigger className="flex-1" data-testid="select-tertiary-nurse">
-                    <SelectValue placeholder="Select tertiary nurse" />
+                    <SelectValue placeholder="Select nurse" />
                   </SelectTrigger>
                   <SelectContent>
                     {getAvailableNurses([formData.primaryNurseId, formData.secondaryNurseId]).map((nurse) => (
