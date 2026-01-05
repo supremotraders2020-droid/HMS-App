@@ -3048,7 +3048,7 @@ export class MemStorage implements IStorage {
 
     const updated = { 
       ...nurse, 
-      isAvailable: true, 
+      isAvailable: false, 
       assignedRoom, 
       assignedDoctor, 
       assignedPosition,
@@ -3064,7 +3064,7 @@ export class MemStorage implements IStorage {
 
     const updated = { 
       ...nurse, 
-      isAvailable: false, 
+      isAvailable: true, 
       assignedRoom: null, 
       assignedDoctor: null, 
       assignedPosition: null,

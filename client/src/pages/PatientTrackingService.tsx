@@ -250,6 +250,7 @@ export default function PatientTrackingService() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/nurse-department-preferences"] });
       toast({
         title: "Patient Admitted",
         description: "Patient has been admitted successfully.",

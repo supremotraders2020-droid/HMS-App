@@ -4999,7 +4999,7 @@ export class DatabaseStorage implements IStorage {
 
     const result = await db.update(nurseDepartmentPreferences)
       .set({ 
-        isAvailable: true,
+        isAvailable: false,
         assignedRoom,
         assignedDoctor,
         assignedPosition,
@@ -5013,7 +5013,7 @@ export class DatabaseStorage implements IStorage {
   async clearNurseAssignment(nurseName: string): Promise<any | undefined> {
     const result = await db.update(nurseDepartmentPreferences)
       .set({ 
-        isAvailable: false,
+        isAvailable: true,
         assignedRoom: null,
         assignedDoctor: null,
         assignedPosition: null,
