@@ -554,7 +554,13 @@ export default function NurseDepartmentPreferences() {
                   <Building className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Department</p>
-                    <p className="font-medium">{selectedAssignment.primaryDepartment}</p>
+                    <p className="font-medium">
+                      {selectedAssignment.assignedPosition === "Primary" 
+                        ? selectedAssignment.primaryDepartment 
+                        : selectedAssignment.assignedPosition === "Secondary"
+                          ? selectedAssignment.secondaryDepartment
+                          : selectedAssignment.tertiaryDepartment}
+                    </p>
                   </div>
                 </div>
 
