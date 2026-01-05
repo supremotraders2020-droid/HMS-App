@@ -12364,12 +12364,15 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       
       // Log audit
       await db.insert(auditLogs).values({
-        action: "USER_PASSWORD_RESET",
-        performedBy: currentUser?.username || "system",
-        targetUser: user.username,
-        module: "User Management",
-        details: `Password reset for user ${user.username} by ${currentUser?.username}`,
-        status: "success"
+        userId: currentUser?.id || 'system',
+        action: 'USER_PASSWORD_RESET',
+        module: 'USERS',
+        entityType: 'user',
+        entityId: user.id,
+        userName: currentUser?.name || 'System',
+        userRole: currentUser?.role || 'SUPER_ADMIN',
+        changeDescription: `Password reset for user ${user.username} by ${currentUser?.username}`,
+        ipAddress: req.ip || 'unknown'
       });
       
       res.json({ 
