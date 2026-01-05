@@ -39,16 +39,7 @@ type NurseUser = {
   role: string;
 };
 
-const PRELOADED_NURSES: { nurseId: string; nurseName: string }[] = [
-  { nurseId: "NRS-001", nurseName: "Sister Priya Sharma" },
-  { nurseId: "NRS-002", nurseName: "Sister Anjali Patel" },
-  { nurseId: "NRS-003", nurseName: "Sister Kavita Singh" },
-  { nurseId: "NRS-004", nurseName: "Sister Meera Reddy" },
-  { nurseId: "NRS-005", nurseName: "Sister Sunita Yadav" },
-  { nurseId: "NRS-006", nurseName: "Sister Deepa Gupta" },
-  { nurseId: "NRS-007", nurseName: "Sister Rani Verma" },
-  { nurseId: "NRS-008", nurseName: "Sister Lakshmi Iyer" },
-];
+type NurseData = { nurseId: string; nurseName: string };
 
 export default function NurseDepartmentPreferences() {
   const { toast } = useToast();
@@ -73,12 +64,10 @@ export default function NurseDepartmentPreferences() {
     queryKey: ["/api/nurse-department-preferences"]
   });
 
-  const existingNursesList = preferences.map(p => ({
-    nurseId: p.nurseId,
-    nurseName: p.nurseName
-  }));
-
-  const allNurses = existingNursesList.length > 0 ? existingNursesList : PRELOADED_NURSES;
+  // Fetch all nurses from the database with auto-generated IDs
+  const { data: allNurses = [] } = useQuery<NurseData[]>({
+    queryKey: ["/api/nurse-department-preferences/all-nurses"]
+  });
 
   const handleNurseIdChange = (nurseId: string) => {
     const nurse = allNurses.find(n => n.nurseId === nurseId);

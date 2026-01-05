@@ -12524,6 +12524,36 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     res.json(HOSPITAL_DEPARTMENTS);
   });
 
+  // Get all nurses from users table with auto-generated IDs for those without
+  app.get("/api/nurse-department-preferences/all-nurses", requireAuth, async (req, res) => {
+    try {
+      const allUsers = await storage.getUsers();
+      const nurses = allUsers.filter(u => u.role === 'NURSE');
+      
+      // Get existing preferences to check for existing IDs
+      const existingPrefs = await storage.getAllNurseDepartmentPreferences();
+      const existingIdMap = new Map(existingPrefs.map(p => [p.nurseName, p.nurseId]));
+      
+      // Map nurses with IDs (use existing or generate new)
+      let autoIdCounter = 1;
+      const nursesWithIds = nurses.map(nurse => {
+        // Check if nurse already has a preference with ID
+        const existingId = existingIdMap.get(nurse.name || nurse.username);
+        if (existingId) {
+          return { nurseId: existingId, nurseName: nurse.name || nurse.username };
+        }
+        // Generate dummy ID for nurses without one
+        const dummyId = `NRS-AUTO-${String(autoIdCounter++).padStart(3, '0')}`;
+        return { nurseId: dummyId, nurseName: nurse.name || nurse.username };
+      });
+      
+      res.json(nursesWithIds);
+    } catch (error) {
+      console.error("Error fetching all nurses:", error);
+      res.status(500).json({ error: "Failed to fetch nurses" });
+    }
+  });
+
   app.get("/api/nurse-department-preferences", requireAuth, async (req, res) => {
     try {
       const allPreferences = await storage.getAllNurseDepartmentPreferences();
