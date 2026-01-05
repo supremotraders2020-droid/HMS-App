@@ -6442,16 +6442,15 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.get("/api/bed-management/beds/:id", async (req, res) => {
+  // Available beds route - must be before :id route to avoid "available" being matched as ID
+  app.get("/api/bed-management/beds/available", async (req, res) => {
     try {
-      const bed = await db.select().from(beds)
-        .where(eq(beds.id, req.params.id));
-      if (!bed.length) {
-        return res.status(404).json({ error: "Bed not found" });
-      }
-      res.json(bed[0]);
+      const availableBeds = await db.select().from(beds)
+        .where(and(eq(beds.occupancyStatus, "AVAILABLE"), eq(beds.isActive, true)))
+        .orderBy(beds.wardName, beds.bedNumber);
+      res.json(availableBeds);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch bed" });
+      res.status(500).json({ error: "Failed to fetch available beds" });
     }
   });
 
@@ -6466,14 +6465,16 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.get("/api/bed-management/beds/available", async (req, res) => {
+  app.get("/api/bed-management/beds/:id", async (req, res) => {
     try {
-      const availableBeds = await db.select().from(beds)
-        .where(and(eq(beds.occupancyStatus, "AVAILABLE"), eq(beds.isActive, true)))
-        .orderBy(beds.wardName, beds.bedNumber);
-      res.json(availableBeds);
+      const bed = await db.select().from(beds)
+        .where(eq(beds.id, req.params.id));
+      if (!bed.length) {
+        return res.status(404).json({ error: "Bed not found" });
+      }
+      res.json(bed[0]);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch available beds" });
+      res.status(500).json({ error: "Failed to fetch bed" });
     }
   });
 
