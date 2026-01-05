@@ -11,6 +11,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   deleteUser(id: string): Promise<boolean>;
   updateUserStatus(id: string, status: string): Promise<User | undefined>;
+  updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
   updateUserLastLogin(id: string): Promise<User | undefined>;
   
   getDoctors(): Promise<Doctor[]>;
