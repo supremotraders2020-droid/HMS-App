@@ -80,6 +80,34 @@ export default function PatientTrackingService() {
     queryKey: ["/api/doctors"],
   });
 
+  // Nurse department preferences for filtering nurses by department
+  const { data: nurseDeptPreferences = [] } = useQuery<any[]>({
+    queryKey: ["/api/nurse-department-preferences"],
+  });
+
+  // State for admit form department selection
+  const [selectedAdmitDepartment, setSelectedAdmitDepartment] = useState<string>("");
+  const [selectedAdmitDoctor, setSelectedAdmitDoctor] = useState<string>("");
+  const [selectedAdmitNurse, setSelectedAdmitNurse] = useState<string>("");
+
+  // Filter doctors by department (matching specialty to department)
+  const filteredDoctors = selectedAdmitDepartment
+    ? doctors.filter(doc => {
+        const specialty = doc.specialty?.toLowerCase() || "";
+        const dept = selectedAdmitDepartment.toLowerCase();
+        return specialty.includes(dept) || dept.includes(specialty) || specialty === "general" || dept === "general medicine";
+      })
+    : doctors;
+
+  // Filter nurses by department (using their department preferences)
+  const filteredNurses = selectedAdmitDepartment
+    ? nurseDeptPreferences.filter(nurse => {
+        return nurse.primaryDepartment === selectedAdmitDepartment ||
+               nurse.secondaryDepartment === selectedAdmitDepartment ||
+               nurse.tertiaryDepartment === selectedAdmitDepartment;
+      })
+    : nurseDeptPreferences;
+
   const { data: patientHistory } = useQuery<{
     patient: TrackingPatient;
     medications: Medication[];
@@ -200,6 +228,7 @@ export default function PatientTrackingService() {
       room: string;
       diagnosis: string;
       doctor: string;
+      nurse?: string;
       notes?: string;
     }) => {
       return await apiRequest("POST", "/api/tracking/patients", data);
@@ -212,6 +241,9 @@ export default function PatientTrackingService() {
       });
       setActiveTab("patients");
       setSelectedAdmitPatientName("");
+      setSelectedAdmitDepartment("");
+      setSelectedAdmitDoctor("");
+      setSelectedAdmitNurse("");
     },
     onError: () => {
       toast({
@@ -395,6 +427,7 @@ export default function PatientTrackingService() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const notes = formData.get("notes") as string;
+    const nurse = formData.get("nurse") as string;
     admitPatientMutation.mutate({
       name: formData.get("name") as string,
       age: parseInt(formData.get("age") as string),
@@ -403,6 +436,7 @@ export default function PatientTrackingService() {
       room: formData.get("room") as string,
       diagnosis: formData.get("diagnosis") as string,
       doctor: formData.get("doctor") as string,
+      nurse: nurse || undefined,
       notes: notes || undefined,
     });
   };
@@ -851,7 +885,16 @@ export default function PatientTrackingService() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="department">Department</Label>
-                    <Select name="department" required>
+                    <Select 
+                      name="department" 
+                      required 
+                      value={selectedAdmitDepartment}
+                      onValueChange={(value) => {
+                        setSelectedAdmitDepartment(value);
+                        setSelectedAdmitDoctor("");
+                        setSelectedAdmitNurse("");
+                      }}
+                    >
                       <SelectTrigger data-testid="select-department">
                         <SelectValue placeholder="Select department" />
                       </SelectTrigger>
@@ -870,6 +913,16 @@ export default function PatientTrackingService() {
                         <SelectItem value="Ophthalmology">Ophthalmology</SelectItem>
                         <SelectItem value="ICU">ICU</SelectItem>
                         <SelectItem value="Emergency">Emergency</SelectItem>
+                        <SelectItem value="ENT">ENT</SelectItem>
+                        <SelectItem value="Oncology">Oncology</SelectItem>
+                        <SelectItem value="Psychiatry">Psychiatry</SelectItem>
+                        <SelectItem value="Urology">Urology</SelectItem>
+                        <SelectItem value="Rheumatology">Rheumatology</SelectItem>
+                        <SelectItem value="Pathology">Pathology</SelectItem>
+                        <SelectItem value="Radiology">Radiology</SelectItem>
+                        <SelectItem value="Physiotherapy">Physiotherapy</SelectItem>
+                        <SelectItem value="Dental">Dental</SelectItem>
+                        <SelectItem value="General Surgery">General Surgery</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -879,17 +932,49 @@ export default function PatientTrackingService() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="doctor">Attending Doctor</Label>
-                    <Select name="doctor" required>
+                    <Select 
+                      name="doctor" 
+                      required 
+                      value={selectedAdmitDoctor}
+                      onValueChange={setSelectedAdmitDoctor}
+                    >
                       <SelectTrigger data-testid="select-doctor">
-                        <SelectValue placeholder="Select physician" />
+                        <SelectValue placeholder={selectedAdmitDepartment ? "Select physician" : "Select department first"} />
                       </SelectTrigger>
                       <SelectContent className="max-h-[200px] overflow-y-auto">
-                        {doctors.length === 0 ? (
-                          <SelectItem value="" disabled>No doctors available</SelectItem>
+                        {!selectedAdmitDepartment ? (
+                          <SelectItem value="" disabled>Please select a department first</SelectItem>
+                        ) : filteredDoctors.length === 0 ? (
+                          <SelectItem value="" disabled>No doctors available for this department</SelectItem>
                         ) : (
-                          doctors.map((doctor) => (
+                          filteredDoctors.map((doctor) => (
                             <SelectItem key={doctor.id} value={doctor.name}>
                               {doctor.name} - {doctor.specialty}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nurse">Attending Nurse</Label>
+                    <Select 
+                      name="nurse" 
+                      value={selectedAdmitNurse}
+                      onValueChange={setSelectedAdmitNurse}
+                    >
+                      <SelectTrigger data-testid="select-nurse">
+                        <SelectValue placeholder={selectedAdmitDepartment ? "Select nurse (optional)" : "Select department first"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
+                        {!selectedAdmitDepartment ? (
+                          <SelectItem value="" disabled>Please select a department first</SelectItem>
+                        ) : filteredNurses.length === 0 ? (
+                          <SelectItem value="" disabled>No nurses assigned to this department</SelectItem>
+                        ) : (
+                          filteredNurses.map((nurse) => (
+                            <SelectItem key={nurse.nurseId} value={nurse.nurseName}>
+                              {nurse.nurseName}
                             </SelectItem>
                           ))
                         )}

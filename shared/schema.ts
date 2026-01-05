@@ -250,6 +250,7 @@ export const trackingPatients = pgTable("tracking_patients", {
   dischargeDate: timestamp("discharge_date"),
   status: text("status").notNull().default("admitted"),
   doctor: text("doctor").notNull(),
+  nurse: text("nurse"),
   notes: text("notes"),
 });
 
