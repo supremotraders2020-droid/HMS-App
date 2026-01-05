@@ -635,6 +635,7 @@ export interface IStorage {
   getNurseDepartmentPreferences(nurseId: string): Promise<any | undefined>;
   upsertNurseDepartmentPreferences(preferences: any): Promise<any>;
   deleteNurseDepartmentPreferences(nurseId: string): Promise<boolean>;
+  updateNurseAvailability(nurseId: string, isAvailable: boolean): Promise<any | undefined>;
   seedNurseDepartmentPreferences(): Promise<void>;
 
   // ========== DEPARTMENT NURSE ASSIGNMENTS ==========
@@ -3003,6 +3004,16 @@ export class MemStorage implements IStorage {
       return this.nurseDepartmentPreferencesData.delete(prefs.id);
     }
     return false;
+  }
+
+  async updateNurseAvailability(nurseId: string, isAvailable: boolean): Promise<any | undefined> {
+    const prefs = await this.getNurseDepartmentPreferences(nurseId);
+    if (prefs) {
+      const updated = { ...prefs, isAvailable, updatedAt: new Date() };
+      this.nurseDepartmentPreferencesData.set(prefs.id, updated);
+      return updated;
+    }
+    return undefined;
   }
 
   async seedNurseDepartmentPreferences(): Promise<void> {

@@ -4953,6 +4953,14 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  async updateNurseAvailability(nurseId: string, isAvailable: boolean): Promise<any | undefined> {
+    const result = await db.update(nurseDepartmentPreferences)
+      .set({ isAvailable, updatedAt: new Date() })
+      .where(eq(nurseDepartmentPreferences.nurseId, nurseId))
+      .returning();
+    return result[0];
+  }
+
   async seedNurseDepartmentPreferences(): Promise<void> {
     const existing = await db.select().from(nurseDepartmentPreferences).limit(1);
     if (existing.length > 0) {

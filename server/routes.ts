@@ -12480,6 +12480,24 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  app.patch("/api/nurse-department-preferences/:nurseId/availability", requireAuth, requireRole(["ADMIN", "SUPER_ADMIN"]), async (req, res) => {
+    try {
+      const { isAvailable } = req.body;
+      if (typeof isAvailable !== "boolean") {
+        return res.status(400).json({ error: "isAvailable must be a boolean value" });
+      }
+      
+      const updated = await storage.updateNurseAvailability(req.params.nurseId, isAvailable);
+      if (!updated) {
+        return res.status(404).json({ error: "Nurse preferences not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating nurse availability:", error);
+      res.status(500).json({ error: "Failed to update nurse availability" });
+    }
+  });
+
   app.post("/api/nurse-department-preferences/seed", requireAuth, requireRole(["ADMIN", "SUPER_ADMIN"]), async (req, res) => {
     try {
       await storage.seedNurseDepartmentPreferences();

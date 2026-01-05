@@ -23,6 +23,7 @@ type NurseDepartmentPreference = {
   primaryDepartment: string;
   secondaryDepartment: string;
   tertiaryDepartment: string;
+  isAvailable: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -50,11 +51,7 @@ export default function NurseDepartmentPreferences() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      return apiRequest("/api/nurse-department-preferences", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" }
-      });
+      return apiRequest("POST", "/api/nurse-department-preferences", data);
     },
     onSuccess: () => {
       toast({
@@ -76,9 +73,7 @@ export default function NurseDepartmentPreferences() {
 
   const deleteMutation = useMutation({
     mutationFn: async (nurseId: string) => {
-      return apiRequest(`/api/nurse-department-preferences/${nurseId}`, {
-        method: "DELETE"
-      });
+      return apiRequest("DELETE", `/api/nurse-department-preferences/${nurseId}`);
     },
     onSuccess: () => {
       toast({
@@ -96,11 +91,29 @@ export default function NurseDepartmentPreferences() {
     }
   });
 
+  const toggleAvailabilityMutation = useMutation({
+    mutationFn: async ({ nurseId, isAvailable }: { nurseId: string; isAvailable: boolean }) => {
+      return apiRequest("PATCH", `/api/nurse-department-preferences/${nurseId}/availability`, { isAvailable });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Status Updated",
+        description: "Nurse availability updated successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/nurse-department-preferences"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update availability",
+        variant: "destructive"
+      });
+    }
+  });
+
   const seedMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("/api/nurse-department-preferences/seed", {
-        method: "POST"
-      });
+      return apiRequest("POST", "/api/nurse-department-preferences/seed");
     },
     onSuccess: () => {
       toast({
@@ -261,6 +274,7 @@ export default function NurseDepartmentPreferences() {
                     <TableHead>Primary Department</TableHead>
                     <TableHead>Secondary Department</TableHead>
                     <TableHead>Tertiary Department</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -282,6 +296,19 @@ export default function NurseDepartmentPreferences() {
                       <TableCell>
                         <Badge className={getDepartmentBadgeColor(2)}>
                           {pref.tertiaryDepartment}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`cursor-pointer transition-colors ${
+                            pref.isAvailable 
+                              ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50" 
+                              : "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
+                          }`}
+                          onClick={() => toggleAvailabilityMutation.mutate({ nurseId: pref.nurseId, isAvailable: !pref.isAvailable })}
+                          data-testid={`badge-status-${pref.nurseId}`}
+                        >
+                          {pref.isAvailable ? "Assigned" : "Not Assigned"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
