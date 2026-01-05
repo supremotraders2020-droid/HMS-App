@@ -89,6 +89,21 @@ export default function PatientTrackingService() {
   const [selectedAdmitDepartment, setSelectedAdmitDepartment] = useState<string>("");
   const [selectedAdmitDoctor, setSelectedAdmitDoctor] = useState<string>("");
   const [selectedAdmitNurse, setSelectedAdmitNurse] = useState<string>("");
+  const [selectedRoom, setSelectedRoom] = useState<string>("");
+
+  // Fetch available beds with real-time updates
+  type AvailableBed = {
+    id: string;
+    bedNumber: string;
+    bedName: string | null;
+    wardName: string;
+    floor: string;
+    department: string;
+  };
+  const { data: availableBeds = [] } = useQuery<AvailableBed[]>({
+    queryKey: ["/api/bed-management/beds/available"],
+    refetchInterval: 5000, // Real-time updates every 5 seconds
+  });
 
   // Filter doctors by department (matching specialty to department)
   const filteredDoctors = selectedAdmitDepartment
@@ -244,6 +259,8 @@ export default function PatientTrackingService() {
       setSelectedAdmitDepartment("");
       setSelectedAdmitDoctor("");
       setSelectedAdmitNurse("");
+      setSelectedRoom("");
+      queryClient.invalidateQueries({ queryKey: ["/api/bed-management/beds/available"] });
     },
     onError: () => {
       toast({
@@ -893,6 +910,7 @@ export default function PatientTrackingService() {
                         setSelectedAdmitDepartment(value);
                         setSelectedAdmitDoctor("");
                         setSelectedAdmitNurse("");
+                        setSelectedRoom("");
                       }}
                     >
                       <SelectTrigger data-testid="select-department">
@@ -928,7 +946,27 @@ export default function PatientTrackingService() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="room">Room Number</Label>
-                    <Input name="room" required placeholder="e.g., 301A, ICU-1" data-testid="input-room" />
+                    <Select 
+                      name="room" 
+                      required 
+                      value={selectedRoom}
+                      onValueChange={setSelectedRoom}
+                    >
+                      <SelectTrigger data-testid="select-room">
+                        <SelectValue placeholder="Select available room" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
+                        {availableBeds.length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">No rooms available</div>
+                        ) : (
+                          availableBeds.map((bed) => (
+                            <SelectItem key={bed.id} value={`${bed.wardName}-${bed.bedNumber}`}>
+                              {bed.wardName} - {bed.bedNumber} ({bed.department}, Floor {bed.floor})
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="doctor">Attending Doctor</Label>
