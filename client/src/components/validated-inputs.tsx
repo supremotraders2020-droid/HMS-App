@@ -419,6 +419,8 @@ export const VitalInput = forwardRef<HTMLInputElement, ValidatedInputProps & {
   }
 
   const allowDecimal = vitalType === 'weight' || vitalType === 'temperature';
+  const minValue = typeof config.min === 'number' ? config.min : undefined;
+  const maxValue = typeof config.max === 'number' ? config.max : undefined;
   
   return (
     <NumericInput
@@ -429,8 +431,8 @@ export const VitalInput = forwardRef<HTMLInputElement, ValidatedInputProps & {
       onChange={onChange}
       onValueChange={onValueChange}
       allowDecimal={allowDecimal}
-      min={config.min}
-      max={config.max}
+      min={minValue}
+      max={maxValue}
       placeholder={config.placeholder}
       data-testid={`input-vital-${vitalType}`}
       {...props}

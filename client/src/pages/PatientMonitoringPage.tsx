@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { IntegerInput, NumericInput } from "@/components/validated-inputs";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -744,12 +745,12 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Pulse (bpm)</Label><Input type="number" value={vitalsForm.pulse} onChange={(e) => setVitalsForm({...vitalsForm, pulse: e.target.value})} data-testid="input-pulse" /></div>
-                <div><Label>SpO2 (%)</Label><Input type="number" value={vitalsForm.spo2} onChange={(e) => setVitalsForm({...vitalsForm, spo2: e.target.value})} data-testid="input-spo2" /></div>
-                <div><Label>SBP (mmHg)</Label><Input type="number" value={vitalsForm.sbp} onChange={(e) => setVitalsForm({...vitalsForm, sbp: e.target.value})} data-testid="input-sbp" /></div>
-                <div><Label>DBP (mmHg)</Label><Input type="number" value={vitalsForm.dbp} onChange={(e) => setVitalsForm({...vitalsForm, dbp: e.target.value})} data-testid="input-dbp" /></div>
-                <div><Label>Temp (°C)</Label><Input type="number" step="0.1" value={vitalsForm.temperature} onChange={(e) => setVitalsForm({...vitalsForm, temperature: e.target.value})} data-testid="input-temp" /></div>
-                <div><Label>RR (/min)</Label><Input type="number" value={vitalsForm.respiratoryRate} onChange={(e) => setVitalsForm({...vitalsForm, respiratoryRate: e.target.value})} data-testid="input-rr" /></div>
+                <div><Label>Pulse (bpm)</Label><IntegerInput value={vitalsForm.pulse} onValueChange={(value) => setVitalsForm({...vitalsForm, pulse: value})} min={30} max={250} data-testid="input-pulse" /></div>
+                <div><Label>SpO2 (%)</Label><IntegerInput value={vitalsForm.spo2} onValueChange={(value) => setVitalsForm({...vitalsForm, spo2: value})} min={50} max={100} data-testid="input-spo2" /></div>
+                <div><Label>SBP (mmHg)</Label><IntegerInput value={vitalsForm.sbp} onValueChange={(value) => setVitalsForm({...vitalsForm, sbp: value})} min={50} max={250} data-testid="input-sbp" /></div>
+                <div><Label>DBP (mmHg)</Label><IntegerInput value={vitalsForm.dbp} onValueChange={(value) => setVitalsForm({...vitalsForm, dbp: value})} min={30} max={150} data-testid="input-dbp" /></div>
+                <div><Label>Temp (°C)</Label><NumericInput value={vitalsForm.temperature} onValueChange={(value) => setVitalsForm({...vitalsForm, temperature: value})} allowDecimal={true} data-testid="input-temp" /></div>
+                <div><Label>RR (/min)</Label><IntegerInput value={vitalsForm.respiratoryRate} onValueChange={(value) => setVitalsForm({...vitalsForm, respiratoryRate: value})} min={5} max={60} data-testid="input-rr" /></div>
               </div>
             </div>
             <DialogFooter className="gap-2">
@@ -1414,9 +1415,9 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Blood Sugar Level (mg/dL)</Label><Input type="number" value={form.bloodSugarLevel} onChange={(e) => setForm({...form, bloodSugarLevel: e.target.value})} /></div>
+              <div><Label>Blood Sugar Level (mg/dL)</Label><IntegerInput value={form.bloodSugarLevel} onValueChange={(value) => setForm({...form, bloodSugarLevel: value})} min={20} max={600} /></div>
               <div><Label>Insulin Type</Label><Input value={form.insulinType} onChange={(e) => setForm({...form, insulinType: e.target.value})} placeholder="e.g., Regular, NPH, Lantus" /></div>
-              <div><Label>Insulin Dose (Units)</Label><Input type="number" value={form.insulinDose} onChange={(e) => setForm({...form, insulinDose: e.target.value})} /></div>
+              <div><Label>Insulin Dose (Units)</Label><IntegerInput value={form.insulinDose} onValueChange={(value) => setForm({...form, insulinDose: value})} min={1} max={200} /></div>
             </div>
             <DialogFooter className="gap-2">
               <DialogClose asChild>

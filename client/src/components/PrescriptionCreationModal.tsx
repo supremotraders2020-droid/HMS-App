@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { BloodPressureInput, IntegerInput, NumericInput, TextOnlyTextarea } from "@/components/validated-inputs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -641,47 +642,53 @@ export default function PrescriptionCreationModal({
                 <CardContent className="grid grid-cols-5 gap-4">
                   <div className="space-y-2">
                     <Label>BP (mmHg)</Label>
-                    <Input
+                    <BloodPressureInput
                       data-testid="input-vitals-bp"
                       value={vitals.bp}
-                      onChange={(e) => setVitals({ ...vitals, bp: e.target.value })}
+                      onValueChange={(value) => setVitals({ ...vitals, bp: value })}
                       placeholder="120/80"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Sugar (mg/dL)</Label>
-                    <Input
+                    <IntegerInput
                       data-testid="input-vitals-sugar"
                       value={vitals.sugar}
-                      onChange={(e) => setVitals({ ...vitals, sugar: e.target.value })}
+                      onValueChange={(value) => setVitals({ ...vitals, sugar: value })}
                       placeholder="100"
+                      min={20}
+                      max={600}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Pulse (bpm)</Label>
-                    <Input
+                    <IntegerInput
                       data-testid="input-vitals-pulse"
                       value={vitals.pulse}
-                      onChange={(e) => setVitals({ ...vitals, pulse: e.target.value })}
+                      onValueChange={(value) => setVitals({ ...vitals, pulse: value })}
                       placeholder="72"
+                      min={30}
+                      max={250}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Weight (kg)</Label>
-                    <Input
+                    <NumericInput
                       data-testid="input-vitals-weight"
                       value={vitals.weight}
-                      onChange={(e) => setVitals({ ...vitals, weight: e.target.value })}
+                      onValueChange={(value) => setVitals({ ...vitals, weight: value })}
                       placeholder="70"
+                      allowDecimal={true}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Temp (°F)</Label>
-                    <Input
+                    <NumericInput
                       data-testid="input-vitals-temp"
                       value={vitals.temp}
-                      onChange={(e) => setVitals({ ...vitals, temp: e.target.value })}
+                      onValueChange={(value) => setVitals({ ...vitals, temp: value })}
                       placeholder="98.6"
+                      allowDecimal={true}
                     />
                   </div>
                 </CardContent>
