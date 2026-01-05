@@ -2072,51 +2072,146 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 View
               </Button>
               <Button variant="outline" size="sm" onClick={() => {
+                const vitals = rx.vitals ? JSON.parse(rx.vitals) : null;
                 const printContent = `
                   <html>
                     <head>
                       <title>Prescription - ${rx.patientName}</title>
                       <style>
-                        body { font-family: Arial, sans-serif; padding: 40px; }
-                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-                        .hospital { font-size: 24px; font-weight: bold; color: #1a56db; }
-                        .section { margin: 20px 0; }
-                        .label { font-weight: bold; color: #666; }
-                        .value { margin-top: 5px; }
-                        .medicines { display: flex; gap: 10px; flex-wrap: wrap; }
-                        .medicine { background: #e5e7eb; padding: 5px 10px; border-radius: 5px; }
-                        .footer { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; }
+                        body { font-family: Arial, sans-serif; padding: 40px; font-size: 14px; line-height: 1.5; }
+                        .header { text-align: center; border-bottom: 2px solid #1a56db; padding-bottom: 15px; margin-bottom: 25px; }
+                        .hospital { font-size: 26px; font-weight: bold; color: #1a56db; }
+                        .subtitle { font-size: 14px; color: #666; margin-top: 5px; }
+                        .section { margin: 18px 0; }
+                        .section-title { font-weight: bold; color: #1a56db; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
+                        .label { font-weight: 600; color: #374151; }
+                        .value { color: #111; margin-top: 3px; }
+                        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+                        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+                        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+                        .medicines { margin-top: 10px; }
+                        .medicine { background: #f3f4f6; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #1a56db; }
+                        .medicine-name { font-weight: 600; }
+                        .medicine-details { font-size: 13px; color: #4b5563; }
+                        .footer { margin-top: 50px; border-top: 1px solid #ddd; padding-top: 20px; }
+                        .signature-line { margin-top: 40px; text-align: right; }
+                        .signature-line .line { border-top: 1px solid #333; width: 200px; margin-left: auto; margin-bottom: 5px; }
+                        .note-box { background: #fef3c7; border: 1px solid #fbbf24; padding: 10px; border-radius: 6px; font-size: 13px; }
+                        @media print { body { padding: 20px; } }
                       </style>
                     </head>
                     <body>
                       <div class="header">
                         <div class="hospital">Gravity Hospital</div>
-                        <div>Medical Prescription</div>
+                        <div class="subtitle">Medical Prescription</div>
                       </div>
+                      
+                      <!-- Patient Details -->
                       <div class="section">
-                        <div class="label">Patient Name</div>
-                        <div class="value">${rx.patientName}</div>
+                        <div class="section-title">Patient Details</div>
+                        <div class="grid-3">
+                          <div><span class="label">Name:</span> <span class="value">${rx.patientName}</span></div>
+                          <div><span class="label">Age:</span> <span class="value">${rx.patientAge || 'N/A'}</span></div>
+                          <div><span class="label">Gender:</span> <span class="value">${rx.patientGender || 'N/A'}</span></div>
+                        </div>
+                        <div class="grid-2" style="margin-top: 10px;">
+                          <div><span class="label">Patient ID:</span> <span class="value">${rx.patientId}</span></div>
+                          <div><span class="label">Date:</span> <span class="value">${rx.prescriptionDate}</span></div>
+                        </div>
                       </div>
+                      
+                      <!-- Vitals -->
+                      ${vitals ? `
                       <div class="section">
-                        <div class="label">Date</div>
-                        <div class="value">${rx.prescriptionDate}</div>
+                        <div class="section-title">Vitals</div>
+                        <div class="grid-5">
+                          <div><span class="label">BP:</span> ${vitals.bp || 'N/A'}</div>
+                          <div><span class="label">Sugar:</span> ${vitals.sugar || 'N/A'}</div>
+                          <div><span class="label">Pulse:</span> ${vitals.pulse || 'N/A'}</div>
+                          <div><span class="label">Weight:</span> ${vitals.weight || 'N/A'}</div>
+                          <div><span class="label">Temp:</span> ${vitals.temp || 'N/A'}</div>
+                        </div>
                       </div>
+                      ` : ''}
+                      
+                      <!-- Clinical Notes -->
+                      ${(rx.patientComplaints || rx.doctorObservations || rx.pastHistoryReference || rx.knownAllergies) ? `
                       <div class="section">
-                        <div class="label">Diagnosis</div>
-                        <div class="value">${rx.diagnosis}</div>
+                        <div class="section-title">Clinical Notes</div>
+                        ${rx.patientComplaints ? `<div style="margin-bottom: 8px;"><span class="label">Patient Complaints:</span> <span class="value">${rx.patientComplaints}</span></div>` : ''}
+                        ${rx.doctorObservations ? `<div style="margin-bottom: 8px;"><span class="label">Doctor Observations:</span> <span class="value">${rx.doctorObservations}</span></div>` : ''}
+                        ${rx.pastHistoryReference ? `<div style="margin-bottom: 8px;"><span class="label">Past History Reference:</span> <span class="value">${rx.pastHistoryReference}</span></div>` : ''}
+                        ${rx.knownAllergies ? `<div><span class="label">Known Allergies:</span> <span class="value" style="color: #dc2626;">${rx.knownAllergies}</span></div>` : ''}
                       </div>
+                      ` : ''}
+                      
+                      <!-- Chief Complaints -->
+                      ${rx.chiefComplaints ? `
                       <div class="section">
-                        <div class="label">Medicines</div>
-                        <div class="medicines">${rx.medicines.map(m => `<span class="medicine">${m}</span>`).join('')}</div>
+                        <div class="section-title">Chief Complaints</div>
+                        <div class="value">${rx.chiefComplaints}</div>
                       </div>
+                      ` : ''}
+                      
+                      <!-- Diagnosis -->
                       <div class="section">
-                        <div class="label">Instructions</div>
-                        <div class="value">${rx.instructions || 'N/A'}</div>
+                        <div class="section-title">Diagnosis</div>
+                        <div class="grid-2">
+                          <div><span class="label">Primary Diagnosis:</span> <span class="value">${rx.diagnosis}</span></div>
+                          ${rx.provisionalDiagnosis ? `<div><span class="label">Provisional:</span> <span class="value">${rx.provisionalDiagnosis}</span></div>` : ''}
+                        </div>
                       </div>
-                      ${rx.followUpDate ? `<div class="section"><div class="label">Follow-up Date</div><div class="value">${rx.followUpDate}</div></div>` : ''}
+                      
+                      <!-- Medicines -->
+                      <div class="section">
+                        <div class="section-title">Medicines</div>
+                        <div class="medicines">
+                          ${rx.medicines.map(m => `<div class="medicine"><span class="medicine-name">${m}</span></div>`).join('')}
+                        </div>
+                      </div>
+                      
+                      <!-- Instructions -->
+                      ${rx.instructions ? `
+                      <div class="section">
+                        <div class="section-title">Instructions</div>
+                        <div class="value">${rx.instructions}</div>
+                      </div>
+                      ` : ''}
+                      
+                      <!-- Tests Advised -->
+                      ${rx.suggestedTest ? `
+                      <div class="section">
+                        <div class="section-title">Tests Advised</div>
+                        <div class="value">${rx.suggestedTest}</div>
+                      </div>
+                      ` : ''}
+                      
+                      <!-- Diet & Precautions -->
+                      ${(rx.dietAdvice || rx.activityAdvice) ? `
+                      <div class="section">
+                        <div class="section-title">Diet & Precautions</div>
+                        ${rx.dietAdvice ? `<div style="margin-bottom: 8px;"><span class="label">Diet Advice:</span> <span class="value">${rx.dietAdvice}</span></div>` : ''}
+                        ${rx.activityAdvice ? `<div><span class="label">Activity Advice:</span> <span class="value">${rx.activityAdvice}</span></div>` : ''}
+                      </div>
+                      ` : ''}
+                      
+                      ${rx.followUpDate ? `
+                      <div class="section">
+                        <div class="section-title">Follow-up</div>
+                        <div class="value">${rx.followUpDate}</div>
+                      </div>
+                      ` : ''}
+                      
                       <div class="footer">
-                        <div>Prescribed by: Dr. ${doctorName}</div>
-                        <div>Gravity Hospital - Pimpri-Chinchwad</div>
+                        <div class="signature-line">
+                          <div class="line"></div>
+                          <div>Dr. ${rx.signedByName || doctorName}</div>
+                          <div style="font-size: 12px; color: #666;">${rx.doctorRegistrationNo ? `Reg. No: ${rx.doctorRegistrationNo}` : ''}</div>
+                        </div>
+                        <div style="margin-top: 20px; font-size: 12px; color: #666;">
+                          <div>Gravity Hospital - Pimpri-Chinchwad</div>
+                          <div>Prescription #: ${rx.prescriptionNumber || rx.id}</div>
+                        </div>
                       </div>
                     </body>
                   </html>
@@ -3338,51 +3433,176 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
           </DialogHeader>
           
           {selectedPrescription && (
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 py-4 pr-4">
+                {/* Patient Details */}
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Patient Name</h4>
-                  <p className="text-sm font-medium" data-testid="view-rx-patient">{selectedPrescription.patientName}</p>
+                  <h4 className="text-xs font-semibold text-primary uppercase mb-2">Patient Details</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-xs text-muted-foreground">Name:</span>
+                      <p className="text-sm font-medium" data-testid="view-rx-patient">{selectedPrescription.patientName}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">Age / Gender:</span>
+                      <p className="text-sm">{selectedPrescription.patientAge || 'N/A'} / {selectedPrescription.patientGender || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">Patient ID:</span>
+                      <p className="text-sm font-mono text-xs">{selectedPrescription.patientId}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">Date:</span>
+                      <p className="text-sm">{selectedPrescription.prescriptionDate}</p>
+                    </div>
+                  </div>
                 </div>
+
+                <Separator />
+
+                {/* Vitals */}
+                {selectedPrescription.vitals && (() => {
+                  const vitals = JSON.parse(selectedPrescription.vitals);
+                  return (vitals.bp || vitals.sugar || vitals.pulse || vitals.weight || vitals.temp) ? (
+                    <div>
+                      <h4 className="text-xs font-semibold text-primary uppercase mb-2">Vitals</h4>
+                      <div className="grid grid-cols-5 gap-2 text-sm">
+                        <div><span className="text-muted-foreground">BP:</span> {vitals.bp || 'N/A'}</div>
+                        <div><span className="text-muted-foreground">Sugar:</span> {vitals.sugar || 'N/A'}</div>
+                        <div><span className="text-muted-foreground">Pulse:</span> {vitals.pulse || 'N/A'}</div>
+                        <div><span className="text-muted-foreground">Weight:</span> {vitals.weight || 'N/A'}</div>
+                        <div><span className="text-muted-foreground">Temp:</span> {vitals.temp || 'N/A'}</div>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* Clinical Notes */}
+                {(selectedPrescription.patientComplaints || selectedPrescription.doctorObservations || selectedPrescription.pastHistoryReference || selectedPrescription.knownAllergies) && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="text-xs font-semibold text-primary uppercase mb-2">Clinical Notes</h4>
+                      <div className="space-y-2 text-sm">
+                        {selectedPrescription.patientComplaints && (
+                          <div><span className="text-muted-foreground">Patient Complaints:</span> {selectedPrescription.patientComplaints}</div>
+                        )}
+                        {selectedPrescription.doctorObservations && (
+                          <div><span className="text-muted-foreground">Doctor Observations:</span> {selectedPrescription.doctorObservations}</div>
+                        )}
+                        {selectedPrescription.pastHistoryReference && (
+                          <div><span className="text-muted-foreground">Past History Reference:</span> {selectedPrescription.pastHistoryReference}</div>
+                        )}
+                        {selectedPrescription.knownAllergies && (
+                          <div><span className="text-muted-foreground">Known Allergies:</span> <span className="text-red-600">{selectedPrescription.knownAllergies}</span></div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Chief Complaints */}
+                {selectedPrescription.chiefComplaints && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="text-xs font-semibold text-primary uppercase mb-2">Chief Complaints</h4>
+                      <p className="text-sm">{selectedPrescription.chiefComplaints}</p>
+                    </div>
+                  </>
+                )}
+
+                <Separator />
+
+                {/* Diagnosis */}
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Status</h4>
-                  <Badge variant={selectedPrescription.status === 'active' ? 'default' : 'secondary'}>
-                    {selectedPrescription.status}
-                  </Badge>
+                  <h4 className="text-xs font-semibold text-primary uppercase mb-2">Diagnosis</h4>
+                  <p className="text-sm bg-muted/50 rounded-lg p-3" data-testid="view-rx-diagnosis">{selectedPrescription.diagnosis}</p>
+                  {selectedPrescription.provisionalDiagnosis && (
+                    <p className="text-xs text-muted-foreground mt-1">Provisional: {selectedPrescription.provisionalDiagnosis}</p>
+                  )}
                 </div>
-              </div>
 
-              <Separator />
+                <Separator />
 
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Diagnosis</h4>
-                <p className="text-sm bg-muted/50 rounded-lg p-3" data-testid="view-rx-diagnosis">{selectedPrescription.diagnosis}</p>
-              </div>
+                {/* Medicines */}
+                <div>
+                  <h4 className="text-xs font-semibold text-primary uppercase mb-2">Medicines</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedPrescription.medicines.map((med, idx) => (
+                      <Badge key={idx} variant="secondary" className="font-normal">
+                        <Pill className="h-3 w-3 mr-1" />
+                        {med}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
 
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Medicines</h4>
-                <div className="flex flex-wrap gap-2">
-                  {selectedPrescription.medicines.map((med, idx) => (
-                    <Badge key={idx} variant="secondary" className="font-normal">
-                      <Pill className="h-3 w-3 mr-1" />
-                      {med}
+                {/* Instructions */}
+                {selectedPrescription.instructions && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="text-xs font-semibold text-primary uppercase mb-2">Instructions</h4>
+                      <p className="text-sm bg-muted/50 rounded-lg p-3" data-testid="view-rx-instructions">{selectedPrescription.instructions}</p>
+                    </div>
+                  </>
+                )}
+
+                {/* Tests Advised */}
+                {selectedPrescription.suggestedTest && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="text-xs font-semibold text-primary uppercase mb-2">Tests Advised</h4>
+                      <p className="text-sm">{selectedPrescription.suggestedTest}</p>
+                    </div>
+                  </>
+                )}
+
+                {/* Diet & Precautions */}
+                {(selectedPrescription.dietAdvice || selectedPrescription.activityAdvice) && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="text-xs font-semibold text-primary uppercase mb-2">Diet & Precautions</h4>
+                      <div className="space-y-1 text-sm">
+                        {selectedPrescription.dietAdvice && <p><span className="text-muted-foreground">Diet:</span> {selectedPrescription.dietAdvice}</p>}
+                        {selectedPrescription.activityAdvice && <p><span className="text-muted-foreground">Activity:</span> {selectedPrescription.activityAdvice}</p>}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Follow-up */}
+                {selectedPrescription.followUpDate && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="text-xs font-semibold text-primary uppercase mb-2">Follow-up Date</h4>
+                      <p className="text-sm" data-testid="view-rx-followup">{selectedPrescription.followUpDate}</p>
+                    </div>
+                  </>
+                )}
+
+                {/* Status */}
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Status:</span>
+                    <Badge variant={selectedPrescription.status === 'active' ? 'default' : 'secondary'} className="ml-2">
+                      {selectedPrescription.prescriptionStatus || selectedPrescription.status}
                     </Badge>
-                  ))}
+                  </div>
+                  {selectedPrescription.signedByName && (
+                    <div className="text-right">
+                      <span className="text-xs text-muted-foreground">Signed by:</span>
+                      <p className="text-sm font-medium">{selectedPrescription.signedByName}</p>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Instructions</h4>
-                <p className="text-sm bg-muted/50 rounded-lg p-3" data-testid="view-rx-instructions">{selectedPrescription.instructions || 'No special instructions'}</p>
-              </div>
-
-              {selectedPrescription.followUpDate && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Follow-up Date</h4>
-                  <p className="text-sm" data-testid="view-rx-followup">{selectedPrescription.followUpDate}</p>
-                </div>
-              )}
-            </div>
+            </ScrollArea>
           )}
 
           <DialogFooter>
