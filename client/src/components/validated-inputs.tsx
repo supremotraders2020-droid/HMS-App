@@ -46,10 +46,6 @@ export const NumericInput = forwardRef<HTMLInputElement, ValidatedInputProps & {
       return;
     }
 
-    if (e.key === '/') {
-      return;
-    }
-
     if (!/^[0-9]$/.test(e.key)) {
       e.preventDefault();
     }
@@ -58,7 +54,7 @@ export const NumericInput = forwardRef<HTMLInputElement, ValidatedInputProps & {
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     
-    if (value === '' || isValidNumericInput(value, allowDecimal) || isValidBloodPressure(value)) {
+    if (value === '' || isValidNumericInput(value, allowDecimal)) {
       setLocalError("");
       onChange?.(value);
       onValueChange?.(value);
