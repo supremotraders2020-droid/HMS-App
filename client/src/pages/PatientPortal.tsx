@@ -2262,61 +2262,134 @@ Description: ${record.description}
                           className="flex-1"
                           onClick={() => {
                             const rx = prescription;
-                            const meds = (rx.medicines as any[] || []).map((m: any) => 
-                              typeof m === 'string' ? m : `${m.name} ${m.dosage || ''} - ${m.frequency || ''}`
-                            ).join(', ');
+                            const vitals = rx.vitals ? (typeof rx.vitals === 'string' ? JSON.parse(rx.vitals) : rx.vitals) : null;
                             const printContent = `
                               <html>
                                 <head>
                                   <title>Prescription - ${rx.patientName}</title>
                                   <style>
-                                    body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
-                                    .container { background: white; padding: 40px; max-width: 600px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-                                    .hospital { font-size: 24px; font-weight: bold; color: #1a56db; }
-                                    .subtitle { color: #666; margin-top: 5px; }
-                                    .timestamp { position: absolute; top: 20px; left: 20px; font-size: 12px; color: #999; }
-                                    .rx-title { position: absolute; top: 20px; right: 20px; font-size: 12px; color: #999; }
-                                    .section { margin: 20px 0; }
-                                    .label { font-weight: bold; color: #333; margin-bottom: 5px; }
-                                    .value { color: #333; }
-                                    .divider { border-top: 1px solid #ddd; margin: 20px 0; }
-                                    .footer { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; font-size: 14px; color: #666; }
+                                    body { font-family: Arial, sans-serif; padding: 40px; font-size: 14px; line-height: 1.5; }
+                                    .header { text-align: center; border-bottom: 2px solid #1a56db; padding-bottom: 15px; margin-bottom: 25px; }
+                                    .hospital { font-size: 26px; font-weight: bold; color: #1a56db; }
+                                    .subtitle { font-size: 14px; color: #666; margin-top: 5px; }
+                                    .section { margin: 18px 0; }
+                                    .section-title { font-weight: bold; color: #1a56db; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
+                                    .label { font-weight: 600; color: #374151; }
+                                    .value { color: #111; margin-top: 3px; }
+                                    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+                                    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+                                    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+                                    .medicines { margin-top: 10px; }
+                                    .medicine { background: #f3f4f6; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #1a56db; }
+                                    .medicine-name { font-weight: 600; }
+                                    .footer { margin-top: 50px; border-top: 1px solid #ddd; padding-top: 20px; }
+                                    .signature-line { margin-top: 40px; text-align: right; }
+                                    .signature-line .line { border-top: 1px solid #333; width: 200px; margin-left: auto; margin-bottom: 5px; }
+                                    @media print { body { padding: 20px; } }
                                   </style>
                                 </head>
                                 <body>
-                                  <div class="container">
-                                    <div class="timestamp">${new Date().toLocaleDateString('en-GB')}, ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
-                                    <div class="rx-title">Prescription - ${rx.patientName}</div>
-                                    <div class="header">
-                                      <div class="hospital">Gravity Hospital</div>
-                                      <div class="subtitle">Medical Prescription</div>
+                                  <div class="header">
+                                    <div class="hospital">Gravity Hospital</div>
+                                    <div class="subtitle">Medical Prescription</div>
+                                  </div>
+                                  
+                                  <div class="section">
+                                    <div class="section-title">Patient Details</div>
+                                    <div class="grid-3">
+                                      <div><span class="label">Name:</span> <span class="value">${rx.patientName}</span></div>
+                                      <div><span class="label">Age:</span> <span class="value">${(rx as any).patientAge || 'N/A'}</span></div>
+                                      <div><span class="label">Gender:</span> <span class="value">${(rx as any).patientGender || 'N/A'}</span></div>
                                     </div>
-                                    <div class="divider"></div>
-                                    <div class="section">
-                                      <div class="label">Patient Name</div>
-                                      <div class="value">${rx.patientName}</div>
+                                    <div class="grid-2" style="margin-top: 10px;">
+                                      <div><span class="label">Patient ID:</span> <span class="value">${rx.patientId}</span></div>
+                                      <div><span class="label">Date:</span> <span class="value">${rx.prescriptionDate || (rx.createdAt ? new Date(rx.createdAt).toISOString().split('T')[0] : 'N/A')}</span></div>
                                     </div>
-                                    <div class="section">
-                                      <div class="label">Date</div>
-                                      <div class="value">${rx.prescriptionDate || (rx.createdAt ? new Date(rx.createdAt).toISOString().split('T')[0] : 'N/A')}</div>
+                                  </div>
+                                  
+                                  ${vitals ? \`
+                                  <div class="section">
+                                    <div class="section-title">Vitals</div>
+                                    <div class="grid-5">
+                                      <div><span class="label">BP:</span> \${vitals.bp || 'N/A'}</div>
+                                      <div><span class="label">Sugar:</span> \${vitals.sugar || 'N/A'}</div>
+                                      <div><span class="label">Pulse:</span> \${vitals.pulse || 'N/A'}</div>
+                                      <div><span class="label">Weight:</span> \${vitals.weight || 'N/A'}</div>
+                                      <div><span class="label">Temp:</span> \${vitals.temp || 'N/A'}</div>
                                     </div>
-                                    <div class="section">
-                                      <div class="label">Diagnosis</div>
-                                      <div class="value">${rx.diagnosis || 'N/A'}</div>
+                                  </div>
+                                  \` : ''}
+                                  
+                                  ${((rx as any).patientComplaints || (rx as any).doctorObservations || (rx as any).pastHistoryReference || (rx as any).knownAllergies) ? \`
+                                  <div class="section">
+                                    <div class="section-title">Clinical Notes</div>
+                                    \${(rx as any).patientComplaints ? \`<div style="margin-bottom: 8px;"><span class="label">Patient Complaints:</span> <span class="value">\${(rx as any).patientComplaints}</span></div>\` : ''}
+                                    \${(rx as any).doctorObservations ? \`<div style="margin-bottom: 8px;"><span class="label">Doctor Observations:</span> <span class="value">\${(rx as any).doctorObservations}</span></div>\` : ''}
+                                    \${(rx as any).pastHistoryReference ? \`<div style="margin-bottom: 8px;"><span class="label">Past History Reference:</span> <span class="value">\${(rx as any).pastHistoryReference}</span></div>\` : ''}
+                                    \${(rx as any).knownAllergies ? \`<div><span class="label">Known Allergies:</span> <span class="value" style="color: #dc2626;">\${(rx as any).knownAllergies}</span></div>\` : ''}
+                                  </div>
+                                  \` : ''}
+                                  
+                                  ${(rx as any).chiefComplaints ? \`
+                                  <div class="section">
+                                    <div class="section-title">Chief Complaints</div>
+                                    <div class="value">\${(rx as any).chiefComplaints}</div>
+                                  </div>
+                                  \` : ''}
+                                  
+                                  <div class="section">
+                                    <div class="section-title">Diagnosis</div>
+                                    <div class="grid-2">
+                                      <div><span class="label">Primary Diagnosis:</span> <span class="value">${rx.diagnosis || 'N/A'}</span></div>
+                                      ${(rx as any).provisionalDiagnosis ? \`<div><span class="label">Provisional:</span> <span class="value">\${(rx as any).provisionalDiagnosis}</span></div>\` : ''}
                                     </div>
-                                    <div class="section">
-                                      <div class="label">Medicines</div>
-                                      <div class="value">${meds || 'N/A'}</div>
+                                  </div>
+                                  
+                                  <div class="section">
+                                    <div class="section-title">Medicines</div>
+                                    <div class="medicines">
+                                      ${(rx.medicines as any[] || []).map((m: any) => \`<div class="medicine"><span class="medicine-name">\${typeof m === 'string' ? m : \`\${m.name} \${m.dosage || ''} - \${m.frequency || ''}\`}</span></div>\`).join('')}
                                     </div>
-                                    <div class="section">
-                                      <div class="label">Instructions</div>
-                                      <div class="value">${rx.instructions || 'N/A'}</div>
+                                  </div>
+                                  
+                                  ${rx.instructions ? \`
+                                  <div class="section">
+                                    <div class="section-title">Instructions</div>
+                                    <div class="value">\${rx.instructions}</div>
+                                  </div>
+                                  \` : ''}
+                                  
+                                  ${(rx as any).suggestedTest ? \`
+                                  <div class="section">
+                                    <div class="section-title">Tests Advised</div>
+                                    <div class="value">\${(rx as any).suggestedTest}</div>
+                                  </div>
+                                  \` : ''}
+                                  
+                                  ${((rx as any).dietAdvice || (rx as any).activityAdvice) ? \`
+                                  <div class="section">
+                                    <div class="section-title">Diet & Precautions</div>
+                                    \${(rx as any).dietAdvice ? \`<div style="margin-bottom: 8px;"><span class="label">Diet Advice:</span> <span class="value">\${(rx as any).dietAdvice}</span></div>\` : ''}
+                                    \${(rx as any).activityAdvice ? \`<div><span class="label">Activity Advice:</span> <span class="value">\${(rx as any).activityAdvice}</span></div>\` : ''}
+                                  </div>
+                                  \` : ''}
+                                  
+                                  ${rx.followUpDate ? \`
+                                  <div class="section">
+                                    <div class="section-title">Follow-up</div>
+                                    <div class="value">\${rx.followUpDate}</div>
+                                  </div>
+                                  \` : ''}
+                                  
+                                  <div class="footer">
+                                    <div class="signature-line">
+                                      <div class="line"></div>
+                                      <div>Dr. ${rx.doctorName}</div>
+                                      ${(rx as any).doctorRegistrationNo ? \`<div style="font-size: 12px; color: #666;">Reg. No: \${(rx as any).doctorRegistrationNo}</div>\` : ''}
                                     </div>
-                                    ${rx.followUpDate ? `<div class="section"><div class="label">Follow-up Date</div><div class="value">${rx.followUpDate}</div></div>` : ''}
-                                    <div class="footer">
-                                      <div>Prescribed by: ${rx.doctorName}</div>
+                                    <div style="margin-top: 20px; font-size: 12px; color: #666;">
                                       <div>Gravity Hospital - Pimpri-Chinchwad</div>
+                                      <div>Prescription #: ${rx.prescriptionNumber || rx.id}</div>
                                     </div>
                                   </div>
                                 </body>
