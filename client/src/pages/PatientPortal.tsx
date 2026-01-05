@@ -2256,15 +2256,93 @@ Description: ${record.description}
                         </div>
                       )}
                       <Separator />
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={() => setActiveSection("medical-stores")}
-                        data-testid={`button-buy-medicines-${prescription.id}`}
-                      >
-                        <Store className="h-4 w-4 mr-2" />
-                        Find Medical Store
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => {
+                            const rx = prescription;
+                            const meds = (rx.medicines as any[] || []).map((m: any) => 
+                              typeof m === 'string' ? m : `${m.name} ${m.dosage || ''} - ${m.frequency || ''}`
+                            ).join(', ');
+                            const printContent = `
+                              <html>
+                                <head>
+                                  <title>Prescription - ${rx.patientName}</title>
+                                  <style>
+                                    body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
+                                    .container { background: white; padding: 40px; max-width: 600px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+                                    .hospital { font-size: 24px; font-weight: bold; color: #1a56db; }
+                                    .subtitle { color: #666; margin-top: 5px; }
+                                    .timestamp { position: absolute; top: 20px; left: 20px; font-size: 12px; color: #999; }
+                                    .rx-title { position: absolute; top: 20px; right: 20px; font-size: 12px; color: #999; }
+                                    .section { margin: 20px 0; }
+                                    .label { font-weight: bold; color: #333; margin-bottom: 5px; }
+                                    .value { color: #333; }
+                                    .divider { border-top: 1px solid #ddd; margin: 20px 0; }
+                                    .footer { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; font-size: 14px; color: #666; }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="container">
+                                    <div class="timestamp">${new Date().toLocaleDateString('en-GB')}, ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                                    <div class="rx-title">Prescription - ${rx.patientName}</div>
+                                    <div class="header">
+                                      <div class="hospital">Gravity Hospital</div>
+                                      <div class="subtitle">Medical Prescription</div>
+                                    </div>
+                                    <div class="divider"></div>
+                                    <div class="section">
+                                      <div class="label">Patient Name</div>
+                                      <div class="value">${rx.patientName}</div>
+                                    </div>
+                                    <div class="section">
+                                      <div class="label">Date</div>
+                                      <div class="value">${rx.prescriptionDate || (rx.createdAt ? new Date(rx.createdAt).toISOString().split('T')[0] : 'N/A')}</div>
+                                    </div>
+                                    <div class="section">
+                                      <div class="label">Diagnosis</div>
+                                      <div class="value">${rx.diagnosis || 'N/A'}</div>
+                                    </div>
+                                    <div class="section">
+                                      <div class="label">Medicines</div>
+                                      <div class="value">${meds || 'N/A'}</div>
+                                    </div>
+                                    <div class="section">
+                                      <div class="label">Instructions</div>
+                                      <div class="value">${rx.instructions || 'N/A'}</div>
+                                    </div>
+                                    ${rx.followUpDate ? `<div class="section"><div class="label">Follow-up Date</div><div class="value">${rx.followUpDate}</div></div>` : ''}
+                                    <div class="footer">
+                                      <div>Prescribed by: ${rx.doctorName}</div>
+                                      <div>Gravity Hospital - Pimpri-Chinchwad</div>
+                                    </div>
+                                  </div>
+                                </body>
+                              </html>
+                            `;
+                            const printWindow = window.open('', '_blank');
+                            if (printWindow) {
+                              printWindow.document.write(printContent);
+                              printWindow.document.close();
+                            }
+                          }}
+                          data-testid={`button-view-prescription-${prescription.id}`}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => setActiveSection("medical-stores")}
+                          data-testid={`button-buy-medicines-${prescription.id}`}
+                        >
+                          <Store className="h-4 w-4 mr-2" />
+                          Buy Medicines
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))
