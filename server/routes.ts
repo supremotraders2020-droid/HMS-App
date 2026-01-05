@@ -12527,7 +12527,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Get all nurses from users table with auto-generated IDs for those without
   app.get("/api/nurse-department-preferences/all-nurses", requireAuth, async (req, res) => {
     try {
-      const allUsers = await storage.getUsers();
+      const allUsers = await storage.getAllUsers();
       const nurses = allUsers.filter(u => u.role === 'NURSE');
       
       // Get existing preferences to check for existing IDs
