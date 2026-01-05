@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IntegerInput } from "@/components/validated-inputs";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -155,31 +156,31 @@ export default function SystemSettings() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
-              <Input
+              <IntegerInput
                 id="sessionTimeout"
-                type="number"
+                min={1}
                 value={systemConfig.sessionTimeout}
-                onChange={(e) => setSystemConfig({...systemConfig, sessionTimeout: e.target.value})}
+                onValueChange={(value) => setSystemConfig({...systemConfig, sessionTimeout: value})}
                 data-testid="input-session-timeout"
               />
             </div>
             <div>
               <Label htmlFor="maxLoginAttempts">Max Login Attempts</Label>
-              <Input
+              <IntegerInput
                 id="maxLoginAttempts"
-                type="number"
+                min={1}
                 value={systemConfig.maxLoginAttempts}
-                onChange={(e) => setSystemConfig({...systemConfig, maxLoginAttempts: e.target.value})}
+                onValueChange={(value) => setSystemConfig({...systemConfig, maxLoginAttempts: value})}
                 data-testid="input-max-login-attempts"
               />
             </div>
             <div>
               <Label htmlFor="passwordExpiry">Password Expiry (days)</Label>
-              <Input
+              <IntegerInput
                 id="passwordExpiry"
-                type="number"
+                min={1}
                 value={systemConfig.passwordExpiry}
-                onChange={(e) => setSystemConfig({...systemConfig, passwordExpiry: e.target.value})}
+                onValueChange={(value) => setSystemConfig({...systemConfig, passwordExpiry: value})}
                 data-testid="input-password-expiry"
               />
             </div>
@@ -187,11 +188,11 @@ export default function SystemSettings() {
 
           <div>
             <Label htmlFor="dataRetention">Data Retention Period (days)</Label>
-            <Input
+            <IntegerInput
               id="dataRetention"
-              type="number"
+              min={1}
               value={systemConfig.dataRetention}
-              onChange={(e) => setSystemConfig({...systemConfig, dataRetention: e.target.value})}
+              onValueChange={(value) => setSystemConfig({...systemConfig, dataRetention: value})}
               className="w-full md:w-48"
               data-testid="input-data-retention"
             />
@@ -399,11 +400,11 @@ export default function SystemSettings() {
             </div>
             <div>
               <Label htmlFor="retentionPeriod">Retention Period (days)</Label>
-              <Input
+              <IntegerInput
                 id="retentionPeriod"
-                type="number"
+                min={1}
                 value={backupSettings.retentionPeriod}
-                onChange={(e) => setBackupSettings({...backupSettings, retentionPeriod: e.target.value})}
+                onValueChange={(value) => setBackupSettings({...backupSettings, retentionPeriod: value})}
                 data-testid="input-retention-period"
               />
             </div>

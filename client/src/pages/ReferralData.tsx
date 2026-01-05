@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IntegerInput } from "@/components/validated-inputs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -612,7 +613,7 @@ export default function ReferralData({ currentUser }: ReferralDataProps) {
               <div className="grid grid-cols-3 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="patientAge">Age</Label>
-                  <Input id="patientAge" name="patientAge" type="number" defaultValue={editingReferral?.patientAge || ""} data-testid="input-patient-age" />
+                  <IntegerInput id="patientAge" name="patientAge" min={0} max={120} defaultValue={editingReferral?.patientAge?.toString() || ""} data-testid="input-patient-age" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="patientGender">Gender</Label>

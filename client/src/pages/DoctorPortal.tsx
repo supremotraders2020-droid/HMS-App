@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { IntegerInput, NumericInput } from "@/components/validated-inputs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -2594,12 +2595,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="templateFollowUp">Follow-up (days)</Label>
-                  <Input
+                  <IntegerInput
                     id="templateFollowUp"
-                    type="number"
                     min={1}
-                    value={templateForm.followUpDays}
-                    onChange={(e) => setTemplateForm(prev => ({ ...prev, followUpDays: parseInt(e.target.value) || 7 }))}
+                    value={templateForm.followUpDays.toString()}
+                    onValueChange={(value) => setTemplateForm(prev => ({ ...prev, followUpDays: parseInt(value) || 7 }))}
                     data-testid="input-followup-days"
                   />
                 </div>

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IntegerInput } from "@/components/validated-inputs";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -335,31 +336,31 @@ export default function HospitalSettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="maxPatients">Max Patients Per Day</Label>
-              <Input
+              <IntegerInput
                 id="maxPatients"
-                type="number"
+                min={1}
                 value={operationalSettings.maxPatientsPerDay}
-                onChange={(e) => setOperationalSettings({...operationalSettings, maxPatientsPerDay: e.target.value})}
+                onValueChange={(value) => setOperationalSettings({...operationalSettings, maxPatientsPerDay: value})}
                 data-testid="input-max-patients"
               />
             </div>
             <div>
               <Label htmlFor="appointmentSlot">Appointment Slot (minutes)</Label>
-              <Input
+              <IntegerInput
                 id="appointmentSlot"
-                type="number"
+                min={5}
                 value={operationalSettings.appointmentSlotDuration}
-                onChange={(e) => setOperationalSettings({...operationalSettings, appointmentSlotDuration: e.target.value})}
+                onValueChange={(value) => setOperationalSettings({...operationalSettings, appointmentSlotDuration: value})}
                 data-testid="input-appointment-slot"
               />
             </div>
             <div>
               <Label htmlFor="emergencyWait">Emergency Wait Time (minutes)</Label>
-              <Input
+              <IntegerInput
                 id="emergencyWait"
-                type="number"
+                min={1}
                 value={operationalSettings.emergencyWaitTime}
-                onChange={(e) => setOperationalSettings({...operationalSettings, emergencyWaitTime: e.target.value})}
+                onValueChange={(value) => setOperationalSettings({...operationalSettings, emergencyWaitTime: value})}
                 data-testid="input-emergency-wait"
               />
             </div>
@@ -392,41 +393,41 @@ export default function HospitalSettingsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="totalBeds">Total Beds</Label>
-              <Input
+              <IntegerInput
                 id="totalBeds"
-                type="number"
+                min={0}
                 value={facilityInfo.totalBeds}
-                onChange={(e) => setFacilityInfo({...facilityInfo, totalBeds: e.target.value})}
+                onValueChange={(value) => setFacilityInfo({...facilityInfo, totalBeds: value})}
                 data-testid="input-total-beds"
               />
             </div>
             <div>
               <Label htmlFor="icuBeds">ICU Beds</Label>
-              <Input
+              <IntegerInput
                 id="icuBeds"
-                type="number"
+                min={0}
                 value={facilityInfo.icuBeds}
-                onChange={(e) => setFacilityInfo({...facilityInfo, icuBeds: e.target.value})}
+                onValueChange={(value) => setFacilityInfo({...facilityInfo, icuBeds: value})}
                 data-testid="input-icu-beds"
               />
             </div>
             <div>
               <Label htmlFor="emergencyBeds">Emergency Beds</Label>
-              <Input
+              <IntegerInput
                 id="emergencyBeds"
-                type="number"
+                min={0}
                 value={facilityInfo.emergencyBeds}
-                onChange={(e) => setFacilityInfo({...facilityInfo, emergencyBeds: e.target.value})}
+                onValueChange={(value) => setFacilityInfo({...facilityInfo, emergencyBeds: value})}
                 data-testid="input-emergency-beds"
               />
             </div>
             <div>
               <Label htmlFor="operationTheaters">Operation Theaters</Label>
-              <Input
+              <IntegerInput
                 id="operationTheaters"
-                type="number"
+                min={0}
                 value={facilityInfo.operationTheaters}
-                onChange={(e) => setFacilityInfo({...facilityInfo, operationTheaters: e.target.value})}
+                onValueChange={(value) => setFacilityInfo({...facilityInfo, operationTheaters: value})}
                 data-testid="input-operation-theaters"
               />
             </div>

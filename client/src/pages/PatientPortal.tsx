@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { IntegerInput, NumericInput } from "@/components/validated-inputs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -2736,11 +2737,11 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
                       </div>
                       <div className="space-y-2">
                         <Label>Estimated Cost (INR)</Label>
-                        <Input
-                          type="number"
+                        <NumericInput
                           placeholder="Enter estimated treatment cost"
                           value={claimForm.estimatedCost}
-                          onChange={(e) => setClaimForm(prev => ({ ...prev, estimatedCost: e.target.value }))}
+                          onValueChange={(value) => setClaimForm(prev => ({ ...prev, estimatedCost: value }))}
+                          allowDecimal={true}
                           data-testid="input-estimated-cost"
                         />
                       </div>

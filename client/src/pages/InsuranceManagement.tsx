@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IntegerInput } from "@/components/validated-inputs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -488,7 +489,7 @@ export default function InsuranceManagement({ currentUser }: InsuranceManagement
 
                     <div className="space-y-2">
                       <Label htmlFor="averageClaimTatDays">Average Claim TAT (Days)</Label>
-                      <Input id="averageClaimTatDays" name="averageClaimTatDays" type="number" defaultValue={editingProvider?.averageClaimTatDays || ""} data-testid="input-tat" />
+                      <IntegerInput id="averageClaimTatDays" name="averageClaimTatDays" min={1} defaultValue={editingProvider?.averageClaimTatDays?.toString() || ""} data-testid="input-tat" />
                     </div>
 
                     <div className="space-y-2">

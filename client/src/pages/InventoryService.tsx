@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IntegerInput, NumericInput } from "@/components/validated-inputs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -721,11 +722,9 @@ export default function InventoryService() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="quantity">Quantity</Label>
-                    <Input
-                      type="number"
+                    <IntegerInput
                       name="quantity"
-                      min="1"
-                      required
+                      min={1}
                       placeholder="Enter quantity"
                       data-testid="input-quantity"
                     />
@@ -1002,13 +1001,11 @@ export default function InventoryService() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="add-quantity">Quantity to Add *</Label>
-                  <Input
+                  <IntegerInput
                     id="add-quantity"
                     name="quantity"
-                    type="number"
-                    min="1"
+                    min={1}
                     placeholder="Enter quantity to add"
-                    required
                     data-testid="input-add-item-quantity"
                   />
                 </div>
@@ -1044,15 +1041,13 @@ export default function InventoryService() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-quantity">Quantity *</Label>
-                    <Input
+                    <IntegerInput
                       id="new-quantity"
                       name="quantity"
-                      type="number"
-                      min="1"
+                      min={1}
                       placeholder="e.g., 20"
-                      required
-                      onChange={(e) => {
-                        const qty = parseInt(e.target.value) || 0;
+                      onValueChange={(value) => {
+                        const qty = parseInt(value) || 0;
                         const costInput = document.getElementById("new-cost") as HTMLInputElement;
                         const cost = parseFloat(costInput?.value) || 0;
                         const totalDisplay = document.getElementById("calculated-total");
@@ -1063,16 +1058,13 @@ export default function InventoryService() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="new-cost">Cost per Unit (Rs.) *</Label>
-                    <Input
+                    <NumericInput
                       id="new-cost"
                       name="cost"
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      allowDecimal={true}
                       placeholder="e.g., 50"
-                      required
-                      onChange={(e) => {
-                        const cost = parseFloat(e.target.value) || 0;
+                      onValueChange={(value) => {
+                        const cost = parseFloat(value) || 0;
                         const qtyInput = document.getElementById("new-quantity") as HTMLInputElement;
                         const qty = parseInt(qtyInput?.value) || 0;
                         const totalDisplay = document.getElementById("calculated-total");
@@ -1091,11 +1083,10 @@ export default function InventoryService() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="new-lowStockThreshold">Low Stock Alert (Optional)</Label>
-                  <Input
+                  <IntegerInput
                     id="new-lowStockThreshold"
                     name="lowStockThreshold"
-                    type="number"
-                    min="0"
+                    min={0}
                     placeholder="Min stock level for alerts"
                     defaultValue="10"
                     data-testid="input-new-item-threshold"
@@ -1150,14 +1141,12 @@ export default function InventoryService() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-quantity">Quantity *</Label>
-                  <Input
+                  <IntegerInput
                     id="edit-quantity"
                     name="quantity"
-                    type="number"
-                    min="0"
+                    min={0}
                     placeholder="Enter quantity"
-                    defaultValue={selectedItem.currentStock}
-                    required
+                    defaultValue={selectedItem.currentStock?.toString()}
                     data-testid="input-edit-item-quantity"
                   />
                 </div>
@@ -1188,26 +1177,23 @@ export default function InventoryService() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-cost">Cost (Rs.)</Label>
-                  <Input
+                  <NumericInput
                     id="edit-cost"
                     name="cost"
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    allowDecimal={true}
                     placeholder="Enter cost per unit"
-                    defaultValue={selectedItem.cost}
+                    defaultValue={selectedItem.cost?.toString()}
                     data-testid="input-edit-item-cost"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-lowStockThreshold">Low Stock Threshold</Label>
-                  <Input
+                  <IntegerInput
                     id="edit-lowStockThreshold"
                     name="lowStockThreshold"
-                    type="number"
-                    min="0"
+                    min={0}
                     placeholder="Min stock level"
-                    defaultValue={selectedItem.lowStockThreshold}
+                    defaultValue={selectedItem.lowStockThreshold?.toString()}
                     data-testid="input-edit-item-threshold"
                   />
                 </div>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IntegerInput } from "@/components/validated-inputs";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -736,10 +737,10 @@ export default function BedManagementPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>Max Day-Care Duration (hours)</Label>
-                      <Input 
-                        type="number"
-                        value={newCategory.maxDayCareDurationHours || ""}
-                        onChange={(e) => setNewCategory({...newCategory, maxDayCareDurationHours: e.target.value ? parseInt(e.target.value) : null})}
+                      <IntegerInput 
+                        value={newCategory.maxDayCareDurationHours?.toString() || ""}
+                        onValueChange={(value) => setNewCategory({...newCategory, maxDayCareDurationHours: value ? parseInt(value) : null})}
+                        min={1}
                         placeholder="Leave empty if N/A"
                       />
                     </div>
