@@ -943,9 +943,9 @@ export default function PatientTrackingService() {
                       </SelectTrigger>
                       <SelectContent className="max-h-[200px] overflow-y-auto">
                         {!selectedAdmitDepartment ? (
-                          <SelectItem value="" disabled>Please select a department first</SelectItem>
+                          <div className="p-2 text-sm text-muted-foreground text-center">Please select a department first</div>
                         ) : filteredDoctors.length === 0 ? (
-                          <SelectItem value="" disabled>No doctors available for this department</SelectItem>
+                          <div className="p-2 text-sm text-muted-foreground text-center">No doctors available for this department</div>
                         ) : (
                           filteredDoctors.map((doctor) => (
                             <SelectItem key={doctor.id} value={doctor.name}>
@@ -968,9 +968,9 @@ export default function PatientTrackingService() {
                       </SelectTrigger>
                       <SelectContent className="max-h-[200px] overflow-y-auto">
                         {!selectedAdmitDepartment ? (
-                          <SelectItem value="" disabled>Please select a department first</SelectItem>
+                          <div className="p-2 text-sm text-muted-foreground text-center">Please select a department first</div>
                         ) : filteredNurses.length === 0 ? (
-                          <SelectItem value="" disabled>No nurses assigned to this department</SelectItem>
+                          <div className="p-2 text-sm text-muted-foreground text-center">No nurses assigned to this department</div>
                         ) : (
                           filteredNurses.map((nurse) => (
                             <SelectItem key={nurse.nurseId} value={nurse.nurseName}>
