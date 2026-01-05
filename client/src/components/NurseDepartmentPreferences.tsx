@@ -28,6 +28,24 @@ type NurseDepartmentPreference = {
   updatedAt: string;
 };
 
+type NurseUser = {
+  id: string;
+  username: string;
+  fullName: string;
+  role: string;
+};
+
+const PRELOADED_NURSES: NurseUser[] = [
+  { id: "nurse-001", username: "nurse-001", fullName: "Sister Priya Sharma", role: "NURSE" },
+  { id: "nurse-002", username: "nurse-002", fullName: "Sister Anjali Patel", role: "NURSE" },
+  { id: "nurse-003", username: "nurse-003", fullName: "Sister Kavita Singh", role: "NURSE" },
+  { id: "nurse-004", username: "nurse-004", fullName: "Sister Meera Reddy", role: "NURSE" },
+  { id: "nurse-005", username: "nurse-005", fullName: "Sister Sunita Yadav", role: "NURSE" },
+  { id: "nurse-006", username: "nurse-006", fullName: "Sister Deepa Gupta", role: "NURSE" },
+  { id: "nurse-007", username: "nurse-007", fullName: "Sister Rani Verma", role: "NURSE" },
+  { id: "nurse-008", username: "nurse-008", fullName: "Sister Lakshmi Iyer", role: "NURSE" },
+];
+
 export default function NurseDepartmentPreferences() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,6 +66,21 @@ export default function NurseDepartmentPreferences() {
   const { data: preferences = [], isLoading } = useQuery<NurseDepartmentPreference[]>({
     queryKey: ["/api/nurse-department-preferences"]
   });
+
+  const { data: apiNurses = [] } = useQuery<NurseUser[]>({
+    queryKey: ["/api/users/nurses"]
+  });
+
+  const allNurses = apiNurses.length > 0 ? apiNurses : PRELOADED_NURSES;
+
+  const handleNurseIdChange = (nurseId: string) => {
+    const nurse = allNurses.find(n => n.id === nurseId || n.username === nurseId);
+    setFormData({ 
+      ...formData, 
+      nurseId: nurseId,
+      nurseName: nurse?.fullName || ""
+    });
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -357,24 +390,48 @@ export default function NurseDepartmentPreferences() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nurseId">Nurse ID</Label>
-                <Input
-                  id="nurseId"
+                <Select
                   value={formData.nurseId}
-                  onChange={(e) => setFormData({ ...formData, nurseId: e.target.value })}
-                  placeholder="e.g., nurse-001"
+                  onValueChange={handleNurseIdChange}
                   disabled={!!selectedPreference}
-                  data-testid="input-nurse-id"
-                />
+                >
+                  <SelectTrigger data-testid="select-nurse-id">
+                    <SelectValue placeholder="Select Nurse ID" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allNurses.map((nurse) => (
+                      <SelectItem key={nurse.id} value={nurse.id || nurse.username}>
+                        {nurse.id || nurse.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nurseName">Nurse Name</Label>
-                <Input
-                  id="nurseName"
+                <Select
                   value={formData.nurseName}
-                  onChange={(e) => setFormData({ ...formData, nurseName: e.target.value })}
-                  placeholder="e.g., Sister Priya Sharma"
-                  data-testid="input-nurse-name"
-                />
+                  onValueChange={(value) => {
+                    const nurse = allNurses.find(n => n.fullName === value);
+                    setFormData({ 
+                      ...formData, 
+                      nurseName: value,
+                      nurseId: nurse?.id || nurse?.username || formData.nurseId
+                    });
+                  }}
+                  disabled={!!selectedPreference}
+                >
+                  <SelectTrigger data-testid="select-nurse-name">
+                    <SelectValue placeholder="Select Nurse Name" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allNurses.map((nurse) => (
+                      <SelectItem key={nurse.id} value={nurse.fullName}>
+                        {nurse.fullName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

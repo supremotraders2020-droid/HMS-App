@@ -332,6 +332,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all nurses
+  app.get("/api/users/nurses", async (_req, res) => {
+    try {
+      const allUsers = await databaseStorage.getAllUsers();
+      const nurses = allUsers
+        .filter(user => user.role === "NURSE")
+        .map(({ password, ...user }) => ({
+          id: user.id,
+          username: user.username,
+          fullName: user.fullName,
+          role: user.role
+        }));
+      res.json(nurses);
+    } catch (error) {
+      console.error("Failed to get nurses:", error);
+      res.status(500).json({ error: "Failed to fetch nurses" });
+    }
+  });
+
   // Get all doctors - merge with doctor_profiles when available
   app.get("/api/doctors", async (_req, res) => {
     try {
