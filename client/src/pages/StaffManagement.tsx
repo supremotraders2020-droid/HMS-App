@@ -520,7 +520,7 @@ export default function StaffManagement({ currentUser }: StaffManagementProps) {
           </TabsTrigger>
           <TabsTrigger value="dept-assignments" data-testid="tab-dept-assignments" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Dept Nurses</span>
+            <span className="hidden sm:inline">Nurse History</span>
           </TabsTrigger>
           <TabsTrigger value="tasks" data-testid="tab-tasks" className="flex items-center gap-2">
             <Briefcase className="h-4 w-4" />
