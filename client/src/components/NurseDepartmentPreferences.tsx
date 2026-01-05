@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { 
   Users, Building, Plus, Edit2, Trash2, Search, 
-  Check, AlertCircle, Stethoscope, Database
+  Check, AlertCircle, Stethoscope, Database, MapPin, UserCheck, DoorOpen, X
 } from "lucide-react";
 
 type NurseDepartmentPreference = {
@@ -46,11 +47,24 @@ const PRELOADED_NURSES: { nurseId: string; nurseName: string }[] = [
   { nurseId: "NRS-008", nurseName: "Sister Lakshmi Iyer" },
 ];
 
+const MOCK_ASSIGNMENT_DATA: Record<string, { roomNumber: string; assignedDoctor: string; position: string }> = {
+  "NRS-001": { roomNumber: "ICU-101", assignedDoctor: "Dr. Rajesh Kumar", position: "Primary" },
+  "NRS-002": { roomNumber: "Ward-205", assignedDoctor: "Dr. Priya Singh", position: "Secondary" },
+  "NRS-003": { roomNumber: "OT-301", assignedDoctor: "Dr. Amit Sharma", position: "Primary" },
+  "NRS-004": { roomNumber: "Emergency-102", assignedDoctor: "Dr. Sunita Verma", position: "Tertiary" },
+  "NRS-005": { roomNumber: "Ward-108", assignedDoctor: "Dr. Vikram Patel", position: "Primary" },
+  "NRS-006": { roomNumber: "ICU-103", assignedDoctor: "Dr. Meena Gupta", position: "Secondary" },
+  "NRS-007": { roomNumber: "Ward-210", assignedDoctor: "Dr. Ravi Iyer", position: "Primary" },
+  "NRS-008": { roomNumber: "OT-302", assignedDoctor: "Dr. Kavita Reddy", position: "Tertiary" },
+};
+
 export default function NurseDepartmentPreferences() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [assignmentDetailsOpen, setAssignmentDetailsOpen] = useState(false);
   const [selectedPreference, setSelectedPreference] = useState<NurseDepartmentPreference | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<NurseDepartmentPreference | null>(null);
   const [formData, setFormData] = useState({
     nurseId: "",
     nurseName: "",
@@ -339,7 +353,14 @@ export default function NurseDepartmentPreferences() {
                               ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50" 
                               : "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
                           }`}
-                          onClick={() => toggleAvailabilityMutation.mutate({ nurseId: pref.nurseId, isAvailable: !pref.isAvailable })}
+                          onClick={() => {
+                            if (pref.isAvailable) {
+                              setSelectedAssignment(pref);
+                              setAssignmentDetailsOpen(true);
+                            } else {
+                              toggleAvailabilityMutation.mutate({ nurseId: pref.nurseId, isAvailable: true });
+                            }
+                          }}
                           data-testid={`badge-status-${pref.nurseId}`}
                         >
                           {pref.isAvailable ? "Assigned" : "Not Assigned"}
@@ -517,6 +538,117 @@ export default function NurseDepartmentPreferences() {
             </Button>
             <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-save-preference">
               {saveMutation.isPending ? "Saving..." : "Save Preferences"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={assignmentDetailsOpen} onOpenChange={setAssignmentDetailsOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-green-600" />
+              Assignment Details
+            </DialogTitle>
+            <DialogDescription>
+              View current assignment information for {selectedAssignment?.nurseName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedAssignment && (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <Users className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Nurse</p>
+                  <p className="font-medium">{selectedAssignment.nurseName}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{selectedAssignment.nurseId}</p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="grid gap-4">
+                <div className="flex items-start gap-3">
+                  <Building className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Department</p>
+                    <p className="font-medium">{selectedAssignment.primaryDepartment}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-purple-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Position</p>
+                    <Badge className={getDepartmentBadgeColor(
+                      MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.position === "Primary" ? 0 :
+                      MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.position === "Secondary" ? 1 : 2
+                    )}>
+                      {MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.position || "Primary"}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <DoorOpen className="h-5 w-5 text-orange-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Assigned Room</p>
+                    <p className="font-medium font-mono">
+                      {MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.roomNumber || "Not Assigned"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Stethoscope className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Assigned Doctor</p>
+                    <p className="font-medium">
+                      {MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.assignedDoctor || "Not Assigned"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                  <Check className="h-4 w-4" />
+                  <span className="text-sm font-medium">Currently Active Assignment</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setAssignmentDetailsOpen(false)}
+              className="flex-1"
+              data-testid="button-keep-assigned"
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Keep Assigned
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                if (selectedAssignment) {
+                  toggleAvailabilityMutation.mutate({ 
+                    nurseId: selectedAssignment.nurseId, 
+                    isAvailable: false 
+                  });
+                  setAssignmentDetailsOpen(false);
+                  setSelectedAssignment(null);
+                }
+              }}
+              className="flex-1"
+              data-testid="button-unassign"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Unassign
             </Button>
           </DialogFooter>
         </DialogContent>
