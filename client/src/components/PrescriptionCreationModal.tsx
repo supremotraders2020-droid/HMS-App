@@ -147,6 +147,11 @@ export default function PrescriptionCreationModal({
     temp: '',
   });
   
+  // Clinical info - New mandatory fields after Vitals
+  const [patientComplaints, setPatientComplaints] = useState('');
+  const [doctorObservations, setDoctorObservations] = useState('');
+  const [pastHistoryReference, setPastHistoryReference] = useState('');
+  
   // Clinical info
   const [chiefComplaints, setChiefComplaints] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
@@ -448,6 +453,9 @@ export default function PrescriptionCreationModal({
         diagnosis,
         provisionalDiagnosis,
         vitals: JSON.stringify(vitals),
+        patientComplaints,
+        doctorObservations,
+        pastHistoryReference,
         knownAllergies,
         pastMedicalHistory,
         medicines: allMedicines.map(m => `${m.dosageForm} ${m.medicineName} ${m.strength} - ${FREQUENCIES.find(f => f.value === m.frequency)?.label || 'Once daily'}`),
@@ -503,6 +511,9 @@ export default function PrescriptionCreationModal({
     setPatientAge('');
     setPatientGender('');
     setVitals({ bp: '', sugar: '', pulse: '', weight: '', temp: '' });
+    setPatientComplaints('');
+    setDoctorObservations('');
+    setPastHistoryReference('');
     setChiefComplaints('');
     setDiagnosis('');
     setProvisionalDiagnosis('');
@@ -527,8 +538,8 @@ export default function PrescriptionCreationModal({
   // Save Draft only needs patient selected
   const canSaveDraft = !!patientName;
   
-  // Sign & Finalize needs everything complete
-  const canFinalizeRx = patientName && diagnosis && (medicines.length > 0 || hasUnaddedMedicine);
+  // Sign & Finalize needs everything complete - including mandatory fields
+  const canFinalizeRx = patientName && diagnosis && patientComplaints && doctorObservations && pastHistoryReference && (medicines.length > 0 || hasUnaddedMedicine);
   
   // Legacy isValid for backward compatibility
   const isValid = canFinalizeRx;
@@ -674,6 +685,48 @@ export default function PrescriptionCreationModal({
                       value={vitals.temp}
                       onChange={(e) => setVitals({ ...vitals, temp: e.target.value })}
                       placeholder="98.6"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Patient Complaints, Doctor Observations, Past History Reference - Required Fields */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Clinical Notes *</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="patientComplaints">Patient Complaints *</Label>
+                    <Textarea
+                      id="patientComplaints"
+                      data-testid="input-patient-complaints"
+                      value={patientComplaints}
+                      onChange={(e) => setPatientComplaints(e.target.value)}
+                      placeholder="Enter patient's complaints in their own words..."
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="doctorObservations">Doctor Observations *</Label>
+                    <Textarea
+                      id="doctorObservations"
+                      data-testid="input-doctor-observations"
+                      value={doctorObservations}
+                      onChange={(e) => setDoctorObservations(e.target.value)}
+                      placeholder="Enter clinical observations and findings..."
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pastHistoryReference">Past History Reference *</Label>
+                    <Textarea
+                      id="pastHistoryReference"
+                      data-testid="input-past-history-reference"
+                      value={pastHistoryReference}
+                      onChange={(e) => setPastHistoryReference(e.target.value)}
+                      placeholder="Reference to patient's past medical history, previous prescriptions, etc..."
+                      className="min-h-[80px]"
                     />
                   </div>
                 </CardContent>

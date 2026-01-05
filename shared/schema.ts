@@ -694,6 +694,9 @@ export const prescriptions = pgTable("prescriptions", {
   diagnosis: text("diagnosis").notNull(),
   provisionalDiagnosis: text("provisional_diagnosis"),
   vitals: text("vitals"), // JSON: {bp, sugar, pulse, weight, temp}
+  patientComplaints: text("patient_complaints"), // Patient's complaints in their own words
+  doctorObservations: text("doctor_observations"), // Doctor's clinical observations
+  pastHistoryReference: text("past_history_reference"), // Reference to past medical history
   knownAllergies: text("known_allergies"),
   pastMedicalHistory: text("past_medical_history"),
   medicines: text("medicines").array().notNull(), // Array of medicine strings like "Amlodipine 5mg - Once daily"
