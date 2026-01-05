@@ -65,25 +65,24 @@ export default function DepartmentNurseAssignments() {
     name: p.nurseName
   }));
 
+  const getActualNurseCountForDept = (deptName: string) => {
+    return nursePreferences.filter(nurse => {
+      if (nurse.isAvailable) return false;
+      const assignedDept = 
+        nurse.assignedPosition === "Primary" ? nurse.primaryDepartment :
+        nurse.assignedPosition === "Secondary" ? nurse.secondaryDepartment :
+        nurse.assignedPosition === "Tertiary" ? nurse.tertiaryDepartment : null;
+      return assignedDept === deptName;
+    }).length;
+  };
+
   const analytics = useMemo(() => {
     const totalDepartments = assignments.length;
-    const fullyStaffed = assignments.filter(a => 
-      a.primaryNurseId && a.secondaryNurseId && a.tertiaryNurseId
-    ).length;
-    const partiallyStaffed = assignments.filter(a => 
-      (a.primaryNurseId || a.secondaryNurseId || a.tertiaryNurseId) &&
-      !(a.primaryNurseId && a.secondaryNurseId && a.tertiaryNurseId)
-    ).length;
-    const unstaffed = assignments.filter(a => 
-      !a.primaryNurseId && !a.secondaryNurseId && !a.tertiaryNurseId
-    ).length;
-    const totalNursesAssigned = assignments.reduce((sum, a) => {
-      let count = 0;
-      if (a.primaryNurseId) count++;
-      if (a.secondaryNurseId) count++;
-      if (a.tertiaryNurseId) count++;
-      return sum + count;
-    }, 0);
+    const deptCounts = assignments.map(a => getActualNurseCountForDept(a.departmentName));
+    const fullyStaffed = deptCounts.filter(c => c >= 3).length;
+    const partiallyStaffed = deptCounts.filter(c => c > 0 && c < 3).length;
+    const unstaffed = deptCounts.filter(c => c === 0).length;
+    const totalNursesAssigned = nursePreferences.filter(n => !n.isAvailable).length;
     const maxCapacity = totalDepartments * 3;
     const utilizationRate = maxCapacity > 0 ? Math.round((totalNursesAssigned / maxCapacity) * 100) : 0;
 
@@ -96,7 +95,7 @@ export default function DepartmentNurseAssignments() {
       maxCapacity,
       utilizationRate
     };
-  }, [assignments]);
+  }, [assignments, nursePreferences]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -222,31 +221,33 @@ export default function DepartmentNurseAssignments() {
     saveMutation.mutate(normalizedData as any);
   };
 
-  const filteredAssignments = assignments.filter(a => 
-    a.departmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (a.primaryNurseName && a.primaryNurseName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (a.secondaryNurseName && a.secondaryNurseName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (a.tertiaryNurseName && a.tertiaryNurseName.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
   const getAvailableNurses = (excludeIds: string[]) => {
     return nurses.filter(n => !excludeIds.includes(n.id));
   };
 
+  const getActuallyAssignedNurses = (departmentName: string) => {
+    return nursePreferences.filter(nurse => {
+      if (nurse.isAvailable) return false;
+      const assignedDept = 
+        nurse.assignedPosition === "Primary" ? nurse.primaryDepartment :
+        nurse.assignedPosition === "Secondary" ? nurse.secondaryDepartment :
+        nurse.assignedPosition === "Tertiary" ? nurse.tertiaryDepartment : null;
+      return assignedDept === departmentName;
+    });
+  };
+
+  const filteredAssignments = assignments.filter(a => {
+    if (a.departmentName.toLowerCase().includes(searchTerm.toLowerCase())) return true;
+    const assignedNurses = getActuallyAssignedNurses(a.departmentName);
+    return assignedNurses.some(n => n.nurseName.toLowerCase().includes(searchTerm.toLowerCase()));
+  });
+
   const getNurseCount = (assignment: DepartmentNurseAssignment) => {
-    let count = 0;
-    if (assignment.primaryNurseId) count++;
-    if (assignment.secondaryNurseId) count++;
-    if (assignment.tertiaryNurseId) count++;
-    return count;
+    return getActuallyAssignedNurses(assignment.departmentName).length;
   };
 
   const getNursesList = (assignment: DepartmentNurseAssignment) => {
-    const nurseNames: string[] = [];
-    if (assignment.primaryNurseName) nurseNames.push(assignment.primaryNurseName);
-    if (assignment.secondaryNurseName) nurseNames.push(assignment.secondaryNurseName);
-    if (assignment.tertiaryNurseName) nurseNames.push(assignment.tertiaryNurseName);
-    return nurseNames;
+    return getActuallyAssignedNurses(assignment.departmentName).map(n => n.nurseName);
   };
 
   return (
