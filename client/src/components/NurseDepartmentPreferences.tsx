@@ -330,21 +330,19 @@ export default function NurseDepartmentPreferences() {
                       <TableCell>
                         <Badge
                           className={`cursor-pointer transition-colors ${
-                            pref.isAvailable 
+                            !pref.isAvailable 
                               ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50" 
-                              : "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
+                              : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:hover:bg-gray-900/50"
                           }`}
                           onClick={() => {
-                            if (pref.isAvailable) {
+                            if (!pref.isAvailable) {
                               setSelectedAssignment(pref);
                               setAssignmentDetailsOpen(true);
-                            } else {
-                              toggleAvailabilityMutation.mutate({ nurseId: pref.nurseId, isAvailable: true });
                             }
                           }}
                           data-testid={`badge-status-${pref.nurseId}`}
                         >
-                          {pref.isAvailable ? "Assigned" : "Not Assigned"}
+                          {!pref.isAvailable ? "Assigned" : "Not Assigned"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
