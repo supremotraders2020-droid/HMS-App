@@ -546,8 +546,8 @@ export default function PrescriptionCreationModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
             New Prescription
@@ -557,7 +557,7 @@ export default function PrescriptionCreationModal({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-1">
+        <ScrollArea className="flex-1 min-h-0 pr-4">
           <Tabs defaultValue="patient" className="w-full">
             <TabsList className="grid w-full grid-cols-5 mb-4">
               <TabsTrigger value="patient" data-testid="tab-patient">Patient Info</TabsTrigger>
@@ -1382,9 +1382,9 @@ export default function PrescriptionCreationModal({
           </Tabs>
         </ScrollArea>
 
-        <Separator className="my-4" />
+        <Separator className="my-4 flex-shrink-0" />
 
-        <DialogFooter className="flex justify-between gap-2">
+        <DialogFooter className="flex-shrink-0 flex justify-between gap-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {!canSaveDraft && (
               <>
