@@ -12363,15 +12363,14 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       await storage.updateUserPassword(user.id, hashedPassword);
       
       // Log audit
-      const auditData = {
-        action: "USER_PASSWORD_RESET" as const,
+      await db.insert(auditLogs).values({
+        action: "USER_PASSWORD_RESET",
         performedBy: currentUser?.username || "system",
         targetUser: user.username,
-        module: "User Management" as const,
+        module: "User Management",
         details: `Password reset for user ${user.username} by ${currentUser?.username}`,
-        status: "success" as const
-      };
-      await storage.createAuditLog(auditData);
+        status: "success"
+      });
       
       res.json({ 
         success: true, 
