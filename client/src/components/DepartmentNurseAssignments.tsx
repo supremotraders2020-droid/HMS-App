@@ -337,9 +337,9 @@ export default function DepartmentNurseAssignments() {
                 <Building2 className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <CardTitle>Department Nurse Assignments</CardTitle>
+                <CardTitle>Nurse History</CardTitle>
                 <CardDescription>
-                  Manage nurse assignments by department with real-time updates
+                  View nurse assignment history by department with real-time updates
                 </CardDescription>
               </div>
             </div>
