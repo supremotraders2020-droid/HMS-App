@@ -201,6 +201,14 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({ password: hashedPassword, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+
   async updateUserLastLogin(id: string): Promise<User | undefined> {
     const result = await db.update(users)
       .set({ lastLogin: new Date(), updatedAt: new Date() })

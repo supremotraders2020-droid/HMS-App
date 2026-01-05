@@ -78,6 +78,16 @@ import { aiEngines } from "./ai-engines";
 
 const SALT_ROUNDS = 10;
 
+// Generate secure random password (12 characters)
+function generateSecurePassword(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
+
 // Configure multer for file uploads
 const labReportStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -12329,6 +12339,50 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // Reset user password (Super Admin only)
+  app.post("/api/super-admin/users/:id/reset-password", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const currentUser = (req as any).session?.user;
+      const user = await storage.getUser(req.params.id);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Prevent resetting super admin password
+      if (user.role === "SUPER_ADMIN") {
+        return res.status(403).json({ error: "Cannot reset Super Admin password" });
+      }
+      
+      // Generate new random password
+      const newPassword = generateSecurePassword();
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      // Update user password
+      await storage.updateUserPassword(user.id, hashedPassword);
+      
+      // Log audit
+      const auditData = {
+        action: "USER_PASSWORD_RESET" as const,
+        performedBy: currentUser?.username || "system",
+        targetUser: user.username,
+        module: "User Management" as const,
+        details: `Password reset for user ${user.username} by ${currentUser?.username}`,
+        status: "success" as const
+      };
+      await storage.createAuditLog(auditData);
+      
+      res.json({ 
+        success: true, 
+        username: user.username,
+        newPassword 
+      });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ error: "Failed to reset password" });
+    }
+  });
+
   // Create new user with auto-generated username and password
   const createUserSchema = z.object({
     name: z.string().min(1, "Name is required").max(100),
@@ -12363,12 +12417,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(400).json({ error: "Generated username conflict, please try again" });
       }
 
-      // Generate secure random password (12 characters)
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
-      let plainPassword = '';
-      for (let i = 0; i < 12; i++) {
-        plainPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
+      // Generate secure random password
+      const plainPassword = generateSecurePassword();
 
       // Hash password before storing
       const hashedPassword = await bcrypt.hash(plainPassword, 10);

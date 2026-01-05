@@ -50,6 +50,8 @@ import {
   Syringe,
   Receipt,
   HeartPulse,
+  KeyRound,
+  Copy,
 } from "lucide-react";
 import type {
   User,
@@ -316,7 +318,9 @@ function UsersSection() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCredentials, setShowCredentials] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<CreatedUserCredentials | null>(null);
+  const [resetPasswordCredentials, setResetPasswordCredentials] = useState<{ username: string; password: string } | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("ADMIN");
   const [showPermissions, setShowPermissions] = useState(false);
@@ -384,6 +388,23 @@ function UsersSection() {
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message || "Failed to update status", variant: "destructive" });
+    }
+  });
+
+  // Reset password mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await apiRequest("POST", `/api/super-admin/users/${userId}/reset-password`);
+      return response.json();
+    },
+    onSuccess: (data: { username: string; newPassword: string }) => {
+      setResetPasswordCredentials({ username: data.username, password: data.newPassword });
+      setShowResetPassword(true);
+      queryClient.invalidateQueries({ queryKey: ["/api/super-admin/users"] });
+      toast({ title: "Password Reset", description: "New password has been generated" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message || "Failed to reset password", variant: "destructive" });
     }
   });
 
@@ -492,6 +513,7 @@ function UsersSection() {
                   <TableHead>Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Reset Password</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -507,6 +529,18 @@ function UsersSection() {
                       </Badge>
                     </TableCell>
                     <TableCell>{user.email || "-"}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => resetPasswordMutation.mutate(user.id)}
+                        disabled={resetPasswordMutation.isPending || user.role === "SUPER_ADMIN"}
+                        data-testid={`button-reset-password-${user.id}`}
+                      >
+                        <KeyRound className="h-4 w-4 mr-1" />
+                        Reset
+                      </Button>
+                    </TableCell>
                     <TableCell>
                       <Badge 
                         variant="outline" 
@@ -729,6 +763,74 @@ function UsersSection() {
             <Button onClick={() => {
               setShowCredentials(false);
               setCreatedCredentials(null);
+            }}>
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-blue-600" />
+              Password Reset Successfully
+            </DialogTitle>
+            <DialogDescription>
+              Save the new password securely. It cannot be retrieved later.
+            </DialogDescription>
+          </DialogHeader>
+          {resetPasswordCredentials && (
+            <div className="space-y-4">
+              <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg space-y-3">
+                <div>
+                  <p className="text-sm text-slate-500">Username</p>
+                  <div className="flex items-center justify-between">
+                    <code className="font-mono bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded">
+                      {resetPasswordCredentials.username}
+                    </code>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => copyToClipboard(resetPasswordCredentials.username, "Username")}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-slate-500">New Password</p>
+                  <div className="flex items-center justify-between">
+                    <code className="font-mono bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded">
+                      {resetPasswordCredentials.password}
+                    </code>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => copyToClipboard(resetPasswordCredentials.password, "Password")}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md">
+                <p className="text-sm text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Save this password now. It will not be shown again.
+                </p>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end mt-4">
+            <Button onClick={() => {
+              setShowResetPassword(false);
+              setResetPasswordCredentials(null);
             }}>
               Done
             </Button>

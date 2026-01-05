@@ -881,6 +881,14 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
+  async updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const updated = { ...user, password: hashedPassword, updatedAt: new Date() };
+    this.users.set(id, updated);
+    return updated;
+  }
+
   async updateUserLastLogin(id: string): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
