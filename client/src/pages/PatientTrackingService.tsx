@@ -1010,11 +1010,18 @@ export default function PatientTrackingService() {
                         ) : filteredNurses.length === 0 ? (
                           <div className="p-2 text-sm text-muted-foreground text-center">No nurses assigned to this department</div>
                         ) : (
-                          filteredNurses.map((nurse) => (
-                            <SelectItem key={nurse.nurseId} value={nurse.nurseName}>
-                              {nurse.nurseName}
-                            </SelectItem>
-                          ))
+                          filteredNurses.map((nurse) => {
+                            const deptLevel = nurse.primaryDepartment === selectedAdmitDepartment 
+                              ? "Primary" 
+                              : nurse.secondaryDepartment === selectedAdmitDepartment 
+                                ? "Secondary" 
+                                : "Tertiary";
+                            return (
+                              <SelectItem key={nurse.nurseId} value={nurse.nurseName}>
+                                {nurse.nurseName} - {selectedAdmitDepartment} ({deptLevel})
+                              </SelectItem>
+                            );
+                          })
                         )}
                       </SelectContent>
                     </Select>
