@@ -4576,6 +4576,9 @@ export const nurseDepartmentPreferences = pgTable("nurse_department_preferences"
   secondaryDepartment: text("secondary_department").notNull(),
   tertiaryDepartment: text("tertiary_department").notNull(),
   isAvailable: boolean("is_available").default(true).notNull(), // Nurse availability status (Assigned/Not Assigned)
+  assignedRoom: text("assigned_room"), // Room number where nurse is currently assigned
+  assignedDoctor: text("assigned_doctor"), // Doctor name the nurse is working with
+  assignedPosition: text("assigned_position"), // Position type: Primary, Secondary, or Tertiary
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

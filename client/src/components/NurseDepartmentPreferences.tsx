@@ -25,6 +25,9 @@ type NurseDepartmentPreference = {
   secondaryDepartment: string;
   tertiaryDepartment: string;
   isAvailable: boolean;
+  assignedRoom: string | null;
+  assignedDoctor: string | null;
+  assignedPosition: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -46,17 +49,6 @@ const PRELOADED_NURSES: { nurseId: string; nurseName: string }[] = [
   { nurseId: "NRS-007", nurseName: "Sister Rani Verma" },
   { nurseId: "NRS-008", nurseName: "Sister Lakshmi Iyer" },
 ];
-
-const MOCK_ASSIGNMENT_DATA: Record<string, { roomNumber: string; assignedDoctor: string; position: string }> = {
-  "NRS-001": { roomNumber: "ICU-101", assignedDoctor: "Dr. Rajesh Kumar", position: "Primary" },
-  "NRS-002": { roomNumber: "Ward-205", assignedDoctor: "Dr. Priya Singh", position: "Secondary" },
-  "NRS-003": { roomNumber: "OT-301", assignedDoctor: "Dr. Amit Sharma", position: "Primary" },
-  "NRS-004": { roomNumber: "Emergency-102", assignedDoctor: "Dr. Sunita Verma", position: "Tertiary" },
-  "NRS-005": { roomNumber: "Ward-108", assignedDoctor: "Dr. Vikram Patel", position: "Primary" },
-  "NRS-006": { roomNumber: "ICU-103", assignedDoctor: "Dr. Meena Gupta", position: "Secondary" },
-  "NRS-007": { roomNumber: "Ward-210", assignedDoctor: "Dr. Ravi Iyer", position: "Primary" },
-  "NRS-008": { roomNumber: "OT-302", assignedDoctor: "Dr. Kavita Reddy", position: "Tertiary" },
-};
 
 export default function NurseDepartmentPreferences() {
   const { toast } = useToast();
@@ -582,10 +574,10 @@ export default function NurseDepartmentPreferences() {
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Position</p>
                     <Badge className={getDepartmentBadgeColor(
-                      MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.position === "Primary" ? 0 :
-                      MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.position === "Secondary" ? 1 : 2
+                      selectedAssignment.assignedPosition === "Primary" ? 0 :
+                      selectedAssignment.assignedPosition === "Secondary" ? 1 : 2
                     )}>
-                      {MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.position || "Primary"}
+                      {selectedAssignment.assignedPosition || "Primary"}
                     </Badge>
                   </div>
                 </div>
@@ -595,7 +587,7 @@ export default function NurseDepartmentPreferences() {
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Assigned Room</p>
                     <p className="font-medium font-mono">
-                      {MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.roomNumber || "Not Assigned"}
+                      {selectedAssignment.assignedRoom || "Not Assigned"}
                     </p>
                   </div>
                 </div>
@@ -605,7 +597,7 @@ export default function NurseDepartmentPreferences() {
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Assigned Doctor</p>
                     <p className="font-medium">
-                      {MOCK_ASSIGNMENT_DATA[selectedAssignment.nurseId]?.assignedDoctor || "Not Assigned"}
+                      {selectedAssignment.assignedDoctor || "Not Assigned"}
                     </p>
                   </div>
                 </div>
