@@ -35,15 +35,15 @@ type NurseUser = {
   role: string;
 };
 
-const PRELOADED_NURSES: NurseUser[] = [
-  { id: "nurse-001", username: "nurse-001", fullName: "Sister Priya Sharma", role: "NURSE" },
-  { id: "nurse-002", username: "nurse-002", fullName: "Sister Anjali Patel", role: "NURSE" },
-  { id: "nurse-003", username: "nurse-003", fullName: "Sister Kavita Singh", role: "NURSE" },
-  { id: "nurse-004", username: "nurse-004", fullName: "Sister Meera Reddy", role: "NURSE" },
-  { id: "nurse-005", username: "nurse-005", fullName: "Sister Sunita Yadav", role: "NURSE" },
-  { id: "nurse-006", username: "nurse-006", fullName: "Sister Deepa Gupta", role: "NURSE" },
-  { id: "nurse-007", username: "nurse-007", fullName: "Sister Rani Verma", role: "NURSE" },
-  { id: "nurse-008", username: "nurse-008", fullName: "Sister Lakshmi Iyer", role: "NURSE" },
+const PRELOADED_NURSES: { nurseId: string; nurseName: string }[] = [
+  { nurseId: "NRS-001", nurseName: "Sister Priya Sharma" },
+  { nurseId: "NRS-002", nurseName: "Sister Anjali Patel" },
+  { nurseId: "NRS-003", nurseName: "Sister Kavita Singh" },
+  { nurseId: "NRS-004", nurseName: "Sister Meera Reddy" },
+  { nurseId: "NRS-005", nurseName: "Sister Sunita Yadav" },
+  { nurseId: "NRS-006", nurseName: "Sister Deepa Gupta" },
+  { nurseId: "NRS-007", nurseName: "Sister Rani Verma" },
+  { nurseId: "NRS-008", nurseName: "Sister Lakshmi Iyer" },
 ];
 
 export default function NurseDepartmentPreferences() {
@@ -67,18 +67,19 @@ export default function NurseDepartmentPreferences() {
     queryKey: ["/api/nurse-department-preferences"]
   });
 
-  const { data: apiNurses = [] } = useQuery<NurseUser[]>({
-    queryKey: ["/api/users/nurses"]
-  });
+  const existingNursesList = preferences.map(p => ({
+    nurseId: p.nurseId,
+    nurseName: p.nurseName
+  }));
 
-  const allNurses = apiNurses.length > 0 ? apiNurses : PRELOADED_NURSES;
+  const allNurses = existingNursesList.length > 0 ? existingNursesList : PRELOADED_NURSES;
 
   const handleNurseIdChange = (nurseId: string) => {
-    const nurse = allNurses.find(n => n.id === nurseId || n.username === nurseId);
+    const nurse = allNurses.find(n => n.nurseId === nurseId);
     setFormData({ 
       ...formData, 
       nurseId: nurseId,
-      nurseName: nurse?.fullName || ""
+      nurseName: nurse?.nurseName || ""
     });
   };
 
@@ -400,8 +401,8 @@ export default function NurseDepartmentPreferences() {
                   </SelectTrigger>
                   <SelectContent>
                     {allNurses.map((nurse) => (
-                      <SelectItem key={nurse.id} value={nurse.id || nurse.username}>
-                        {nurse.id || nurse.username}
+                      <SelectItem key={nurse.nurseId} value={nurse.nurseId}>
+                        {nurse.nurseId}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -412,11 +413,11 @@ export default function NurseDepartmentPreferences() {
                 <Select
                   value={formData.nurseName}
                   onValueChange={(value) => {
-                    const nurse = allNurses.find(n => n.fullName === value);
+                    const nurse = allNurses.find(n => n.nurseName === value);
                     setFormData({ 
                       ...formData, 
                       nurseName: value,
-                      nurseId: nurse?.id || nurse?.username || formData.nurseId
+                      nurseId: nurse?.nurseId || formData.nurseId
                     });
                   }}
                   disabled={!!selectedPreference}
@@ -426,8 +427,8 @@ export default function NurseDepartmentPreferences() {
                   </SelectTrigger>
                   <SelectContent>
                     {allNurses.map((nurse) => (
-                      <SelectItem key={nurse.id} value={nurse.fullName}>
-                        {nurse.fullName}
+                      <SelectItem key={nurse.nurseId} value={nurse.nurseName}>
+                        {nurse.nurseName}
                       </SelectItem>
                     ))}
                   </SelectContent>
