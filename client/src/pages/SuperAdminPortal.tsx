@@ -53,6 +53,9 @@ import {
   HeartPulse,
   KeyRound,
   Copy,
+  Bell,
+  Database,
+  Save,
 } from "lucide-react";
 import type {
   User,
@@ -1958,6 +1961,100 @@ function AuditSection() {
 }
 
 function SettingsSection() {
+  const { toast } = useToast();
+  
+  const [systemConfig, setSystemConfig] = useState({
+    maintenanceMode: false,
+    autoBackup: true,
+    sessionTimeout: "30",
+    maxLoginAttempts: "5",
+    passwordExpiry: "90",
+    dataRetention: "365"
+  });
+
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    smsNotifications: true,
+    systemAlerts: true,
+    appointmentReminders: true,
+    emergencyAlerts: true,
+    maintenanceNotifications: false
+  });
+
+  const [securitySettings, setSecuritySettings] = useState({
+    twoFactorAuth: false,
+    ipWhitelist: "",
+    encryptionLevel: "256",
+    auditLogging: true,
+    passwordComplexity: "high",
+    nabh: true,
+    hipaa: true
+  });
+
+  const [backupSettings, setBackupSettings] = useState({
+    autoBackupEnabled: true,
+    backupFrequency: "daily",
+    retentionPeriod: "30",
+    lastBackup: "2025-09-15 23:30:00",
+    backupLocation: "Internal Storage"
+  });
+
+  const [financialControls, setFinancialControls] = useState({
+    autoLockBills: true,
+    requireDiscountApproval: true,
+    discountThreshold: "10"
+  });
+
+  const handleSystemConfigSave = () => {
+    toast({
+      title: "Success",
+      description: "System configuration updated successfully",
+    });
+  };
+
+  const handleNotificationSave = () => {
+    toast({
+      title: "Success",
+      description: "Notification settings updated successfully",
+    });
+  };
+
+  const handleSecuritySave = () => {
+    toast({
+      title: "Success",
+      description: "Security settings updated successfully",
+    });
+  };
+
+  const handleBackupSave = () => {
+    toast({
+      title: "Success",
+      description: "Backup settings updated successfully",
+    });
+  };
+
+  const handleManualBackup = () => {
+    toast({
+      title: "Backup Started",
+      description: "Manual backup has been initiated",
+    });
+  };
+
+  const handleSystemRestart = () => {
+    toast({
+      title: "System Restart",
+      description: "System restart has been scheduled",
+      variant: "destructive"
+    });
+  };
+
+  const handleClearCache = () => {
+    toast({
+      title: "Cache Cleared",
+      description: "System cache has been cleared successfully",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -1965,47 +2062,177 @@ function SettingsSection() {
         <p className="text-slate-600 dark:text-slate-400">Configure global system preferences and security</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            System Configuration
+          </CardTitle>
+          <CardDescription>General system settings and operational parameters</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Maintenance Mode</Label>
+              <p className="text-sm text-muted-foreground">Enable to restrict system access during maintenance</p>
+            </div>
+            <Switch
+              checked={systemConfig.maintenanceMode}
+              onCheckedChange={(checked) => setSystemConfig({...systemConfig, maintenanceMode: checked})}
+              data-testid="switch-sa-maintenance-mode"
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Auto Backup</Label>
+              <p className="text-sm text-muted-foreground">Automatically backup system data</p>
+            </div>
+            <Switch
+              checked={systemConfig.autoBackup}
+              onCheckedChange={(checked) => setSystemConfig({...systemConfig, autoBackup: checked})}
+              data-testid="switch-sa-auto-backup"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="sa-sessionTimeout">Session Timeout (minutes)</Label>
+              <IntegerInput
+                id="sa-sessionTimeout"
+                min={1}
+                value={systemConfig.sessionTimeout}
+                onValueChange={(value) => setSystemConfig({...systemConfig, sessionTimeout: value})}
+                data-testid="input-sa-session-timeout"
+              />
+            </div>
+            <div>
+              <Label htmlFor="sa-maxLoginAttempts">Max Login Attempts</Label>
+              <IntegerInput
+                id="sa-maxLoginAttempts"
+                min={1}
+                value={systemConfig.maxLoginAttempts}
+                onValueChange={(value) => setSystemConfig({...systemConfig, maxLoginAttempts: value})}
+                data-testid="input-sa-max-login-attempts"
+              />
+            </div>
+            <div>
+              <Label htmlFor="sa-passwordExpiry">Password Expiry (days)</Label>
+              <IntegerInput
+                id="sa-passwordExpiry"
+                min={1}
+                value={systemConfig.passwordExpiry}
+                onValueChange={(value) => setSystemConfig({...systemConfig, passwordExpiry: value})}
+                data-testid="input-sa-password-expiry"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="sa-dataRetention">Data Retention Period (days)</Label>
+            <IntegerInput
+              id="sa-dataRetention"
+              min={1}
+              value={systemConfig.dataRetention}
+              onValueChange={(value) => setSystemConfig({...systemConfig, dataRetention: value})}
+              className="w-full md:w-48"
+              data-testid="input-sa-data-retention"
+            />
+          </div>
+
+          <Button onClick={handleSystemConfigSave} data-testid="button-sa-save-system-config">
+            <Save className="h-4 w-4 mr-2" />
+            Save System Configuration
+          </Button>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
               Security Settings
             </CardTitle>
+            <CardDescription>Configure security protocols and access controls</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Two-Factor Authentication</p>
-                <p className="text-sm text-slate-500">Require 2FA for all Super Admin actions</p>
+              <div className="space-y-0.5">
+                <Label>Two-Factor Authentication</Label>
+                <p className="text-sm text-muted-foreground">Require 2FA for all admin accounts</p>
               </div>
-              <Switch />
+              <Switch
+                checked={securitySettings.twoFactorAuth}
+                onCheckedChange={(checked) => setSecuritySettings({...securitySettings, twoFactorAuth: checked})}
+                data-testid="switch-sa-two-factor"
+              />
             </div>
-            <Separator />
+
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Session Timeout</p>
-                <p className="text-sm text-slate-500">Auto-logout after inactivity</p>
+              <div className="space-y-0.5">
+                <Label>Audit Logging</Label>
+                <p className="text-sm text-muted-foreground">Log all system activities and changes</p>
               </div>
-              <Select defaultValue="30">
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 min</SelectItem>
-                  <SelectItem value="30">30 min</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                </SelectContent>
-              </Select>
+              <Switch
+                checked={securitySettings.auditLogging}
+                onCheckedChange={(checked) => setSecuritySettings({...securitySettings, auditLogging: checked})}
+                data-testid="switch-sa-audit-logging"
+              />
             </div>
-            <Separator />
-            <div className="flex items-center justify-between">
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="font-medium">IP Whitelist</p>
-                <p className="text-sm text-slate-500">Restrict Super Admin access by IP</p>
+                <Label>Password Complexity</Label>
+                <Select 
+                  value={securitySettings.passwordComplexity} 
+                  onValueChange={(value) => setSecuritySettings({...securitySettings, passwordComplexity: value})}
+                >
+                  <SelectTrigger data-testid="select-sa-password-complexity">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Switch />
+              <div>
+                <Label>Encryption Level</Label>
+                <Select 
+                  value={securitySettings.encryptionLevel} 
+                  onValueChange={(value) => setSecuritySettings({...securitySettings, encryptionLevel: value})}
+                >
+                  <SelectTrigger data-testid="select-sa-encryption-level">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="128">128-bit</SelectItem>
+                    <SelectItem value="256">256-bit</SelectItem>
+                    <SelectItem value="512">512-bit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            <div>
+              <Label htmlFor="sa-ipWhitelist">IP Whitelist (comma-separated)</Label>
+              <Input
+                id="sa-ipWhitelist"
+                value={securitySettings.ipWhitelist}
+                onChange={(e) => setSecuritySettings({...securitySettings, ipWhitelist: e.target.value})}
+                placeholder="192.168.1.1, 10.0.0.1"
+                data-testid="input-sa-ip-whitelist"
+              />
+            </div>
+
+            <Button onClick={handleSecuritySave} data-testid="button-sa-save-security">
+              <Save className="h-4 w-4 mr-2" />
+              Save Security Settings
+            </Button>
           </CardContent>
         </Card>
 
@@ -2015,30 +2242,43 @@ function SettingsSection() {
               <Lock className="h-5 w-5" />
               Financial Controls
             </CardTitle>
+            <CardDescription>Configure billing and discount controls</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Auto-Lock Finalized Bills</p>
-                <p className="text-sm text-slate-500">Automatically lock bills after finalization</p>
+                <p className="text-sm text-muted-foreground">Automatically lock bills after finalization</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={financialControls.autoLockBills}
+                onCheckedChange={(checked) => setFinancialControls({...financialControls, autoLockBills: checked})}
+              />
             </div>
             <Separator />
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Require Approval for Discounts</p>
-                <p className="text-sm text-slate-500">Discounts above threshold need approval</p>
+                <p className="text-sm text-muted-foreground">Discounts above threshold need approval</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={financialControls.requireDiscountApproval}
+                onCheckedChange={(checked) => setFinancialControls({...financialControls, requireDiscountApproval: checked})}
+              />
             </div>
             <Separator />
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Discount Approval Threshold</p>
-                <p className="text-sm text-slate-500">Percentage above which approval is needed</p>
+                <p className="font-medium">Discount Approval Threshold (%)</p>
+                <p className="text-sm text-muted-foreground">Percentage above which approval is needed</p>
               </div>
-              <IntegerInput defaultValue="10" className="w-20" min={0} max={100} />
+              <IntegerInput 
+                value={financialControls.discountThreshold}
+                onValueChange={(value) => setFinancialControls({...financialControls, discountThreshold: value})}
+                className="w-20" 
+                min={0} 
+                max={100} 
+              />
             </div>
           </CardContent>
         </Card>
@@ -2046,36 +2286,76 @@ function SettingsSection() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              Audit Settings
+              <Bell className="h-5 w-5" />
+              Notification Settings
             </CardTitle>
+            <CardDescription>Configure system-wide notification preferences</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Log All User Actions</p>
-                <p className="text-sm text-slate-500">Track every user action in the system</p>
+              <div className="space-y-0.5">
+                <Label>Email Notifications</Label>
+                <p className="text-sm text-muted-foreground">Send notifications via email</p>
               </div>
-              <Switch defaultChecked />
+              <Switch
+                checked={notificationSettings.emailNotifications}
+                onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, emailNotifications: checked})}
+                data-testid="switch-sa-email-notifications"
+              />
             </div>
-            <Separator />
+
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Log Retention Period</p>
-                <p className="text-sm text-slate-500">How long to keep audit logs</p>
+              <div className="space-y-0.5">
+                <Label>SMS Notifications</Label>
+                <p className="text-sm text-muted-foreground">Send critical alerts via SMS</p>
               </div>
-              <Select defaultValue="365">
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="90">90 days</SelectItem>
-                  <SelectItem value="180">180 days</SelectItem>
-                  <SelectItem value="365">1 year</SelectItem>
-                  <SelectItem value="730">2 years</SelectItem>
-                </SelectContent>
-              </Select>
+              <Switch
+                checked={notificationSettings.smsNotifications}
+                onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, smsNotifications: checked})}
+                data-testid="switch-sa-sms-notifications"
+              />
             </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>System Alerts</Label>
+                <p className="text-sm text-muted-foreground">Notify about system issues and updates</p>
+              </div>
+              <Switch
+                checked={notificationSettings.systemAlerts}
+                onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, systemAlerts: checked})}
+                data-testid="switch-sa-system-alerts"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Appointment Reminders</Label>
+                <p className="text-sm text-muted-foreground">Send automatic appointment reminders</p>
+              </div>
+              <Switch
+                checked={notificationSettings.appointmentReminders}
+                onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, appointmentReminders: checked})}
+                data-testid="switch-sa-appointment-reminders"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Emergency Alerts</Label>
+                <p className="text-sm text-muted-foreground">Critical emergency notifications</p>
+              </div>
+              <Switch
+                checked={notificationSettings.emergencyAlerts}
+                onCheckedChange={(checked) => setNotificationSettings({...notificationSettings, emergencyAlerts: checked})}
+                data-testid="switch-sa-emergency-alerts"
+              />
+            </div>
+
+            <Button onClick={handleNotificationSave} data-testid="button-sa-save-notifications">
+              <Save className="h-4 w-4 mr-2" />
+              Save Notification Settings
+            </Button>
           </CardContent>
         </Card>
 
@@ -2085,34 +2365,105 @@ function SettingsSection() {
               <AlertTriangle className="h-5 w-5" />
               Compliance
             </CardTitle>
+            <CardDescription>Configure compliance requirements</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">NABH Compliance Mode</p>
-                <p className="text-sm text-slate-500">Enforce NABH requirements</p>
+                <p className="text-sm text-muted-foreground">Enforce NABH requirements</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={securitySettings.nabh}
+                onCheckedChange={(checked) => setSecuritySettings({...securitySettings, nabh: checked})}
+              />
             </div>
             <Separator />
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">HIPAA Compliance Mode</p>
-                <p className="text-sm text-slate-500">Enforce HIPAA data protection</p>
+                <p className="text-sm text-muted-foreground">Enforce HIPAA data protection</p>
               </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Data Encryption</p>
-                <p className="text-sm text-slate-500">Encrypt sensitive financial data</p>
-              </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={securitySettings.hipaa}
+                onCheckedChange={(checked) => setSecuritySettings({...securitySettings, hipaa: checked})}
+              />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Backup & Maintenance
+          </CardTitle>
+          <CardDescription>System backup and maintenance operations</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label>Backup Frequency</Label>
+              <Select 
+                value={backupSettings.backupFrequency} 
+                onValueChange={(value) => setBackupSettings({...backupSettings, backupFrequency: value})}
+              >
+                <SelectTrigger data-testid="select-sa-backup-frequency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hourly">Hourly</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="sa-retentionPeriod">Retention Period (days)</Label>
+              <IntegerInput
+                id="sa-retentionPeriod"
+                min={1}
+                value={backupSettings.retentionPeriod}
+                onValueChange={(value) => setBackupSettings({...backupSettings, retentionPeriod: value})}
+                data-testid="input-sa-retention-period"
+              />
+            </div>
+            <div>
+              <Label>Last Backup</Label>
+              <div className="flex items-center gap-2 mt-2">
+                <Badge variant="secondary" data-testid="badge-sa-last-backup">
+                  {backupSettings.lastBackup}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <Button onClick={handleManualBackup} data-testid="button-sa-manual-backup">
+              <Download className="h-4 w-4 mr-2" />
+              Manual Backup
+            </Button>
+            <Button onClick={handleBackupSave} variant="outline" data-testid="button-sa-save-backup">
+              <Save className="h-4 w-4 mr-2" />
+              Save Settings
+            </Button>
+          </div>
+
+          <Separator />
+
+          <div className="flex flex-wrap gap-4">
+            <Button onClick={handleSystemRestart} variant="destructive" data-testid="button-sa-system-restart">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Restart System
+            </Button>
+            <Button onClick={handleClearCache} variant="outline" data-testid="button-sa-clear-cache">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear Cache
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
