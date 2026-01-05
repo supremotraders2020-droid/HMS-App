@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { IntegerInput, NumericInput } from "@/components/validated-inputs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -1309,70 +1310,63 @@ export default function PatientTrackingService() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="roomCharges">Room Charges (₹)</Label>
-                        <Input
-                          type="number"
+                        <NumericInput
                           value={billingForm.roomCharges}
-                          onChange={(e) => setBillingForm(f => ({ ...f, roomCharges: e.target.value }))}
+                          onValueChange={(value) => setBillingForm(f => ({ ...f, roomCharges: value }))}
                           placeholder="0"
                           data-testid="input-room-charges"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="roomDays">Room Days</Label>
-                        <Input
-                          type="number"
+                        <IntegerInput
                           value={billingForm.roomDays}
-                          onChange={(e) => setBillingForm(f => ({ ...f, roomDays: e.target.value }))}
-                          min="1"
+                          onValueChange={(value) => setBillingForm(f => ({ ...f, roomDays: value }))}
+                          min={1}
                           data-testid="input-room-days"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="doctorConsultation">Doctor Consultation (₹)</Label>
-                        <Input
-                          type="number"
+                        <NumericInput
                           value={billingForm.doctorConsultation}
-                          onChange={(e) => setBillingForm(f => ({ ...f, doctorConsultation: e.target.value }))}
+                          onValueChange={(value) => setBillingForm(f => ({ ...f, doctorConsultation: value }))}
                           placeholder="0"
                           data-testid="input-doctor-consultation"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="labTests">Lab Tests (₹)</Label>
-                        <Input
-                          type="number"
+                        <NumericInput
                           value={billingForm.labTests}
-                          onChange={(e) => setBillingForm(f => ({ ...f, labTests: e.target.value }))}
+                          onValueChange={(value) => setBillingForm(f => ({ ...f, labTests: value }))}
                           placeholder="0"
                           data-testid="input-lab-tests"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="medicines">Medicines (₹)</Label>
-                        <Input
-                          type="number"
+                        <NumericInput
                           value={billingForm.medicines}
-                          onChange={(e) => setBillingForm(f => ({ ...f, medicines: e.target.value }))}
+                          onValueChange={(value) => setBillingForm(f => ({ ...f, medicines: value }))}
                           placeholder="0"
                           data-testid="input-medicines"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="inventoryCharges">Inventory/Equipment (₹)</Label>
-                        <Input
-                          type="number"
+                        <NumericInput
                           value={billingForm.inventoryCharges}
-                          onChange={(e) => setBillingForm(f => ({ ...f, inventoryCharges: e.target.value }))}
+                          onValueChange={(value) => setBillingForm(f => ({ ...f, inventoryCharges: value }))}
                           placeholder="0"
                           data-testid="input-inventory-charges"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="otherFees">Other Fees (₹)</Label>
-                        <Input
-                          type="number"
+                        <NumericInput
                           value={billingForm.otherFees}
-                          onChange={(e) => setBillingForm(f => ({ ...f, otherFees: e.target.value }))}
+                          onValueChange={(value) => setBillingForm(f => ({ ...f, otherFees: value }))}
                           placeholder="0"
                           data-testid="input-other-fees"
                         />

@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { IntegerInput, NumericInput, NameInput } from "@/components/validated-inputs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
@@ -1035,15 +1036,15 @@ function StockSection() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity</Label>
-              <Input id="quantity" type="number" placeholder="0" data-testid="input-quantity" />
+              <IntegerInput id="quantity" placeholder="0" min={0} data-testid="input-quantity" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="mrp">MRP (₹)</Label>
-              <Input id="mrp" type="number" placeholder="0.00" data-testid="input-mrp" />
+              <NumericInput id="mrp" placeholder="0.00" allowDecimal={true} data-testid="input-mrp" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="purchasePrice">Purchase Price (₹)</Label>
-              <Input id="purchasePrice" type="number" placeholder="0.00" data-testid="input-purchase-price" />
+              <NumericInput id="purchasePrice" placeholder="0.00" allowDecimal={true} data-testid="input-purchase-price" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="gstPercentage">GST %</Label>
@@ -1230,24 +1231,24 @@ function SurgerySection() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="otCharges">OT Charges (₹)</Label>
-                <Input id="otCharges" type="number" placeholder="0" data-testid="input-ot-charges" />
+                <NumericInput id="otCharges" placeholder="0" allowDecimal={true} data-testid="input-ot-charges" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="surgeonFees">Surgeon Fees (₹)</Label>
-                <Input id="surgeonFees" type="number" placeholder="0" data-testid="input-surgeon-fees" />
+                <NumericInput id="surgeonFees" placeholder="0" allowDecimal={true} data-testid="input-surgeon-fees" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="anesthesiaFees">Anesthesia Fees (₹)</Label>
-                <Input id="anesthesiaFees" type="number" placeholder="0" data-testid="input-anesthesia-fees" />
+                <NumericInput id="anesthesiaFees" placeholder="0" allowDecimal={true} data-testid="input-anesthesia-fees" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nursingCharges">Nursing Charges (₹)</Label>
-                <Input id="nursingCharges" type="number" placeholder="0" data-testid="input-nursing-charges" />
+                <NumericInput id="nursingCharges" placeholder="0" allowDecimal={true} data-testid="input-nursing-charges" />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="packagePrice">Total Package Price (₹)</Label>
-              <Input id="packagePrice" type="number" placeholder="0" data-testid="input-package-price" />
+              <NumericInput id="packagePrice" placeholder="0" allowDecimal={true} data-testid="input-package-price" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
@@ -1391,7 +1392,7 @@ function MedicinesSection() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="mrpMedicine">MRP (₹)</Label>
-              <Input id="mrpMedicine" type="number" placeholder="0.00" data-testid="input-mrp-medicine" />
+              <NumericInput id="mrpMedicine" placeholder="0.00" allowDecimal={true} data-testid="input-mrp-medicine" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="manufacturer">Manufacturer</Label>
@@ -1536,15 +1537,15 @@ function InsuranceSection() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="coverageLimit">Default Coverage (₹)</Label>
-              <Input id="coverageLimit" type="number" placeholder="500000" data-testid="input-coverage-limit" />
+              <NumericInput id="coverageLimit" placeholder="500000" allowDecimal={true} data-testid="input-coverage-limit" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="coPayPercentage">Co-Pay %</Label>
-              <Input id="coPayPercentage" type="number" placeholder="10" data-testid="input-copay" />
+              <IntegerInput id="coPayPercentage" placeholder="10" min={0} max={100} data-testid="input-copay" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="settlementDays">Settlement Days</Label>
-              <Input id="settlementDays" type="number" placeholder="30" data-testid="input-settlement-days" />
+              <IntegerInput id="settlementDays" placeholder="30" min={1} data-testid="input-settlement-days" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="contactEmail">Contact Email</Label>
@@ -1740,15 +1741,15 @@ function PackagesSection() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="basePrice">Base Price (₹)</Label>
-              <Input id="basePrice" type="number" placeholder="0" data-testid="input-base-price" />
+              <NumericInput id="basePrice" placeholder="0" allowDecimal={true} data-testid="input-base-price" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="discountPercentage">Discount %</Label>
-              <Input id="discountPercentage" type="number" placeholder="0" data-testid="input-discount" />
+              <IntegerInput id="discountPercentage" placeholder="0" min={0} max={100} data-testid="input-discount" />
             </div>
             <div className="col-span-2 space-y-2">
               <Label htmlFor="finalPrice">Final Price (₹)</Label>
-              <Input id="finalPrice" type="number" placeholder="0" data-testid="input-final-price" />
+              <NumericInput id="finalPrice" placeholder="0" allowDecimal={true} data-testid="input-final-price" />
             </div>
             <div className="col-span-2 space-y-2">
               <Label htmlFor="inclusions">Inclusions</Label>
@@ -1756,7 +1757,7 @@ function PackagesSection() {
             </div>
             <div className="col-span-2 space-y-2">
               <Label htmlFor="validityDays">Validity (Days)</Label>
-              <Input id="validityDays" type="number" placeholder="365" data-testid="input-validity" />
+              <IntegerInput id="validityDays" placeholder="365" min={1} data-testid="input-validity" />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
@@ -2037,7 +2038,7 @@ function SettingsSection() {
                 <p className="font-medium">Discount Approval Threshold</p>
                 <p className="text-sm text-slate-500">Percentage above which approval is needed</p>
               </div>
-              <Input type="number" defaultValue="10" className="w-20" />
+              <IntegerInput defaultValue="10" className="w-20" min={0} max={100} />
             </div>
           </CardContent>
         </Card>

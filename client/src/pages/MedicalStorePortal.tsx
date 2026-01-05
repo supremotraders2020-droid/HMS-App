@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IntegerInput, NumericInput } from "@/components/validated-inputs";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -498,32 +499,33 @@ function MedicineInventoryTab({ storeId }: { storeId: string }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity *</Label>
-              <Input
+              <IntegerInput
                 id="quantity"
-                type="number"
-                min="0"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                min={0}
+                value={formData.quantity.toString()}
+                onValueChange={(value) => setFormData({ ...formData, quantity: parseInt(value) || 0 })}
                 data-testid="input-quantity"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="unitPrice">Unit Price (Rs.) *</Label>
-              <Input
+              <NumericInput
                 id="unitPrice"
                 value={formData.unitPrice}
-                onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
+                onValueChange={(value) => setFormData({ ...formData, unitPrice: value })}
                 placeholder="0.00"
+                allowDecimal={true}
                 data-testid="input-unit-price"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="mrp">MRP (Rs.)</Label>
-              <Input
+              <NumericInput
                 id="mrp"
                 value={formData.mrp}
-                onChange={(e) => setFormData({ ...formData, mrp: e.target.value })}
+                onValueChange={(value) => setFormData({ ...formData, mrp: value })}
                 placeholder="0.00"
+                allowDecimal={true}
                 data-testid="input-mrp"
               />
             </div>
@@ -645,12 +647,11 @@ function MedicineInventoryTab({ storeId }: { storeId: string }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-quantity">Quantity *</Label>
-              <Input
+              <IntegerInput
                 id="edit-quantity"
-                type="number"
-                min="0"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                min={0}
+                value={formData.quantity.toString()}
+                onValueChange={(value) => setFormData({ ...formData, quantity: parseInt(value) || 0 })}
                 data-testid="input-edit-quantity"
               />
             </div>

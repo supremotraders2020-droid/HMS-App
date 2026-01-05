@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IntegerInput, NumericInput } from "@/components/validated-inputs";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -291,11 +292,11 @@ export default function OxygenTracker() {
                         </div>
                         <div>
                           <Label htmlFor="capacity">Capacity (Liters)</Label>
-                          <Input id="capacity" name="capacity" type="number" placeholder="47" required />
+                          <IntegerInput id="capacity" name="capacity" placeholder="47" min={1} />
                         </div>
                         <div>
                           <Label htmlFor="filledPressure">Filled Pressure (PSI)</Label>
-                          <Input id="filledPressure" name="filledPressure" type="number" placeholder="2200" required />
+                          <IntegerInput id="filledPressure" name="filledPressure" placeholder="2200" min={0} />
                         </div>
                         <div>
                           <Label htmlFor="vendor">Vendor</Label>
@@ -461,7 +462,7 @@ export default function OxygenTracker() {
                         </div>
                         <div>
                           <Label htmlFor="startPressure">Start Pressure (PSI)</Label>
-                          <Input id="startPressure" name="startPressure" type="number" placeholder="2200" required />
+                          <IntegerInput id="startPressure" name="startPressure" placeholder="2200" min={0} />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
@@ -522,7 +523,7 @@ export default function OxygenTracker() {
                         </div>
                         <div>
                           <Label htmlFor="endPressure">Remaining Pressure (PSI)</Label>
-                          <Input id="endPressure" name="endPressure" type="number" placeholder="50" required />
+                          <IntegerInput id="endPressure" name="endPressure" placeholder="50" min={0} />
                         </div>
                         <div>
                           <Label htmlFor="acknowledgedBy">Acknowledged By</Label>
@@ -652,14 +653,12 @@ export default function OxygenTracker() {
                       </div>
                       <div>
                         <Label htmlFor="flowRate">Flow Rate (LPM)</Label>
-                        <Input 
+                        <NumericInput 
                           id="flowRate" 
-                          type="number" 
-                          step="0.5" 
+                          allowDecimal={true}
                           value={consumptionForm.flowRate}
-                          onChange={(e) => setConsumptionForm(prev => ({ ...prev, flowRate: e.target.value }))}
+                          onValueChange={(value) => setConsumptionForm(prev => ({ ...prev, flowRate: value }))}
                           placeholder="2" 
-                          required 
                         />
                       </div>
                       <div>
@@ -770,19 +769,19 @@ export default function OxygenTracker() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="levelPercentage">Level (%)</Label>
-                          <Input id="levelPercentage" name="levelPercentage" type="number" min="0" max="100" placeholder="75" required />
+                          <IntegerInput id="levelPercentage" name="levelPercentage" min={0} max={100} placeholder="75" />
                         </div>
                         <div>
                           <Label htmlFor="volumeLiters">Volume (Liters)</Label>
-                          <Input id="volumeLiters" name="volumeLiters" type="number" placeholder="5000" />
+                          <IntegerInput id="volumeLiters" name="volumeLiters" placeholder="5000" min={0} />
                         </div>
                         <div>
                           <Label htmlFor="pressure">Pressure (PSI)</Label>
-                          <Input id="pressure" name="pressure" type="number" placeholder="150" />
+                          <IntegerInput id="pressure" name="pressure" placeholder="150" min={0} />
                         </div>
                         <div>
                           <Label htmlFor="temperature">Temperature (°C)</Label>
-                          <Input id="temperature" name="temperature" type="number" placeholder="-183" />
+                          <NumericInput id="temperature" name="temperature" placeholder="-183" allowDecimal={true} />
                         </div>
                       </div>
                       <div>
