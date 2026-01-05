@@ -2453,6 +2453,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Only Doctors and Admins can finalize prescriptions" });
       }
 
+      // Validate mandatory clinical note fields before finalization
+      const existingPrescription = await storage.getPrescription(req.params.id);
+      if (existingPrescription) {
+        const missingFields = [];
+        if (!existingPrescription.patientComplaints) missingFields.push('Patient Complaints');
+        if (!existingPrescription.doctorObservations) missingFields.push('Doctor Observations');
+        if (!existingPrescription.pastHistoryReference) missingFields.push('Past History Reference');
+        
+        if (missingFields.length > 0) {
+          return res.status(400).json({ 
+            error: `Cannot finalize prescription. Missing mandatory fields: ${missingFields.join(', ')}` 
+          });
+        }
+      }
+
       const prescription = await storage.finalizePrescription(req.params.id, signedBy, signedByName);
       if (!prescription) {
         return res.status(404).json({ error: "Prescription not found" });
