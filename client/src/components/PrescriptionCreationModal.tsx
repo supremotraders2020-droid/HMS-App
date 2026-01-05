@@ -157,7 +157,6 @@ export default function PrescriptionCreationModal({
   const [diagnosis, setDiagnosis] = useState('');
   const [provisionalDiagnosis, setProvisionalDiagnosis] = useState('');
   const [knownAllergies, setKnownAllergies] = useState('');
-  const [pastMedicalHistory, setPastMedicalHistory] = useState('');
   
   // Medicines
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
@@ -457,7 +456,6 @@ export default function PrescriptionCreationModal({
         doctorObservations,
         pastHistoryReference,
         knownAllergies,
-        pastMedicalHistory,
         medicines: allMedicines.map(m => `${m.dosageForm} ${m.medicineName} ${m.strength} - ${FREQUENCIES.find(f => f.value === m.frequency)?.label || 'Once daily'}`),
         medicineDetails: JSON.stringify(allMedicines),
         instructions,
@@ -518,7 +516,6 @@ export default function PrescriptionCreationModal({
     setDiagnosis('');
     setProvisionalDiagnosis('');
     setKnownAllergies('');
-    setPastMedicalHistory('');
     setMedicines([]);
     setInstructions('');
     setDietAdvice('');
@@ -729,6 +726,16 @@ export default function PrescriptionCreationModal({
                       className="min-h-[80px]"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="knownAllergies">Known Allergies</Label>
+                    <Input
+                      id="knownAllergies"
+                      data-testid="input-known-allergies"
+                      value={knownAllergies}
+                      onChange={(e) => setKnownAllergies(e.target.value)}
+                      placeholder="e.g., Penicillin, Sulfa drugs"
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -867,27 +874,7 @@ export default function PrescriptionCreationModal({
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Known Allergies</Label>
-                      <Input
-                        data-testid="input-allergies"
-                        value={knownAllergies}
-                        onChange={(e) => setKnownAllergies(e.target.value)}
-                        placeholder="e.g., Penicillin, Sulfa drugs"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Past Medical History</Label>
-                      <Input
-                        data-testid="input-medical-history"
-                        value={pastMedicalHistory}
-                        onChange={(e) => setPastMedicalHistory(e.target.value)}
-                        placeholder="e.g., Diabetes, Hypertension"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
+                  </CardContent>
               </Card>
             </TabsContent>
 
