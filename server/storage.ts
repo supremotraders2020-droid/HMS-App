@@ -633,9 +633,12 @@ export interface IStorage {
   // ========== NURSE DEPARTMENT PREFERENCES ==========
   getAllNurseDepartmentPreferences(): Promise<any[]>;
   getNurseDepartmentPreferences(nurseId: string): Promise<any | undefined>;
+  getNurseDepartmentPreferencesByName(nurseName: string): Promise<any | undefined>;
   upsertNurseDepartmentPreferences(preferences: any): Promise<any>;
   deleteNurseDepartmentPreferences(nurseId: string): Promise<boolean>;
   updateNurseAvailability(nurseId: string, isAvailable: boolean): Promise<any | undefined>;
+  updateNurseAssignment(nurseName: string, assignedRoom: string | null, assignedDoctor: string | null, department: string | null): Promise<any | undefined>;
+  clearNurseAssignment(nurseName: string): Promise<any | undefined>;
   seedNurseDepartmentPreferences(): Promise<void>;
 
   // ========== DEPARTMENT NURSE ASSIGNMENTS ==========
@@ -3014,6 +3017,53 @@ export class MemStorage implements IStorage {
       return updated;
     }
     return undefined;
+  }
+
+  async getNurseDepartmentPreferencesByName(nurseName: string): Promise<any | undefined> {
+    return Array.from(this.nurseDepartmentPreferencesData.values()).find(p => p.nurseName === nurseName);
+  }
+
+  async updateNurseAssignment(nurseName: string, assignedRoom: string | null, assignedDoctor: string | null, department: string | null): Promise<any | undefined> {
+    const nurse = await this.getNurseDepartmentPreferencesByName(nurseName);
+    if (!nurse) return undefined;
+
+    let assignedPosition: string | null = null;
+    if (department) {
+      if (nurse.primaryDepartment === department) {
+        assignedPosition = "Primary";
+      } else if (nurse.secondaryDepartment === department) {
+        assignedPosition = "Secondary";
+      } else if (nurse.tertiaryDepartment === department) {
+        assignedPosition = "Tertiary";
+      }
+    }
+
+    const updated = { 
+      ...nurse, 
+      isAvailable: true, 
+      assignedRoom, 
+      assignedDoctor, 
+      assignedPosition,
+      updatedAt: new Date() 
+    };
+    this.nurseDepartmentPreferencesData.set(nurse.id, updated);
+    return updated;
+  }
+
+  async clearNurseAssignment(nurseName: string): Promise<any | undefined> {
+    const nurse = await this.getNurseDepartmentPreferencesByName(nurseName);
+    if (!nurse) return undefined;
+
+    const updated = { 
+      ...nurse, 
+      isAvailable: false, 
+      assignedRoom: null, 
+      assignedDoctor: null, 
+      assignedPosition: null,
+      updatedAt: new Date() 
+    };
+    this.nurseDepartmentPreferencesData.set(nurse.id, updated);
+    return updated;
   }
 
   async seedNurseDepartmentPreferences(): Promise<void> {

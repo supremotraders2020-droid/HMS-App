@@ -4967,6 +4967,55 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async getNurseDepartmentPreferencesByName(nurseName: string): Promise<any | undefined> {
+    const result = await db.select().from(nurseDepartmentPreferences)
+      .where(eq(nurseDepartmentPreferences.nurseName, nurseName))
+      .limit(1);
+    return result[0];
+  }
+
+  async updateNurseAssignment(nurseName: string, assignedRoom: string | null, assignedDoctor: string | null, department: string | null): Promise<any | undefined> {
+    const nurse = await this.getNurseDepartmentPreferencesByName(nurseName);
+    if (!nurse) return undefined;
+
+    let assignedPosition: string | null = null;
+    if (department) {
+      if (nurse.primaryDepartment === department) {
+        assignedPosition = "Primary";
+      } else if (nurse.secondaryDepartment === department) {
+        assignedPosition = "Secondary";
+      } else if (nurse.tertiaryDepartment === department) {
+        assignedPosition = "Tertiary";
+      }
+    }
+
+    const result = await db.update(nurseDepartmentPreferences)
+      .set({ 
+        isAvailable: true,
+        assignedRoom,
+        assignedDoctor,
+        assignedPosition,
+        updatedAt: new Date() 
+      })
+      .where(eq(nurseDepartmentPreferences.nurseName, nurseName))
+      .returning();
+    return result[0];
+  }
+
+  async clearNurseAssignment(nurseName: string): Promise<any | undefined> {
+    const result = await db.update(nurseDepartmentPreferences)
+      .set({ 
+        isAvailable: false,
+        assignedRoom: null,
+        assignedDoctor: null,
+        assignedPosition: null,
+        updatedAt: new Date() 
+      })
+      .where(eq(nurseDepartmentPreferences.nurseName, nurseName))
+      .returning();
+    return result[0];
+  }
+
   async seedNurseDepartmentPreferences(): Promise<void> {
     const existing = await db.select().from(nurseDepartmentPreferences).limit(1);
     if (existing.length > 0) {

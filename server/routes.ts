@@ -922,6 +922,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: parsed.error.errors });
       }
       const newPatient = await storage.createTrackingPatient(parsed.data);
+      
+      // If a nurse is assigned, update their assignment status with room and doctor info
+      if (parsed.data.nurse) {
+        try {
+          await storage.updateNurseAssignment(
+            parsed.data.nurse,
+            parsed.data.room || null,
+            parsed.data.doctor || null,
+            parsed.data.department || null
+          );
+          console.log(`Updated nurse assignment for ${parsed.data.nurse}: Room ${parsed.data.room}, Doctor ${parsed.data.doctor}`);
+        } catch (nurseError) {
+          console.error("Failed to update nurse assignment:", nurseError);
+          // Don't fail the admission if nurse assignment update fails
+        }
+      }
+      
       res.status(201).json(newPatient);
     } catch (error) {
       res.status(500).json({ error: "Failed to create patient" });
@@ -945,10 +962,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Discharge tracking patient (update status to discharged with discharge date)
   app.patch("/api/tracking/patients/:id/discharge", async (req, res) => {
     try {
+      // Get the patient first to know which nurse to clear
+      const patient = await storage.getTrackingPatientById(req.params.id);
+      
       const updated = await storage.dischargeTrackingPatient(req.params.id, new Date());
       if (!updated) {
         return res.status(404).json({ error: "Patient not found" });
       }
+      
+      // Clear nurse assignment when patient is discharged
+      if (patient && patient.nurse) {
+        try {
+          await storage.clearNurseAssignment(patient.nurse);
+          console.log(`Cleared nurse assignment for ${patient.nurse} after patient discharge`);
+        } catch (nurseError) {
+          console.error("Failed to clear nurse assignment:", nurseError);
+        }
+      }
+      
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to discharge patient" });
