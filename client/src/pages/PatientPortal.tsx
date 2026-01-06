@@ -77,7 +77,8 @@ import {
   Plus,
   FileCheck,
   XCircle,
-  Scissors
+  Scissors,
+  ClipboardList
 } from "lucide-react";
 import HospitalServices from "@/pages/HospitalServices";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -2236,28 +2237,58 @@ Description: ${record.description}
       case "prescriptions":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold" data-testid="text-prescriptions-title">My Prescriptions</h2>
-              <p className="text-muted-foreground">View and manage your prescriptions</p>
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Pill className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold" data-testid="text-prescriptions-title">My Prescriptions</h2>
+                  <p className="text-white/80">View and manage your prescriptions</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="grid gap-4 grid-cols-3">
+              <Card className="text-center p-4">
+                <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">{patientPrescriptions.length}</div>
+                <p className="text-xs text-muted-foreground">Total Prescriptions</p>
+              </Card>
+              <Card className="text-center p-4">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{patientPrescriptions.filter(p => p.prescriptionStatus === 'finalized').length}</div>
+                <p className="text-xs text-muted-foreground">Finalized</p>
+              </Card>
+              <Card className="text-center p-4">
+                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{patientPrescriptions.filter(p => p.prescriptionStatus === 'draft').length}</div>
+                <p className="text-xs text-muted-foreground">Pending</p>
+              </Card>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {patientPrescriptions.length > 0 ? (
                 patientPrescriptions.map((prescription) => (
-                  <Card key={prescription.id} className="hover-elevate" data-testid={`card-prescription-${prescription.id}`}>
+                  <Card key={prescription.id} className="hover-elevate border-0 shadow-md" data-testid={`card-prescription-${prescription.id}`}>
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <CardTitle className="text-base font-mono">{prescription.prescriptionNumber}</CardTitle>
-                          <CardDescription>
-                            {prescription.createdAt ? format(new Date(prescription.createdAt), "MMM dd, yyyy") : "-"}
-                          </CardDescription>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center shadow-md">
+                            <ClipboardList className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <CardDescription className="text-xs">
+                              {prescription.createdAt ? format(new Date(prescription.createdAt), "MMM dd, yyyy") : "-"}
+                            </CardDescription>
+                          </div>
                         </div>
                         <Badge 
+                          variant="secondary"
                           className={
                             prescription.prescriptionStatus === "finalized" 
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" 
-                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-0" 
+                              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-0"
                           }
                         >
                           {prescription.prescriptionStatus}
@@ -2266,34 +2297,36 @@ Description: ${record.description}
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="flex items-center gap-2 text-sm">
-                        <Stethoscope className="h-4 w-4 text-muted-foreground" />
-                        <span>Dr. {prescription.doctorName}</span>
+                        <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <span className="font-medium">Dr. {prescription.doctorName}</span>
                       </div>
                       {prescription.diagnosis && (
-                        <div className="text-sm">
+                        <div className="text-sm p-3 rounded-lg bg-muted/50">
                           <span className="text-muted-foreground">Diagnosis: </span>
-                          <span>{prescription.diagnosis}</span>
+                          <span className="font-medium">{prescription.diagnosis}</span>
                         </div>
                       )}
                       {prescription.medicines && prescription.medicines.length > 0 && (
                         <div className="space-y-2">
                           <span className="text-sm text-muted-foreground">Medicines:</span>
-                          <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-wrap gap-1.5">
                             {(prescription.medicines as any[]).slice(0, 3).map((med, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs">
-                                <Pill className="h-3 w-3 mr-1" />
+                              <Badge key={idx} variant="outline" className="text-xs bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800">
+                                <Pill className="h-3 w-3 mr-1 text-teal-600 dark:text-teal-400" />
                                 {med.name || med}
                               </Badge>
                             ))}
                             {(prescription.medicines as any[]).length > 3 && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="secondary" className="text-xs">
                                 +{(prescription.medicines as any[]).length - 3} more
                               </Badge>
                             )}
                           </div>
                         </div>
                       )}
-                      <Separator />
+                      <Separator className="my-3" />
                       <div className="flex gap-2">
                         <Button 
                           variant="outline" 
