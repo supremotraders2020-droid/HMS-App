@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { 
@@ -998,42 +999,58 @@ Description: ${record.description}
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-0">
                   {upcomingAppointments.length > 0 ? (
-                    upcomingAppointments.slice(0, 3).map((apt, index) => {
-                      const locationData = LOCATIONS.find(l => l.name === (apt as any).location) || LOCATIONS[9];
-                      return (
-                        <div key={apt.id} className="p-4 rounded-xl bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20 border border-blue-100 dark:border-blue-900/30 space-y-3" data-testid={`appointment-item-${apt.id}`}>
-                          <div className="flex items-center gap-4">
-                            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                              <Stethoscope className="h-7 w-7 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-semibold text-foreground">Doctor Consultation</p>
-                              <p className="text-sm text-muted-foreground">Doctor ID: {apt.doctorId}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold text-blue-600 dark:text-blue-400">{apt.appointmentDate}</p>
-                              <p className="text-sm font-medium text-muted-foreground">{apt.timeSlot}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between pl-[4.5rem]">
-                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">{locationData.name}</span>
-                            <a 
-                              href={locationData.mapUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 rounded-full"
-                              data-testid={`link-apt-map-${apt.id}`}
-                            >
-                              <MapPin className="h-3 w-3" />
-                              <span>View Map</span>
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </div>
-                        </div>
-                      );
-                    })
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="font-semibold">Doctor</TableHead>
+                          <TableHead className="font-semibold">Date</TableHead>
+                          <TableHead className="font-semibold">Time</TableHead>
+                          <TableHead className="font-semibold">Status</TableHead>
+                          <TableHead className="font-semibold text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {upcomingAppointments.slice(0, 5).map((apt) => {
+                          const locationData = LOCATIONS.find(l => l.name === (apt as any).location) || LOCATIONS[9];
+                          return (
+                            <TableRow key={apt.id} className="hover:bg-muted/30" data-testid={`appointment-row-${apt.id}`}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                    <Stethoscope className="h-4 w-4 text-blue-500" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">Consultation</p>
+                                    <p className="text-xs text-muted-foreground">ID: {apt.doctorId?.slice(0, 8)}</p>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium text-blue-600 dark:text-blue-400">{apt.appointmentDate}</TableCell>
+                              <TableCell>{apt.timeSlot}</TableCell>
+                              <TableCell>
+                                <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                                  {apt.status || "Scheduled"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <a 
+                                  href={locationData.mapUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                                  data-testid={`link-apt-map-${apt.id}`}
+                                >
+                                  <MapPin className="h-3 w-3" />
+                                  Map
+                                </a>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
                   ) : (
                     <div className="text-center py-10 px-4">
                       <div className="h-20 w-20 rounded-full bg-blue-50 dark:bg-blue-950/30 mx-auto flex items-center justify-center mb-4">
@@ -1063,47 +1080,77 @@ Description: ${record.description}
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="p-0">
                   {(patientPrescriptions.length > 0 || patientRecords.length > 0) ? (
-                    <>
-                      {patientPrescriptions.slice(0, 2).map((prescription) => (
-                        <div key={`rx-${prescription.id}`} className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 hover-elevate transition-all" data-testid={`prescription-item-${prescription.id}`}>
-                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                            <Pill className="h-6 w-6 text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold truncate">{prescription.diagnosis}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Prescribed by Dr. {prescription.doctorName} on {prescription.prescriptionDate ? format(new Date(prescription.prescriptionDate), 'yyyy-MM-dd') : 'N/A'}
-                            </p>
-                          </div>
-                          <Badge variant={prescription.status === 'active' ? 'default' : 'secondary'} className="text-xs">
-                            {prescription.status}
-                          </Badge>
-                        </div>
-                      ))}
-                      {patientRecords.slice(0, 1).map((record) => (
-                        <div key={record.id} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover-elevate transition-all" data-testid={`record-item-${record.id}`}>
-                          <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                            {getRecordIcon(record.recordType)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold truncate">{record.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {record.recordDate ? format(new Date(record.recordDate), 'yyyy-MM-dd') : 'N/A'}
-                            </p>
-                          </div>
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            onClick={() => handleViewRecord(record)}
-                            data-testid={`button-view-record-${record.id}`}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="font-semibold">Type</TableHead>
+                          <TableHead className="font-semibold">Details</TableHead>
+                          <TableHead className="font-semibold">Date</TableHead>
+                          <TableHead className="font-semibold">Status</TableHead>
+                          <TableHead className="font-semibold text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {patientPrescriptions.slice(0, 3).map((prescription) => (
+                          <TableRow key={`rx-${prescription.id}`} className="hover:bg-muted/30" data-testid={`prescription-row-${prescription.id}`}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                  <Pill className="h-4 w-4 text-emerald-500" />
+                                </div>
+                                <span className="text-sm font-medium">Prescription</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-medium truncate max-w-[150px]">{prescription.diagnosis}</p>
+                              <p className="text-xs text-muted-foreground">Dr. {prescription.doctorName}</p>
+                            </TableCell>
+                            <TableCell className="text-sm">{prescription.prescriptionDate ? format(new Date(prescription.prescriptionDate), 'MMM dd, yyyy') : 'N/A'}</TableCell>
+                            <TableCell>
+                              <Badge className={prescription.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}>
+                                {prescription.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button size="sm" variant="ghost">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {patientRecords.slice(0, 2).map((record) => (
+                          <TableRow key={record.id} className="hover:bg-muted/30" data-testid={`record-row-${record.id}`}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                  {getRecordIcon(record.recordType)}
+                                </div>
+                                <span className="text-sm font-medium capitalize">{record.recordType?.replace('_', ' ')}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-medium truncate max-w-[150px]">{record.title}</p>
+                            </TableCell>
+                            <TableCell className="text-sm">{record.recordDate ? format(new Date(record.recordDate), 'MMM dd, yyyy') : 'N/A'}</TableCell>
+                            <TableCell>
+                              <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Record</Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => handleViewRecord(record)}
+                                data-testid={`button-view-record-${record.id}`}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   ) : (
                     <div className="text-center py-8">
                       <div className="h-16 w-16 rounded-full bg-muted mx-auto flex items-center justify-center mb-3">
@@ -1112,16 +1159,18 @@ Description: ${record.description}
                       <p className="text-muted-foreground">No health records yet</p>
                     </div>
                   )}
+                </CardContent>
+                <CardFooter className="border-t p-4">
                   <Button 
                     variant="outline" 
-                    className="w-full mt-3"
+                    className="w-full"
                     onClick={() => setActiveSection("records")}
                     data-testid="button-view-all-records"
                   >
                     View All Records
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
-                </CardContent>
+                </CardFooter>
               </Card>
             </div>
 
@@ -1462,55 +1511,70 @@ Description: ${record.description}
               </div>
             </div>
 
-            {/* Prescriptions Section */}
+            {/* Prescriptions Section - Table Layout */}
             {patientPrescriptions.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Pill className="h-5 w-5 text-green-500" />
-                  My Prescriptions ({patientPrescriptions.length})
-                </h3>
-                <div className="grid gap-4">
-                  {patientPrescriptions.map((rx) => (
-                    <Card key={rx.id} className="hover-elevate" data-testid={`prescription-card-${rx.id}`}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-4">
-                          <div className="h-12 w-12 rounded-xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
-                            <FileText className="h-6 w-6 text-blue-600" />
-                          </div>
-                          <div className="flex-1 min-w-0 space-y-2">
-                            <div className="flex items-center justify-between gap-2 flex-wrap">
-                              <h4 className="font-semibold" data-testid={`rx-diagnosis-${rx.id}`}>{rx.diagnosis}</h4>
-                              <Badge variant={rx.status === 'active' ? 'default' : 'secondary'}>
-                                {rx.status}
-                              </Badge>
+              <Card className="border-0 shadow-md">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                        <Pill className="h-4 w-4 text-green-500" />
+                      </div>
+                      My Prescriptions
+                    </CardTitle>
+                    <Badge variant="secondary">{patientPrescriptions.length} total</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="font-semibold">Date</TableHead>
+                        <TableHead className="font-semibold">Doctor</TableHead>
+                        <TableHead className="font-semibold">Diagnosis</TableHead>
+                        <TableHead className="font-semibold">Medicines</TableHead>
+                        <TableHead className="font-semibold">Status</TableHead>
+                        <TableHead className="font-semibold text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {patientPrescriptions.map((rx) => (
+                        <TableRow key={rx.id} className="hover:bg-muted/30" data-testid={`prescription-row-${rx.id}`}>
+                          <TableCell className="font-medium">{rx.prescriptionDate}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <Stethoscope className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <span>{rx.doctorName}</span>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              Prescribed by {rx.doctorName} on {rx.prescriptionDate}
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {rx.medicines.map((med, idx) => (
-                                <Badge key={idx} variant="secondary" className="font-normal">
-                                  <Pill className="h-3 w-3 mr-1" />
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-medium truncate max-w-[150px]" data-testid={`rx-diagnosis-${rx.id}`}>{rx.diagnosis}</p>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {rx.medicines.slice(0, 2).map((med, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs font-normal">
                                   {med}
                                 </Badge>
                               ))}
+                              {rx.medicines.length > 2 && (
+                                <Badge variant="outline" className="text-xs">+{rx.medicines.length - 2}</Badge>
+                              )}
                             </div>
-                            {rx.instructions && (
-                              <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
-                                <strong>Instructions:</strong> {rx.instructions}
-                              </p>
-                            )}
-                            {rx.followUpDate && (
-                              <p className="text-sm text-primary">
-                                <strong>Follow-up:</strong> {rx.followUpDate}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => {
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={rx.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}>
+                              {rx.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-1 justify-end">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => {
                                 const rxData = rx as any;
                                 const vitals = rxData.vitals ? (typeof rxData.vitals === 'string' ? JSON.parse(rxData.vitals) : rxData.vitals) : null;
                                 
@@ -1547,16 +1611,17 @@ Description: ${record.description}
                             >
                               <FileText className="h-4 w-4" />
                             </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
             )}
 
-            {/* Medical Records Section */}
+            {/* Medical Records Section - Table Layout */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <FileText className="h-5 w-5 text-blue-500" />
