@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -1054,6 +1054,35 @@ function BillingSection() {
   const { toast } = useToast();
 
   const [filterStatus, setFilterStatus] = useState("all");
+  const [showCreateBill, setShowCreateBill] = useState(false);
+  const [newBill, setNewBill] = useState({
+    patientName: "",
+    billType: "OPD" as "OPD" | "IPD",
+    totalAmount: "",
+    description: ""
+  });
+
+  const createBillMutation = useMutation({
+    mutationFn: async (billData: typeof newBill) => {
+      const response = await apiRequest("POST", "/api/super-admin/billing-records", {
+        patientName: billData.patientName,
+        billType: billData.billType,
+        totalAmount: parseFloat(billData.totalAmount),
+        description: billData.description,
+        status: "draft"
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/super-admin/billing-records"] });
+      setShowCreateBill(false);
+      setNewBill({ patientName: "", billType: "OPD", totalAmount: "", description: "" });
+      toast({ title: "Bill Created", description: "New bill has been created successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
 
   const filteredBills = bills?.filter(bill => 
     filterStatus === "all" || bill.status === filterStatus
@@ -1066,11 +1095,86 @@ function BillingSection() {
           <h2 className="text-2xl font-bold">Billing Finalization</h2>
           <p className="text-slate-600 dark:text-slate-400">Review, approve, and lock OPD/IPD bills</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreateBill(true)} data-testid="button-create-bill">
           <Plus className="h-4 w-4 mr-2" />
           Create Bill
         </Button>
       </div>
+
+      {/* Create Bill Dialog */}
+      <Dialog open={showCreateBill} onOpenChange={setShowCreateBill}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create New Bill</DialogTitle>
+            <DialogDescription>Create a new OPD or IPD billing record</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="patientName">Patient Name</Label>
+              <Input 
+                id="patientName" 
+                placeholder="Enter patient name" 
+                value={newBill.patientName}
+                onChange={(e) => setNewBill({ ...newBill, patientName: e.target.value })}
+                data-testid="input-bill-patient-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="billType">Bill Type</Label>
+              <Select 
+                value={newBill.billType} 
+                onValueChange={(value: "OPD" | "IPD") => setNewBill({ ...newBill, billType: value })}
+              >
+                <SelectTrigger data-testid="select-bill-type">
+                  <SelectValue placeholder="Select bill type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="OPD">OPD (Outpatient)</SelectItem>
+                  <SelectItem value="IPD">IPD (Inpatient)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="totalAmount">Total Amount (₹)</Label>
+              <Input 
+                id="totalAmount" 
+                type="number"
+                placeholder="Enter amount" 
+                value={newBill.totalAmount}
+                onChange={(e) => setNewBill({ ...newBill, totalAmount: e.target.value })}
+                data-testid="input-bill-amount"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input 
+                id="description" 
+                placeholder="Bill description (optional)" 
+                value={newBill.description}
+                onChange={(e) => setNewBill({ ...newBill, description: e.target.value })}
+                data-testid="input-bill-description"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateBill(false)}>Cancel</Button>
+            <Button 
+              onClick={() => createBillMutation.mutate(newBill)}
+              disabled={createBillMutation.isPending || !newBill.patientName || !newBill.totalAmount}
+              data-testid="button-submit-bill"
+            >
+              {createBillMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Bill"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filter Tabs */}
       <Tabs defaultValue="all" onValueChange={setFilterStatus}>
@@ -1158,7 +1262,7 @@ function BillingSection() {
             <div className="text-center py-12">
               <Receipt className="h-12 w-12 mx-auto text-slate-300 mb-4" />
               <p className="text-slate-500">No billing records found</p>
-              <Button className="mt-4">Create First Bill</Button>
+              <Button className="mt-4" onClick={() => setShowCreateBill(true)} data-testid="button-create-first-bill">Create First Bill</Button>
             </div>
           )}
         </CardContent>
