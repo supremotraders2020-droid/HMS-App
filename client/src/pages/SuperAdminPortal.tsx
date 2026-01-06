@@ -104,28 +104,21 @@ type SuperAdminSection =
   | "audit"
   | "settings";
 
-const MODULES = [
-  "BILLING",
-  "STOCK",
-  "SURGERY",
-  "MEDICINE",
-  "INSURANCE",
-  "CLAIMS",
-  "PACKAGES",
-  "USERS",
-  "REPORTS",
-] as const;
+import { 
+  HMS_MODULES, 
+  HMS_ROLES, 
+  HMS_ACTIONS,
+  MODULE_LABELS, 
+  ACTION_LABELS,
+  ROLE_LABELS,
+  DEFAULT_PERMISSIONS,
+  type HMSModule,
+  type HMSRole,
+  type HMSAction
+} from "@shared/permissions";
 
-const ROLES = [
-  "SUPER_ADMIN",
-  "ADMIN",
-  "DOCTOR",
-  "NURSE",
-  "OPD_MANAGER",
-  "PATIENT",
-  "MEDICAL_STORE",
-  "PATHOLOGY_LAB",
-] as const;
+const MODULES = HMS_MODULES;
+const ROLES = HMS_ROLES;
 
 interface SuperAdminPortalProps {
   section?: SuperAdminSection;
@@ -317,6 +310,19 @@ interface CreatedUserCredentials {
   role: string;
 }
 
+interface PermissionMatrixState {
+  [module: string]: {
+    canView: boolean;
+    canCreate: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canApprove: boolean;
+    canLock: boolean;
+    canUnlock: boolean;
+    canExport: boolean;
+  };
+}
+
 function UsersSection() {
   const { toast } = useToast();
   const [showAddUser, setShowAddUser] = useState(false);
@@ -330,12 +336,83 @@ function UsersSection() {
   const [showPermissions, setShowPermissions] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
+  // Permission matrix state
+  const [permissionRole, setPermissionRole] = useState<HMSRole>("ADMIN");
+  const [permissionMatrix, setPermissionMatrix] = useState<PermissionMatrixState>({});
+  
   // Form state for new user
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
 
   const { data: users, isLoading, refetch } = useQuery<User[]>({ queryKey: ["/api/super-admin/users"] });
-  const { data: permissions } = useQuery<RolePermission[]>({ queryKey: ["/api/super-admin/permissions"] });
+  const { data: permissions, refetch: refetchPermissions } = useQuery<RolePermission[]>({ queryKey: ["/api/super-admin/permissions"] });
+  
+  // Initialize permission matrix when role changes or permissions load
+  const initializePermissionMatrix = (role: HMSRole, perms: RolePermission[]) => {
+    const matrix: PermissionMatrixState = {};
+    
+    HMS_MODULES.forEach(module => {
+      const existingPerm = perms?.find(p => p.role === role && p.module === module);
+      const defaults = DEFAULT_PERMISSIONS[role]?.[module] || {};
+      
+      matrix[module] = {
+        canView: existingPerm?.canView ?? defaults.view ?? false,
+        canCreate: existingPerm?.canCreate ?? defaults.create ?? false,
+        canEdit: existingPerm?.canEdit ?? defaults.edit ?? false,
+        canDelete: existingPerm?.canDelete ?? defaults.delete ?? false,
+        canApprove: existingPerm?.canApprove ?? defaults.approve ?? false,
+        canLock: existingPerm?.canLock ?? defaults.lock ?? false,
+        canUnlock: existingPerm?.canUnlock ?? defaults.unlock ?? false,
+        canExport: existingPerm?.canExport ?? defaults.export ?? false,
+      };
+    });
+    
+    setPermissionMatrix(matrix);
+  };
+  
+  const handleOpenPermissionMatrix = () => {
+    initializePermissionMatrix(permissionRole, permissions || []);
+    setShowPermissions(true);
+  };
+  
+  const handlePermissionRoleChange = (role: HMSRole) => {
+    setPermissionRole(role);
+    initializePermissionMatrix(role, permissions || []);
+  };
+  
+  const togglePermission = (module: string, action: keyof PermissionMatrixState[string]) => {
+    setPermissionMatrix(prev => ({
+      ...prev,
+      [module]: {
+        ...prev[module],
+        [action]: !prev[module]?.[action]
+      }
+    }));
+  };
+  
+  // Save permissions mutation
+  const savePermissionsMutation = useMutation({
+    mutationFn: async () => {
+      const permList = Object.entries(permissionMatrix).map(([module, perms]) => ({
+        module,
+        ...perms
+      }));
+      
+      const response = await apiRequest("POST", "/api/super-admin/permissions/bulk", {
+        role: permissionRole,
+        permissions: permList
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Permissions Saved", description: `Permissions for ${ROLE_LABELS[permissionRole]} have been updated` });
+      refetchPermissions();
+      setShowPermissions(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message || "Failed to save permissions", variant: "destructive" });
+    }
+  });
 
   // Create user mutation
   const createUserMutation = useMutation({
@@ -452,7 +529,7 @@ function UsersSection() {
           <p className="text-slate-600 dark:text-slate-400">Manage user accounts and access control</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowPermissions(true)}>
+          <Button variant="outline" onClick={handleOpenPermissionMatrix} data-testid="button-permission-matrix">
             <Shield className="h-4 w-4 mr-2" />
             Permission Matrix
           </Button>
@@ -588,44 +665,131 @@ function UsersSection() {
 
       {/* Permission Matrix Dialog */}
       <Dialog open={showPermissions} onOpenChange={setShowPermissions}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-5xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Role Permission Matrix</DialogTitle>
-            <DialogDescription>Configure fine-grained permissions for each role</DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Role Permission Matrix
+            </DialogTitle>
+            <DialogDescription>Configure fine-grained permissions for each role. Changes are logged for audit purposes.</DialogDescription>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Module</TableHead>
-                  <TableHead>View</TableHead>
-                  <TableHead>Create</TableHead>
-                  <TableHead>Edit</TableHead>
-                  <TableHead>Delete</TableHead>
-                  <TableHead>Approve</TableHead>
-                  <TableHead>Lock</TableHead>
-                  <TableHead>Unlock</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {MODULES.map((module) => (
-                  <TableRow key={module}>
-                    <TableCell className="font-medium">{module}</TableCell>
-                    <TableCell><Switch defaultChecked /></TableCell>
-                    <TableCell><Switch defaultChecked /></TableCell>
-                    <TableCell><Switch defaultChecked /></TableCell>
-                    <TableCell><Switch /></TableCell>
-                    <TableCell><Switch /></TableCell>
-                    <TableCell><Switch /></TableCell>
-                    <TableCell><Switch /></TableCell>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Label className="text-sm font-medium">Select Role:</Label>
+              <Select value={permissionRole} onValueChange={(v) => handlePermissionRoleChange(v as HMSRole)}>
+                <SelectTrigger className="w-48" data-testid="select-permission-role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {HMS_ROLES.filter(r => r !== "SUPER_ADMIN").map((role) => (
+                    <SelectItem key={role} value={role}>{ROLE_LABELS[role]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {permissionRole === "SUPER_ADMIN" && (
+                <Badge variant="secondary">Super Admin has all permissions</Badge>
+              )}
+            </div>
+            
+            <ScrollArea className="h-[50vh] border rounded-lg">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead className="w-48 font-semibold">Module</TableHead>
+                    <TableHead className="text-center w-20">View</TableHead>
+                    <TableHead className="text-center w-20">Create</TableHead>
+                    <TableHead className="text-center w-20">Edit</TableHead>
+                    <TableHead className="text-center w-20">Delete</TableHead>
+                    <TableHead className="text-center w-20">Approve</TableHead>
+                    <TableHead className="text-center w-20">Lock</TableHead>
+                    <TableHead className="text-center w-20">Unlock</TableHead>
+                    <TableHead className="text-center w-20">Export</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {HMS_MODULES.map((module) => (
+                    <TableRow key={module} data-testid={`permission-row-${module}`}>
+                      <TableCell className="font-medium">{MODULE_LABELS[module]}</TableCell>
+                      <TableCell className="text-center">
+                        <Switch 
+                          checked={permissionMatrix[module]?.canView ?? false}
+                          onCheckedChange={() => togglePermission(module, "canView")}
+                          data-testid={`switch-${module}-view`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch 
+                          checked={permissionMatrix[module]?.canCreate ?? false}
+                          onCheckedChange={() => togglePermission(module, "canCreate")}
+                          data-testid={`switch-${module}-create`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch 
+                          checked={permissionMatrix[module]?.canEdit ?? false}
+                          onCheckedChange={() => togglePermission(module, "canEdit")}
+                          data-testid={`switch-${module}-edit`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch 
+                          checked={permissionMatrix[module]?.canDelete ?? false}
+                          onCheckedChange={() => togglePermission(module, "canDelete")}
+                          data-testid={`switch-${module}-delete`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch 
+                          checked={permissionMatrix[module]?.canApprove ?? false}
+                          onCheckedChange={() => togglePermission(module, "canApprove")}
+                          data-testid={`switch-${module}-approve`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch 
+                          checked={permissionMatrix[module]?.canLock ?? false}
+                          onCheckedChange={() => togglePermission(module, "canLock")}
+                          data-testid={`switch-${module}-lock`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch 
+                          checked={permissionMatrix[module]?.canUnlock ?? false}
+                          onCheckedChange={() => togglePermission(module, "canUnlock")}
+                          data-testid={`switch-${module}-unlock`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch 
+                          checked={permissionMatrix[module]?.canExport ?? false}
+                          onCheckedChange={() => togglePermission(module, "canExport")}
+                          data-testid={`switch-${module}-export`}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
           </div>
+          
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setShowPermissions(false)}>Cancel</Button>
-            <Button>Save Permissions</Button>
+            <Button 
+              onClick={() => savePermissionsMutation.mutate()}
+              disabled={savePermissionsMutation.isPending}
+              data-testid="button-save-permissions"
+            >
+              {savePermissionsMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Permissions"
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
