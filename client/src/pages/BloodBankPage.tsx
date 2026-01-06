@@ -123,8 +123,8 @@ export default function BloodBankPage() {
         address: donorData.address || null,
         dateOfBirth: donorData.dateOfBirth || null,
         age: donorData.age ? parseInt(donorData.age) : null,
-        weight: donorData.weight ? parseFloat(donorData.weight) : null,
-        hemoglobinLevel: donorData.hemoglobinLevel ? parseFloat(donorData.hemoglobinLevel) : null,
+        weight: donorData.weight || null,
+        hemoglobinLevel: donorData.hemoglobinLevel || null,
         eligibilityStatus: "ELIGIBLE",
         totalDonations: 0
       });
