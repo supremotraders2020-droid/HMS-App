@@ -901,92 +901,125 @@ Description: ${record.description}
       case "dashboard":
         return (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-6 text-primary-foreground">
-              <h2 className="text-2xl font-bold mb-2" data-testid="text-welcome">Welcome back, {patientName}!</h2>
-              <p className="opacity-90">Your health, our priority. Here's your health summary.</p>
+            {/* Enhanced Welcome Banner with gradient and decorative elements */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-emerald-600 rounded-2xl p-8 text-white shadow-lg">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                    <Heart className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white/80 text-sm">Good to see you!</p>
+                    <h2 className="text-2xl font-bold" data-testid="text-welcome">Welcome back, {patientName}!</h2>
+                  </div>
+                </div>
+                <p className="text-white/90 max-w-lg">Your health, our priority. Here's your personalized health summary and quick access to all your medical services.</p>
+              </div>
             </div>
 
+            {/* Enhanced Stat Cards with colorful icons */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="hover-elevate" data-testid="card-total-appointments">
+              <Card className="hover-elevate group relative" data-testid="card-total-appointments">
                 <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Appointments</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Appointments</CardTitle>
+                  <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-blue-500" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-total-appointments">{appointments.length || 12}</div>
-                  <p className="text-xs text-muted-foreground">Lifetime visits</p>
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400" data-testid="text-total-appointments">{appointments.length || 12}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Lifetime visits</p>
                 </CardContent>
               </Card>
-              <Card className="hover-elevate" data-testid="card-upcoming">
+
+              <Card className="hover-elevate group relative" data-testid="card-upcoming">
                 <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming</CardTitle>
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-emerald-500" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-upcoming">{upcomingAppointments.length || 2}</div>
-                  <p className="text-xs text-muted-foreground">Scheduled appointments</p>
+                  <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400" data-testid="text-upcoming">{upcomingAppointments.length || 2}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Scheduled appointments</p>
                 </CardContent>
               </Card>
-              <Card className="hover-elevate" data-testid="card-records">
+
+              <Card className="hover-elevate group relative" data-testid="card-records">
                 <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Health Records</CardTitle>
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Health Records</CardTitle>
+                  <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-purple-500" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-records">{patientRecords.length}</div>
-                  <p className="text-xs text-muted-foreground">Medical documents</p>
+                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400" data-testid="text-records">{patientRecords.length}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Medical documents</p>
                 </CardContent>
               </Card>
-              <Card className="hover-elevate" data-testid="card-bills">
+
+              <Card className="hover-elevate group relative" data-testid="card-bills">
                 <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pending Bills</CardTitle>
-                  <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Pending Bills</CardTitle>
+                  <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                    <IndianRupee className="h-5 w-5 text-orange-500" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold" data-testid="text-bills">₹2,500</div>
-                  <p className="text-xs text-muted-foreground">Outstanding amount</p>
+                  <div className="text-3xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-bills">₹2,500</div>
+                  <p className="text-xs text-muted-foreground mt-1">Outstanding amount</p>
                 </CardContent>
               </Card>
             </div>
 
+            {/* Enhanced Cards with better styling */}
             <div className="grid gap-6 lg:grid-cols-2">
-              <Card data-testid="card-upcoming-appointments">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    Upcoming Appointments
-                  </CardTitle>
+              <Card className="border-0 shadow-md" data-testid="card-upcoming-appointments">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                        <Calendar className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <span>Upcoming Appointments</span>
+                    </CardTitle>
+                    {upcomingAppointments.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">{upcomingAppointments.length} scheduled</Badge>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {upcomingAppointments.length > 0 ? (
-                    upcomingAppointments.slice(0, 3).map((apt) => {
+                    upcomingAppointments.slice(0, 3).map((apt, index) => {
                       const locationData = LOCATIONS.find(l => l.name === (apt as any).location) || LOCATIONS[9];
                       return (
-                        <div key={apt.id} className="p-3 rounded-lg bg-muted/50 space-y-2" data-testid={`appointment-item-${apt.id}`}>
+                        <div key={apt.id} className="p-4 rounded-xl bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20 border border-blue-100 dark:border-blue-900/30 space-y-3" data-testid={`appointment-item-${apt.id}`}>
                           <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Stethoscope className="h-6 w-6 text-primary" />
+                            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                              <Stethoscope className="h-7 w-7 text-white" />
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium">Doctor Consultation</p>
+                              <p className="font-semibold text-foreground">Doctor Consultation</p>
                               <p className="text-sm text-muted-foreground">Doctor ID: {apt.doctorId}</p>
                             </div>
                             <div className="text-right">
-                              <p className="font-medium">{apt.appointmentDate}</p>
-                              <p className="text-sm text-muted-foreground">{apt.timeSlot}</p>
+                              <p className="font-semibold text-blue-600 dark:text-blue-400">{apt.appointmentDate}</p>
+                              <p className="text-sm font-medium text-muted-foreground">{apt.timeSlot}</p>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between pl-16">
-                            <span className="text-sm text-muted-foreground">{locationData.name}</span>
+                          <div className="flex items-center justify-between pl-[4.5rem]">
+                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">{locationData.name}</span>
                             <a 
                               href={locationData.mapUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-xs text-primary hover:underline"
+                              className="flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 rounded-full"
                               data-testid={`link-apt-map-${apt.id}`}
                             >
                               <MapPin className="h-3 w-3" />
-                              <span>Map</span>
+                              <span>View Map</span>
                               <ExternalLink className="h-3 w-3" />
                             </a>
                           </div>
@@ -994,10 +1027,13 @@ Description: ${record.description}
                       );
                     })
                   ) : (
-                    <div className="text-center py-8">
-                      <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                      <p className="text-muted-foreground">No upcoming appointments</p>
-                      <Button className="mt-4" onClick={() => setActiveSection("opd")} data-testid="button-book-from-empty">
+                    <div className="text-center py-10 px-4">
+                      <div className="h-20 w-20 rounded-full bg-blue-50 dark:bg-blue-950/30 mx-auto flex items-center justify-center mb-4">
+                        <Calendar className="h-10 w-10 text-blue-400" />
+                      </div>
+                      <p className="text-muted-foreground mb-4">No upcoming appointments scheduled</p>
+                      <Button onClick={() => setActiveSection("opd")} data-testid="button-book-from-empty">
+                        <Plus className="h-4 w-4 mr-2" />
                         Book Appointment
                       </Button>
                     </div>
@@ -1005,23 +1041,30 @@ Description: ${record.description}
                 </CardContent>
               </Card>
 
-              <Card data-testid="card-recent-records">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    Recent Health Records
-                  </CardTitle>
+              <Card className="border-0 shadow-md" data-testid="card-recent-records">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-emerald-500" />
+                      </div>
+                      <span>Recent Health Records</span>
+                    </CardTitle>
+                    {(patientPrescriptions.length > 0 || patientRecords.length > 0) && (
+                      <Badge variant="secondary" className="text-xs">{patientPrescriptions.length + patientRecords.length} records</Badge>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {(patientPrescriptions.length > 0 || patientRecords.length > 0) ? (
                     <>
                       {patientPrescriptions.slice(0, 2).map((prescription) => (
-                        <div key={`rx-${prescription.id}`} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50" data-testid={`prescription-item-${prescription.id}`}>
-                          <div className="h-10 w-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                            <Pill className="h-5 w-5 text-green-500" />
+                        <div key={`rx-${prescription.id}`} className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 hover-elevate transition-all" data-testid={`prescription-item-${prescription.id}`}>
+                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                            <Pill className="h-6 w-6 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{prescription.diagnosis}</p>
+                            <p className="font-semibold truncate">{prescription.diagnosis}</p>
                             <p className="text-xs text-muted-foreground">
                               Prescribed by Dr. {prescription.doctorName} on {prescription.prescriptionDate ? format(new Date(prescription.prescriptionDate), 'yyyy-MM-dd') : 'N/A'}
                             </p>
@@ -1032,10 +1075,12 @@ Description: ${record.description}
                         </div>
                       ))}
                       {patientRecords.slice(0, 1).map((record) => (
-                        <div key={record.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50" data-testid={`record-item-${record.id}`}>
-                          {getRecordIcon(record.recordType)}
+                        <div key={record.id} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover-elevate transition-all" data-testid={`record-item-${record.id}`}>
+                          <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                            {getRecordIcon(record.recordType)}
+                          </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{record.title}</p>
+                            <p className="font-semibold truncate">{record.title}</p>
                             <p className="text-xs text-muted-foreground">
                               {record.recordDate ? format(new Date(record.recordDate), 'yyyy-MM-dd') : 'N/A'}
                             </p>
@@ -1052,11 +1097,16 @@ Description: ${record.description}
                       ))}
                     </>
                   ) : (
-                    <p className="text-muted-foreground text-center py-4">No health records yet</p>
+                    <div className="text-center py-8">
+                      <div className="h-16 w-16 rounded-full bg-muted mx-auto flex items-center justify-center mb-3">
+                        <FileText className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <p className="text-muted-foreground">No health records yet</p>
+                    </div>
                   )}
                   <Button 
                     variant="outline" 
-                    className="w-full mt-2"
+                    className="w-full mt-3"
                     onClick={() => setActiveSection("records")}
                     data-testid="button-view-all-records"
                   >
@@ -1067,29 +1117,40 @@ Description: ${record.description}
               </Card>
             </div>
 
-            <Card data-testid="card-quick-actions">
+            {/* Enhanced Quick Actions */}
+            <Card className="border-0 shadow-md" data-testid="card-quick-actions">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common tasks at your fingertips</CardDescription>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <span>Quick Actions</span>
+                    <CardDescription className="font-normal mt-0.5">Common tasks at your fingertips</CardDescription>
+                  </div>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {[
-                    { label: "Book Appointment", icon: Calendar, section: "opd", color: "bg-blue-500" },
-                    { label: "View Records", icon: FileText, section: "records", color: "bg-green-500" },
-                    { label: "Pay Bills", icon: CreditCard, section: "admission", color: "bg-orange-500" },
-                    { label: "Chat with Us", icon: MessageCircle, section: "chatbot", color: "bg-purple-500" },
+                    { label: "Book Appointment", desc: "Schedule a visit", icon: Calendar, section: "opd", gradient: "from-blue-500 to-blue-600", shadow: "shadow-blue-500/30" },
+                    { label: "View Records", desc: "Medical history", icon: FileText, section: "records", gradient: "from-emerald-500 to-emerald-600", shadow: "shadow-emerald-500/30" },
+                    { label: "Pay Bills", desc: "Pending payments", icon: CreditCard, section: "admission", gradient: "from-orange-500 to-orange-600", shadow: "shadow-orange-500/30" },
+                    { label: "Health Assistant", desc: "24/7 support", icon: MessageCircle, section: "chatbot", gradient: "from-purple-500 to-purple-600", shadow: "shadow-purple-500/30" },
                   ].map((action) => (
                     <button
                       key={action.label}
                       onClick={() => setActiveSection(action.section)}
-                      className="flex items-center gap-4 p-4 rounded-xl border hover:bg-muted/50 transition-colors text-left"
+                      className="group flex flex-col items-center gap-4 p-6 rounded-2xl border bg-card hover:shadow-lg transition-all duration-300 text-center"
                       data-testid={`action-${action.section}`}
                     >
-                      <div className={`h-12 w-12 rounded-xl ${action.color} flex items-center justify-center`}>
-                        <action.icon className="h-6 w-6 text-white" />
+                      <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-lg ${action.shadow} group-hover:scale-110 transition-transform duration-300`}>
+                        <action.icon className="h-8 w-8 text-white" />
                       </div>
-                      <span className="font-medium">{action.label}</span>
+                      <div>
+                        <p className="font-semibold text-foreground">{action.label}</p>
+                        <p className="text-xs text-muted-foreground">{action.desc}</p>
+                      </div>
                     </button>
                   ))}
                 </div>
