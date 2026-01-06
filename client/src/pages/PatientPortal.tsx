@@ -1163,9 +1163,18 @@ Description: ${record.description}
       case "opd":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold mb-2" data-testid="text-opd-title">Book an Appointment</h2>
-              <p className="text-muted-foreground">Choose a department and doctor to schedule your visit</p>
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-sky-600 via-sky-500 to-blue-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Calendar className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold" data-testid="text-opd-title">Book an Appointment</h2>
+                  <p className="text-white/80">Choose a department and doctor to schedule your visit</p>
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
@@ -1409,11 +1418,22 @@ Description: ${record.description}
       case "records":
         return (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold" data-testid="text-records-title">Health Records</h2>
-                <p className="text-muted-foreground">View and download your medical documents</p>
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold" data-testid="text-records-title">Health Records</h2>
+                  <p className="text-white/80">View and download your medical documents</p>
+                </div>
               </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div></div>
               <div className="flex gap-2 flex-wrap">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1758,9 +1778,18 @@ Description: ${record.description}
       case "admission":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold" data-testid="text-admission-title">Admission Details</h2>
-              <p className="text-muted-foreground">View your current admission status and billing</p>
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <BedDouble className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold" data-testid="text-admission-title">Admission & Billing</h2>
+                  <p className="text-white/80">View your current admission status and billing</p>
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
@@ -1942,19 +1971,28 @@ Description: ${record.description}
 
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold" data-testid="text-notifications-title">Notifications</h2>
-                <p className="text-muted-foreground">Stay updated with your health alerts</p>
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Bell className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold" data-testid="text-notifications-title">Notifications</h2>
+                    <p className="text-white/80">Stay updated with your health alerts</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  data-testid="button-mark-all-read"
+                  onClick={() => markAllAsRead()}
+                >
+                  Mark all as read
+                </Button>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                data-testid="button-mark-all-read"
-                onClick={() => markAllAsRead()}
-              >
-                Mark all as read
-              </Button>
             </div>
 
             <div className="space-y-3">
@@ -2407,9 +2445,34 @@ Description: ${record.description}
       case "lab-reports":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold" data-testid="text-lab-reports-title">My Lab Reports</h2>
-              <p className="text-muted-foreground">View your pathology test results and lab reports</p>
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <TestTube className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold" data-testid="text-lab-reports-title">My Lab Reports</h2>
+                  <p className="text-white/80">View your pathology test results and lab reports</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="grid gap-4 grid-cols-3">
+              <Card className="text-center p-4">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{labReports.length}</div>
+                <p className="text-xs text-muted-foreground">Total Reports</p>
+              </Card>
+              <Card className="text-center p-4">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{labReports.filter((r: any) => r.reportStatus === 'VERIFIED').length}</div>
+                <p className="text-xs text-muted-foreground">Verified</p>
+              </Card>
+              <Card className="text-center p-4">
+                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{labReports.filter((r: any) => r.reportStatus === 'IN_PROGRESS').length}</div>
+                <p className="text-xs text-muted-foreground">In Progress</p>
+              </Card>
             </div>
 
             {labReportsLoading ? (
@@ -2582,9 +2645,18 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
       case "medical-stores":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold" data-testid="text-medical-stores-title">Medical Stores</h2>
-              <p className="text-muted-foreground">Find authorized pharmacies to buy your prescribed medicines</p>
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Store className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold" data-testid="text-medical-stores-title">Medical Stores</h2>
+                  <p className="text-white/80">Find authorized pharmacies to buy your prescribed medicines</p>
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -2726,17 +2798,28 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
         };
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold" data-testid="text-insurance-title">Insurance Claims</h2>
-                <p className="text-muted-foreground">Submit and track your insurance claims</p>
-              </div>
-              <Dialog open={showClaimDialog} onOpenChange={setShowClaimDialog}>
-                <Button onClick={() => setShowClaimDialog(true)} data-testid="button-new-claim">
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-rose-600 via-rose-500 to-pink-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Shield className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold" data-testid="text-insurance-title">Insurance Claims</h2>
+                    <p className="text-white/80">Submit and track your insurance claims</p>
+                  </div>
+                </div>
+                <Button variant="secondary" onClick={() => setShowClaimDialog(true)} data-testid="button-new-claim">
                   <Plus className="h-4 w-4 mr-2" />
                   New Claim
                 </Button>
-                <DialogContent className="max-w-lg">
+              </div>
+            </div>
+
+            <Dialog open={showClaimDialog} onOpenChange={setShowClaimDialog}>
+              <DialogContent className="max-w-lg">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Shield className="h-5 w-5 text-primary" />
@@ -2850,8 +2933,7 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
                     </DialogFooter>
                   </form>
                 </DialogContent>
-              </Dialog>
-            </div>
+            </Dialog>
 
             <div className="grid gap-4 md:grid-cols-3 mb-6">
               <Card data-testid="card-total-claims">
@@ -2990,16 +3072,30 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
 
       case "chatbot":
         return (
-          <div className="max-w-2xl mx-auto">
-            <Card className="h-[600px] flex flex-col" data-testid="card-chatbot">
-              <CardHeader className="border-b bg-gradient-to-r from-primary/10 to-primary/5">
+          <div className="max-w-2xl mx-auto space-y-4">
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-violet-600 via-purple-500 to-fuchsia-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Bot className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Health Assistant</h2>
+                  <p className="text-white/80">AI-powered 24/7 healthcare support</p>
+                </div>
+              </div>
+            </div>
+
+            <Card className="h-[500px] flex flex-col border-0 shadow-md" data-testid="card-chatbot">
+              <CardHeader className="border-b bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
-                    <Bot className="h-5 w-5 text-primary-foreground" />
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-md">
+                    <Bot className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <CardTitle>Health Assistant</CardTitle>
-                    <CardDescription>AI-powered healthcare support</CardDescription>
+                    <CardTitle className="text-base">Chat with AI Assistant</CardTitle>
+                    <CardDescription className="text-xs">Ask about symptoms, medications, or general health queries</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -3047,12 +3143,21 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
       case "profile":
         return (
           <div className="max-w-2xl mx-auto space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold" data-testid="text-profile-title">My Profile</h2>
-              <p className="text-muted-foreground">Manage your personal information</p>
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-slate-600 via-slate-500 to-zinc-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <User className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold" data-testid="text-profile-title">My Profile</h2>
+                  <p className="text-white/80">Manage your personal information</p>
+                </div>
+              </div>
             </div>
 
-            <Card data-testid="card-profile">
+            <Card className="border-0 shadow-md" data-testid="card-profile">
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
@@ -3216,9 +3321,18 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
       case "health-guide":
         return (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl p-6 text-white">
-              <h2 className="text-2xl font-bold mb-2" data-testid="text-health-guide-title">Health Guide</h2>
-              <p className="opacity-90">Learn about diseases, diet plans, and medication timing guidance. This is for educational purposes only.</p>
+            {/* Enhanced Header */}
+            <div className="relative rounded-2xl bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 p-6 text-white shadow-lg">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
+              <div className="relative flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <BookOpen className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold" data-testid="text-health-guide-title">Health Guide</h2>
+                  <p className="text-white/80">Learn about diseases, diet plans, and medication timing guidance</p>
+                </div>
+              </div>
             </div>
 
             <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
