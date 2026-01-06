@@ -648,6 +648,11 @@ export interface IStorage {
   upsertDepartmentNurseAssignment(assignment: any): Promise<any>;
   deleteDepartmentNurseAssignment(departmentName: string): Promise<boolean>;
   initializeDepartmentNurseAssignments(): Promise<void>;
+  
+  // ========== ROLE PERMISSIONS ==========
+  getRolePermission(role: string, module: string): Promise<any | undefined>;
+  getRolePermissions(role: string): Promise<any[]>;
+  upsertRolePermission(permission: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -3114,6 +3119,32 @@ export class MemStorage implements IStorage {
 
   async initializeDepartmentNurseAssignments(): Promise<void> {
     // Stub implementation for in-memory storage
+  }
+  
+  // ========== ROLE PERMISSIONS ==========
+  private rolePermissions: Map<string, any> = new Map();
+  
+  async getRolePermission(role: string, module: string): Promise<any | undefined> {
+    const key = `${role}:${module}`;
+    return this.rolePermissions.get(key);
+  }
+  
+  async getRolePermissions(role: string): Promise<any[]> {
+    return Array.from(this.rolePermissions.values()).filter(p => p.role === role);
+  }
+  
+  async upsertRolePermission(permission: any): Promise<any> {
+    const key = `${permission.role}:${permission.module}`;
+    const existing = this.rolePermissions.get(key);
+    const updated = {
+      ...existing,
+      ...permission,
+      id: existing?.id || `perm_${Date.now()}`,
+      createdAt: existing?.createdAt || new Date(),
+      updatedAt: new Date()
+    };
+    this.rolePermissions.set(key, updated);
+    return updated;
   }
 }
 

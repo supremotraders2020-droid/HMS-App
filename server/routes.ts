@@ -7,6 +7,7 @@ import crypto from "crypto";
 import bwipjs from "bwip-js";
 import multer from "multer";
 import { z } from "zod";
+import { HMS_MODULES, HMS_ACTIONS, DEFAULT_PERMISSIONS } from "../shared/permissions";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db } from "./db";
@@ -163,6 +164,69 @@ const requireRole = (allowedRoles: string[]) => {
     }
     
     next();
+  };
+};
+
+// Permission-based authorization middleware factory
+// Uses the centralized permission matrix stored in the database
+type HMSModule = typeof HMS_MODULES[number];
+type HMSAction = typeof HMS_ACTIONS[number];
+
+const requirePermission = (module: HMSModule, action: HMSAction) => {
+  return async (req: any, res: any, next: any) => {
+    const session = req.session;
+    const user = session?.user;
+    
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized. Please log in." });
+    }
+    
+    const role = user.role as string;
+    
+    // Super Admin has all permissions
+    if (role === "SUPER_ADMIN") {
+      return next();
+    }
+    
+    try {
+      // Check database for permission
+      const permission = await storage.getRolePermission(role, module);
+      
+      // Map action to database field
+      const actionFieldMap: Record<HMSAction, string> = {
+        view: "canView",
+        create: "canCreate",
+        edit: "canEdit",
+        delete: "canDelete",
+        approve: "canApprove",
+        lock: "canLock",
+        unlock: "canUnlock",
+        export: "canExport"
+      };
+      
+      const field = actionFieldMap[action];
+      
+      // If permission exists in DB, use it; otherwise fall back to defaults
+      let hasPermission = false;
+      if (permission) {
+        hasPermission = permission[field as keyof typeof permission] === true;
+      } else {
+        // Fall back to default permissions
+        const defaults = DEFAULT_PERMISSIONS[role as keyof typeof DEFAULT_PERMISSIONS]?.[module];
+        hasPermission = defaults?.[action] === true;
+      }
+      
+      if (!hasPermission) {
+        return res.status(403).json({ 
+          error: `Access denied. You don't have permission to ${action} ${module.toLowerCase().replace("_", " ")}.`
+        });
+      }
+      
+      next();
+    } catch (error) {
+      console.error("Permission check error:", error);
+      return res.status(500).json({ error: "Failed to verify permissions" });
+    }
   };
 };
 
