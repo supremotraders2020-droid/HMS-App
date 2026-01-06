@@ -12,7 +12,7 @@ import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
-import { users, insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
+import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
   patientBarcodes, insertPatientBarcodeSchema, barcodeScanLogs, insertBarcodeScanLogSchema, servicePatients,
   patientMonitoringSessions, insertPatientMonitoringSessionSchema,
   vitalsHourly, insertVitalsHourlySchema,
@@ -12220,12 +12220,14 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       }
       
       await db.insert(auditLogs).values({
-        userId: user?.id,
-        userRole: user?.role,
-        action: "PERMISSIONS_UPDATED",
-        targetType: "ROLE_PERMISSION",
-        targetId: role,
-        details: { role, modulesUpdated: permList.map((p: any) => p.module) },
+        userId: user?.id || "unknown",
+        userName: user?.name || "System",
+        userRole: user?.role || "UNKNOWN",
+        action: "UPDATE",
+        module: "USERS",
+        entityType: "ROLE_PERMISSION",
+        entityId: role,
+        changeDescription: `Permissions updated for role ${role}. Modules: ${permList.map((p: any) => p.module).join(", ")}`,
         severity: "warning",
         ipAddress: req.ip || "unknown"
       });
@@ -12594,6 +12596,38 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         role,
         dateOfBirth: dateOfBirth || null,
       });
+
+      // If creating a DOCTOR, also create their doctor profile for OPD
+      if (role === "DOCTOR") {
+        const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+        
+        // Create doctor entry in doctors table (for OPD booking list)
+        const [doctorEntry] = await db.insert(doctors).values({
+          name: name,
+          specialty: "General Medicine", // Default specialty, can be updated later
+          qualification: "MBBS",         // Default qualification
+          experience: 1,                 // Default experience in years
+          rating: "4.5",
+          availableDays: "Mon, Wed, Fri", // Default availability
+          avatarInitials: initials,
+          dateOfBirth: dateOfBirth || null
+        }).returning();
+        
+        // Also create doctor profile entry (extended profile info linked to user)
+        await db.insert(doctorProfiles).values({
+          doctorId: newUser.id,          // Link to the user account
+          fullName: name,
+          specialty: "General Medicine",
+          email: email || null,
+          qualifications: "MBBS",
+          experience: "1 year",
+          designation: "Consultant",
+          department: "General Medicine",
+          hospitalName: "Gravity Hospital"
+        });
+        
+        console.log(`Created doctor entry and profile for ${name} (user: ${newUser.id}, doctor: ${doctorEntry.id})`);
+      }
 
       // Log audit action
       await db.insert(auditLogs).values({
