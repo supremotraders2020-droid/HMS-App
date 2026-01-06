@@ -12105,6 +12105,101 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  app.post("/api/super-admin/permissions/bulk", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      const { role, permissions: permList } = req.body;
+      
+      if (!role || !Array.isArray(permList)) {
+        return res.status(400).json({ error: "Role and permissions array required" });
+      }
+
+      const results = [];
+      
+      for (const perm of permList) {
+        const existingPerm = await db.select().from(rolePermissions)
+          .where(and(eq(rolePermissions.role, role), eq(rolePermissions.module, perm.module)))
+          .limit(1);
+        
+        if (existingPerm.length > 0) {
+          const [updated] = await db.update(rolePermissions)
+            .set({
+              canView: perm.canView ?? false,
+              canCreate: perm.canCreate ?? false,
+              canEdit: perm.canEdit ?? false,
+              canDelete: perm.canDelete ?? false,
+              canApprove: perm.canApprove ?? false,
+              canLock: perm.canLock ?? false,
+              canUnlock: perm.canUnlock ?? false,
+              canExport: perm.canExport ?? false,
+              updatedAt: new Date()
+            })
+            .where(eq(rolePermissions.id, existingPerm[0].id))
+            .returning();
+          results.push(updated);
+        } else {
+          const [created] = await db.insert(rolePermissions).values({
+            role,
+            module: perm.module,
+            canView: perm.canView ?? false,
+            canCreate: perm.canCreate ?? false,
+            canEdit: perm.canEdit ?? false,
+            canDelete: perm.canDelete ?? false,
+            canApprove: perm.canApprove ?? false,
+            canLock: perm.canLock ?? false,
+            canUnlock: perm.canUnlock ?? false,
+            canExport: perm.canExport ?? false,
+            createdBy: user?.id
+          }).returning();
+          results.push(created);
+        }
+      }
+      
+      await db.insert(auditLogs).values({
+        userId: user?.id,
+        userRole: user?.role,
+        action: "PERMISSIONS_UPDATED",
+        targetType: "ROLE_PERMISSION",
+        targetId: role,
+        details: { role, modulesUpdated: permList.map((p: any) => p.module) },
+        severity: "warning",
+        ipAddress: req.ip || "unknown"
+      });
+      
+      res.json({ success: true, updated: results.length, permissions: results });
+    } catch (error) {
+      console.error("Error bulk updating permissions:", error);
+      res.status(500).json({ error: "Failed to update permissions" });
+    }
+  });
+
+  app.get("/api/super-admin/permissions/:role", requireAuth, requireSuperAdmin, async (req, res) => {
+    try {
+      const permissions = await db.select().from(rolePermissions)
+        .where(eq(rolePermissions.role, req.params.role));
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching role permissions:", error);
+      res.status(500).json({ error: "Failed to fetch role permissions" });
+    }
+  });
+
+  app.get("/api/permissions/current", requireAuth, async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const permissions = await db.select().from(rolePermissions)
+        .where(eq(rolePermissions.role, user.role));
+      res.json({ role: user.role, permissions });
+    } catch (error) {
+      console.error("Error fetching current user permissions:", error);
+      res.status(500).json({ error: "Failed to fetch permissions" });
+    }
+  });
+
   // Billing Records
   app.get("/api/super-admin/billing-records", requireAuth, requireSuperAdmin, async (req, res) => {
     try {
