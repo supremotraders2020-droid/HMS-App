@@ -791,20 +791,20 @@ Description: ${record.description}
   };
 
   const navigationItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "opd", label: "Book Appointment", icon: Calendar },
-    { id: "prescriptions", label: "Prescriptions", icon: Pill },
-    { id: "lab-reports", label: "Lab Reports", icon: TestTube },
-    { id: "records", label: "Health Records", icon: FileText },
-    { id: "medical-stores", label: "Medical Stores", icon: Store },
-    { id: "insurance", label: "Insurance Claims", icon: CreditCard },
-    { id: "health-guide", label: "Health Guide", icon: BookOpen },
-    { id: "admission", label: "Admission", icon: BedDouble },
-    { id: "hospital-services", label: "Services & Surgeries", icon: Scissors },
-    { id: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifications },
-    { id: "team", label: "Our Doctors", icon: Users },
-    { id: "chatbot", label: "Health Assistant", icon: MessageCircle },
-    { id: "profile", label: "My Profile", icon: User },
+    { id: "dashboard", label: "Dashboard", icon: Home, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { id: "opd", label: "Book Appointment", icon: Calendar, color: "text-sky-500", bg: "bg-sky-500/10" },
+    { id: "prescriptions", label: "Prescriptions", icon: Pill, color: "text-teal-500", bg: "bg-teal-500/10" },
+    { id: "lab-reports", label: "Lab Reports", icon: TestTube, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { id: "records", label: "Health Records", icon: FileText, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { id: "medical-stores", label: "Medical Stores", icon: Store, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+    { id: "insurance", label: "Insurance Claims", icon: CreditCard, color: "text-rose-500", bg: "bg-rose-500/10" },
+    { id: "health-guide", label: "Health Guide", icon: BookOpen, color: "text-green-500", bg: "bg-green-500/10" },
+    { id: "admission", label: "Admission", icon: BedDouble, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { id: "hospital-services", label: "Services & Surgeries", icon: Scissors, color: "text-pink-500", bg: "bg-pink-500/10" },
+    { id: "notifications", label: "Notifications", icon: Bell, color: "text-amber-500", bg: "bg-amber-500/10", badge: unreadNotifications },
+    { id: "team", label: "Our Doctors", icon: Users, color: "text-cyan-500", bg: "bg-cyan-500/10" },
+    { id: "chatbot", label: "Health Assistant", icon: MessageCircle, color: "text-violet-500", bg: "bg-violet-500/10" },
+    { id: "profile", label: "My Profile", icon: User, color: "text-slate-500", bg: "bg-slate-500/10" },
   ];
 
   const getRecordIcon = (type: string) => {
@@ -847,7 +847,7 @@ Description: ${record.description}
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-1 px-2">
                 {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton 
@@ -855,9 +855,16 @@ Description: ${record.description}
                       isActive={activeSection === item.id}
                       tooltip={item.label}
                       data-testid={`nav-${item.id}`}
+                      className={`rounded-xl transition-all duration-200 ${
+                        activeSection === item.id 
+                          ? `${item.bg} border border-current/10` 
+                          : ""
+                      }`}
                     >
-                      <item.icon className="h-5 w-5" />
-                      <span className="flex-1">{item.label}</span>
+                      <div className={`h-8 w-8 rounded-lg ${item.bg} flex items-center justify-center shrink-0`}>
+                        <item.icon className={`h-4 w-4 ${item.color}`} />
+                      </div>
+                      <span className={`flex-1 font-medium ${activeSection === item.id ? item.color : ""}`}>{item.label}</span>
                       {item.badge && item.badge > 0 && (
                         <Badge variant="destructive" className="h-5 min-w-5 text-xs group-data-[collapsible=icon]:hidden">
                           {item.badge}
