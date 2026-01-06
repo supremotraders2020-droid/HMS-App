@@ -202,7 +202,7 @@ export default function OPDService() {
       for (let mins = startMins; mins < endMins; mins += 30) {
         slots.push({
           time: minsToTime(mins),
-          location: schedule.slotType || schedule.location,
+          location: schedule.location || null,
         });
       }
     }
