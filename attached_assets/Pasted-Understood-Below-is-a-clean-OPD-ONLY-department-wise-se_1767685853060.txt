@@ -1,0 +1,468 @@
+Understood.
+Below is a **clean, OPD-ONLY, department-wise service flow** for a **multispeciality hospital software**.
+
+❌ **No IPD**
+❌ **No surgery / OT / ICU transfer**
+✅ **Only OPD admission → consultation → tests → reports → closure**
+✅ **Includes data pattern captured in software for each department**
+
+This is **HMIS / HMS implementation-ready**.
+
+---
+
+# 🔹 COMMON OPD MASTER FLOW (APPLICABLE TO ALL DEPARTMENTS)
+
+1. Patient Entry
+2. OPD Registration (UHID creation)
+3. Department & doctor selection
+4. Vital signs capture
+5. Doctor consultation
+6. Department-specific clinical data entry
+7. Test / investigation prescription
+8. Radiology / Pathology execution
+9. Report upload & verification
+10. Doctor review of reports
+11. Diagnosis & advice
+12. Digital prescription
+13. OPD closure & follow-up scheduling
+
+---
+
+# 1️⃣ CARDIOTHORACIC – OPD FLOW
+
+### OPD SERVICE FLOW
+
+1. Registration → Cardiothoracic OPD
+2. Vitals (BP, HR, SpO₂)
+3. Complaint entry (Chest pain, breathlessness, fatigue)
+4. Clinical examination
+5. Test orders (ECG, Echo, Chest X-ray, Blood tests)
+6. Reports uploaded
+7. Doctor review
+8. Medical advice & follow-up
+
+### DATA PATTERN CAPTURED
+
+* Chest pain characteristics
+* NYHA class
+* Risk factors (DM, HTN, Smoking)
+* ECG/Echo parameters
+* Cardiac enzymes
+
+---
+
+# 2️⃣ CARDIOVASCULAR – OPD FLOW
+
+### FLOW
+
+* Registration → OPD
+* Limb / vascular complaints
+* Doppler / ABI / CT Angio orders
+* Report review
+* Medical advice
+
+### DATA PATTERN
+
+* Limb pain
+* Claudication distance
+* Pulses
+* Doppler flow values
+* Vessel involvement
+
+---
+
+# 3️⃣ CATHLAB – OPD EVALUATION FLOW
+
+### FLOW
+
+* Cardiology OPD
+* Symptom assessment
+* ECG / Echo / Stress test
+* Risk stratification
+* Medical management advice
+
+### DATA PATTERN
+
+* Angina grade
+* ECG changes
+* Stress test result
+* Ejection fraction
+
+---
+
+# 4️⃣ VASCULAR – OPD FLOW
+
+### FLOW
+
+* OPD consultation
+* Doppler / ABI
+* Report review
+* Conservative management advice
+
+### DATA PATTERN
+
+* Limb temperature
+* Ulcers
+* Pulse grading
+* Doppler indices
+
+---
+
+# 5️⃣ DAY CARE & MINOR PROCEDURE – OPD FLOW (WITHOUT PROCEDURE)
+
+### FLOW
+
+* OPD consultation
+* Evaluation
+* Test ordering
+* Report review
+* Advice / medication
+
+### DATA PATTERN
+
+* Local complaints
+* Infection markers
+* Basic imaging
+
+---
+
+# 6️⃣ ENT – OPD FLOW
+
+### FLOW
+
+* ENT OPD
+* Ear / nose / throat complaints
+* Endoscopy / Audiometry / X-ray
+* Report review
+* Prescription
+
+### DATA PATTERN
+
+* Hearing level
+* Nasal obstruction
+* Throat findings
+* Endoscopy images
+
+---
+
+# 7️⃣ GENERAL SURGERY – OPD FLOW
+
+### FLOW
+
+* OPD consultation
+* Abdominal / lump evaluation
+* USG / Labs
+* Report review
+* Medical advice
+
+### DATA PATTERN
+
+* Pain location
+* Tenderness
+* USG findings
+* CBC values
+
+---
+
+# 8️⃣ ICU & CASUALTY – OPD STABILIZED FLOW
+
+*(For non-critical OPD-managed cases)*
+
+### FLOW
+
+* Casualty OPD entry
+* Initial assessment
+* Basic labs / imaging
+* Observation
+* Discharge advice
+
+### DATA PATTERN
+
+* GCS
+* Vitals trend
+* Immediate lab values
+
+---
+
+# 9️⃣ MAXILLO FACIAL – OPD FLOW
+
+### FLOW
+
+* OPD consultation
+* Facial pain / swelling
+* X-ray / CT face
+* Report review
+* Advice
+
+### DATA PATTERN
+
+* Jaw movement
+* Facial symmetry
+* Dental alignment
+* Imaging notes
+
+---
+
+# 🔟 NEUROLOGY  – OPD FLOW
+
+### FLOW
+
+* Neuro OPD
+* Headache / weakness / seizures
+* MRI / CT / EEG
+* Report review
+* Medication advice
+
+### DATA PATTERN
+
+* Power grading
+* Reflexes
+* MRI findings
+* Neurological scores
+
+---
+
+# 1️⃣1️⃣ OBGY & GYNEAC – OPD FLOW
+
+### FLOW
+
+* OPD registration
+* Menstrual / pregnancy complaint
+* USG / Hormonal tests
+* Report review
+* Advice
+
+### DATA PATTERN
+
+* LMP
+* Cycle length
+* USG uterus/ovary data
+* Hormone levels
+
+---
+
+# 1️⃣2️⃣ ONCOLOGY – OPD FLOW
+
+### FLOW
+
+* Oncology OPD
+* Symptom review
+* Biopsy / Imaging orders
+* Report review
+* Treatment planning advice
+
+### DATA PATTERN
+
+* Tumor markers
+* Imaging staging
+* Histopathology summary
+
+---
+
+# 1️⃣3️⃣ ORTHOPEDIC – OPD FLOW
+
+### FLOW
+
+* OPD consultation
+* Pain / injury assessment
+* X-ray / MRI
+* Report review
+* Medication & physiotherapy advice
+
+### DATA PATTERN
+
+* ROM
+* Pain score
+* Imaging notes
+
+---
+
+# 1️⃣4️⃣ PAEDIATRIC ORTHO – OPD FLOW
+
+### FLOW
+
+* Child OPD
+* Growth / limb complaint
+* X-ray
+* Report review
+* Advice
+
+### DATA PATTERN
+
+* Growth percentiles
+* Limb alignment
+* Pediatric imaging data
+
+---
+
+# 1️⃣5️⃣ PAEDIATRIC GENERAL SURGERY – OPD FLOW
+
+### FLOW
+
+* Pediatric OPD
+* Parent history
+* USG / Labs
+* Report review
+* Advice
+
+### DATA PATTERN
+
+* Weight / age norms
+* Congenital notes
+
+---
+
+# 1️⃣6️⃣ PAEDIATRIC CARDIAC UNIT – OPD FLOW
+
+### FLOW
+
+* Pediatric cardiology OPD
+* Echo / ECG
+* Report review
+* Medical advice
+
+### DATA PATTERN
+
+* Congenital defect type
+* Oxygen saturation
+* Echo findings
+
+---
+
+# 1️⃣7️⃣ PAIN MANAGEMENT – OPD FLOW
+
+### FLOW
+
+* Pain OPD
+* Pain assessment scale
+* Imaging review
+* Medication plan
+
+### DATA PATTERN
+
+* VAS score
+* Pain duration
+* Trigger factors
+
+---
+
+# 1️⃣8️⃣ PLASTIC SURGERY – OPD FLOW
+
+### FLOW
+
+* OPD consultation
+* Deformity / wound evaluation
+* Imaging
+* Advice
+
+### DATA PATTERN
+
+* Scar size
+* Wound healing stage
+* Photographic records
+
+---
+
+# 1️⃣9️⃣ URO SURGERY – OPD FLOW
+
+### FLOW
+
+* Urology OPD
+* Urinary symptoms
+* USG / Urine tests
+* Report review
+* Advice
+
+### DATA PATTERN
+
+* IPSS score
+* Prostate size
+* Urine analysis
+
+---
+
+# 2️⃣0️⃣ PATHOLOGY – OPD SERVICE FLOW
+
+### FLOW
+
+* Test order received
+* Sample collection
+* Processing
+* Report generation
+* Upload & notify
+
+### DATA PATTERN
+
+* Test values
+* Reference ranges
+* Critical flags
+
+---
+
+# 2️⃣1️⃣ RADIOLOGY – OPD FLOW
+
+### FLOW
+
+* Imaging request
+* Scan
+* Report dictation
+* Upload
+* Doctor access
+
+### DATA PATTERN
+
+* Modality type
+* Findings
+* Impression
+
+---
+
+# 2️⃣2️⃣ REHAB SERVICES – OPD FLOW
+
+### FLOW
+
+* Referral
+* Assessment
+* Therapy plan
+* Progress notes
+* Discharge from OPD rehab
+
+### DATA PATTERN
+
+* Mobility scores
+* Pain reduction metrics
+
+---
+
+# 2️⃣3️⃣ GASTROENTEROLOGY – OPD FLOW
+
+### FLOW
+
+* GI OPD
+* GI symptom analysis
+* Endoscopy / Labs
+* Report review
+* Medication & diet advice
+
+### DATA PATTERN
+
+* Stool pattern
+* Liver enzymes
+* Endoscopy findings
+
+---
+
+## ✅ RESULT FOR SOFTWARE
+
+* Clean OPD-only workflows
+* Department-specific EMR structure
+* Test → report → review automation
+* Analytics-ready structured data
+
+If you want next:
+✔ **Database tables per department**
+✔ **OPD status codes & state machine**
+✔ **Doctor UI form designs**
+✔ **Analytics dashboards**
+
+Just say the word.

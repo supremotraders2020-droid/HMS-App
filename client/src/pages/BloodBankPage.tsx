@@ -41,8 +41,11 @@ import type {
 } from "@shared/schema";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const BLOOD_GROUPS_SPLIT = ["A", "B", "AB", "O"];
+const RH_FACTORS = ["Positive", "Negative"];
 const COMPONENT_TYPES = ["WHOLE_BLOOD", "PRBC", "PLATELET", "FFP", "CRYOPRECIPITATE", "GRANULOCYTES"];
 const URGENCY_LEVELS = ["ROUTINE", "URGENT", "EMERGENCY", "MASSIVE_TRANSFUSION"];
+const GENDERS = ["Male", "Female", "Other"];
 
 export default function BloodBankPage() {
   const { toast } = useToast();
@@ -50,6 +53,32 @@ export default function BloodBankPage() {
   const [showAddDonorModal, setShowAddDonorModal] = useState(false);
   const [showAddUnitModal, setShowAddUnitModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Form state for new donor
+  const [newDonor, setNewDonor] = useState({
+    name: "",
+    bloodGroup: "",
+    rhFactor: "Positive",
+    gender: "Male",
+    phone: "",
+    email: "",
+    address: "",
+    dateOfBirth: "",
+    age: "",
+    weight: "",
+    hemoglobinLevel: ""
+  });
+
+  // Form state for new blood unit
+  const [newUnit, setNewUnit] = useState({
+    componentType: "WHOLE_BLOOD",
+    bloodGroup: "",
+    rhFactor: "Positive",
+    volume: "450",
+    donorId: "",
+    collectionDate: new Date().toISOString().split('T')[0],
+    expiryDate: ""
+  });
 
   // Queries
   const { data: bloodUnits = [], isLoading: unitsLoading } = useQuery<BloodUnit[]>({
@@ -74,6 +103,79 @@ export default function BloodBankPage() {
 
   const { data: auditLogs = [] } = useQuery<BloodBankAuditLog[]>({
     queryKey: ["/api/blood-bank/audit-log"],
+  });
+
+  // Mutations
+  const createDonorMutation = useMutation({
+    mutationFn: async (donorData: typeof newDonor) => {
+      const donorId = `DN-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+      // Combine blood group letter with Rh sign for bloodGroup field (e.g., "A+")
+      const rhSign = donorData.rhFactor === "Positive" ? "+" : "-";
+      const fullBloodGroup = `${donorData.bloodGroup}${rhSign}`;
+      const response = await apiRequest("POST", "/api/blood-bank/donors", {
+        donorId,
+        name: donorData.name,
+        bloodGroup: fullBloodGroup,
+        rhFactor: donorData.rhFactor,
+        gender: donorData.gender,
+        phone: donorData.phone,
+        email: donorData.email || null,
+        address: donorData.address || null,
+        dateOfBirth: donorData.dateOfBirth || null,
+        age: donorData.age ? parseInt(donorData.age) : null,
+        weight: donorData.weight ? parseFloat(donorData.weight) : null,
+        hemoglobinLevel: donorData.hemoglobinLevel ? parseFloat(donorData.hemoglobinLevel) : null,
+        eligibilityStatus: "ELIGIBLE",
+        totalDonations: 0
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/blood-bank/donors"] });
+      setShowAddDonorModal(false);
+      setNewDonor({ name: "", bloodGroup: "", rhFactor: "Positive", gender: "Male", phone: "", email: "", address: "", dateOfBirth: "", age: "", weight: "", hemoglobinLevel: "" });
+      toast({ title: "Donor Registered", description: "New blood donor has been registered successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const createUnitMutation = useMutation({
+    mutationFn: async (unitData: typeof newUnit) => {
+      const unitId = `BU-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+      const selectedDonor = donors.find(d => d.id === unitData.donorId);
+      const expiryDays = unitData.componentType === "PLATELET" ? 5 : unitData.componentType === "FFP" ? 365 : 35;
+      const collectionDate = new Date(unitData.collectionDate);
+      const expiryDate = new Date(collectionDate);
+      expiryDate.setDate(expiryDate.getDate() + expiryDays);
+      // Combine blood group letter with Rh sign for bloodGroup field (e.g., "A+")
+      const rhSign = unitData.rhFactor === "Positive" ? "+" : "-";
+      const fullBloodGroup = `${unitData.bloodGroup}${rhSign}`;
+      
+      const response = await apiRequest("POST", "/api/blood-bank/units", {
+        unitId,
+        componentType: unitData.componentType,
+        bloodGroup: fullBloodGroup,
+        rhFactor: unitData.rhFactor,
+        volume: parseInt(unitData.volume),
+        donorId: unitData.donorId,
+        donorName: selectedDonor?.name || "Unknown Donor",
+        collectionDate: unitData.collectionDate,
+        expiryDate: expiryDate.toISOString().split('T')[0],
+        status: "COLLECTED"
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/blood-bank/units"] });
+      setShowAddUnitModal(false);
+      setNewUnit({ componentType: "WHOLE_BLOOD", bloodGroup: "", rhFactor: "Positive", volume: "450", donorId: "", collectionDate: new Date().toISOString().split('T')[0], expiryDate: "" });
+      toast({ title: "Blood Unit Added", description: "New blood unit has been registered successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   });
 
   // Dashboard Stats
@@ -370,7 +472,7 @@ export default function BloodBankPage() {
                           <TableCell className="font-mono text-sm">{unit.unitId}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="font-bold text-red-600 border-red-300">
-                              {unit.bloodGroup}{unit.rhFactor === "Positive" ? "+" : "-"}
+                              {unit.bloodGroup}
                             </Badge>
                           </TableCell>
                           <TableCell>{unit.componentType?.replace(/_/g, " ")}</TableCell>
@@ -654,45 +756,287 @@ export default function BloodBankPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Add Donor Modal - Placeholder for now */}
+      {/* Add Donor Modal */}
       <Dialog open={showAddDonorModal} onOpenChange={setShowAddDonorModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Register New Donor</DialogTitle>
             <DialogDescription>
               Add a new blood donor to the registry
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground text-center">
-              Donor registration form will be implemented with full service workflow
-            </p>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="donorName">Full Name *</Label>
+              <Input 
+                id="donorName" 
+                placeholder="Enter donor's full name" 
+                value={newDonor.name}
+                onChange={(e) => setNewDonor({ ...newDonor, name: e.target.value })}
+                data-testid="input-donor-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bloodGroup">Blood Group *</Label>
+              <Select value={newDonor.bloodGroup} onValueChange={(v) => setNewDonor({ ...newDonor, bloodGroup: v })}>
+                <SelectTrigger data-testid="select-donor-blood-group">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BLOOD_GROUPS_SPLIT.map(g => (
+                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rhFactor">Rh Factor *</Label>
+              <Select value={newDonor.rhFactor} onValueChange={(v) => setNewDonor({ ...newDonor, rhFactor: v })}>
+                <SelectTrigger data-testid="select-donor-rh-factor">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {RH_FACTORS.map(f => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender *</Label>
+              <Select value={newDonor.gender} onValueChange={(v) => setNewDonor({ ...newDonor, gender: v })}>
+                <SelectTrigger data-testid="select-donor-gender">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENDERS.map(g => (
+                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number *</Label>
+              <Input 
+                id="phone" 
+                type="tel"
+                placeholder="10-digit mobile" 
+                value={newDonor.phone}
+                onChange={(e) => setNewDonor({ ...newDonor, phone: e.target.value })}
+                data-testid="input-donor-phone"
+              />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email"
+                placeholder="donor@email.com" 
+                value={newDonor.email}
+                onChange={(e) => setNewDonor({ ...newDonor, email: e.target.value })}
+                data-testid="input-donor-email"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <Input 
+                id="dateOfBirth" 
+                type="date"
+                value={newDonor.dateOfBirth}
+                onChange={(e) => setNewDonor({ ...newDonor, dateOfBirth: e.target.value })}
+                data-testid="input-donor-dob"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="age">Age</Label>
+              <Input 
+                id="age" 
+                type="number"
+                placeholder="Years" 
+                value={newDonor.age}
+                onChange={(e) => setNewDonor({ ...newDonor, age: e.target.value })}
+                data-testid="input-donor-age"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="weight">Weight (kg)</Label>
+              <Input 
+                id="weight" 
+                type="number"
+                placeholder="e.g., 65" 
+                value={newDonor.weight}
+                onChange={(e) => setNewDonor({ ...newDonor, weight: e.target.value })}
+                data-testid="input-donor-weight"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hemoglobin">Hemoglobin (g/dL)</Label>
+              <Input 
+                id="hemoglobin" 
+                type="number"
+                step="0.1"
+                placeholder="e.g., 14.5" 
+                value={newDonor.hemoglobinLevel}
+                onChange={(e) => setNewDonor({ ...newDonor, hemoglobinLevel: e.target.value })}
+                data-testid="input-donor-hemoglobin"
+              />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="address">Address</Label>
+              <Input 
+                id="address" 
+                placeholder="Full address" 
+                value={newDonor.address}
+                onChange={(e) => setNewDonor({ ...newDonor, address: e.target.value })}
+                data-testid="input-donor-address"
+              />
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDonorModal(false)}>
-              Close
+            <Button variant="outline" onClick={() => setShowAddDonorModal(false)}>Cancel</Button>
+            <Button 
+              onClick={() => createDonorMutation.mutate(newDonor)}
+              disabled={createDonorMutation.isPending || !newDonor.name || !newDonor.bloodGroup || !newDonor.phone}
+              data-testid="button-submit-donor"
+            >
+              {createDonorMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Registering...
+                </>
+              ) : (
+                "Register Donor"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Add Unit Modal - Placeholder for now */}
+      {/* Add Unit Modal */}
       <Dialog open={showAddUnitModal} onOpenChange={setShowAddUnitModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Blood Unit</DialogTitle>
             <DialogDescription>
               Register a new blood unit from collection
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground text-center">
-              Blood unit registration form will be implemented with full service workflow
-            </p>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="donorSelect">Select Donor *</Label>
+              <Select value={newUnit.donorId} onValueChange={(v) => {
+                const donor = donors.find(d => d.id === v);
+                // Parse blood group from donor (e.g., "A+" -> bloodGroup: "A", rhFactor based on sign)
+                let bgLetter = "";
+                let rhFromDonor = "Positive";
+                if (donor?.bloodGroup) {
+                  const bg = donor.bloodGroup;
+                  if (bg.endsWith("+")) {
+                    bgLetter = bg.slice(0, -1);
+                    rhFromDonor = "Positive";
+                  } else if (bg.endsWith("-")) {
+                    bgLetter = bg.slice(0, -1);
+                    rhFromDonor = "Negative";
+                  } else {
+                    bgLetter = bg;
+                    rhFromDonor = donor.rhFactor || "Positive";
+                  }
+                }
+                setNewUnit({ 
+                  ...newUnit, 
+                  donorId: v,
+                  bloodGroup: bgLetter,
+                  rhFactor: rhFromDonor
+                });
+              }}>
+                <SelectTrigger data-testid="select-unit-donor">
+                  <SelectValue placeholder="Select registered donor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {donors.filter(d => d.eligibilityStatus === "ELIGIBLE").map(d => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name} ({d.bloodGroup})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="componentType">Component Type *</Label>
+              <Select value={newUnit.componentType} onValueChange={(v) => setNewUnit({ ...newUnit, componentType: v })}>
+                <SelectTrigger data-testid="select-unit-component">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COMPONENT_TYPES.map(t => (
+                    <SelectItem key={t} value={t}>{t.replace(/_/g, " ")}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="volume">Volume (mL) *</Label>
+              <Input 
+                id="volume" 
+                type="number"
+                placeholder="450" 
+                value={newUnit.volume}
+                onChange={(e) => setNewUnit({ ...newUnit, volume: e.target.value })}
+                data-testid="input-unit-volume"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unitBloodGroup">Blood Group *</Label>
+              <Select value={newUnit.bloodGroup} onValueChange={(v) => setNewUnit({ ...newUnit, bloodGroup: v })}>
+                <SelectTrigger data-testid="select-unit-blood-group">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BLOOD_GROUPS_SPLIT.map(g => (
+                    <SelectItem key={g} value={g}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unitRhFactor">Rh Factor *</Label>
+              <Select value={newUnit.rhFactor} onValueChange={(v) => setNewUnit({ ...newUnit, rhFactor: v })}>
+                <SelectTrigger data-testid="select-unit-rh-factor">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {RH_FACTORS.map(f => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="collectionDate">Collection Date *</Label>
+              <Input 
+                id="collectionDate" 
+                type="date"
+                value={newUnit.collectionDate}
+                onChange={(e) => setNewUnit({ ...newUnit, collectionDate: e.target.value })}
+                data-testid="input-unit-collection-date"
+              />
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddUnitModal(false)}>
-              Close
+            <Button variant="outline" onClick={() => setShowAddUnitModal(false)}>Cancel</Button>
+            <Button 
+              onClick={() => createUnitMutation.mutate(newUnit)}
+              disabled={createUnitMutation.isPending || !newUnit.donorId || !newUnit.bloodGroup || !newUnit.volume}
+              data-testid="button-submit-unit"
+            >
+              {createUnitMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                "Add Blood Unit"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
