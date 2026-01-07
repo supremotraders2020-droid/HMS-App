@@ -12932,6 +12932,31 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       });
 
       // If creating a DOCTOR, also create their doctor profile for OPD
+      // CRITICAL: Create staff_master entry for staff roles (required for login)
+      const staffRoles = ["DOCTOR", "NURSE", "OPD_MANAGER", "ADMIN", "PATHOLOGY_LAB", "MEDICAL_STORE"];
+      if (staffRoles.includes(role)) {
+        const empCodePrefix = role === "DOCTOR" ? "DOC" : role === "NURSE" ? "NUR" : role === "OPD_MANAGER" ? "OPD" : role === "ADMIN" ? "ADM" : role === "PATHOLOGY_LAB" ? "LAB" : "STR";
+        const empCode = `${empCodePrefix}${Date.now().toString().slice(-6)}`;
+        
+        await storage.createStaffMaster({
+          fullName: name,
+          email: email || null,
+          role: role,
+          department: "General",
+          employeeCode: empCode,
+          status: "ACTIVE",
+          userId: newUser.id,
+          phone: null,
+          dateOfBirth: dateOfBirth || null,
+          address: null,
+          qualifications: role === "DOCTOR" ? "MBBS" : null,
+          specialization: null,
+          joiningDate: new Date().toISOString().split('T')[0]
+        });
+        
+        console.log(`Created staff_master entry for ${name} (${role}) with employee code ${empCode}`);
+      }
+      
       if (role === "DOCTOR") {
         const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
         
