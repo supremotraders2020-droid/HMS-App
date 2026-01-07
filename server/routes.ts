@@ -1273,10 +1273,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== PATIENT SERVICE ROUTES ==========
 
-  // Get all service patients
-  app.get("/api/patients/service", async (_req, res) => {
+  // Get all service patients (with patient data isolation for PATIENT role)
+  app.get("/api/patients/service", async (req, res) => {
     try {
-      const patients = await storage.getAllServicePatients();
+      const user = req.user as any;
+      let patients = await storage.getAllServicePatients();
+      
+      // CRITICAL: Patient data isolation - PATIENT role only sees their own record
+      if (user && user.role === 'PATIENT') {
+        const patientId = user.id;
+        patients = patients.filter(p => 
+          p.id === patientId ||
+          p.userId === patientId ||
+          p.name?.toLowerCase() === user.name?.toLowerCase() ||
+          p.name?.toLowerCase() === user.username?.toLowerCase()
+        );
+      }
+      
       res.json(patients);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch patients" });
@@ -1374,20 +1387,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== ADMISSIONS ROUTES ==========
 
-  // Get all admissions
-  app.get("/api/admissions", async (_req, res) => {
+  // Get all admissions (with patient data isolation for PATIENT role)
+  app.get("/api/admissions", async (req, res) => {
     try {
-      const admissions = await storage.getAllAdmissions();
+      const user = req.user as any;
+      let admissions = await storage.getAllAdmissions();
+      
+      // CRITICAL: Patient data isolation - PATIENT role only sees their own admissions
+      if (user && user.role === 'PATIENT') {
+        const patientId = user.id;
+        admissions = admissions.filter(adm => 
+          adm.patientId === patientId ||
+          adm.patientName?.toLowerCase() === user.name?.toLowerCase() ||
+          adm.patientName?.toLowerCase() === user.username?.toLowerCase()
+        );
+      }
+      
       res.json(admissions);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch admissions" });
     }
   });
 
-  // Get active admissions
-  app.get("/api/admissions/active", async (_req, res) => {
+  // Get active admissions (with patient data isolation for PATIENT role)
+  app.get("/api/admissions/active", async (req, res) => {
     try {
-      const admissions = await storage.getActiveAdmissions();
+      const user = req.user as any;
+      let admissions = await storage.getActiveAdmissions();
+      
+      // CRITICAL: Patient data isolation - PATIENT role only sees their own admissions
+      if (user && user.role === 'PATIENT') {
+        const patientId = user.id;
+        admissions = admissions.filter(adm => 
+          adm.patientId === patientId ||
+          adm.patientName?.toLowerCase() === user.name?.toLowerCase() ||
+          adm.patientName?.toLowerCase() === user.username?.toLowerCase()
+        );
+      }
+      
       res.json(admissions);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch active admissions" });
@@ -1508,10 +1545,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== MEDICAL RECORDS ROUTES ==========
 
-  // Get all medical records
-  app.get("/api/medical-records", async (_req, res) => {
+  // Get all medical records (with patient data isolation for PATIENT role)
+  app.get("/api/medical-records", async (req, res) => {
     try {
-      const records = await storage.getAllMedicalRecords();
+      const user = req.user as any;
+      let records = await storage.getAllMedicalRecords();
+      
+      // CRITICAL: Patient data isolation - PATIENT role only sees their own medical records
+      if (user && user.role === 'PATIENT') {
+        const patientId = user.id;
+        records = records.filter(record => 
+          record.patientId === patientId
+        );
+      }
+      
       res.json(records);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch medical records" });
@@ -1912,10 +1959,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== NOTIFICATION SERVICE ROUTES ==========
 
-  // Get all notifications
-  app.get("/api/notifications", async (_req, res) => {
+  // Get all notifications (with patient data isolation for PATIENT role)
+  app.get("/api/notifications", async (req, res) => {
     try {
-      const notifications = await storage.getAllNotifications();
+      const user = req.user as any;
+      let notifications = await storage.getAllNotifications();
+      
+      // CRITICAL: Patient data isolation - PATIENT role only sees their own notifications
+      if (user && user.role === 'PATIENT') {
+        const patientId = user.id;
+        notifications = notifications.filter(n => 
+          n.userId === patientId ||
+          n.recipientId === patientId
+        );
+      }
+      
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch notifications" });
@@ -2476,10 +2534,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== PRESCRIPTION ROUTES ==========
 
-  // Get all prescriptions
-  app.get("/api/prescriptions", async (_req, res) => {
+  // Get all prescriptions (with patient data isolation for PATIENT role)
+  app.get("/api/prescriptions", async (req, res) => {
     try {
-      const prescriptions = await storage.getPrescriptions();
+      const user = req.user as any;
+      let prescriptions = await storage.getPrescriptions();
+      
+      // CRITICAL: Patient data isolation - PATIENT role only sees their own prescriptions
+      if (user && user.role === 'PATIENT') {
+        const patientId = user.id;
+        prescriptions = prescriptions.filter(rx => 
+          rx.patientId === patientId ||
+          rx.patientName?.toLowerCase() === user.name?.toLowerCase() ||
+          rx.patientName?.toLowerCase() === user.username?.toLowerCase()
+        );
+      }
+      
       res.json(prescriptions);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch prescriptions" });
@@ -4788,10 +4858,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== PATIENT BILLING ROUTES ==========
 
-  // Get all patient bills
+  // Get all patient bills (with patient data isolation for PATIENT role)
   app.get("/api/patient-bills", async (req, res) => {
     try {
-      const bills = await storage.getAllPatientBills();
+      const user = req.user as any;
+      let bills = await storage.getAllPatientBills();
+      
+      // CRITICAL: Patient data isolation - PATIENT role only sees their own bills
+      if (user && user.role === 'PATIENT') {
+        const patientId = user.id;
+        bills = bills.filter(bill => 
+          bill.patientId === patientId ||
+          bill.patientName?.toLowerCase() === user.name?.toLowerCase() ||
+          bill.patientName?.toLowerCase() === user.username?.toLowerCase()
+        );
+      }
+      
       res.json(bills);
     } catch (error) {
       console.error("Failed to fetch bills:", error);
