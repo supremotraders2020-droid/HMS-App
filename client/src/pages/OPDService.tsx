@@ -150,12 +150,24 @@ export default function OPDService() {
 
   // Generate available time slots from doctor's schedule blocks if no pre-generated slots exist
   const getBookingAvailableSlots = (): { time: string; location: string | null }[] => {
-    // If we have pre-generated slots in the database, use those
+    // Helper to convert time to minutes for sorting
+    const timeToMinsHelper = (timeStr: string): number => {
+      const [time, period] = timeStr.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      let totalHours = hours;
+      if (period === 'PM' && hours !== 12) totalHours += 12;
+      if (period === 'AM' && hours === 12) totalHours = 0;
+      return totalHours * 60 + (minutes || 0);
+    };
+
+    // If we have pre-generated slots in the database, use those (sorted AM to PM)
     if (bookingTimeSlots.length > 0) {
-      return bookingTimeSlots.map(slot => ({
-        time: slot.startTime,
-        location: slot.location,
-      }));
+      return bookingTimeSlots
+        .map(slot => ({
+          time: slot.startTime,
+          location: slot.location,
+        }))
+        .sort((a, b) => timeToMinsHelper(a.time) - timeToMinsHelper(b.time));
     }
 
     // Otherwise, generate slots from the doctor's schedule blocks
