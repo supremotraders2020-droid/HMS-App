@@ -520,20 +520,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all appointments
-  app.get("/api/appointments", async (_req, res) => {
+  // Get all appointments (with patient data isolation for PATIENT role)
+  app.get("/api/appointments", async (req, res) => {
     try {
-      const appointments = await storage.getAppointments();
+      const user = req.user as any;
+      let appointments = await storage.getAppointments();
+      
+      // CRITICAL: Patient data isolation - PATIENT role only sees their own appointments
+      if (user && user.role === 'PATIENT') {
+        const patientId = user.id;
+        appointments = appointments.filter(apt => 
+          apt.patientId === patientId || 
+          apt.patientName?.toLowerCase() === user.name?.toLowerCase() ||
+          apt.patientName?.toLowerCase() === user.username?.toLowerCase()
+        );
+      }
+      
       res.json(appointments);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch appointments" });
     }
   });
 
-  // Get appointments by status
+  // Get appointments by status (with patient data isolation for PATIENT role)
   app.get("/api/appointments/status/:status", async (req, res) => {
     try {
-      const appointments = await storage.getAppointmentsByStatus(req.params.status);
+      const user = req.user as any;
+      let appointments = await storage.getAppointmentsByStatus(req.params.status);
+      
+      // CRITICAL: Patient data isolation - PATIENT role only sees their own appointments
+      if (user && user.role === 'PATIENT') {
+        const patientId = user.id;
+        appointments = appointments.filter(apt => 
+          apt.patientId === patientId || 
+          apt.patientName?.toLowerCase() === user.name?.toLowerCase() ||
+          apt.patientName?.toLowerCase() === user.username?.toLowerCase()
+        );
+      }
+      
       res.json(appointments);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch appointments" });
