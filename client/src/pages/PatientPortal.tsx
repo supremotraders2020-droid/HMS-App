@@ -938,7 +938,7 @@ Description: ${record.description}
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400" data-testid="text-total-appointments">{appointments.length || 12}</div>
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400" data-testid="text-total-appointments">{appointments.length}</div>
                   <p className="text-xs text-muted-foreground mt-1">Lifetime visits</p>
                 </CardContent>
               </Card>
@@ -951,7 +951,7 @@ Description: ${record.description}
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400" data-testid="text-upcoming">{upcomingAppointments.length || 2}</div>
+                  <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400" data-testid="text-upcoming">{upcomingAppointments.length}</div>
                   <p className="text-xs text-muted-foreground mt-1">Scheduled appointments</p>
                 </CardContent>
               </Card>
@@ -977,7 +977,9 @@ Description: ${record.description}
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-bills">₹2,500</div>
+                  <div className="text-3xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-bills">
+                    ₹{patientBill?.status === 'pending' ? Number(patientBill.totalAmount || 0).toLocaleString('en-IN') : '0'}
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">Outstanding amount</p>
                 </CardContent>
               </Card>
