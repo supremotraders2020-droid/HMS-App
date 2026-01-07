@@ -25,18 +25,46 @@ This document provides a complete overview of the database structure for Gravity
 
 ### Table: `users`
 
-Stores all system users including admins, doctors, nurses, OPD managers, and patients.
+Stores all system users including admins, doctors, nurses, OPD managers, patients, and specialized roles.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | `id` | VARCHAR | PRIMARY KEY, DEFAULT UUID | Unique user identifier |
 | `username` | TEXT | NOT NULL, UNIQUE | Login username |
-| `password` | TEXT | NOT NULL | Hashed password |
-| `role` | TEXT | NOT NULL, DEFAULT 'PATIENT' | User role: ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT |
+| `password` | TEXT | NOT NULL | Hashed password (bcrypt, 10 rounds) |
+| `role` | TEXT | NOT NULL, DEFAULT 'PATIENT' | User role (see valid roles below) |
 | `name` | TEXT | NULLABLE | Full name of user |
 | `email` | TEXT | NULLABLE | Email address |
+| `date_of_birth` | TEXT | NULLABLE | Date of birth |
+| `status` | TEXT | NOT NULL, DEFAULT 'ACTIVE' | ACTIVE or INACTIVE |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | Account creation time |
+| `updated_at` | TIMESTAMP | DEFAULT NOW() | Last update time |
+| `created_by` | VARCHAR | NULLABLE | ID of user who created this account |
 
-**Valid Roles:** `ADMIN`, `DOCTOR`, `NURSE`, `OPD_MANAGER`, `PATIENT`
+**Valid Roles:** `SUPER_ADMIN`, `ADMIN`, `DOCTOR`, `NURSE`, `OPD_MANAGER`, `PATIENT`, `MEDICAL_STORE`, `PATHOLOGY_LAB`
+
+### Table: `staff_master`
+
+Staff authentication validation table. Staff roles require an ACTIVE entry here to login.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | VARCHAR | PRIMARY KEY, DEFAULT UUID | Unique identifier |
+| `user_id` | VARCHAR | NOT NULL | Reference to users table |
+| `employee_id` | TEXT | UNIQUE | Unique employee ID |
+| `name` | TEXT | NOT NULL | Staff full name |
+| `role` | TEXT | NOT NULL | DOCTOR, NURSE, OPD_MANAGER, ADMIN |
+| `department` | TEXT | NULLABLE | Hospital department |
+| `specialization` | TEXT | NULLABLE | Medical specialization |
+| `qualification` | TEXT | NULLABLE | Qualifications |
+| `phone` | TEXT | NULLABLE | Contact phone |
+| `email` | TEXT | NULLABLE | Contact email |
+| `status` | TEXT | NOT NULL, DEFAULT 'ACTIVE' | ACTIVE or INACTIVE |
+| `joining_date` | TEXT | NULLABLE | Date of joining |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | Creation time |
+| `updated_at` | TIMESTAMP | DEFAULT NOW() | Last update time |
+
+**Security:** Auto-created when Admin adds users. Staff roles require ACTIVE staff_master entry to login.
 
 ---
 

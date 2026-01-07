@@ -14,10 +14,15 @@ This document describes the relationships between database tables in the HMS Cor
 │                                                                              │
 │  users ──────────────────────────────────────────────────────────────────┐  │
 │    │                                                                     │  │
+│    ├──> staff_master (1:1) - Required for staff roles to login          │  │
 │    ├──> doctor_profiles (1:1)                                           │  │
 │    ├──> patient_profiles (1:1)                                          │  │
 │    ├──> doctor_oath_confirmations (1:N)                                 │  │
-│    └──> user_notifications (1:N)                                        │  │
+│    ├──> user_notifications (1:N)                                        │  │
+│    └──> audit_logs (1:N) - All user actions logged                      │  │
+│                                                                          │  │
+│  Valid Roles: SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER,           │  │
+│               PATIENT, MEDICAL_STORE, PATHOLOGY_LAB                     │  │
 │                                                                          │  │
 └──────────────────────────────────────────────────────────────────────────┘  │
                                                                                │
@@ -88,17 +93,27 @@ This document describes the relationships between database tables in the HMS Cor
 ### 1. User Management
 
 ```
+users (1) ────> (1) staff_master (for DOCTOR, NURSE, OPD_MANAGER, ADMIN roles)
 users (1) ────> (1) doctor_profiles
 users (1) ────> (1) patient_profiles
 users (1) ────> (N) doctor_oath_confirmations
 users (1) ────> (N) user_notifications
 users (1) ────> (N) activity_logs (via performed_by)
+users (1) ────> (N) audit_logs (for CREATE/DELETE actions)
 ```
 
 **Key Relationships:**
+- Staff roles (DOCTOR, NURSE, OPD_MANAGER, ADMIN) require staff_master entry to login
+- staff_master is auto-created when Admin adds users through User Management
 - Each user can have ONE doctor_profile OR ONE patient_profile based on role
 - Doctors must have daily oath confirmations (doctor_oath_confirmations)
 - All users receive role-specific notifications
+- All user create/delete actions are logged in audit_logs
+
+**Security & Data Isolation:**
+- Patient data isolation: Patients can ONLY see their own data (appointments, notifications, health records)
+- Staff authentication: Only users with ACTIVE staff_master entries can login for staff roles
+- Audit trail: All user management actions are logged for NABH/HIPAA compliance
 
 ---
 

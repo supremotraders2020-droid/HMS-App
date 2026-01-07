@@ -44,9 +44,36 @@ Core user authentication table.
 | id | varchar (PK) | UUID, auto-generated |
 | username | text | Unique login identifier |
 | password | text | bcrypt hashed (10 rounds) |
-| role | text | ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT |
+| role | text | SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, MEDICAL_STORE, PATHOLOGY_LAB |
 | name | text | Display name |
 | email | text | Email address |
+| date_of_birth | text | User's date of birth |
+| status | text | ACTIVE or INACTIVE (default: ACTIVE) |
+| created_at | timestamp | Account creation timestamp |
+| updated_at | timestamp | Last update timestamp |
+| created_by | varchar | ID of user who created this account |
+
+### staff_master
+Staff authentication validation table. Staff roles (DOCTOR, NURSE, OPD_MANAGER, ADMIN) require an ACTIVE entry here to login.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | varchar (PK) | UUID, auto-generated |
+| user_id | varchar | Reference to users table |
+| employee_id | text | Unique employee identifier |
+| name | text | Staff full name |
+| role | text | DOCTOR, NURSE, OPD_MANAGER, ADMIN |
+| department | text | Hospital department |
+| specialization | text | Medical specialization (for doctors) |
+| qualification | text | Qualifications |
+| phone | text | Contact phone |
+| email | text | Contact email |
+| status | text | ACTIVE or INACTIVE |
+| joining_date | text | Date of joining |
+| created_at | timestamp | Record creation timestamp |
+| updated_at | timestamp | Last update timestamp |
+
+**Security Note:** Auto-created when Admin adds users through User Management. Only users with ACTIVE staff_master entries can login for staff roles.
 
 ### doctor_oath_confirmations
 Daily NMC Physician's Pledge acceptance tracking.
