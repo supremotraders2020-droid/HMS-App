@@ -284,19 +284,31 @@ export default function PrescriptionCreationModal({
         });
       }
 
-      // Auto-fill instructions
+      // Auto-fill instructions (append only if not already present to avoid duplicates)
       if (templateInstructions) {
-        setInstructions(prev => prev ? `${prev}\n${templateInstructions}` : templateInstructions);
+        setInstructions(prev => {
+          if (!prev) return templateInstructions;
+          if (prev.includes(templateInstructions)) return prev;
+          return `${prev}\n${templateInstructions}`;
+        });
       }
 
-      // Auto-fill diet and activity advice
+      // Auto-fill diet and activity advice (append only if not already present to avoid duplicates)
       if (template.dietAdvice) {
         const dietText = template.dietAdvice;
-        setDietAdvice(prev => prev ? `${prev}\n${dietText}` : dietText);
+        setDietAdvice(prev => {
+          if (!prev) return dietText;
+          if (prev.includes(dietText)) return prev;
+          return `${prev}\n${dietText}`;
+        });
       }
       if (template.activityAdvice) {
         const activityText = template.activityAdvice;
-        setActivityAdvice(prev => prev ? `${prev}\n${activityText}` : activityText);
+        setActivityAdvice(prev => {
+          if (!prev) return activityText;
+          if (prev.includes(activityText)) return prev;
+          return `${prev}\n${activityText}`;
+        });
       }
 
       // Auto-fill suggested tests
