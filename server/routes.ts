@@ -3766,10 +3766,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // USER NOTIFICATIONS (Role-based real-time notifications)
   // =========================================
 
-  // Get notifications for a user
+  // Get notifications for a user (with session validation for data isolation)
   app.get("/api/user-notifications/:userId", async (req, res) => {
     try {
-      const notifications = await storage.getUserNotifications(req.params.userId);
+      const user = (req as any).session?.user;
+      const requestedUserId = req.params.userId;
+      
+      // CRITICAL: Patient data isolation - patients can only see their own notifications
+      if (user && user.role === 'PATIENT') {
+        if (user.id !== requestedUserId && user.username !== requestedUserId) {
+          return res.status(403).json({ error: "Access denied: You can only view your own notifications" });
+        }
+      }
+      
+      const notifications = await storage.getUserNotifications(requestedUserId);
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch notifications" });
@@ -3822,10 +3832,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mark all notifications as read for a user
+  // Mark all notifications as read for a user (with session validation)
   app.patch("/api/user-notifications/:userId/read-all", async (req, res) => {
     try {
-      await storage.markAllUserNotificationsRead(req.params.userId);
+      const user = (req as any).session?.user;
+      const requestedUserId = req.params.userId;
+      
+      // CRITICAL: Patient data isolation - patients can only modify their own notifications
+      if (user && user.role === 'PATIENT') {
+        if (user.id !== requestedUserId && user.username !== requestedUserId) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+      
+      await storage.markAllUserNotificationsRead(requestedUserId);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to mark all notifications as read" });
