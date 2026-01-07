@@ -52,6 +52,8 @@ const titleToRole = (title: string): UserRole => {
   if (lowerTitle.includes("nurse")) return "NURSE";
   if (lowerTitle.includes("opd") || lowerTitle.includes("manager")) return "OPD_MANAGER";
   if (lowerTitle.includes("admin")) return "ADMIN";
+  if (lowerTitle.includes("pathology") || lowerTitle.includes("lab")) return "PATHOLOGY_LAB";
+  if (lowerTitle.includes("medical") || lowerTitle.includes("store") || lowerTitle.includes("pharmacy")) return "MEDICAL_STORE";
   return "OPD_MANAGER";
 };
 
@@ -274,6 +276,8 @@ export default function UserManagement() {
       case "DOCTOR": return "default";
       case "NURSE": return "secondary";
       case "OPD_MANAGER": return "outline";
+      case "PATHOLOGY_LAB": return "default";
+      case "MEDICAL_STORE": return "secondary";
       default: return "outline";
     }
   };
@@ -370,6 +374,8 @@ export default function UserManagement() {
                       <SelectItem value="NURSE">Nurse</SelectItem>
                       <SelectItem value="OPD_MANAGER">OPD Manager</SelectItem>
                       <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="PATHOLOGY_LAB">Pathology Lab</SelectItem>
+                      <SelectItem value="MEDICAL_STORE">Medical Store</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -503,6 +509,8 @@ export default function UserManagement() {
                       <SelectItem value="NURSE">Nurse</SelectItem>
                       <SelectItem value="OPD_MANAGER">OPD Manager</SelectItem>
                       <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="PATHOLOGY_LAB">Pathology Lab</SelectItem>
+                      <SelectItem value="MEDICAL_STORE">Medical Store</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -652,6 +660,8 @@ export default function UserManagement() {
                 <SelectItem value="NURSE">Nurses</SelectItem>
                 <SelectItem value="OPD_MANAGER">OPD Managers</SelectItem>
                 <SelectItem value="ADMIN">Admins</SelectItem>
+                <SelectItem value="PATHOLOGY_LAB">Pathology Lab</SelectItem>
+                <SelectItem value="MEDICAL_STORE">Medical Store</SelectItem>
               </SelectContent>
             </Select>
           </div>
