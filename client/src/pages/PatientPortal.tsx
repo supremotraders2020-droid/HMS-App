@@ -552,7 +552,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
         slots.push({
           value: timeLabel,
           label: timeLabel,
-          location: schedule.slotType || schedule.location,
+          location: schedule.location || null,
         });
       }
     }

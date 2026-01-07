@@ -1424,8 +1424,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         specificDate: null,
         startTime: "14:00",
         endTime: "18:00",
-        slotType: "Gravity Hospital - Nigdi (Main)",
-        location: null,
+        slotType: "OPD",
+        location: "Gravity Hospital - Nigdi (Main)",
         maxPatients: 20,
         isAvailable: true,
         createdAt: null,
@@ -1686,8 +1686,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       specificDate: dateStr,
                       startTime: "09:00 AM",
                       endTime: "12:00 PM",
-                      slotType: "Gravity Hospital - Nigdi (Main)",
-                      location: null,
+                      slotType: "OPD",
+                      location: "Gravity Hospital - Nigdi (Main)",
                       maxPatients: 20,
                       isAvailable: true,
                     });
@@ -1773,10 +1773,10 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                           <div className="space-y-1">
                             <Label className="text-xs">Location</Label>
                             <Select 
-                              value={slot.slotType} 
-                              onValueChange={(v) => updateScheduleMutation.mutate({ id: slot.id, updates: { slotType: v }})}
+                              value={slot.location || "Gravity Hospital - Nigdi (Main)"} 
+                              onValueChange={(v) => updateScheduleMutation.mutate({ id: slot.id, updates: { location: v }})}
                             >
-                              <SelectTrigger data-testid={`select-dept-${slot.id}`}>
+                              <SelectTrigger data-testid={`select-location-${slot.id}`}>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>

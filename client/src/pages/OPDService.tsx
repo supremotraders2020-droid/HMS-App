@@ -692,7 +692,7 @@ export default function OPDService() {
                                     </div>
                                   </div>
                                   <Badge variant={block.isAvailable ? "default" : "secondary"}>
-                                    {block.location || block.slotType}
+                                    {block.location || "OPD"}
                                   </Badge>
                                 </div>
                               ))}
