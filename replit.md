@@ -57,6 +57,20 @@ Key modules and features include:
 - **Database Schema**: Extensive schema with over 60 tables to support complex healthcare data.
 - **Scalability**: Utilizes serverless PostgreSQL (Neon) and a robust Node.js backend to handle growth.
 
+### Security & Data Isolation
+- **Patient Data Isolation**: Each patient can ONLY see their own data (appointments, notifications, health records). Session-based validation on all patient-facing endpoints prevents data leakage. Even with thousands of patients, each dashboard shows only that patient's specific data.
+- **Staff Authentication**: Only users with ACTIVE entries in the Staff List (staff_master table) can log in for DOCTOR, NURSE, OPD_MANAGER, and ADMIN roles. This prevents unauthorized access.
+- **Auto Staff Creation**: When Admin creates users through User Management, the system automatically creates corresponding staff_master entries for staff roles.
+- **No Mock Data**: System starts clean - only Super Admin is seeded. All doctors, nurses, OPD managers, and admins must be added via User Management by authorized personnel.
+- **Audit Trail**: All user creation/deletion actions are logged in audit_logs for compliance.
+
+### Current Staff (Added via User Management)
+- **Doctors (5)**: jay, sunil, suraj, kapil, raghav
+- **Nurses (5)**: riya, rutuja, sakshi, siya, teju
+- **OPD Managers (2)**: dipak, shree
+- **Admin (1)**: admin
+- **Super Admin (1)**: superadmin (seeded)
+
 ## External Dependencies
 
 ### Database
