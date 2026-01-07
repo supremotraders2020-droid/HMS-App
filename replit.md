@@ -69,6 +69,7 @@ Key modules and features include:
 - **Doctors (5)**: jay, sunil, suraj, kapil, raghav
 - **Nurses (5)**: riya, rutuja, sakshi, siya, teju
 - **OPD Managers (2)**: dipak, shree
+- **Technicians (3)**: rahul, priya, amit
 - **Admin (1)**: admin
 - **Super Admin (1)**: superadmin (seeded)
 
