@@ -3761,6 +3761,11 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async getStaffMasterByEmail(email: string): Promise<StaffMaster | undefined> {
+    const result = await db.select().from(staffMaster).where(eq(staffMaster.email, email));
+    return result[0];
+  }
+
   async getStaffMasterByDepartment(department: string): Promise<StaffMaster[]> {
     return await db.select().from(staffMaster).where(eq(staffMaster.department, department)).orderBy(staffMaster.fullName);
   }

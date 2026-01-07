@@ -10,7 +10,7 @@ import { z } from "zod";
 import { HMS_MODULES, HMS_ACTIONS, DEFAULT_PERMISSIONS } from "../shared/permissions";
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
   patientBarcodes, insertPatientBarcodeSchema, barcodeScanLogs, insertBarcodeScanLogSchema, servicePatients,
@@ -336,6 +336,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Roles that require active staff list entry to login
+  const STAFF_ROLES_REQUIRING_VALIDATION = ["DOCTOR", "NURSE", "ADMIN", "OPD_MANAGER", "PATHOLOGY_LAB", "MEDICAL_STORE"];
+  
   // Login endpoint - fetch user by username, verify hashed password
   app.post("/api/auth/login", async (req, res) => {
     try {
@@ -366,6 +369,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate role matches
       if (user.role !== role) {
         return res.status(401).json({ error: `This account is registered as ${user.role}. Please select the correct role.` });
+      }
+      
+      // CRITICAL: Staff list validation - Staff roles must have an ACTIVE entry in staff_master table
+      // SUPER_ADMIN and PATIENT roles are exempt from this check
+      if (user.role !== "SUPER_ADMIN" && user.role !== "PATIENT" && STAFF_ROLES_REQUIRING_VALIDATION.includes(user.role)) {
+        // Try to find staff record by userId first (primary link)
+        let staffRecord = await storage.getStaffMasterByUserId(user.id);
+        
+        // If no userId link, try finding by email (fallback for legacy staff records)
+        if (!staffRecord && user.email) {
+          staffRecord = await storage.getStaffMasterByEmail(user.email);
+          // If found by email, automatically link the userId for future logins
+          if (staffRecord && !staffRecord.userId) {
+            await storage.updateStaffMaster(staffRecord.id, { userId: user.id });
+            console.log(`Auto-linked staff ${staffRecord.fullName} to user ${user.id} via email`);
+          }
+        }
+        
+        // If still not found, try finding by username as employeeCode (fallback for legacy records)
+        if (!staffRecord) {
+          staffRecord = await storage.getStaffMasterByEmployeeCode(username);
+          // If found by employeeCode, automatically link the userId for future logins
+          if (staffRecord && !staffRecord.userId) {
+            await storage.updateStaffMaster(staffRecord.id, { userId: user.id });
+            console.log(`Auto-linked staff ${staffRecord.fullName} to user ${user.id} via employeeCode`);
+          }
+        }
+        
+        if (!staffRecord) {
+          console.log(`Login denied for ${username}: No staff record found for role ${user.role}`);
+          return res.status(403).json({ 
+            error: "Access denied. Your account is not registered in the Staff List. Please contact the administrator." 
+          });
+        }
+        
+        if (staffRecord.status !== "ACTIVE") {
+          console.log(`Login denied for ${username}: Staff status is ${staffRecord.status}`);
+          return res.status(403).json({ 
+            error: `Access denied. Your staff account is ${staffRecord.status.toLowerCase()}. Please contact the administrator.` 
+          });
+        }
       }
       
       const { password: _, ...userWithoutPassword } = user;
@@ -9498,9 +9542,95 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       if (!user || user.role !== "ADMIN") {
         return res.status(403).json({ error: "Unauthorized" });
       }
-      const deleted = await storage.deleteStaffMaster(req.params.id);
-      if (!deleted) return res.status(404).json({ error: "Staff not found" });
-      res.json({ success: true });
+      
+      // Get staff record before deletion to find linked user
+      const staffRecord = await storage.getStaffMaster(req.params.id);
+      if (!staffRecord) {
+        return res.status(404).json({ error: "Staff not found" });
+      }
+      
+      const linkedUserId = staffRecord.userId;
+      const staffId = req.params.id;
+      const staffName = staffRecord.fullName;
+      const employeeCode = staffRecord.employeeCode;
+      
+      // CRITICAL: Cascade delete with proper ordering - revoke access FIRST, then delete records
+      // Order: Sessions -> User -> Staff (reverse dependency order to ensure access is revoked immediately)
+      if (linkedUserId) {
+        try {
+          // Step 1: Invalidate all sessions FIRST (immediate access revocation)
+          await pool.query(`DELETE FROM session WHERE sess::jsonb->'user'->>'id' = $1`, [linkedUserId]);
+          console.log(`Sessions invalidated for user ${linkedUserId}`);
+          
+          // Step 2: Delete the user account (prevents new logins)
+          await databaseStorage.deleteUser(linkedUserId);
+          console.log(`User account ${linkedUserId} deleted due to staff removal`);
+          
+          // Step 3: Delete the staff record
+          const deleted = await storage.deleteStaffMaster(staffId);
+          if (!deleted) {
+            // Staff record deletion failed - log and return error so admin knows to retry
+            await storage.createActivityLog({
+              action: "STAFF_DELETE_PARTIAL_FAILURE",
+              entityType: "staff",
+              entityId: staffId,
+              performedBy: user.name || user.username,
+              performedByRole: user.role,
+              details: `User account and sessions for ${staffName} were deleted, but staff record deletion failed. Access revoked but staff record remains.`,
+              activityType: "warning"
+            });
+            return res.status(500).json({ 
+              error: "User access revoked but staff record cleanup failed. Please retry or contact administrator." 
+            });
+          }
+          
+          // Create audit log for successful cascading deletion
+          await storage.createActivityLog({
+            action: "STAFF_DELETED_CASCADE",
+            entityType: "staff",
+            entityId: staffId,
+            performedBy: user.name || user.username,
+            performedByRole: user.role,
+            details: `Staff member ${staffName} (${employeeCode}) removed - user account ${linkedUserId} and all sessions deleted`,
+            activityType: "urgent"
+          });
+          
+          res.json({ success: true, message: "Staff member, user account, and all sessions deleted successfully" });
+        } catch (cascadeError) {
+          console.error("Error during cascade deletion:", cascadeError);
+          // Log the failure and return error - access revocation failed
+          try {
+            await storage.createActivityLog({
+              action: "STAFF_DELETE_CASCADE_FAILED",
+              entityType: "staff",
+              entityId: staffId,
+              performedBy: user.name || user.username,
+              performedByRole: user.role,
+              details: `Staff ${staffName} cascade deletion failed: ${(cascadeError as Error).message}. Manual cleanup required.`,
+              activityType: "warning"
+            });
+          } catch {}
+          return res.status(500).json({ 
+            error: "Failed to fully revoke staff access. Please contact system administrator for manual cleanup." 
+          });
+        }
+      } else {
+        // No linked user - just delete the staff record
+        const deleted = await storage.deleteStaffMaster(staffId);
+        if (!deleted) return res.status(404).json({ error: "Staff not found" });
+        
+        await storage.createActivityLog({
+          action: "STAFF_DELETED",
+          entityType: "staff",
+          entityId: staffId,
+          performedBy: user.name || user.username,
+          performedByRole: user.role,
+          details: `Staff member ${staffName} (${employeeCode}) removed (no linked user account)`,
+          activityType: "info"
+        });
+        
+        res.json({ success: true, message: "Staff member deleted successfully" });
+      }
     } catch (error) {
       console.error("Error deleting staff:", error);
       res.status(500).json({ error: "Failed to delete staff" });
