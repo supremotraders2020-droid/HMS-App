@@ -1321,13 +1321,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get service patient by ID
+  // Get service patient by ID (with patient data isolation for PATIENT role)
   app.get("/api/patients/service/:id", async (req, res) => {
     try {
+      const user = req.user as any;
       const patient = await storage.getServicePatientById(req.params.id);
       if (!patient) {
         return res.status(404).json({ error: "Patient not found" });
       }
+      
+      // CRITICAL: Patient data isolation - PATIENT role can only access their own record
+      if (user && user.role === 'PATIENT') {
+        if (patient.id !== user.id && patient.userId !== user.id) {
+          return res.status(403).json({ error: "Access denied. You can only view your own patient record." });
+        }
+      }
+      
       res.json(patient);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch patient" });
@@ -1431,22 +1440,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get admission by ID
+  // Get admission by ID (with patient data isolation for PATIENT role)
   app.get("/api/admissions/:id", async (req, res) => {
     try {
+      const user = req.user as any;
       const admission = await storage.getAdmissionById(req.params.id);
       if (!admission) {
         return res.status(404).json({ error: "Admission not found" });
       }
+      
+      // CRITICAL: Patient data isolation - PATIENT role can only access their own admissions
+      if (user && user.role === 'PATIENT') {
+        if (admission.patientId !== user.id) {
+          return res.status(403).json({ error: "Access denied. You can only view your own admission records." });
+        }
+      }
+      
       res.json(admission);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch admission" });
     }
   });
 
-  // Get admissions by patient
+  // Get admissions by patient (with patient data isolation for PATIENT role)
   app.get("/api/patients/service/:id/admissions", async (req, res) => {
     try {
+      const user = req.user as any;
+      
+      // CRITICAL: Patient data isolation - PATIENT role can only access their own admissions
+      if (user && user.role === 'PATIENT') {
+        if (req.params.id !== user.id) {
+          return res.status(403).json({ error: "Access denied. You can only view your own admission records." });
+        }
+      }
+      
       const admissions = await storage.getAdmissionsByPatient(req.params.id);
       res.json(admissions);
     } catch (error) {
@@ -1565,22 +1592,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get medical record by ID
+  // Get medical record by ID (with patient data isolation for PATIENT role)
   app.get("/api/medical-records/:id", async (req, res) => {
     try {
+      const user = req.user as any;
       const record = await storage.getMedicalRecordById(req.params.id);
       if (!record) {
         return res.status(404).json({ error: "Medical record not found" });
       }
+      
+      // CRITICAL: Patient data isolation - PATIENT role can only access their own medical records
+      if (user && user.role === 'PATIENT') {
+        if (record.patientId !== user.id) {
+          return res.status(403).json({ error: "Access denied. You can only view your own medical records." });
+        }
+      }
+      
       res.json(record);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch medical record" });
     }
   });
 
-  // Get medical records by patient
+  // Get medical records by patient (with patient data isolation for PATIENT role)
   app.get("/api/patients/service/:id/medical-records", async (req, res) => {
     try {
+      const user = req.user as any;
+      
+      // CRITICAL: Patient data isolation - PATIENT role can only access their own medical records
+      if (user && user.role === 'PATIENT') {
+        if (req.params.id !== user.id) {
+          return res.status(403).json({ error: "Access denied. You can only view your own medical records." });
+        }
+      }
+      
       const records = await storage.getMedicalRecordsByPatient(req.params.id);
       res.json(records);
     } catch (error) {
@@ -1980,13 +2025,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get notification by ID
+  // Get notification by ID (with patient data isolation for PATIENT role)
   app.get("/api/notifications/:id", async (req, res) => {
     try {
+      const user = req.user as any;
       const notification = await storage.getNotificationById(req.params.id);
       if (!notification) {
         return res.status(404).json({ error: "Notification not found" });
       }
+      
+      // CRITICAL: Patient data isolation - PATIENT role can only access their own notifications
+      if (user && user.role === 'PATIENT') {
+        if (notification.userId !== user.id && notification.recipientId !== user.id) {
+          return res.status(403).json({ error: "Access denied. You can only view your own notifications." });
+        }
+      }
+      
       res.json(notification);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch notification" });
@@ -2577,13 +2631,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get single prescription
+  // Get single prescription (with patient data isolation for PATIENT role)
   app.get("/api/prescriptions/:id", async (req, res) => {
     try {
+      const user = req.user as any;
       const prescription = await storage.getPrescription(req.params.id);
       if (!prescription) {
         return res.status(404).json({ error: "Prescription not found" });
       }
+      
+      // CRITICAL: Patient data isolation - PATIENT role can only access their own prescriptions
+      if (user && user.role === 'PATIENT') {
+        if (prescription.patientId !== user.id && 
+            prescription.patientName?.toLowerCase() !== user.name?.toLowerCase() &&
+            prescription.patientName?.toLowerCase() !== user.username?.toLowerCase()) {
+          return res.status(403).json({ error: "Access denied. You can only view your own prescriptions." });
+        }
+      }
+      
       res.json(prescription);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch prescription" });
@@ -4892,13 +4957,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get bill by ID
+  // Get bill by ID (with patient data isolation for PATIENT role)
   app.get("/api/patient-bills/:id", async (req, res) => {
     try {
+      const user = req.user as any;
       const bill = await storage.getPatientBill(req.params.id);
       if (!bill) {
         return res.status(404).json({ error: "Bill not found" });
       }
+      
+      // CRITICAL: Patient data isolation - PATIENT role can only access their own bills
+      if (user && user.role === 'PATIENT') {
+        if (bill.patientId !== user.id) {
+          return res.status(403).json({ error: "Access denied. You can only view your own billing records." });
+        }
+      }
+      
       res.json(bill);
     } catch (error) {
       console.error("Failed to fetch bill:", error);
@@ -4906,9 +4980,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get bill by patient ID
+  // Get bill by patient ID (with patient data isolation for PATIENT role)
   app.get("/api/patient-bills/patient/:patientId", async (req, res) => {
     try {
+      const user = req.user as any;
+      
+      // CRITICAL: Patient data isolation - PATIENT role can only access their own bills
+      if (user && user.role === 'PATIENT') {
+        if (req.params.patientId !== user.id && req.params.patientId !== user.username) {
+          return res.status(403).json({ error: "Access denied. You can only view your own billing records." });
+        }
+      }
+      
       const bill = await storage.getPatientBillByPatientId(req.params.patientId);
       res.json(bill || null);
     } catch (error) {
