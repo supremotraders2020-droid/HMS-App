@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -369,12 +371,12 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     }
   });
 
-  const { data: appointments = [] } = useQuery<Appointment[]>({
+  const { data: appointments = [], isLoading: appointmentsLoading } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments"],
   });
 
   // Fetch medical records with real-time sync (refetch every 3 seconds)
-  const { data: medicalRecords = [] } = useQuery<MedicalRecord[]>({
+  const { data: medicalRecords = [], isLoading: recordsLoading } = useQuery<MedicalRecord[]>({
     queryKey: ["/api/medical-records"],
     refetchInterval: 3000, // Real-time sync every 3 seconds
   });
@@ -392,7 +394,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   });
 
   // Fetch prescriptions for this patient by name with flexible matching
-  const { data: patientPrescriptions = [] } = useQuery<Prescription[]>({
+  const { data: patientPrescriptions = [], isLoading: prescriptionsLoading } = useQuery<Prescription[]>({
     queryKey: [`/api/prescriptions/patient/${encodeURIComponent(patientName)}`],
     refetchInterval: 3000, // Real-time sync
   });
@@ -905,359 +907,766 @@ Description: ${record.description}
     );
   }
 
+  // Check for reduced motion preference
+  const prefersReducedMotion = typeof window !== 'undefined' 
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches 
+    : false;
+
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
+        const isDataLoading = appointmentsLoading || recordsLoading || prescriptionsLoading;
         return (
-          <div className="space-y-6">
-            {/* Enhanced Welcome Banner with gradient and decorative elements */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-emerald-600 rounded-2xl p-8 text-white shadow-lg">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24" />
+          <motion.div 
+            className="space-y-6"
+            initial={prefersReducedMotion ? {} : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={prefersReducedMotion ? {} : { duration: 0.3 }}
+          >
+            {/* Enhanced Welcome Banner with gradient, decorative elements, and animations */}
+            <motion.div 
+              className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-emerald-600 rounded-2xl p-6 sm:p-8 text-white shadow-xl"
+              initial={prefersReducedMotion ? {} : { y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={prefersReducedMotion ? {} : { duration: 0.5, ease: "easeOut" }}
+            >
+              {/* Animated background decorations - only animate if reduced motion not preferred */}
+              {!prefersReducedMotion && (
+                <>
+                  <motion.div 
+                    className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-white/5 rounded-full -translate-y-24 sm:-translate-y-32 translate-x-24 sm:translate-x-32"
+                    animate={{ scale: [1, 1.1, 1], rotate: [0, 5, 0] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div 
+                    className="absolute bottom-0 left-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/5 rounded-full translate-y-16 sm:translate-y-24 -translate-x-16 sm:-translate-x-24"
+                    animate={{ scale: [1, 1.15, 1], rotate: [0, -5, 0] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  />
+                  {/* Floating particles */}
+                  <motion.div 
+                    className="absolute top-1/4 right-1/4 w-2 h-2 bg-white/20 rounded-full"
+                    animate={{ y: [-10, 10, -10], opacity: [0.2, 0.5, 0.2] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div 
+                    className="absolute bottom-1/3 right-1/3 w-3 h-3 bg-white/15 rounded-full"
+                    animate={{ y: [10, -10, 10], opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                  />
+                </>
+              )}
+              {/* Static decorations for reduced motion */}
+              {prefersReducedMotion && (
+                <>
+                  <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-white/5 rounded-full -translate-y-24 sm:-translate-y-32 translate-x-24 sm:translate-x-32" />
+                  <div className="absolute bottom-0 left-0 w-32 sm:w-48 h-32 sm:h-48 bg-white/5 rounded-full translate-y-16 sm:translate-y-24 -translate-x-16 sm:-translate-x-24" />
+                </>
+              )}
               <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-                    <Heart className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-white/80 text-sm">Good to see you!</p>
-                    <h2 className="text-2xl font-bold" data-testid="text-welcome">Welcome back, {patientName}!</h2>
-                  </div>
-                </div>
-                <p className="text-white/90 max-w-lg">Your health, our priority. Here's your personalized health summary and quick access to all your medical services.</p>
-              </div>
-            </div>
-
-            {/* Enhanced Stat Cards with colorful icons */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="hover-elevate group relative" data-testid="card-total-appointments">
-                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Appointments</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-blue-500" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400" data-testid="text-total-appointments">{appointments.length}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Lifetime visits</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-elevate group relative" data-testid="card-upcoming">
-                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-emerald-500" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400" data-testid="text-upcoming">{upcomingAppointments.length}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Scheduled appointments</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-elevate group relative" data-testid="card-records">
-                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Health Records</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-purple-500" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400" data-testid="text-records">{patientRecords.length}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Medical documents</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-elevate group relative" data-testid="card-bills">
-                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Pending Bills</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                    <IndianRupee className="h-5 w-5 text-orange-500" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-orange-600 dark:text-orange-400" data-testid="text-bills">
-                    ₹{patientBill?.status === 'pending' ? Number(patientBill.totalAmount || 0).toLocaleString('en-IN') : '0'}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Outstanding amount</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Enhanced Cards with better styling */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="border-0 shadow-md" data-testid="card-upcoming-appointments">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                        <Calendar className="h-5 w-5 text-blue-500" />
-                      </div>
-                      <span>Upcoming Appointments</span>
-                    </CardTitle>
-                    {upcomingAppointments.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">{upcomingAppointments.length} scheduled</Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {upcomingAppointments.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="font-semibold">Doctor</TableHead>
-                          <TableHead className="font-semibold">Date</TableHead>
-                          <TableHead className="font-semibold">Time</TableHead>
-                          <TableHead className="font-semibold">Status</TableHead>
-                          <TableHead className="font-semibold text-right">Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {upcomingAppointments.slice(0, 5).map((apt) => {
-                          const locationData = LOCATIONS.find(l => l.name === (apt as any).location) || LOCATIONS[9];
-                          return (
-                            <TableRow key={apt.id} className="hover:bg-muted/30" data-testid={`appointment-row-${apt.id}`}>
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                    <Stethoscope className="h-4 w-4 text-blue-500" />
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Consultation</p>
-                                    <p className="text-xs text-muted-foreground">ID: {apt.doctorId?.slice(0, 8)}</p>
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell className="font-medium text-blue-600 dark:text-blue-400">{apt.appointmentDate}</TableCell>
-                              <TableCell>{apt.timeSlot}</TableCell>
-                              <TableCell>
-                                <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                                  {apt.status || "Scheduled"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <a 
-                                  href={locationData.mapUrl} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
-                                  data-testid={`link-apt-map-${apt.id}`}
-                                >
-                                  <MapPin className="h-3 w-3" />
-                                  Map
-                                </a>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="text-center py-10 px-4">
-                      <div className="h-20 w-20 rounded-full bg-blue-50 dark:bg-blue-950/30 mx-auto flex items-center justify-center mb-4">
-                        <Calendar className="h-10 w-10 text-blue-400" />
-                      </div>
-                      <p className="text-muted-foreground mb-4">No upcoming appointments scheduled</p>
-                      <Button onClick={() => setActiveSection("opd")} data-testid="button-book-from-empty">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Book Appointment
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-md" data-testid="card-recent-records">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-emerald-500" />
-                      </div>
-                      <span>Recent Health Records</span>
-                    </CardTitle>
-                    {(patientPrescriptions.length > 0 || patientRecords.length > 0) && (
-                      <Badge variant="secondary" className="text-xs">{patientPrescriptions.length + patientRecords.length} records</Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {(patientPrescriptions.length > 0 || patientRecords.length > 0) ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="font-semibold">Type</TableHead>
-                          <TableHead className="font-semibold">Details</TableHead>
-                          <TableHead className="font-semibold">Date</TableHead>
-                          <TableHead className="font-semibold">Status</TableHead>
-                          <TableHead className="font-semibold text-right">Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {patientPrescriptions.slice(0, 3).map((prescription) => (
-                          <TableRow key={`rx-${prescription.id}`} className="hover:bg-muted/30" data-testid={`prescription-row-${prescription.id}`}>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                                  <Pill className="h-4 w-4 text-emerald-500" />
-                                </div>
-                                <span className="text-sm font-medium">Prescription</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-medium truncate max-w-[150px]">{prescription.diagnosis}</p>
-                              <p className="text-xs text-muted-foreground">Dr. {prescription.doctorName}</p>
-                            </TableCell>
-                            <TableCell className="text-sm">{prescription.prescriptionDate ? format(new Date(prescription.prescriptionDate), 'MMM dd, yyyy') : 'N/A'}</TableCell>
-                            <TableCell>
-                              <Badge className={prescription.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}>
-                                {prescription.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button size="sm" variant="ghost">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {patientRecords.slice(0, 2).map((record) => (
-                          <TableRow key={record.id} className="hover:bg-muted/30" data-testid={`record-row-${record.id}`}>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                                  {getRecordIcon(record.recordType)}
-                                </div>
-                                <span className="text-sm font-medium capitalize">{record.recordType?.replace('_', ' ')}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-medium truncate max-w-[150px]">{record.title}</p>
-                            </TableCell>
-                            <TableCell className="text-sm">{record.recordDate ? format(new Date(record.recordDate), 'MMM dd, yyyy') : 'N/A'}</TableCell>
-                            <TableCell>
-                              <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Record</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => handleViewRecord(record)}
-                                data-testid={`button-view-record-${record.id}`}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="h-16 w-16 rounded-full bg-muted mx-auto flex items-center justify-center mb-3">
-                        <FileText className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <p className="text-muted-foreground">No health records yet</p>
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter className="border-t p-4">
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => setActiveSection("records")}
-                    data-testid="button-view-all-records"
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4">
+                  <motion.div 
+                    className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg"
+                    whileHover={{ scale: 1.1, rotate: 10 }}
+                    transition={{ type: "spring", stiffness: 400 }}
                   >
-                    View All Records
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </CardFooter>
-              </Card>
+                    <Heart className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                  </motion.div>
+                  <div>
+                    <motion.p 
+                      className="text-white/80 text-sm font-medium"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      Good to see you!
+                    </motion.p>
+                    <motion.h2 
+                      className="text-xl sm:text-2xl lg:text-3xl font-bold" 
+                      data-testid="text-welcome"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      Welcome back, {patientName}!
+                    </motion.h2>
+                  </div>
+                </div>
+                <motion.p 
+                  className="text-white/90 max-w-lg text-sm sm:text-base leading-relaxed"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  Your health, our priority. Here's your personalized health summary and quick access to all your medical services.
+                </motion.p>
+              </div>
+            </motion.div>
+
+            {/* Enhanced Stat Cards with animations and loading skeletons */}
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+              {[
+                { 
+                  id: "total-appointments", 
+                  title: "Total Appointments", 
+                  value: appointments.length, 
+                  subtitle: "Lifetime visits", 
+                  icon: Calendar, 
+                  color: "blue",
+                  gradient: "from-blue-500 to-blue-600"
+                },
+                { 
+                  id: "upcoming", 
+                  title: "Upcoming", 
+                  value: upcomingAppointments.length, 
+                  subtitle: "Scheduled appointments", 
+                  icon: Clock, 
+                  color: "emerald",
+                  gradient: "from-emerald-500 to-emerald-600"
+                },
+                { 
+                  id: "records", 
+                  title: "Health Records", 
+                  value: patientRecords.length, 
+                  subtitle: "Medical documents", 
+                  icon: FileText, 
+                  color: "purple",
+                  gradient: "from-purple-500 to-purple-600"
+                },
+                { 
+                  id: "bills", 
+                  title: "Pending Bills", 
+                  value: `₹${patientBill?.status === 'pending' ? Number(patientBill.totalAmount || 0).toLocaleString('en-IN') : '0'}`, 
+                  subtitle: "Outstanding amount", 
+                  icon: IndianRupee, 
+                  color: "orange",
+                  gradient: "from-orange-500 to-orange-600"
+                }
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 + 0.3, duration: 0.4 }}
+                >
+                  <Card 
+                    className="group relative overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300" 
+                    data-testid={`card-${stat.id}`}
+                    role="region"
+                    aria-label={`${stat.title}: ${stat.value}`}
+                  >
+                    {/* Subtle gradient background on hover */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+                    
+                    <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2 relative">
+                      <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                      <motion.div 
+                        className={`h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-${stat.color}-500/10 flex items-center justify-center`}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ type: "spring", stiffness: 400 }}
+                      >
+                        <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 text-${stat.color}-500`} />
+                      </motion.div>
+                    </CardHeader>
+                    <CardContent className="relative">
+                      {isDataLoading ? (
+                        <div className="space-y-2">
+                          <Skeleton className="h-8 w-16" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      ) : (
+                        <>
+                          <motion.div 
+                            className={`text-2xl sm:text-3xl font-bold text-${stat.color}-600 dark:text-${stat.color}-400`}
+                            data-testid={`text-${stat.id}`}
+                            initial={{ scale: 0.5 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: index * 0.1 + 0.4, type: "spring", stiffness: 200 }}
+                          >
+                            {stat.value}
+                          </motion.div>
+                          <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
             </div>
 
-            {/* Enhanced Quick Actions */}
-            <Card className="border-0 shadow-md" data-testid="card-quick-actions">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <span>Quick Actions</span>
-                    <CardDescription className="font-normal mt-0.5">Common tasks at your fingertips</CardDescription>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {[
-                    { label: "Book Appointment", desc: "Schedule a visit", icon: Calendar, section: "opd", gradient: "from-blue-500 to-blue-600", shadow: "shadow-blue-500/30" },
-                    { label: "View Records", desc: "Medical history", icon: FileText, section: "records", gradient: "from-emerald-500 to-emerald-600", shadow: "shadow-emerald-500/30" },
-                    { label: "Pay Bills", desc: "Pending payments", icon: CreditCard, section: "admission", gradient: "from-orange-500 to-orange-600", shadow: "shadow-orange-500/30" },
-                    { label: "Health Assistant", desc: "24/7 support", icon: MessageCircle, section: "chatbot", gradient: "from-purple-500 to-purple-600", shadow: "shadow-purple-500/30" },
-                  ].map((action) => (
-                    <button
-                      key={action.label}
-                      onClick={() => setActiveSection(action.section)}
-                      className="group flex flex-col items-center gap-4 p-6 rounded-2xl border bg-card hover:shadow-lg transition-all duration-300 text-center"
-                      data-testid={`action-${action.section}`}
+            {/* Enhanced Cards with better styling and animations */}
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+              >
+                <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 h-full" data-testid="card-upcoming-appointments" role="region" aria-label="Upcoming Appointments">
+                  <CardHeader className="pb-3 sm:pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <CardTitle className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg">
+                        <motion.div 
+                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-blue-500/10 flex items-center justify-center"
+                          whileHover={{ scale: 1.1 }}
+                        >
+                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+                        </motion.div>
+                        <span>Upcoming Appointments</span>
+                      </CardTitle>
+                      {upcomingAppointments.length > 0 && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.6, type: "spring" }}
+                        >
+                          <Badge variant="secondary" className="text-xs">{upcomingAppointments.length} scheduled</Badge>
+                        </motion.div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <AnimatePresence mode="wait">
+                      {isDataLoading ? (
+                        <motion.div 
+                          key="loading"
+                          className="p-4 space-y-3"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex items-center gap-3">
+                              <Skeleton className="h-9 w-9 rounded-lg" />
+                              <div className="flex-1 space-y-2">
+                                <Skeleton className="h-4 w-3/4" />
+                                <Skeleton className="h-3 w-1/2" />
+                              </div>
+                            </div>
+                          ))}
+                        </motion.div>
+                      ) : upcomingAppointments.length > 0 ? (
+                        <motion.div
+                          key="content"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        >
+                          {/* Mobile-friendly list view */}
+                          <div className="block sm:hidden divide-y">
+                            {upcomingAppointments.slice(0, 5).map((apt, idx) => {
+                              const locationData = LOCATIONS.find(l => l.name === (apt as any).location) || LOCATIONS[9];
+                              return (
+                                <motion.div 
+                                  key={apt.id} 
+                                  className="p-4 hover:bg-muted/30 transition-colors"
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: idx * 0.05 }}
+                                  data-testid={`appointment-mobile-${apt.id}`}
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                      <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                                        <Stethoscope className="h-5 w-5 text-blue-500" />
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold text-sm">Consultation</p>
+                                        <p className="text-xs text-muted-foreground">{apt.appointmentDate} at {apt.timeSlot}</p>
+                                      </div>
+                                    </div>
+                                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs shrink-0">
+                                      {apt.status || "Scheduled"}
+                                    </Badge>
+                                  </div>
+                                  <div className="mt-3 flex justify-end">
+                                    <a 
+                                      href={locationData.mapUrl} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400"
+                                    >
+                                      <MapPin className="h-3 w-3" />
+                                      View on Map
+                                    </a>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                          {/* Desktop table view */}
+                          <div className="hidden sm:block overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="bg-muted/50">
+                                  <TableHead className="font-semibold">Doctor</TableHead>
+                                  <TableHead className="font-semibold">Date</TableHead>
+                                  <TableHead className="font-semibold">Time</TableHead>
+                                  <TableHead className="font-semibold">Status</TableHead>
+                                  <TableHead className="font-semibold text-right">Action</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {upcomingAppointments.slice(0, 5).map((apt, idx) => {
+                                  const locationData = LOCATIONS.find(l => l.name === (apt as any).location) || LOCATIONS[9];
+                                  return (
+                                    <motion.tr 
+                                      key={apt.id} 
+                                      className="hover:bg-muted/30 transition-colors border-b"
+                                      initial={{ opacity: 0, x: -10 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      transition={{ delay: idx * 0.05 }}
+                                      data-testid={`appointment-row-${apt.id}`}
+                                    >
+                                      <TableCell>
+                                        <div className="flex items-center gap-3">
+                                          <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                            <Stethoscope className="h-4 w-4 text-blue-500" />
+                                          </div>
+                                          <div>
+                                            <p className="font-medium">Consultation</p>
+                                            <p className="text-xs text-muted-foreground">ID: {apt.doctorId?.slice(0, 8)}</p>
+                                          </div>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="font-medium text-blue-600 dark:text-blue-400">{apt.appointmentDate}</TableCell>
+                                      <TableCell>{apt.timeSlot}</TableCell>
+                                      <TableCell>
+                                        <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                                          {apt.status || "Scheduled"}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell className="text-right">
+                                        <a 
+                                          href={locationData.mapUrl} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                                          data-testid={`link-apt-map-${apt.id}`}
+                                        >
+                                          <MapPin className="h-3 w-3" />
+                                          Map
+                                        </a>
+                                      </TableCell>
+                                    </motion.tr>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div 
+                          key="empty"
+                          className="text-center py-8 sm:py-12 px-4"
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <motion.div 
+                            className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 mx-auto flex items-center justify-center mb-4 shadow-inner"
+                            animate={prefersReducedMotion ? {} : { y: [0, -5, 0] }}
+                            transition={prefersReducedMotion ? {} : { duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                          >
+                            <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-blue-400" />
+                          </motion.div>
+                          <h4 className="font-semibold text-foreground mb-1">No Upcoming Appointments</h4>
+                          <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">Schedule a visit with one of our specialists today</p>
+                          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <Button onClick={() => setActiveSection("opd")} data-testid="button-book-from-empty" className="shadow-md">
+                              <Plus className="h-4 w-4 mr-2" />
+                              Book Appointment
+                            </Button>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6, duration: 0.4 }}
+              >
+                <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 h-full" data-testid="card-recent-records" role="region" aria-label="Recent Health Records">
+                  <CardHeader className="pb-3 sm:pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <CardTitle className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg">
+                        <motion.div 
+                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"
+                          whileHover={{ scale: 1.1 }}
+                        >
+                          <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
+                        </motion.div>
+                        <span>Recent Health Records</span>
+                      </CardTitle>
+                      {(patientPrescriptions.length > 0 || patientRecords.length > 0) && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.7, type: "spring" }}
+                        >
+                          <Badge variant="secondary" className="text-xs">{patientPrescriptions.length + patientRecords.length} records</Badge>
+                        </motion.div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <AnimatePresence mode="wait">
+                      {isDataLoading ? (
+                        <motion.div 
+                          key="loading"
+                          className="p-4 space-y-3"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex items-center gap-3">
+                              <Skeleton className="h-8 w-8 rounded-lg" />
+                              <div className="flex-1 space-y-2">
+                                <Skeleton className="h-4 w-2/3" />
+                                <Skeleton className="h-3 w-1/3" />
+                              </div>
+                            </div>
+                          ))}
+                        </motion.div>
+                      ) : (patientPrescriptions.length > 0 || patientRecords.length > 0) ? (
+                        <motion.div
+                          key="content"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        >
+                          {/* Mobile-friendly list view */}
+                          <div className="block sm:hidden divide-y">
+                            {patientPrescriptions.slice(0, 3).map((prescription, idx) => (
+                              <motion.div 
+                                key={`rx-${prescription.id}`}
+                                className="p-4 hover:bg-muted/30 transition-colors"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                                      <Pill className="h-5 w-5 text-emerald-500" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="font-semibold text-sm truncate">{prescription.diagnosis}</p>
+                                      <p className="text-xs text-muted-foreground">Dr. {prescription.doctorName}</p>
+                                    </div>
+                                  </div>
+                                  <Badge className={prescription.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'} variant="secondary">
+                                    {prescription.status}
+                                  </Badge>
+                                </div>
+                              </motion.div>
+                            ))}
+                            {patientRecords.slice(0, 2).map((record, idx) => (
+                              <motion.div 
+                                key={record.id}
+                                className="p-4 hover:bg-muted/30 transition-colors"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: (patientPrescriptions.length + idx) * 0.05 }}
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
+                                      {getRecordIcon(record.recordType)}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="font-semibold text-sm truncate">{record.title}</p>
+                                      <p className="text-xs text-muted-foreground capitalize">{record.recordType?.replace('_', ' ')}</p>
+                                    </div>
+                                  </div>
+                                  <Button 
+                                    size="icon" 
+                                    variant="ghost"
+                                    className="shrink-0"
+                                    onClick={() => handleViewRecord(record)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                          {/* Desktop table view */}
+                          <div className="hidden sm:block overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="bg-muted/50">
+                                  <TableHead className="font-semibold">Type</TableHead>
+                                  <TableHead className="font-semibold">Details</TableHead>
+                                  <TableHead className="font-semibold">Date</TableHead>
+                                  <TableHead className="font-semibold">Status</TableHead>
+                                  <TableHead className="font-semibold text-right">Action</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {patientPrescriptions.slice(0, 3).map((prescription, idx) => (
+                                  <motion.tr 
+                                    key={`rx-${prescription.id}`} 
+                                    className="hover:bg-muted/30 transition-colors border-b" 
+                                    data-testid={`prescription-row-${prescription.id}`}
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                  >
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                          <Pill className="h-4 w-4 text-emerald-500" />
+                                        </div>
+                                        <span className="text-sm font-medium">Prescription</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <p className="font-medium truncate max-w-[150px]">{prescription.diagnosis}</p>
+                                      <p className="text-xs text-muted-foreground">Dr. {prescription.doctorName}</p>
+                                    </TableCell>
+                                    <TableCell className="text-sm">{prescription.prescriptionDate ? format(new Date(prescription.prescriptionDate), 'MMM dd, yyyy') : 'N/A'}</TableCell>
+                                    <TableCell>
+                                      <Badge className={prescription.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}>
+                                        {prescription.status}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <Button size="sm" variant="ghost">
+                                        <Eye className="h-4 w-4" />
+                                      </Button>
+                                    </TableCell>
+                                  </motion.tr>
+                                ))}
+                                {patientRecords.slice(0, 2).map((record, idx) => (
+                                  <motion.tr 
+                                    key={record.id} 
+                                    className="hover:bg-muted/30 transition-colors border-b" 
+                                    data-testid={`record-row-${record.id}`}
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: (patientPrescriptions.length + idx) * 0.05 }}
+                                  >
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                          {getRecordIcon(record.recordType)}
+                                        </div>
+                                        <span className="text-sm font-medium capitalize">{record.recordType?.replace('_', ' ')}</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <p className="font-medium truncate max-w-[150px]">{record.title}</p>
+                                    </TableCell>
+                                    <TableCell className="text-sm">{record.recordDate ? format(new Date(record.recordDate), 'MMM dd, yyyy') : 'N/A'}</TableCell>
+                                    <TableCell>
+                                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Record</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        onClick={() => handleViewRecord(record)}
+                                        data-testid={`button-view-record-${record.id}`}
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                      </Button>
+                                    </TableCell>
+                                  </motion.tr>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div 
+                          key="empty"
+                          className="text-center py-8 sm:py-12 px-4"
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <motion.div 
+                            className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/30 mx-auto flex items-center justify-center mb-4 shadow-inner"
+                            animate={prefersReducedMotion ? {} : { y: [0, -5, 0] }}
+                            transition={prefersReducedMotion ? {} : { duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                          >
+                            <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-emerald-400" />
+                          </motion.div>
+                          <h4 className="font-semibold text-foreground mb-1">No Health Records Yet</h4>
+                          <p className="text-sm text-muted-foreground max-w-xs mx-auto">Your medical records, prescriptions, and lab reports will appear here</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                  <CardFooter className="border-t p-3 sm:p-4">
+                    <motion.div className="w-full" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => setActiveSection("records")}
+                        data-testid="button-view-all-records"
+                      >
+                        View All Records
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </motion.div>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            </div>
+
+            {/* Enhanced Quick Actions with animations */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.4 }}
+            >
+              <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300" data-testid="card-quick-actions" role="region" aria-label="Quick Actions">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg">
+                    <motion.div 
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary/10 flex items-center justify-center"
+                      whileHover={{ scale: 1.1, rotate: 10 }}
                     >
-                      <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-lg ${action.shadow} group-hover:scale-110 transition-transform duration-300`}>
-                        <action.icon className="h-8 w-8 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{action.label}</p>
-                        <p className="text-xs text-muted-foreground">{action.desc}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                      <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    </motion.div>
+                    <div>
+                      <span>Quick Actions</span>
+                      <CardDescription className="font-normal mt-0.5 text-sm">Common tasks at your fingertips</CardDescription>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+                    {[
+                      { label: "Book Appointment", desc: "Schedule a visit", icon: Calendar, section: "opd", gradient: "from-blue-500 to-blue-600", shadow: "shadow-blue-500/30", hoverBg: "hover:bg-blue-50 dark:hover:bg-blue-950/20" },
+                      { label: "View Records", desc: "Medical history", icon: FileText, section: "records", gradient: "from-emerald-500 to-emerald-600", shadow: "shadow-emerald-500/30", hoverBg: "hover:bg-emerald-50 dark:hover:bg-emerald-950/20" },
+                      { label: "Pay Bills", desc: "Pending payments", icon: CreditCard, section: "admission", gradient: "from-orange-500 to-orange-600", shadow: "shadow-orange-500/30", hoverBg: "hover:bg-orange-50 dark:hover:bg-orange-950/20" },
+                      { label: "Health Assistant", desc: "24/7 support", icon: MessageCircle, section: "chatbot", gradient: "from-purple-500 to-purple-600", shadow: "shadow-purple-500/30", hoverBg: "hover:bg-purple-50 dark:hover:bg-purple-950/20" },
+                    ].map((action, index) => (
+                      <motion.button
+                        key={action.label}
+                        onClick={() => setActiveSection(action.section)}
+                        className={`group flex flex-col items-center gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl border bg-card ${action.hoverBg} transition-all duration-300 text-center focus:outline-none focus:ring-2 focus:ring-primary/50`}
+                        data-testid={`action-${action.section}`}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.8 + index * 0.1, type: "spring", stiffness: 300 }}
+                        whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.2)" }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <motion.div 
+                          className={`h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-lg ${action.shadow}`}
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                        >
+                          <action.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                        </motion.div>
+                        <div>
+                          <p className="font-semibold text-foreground text-sm sm:text-base">{action.label}</p>
+                          <p className="text-xs text-muted-foreground hidden sm:block">{action.desc}</p>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
         );
 
       case "opd":
         return (
-          <div className="space-y-6">
-            {/* Enhanced Header */}
-            <div className="relative rounded-2xl bg-gradient-to-r from-sky-600 via-sky-500 to-blue-500 p-6 text-white shadow-lg">
+          <motion.div 
+            className="space-y-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Enhanced Header with animation */}
+            <motion.div 
+              className="relative rounded-2xl bg-gradient-to-r from-sky-600 via-sky-500 to-blue-500 p-4 sm:p-6 text-white shadow-xl overflow-hidden"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50 rounded-2xl" />
-              <div className="relative flex items-center gap-4">
-                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <Calendar className="h-8 w-8 text-white" />
-                </div>
+              {/* Floating decorations - respect reduced motion */}
+              {prefersReducedMotion ? (
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16" />
+              ) : (
+                <motion.div 
+                  className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 6, repeat: Infinity }}
+                />
+              )}
+              <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                <motion.div 
+                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                >
+                  <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                </motion.div>
                 <div>
-                  <h2 className="text-2xl font-bold" data-testid="text-opd-title">Book an Appointment</h2>
-                  <p className="text-white/80">Choose a department and doctor to schedule your visit</p>
+                  <motion.h2 
+                    className="text-xl sm:text-2xl font-bold" 
+                    data-testid="text-opd-title"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    Book an Appointment
+                  </motion.h2>
+                  <motion.p 
+                    className="text-white/80 text-sm sm:text-base"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    Choose a department and doctor to schedule your visit
+                  </motion.p>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-              {DEPARTMENTS.map((dept) => (
-                <Card 
-                  key={dept.id} 
-                  className={`cursor-pointer text-center transition-all ${selectedDepartment === dept.name ? "ring-2 ring-primary bg-primary/5" : "hover-elevate"}`}
-                  onClick={() => {
-                    if (selectedDepartment === dept.name) {
-                      setSelectedDepartment("");
-                      setSelectedDoctor(null);
-                    } else {
-                      setSelectedDepartment(dept.name);
-                      setSelectedDoctor(null);
-                    }
-                  }}
-                  data-testid={`dept-${dept.id}`}
+            {/* Department selection with animations */}
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+              {DEPARTMENTS.map((dept, index) => (
+                <motion.div
+                  key={dept.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 + 0.2 }}
                 >
-                  <CardContent className="pt-6">
-                    <div className={`h-12 w-12 mx-auto rounded-xl ${selectedDepartment === dept.name ? "bg-primary/20" : "bg-muted"} flex items-center justify-center mb-3`}>
-                      <dept.icon className={`h-6 w-6 ${dept.color}`} />
-                    </div>
-                    <p className="font-medium text-sm">{dept.name}</p>
-                  </CardContent>
-                </Card>
+                  <Card 
+                    className={`cursor-pointer text-center transition-all h-full ${selectedDepartment === dept.name ? "ring-2 ring-primary bg-primary/5 shadow-lg" : "hover:shadow-md"}`}
+                    onClick={() => {
+                      if (selectedDepartment === dept.name) {
+                        setSelectedDepartment("");
+                        setSelectedDoctor(null);
+                      } else {
+                        setSelectedDepartment(dept.name);
+                        setSelectedDoctor(null);
+                      }
+                    }}
+                    data-testid={`dept-${dept.id}`}
+                  >
+                    <CardContent className="pt-4 sm:pt-6 pb-4">
+                      <motion.div 
+                        className={`h-10 w-10 sm:h-12 sm:w-12 mx-auto rounded-xl ${selectedDepartment === dept.name ? "bg-primary/20" : "bg-muted"} flex items-center justify-center mb-2 sm:mb-3`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <dept.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${dept.color}`} />
+                      </motion.div>
+                      <p className="font-medium text-xs sm:text-sm">{dept.name}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
             </div>
 
@@ -1339,7 +1748,12 @@ Description: ${record.description}
               const doctorDepartment = doctorData?.specialty || selectedDepartment || "General Medicine";
               
               return (
-              <Card className="border-primary" data-testid="card-booking-form">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+              <Card className="border-primary shadow-lg" data-testid="card-booking-form">
                 <CardHeader>
                   <CardTitle>Select Date & Time</CardTitle>
                   <CardDescription>Choose your preferred appointment slot for {doctorData?.name}</CardDescription>
@@ -1468,9 +1882,10 @@ Description: ${record.description}
                   </Button>
                 </CardFooter>
               </Card>
+              </motion.div>
               );
             })()}
-          </div>
+          </motion.div>
         );
 
       case "records":
