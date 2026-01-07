@@ -168,7 +168,7 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
               <div class="patient-name">${selectedPatientForBarcode.name}</div>
               <div class="uhid">UHID: ${selectedPatientForBarcode.barcode.uhid}</div>
               <img class="qr-img" src="/api/barcodes/image/${selectedPatientForBarcode.barcode.uhid}" />
-              <div class="hospital-name">Gravity Hospital - HMS Core</div>
+              <div class="hospital-name">Gravity Hospital - Gravity AI Manager</div>
             </div>
             <script>
               setTimeout(() => { window.print(); window.close(); }, 500);

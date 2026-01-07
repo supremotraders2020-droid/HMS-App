@@ -276,7 +276,7 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
               transition={{ duration: 0.6, delay: 0.6 }}
             >
               Welcome to
-              <span className="block text-cyan-200 mt-2">HMS Core</span>
+              <span className="block text-cyan-200 mt-2">Gravity AI Manager</span>
             </motion.h1>
 
             <motion.p 
@@ -354,7 +354,7 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
                   <Heart className="w-full h-full text-white" fill="rgba(255,255,255,0.3)" />
                 </motion.div>
               </div>
-              <h1 className="text-2xl font-bold text-white">HMS Core</h1>
+              <h1 className="text-2xl font-bold text-white">Gravity AI Manager</h1>
               <p className="text-white/70 text-sm">Hospital Management System</p>
             </motion.div>
 
@@ -609,7 +609,7 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
             >
-              Gravity Hospital &copy; {new Date().getFullYear()} | Powered by HMS Core
+              Gravity Hospital &copy; {new Date().getFullYear()} | Powered by Gravity AI Manager
             </motion.p>
           </motion.div>
         </div>

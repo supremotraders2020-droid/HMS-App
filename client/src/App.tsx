@@ -742,7 +742,7 @@ function AppContent() {
                     <SidebarTrigger data-testid="button-sidebar-toggle" className="glass-button" />
                     <div className="flex flex-col">
                       <span className="text-lg font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Gravity Hospital</span>
-                      <span className="text-xs text-muted-foreground">HMS Core System</span>
+                      <span className="text-xs text-muted-foreground">Gravity AI Manager</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">

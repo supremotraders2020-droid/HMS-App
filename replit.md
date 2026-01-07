@@ -1,7 +1,7 @@
-# HMS Core - Hospital Management System
+# Gravity AI Manager - Hospital Management System
 
 ## Overview
-HMS Core is a comprehensive Hospital Management System designed for Gravity Hospital, offering role-based access for nine user roles: SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE, and TECHNICIAN. It provides specialized dashboards and workflows tailored to each role, focusing on clinical clarity, professional trust, and efficient healthcare workflows. The system adheres to Material Design 3 principles adapted for the healthcare industry. The project includes 24 departments with 4,830+ hospital services (including 1,148 pathology tests), integrating AI for enhanced decision-making and operational efficiency.
+Gravity AI Manager is a comprehensive Hospital Management System designed for Gravity Hospital, offering role-based access for nine user roles: SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE, and TECHNICIAN. It provides specialized dashboards and workflows tailored to each role, focusing on clinical clarity, professional trust, and efficient healthcare workflows. The system adheres to Material Design 3 principles adapted for the healthcare industry. The project includes 24 departments with 4,830+ hospital services (including 1,148 pathology tests), integrating AI for enhanced decision-making and operational efficiency.
 
 ## User Preferences
 - Preferred communication style: Simple, everyday language
@@ -19,7 +19,7 @@ The frontend is built with React 18 and TypeScript, utilizing Radix UI and shadc
 The backend uses Node.js with Express, Drizzle ORM for type-safe database interactions, PostgreSQL (Neon) as the serverless database, bcrypt for password hashing (10 rounds), Express Sessions for authentication, and WebSockets for real-time notifications. OpenAI GPT-4o is integrated for AI services.
 
 ### Feature Specifications
-HMS Core includes 23 core modules, with a strong emphasis on role-based access control for SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE, and TECHNICIAN roles.
+Gravity AI Manager includes 23 core modules, with a strong emphasis on role-based access control for SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE, and TECHNICIAN roles.
 
 Key modules and features include:
 - **Authentication & RBAC**: Session-based authentication, bcrypt hashing, daily Doctor Oath requirement, and role-based UI filtering.
