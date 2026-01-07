@@ -523,17 +523,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all appointments (with patient data isolation for PATIENT role)
   app.get("/api/appointments", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       let appointments = await storage.getAppointments();
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own appointments
       if (user && user.role === 'PATIENT') {
         const patientId = user.id;
-        appointments = appointments.filter(apt => 
-          apt.patientId === patientId || 
-          apt.patientName?.toLowerCase() === user.name?.toLowerCase() ||
-          apt.patientName?.toLowerCase() === user.username?.toLowerCase()
-        );
+        const userName = user.name?.toLowerCase().replace(/\s+/g, ' ').trim();
+        const userUsername = user.username?.toLowerCase();
+        appointments = appointments.filter(apt => {
+          const aptPatientName = apt.patientName?.toLowerCase().replace(/\s+/g, ' ').trim();
+          return apt.patientId === patientId || 
+            aptPatientName === userName ||
+            aptPatientName === userUsername;
+        });
       }
       
       res.json(appointments);
@@ -545,17 +548,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get appointments by status (with patient data isolation for PATIENT role)
   app.get("/api/appointments/status/:status", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       let appointments = await storage.getAppointmentsByStatus(req.params.status);
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own appointments
       if (user && user.role === 'PATIENT') {
         const patientId = user.id;
-        appointments = appointments.filter(apt => 
-          apt.patientId === patientId || 
-          apt.patientName?.toLowerCase() === user.name?.toLowerCase() ||
-          apt.patientName?.toLowerCase() === user.username?.toLowerCase()
-        );
+        const userName = user.name?.toLowerCase().replace(/\s+/g, ' ').trim();
+        const userUsername = user.username?.toLowerCase();
+        appointments = appointments.filter(apt => {
+          const aptPatientName = apt.patientName?.toLowerCase().replace(/\s+/g, ' ').trim();
+          return apt.patientId === patientId || 
+            aptPatientName === userName ||
+            aptPatientName === userUsername;
+        });
       }
       
       res.json(appointments);
@@ -1276,7 +1282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all service patients (with patient data isolation for PATIENT role)
   app.get("/api/patients/service", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       let patients = await storage.getAllServicePatients();
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own record
@@ -1324,7 +1330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get service patient by ID (with patient data isolation for PATIENT role)
   app.get("/api/patients/service/:id", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const patient = await storage.getServicePatientById(req.params.id);
       if (!patient) {
         return res.status(404).json({ error: "Patient not found" });
@@ -1399,17 +1405,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all admissions (with patient data isolation for PATIENT role)
   app.get("/api/admissions", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       let admissions = await storage.getAllAdmissions();
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own admissions
       if (user && user.role === 'PATIENT') {
         const patientId = user.id;
-        admissions = admissions.filter(adm => 
-          adm.patientId === patientId ||
-          adm.patientName?.toLowerCase() === user.name?.toLowerCase() ||
-          adm.patientName?.toLowerCase() === user.username?.toLowerCase()
-        );
+        const userName = user.name?.toLowerCase().replace(/\s+/g, ' ').trim();
+        const userUsername = user.username?.toLowerCase();
+        admissions = admissions.filter(adm => {
+          const admPatientName = adm.patientName?.toLowerCase().replace(/\s+/g, ' ').trim();
+          return adm.patientId === patientId ||
+            admPatientName === userName ||
+            admPatientName === userUsername;
+        });
       }
       
       res.json(admissions);
@@ -1421,17 +1430,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get active admissions (with patient data isolation for PATIENT role)
   app.get("/api/admissions/active", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       let admissions = await storage.getActiveAdmissions();
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own admissions
       if (user && user.role === 'PATIENT') {
         const patientId = user.id;
-        admissions = admissions.filter(adm => 
-          adm.patientId === patientId ||
-          adm.patientName?.toLowerCase() === user.name?.toLowerCase() ||
-          adm.patientName?.toLowerCase() === user.username?.toLowerCase()
-        );
+        const userName = user.name?.toLowerCase().replace(/\s+/g, ' ').trim();
+        const userUsername = user.username?.toLowerCase();
+        admissions = admissions.filter(adm => {
+          const admPatientName = adm.patientName?.toLowerCase().replace(/\s+/g, ' ').trim();
+          return adm.patientId === patientId ||
+            admPatientName === userName ||
+            admPatientName === userUsername;
+        });
       }
       
       res.json(admissions);
@@ -1443,7 +1455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get admission by ID (with patient data isolation for PATIENT role)
   app.get("/api/admissions/:id", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const admission = await storage.getAdmissionById(req.params.id);
       if (!admission) {
         return res.status(404).json({ error: "Admission not found" });
@@ -1465,7 +1477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get admissions by patient (with patient data isolation for PATIENT role)
   app.get("/api/patients/service/:id/admissions", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       // CRITICAL: Patient data isolation - PATIENT role can only access their own admissions
       if (user && user.role === 'PATIENT') {
@@ -1575,7 +1587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all medical records (with patient data isolation for PATIENT role)
   app.get("/api/medical-records", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       let records = await storage.getAllMedicalRecords();
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own medical records
@@ -1595,7 +1607,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get medical record by ID (with patient data isolation for PATIENT role)
   app.get("/api/medical-records/:id", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const record = await storage.getMedicalRecordById(req.params.id);
       if (!record) {
         return res.status(404).json({ error: "Medical record not found" });
@@ -1617,7 +1629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get medical records by patient (with patient data isolation for PATIENT role)
   app.get("/api/patients/service/:id/medical-records", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       // CRITICAL: Patient data isolation - PATIENT role can only access their own medical records
       if (user && user.role === 'PATIENT') {
@@ -2007,7 +2019,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all notifications (with patient data isolation for PATIENT role)
   app.get("/api/notifications", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       let notifications = await storage.getAllNotifications();
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own notifications
@@ -2028,7 +2040,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get notification by ID (with patient data isolation for PATIENT role)
   app.get("/api/notifications/:id", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const notification = await storage.getNotificationById(req.params.id);
       if (!notification) {
         return res.status(404).json({ error: "Notification not found" });
@@ -2591,7 +2603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all prescriptions (with patient data isolation for PATIENT role)
   app.get("/api/prescriptions", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       let prescriptions = await storage.getPrescriptions();
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own prescriptions
@@ -2634,7 +2646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get single prescription (with patient data isolation for PATIENT role)
   app.get("/api/prescriptions/:id", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const prescription = await storage.getPrescription(req.params.id);
       if (!prescription) {
         return res.status(404).json({ error: "Prescription not found" });
@@ -4926,17 +4938,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all patient bills (with patient data isolation for PATIENT role)
   app.get("/api/patient-bills", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       let bills = await storage.getAllPatientBills();
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own bills
       if (user && user.role === 'PATIENT') {
         const patientId = user.id;
-        bills = bills.filter(bill => 
-          bill.patientId === patientId ||
-          bill.patientName?.toLowerCase() === user.name?.toLowerCase() ||
-          bill.patientName?.toLowerCase() === user.username?.toLowerCase()
-        );
+        const userName = user.name?.toLowerCase().replace(/\s+/g, ' ').trim();
+        const userUsername = user.username?.toLowerCase();
+        bills = bills.filter(bill => {
+          const billPatientName = bill.patientName?.toLowerCase().replace(/\s+/g, ' ').trim();
+          return bill.patientId === patientId ||
+            billPatientName === userName ||
+            billPatientName === userUsername;
+        });
       }
       
       res.json(bills);
@@ -4960,7 +4975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get bill by ID (with patient data isolation for PATIENT role)
   app.get("/api/patient-bills/:id", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const bill = await storage.getPatientBill(req.params.id);
       if (!bill) {
         return res.status(404).json({ error: "Bill not found" });
@@ -4983,7 +4998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get bill by patient ID (with patient data isolation for PATIENT role)
   app.get("/api/patient-bills/patient/:patientId", async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       // CRITICAL: Patient data isolation - PATIENT role can only access their own bills
       if (user && user.role === 'PATIENT') {
@@ -11048,7 +11063,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(404).json({ error: "Face embedding not found" });
       }
       // Don't return the actual embedding vector to non-admin
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       if (user.role !== "ADMIN") {
         res.json({ ...embedding, embeddingVector: "[ENCRYPTED]" });
       } else {
@@ -11064,7 +11079,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/face-recognition/consent", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { userId, userType, consentStatus, ipAddress } = req.body;
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       if (!userId || !userType) {
         return res.status(400).json({ error: "Missing required fields: userId, userType" });
@@ -11114,7 +11129,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/face-recognition/consent/revoke", requireAuth, requireRole(["ADMIN", "PATIENT"]), async (req, res) => {
     try {
       const { userId, userType, reason } = req.body;
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       // Patient can only revoke their own consent
       if (user.role === "PATIENT" && user.id !== userId) {
@@ -11137,7 +11152,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     try {
       const startTime = Date.now();
       const { embeddingVector, userType, purpose, location, deviceId } = req.body;
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       if (!embeddingVector) {
         return res.status(400).json({ error: "Missing embeddingVector" });
@@ -11211,7 +11226,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/face-recognition/duplicate-check", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { embeddingVector, newPatientId, location } = req.body;
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       if (!embeddingVector) {
         return res.status(400).json({ error: "Missing embeddingVector" });
@@ -11294,7 +11309,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/face-recognition/duplicate-alerts/:id/resolve", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
     try {
       const { status, notes, mergedToId } = req.body;
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       const alert = await storage.resolveDuplicateAlert(
         req.params.id,
@@ -11315,7 +11330,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/face-recognition/attendance", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { embeddingVector, location, deviceId, staffId } = req.body;
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       if (!embeddingVector) {
         return res.status(400).json({ error: "Missing embeddingVector" });
@@ -11425,7 +11440,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/face-recognition/settings", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
     try {
       const { key, value, description } = req.body;
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       const setting = await storage.upsertFaceRecognitionSetting(key, value, description, user.id);
       res.json(setting);
@@ -11476,7 +11491,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/face-recognition/patient-checkin", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { embeddingVector, location, deviceId } = req.body;
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       
       if (!embeddingVector) {
         return res.status(400).json({ error: "Missing embeddingVector" });
@@ -11560,7 +11575,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/referral-sources", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const source = await storage.createReferralSource({ 
         ...req.body, 
         tenantId: user.tenantId || user.hospitalName || "default",
@@ -11612,7 +11627,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/referrals", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const referral = await storage.createPatientReferral({ 
         ...req.body, 
         tenantId: user.tenantId || user.hospitalName || "default",
@@ -11661,7 +11676,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Seed demo referral sources
   app.post("/api/referral-sources/seed", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const tenantId = user.tenantId || user.hospitalName || "default";
       
       // Check if sources already exist
@@ -11874,7 +11889,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Create new template (ADMIN and DOCTOR only)
   app.post("/api/opd-templates", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const userId = user?.id;
       const userName = user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username;
       
@@ -11896,7 +11911,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Update template (ADMIN can update any, DOCTOR can update their own)
   app.patch("/api/opd-templates/:id", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const userId = user?.id;
       const userName = user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username;
       const userRole = user?.role;
@@ -11925,7 +11940,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Delete template (ADMIN can delete any non-system, DOCTOR can delete their own)
   app.delete("/api/opd-templates/:id", requireAuth, requireRole(["ADMIN", "DOCTOR"]), async (req, res) => {
     try {
-      const user = req.user as any;
+      const user = (req as any).session?.user;
       const userId = user?.id;
       const userRole = user?.role;
       
