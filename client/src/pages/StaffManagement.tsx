@@ -23,7 +23,7 @@ import StaffSelfService from "@/components/StaffSelfService";
 import NurseDepartmentPreferences from "@/components/NurseDepartmentPreferences";
 import DepartmentNurseAssignments from "@/components/DepartmentNurseAssignments";
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB" | "TECHNICIAN";
 
 type CurrentUser = {
   id: string;

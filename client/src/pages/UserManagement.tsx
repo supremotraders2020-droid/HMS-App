@@ -34,7 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { HospitalTeamMember } from "@shared/schema";
 
-type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB" | "TECHNICIAN";
 
 const roleToTitle: Record<UserRole, string> = {
   DOCTOR: "Doctor",
@@ -43,7 +43,8 @@ const roleToTitle: Record<UserRole, string> = {
   ADMIN: "Administrator",
   PATIENT: "Patient",
   MEDICAL_STORE: "Medical Store Staff",
-  PATHOLOGY_LAB: "Lab Technician"
+  PATHOLOGY_LAB: "Lab Technician",
+  TECHNICIAN: "Technician"
 };
 
 const titleToRole = (title: string): UserRole => {
@@ -52,8 +53,9 @@ const titleToRole = (title: string): UserRole => {
   if (lowerTitle.includes("nurse")) return "NURSE";
   if (lowerTitle.includes("opd") || lowerTitle.includes("manager")) return "OPD_MANAGER";
   if (lowerTitle.includes("admin")) return "ADMIN";
-  if (lowerTitle.includes("pathology") || lowerTitle.includes("lab")) return "PATHOLOGY_LAB";
+  if (lowerTitle.includes("pathology") || lowerTitle.includes("lab technician")) return "PATHOLOGY_LAB";
   if (lowerTitle.includes("medical") || lowerTitle.includes("store") || lowerTitle.includes("pharmacy")) return "MEDICAL_STORE";
+  if (lowerTitle.includes("technician") || lowerTitle.includes("mri") || lowerTitle.includes("ct") || lowerTitle.includes("radiology") || lowerTitle.includes("sonography")) return "TECHNICIAN";
   return "OPD_MANAGER";
 };
 
@@ -278,6 +280,7 @@ export default function UserManagement() {
       case "OPD_MANAGER": return "outline";
       case "PATHOLOGY_LAB": return "default";
       case "MEDICAL_STORE": return "secondary";
+      case "TECHNICIAN": return "default";
       default: return "outline";
     }
   };
@@ -376,13 +379,14 @@ export default function UserManagement() {
                       <SelectItem value="ADMIN">Admin</SelectItem>
                       <SelectItem value="PATHOLOGY_LAB">Pathology Lab</SelectItem>
                       <SelectItem value="MEDICAL_STORE">Medical Store</SelectItem>
+                      <SelectItem value="TECHNICIAN">Technician</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              {/* Department dropdown - shown for Doctor and Nurse roles */}
-              {(newStaff.role === "DOCTOR" || newStaff.role === "NURSE") && (
+              {/* Department dropdown - shown for Doctor, Nurse, and Technician roles */}
+              {(newStaff.role === "DOCTOR" || newStaff.role === "NURSE" || newStaff.role === "TECHNICIAN") && (
                 <div>
                   <Label>Department *</Label>
                   <Select value={newStaff.department} onValueChange={(value) => setNewStaff({...newStaff, department: value})}>
@@ -511,6 +515,7 @@ export default function UserManagement() {
                       <SelectItem value="ADMIN">Admin</SelectItem>
                       <SelectItem value="PATHOLOGY_LAB">Pathology Lab</SelectItem>
                       <SelectItem value="MEDICAL_STORE">Medical Store</SelectItem>
+                      <SelectItem value="TECHNICIAN">Technician</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -662,6 +667,7 @@ export default function UserManagement() {
                 <SelectItem value="ADMIN">Admins</SelectItem>
                 <SelectItem value="PATHOLOGY_LAB">Pathology Lab</SelectItem>
                 <SelectItem value="MEDICAL_STORE">Medical Store</SelectItem>
+                <SelectItem value="TECHNICIAN">Technicians</SelectItem>
               </SelectContent>
             </Select>
           </div>

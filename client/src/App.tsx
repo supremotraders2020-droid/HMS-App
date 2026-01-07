@@ -48,8 +48,9 @@ import InsuranceManagement from "@/pages/InsuranceManagement";
 import ReferralData from "@/pages/ReferralData";
 import HospitalServices from "@/pages/HospitalServices";
 import SuperAdminPortal from "@/pages/SuperAdminPortal";
+import TechnicianPortal from "@/pages/TechnicianPortal";
 
-type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB" | "TECHNICIAN";
 
 interface User {
   id: string;
@@ -298,6 +299,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only pathology lab staff and administrators can access this portal.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/technician-portal">
+        {["TECHNICIAN", "ADMIN"].includes(currentUser.role) ? (
+          <TechnicianPortal currentUserId={currentUser.id} currentUserName={currentUser.name} currentUserRole={currentUser.role} />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only technicians can access this portal.</p>
           </div>
         )}
       </Route>
@@ -639,7 +650,8 @@ function AppContent() {
       OPD_MANAGER: "Mary Johnson",
       PATIENT: "John Smith",
       MEDICAL_STORE: "Pharmacy Staff",
-      PATHOLOGY_LAB: "Lab Technician"
+      PATHOLOGY_LAB: "Lab Technician",
+      TECHNICIAN: "Diagnostic Technician"
     };
     return names[role] || username;
   };

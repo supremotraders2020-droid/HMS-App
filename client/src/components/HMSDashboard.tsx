@@ -39,7 +39,7 @@ import type { ActivityLog, Appointment, ServicePatient, CriticalAlert } from "@s
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 
-type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB" | "TECHNICIAN";
 
 interface HMSDashboardProps {
   currentRole: UserRole;
@@ -331,6 +331,12 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
         { title: "Reports Uploaded", value: "34", change: "+5", icon: TrendingUp, urgent: false },
         { title: "Critical Results", value: "2", change: "+1", icon: AlertTriangle, urgent: true },
         { title: "Samples Collected", value: "18", change: "+3", icon: Activity, urgent: false }
+      ],
+      TECHNICIAN: [
+        { title: "Pending Scans", value: "8", change: "+2", icon: FileText, urgent: false },
+        { title: "Reports Uploaded", value: "15", change: "+3", icon: TrendingUp, urgent: false },
+        { title: "Today's Procedures", value: "12", change: "+4", icon: Activity, urgent: false },
+        { title: "Urgent Requests", value: "3", change: "+1", icon: AlertTriangle, urgent: true }
       ]
     };
 
@@ -369,6 +375,7 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
       case "PATIENT": return "from-teal-500/25 to-cyan-600/15";
       case "MEDICAL_STORE": return "from-rose-500/25 to-pink-600/15";
       case "PATHOLOGY_LAB": return "from-indigo-500/25 to-blue-600/15";
+      case "TECHNICIAN": return "from-sky-500/25 to-blue-600/15";
       default: return "from-slate-500/25 to-gray-600/15";
     }
   };

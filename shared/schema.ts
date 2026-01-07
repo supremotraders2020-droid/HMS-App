@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // User Role Enum - SUPER_ADMIN is the highest authority
-export const userRoleEnum = pgEnum("user_role", ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"]);
+export const userRoleEnum = pgEnum("user_role", ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB", "TECHNICIAN"]);
 
 // Inventory Enums
 export const inventoryCategoryEnum = pgEnum("inventory_category", ["disposables", "syringes", "gloves", "medicines", "equipment"]);
@@ -26,7 +26,7 @@ export const users = pgTable("users", {
   createdBy: varchar("created_by"),
 });
 
-const validRoles = ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB"] as const;
+const validRoles = ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "MEDICAL_STORE", "PATHOLOGY_LAB", "TECHNICIAN"] as const;
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,

@@ -9,7 +9,7 @@ import { UserPlus, LogIn, Heart, Activity, Stethoscope, Pill, Syringe, Shield, C
 import { motion, AnimatePresence } from "framer-motion";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 
-type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB";
+type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB" | "TECHNICIAN";
 
 interface AuthFormsProps {
   onLogin?: (username: string, password: string, role: UserRole) => void;
@@ -165,7 +165,8 @@ export default function AuthForms({ onLogin, onRegister, loginError }: AuthForms
     { value: "OPD_MANAGER", label: "OPD Manager", description: "Outpatient department" },
     { value: "PATIENT", label: "Patient", description: "Personal health records" },
     { value: "MEDICAL_STORE", label: "Medical Store", description: "Pharmacy & dispensing" },
-    { value: "PATHOLOGY_LAB", label: "Pathology Lab", description: "Lab tests & reports" }
+    { value: "PATHOLOGY_LAB", label: "Pathology Lab", description: "Lab tests & reports" },
+    { value: "TECHNICIAN", label: "Technician", description: "Diagnostic imaging & scans" }
   ];
   
   const registrationRoles: { value: UserRole; label: string; description: string }[] = [
