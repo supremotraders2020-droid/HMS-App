@@ -3095,7 +3095,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       )}
       
       <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-        <div className={`flex h-screen w-full ${!hasAcceptedOath ? 'pointer-events-none blur-sm' : ''}`}>
+        <div className={`flex h-screen w-full overflow-hidden ${!hasAcceptedOath ? 'pointer-events-none blur-sm' : ''}`}>
           <Sidebar className="glass-sidebar">
             <SidebarHeader className="py-4 px-3">
               <div className="relative">
@@ -3287,26 +3287,26 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             </SidebarFooter>
           </Sidebar>
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <header className="flex items-center justify-between gap-2 p-3 border-b bg-background/95 backdrop-blur">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger data-testid="button-sidebar-toggle" />
-              <Separator orientation="vertical" className="h-6" />
-              <div>
-                <h2 className="font-semibold capitalize">{activeSection}</h2>
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          <header className="flex items-center justify-between gap-2 px-3 sm:px-4 py-3 border-b bg-background/95 backdrop-blur shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <SidebarTrigger data-testid="button-sidebar-toggle" className="shrink-0" />
+              <Separator orientation="vertical" className="h-6 hidden sm:block" />
+              <div className="min-w-0">
+                <h2 className="font-semibold capitalize truncate text-sm sm:text-base">{activeSection}</h2>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="relative"
+                className="relative h-9 w-9"
                 onClick={() => setActiveSection("notifications")}
                 data-testid="button-header-notifications"
               >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
                 {unreadNotifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] sm:text-xs flex items-center justify-center">
                     {unreadNotifications.length}
                   </span>
                 )}
@@ -3315,7 +3315,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
             {renderContent()}
           </main>
         </div>

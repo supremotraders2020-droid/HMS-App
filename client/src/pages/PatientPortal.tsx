@@ -2779,17 +2779,17 @@ Description: ${record.description}
             </div>
 
             {/* Summary Stats */}
-            <div className="grid gap-4 grid-cols-3">
-              <Card className="text-center p-4">
-                <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">{patientPrescriptions.length}</div>
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+              <Card className="text-center p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-teal-600 dark:text-teal-400">{patientPrescriptions.length}</div>
                 <p className="text-xs text-muted-foreground">Total Prescriptions</p>
               </Card>
-              <Card className="text-center p-4">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{patientPrescriptions.filter(p => p.prescriptionStatus === 'finalized').length}</div>
+              <Card className="text-center p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{patientPrescriptions.filter(p => p.prescriptionStatus === 'finalized').length}</div>
                 <p className="text-xs text-muted-foreground">Finalized</p>
               </Card>
-              <Card className="text-center p-4">
-                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{patientPrescriptions.filter(p => p.prescriptionStatus === 'draft').length}</div>
+              <Card className="text-center p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400">{patientPrescriptions.filter(p => p.prescriptionStatus === 'draft').length}</div>
                 <p className="text-xs text-muted-foreground">Pending</p>
               </Card>
             </div>
@@ -2949,17 +2949,17 @@ Description: ${record.description}
             </div>
 
             {/* Summary Stats */}
-            <div className="grid gap-4 grid-cols-3">
-              <Card className="text-center p-4">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{labReports.length}</div>
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+              <Card className="text-center p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{labReports.length}</div>
                 <p className="text-xs text-muted-foreground">Total Reports</p>
               </Card>
-              <Card className="text-center p-4">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{labReports.filter((r: any) => r.reportStatus === 'VERIFIED').length}</div>
+              <Card className="text-center p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{labReports.filter((r: any) => r.reportStatus === 'VERIFIED').length}</div>
                 <p className="text-xs text-muted-foreground">Verified</p>
               </Card>
-              <Card className="text-center p-4">
-                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{labReports.filter((r: any) => r.reportStatus === 'IN_PROGRESS').length}</div>
+              <Card className="text-center p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400">{labReports.filter((r: any) => r.reportStatus === 'IN_PROGRESS').length}</div>
                 <p className="text-xs text-muted-foreground">In Progress</p>
               </Card>
             </div>
@@ -4114,14 +4114,14 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
 
   return (
     <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-      <div className="flex h-screen w-full">
+      <div className="flex h-screen w-full overflow-hidden">
         <PatientSidebar />
-        <div className="flex flex-col flex-1">
-          <header className="h-16 border-b bg-card px-4 flex items-center justify-between lg:px-6">
-            <div className="flex items-center gap-4">
+        <div className="flex flex-col flex-1 min-w-0">
+          <header className="h-14 sm:h-16 border-b bg-card px-3 sm:px-4 flex items-center justify-between gap-2 lg:px-6 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
-              <div>
-                <h1 className="text-lg font-semibold" data-testid="text-page-title">
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-semibold truncate" data-testid="text-page-title">
                   {navigationItems.find(n => n.id === activeSection)?.label || "Dashboard"}
                 </h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">
@@ -4129,15 +4129,15 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <Button 
                 size="icon" 
                 variant="ghost"
                 onClick={() => setActiveSection("notifications")}
-                className="relative"
+                className="relative h-9 w-9"
                 data-testid="button-header-notifications"
               >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
                 {unreadNotifications > 0 && (
                   <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
                 )}
@@ -4147,7 +4147,7 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
           </header>
 
           <ScrollArea className="flex-1">
-            <main className="p-4 lg:p-6 space-y-4">
+            <main className="p-3 sm:p-4 lg:p-6 space-y-4">
               {renderContent()}
             </main>
           </ScrollArea>

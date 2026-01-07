@@ -723,7 +723,7 @@ function AppContent() {
       <ThemeProvider>
         <TooltipProvider>
           <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-            <div className="flex h-screen w-full">
+            <div className="flex h-screen w-full overflow-hidden">
               <HMSSidebar 
                 currentRole={currentUser.role}
                 currentUser={{
@@ -736,20 +736,20 @@ function AppContent() {
                 }}
                 onLogout={handleLogout}
               />
-              <div className="flex flex-col flex-1">
-                <header className="flex items-center justify-between p-4 border-b glass-panel sticky top-0 z-40">
-                  <div className="flex items-center space-x-4">
-                    <SidebarTrigger data-testid="button-sidebar-toggle" className="glass-button" />
-                    <div className="flex flex-col">
-                      <span className="text-lg font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Gravity Hospital</span>
-                      <span className="text-xs text-muted-foreground">Gravity AI Manager</span>
+              <div className="flex flex-col flex-1 min-w-0">
+                <header className="flex items-center justify-between gap-2 px-3 sm:px-4 py-3 border-b glass-panel sticky top-0 z-40 shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                    <SidebarTrigger data-testid="button-sidebar-toggle" className="glass-button shrink-0" />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-base sm:text-lg font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate">Gravity Hospital</span>
+                      <span className="text-xs text-muted-foreground hidden sm:block">Gravity AI Manager</span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     <ThemeSwitcher />
                   </div>
                 </header>
-                <main className="flex-1 overflow-auto p-6">
+                <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
                   <Router currentUser={currentUser} currentPath="/" />
                 </main>
               </div>
