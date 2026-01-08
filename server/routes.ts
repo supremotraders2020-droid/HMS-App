@@ -4221,96 +4221,177 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const firstPage = pages[0];
       const { width, height } = firstPage.getSize();
       
-      if (patient) {
-        // Add patient information header at the top of the first page
-        const patientName = `${patient.firstName} ${patient.lastName}`;
-        const dateOfBirth = patient.dateOfBirth || 'N/A';
-        const gender = patient.gender || 'N/A';
-        const phone = patient.phone || 'N/A';
-        const currentDate = new Date().toLocaleDateString('en-IN', {
-          day: '2-digit',
-          month: 'short', 
-          year: 'numeric'
-        });
-        
-        // Draw patient info box at the top
-        const boxY = height - 90;
-        const boxHeight = 70;
-        
-        // Draw background rectangle
-        firstPage.drawRectangle({
-          x: 20,
-          y: boxY,
-          width: width - 40,
-          height: boxHeight,
-          color: rgb(0.95, 0.97, 1),
-          borderColor: rgb(0.2, 0.6, 0.9),
-          borderWidth: 1,
-        });
-        
-        // Add "PATIENT DETAILS" header
-        firstPage.drawText('PATIENT DETAILS', {
-          x: 30,
-          y: boxY + boxHeight - 18,
-          size: 10,
-          font: helveticaBold,
-          color: rgb(0.1, 0.4, 0.7),
-        });
-        
-        // Add patient name
-        firstPage.drawText(`Name: ${patientName}`, {
-          x: 30,
-          y: boxY + boxHeight - 35,
-          size: 11,
-          font: helveticaBold,
-          color: rgb(0, 0, 0),
-        });
-        
-        // Add date of birth
-        firstPage.drawText(`DOB: ${dateOfBirth}`, {
-          x: 250,
-          y: boxY + boxHeight - 35,
-          size: 10,
-          font: helveticaFont,
-          color: rgb(0.2, 0.2, 0.2),
-        });
-        
-        // Add gender
-        firstPage.drawText(`Gender: ${gender}`, {
-          x: 400,
-          y: boxY + boxHeight - 35,
-          size: 10,
-          font: helveticaFont,
-          color: rgb(0.2, 0.2, 0.2),
-        });
-        
-        // Add phone
-        firstPage.drawText(`Phone: ${phone}`, {
-          x: 30,
-          y: boxY + boxHeight - 55,
-          size: 10,
-          font: helveticaFont,
-          color: rgb(0.2, 0.2, 0.2),
-        });
-        
-        // Add current date
-        firstPage.drawText(`Date: ${currentDate}`, {
-          x: 250,
-          y: boxY + boxHeight - 55,
-          size: 10,
-          font: helveticaFont,
-          color: rgb(0.2, 0.2, 0.2),
-        });
-        
-        // Add hospital name
-        firstPage.drawText('Gravity Hospital, Pimpri-Chinchwad', {
-          x: 400,
-          y: boxY + boxHeight - 55,
-          size: 9,
-          font: helveticaFont,
-          color: rgb(0.3, 0.3, 0.3),
+      // ============ PROFESSIONAL HOSPITAL HEADER FOR ALL CONSENT FORMS ============
+      
+      // Embed hospital logo
+      const logoPath = path.join(process.cwd(), 'server/public/hospital-logo.png');
+      let logoImage = null;
+      if (fs.existsSync(logoPath)) {
+        const logoBytes = fs.readFileSync(logoPath);
+        logoImage = await pdfDoc.embedPng(logoBytes);
+      }
+      
+      // Header dimensions
+      const headerStartY = height - 20;
+      const logoWidth = 140;
+      const logoHeight = 45;
+      const leftMargin = 30;
+      const rightMargin = width - 30;
+      
+      // Draw hospital logo at top-left
+      if (logoImage) {
+        const logoDims = logoImage.scale(logoWidth / logoImage.width);
+        firstPage.drawImage(logoImage, {
+          x: leftMargin,
+          y: headerStartY - logoHeight,
+          width: logoWidth,
+          height: logoDims.height > logoHeight ? logoHeight : logoDims.height,
         });
       }
+      
+      // Hospital details to the right of logo
+      const textStartX = leftMargin + logoWidth + 20;
+      const hospitalNameColor = rgb(0.29, 0.15, 0.55); // Purple color matching logo
+      
+      // Hospital Name (Bold, larger font)
+      firstPage.drawText('Gravity Hospital & Research Centre', {
+        x: textStartX,
+        y: headerStartY - 14,
+        size: 14,
+        font: helveticaBold,
+        color: hospitalNameColor,
+      });
+      
+      // Hospital Address
+      firstPage.drawText('Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,', {
+        x: textStartX,
+        y: headerStartY - 28,
+        size: 9,
+        font: helveticaFont,
+        color: rgb(0.3, 0.3, 0.3),
+      });
+      
+      firstPage.drawText('Pimpri-Chinchwad, Maharashtra - 411062', {
+        x: textStartX,
+        y: headerStartY - 40,
+        size: 9,
+        font: helveticaFont,
+        color: rgb(0.3, 0.3, 0.3),
+      });
+      
+      // Contact Numbers
+      firstPage.drawText('Contact: 7796513130, 7769651310', {
+        x: textStartX,
+        y: headerStartY - 54,
+        size: 9,
+        font: helveticaBold,
+        color: rgb(0.2, 0.2, 0.2),
+      });
+      
+      // Horizontal divider line below hospital details
+      const dividerY = headerStartY - 65;
+      firstPage.drawLine({
+        start: { x: leftMargin, y: dividerY },
+        end: { x: rightMargin, y: dividerY },
+        thickness: 1.5,
+        color: hospitalNameColor,
+      });
+      
+      // Patient Information Row below divider
+      const patientRowY = dividerY - 18;
+      const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '____________';
+      const patientUHID = patient?.id ? patient.id.substring(0, 8).toUpperCase() : '____________';
+      const patientGender = patient?.gender || '____________';
+      
+      // Calculate age from date of birth
+      let patientAge = '____________';
+      if (patient?.dateOfBirth) {
+        const dob = new Date(patient.dateOfBirth);
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+          age--;
+        }
+        patientAge = `${age} years`;
+      }
+      
+      // Draw patient info labels and values in a row
+      const labelColor = rgb(0.3, 0.3, 0.3);
+      const valueColor = rgb(0, 0, 0);
+      
+      // Patient Name
+      firstPage.drawText('Patient Name:', {
+        x: leftMargin,
+        y: patientRowY,
+        size: 9,
+        font: helveticaBold,
+        color: labelColor,
+      });
+      firstPage.drawText(patientName, {
+        x: leftMargin + 70,
+        y: patientRowY,
+        size: 10,
+        font: helveticaFont,
+        color: valueColor,
+      });
+      
+      // UHID No
+      firstPage.drawText('UHID No:', {
+        x: 200,
+        y: patientRowY,
+        size: 9,
+        font: helveticaBold,
+        color: labelColor,
+      });
+      firstPage.drawText(patientUHID, {
+        x: 248,
+        y: patientRowY,
+        size: 10,
+        font: helveticaFont,
+        color: valueColor,
+      });
+      
+      // Gender
+      firstPage.drawText('Gender:', {
+        x: 350,
+        y: patientRowY,
+        size: 9,
+        font: helveticaBold,
+        color: labelColor,
+      });
+      firstPage.drawText(patientGender, {
+        x: 392,
+        y: patientRowY,
+        size: 10,
+        font: helveticaFont,
+        color: valueColor,
+      });
+      
+      // Age
+      firstPage.drawText('Age:', {
+        x: 470,
+        y: patientRowY,
+        size: 9,
+        font: helveticaBold,
+        color: labelColor,
+      });
+      firstPage.drawText(patientAge, {
+        x: 495,
+        y: patientRowY,
+        size: 10,
+        font: helveticaFont,
+        color: valueColor,
+      });
+      
+      // Second divider line below patient info
+      const secondDividerY = patientRowY - 10;
+      firstPage.drawLine({
+        start: { x: leftMargin, y: secondDividerY },
+        end: { x: rightMargin, y: secondDividerY },
+        thickness: 0.5,
+        color: rgb(0.7, 0.7, 0.7),
+      });
       
       // Save the modified PDF
       const modifiedPdfBytes = await pdfDoc.save();
