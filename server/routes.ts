@@ -1640,9 +1640,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own medical records
       if (user && user.role === 'PATIENT') {
-        const patientId = user.id;
+        // Get the user's email to find their service patient record
+        const userEmail = user.email;
+        const allServicePatients = await storage.getAllServicePatients();
+        
+        // Find service patient IDs that match this user by email or direct ID match
+        const matchingPatientIds = allServicePatients
+          .filter(sp => sp.email === userEmail || sp.id === user.id)
+          .map(sp => sp.id);
+        
+        // Also allow direct user.id match for backwards compatibility
+        matchingPatientIds.push(user.id);
+        
         records = records.filter(record => 
-          record.patientId === patientId
+          matchingPatientIds.includes(record.patientId)
         );
       }
       
@@ -1705,7 +1716,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const records = await storage.getMedicalRecordsByDoctor(req.params.doctorId);
+      // Find the doctor record that matches the logged-in user by name
+      const allDoctors = await storage.getDoctors();
+      const allRecords = await storage.getAllMedicalRecords();
+      
+      // Get the logged-in doctor's name from the user session
+      const doctorUserName = user?.username?.toLowerCase().replace(/^dr\.?\s*/i, '').trim() || '';
+      
+      // Find all doctor IDs that match this user (by name matching)
+      const matchingDoctorIds: string[] = [];
+      for (const doctor of allDoctors) {
+        const docName = doctor.name.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
+        if (docName === doctorUserName || 
+            docName.includes(doctorUserName) || 
+            doctorUserName.includes(docName) ||
+            docName.split(' ')[0] === doctorUserName.split(' ')[0]) {
+          matchingDoctorIds.push(doctor.id);
+        }
+      }
+      
+      // Also add the user.id for direct matches
+      matchingDoctorIds.push(req.params.doctorId);
+      
+      // Filter records by any matching doctor ID
+      const records = allRecords.filter(record => 
+        record.doctorId && matchingDoctorIds.includes(record.doctorId)
+      );
+      
       res.json(records);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch doctor medical records" });
