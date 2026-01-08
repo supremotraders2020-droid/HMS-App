@@ -2047,7 +2047,7 @@ Description: ${record.description}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <FileText className="h-5 w-5 text-blue-500" />
-                Medical Documents ({patientRecords.length})
+                Medical Records ({patientRecords.length})
               </h3>
               <div className="grid gap-4">
                 {patientRecords.length > 0 ? patientRecords.map((record) => (
