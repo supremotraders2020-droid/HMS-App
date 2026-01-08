@@ -1,0 +1,341 @@
+Perfect. I have carefully gone through all 3 images and consolidated them into one exact ICU chart data structure, without missing a single field.
+
+Below is the 100% COMPLETE, IMAGE-TO-APP EXACT MAPPING
+👉 Written in table-wise + sub-column format, ready for DB design / App forms / PDF generation.
+
+⸻
+
+🏥 ICU PATIENT CHART – EXACT TABLE & FIELD EXTRACTION
+
+(As per your uploaded ICU sheets)
+
+⸻
+
+1️⃣ PATIENT IDENTIFICATION DATA
+
+Table: patient_identification
+	•	Patient Name
+	•	Age
+	•	Sex
+	•	Date
+	•	Blood Group
+	•	Weight
+	•	Diagnosis
+	•	Date of Admission
+	•	Ward
+	•	Bed No
+
+⸻
+
+2️⃣ ICU VITAL SIGNS GRAPH / OBSERVATION CHART
+
+Table: icu_vital_chart
+
+X-Axis (Time – fixed columns)
+	•	08:00 | 09:00 | 10:00 | 11:00 | 12:00 | 13:00 | 14:00 | 15:00 | 16:00 | 17:00 | 18:00 | 19:00 | 20:00 | 21:00 | 22:00 | 23:00 | 24:00 | 01:00 | 02:00 | 03:00 | 04:00 | 05:00 | 06:00 | 07:00
+
+Parameters (Y-Axis rows)
+	•	Temperature
+	•	Core Temp
+	•	Skin Temp
+	•	Pulse (HR)
+	•	Blood Pressure (BP)
+	•	Central Venous Pressure (CVP)
+	•	Respiratory Rate
+	•	SpO₂
+
+⸻
+
+3️⃣ HEMODYNAMIC & ICU PARAMETERS
+
+Table: hemodynamic_monitoring
+	•	Time
+	•	Heart Rate
+	•	MAP
+	•	CVP
+	•	ICP
+	•	CPP
+	•	Inotrope (Name / Dose)
+
+⸻
+
+4️⃣ SEDATION & NEURO STATUS
+
+Table: sedation_monitoring
+	•	Time
+	•	Sedation Score
+	•	Drug Name
+	•	Dose
+	•	Remarks
+
+⸻
+
+5️⃣ VENTILATOR PARAMETERS (VERY IMPORTANT)
+
+Table: ventilator_settings
+	•	Time
+	•	Mode
+	•	FiO₂
+	•	Exp. Tidal Volume
+	•	Exp. Min. Volume
+	•	Set Tidal Volume
+	•	Set Min. Volume
+	•	Resp. Rate / Min
+	•	Spontaneous RR / Min
+	•	SIMV Rate / Min
+	•	PEEP / CPAP
+	•	Auto PEEP
+	•	Peak Airway Pressure
+	•	Pressure Support
+	•	I:E Ratio
+
+⸻
+
+6️⃣ ARTERIAL BLOOD GAS (ABG)
+
+Table: abg_reports
+	•	Time
+	•	pH
+	•	PCO₂
+	•	PO₂
+	•	SBC
+	•	BE
+	•	SaO₂
+	•	SvO₂
+	•	Lactate
+
+⸻
+
+7️⃣ SECRETIONS & POSITION
+
+Table: airway_care
+	•	Time
+	•	Secretions (Yes/No)
+	•	Type (Thick / Thin)
+	•	Patient Position
+	•	A/G (Airway Guarded)
+
+⸻
+
+8️⃣ TODAY’S INVESTIGATIONS & REPORTS
+
+Table: daily_investigations
+	•	HB
+	•	WBC
+	•	Urea
+	•	Creatinine
+	•	Electrolytes
+	•	PT / APTT
+	•	LFTs
+	•	BSL
+	•	Sputum R / Culture
+	•	Urine R / Culture
+	•	Blood Culture
+	•	X-Ray Chest
+	•	ABG
+	•	Any Other
+
+⸻
+
+9️⃣ DIABETIC FLOW CHART
+
+Table: diabetic_chart
+	•	Time
+	•	BSL
+	•	Insulin
+	•	Na
+	•	K
+	•	Cl
+
+⸻
+
+🔟 PLAY OF THE DAY
+
+Table: play_of_day
+	•	Notes / Free Text
+
+⸻
+
+1️⃣1️⃣ CUFF PRESSURE
+
+Table: cuff_pressure
+	•	Morning
+	•	Evening
+	•	Night
+
+⸻
+
+1️⃣2️⃣ ETT / TRACHEOSTOMY DETAILS
+
+Table: ett_tracheostomy
+	•	Tube Type (ETT / Tracheostomy)
+	•	Size
+	•	Cut / Tied At
+
+⸻
+
+1️⃣3️⃣ VENTILATION & ICU STAY SUMMARY
+
+Table: icu_duration
+	•	Days Intubated
+	•	Days Ventilated
+	•	Days ICU Stay
+
+⸻
+
+1️⃣4️⃣ 24 HR FLUID BALANCE TARGET
+
+Table: fluid_balance_target
+	•	Target Intake
+	•	Target Output
+	•	Net Balance Goal
+
+⸻
+
+1️⃣5️⃣ INTAKE CHART
+
+Table: intake_chart
+
+Columns
+	•	Time Slot (08–09 … 07–08)
+	•	Line 1
+	•	Line 2
+	•	Line 3
+	•	Line 4
+	•	Line 5
+	•	Line 6
+	•	Total Intake
+
+⸻
+
+1️⃣6️⃣ OUTPUT CHART
+
+Table: output_chart
+	•	Time Slot
+	•	Urine Hourly
+	•	Other Losses
+	•	Total Output
+
+⸻
+
+1️⃣7️⃣ DOCTOR’S MEDICATION ORDER
+
+Table: doctor_medication_order
+	•	Sr No
+	•	Drug Name
+	•	Route
+	•	Dose
+	•	Frequency
+	•	Time
+	•	Doctor’s Signature
+
+⸻
+
+1️⃣8️⃣ NURSING REMARKS
+
+Table: nursing_remarks
+	•	Time
+	•	Initials
+	•	Remarks
+
+⸻
+
+1️⃣9️⃣ ADMITTING & ICU CONSULTANT
+
+Table: consultant_details
+	•	Admitting Consultant
+	•	ICU Consultant
+
+⸻
+
+2️⃣0️⃣ SISTERS ON DUTY
+
+Table: nursing_duty
+	•	Shift (Morning / Evening / Night)
+	•	Name
+	•	Emp No
+
+⸻
+
+2️⃣1️⃣ FLUID ORDERS
+
+Table: fluid_orders
+	•	Fluid Name
+	•	Rate
+	•	Duration
+	•	Remarks
+
+⸻
+
+2️⃣2️⃣ NUTRITION
+
+Table: nutrition_chart
+	•	Type of Feed
+	•	Route
+	•	Quantity
+	•	Frequency
+	•	Remarks
+
+⸻
+
+2️⃣3️⃣ BODY MARKING / PRESSURE SORE CHART
+
+Table: body_marking
+	•	Body Diagram (Front View)
+	•	Marked Area
+	•	Type of Injury
+	•	Grade
+	•	Date
+	•	Remarks
+
+⸻
+
+2️⃣4️⃣ IMPORTANT EVENTS DURING SHIFT (NURSE DIARY)
+
+Table: nurse_diary
+	•	Time
+	•	Event Description
+
+⸻
+
+2️⃣5️⃣ ONCE ONLY DRUGS
+
+Table: once_only_drugs
+	•	Drug Name
+	•	Dose
+	•	Route
+	•	Time
+	•	Doctor Sign
+	•	Time Given
+	•	Nurse Sign
+
+⸻
+
+2️⃣6️⃣ PREVIOUS DAY NOTES
+
+Table: previous_day_notes
+	•	Notes / Summary
+
+⸻
+
+2️⃣7️⃣ ALLERGIES & SPECIAL PRECAUTIONS
+
+Table: allergy_precautions
+	•	Drug Allergy
+	•	Food Allergy
+	•	Other Allergy
+	•	Special Precautions
+
+⸻
+
+✅ WHAT YOU CAN DO NEXT (I STRONGLY RECOMMEND)
+
+I can now:
+	1.	✅ Convert this into Database Schema (SQL / MongoDB)
+	2.	✅ Create API JSON payload structure
+	3.	✅ Design Exact UI Form Screens (Nurse-friendly)
+	4.	✅ Generate Printable ICU PDF – EXACT COPY
+	5.	✅ Create HMIS / HIS integration-ready modules
+
+👉 Tell me NEXT STEP and TECH STACK (Web / Mobile / Hospital App)
+I’ll take it forward exactly like a production system.

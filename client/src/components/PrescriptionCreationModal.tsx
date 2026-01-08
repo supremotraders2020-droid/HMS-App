@@ -340,12 +340,6 @@ export default function PrescriptionCreationModal({
     setSmartOpdApplied(false);
   };
 
-  // Reset Smart OPD state whenever modal closes (handles programmatic closes too)
-  useEffect(() => {
-    if (!open) {
-      resetSmartOpdState();
-    }
-  }, [open]);
 
   // Group templates by category
   const groupedTemplates = useMemo(() => {
@@ -673,7 +667,40 @@ export default function PrescriptionCreationModal({
     setSuggestedTestsSearch('');
     setSelectedCategory('all');
     setFollowUpDate('');
+    setCurrentMedicine({
+      medicineName: '',
+      dosageForm: 'Tab',
+      strength: '',
+      frequency: '1',
+      mealTiming: 'after_food',
+      duration: 5,
+      durationUnit: 'days',
+      specialInstructions: '',
+      quantity: 5,
+    });
   };
+
+  // Reset all form state when modal opens or closes
+  useEffect(() => {
+    if (open) {
+      // Reset form when modal opens for a new prescription
+      resetForm();
+      resetSmartOpdState();
+      // If initial patient data is provided, set it after reset
+      if (initialPatientId && patientsFromDB.length > 0) {
+        const patient = patientsFromDB.find(p => p.id === initialPatientId);
+        if (patient) {
+          setPatientId(patient.id);
+          setPatientName(`${patient.firstName} ${patient.lastName}`);
+          setPatientAge(patient.dateOfBirth ? String(Math.floor((Date.now() - new Date(patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))) : '');
+          setPatientGender(patient.gender || '');
+        }
+      }
+    } else {
+      // Reset when modal closes
+      resetSmartOpdState();
+    }
+  }, [open, initialPatientId, patientsFromDB]);
 
   const canFinalize = userRole === 'ADMIN' || userRole === 'DOCTOR';
   
