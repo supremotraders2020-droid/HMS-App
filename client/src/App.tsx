@@ -49,6 +49,7 @@ import ReferralData from "@/pages/ReferralData";
 import HospitalServices from "@/pages/HospitalServices";
 import SuperAdminPortal from "@/pages/SuperAdminPortal";
 import TechnicianPortal from "@/pages/TechnicianPortal";
+import SmartOPDConsultation from "@/pages/SmartOPDConsultation";
 
 type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB" | "TECHNICIAN";
 
@@ -170,6 +171,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
       {/* Service Routes */}
       <Route path="/opd-service">
         <OPDService />
+      </Route>
+      <Route path="/smart-opd-consultation">
+        {(currentUser.role === "DOCTOR" || currentUser.role === "ADMIN" || currentUser.role === "SUPER_ADMIN") ? (
+          <SmartOPDConsultation />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only doctors and administrators can access Smart OPD Consultation.</p>
+          </div>
+        )}
       </Route>
       <Route path="/patient-service">
         <PatientService currentRole={currentUser.role} currentUserId={currentUser.id} />
