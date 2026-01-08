@@ -100,6 +100,8 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
       <Route path="/">
         {currentUser.role === "MEDICAL_STORE" ? (
           <MedicalStorePortal currentUserId={currentUser.id} />
+        ) : currentUser.role === "TECHNICIAN" ? (
+          <TechnicianPortal currentUserId={currentUser.id} currentUserName={currentUser.name} currentUserRole={currentUser.role} />
         ) : (
           <HMSDashboard 
             currentRole={currentUser.role}
@@ -112,6 +114,8 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
       <Route path="/dashboard">
         {currentUser.role === "MEDICAL_STORE" ? (
           <MedicalStorePortal currentUserId={currentUser.id} />
+        ) : currentUser.role === "TECHNICIAN" ? (
+          <TechnicianPortal currentUserId={currentUser.id} currentUserName={currentUser.name} currentUserRole={currentUser.role} />
         ) : (
           <HMSDashboard 
             currentRole={currentUser.role}
