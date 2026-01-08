@@ -728,6 +728,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(medicalRecords.recordDate));
   }
 
+  async getMedicalRecordsByDoctor(doctorId: string): Promise<MedicalRecord[]> {
+    return await db.select().from(medicalRecords)
+      .where(eq(medicalRecords.doctorId, doctorId))
+      .orderBy(desc(medicalRecords.recordDate));
+  }
+
   async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
     const result = await db.insert(medicalRecords).values(record).returning();
     return result[0];
