@@ -208,6 +208,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const [editPrescriptionDialogOpen, setEditPrescriptionDialogOpen] = useState(false);
   const [viewPatientDialogOpen, setViewPatientDialogOpen] = useState(false);
   const [editPatientDialogOpen, setEditPatientDialogOpen] = useState(false);
+  const [viewRecordDialogOpen, setViewRecordDialogOpen] = useState(false);
+  const [selectedViewRecord, setSelectedViewRecord] = useState<MedicalRecord | null>(null);
   const [editingPrescription, setEditingPrescription] = useState<{diagnosis: string; medicines: string[]; instructions: string}>({diagnosis: "", medicines: [], instructions: ""});
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | undefined>(undefined);
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
@@ -2347,6 +2349,17 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       <Button 
                         size="icon" 
                         variant="ghost" 
+                        onClick={() => {
+                          setSelectedViewRecord(record);
+                          setViewRecordDialogOpen(true);
+                        }}
+                        data-testid={`button-view-record-${record.id}`}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
                         onClick={() => handleDownloadDoctorRecord(record)}
                         disabled={!record.fileData}
                         data-testid={`button-download-record-${record.id}`}
@@ -3940,6 +3953,80 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditPatientDialogOpen(false)} data-testid="button-close-edit-patient">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Medical Record Dialog */}
+      <Dialog open={viewRecordDialogOpen} onOpenChange={setViewRecordDialogOpen}>
+        <DialogContent className="max-w-2xl" data-testid="dialog-view-record">
+          <DialogHeader>
+            <DialogTitle data-testid="text-view-record-title">{selectedViewRecord?.title || 'Medical Record'}</DialogTitle>
+            <DialogDescription>
+              Record details for patient {getPatientName(selectedViewRecord?.patientId || '')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedViewRecord && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Record Type</Label>
+                  <p className="font-medium">{selectedViewRecord.recordType}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date</Label>
+                  <p className="font-medium">{selectedViewRecord.recordDate ? format(new Date(selectedViewRecord.recordDate), 'MMM dd, yyyy') : 'N/A'}</p>
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-muted-foreground">Physician</Label>
+                <p className="font-medium">{selectedViewRecord.physician || 'N/A'}</p>
+              </div>
+              
+              <div>
+                <Label className="text-muted-foreground">Description</Label>
+                <p className="font-medium">{selectedViewRecord.description || 'No description provided'}</p>
+              </div>
+              
+              {selectedViewRecord.fileName && (
+                <div>
+                  <Label className="text-muted-foreground">Attached File</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline">
+                      <FileText className="h-3 w-3 mr-1" />
+                      {selectedViewRecord.fileName}
+                    </Badge>
+                    {selectedViewRecord.fileData && (
+                      <Button size="sm" variant="outline" onClick={() => handleDownloadDoctorRecord(selectedViewRecord)}>
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {selectedViewRecord.fileData && selectedViewRecord.fileName?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i) && (
+                <div>
+                  <Label className="text-muted-foreground">Image Preview</Label>
+                  <div className="mt-2 border rounded-lg overflow-hidden">
+                    <img 
+                      src={`data:image/*;base64,${selectedViewRecord.fileData}`}
+                      alt={selectedViewRecord.fileName}
+                      className="max-w-full max-h-96 object-contain mx-auto"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewRecordDialogOpen(false)} data-testid="button-close-view-record">
               Close
             </Button>
           </DialogFooter>
