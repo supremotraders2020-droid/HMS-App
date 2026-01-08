@@ -1,0 +1,532 @@
+Excellent.
+Below is the COMPLETE, CONSISTENT, INPUT-DRIVEN SMART OPD FLOW for ALL departments you listed, written in exactly the SAME LOGIC & DEPTH as your upgraded EMR engine.
+
+This is implementation-ready for:
+
+Dynamic EMR forms
+
+Rule engine
+
+Analytics
+
+Future AI clinical support
+
+❌ No IPD
+❌ No OT / Surgery execution
+✅ OPD-only clinical intelligence
+
+🏥 SMART OPD ENGINE — DEPARTMENT-WISE FLOWS
+1️⃣ CARDIOTHORACIC SURGERY – SMART OPD FLOW
+SYMPTOMS
+
+Chest pain
+
+Breathlessness
+
+Palpitations
+
+Fatigue
+
+Syncope
+
+AUTO OBSERVATION
+
+Heart sounds
+
+Murmur (grade)
+
+JVP
+
+Peripheral edema
+
+Pulse rhythm
+
+FLOW LOGIC
+
+Chest pain + exertional → ECG + Troponin
+
+Breathlessness + NYHA ≥ II → Echo
+
+2️⃣ CARDIOVASCULAR SURGERY – INPUT-DRIVEN FLOW
+SYMPTOMS
+
+Limb pain
+
+Claudication
+
+Non-healing ulcer
+
+Limb discoloration
+
+AUTO OBSERVATION
+
+Pulse grading
+
+Limb temperature
+
+Capillary refill
+
+Edema
+
+FLOW LOGIC
+
+Claudication → ABI + Doppler
+
+Ulcer → Infection markers + Doppler
+
+3️⃣ CATHLAB – RISK-STRATIFIED OPD FLOW
+SYMPTOMS
+
+Angina
+
+Dyspnea on exertion
+
+Palpitations
+
+AUTO OBSERVATION
+
+ECG rhythm
+
+BP trend
+
+Heart rate
+
+FLOW LOGIC
+
+Typical angina → Stress test
+
+Reduced EF → Echo review only (no procedure)
+
+4️⃣ VASCULAR SURGERY – LIMB-BASED FLOW
+SYMPTOMS
+
+Leg swelling
+
+Varicose veins
+
+Limb heaviness
+
+AUTO OBSERVATION
+
+Varicosity grade
+
+Skin pigmentation
+
+Ulcer presence
+
+FLOW LOGIC
+
+Swelling → Venous Doppler
+
+Ulcer → ABI
+
+5️⃣ DAY CARE & MINOR PROCEDURE – EVALUATION FLOW (NO PROCEDURE)
+SYMPTOMS
+
+Local swelling
+
+Pain
+
+Redness
+
+AUTO OBSERVATION
+
+Tenderness
+
+Temperature
+
+Local discharge
+
+FLOW LOGIC
+
+Infection signs → CBC
+
+Swelling → USG
+
+6️⃣ ENT – ORGAN-SPECIFIC FLOW
+SYMPTOMS
+
+Ear pain
+
+Hearing loss
+
+Nasal block
+
+Throat pain
+
+Voice change
+
+AUTO OBSERVATION
+
+Otoscopy
+
+Throat exam
+
+Nasal endoscopy (conditional)
+
+FLOW LOGIC
+
+Hearing loss > 2 weeks → Audiometry
+
+Voice change > 3 weeks → Laryngoscopy
+
+7️⃣ GENERAL SURGERY – ABDOMINAL / LUMP FLOW
+SYMPTOMS
+
+Abdominal pain
+
+Lump
+
+Hernia symptoms
+
+AUTO OBSERVATION
+
+Tenderness
+
+Guarding
+
+Lump mobility
+
+FLOW LOGIC
+
+Pain → USG abdomen
+
+Lump → USG ± FNAC
+
+8️⃣ ICU & CASUALTY – STABILIZED OPD FLOW
+SYMPTOMS
+
+Acute pain
+
+Breathlessness
+
+Dizziness
+
+AUTO OBSERVATION
+
+GCS
+
+Vitals trend
+
+FLOW LOGIC
+
+Stable vitals → OPD management
+
+Abnormal ECG → Cardiology referral
+
+9️⃣ MAXILLO FACIAL – STRUCTURAL FLOW
+SYMPTOMS
+
+Facial pain
+
+Swelling
+
+Jaw stiffness
+
+AUTO OBSERVATION
+
+Jaw ROM
+
+Facial symmetry
+
+Dental alignment
+
+FLOW LOGIC
+
+Swelling → X-ray / CT face
+
+🔟 NEURO SURGERY – NEURO-DEFICIT FLOW
+SYMPTOMS
+
+Headache
+
+Weakness
+
+Seizures
+
+Vision loss
+
+AUTO OBSERVATION
+
+GCS
+
+Power grading
+
+Reflexes
+
+FLOW LOGIC
+
+Red flag headache → MRI
+
+First seizure → EEG + MRI
+
+1️⃣1️⃣ OBGY & GYNAEC – CONDITION-AWARE FLOW
+SYMPTOMS
+
+Irregular menses
+
+Pelvic pain
+
+Pregnancy complaint
+
+White discharge
+
+AUTO OBSERVATION
+
+LMP
+
+Cycle pattern
+
+Per speculum findings
+
+FLOW LOGIC
+
+Pregnancy → Antenatal flow
+
+Pain + fever → USG
+
+1️⃣2️⃣ ONCOLOGY / ONCO SURGERY / RADIATION – STAGING FLOW
+SYMPTOMS
+
+Lump
+
+Weight loss
+
+Bleeding
+
+Pain
+
+AUTO OBSERVATION
+
+Lump size
+
+Fixity
+
+Nodes
+
+ECOG score
+
+FLOW LOGIC
+
+Lump → Imaging + biopsy
+
+High ECOG → Conservative OPD
+
+1️⃣3️⃣ ORTHOPEDIC SURGERY – MOVEMENT-DRIVEN FLOW
+SYMPTOMS
+
+Joint pain
+
+Trauma
+
+Swelling
+
+AUTO OBSERVATION
+
+ROM
+
+Deformity
+
+Weight bearing
+
+FLOW LOGIC
+
+Trauma → X-ray mandatory
+
+Chronic pain → MRI optional
+
+1️⃣4️⃣ PAEDIATRIC ORTHO – GROWTH-BASED FLOW
+SYMPTOMS
+
+Limb deformity
+
+Gait abnormality
+
+AUTO OBSERVATION
+
+Growth percentile
+
+Limb alignment
+
+FLOW LOGIC
+
+Deformity → X-ray
+
+1️⃣5️⃣ PAEDIATRIC GENERAL SURGERY – AGE-SENSITIVE FLOW
+SYMPTOMS
+
+Abdominal pain
+
+Congenital swelling
+
+AUTO OBSERVATION
+
+Weight
+
+Abdomen exam
+
+FLOW LOGIC
+
+Pain → USG
+
+Congenital → Imaging review
+
+1️⃣6️⃣ PAEDIATRIC CARDIAC UNIT – DEFECT-AWARE FLOW
+SYMPTOMS
+
+Cyanosis
+
+Breathlessness
+
+AUTO OBSERVATION
+
+SpO₂
+
+Murmur
+
+FLOW LOGIC
+
+Murmur → Echo
+
+1️⃣7️⃣ PAIN MANAGEMENT – SCORE-DRIVEN FLOW
+SYMPTOMS
+
+Chronic pain
+
+Back pain
+
+Neuralgia
+
+AUTO OBSERVATION
+
+VAS score
+
+Functional limitation
+
+FLOW LOGIC
+
+VAS > 6 → Imaging + rehab referral
+
+1️⃣8️⃣ PLASTIC SURGERY – TISSUE-BASED FLOW
+SYMPTOMS
+
+Scar
+
+Wound
+
+Deformity
+
+AUTO OBSERVATION
+
+Scar size
+
+Healing stage
+
+Photo capture
+
+FLOW LOGIC
+
+Non-healing wound → Infection markers
+
+1️⃣9️⃣ URO SURGERY – SCORE-DRIVEN FLOW
+SYMPTOMS
+
+Burning micturition
+
+Frequency
+
+Retention
+
+Hematuria
+
+AUTO OBSERVATION
+
+IPSS score
+
+CVA tenderness
+
+FLOW LOGIC
+
+LUTS → USG + PSA
+
+Fever → Urine culture
+
+2️⃣0️⃣ PATHOLOGY – SERVICE FLOW
+FLOW
+
+Order received
+
+Sample collected
+
+Processing
+
+Report upload
+
+DATA CAPTURE
+
+Values
+
+Reference range
+
+Critical flags
+
+2️⃣1️⃣ RADIOLOGY – IMAGING FLOW
+FLOW
+
+Imaging request
+
+Scan execution
+
+Report dictation
+
+Upload
+
+DATA CAPTURE
+
+Modality
+
+Findings
+
+Impression
+
+2️⃣2️⃣ REHAB SERVICES – FUNCTION-BASED FLOW
+SYMPTOMS
+
+Mobility limitation
+
+Pain
+
+AUTO OBSERVATION
+
+Functional score
+
+Progress notes
+
+FLOW LOGIC
+
+Poor improvement → Plan revision
+
+2️⃣3️⃣ GASTROENTEROLOGY – DIGESTIVE PATH FLOW
+SYMPTOMS
+
+Abdominal pain
+
+Vomiting
+
+Diarrhea
+
+Jaundice
+
+AUTO OBSERVATION
+
+Pain quadrant
+
+Liver size
+
+Stool history
+
+FLOW LOGIC
+
+Jaundice → LFT + USG
+
+Chronic GI → Endoscopy

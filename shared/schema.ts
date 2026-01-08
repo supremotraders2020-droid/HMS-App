@@ -4631,3 +4631,118 @@ export const insertDepartmentNurseAssignmentsSchema = createInsertSchema(departm
 
 export type InsertDepartmentNurseAssignments = z.infer<typeof insertDepartmentNurseAssignmentsSchema>;
 export type DepartmentNurseAssignments = typeof departmentNurseAssignments.$inferSelect;
+
+// ================== SMART OPD FLOW ENGINE ==================
+
+// OPD Department Flows - Master configuration for department-specific clinical workflows
+export const opdDepartmentFlows = pgTable("opd_department_flows", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  departmentCode: text("department_code").notNull().unique(),
+  departmentName: text("department_name").notNull(),
+  flowType: text("flow_type").notNull(), // symptom_driven, score_driven, service_flow, imaging_flow
+  
+  // Symptom Configuration (JSON array of symptom objects)
+  symptoms: text("symptoms").notNull(), // JSON: [{id, name, severity_levels, duration_options}]
+  
+  // Auto Observation Fields (JSON array)
+  autoObservations: text("auto_observations").notNull(), // JSON: [{id, name, type, options, unit}]
+  
+  // Flow Logic Rules (JSON array of rule objects)
+  flowLogicRules: text("flow_logic_rules").notNull(), // JSON: [{condition, action, priority}]
+  
+  // Suggested Tests/Investigations
+  suggestedTests: text("suggested_tests"), // JSON: [{testName, condition, mandatory}]
+  
+  // Suggested Referrals
+  suggestedReferrals: text("suggested_referrals"), // JSON: [{department, condition}]
+  
+  // Additional Configuration
+  requiresVitals: boolean("requires_vitals").default(true),
+  vitalsFields: text("vitals_fields"), // JSON: which vitals to capture
+  
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOpdDepartmentFlowsSchema = createInsertSchema(opdDepartmentFlows).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertOpdDepartmentFlows = z.infer<typeof insertOpdDepartmentFlowsSchema>;
+export type OpdDepartmentFlows = typeof opdDepartmentFlows.$inferSelect;
+
+// OPD Consultations - Patient visit records with clinical data
+export const opdConsultations = pgTable("opd_consultations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  consultationNumber: text("consultation_number").notNull().unique(), // OPD-YYYYMMDD-XXXX format
+  
+  // Patient & Doctor Info
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientAge: integer("patient_age"),
+  patientGender: text("patient_gender"),
+  
+  doctorId: varchar("doctor_id").notNull(),
+  doctorName: text("doctor_name").notNull(),
+  
+  // Department & Flow
+  departmentCode: text("department_code").notNull(),
+  departmentName: text("department_name").notNull(),
+  appointmentId: varchar("appointment_id"), // Link to appointment if booked
+  
+  // Visit Type
+  visitType: text("visit_type").notNull().default("new"), // new, follow_up, review
+  
+  // Chief Complaints (Selected Symptoms)
+  selectedSymptoms: text("selected_symptoms").notNull(), // JSON: [{symptomId, name, severity, duration, notes}]
+  
+  // Clinical Observations (Auto + Manual)
+  observations: text("observations").notNull(), // JSON: [{fieldId, name, value, unit}]
+  
+  // Vitals Captured
+  vitals: text("vitals"), // JSON: {bp, pulse, temp, spo2, rr, weight, height, bmi}
+  
+  // Flow Logic Results (Auto-generated suggestions)
+  flowResults: text("flow_results"), // JSON: {suggestedTests: [], suggestedReferrals: [], alerts: []}
+  
+  // Clinical Notes
+  clinicalNotes: text("clinical_notes"),
+  diagnosis: text("diagnosis"),
+  provisionalDiagnosis: text("provisional_diagnosis"),
+  differentialDiagnosis: text("differential_diagnosis"),
+  
+  // Treatment Plan (OPD only - no IPD/surgery)
+  treatmentPlan: text("treatment_plan"),
+  medicationsAdvised: text("medications_advised"), // JSON: medications list
+  
+  // Investigations Ordered
+  investigationsOrdered: text("investigations_ordered"), // JSON: [{testId, testName, priority, notes}]
+  
+  // Referrals Made
+  referralsMade: text("referrals_made"), // JSON: [{department, doctorName, reason, priority}]
+  
+  // Follow-up
+  followUpDate: timestamp("follow_up_date"),
+  followUpNotes: text("follow_up_notes"),
+  
+  // Status
+  status: text("status").notNull().default("in_progress"), // in_progress, completed, cancelled
+  
+  // Timestamps
+  consultationDate: timestamp("consultation_date").defaultNow(),
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOpdConsultationsSchema = createInsertSchema(opdConsultations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertOpdConsultations = z.infer<typeof insertOpdConsultationsSchema>;
+export type OpdConsultations = typeof opdConsultations.$inferSelect;
