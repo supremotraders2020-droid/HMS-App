@@ -277,8 +277,8 @@ export default function PrescriptionCreationModal({
       }
       const res = await apiRequest("POST", "/api/opd-flows/apply-rules", {
         departmentCode: smartOpdDepartment,
-        symptoms: smartOpdSymptoms.map(s => ({
-          symptomId: s.id,
+        selectedSymptoms: smartOpdSymptoms.map(s => ({
+          id: s.id,
           severity: s.severity,
           duration: s.duration
         })),
