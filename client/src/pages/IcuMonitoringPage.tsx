@@ -346,22 +346,6 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Assigned ICU Nurse</Label>
-                  <Select value={newChart.assignedNurse} onValueChange={v => setNewChart(prev => ({ ...prev, assignedNurse: v }))}>
-                    <SelectTrigger data-testid="select-assigned-nurse">
-                      <SelectValue placeholder={icuNurses.length === 0 ? "No ICU nurses available" : "Select ICU nurse"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {icuNurses.map(nurse => (
-                        <SelectItem key={nurse.nurseId} value={nurse.nurseName}>
-                          {nurse.nurseName} - {nurse.primaryDepartment === "ICU" ? "Primary ICU" : nurse.secondaryDepartment === "ICU" ? "Secondary ICU" : "Tertiary ICU"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 <Button 
                   onClick={() => createChartMutation.mutate(newChart)}
                   disabled={!newChart.patientName || !newChart.chartDate || createChartMutation.isPending}
