@@ -2277,13 +2277,13 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     }
   };
 
-  const renderMedicalRecords = () => {
-    // Get patient names for records
-    const getPatientName = (patientId: string) => {
-      const patient = servicePatients.find(p => p.id === patientId);
-      return patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient';
-    };
+  // Get patient names for records - moved to component scope for dialog access
+  const getPatientName = (patientId: string) => {
+    const patient = servicePatients.find(p => p.id === patientId);
+    return patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient';
+  };
 
+  const renderMedicalRecords = () => {
     const getRecordIcon = (recordType: string) => {
       switch (recordType?.toLowerCase()) {
         case 'lab_result':
