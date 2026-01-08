@@ -419,6 +419,7 @@ export type Admission = typeof admissions.$inferSelect;
 export const medicalRecords = pgTable("medical_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   patientId: varchar("patient_id").notNull(),
+  doctorId: varchar("doctor_id"),
   recordDate: timestamp("record_date").defaultNow(),
   recordType: text("record_type").notNull(),
   title: text("title").notNull(),

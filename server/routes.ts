@@ -1693,10 +1693,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get medical records by doctor (for doctor portal)
+  app.get("/api/doctors/:doctorId/medical-records", async (req, res) => {
+    try {
+      const user = (req as any).session?.user;
+      
+      // CRITICAL: Doctor data isolation - DOCTOR role can only access their own assigned records
+      if (user && user.role === 'DOCTOR') {
+        if (req.params.doctorId !== user.id) {
+          return res.status(403).json({ error: "Access denied. You can only view your own assigned medical records." });
+        }
+      }
+      
+      const records = await storage.getMedicalRecordsByDoctor(req.params.doctorId);
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch doctor medical records" });
+    }
+  });
+
   // Create medical record
   app.post("/api/medical-records", async (req, res) => {
     try {
-      const parsed = insertMedicalRecordSchema.safeParse(req.body);
+      // First find the doctor to get their ID
+      let doctorId: string | null = null;
+      const allDoctors = await storage.getDoctors();
+      const physicianName = req.body.physician?.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
+      const matchedDoctor = allDoctors.find((d: { id: string; name: string }) => {
+        const docName = d.name.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
+        return docName === physicianName || 
+               docName.includes(physicianName) || 
+               physicianName.includes(docName) ||
+               docName.split(' ')[0] === physicianName.split(' ')[0];
+      });
+      
+      if (matchedDoctor) {
+        doctorId = matchedDoctor.id;
+      }
+      
+      // Include doctorId in the record data
+      const recordData = { ...req.body, doctorId };
+      const parsed = insertMedicalRecordSchema.safeParse(recordData);
       if (!parsed.success) {
         return res.status(400).json({ error: parsed.error.errors });
       }
@@ -1735,17 +1772,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send notification to the doctor
       try {
-        const physicianName = parsed.data.physician.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
-        // Find the doctor from the doctors table that matches the physician name
-        const allDoctors = await storage.getDoctors();
-        const matchedDoctor = allDoctors.find((d: { id: string; name: string }) => {
-          const docName = d.name.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
-          return docName === physicianName || 
-                 docName.includes(physicianName) || 
-                 physicianName.includes(docName) ||
-                 docName.split(' ')[0] === physicianName.split(' ')[0];
-        });
-        
         if (matchedDoctor) {
           // Build message with file info if available
           let message = `A new ${parsed.data.recordType} record "${parsed.data.title}" for patient ${patientName} has been assigned to you.`;

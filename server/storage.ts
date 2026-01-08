@@ -113,6 +113,7 @@ export interface IStorage {
   getAllMedicalRecords(): Promise<MedicalRecord[]>;
   getMedicalRecordById(id: string): Promise<MedicalRecord | undefined>;
   getMedicalRecordsByPatient(patientId: string): Promise<MedicalRecord[]>;
+  getMedicalRecordsByDoctor(doctorId: string): Promise<MedicalRecord[]>;
   createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
   updateMedicalRecord(id: string, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord | undefined>;
   deleteMedicalRecord(id: string): Promise<boolean>;
@@ -1862,6 +1863,12 @@ export class MemStorage implements IStorage {
   async getMedicalRecordsByPatient(patientId: string): Promise<MedicalRecord[]> {
     return Array.from(this.medicalRecordsData.values())
       .filter(record => record.patientId === patientId)
+      .sort((a, b) => (b.recordDate?.getTime() ?? 0) - (a.recordDate?.getTime() ?? 0));
+  }
+
+  async getMedicalRecordsByDoctor(doctorId: string): Promise<MedicalRecord[]> {
+    return Array.from(this.medicalRecordsData.values())
+      .filter(record => record.doctorId === doctorId)
       .sort((a, b) => (b.recordDate?.getTime() ?? 0) - (a.recordDate?.getTime() ?? 0));
   }
 
