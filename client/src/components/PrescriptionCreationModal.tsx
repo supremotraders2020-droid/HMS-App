@@ -27,8 +27,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send, Printer, ChevronsUpDown, Check, X, Lightbulb, Filter, Sparkles, FileStack } from "lucide-react";
-import type { Prescription, Medicine, ServicePatient, LabTestCatalog, OpdPrescriptionTemplate } from "@shared/schema";
+import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send, Printer, ChevronsUpDown, Check, X, Lightbulb, Filter, Sparkles, FileStack, Stethoscope, Building2, ClipboardList, Activity, Beaker, UserCheck, ChevronRight } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { Prescription, Medicine, ServicePatient, LabTestCatalog, OpdPrescriptionTemplate, OpdDepartmentFlows } from "@shared/schema";
 
 interface MedicineItem {
   medicineName: string;
@@ -211,6 +212,140 @@ export default function PrescriptionCreationModal({
   // State for template selection
   const [templateOpen, setTemplateOpen] = useState(false);
   const [templateSearch, setTemplateSearch] = useState('');
+
+  // Smart OPD state
+  const [smartOpdDepartment, setSmartOpdDepartment] = useState<string>("");
+  const [smartOpdSymptoms, setSmartOpdSymptoms] = useState<{id: string; name: string; severity: string; duration: string}[]>([]);
+  const [smartOpdObservations, setSmartOpdObservations] = useState<{fieldId: string; name: string; value: string; unit?: string}[]>([]);
+  const [smartOpdSuggestions, setSmartOpdSuggestions] = useState<{suggestedTests: any[]; suggestedReferrals: any[]; alerts: string[]}>({
+    suggestedTests: [], suggestedReferrals: [], alerts: []
+  });
+  const [smartOpdStep, setSmartOpdStep] = useState<"department" | "symptoms" | "observations" | "suggestions">("department");
+
+  // Fetch OPD flows for Smart OPD
+  const { data: opdFlows = [] } = useQuery<OpdDepartmentFlows[]>({
+    queryKey: ['/api/opd-flows'],
+  });
+
+  // Get current department config
+  const currentDepartmentFlow = opdFlows.find(f => f.departmentCode === smartOpdDepartment);
+  const departmentSymptoms: any[] = currentDepartmentFlow?.symptoms ? 
+    (typeof currentDepartmentFlow.symptoms === 'string' ? JSON.parse(currentDepartmentFlow.symptoms) : currentDepartmentFlow.symptoms) : [];
+  const departmentObservations: any[] = currentDepartmentFlow?.autoObservations ?
+    (typeof currentDepartmentFlow.autoObservations === 'string' ? JSON.parse(currentDepartmentFlow.autoObservations) : currentDepartmentFlow.autoObservations) : [];
+
+  // Toggle symptom selection
+  const toggleSmartOpdSymptom = (symptom: any) => {
+    const exists = smartOpdSymptoms.find(s => s.id === symptom.id);
+    if (exists) {
+      setSmartOpdSymptoms(smartOpdSymptoms.filter(s => s.id !== symptom.id));
+    } else {
+      setSmartOpdSymptoms([...smartOpdSymptoms, {
+        id: symptom.id,
+        name: symptom.name,
+        severity: symptom.severity_levels?.[0] || "Mild",
+        duration: symptom.duration_options?.[0] || "1-3 days"
+      }]);
+    }
+  };
+
+  // Update symptom details
+  const updateSmartOpdSymptom = (symptomId: string, field: string, value: string) => {
+    setSmartOpdSymptoms(smartOpdSymptoms.map(s => 
+      s.id === symptomId ? { ...s, [field]: value } : s
+    ));
+  };
+
+  // Update observation value
+  const updateSmartOpdObservation = (fieldId: string, name: string, value: string, unit?: string) => {
+    const existing = smartOpdObservations.find(o => o.fieldId === fieldId);
+    if (existing) {
+      setSmartOpdObservations(smartOpdObservations.map(o => o.fieldId === fieldId ? { ...o, value } : o));
+    } else {
+      setSmartOpdObservations([...smartOpdObservations, { fieldId, name, value, unit }]);
+    }
+  };
+
+  // Track if Smart OPD suggestions have been applied
+  const [smartOpdApplied, setSmartOpdApplied] = useState(false);
+
+  // Apply Smart OPD rules mutation
+  const applySmartOpdRulesMutation = useMutation({
+    mutationFn: async () => {
+      if (!smartOpdDepartment || smartOpdSymptoms.length === 0) {
+        throw new Error("Please select a department and at least one symptom");
+      }
+      const res = await apiRequest("POST", "/api/opd-flows/apply-rules", {
+        departmentCode: smartOpdDepartment,
+        symptoms: smartOpdSymptoms.map(s => ({
+          symptomId: s.id,
+          severity: s.severity,
+          duration: s.duration
+        })),
+        observations: smartOpdObservations.map(o => ({
+          fieldId: o.fieldId,
+          value: o.value
+        })),
+        visitType: "new"
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setSmartOpdSuggestions({
+        suggestedTests: data.suggestedTests || [],
+        suggestedReferrals: data.suggestedReferrals || [],
+        alerts: data.alerts || []
+      });
+      setSmartOpdStep("suggestions");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Smart OPD Error",
+        description: error.message || "Failed to get suggestions",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Apply Smart OPD data to prescription (called explicitly)
+  const applySmartOpdToPrescription = () => {
+    if (smartOpdApplied) return; // Prevent duplicate application
+    
+    // Apply suggested tests
+    if (smartOpdSuggestions.suggestedTests.length > 0) {
+      const testNames = smartOpdSuggestions.suggestedTests.map((t: any) => t.testName);
+      setSuggestedTests(prev => Array.from(new Set([...prev, ...testNames])));
+    }
+    
+    // Apply symptoms to patient complaints (only if not already present)
+    if (smartOpdSymptoms.length > 0) {
+      const symptomsText = smartOpdSymptoms.map(s => `${s.name} (${s.severity}, ${s.duration})`).join('; ');
+      setPatientComplaints(prev => {
+        if (prev.includes(symptomsText)) return prev;
+        return prev ? `${prev}; ${symptomsText}` : symptomsText;
+      });
+    }
+    
+    setSmartOpdApplied(true);
+    toast({ title: "Smart OPD Applied", description: "Symptoms and suggested tests have been added to the prescription" });
+  };
+
+  // Reset Smart OPD state when modal closes
+  const resetSmartOpdState = () => {
+    setSmartOpdDepartment("");
+    setSmartOpdSymptoms([]);
+    setSmartOpdObservations([]);
+    setSmartOpdSuggestions({ suggestedTests: [], suggestedReferrals: [], alerts: [] });
+    setSmartOpdStep("department");
+    setSmartOpdApplied(false);
+  };
+
+  // Reset Smart OPD state whenever modal closes (handles programmatic closes too)
+  useEffect(() => {
+    if (!open) {
+      resetSmartOpdState();
+    }
+  }, [open]);
 
   // Group templates by category
   const groupedTemplates = useMemo(() => {
@@ -555,7 +690,7 @@ export default function PrescriptionCreationModal({
   const isValid = canFinalizeRx;
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) { resetSmartOpdState(); onClose(); } }}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
@@ -569,12 +704,16 @@ export default function PrescriptionCreationModal({
 
         <ScrollArea className="flex-1 min-h-0 pr-4">
           <Tabs defaultValue="patient" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-4">
+            <TabsList className="grid w-full grid-cols-6 mb-4">
               <TabsTrigger value="patient" data-testid="tab-patient">Patient Info</TabsTrigger>
               <TabsTrigger value="clinical" data-testid="tab-clinical">Clinical</TabsTrigger>
               <TabsTrigger value="medicines" data-testid="tab-medicines">Medicines</TabsTrigger>
               <TabsTrigger value="instructions" data-testid="tab-instructions">Instructions</TabsTrigger>
               <TabsTrigger value="suggested-test" data-testid="tab-suggested-test">Suggested Test</TabsTrigger>
+              <TabsTrigger value="smart-opd" data-testid="tab-smart-opd" className="flex items-center gap-1">
+                <Stethoscope className="h-3 w-3" />
+                Smart OPD
+              </TabsTrigger>
             </TabsList>
 
             {/* Patient Info Tab */}
@@ -1383,6 +1522,356 @@ export default function PrescriptionCreationModal({
                     </p>
                   </CardContent>
                 </Card>
+              )}
+            </TabsContent>
+
+            {/* Smart OPD Tab - Clinical Workflow Engine */}
+            <TabsContent value="smart-opd" className="space-y-4">
+              <Card className="border-0 bg-gradient-to-r from-cyan-500/10 via-cyan-500/5 to-transparent">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-cyan-500/20">
+                        <Stethoscope className="h-5 w-5 text-cyan-500" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Smart OPD Consultation</h3>
+                        <p className="text-sm text-muted-foreground">Department-specific clinical workflow engine</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline">{opdFlows.length} Departments</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Step Navigation */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                <Button
+                  size="sm"
+                  variant={smartOpdStep === "department" ? "default" : "outline"}
+                  onClick={() => setSmartOpdStep("department")}
+                  className="shrink-0"
+                  data-testid="smart-opd-step-department"
+                >
+                  <Building2 className="h-3 w-3 mr-1" />
+                  1. Department
+                </Button>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Button
+                  size="sm"
+                  variant={smartOpdStep === "symptoms" ? "default" : "outline"}
+                  onClick={() => setSmartOpdStep("symptoms")}
+                  disabled={!smartOpdDepartment}
+                  className="shrink-0"
+                  data-testid="smart-opd-step-symptoms"
+                >
+                  <ClipboardList className="h-3 w-3 mr-1" />
+                  2. Symptoms
+                </Button>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Button
+                  size="sm"
+                  variant={smartOpdStep === "observations" ? "default" : "outline"}
+                  onClick={() => setSmartOpdStep("observations")}
+                  disabled={smartOpdSymptoms.length === 0}
+                  className="shrink-0"
+                  data-testid="smart-opd-step-observations"
+                >
+                  <Activity className="h-3 w-3 mr-1" />
+                  3. Observations
+                </Button>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Button
+                  size="sm"
+                  variant={smartOpdStep === "suggestions" ? "default" : "outline"}
+                  onClick={() => smartOpdSymptoms.length > 0 && applySmartOpdRulesMutation.mutate()}
+                  disabled={smartOpdSymptoms.length === 0}
+                  className="shrink-0"
+                  data-testid="smart-opd-step-suggestions"
+                >
+                  <Lightbulb className="h-3 w-3 mr-1" />
+                  4. Suggestions
+                </Button>
+              </div>
+
+              {/* Department Selection Step */}
+              {smartOpdStep === "department" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Building2 className="h-4 w-4" />
+                      Select Department
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {opdFlows.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Stethoscope className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                        <p className="text-muted-foreground mb-2">No OPD departments configured</p>
+                        <p className="text-sm text-muted-foreground">Contact your administrator to set up department-specific clinical workflows.</p>
+                      </div>
+                    ) : (
+                    <ScrollArea className="h-[300px] pr-2">
+                      <div className="grid gap-2">
+                        {opdFlows.map(flow => (
+                          <Button
+                            key={flow.departmentCode}
+                            variant={smartOpdDepartment === flow.departmentCode ? "default" : "outline"}
+                            className="justify-start h-auto py-3 px-4"
+                            onClick={() => {
+                              setSmartOpdDepartment(flow.departmentCode);
+                              setSmartOpdSymptoms([]);
+                              setSmartOpdObservations([]);
+                              setSmartOpdSuggestions({ suggestedTests: [], suggestedReferrals: [], alerts: [] });
+                              setSmartOpdStep("symptoms");
+                            }}
+                            data-testid={`smart-opd-dept-${flow.departmentCode}`}
+                          >
+                            <div className="text-left flex-1">
+                              <div className="font-medium">{flow.departmentName}</div>
+                              <div className="text-xs opacity-70">
+                                {flow.flowType === "symptom_driven" && "Symptom-based flow"}
+                                {flow.flowType === "score_driven" && "Score-based flow"}
+                                {flow.flowType === "service_flow" && "Service workflow"}
+                                {flow.flowType === "imaging_flow" && "Imaging workflow"}
+                              </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 ml-auto" />
+                          </Button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Symptoms Selection Step */}
+              {smartOpdStep === "symptoms" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <ClipboardList className="h-4 w-4" />
+                      Select Symptoms - {currentDepartmentFlow?.departmentName}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px] pr-2">
+                      <div className="space-y-3">
+                        {departmentSymptoms.map((symptom: any) => {
+                          const isSelected = smartOpdSymptoms.find(s => s.id === symptom.id);
+                          return (
+                            <Card key={symptom.id} className={isSelected ? "border-primary" : ""}>
+                              <CardContent className="p-3">
+                                <div className="flex items-start gap-3">
+                                  <Checkbox
+                                    checked={!!isSelected}
+                                    onCheckedChange={(checked) => {
+                                      if (checked === true && !isSelected) {
+                                        toggleSmartOpdSymptom(symptom);
+                                      } else if (checked === false && isSelected) {
+                                        toggleSmartOpdSymptom(symptom);
+                                      }
+                                    }}
+                                    data-testid={`smart-opd-symptom-${symptom.id}`}
+                                  />
+                                  <div className="flex-1 space-y-2">
+                                    <Label className="font-medium cursor-pointer" onClick={() => toggleSmartOpdSymptom(symptom)}>
+                                      {symptom.name}
+                                    </Label>
+                                    {isSelected && (
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <Select
+                                          value={isSelected.severity}
+                                          onValueChange={(val) => updateSmartOpdSymptom(symptom.id, "severity", val)}
+                                        >
+                                          <SelectTrigger className="h-8">
+                                            <SelectValue placeholder="Severity" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {(symptom.severity_levels || ["Mild", "Moderate", "Severe"]).map((level: string) => (
+                                              <SelectItem key={level} value={level}>{level}</SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        <Select
+                                          value={isSelected.duration}
+                                          onValueChange={(val) => updateSmartOpdSymptom(symptom.id, "duration", val)}
+                                        >
+                                          <SelectTrigger className="h-8">
+                                            <SelectValue placeholder="Duration" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {(symptom.duration_options || ["1-3 days", "3-7 days", "1-2 weeks", ">2 weeks"]).map((opt: string) => (
+                                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                        {departmentSymptoms.length === 0 && (
+                          <p className="text-center text-muted-foreground py-8">No symptoms configured for this department</p>
+                        )}
+                      </div>
+                    </ScrollArea>
+                    <div className="flex justify-between mt-4">
+                      <Button variant="outline" onClick={() => setSmartOpdStep("department")}>Back</Button>
+                      <Button onClick={() => setSmartOpdStep("observations")} disabled={smartOpdSymptoms.length === 0}>
+                        Continue to Observations
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Observations Step */}
+              {smartOpdStep === "observations" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Activity className="h-4 w-4" />
+                      Clinical Observations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px] pr-2">
+                      <div className="grid grid-cols-2 gap-4">
+                        {departmentObservations.map((obs: any) => (
+                          <div key={obs.id} className="space-y-1">
+                            <Label className="text-sm">{obs.name} {obs.unit && `(${obs.unit})`}</Label>
+                            {obs.type === "select" ? (
+                              <Select
+                                value={smartOpdObservations.find(o => o.fieldId === obs.id)?.value || ""}
+                                onValueChange={(val) => updateSmartOpdObservation(obs.id, obs.name, val, obs.unit)}
+                              >
+                                <SelectTrigger className="h-9">
+                                  <SelectValue placeholder="Select..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {(obs.options || []).map((opt: string) => (
+                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                type={obs.type === "number" ? "number" : "text"}
+                                placeholder={obs.name}
+                                value={smartOpdObservations.find(o => o.fieldId === obs.id)?.value || ""}
+                                onChange={(e) => updateSmartOpdObservation(obs.id, obs.name, e.target.value, obs.unit)}
+                                className="h-9"
+                              />
+                            )}
+                          </div>
+                        ))}
+                        {departmentObservations.length === 0 && (
+                          <p className="col-span-2 text-center text-muted-foreground py-8">No specific observations for this department</p>
+                        )}
+                      </div>
+                    </ScrollArea>
+                    <div className="flex justify-between mt-4">
+                      <Button variant="outline" onClick={() => setSmartOpdStep("symptoms")}>Back</Button>
+                      <Button onClick={() => applySmartOpdRulesMutation.mutate()} disabled={applySmartOpdRulesMutation.isPending}>
+                        {applySmartOpdRulesMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Lightbulb className="h-4 w-4 mr-2" />
+                        )}
+                        Get Smart Suggestions
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Suggestions Step */}
+              {smartOpdStep === "suggestions" && (
+                <div className="space-y-4">
+                  {smartOpdSuggestions.alerts.length > 0 && (
+                    <Card className="border-red-500/50 bg-red-500/5">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2 text-red-500">
+                          <AlertCircle className="h-4 w-4" />
+                          Clinical Alerts
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="list-disc list-inside space-y-1 text-sm">
+                          {smartOpdSuggestions.alerts.map((alert, idx) => (
+                            <li key={idx}>{alert}</li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Beaker className="h-4 w-4 text-blue-500" />
+                          Suggested Investigations
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {smartOpdSuggestions.suggestedTests.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No specific tests suggested</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {smartOpdSuggestions.suggestedTests.map((test: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                                <div className="flex items-center gap-2">
+                                  <Checkbox defaultChecked />
+                                  <span className="text-sm">{test.testName}</span>
+                                </div>
+                                <Badge variant={test.priority === "urgent" ? "destructive" : "secondary"} className="text-xs">
+                                  {test.priority}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <UserCheck className="h-4 w-4 text-green-500" />
+                          Suggested Referrals
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {smartOpdSuggestions.suggestedReferrals.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No referrals suggested</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {smartOpdSuggestions.suggestedReferrals.map((ref: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                                <span className="text-sm">{ref.department}</span>
+                                <Badge variant="outline" className="text-xs">{ref.reason}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <Button variant="outline" onClick={() => setSmartOpdStep("observations")}>Back</Button>
+                    <Button onClick={applySmartOpdToPrescription} disabled={smartOpdApplied}>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      {smartOpdApplied ? "Applied" : "Apply to Prescription"}
+                    </Button>
+                  </div>
+                </div>
               )}
             </TabsContent>
           </Tabs>
