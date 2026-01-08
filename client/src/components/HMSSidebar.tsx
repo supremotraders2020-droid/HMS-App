@@ -238,8 +238,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Notifications Section - Hidden from ADMIN, NURSE, MEDICAL_STORE, PATHOLOGY_LAB roles */}
-        {currentRole !== "NURSE" && currentRole !== "ADMIN" && currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && (
+        {/* Notifications Section - Hidden from ADMIN, NURSE, MEDICAL_STORE, PATHOLOGY_LAB, TECHNICIAN roles */}
+        {currentRole !== "NURSE" && currentRole !== "ADMIN" && currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && currentRole !== "TECHNICIAN" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Notifications</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -277,8 +277,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           </SidebarGroup>
         )}
 
-        {/* Dashboard Section - Hidden from MEDICAL_STORE and PATHOLOGY_LAB roles */}
-        {currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && (
+        {/* Dashboard Section - Hidden from MEDICAL_STORE, PATHOLOGY_LAB, TECHNICIAN roles */}
+        {currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && currentRole !== "TECHNICIAN" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Dashboard</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -302,8 +302,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           </SidebarGroup>
         )}
 
-        {/* Core Services Section - Hidden from MEDICAL_STORE and PATHOLOGY_LAB roles */}
-        {currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && (
+        {/* Core Services Section - Hidden from MEDICAL_STORE, PATHOLOGY_LAB, TECHNICIAN roles */}
+        {currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && currentRole !== "TECHNICIAN" && (
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Core Services</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -334,8 +334,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
         </SidebarGroup>
         )}
 
-        {/* Support Services - Hidden for OPD_MANAGER, MEDICAL_STORE and PATHOLOGY_LAB */}
-        {currentRole !== "OPD_MANAGER" && currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && (
+        {/* Support Services - Hidden for OPD_MANAGER, MEDICAL_STORE, PATHOLOGY_LAB, TECHNICIAN */}
+        {currentRole !== "OPD_MANAGER" && currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && currentRole !== "TECHNICIAN" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Support Services</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -366,8 +366,33 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           </SidebarGroup>
         )}
 
-        {/* Management - Hidden for OPD_MANAGER, NURSE, and SUPER_ADMIN */}
-        {currentRole !== "OPD_MANAGER" && currentRole !== "NURSE" && currentRole !== "SUPER_ADMIN" && (
+        {/* Technician Portal Section - Only for TECHNICIAN */}
+        {currentRole === "TECHNICIAN" && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Technician Portal</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild data-testid="link-technician-portal">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start group relative overflow-visible bg-gradient-to-r from-sky-50/80 to-cyan-50/60 hover:from-sky-100 hover:to-cyan-100 dark:from-sky-900/30 dark:to-cyan-900/20 dark:hover:from-sky-800/40 dark:hover:to-cyan-800/30 border border-sky-200/50 dark:border-sky-700/30 rounded-xl transition-all duration-300 hover:shadow-md hover:shadow-sky-500/10 hover:-translate-y-0.5"
+                      onClick={() => handleMenuClick("/technician-portal")}
+                    >
+                      <div className="p-1.5 rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-white mr-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm">
+                        <Wrench className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="font-medium">Technician Portal</span>
+                    </Button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Management - Hidden for OPD_MANAGER, NURSE, SUPER_ADMIN, and TECHNICIAN */}
+        {currentRole !== "OPD_MANAGER" && currentRole !== "NURSE" && currentRole !== "SUPER_ADMIN" && currentRole !== "TECHNICIAN" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Management</SidebarGroupLabel>
             <SidebarGroupContent>
