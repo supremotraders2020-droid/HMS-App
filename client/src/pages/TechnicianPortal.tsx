@@ -257,7 +257,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Tests</CardTitle>
+            <CardTitle className="text-sm font-medium">Upcoming Tests</CardTitle>
             <Clock className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
@@ -299,7 +299,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
 
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="pending" data-testid="tab-pending">Pending Tests</TabsTrigger>
+          <TabsTrigger value="pending" data-testid="tab-pending">Upcoming Tests</TabsTrigger>
           <TabsTrigger value="reports" data-testid="tab-reports">Submitted Reports</TabsTrigger>
           <TabsTrigger value="notifications" data-testid="tab-notifications">Notifications</TabsTrigger>
         </TabsList>
