@@ -81,7 +81,8 @@ import {
   Save,
   Home,
   UserCheck,
-  Scissors
+  Scissors,
+  Download
 } from "lucide-react";
 import HospitalServices from "@/pages/HospitalServices";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -289,6 +290,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   // Fetch all medical records to show patient files in prescription form
   const { data: allMedicalRecords = [] } = useQuery<MedicalRecord[]>({
     queryKey: ['/api/medical-records'],
+  });
+
+  // Fetch medical records assigned to this doctor
+  const { data: doctorMedicalRecords = [], isLoading: doctorRecordsLoading } = useQuery<MedicalRecord[]>({
+    queryKey: ['/api/doctors', doctorId, 'medical-records'],
   });
 
   // Fetch service patients to display in Patient Records section
@@ -856,6 +862,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     { id: "schedules", title: "Schedules", icon: CalendarDays },
     { id: "patients", title: "Patients", icon: Users },
     { id: "prescriptions", title: "Prescriptions", icon: FileText },
+    { id: "medical-records", title: "Medical Records", icon: ClipboardList },
     { id: "templates", title: "Rx Templates", icon: ClipboardList },
     { id: "patient-monitoring", title: "Patient Monitoring", icon: MonitorCheck },
     { id: "hospital-services", title: "Services & Surgeries", icon: Scissors },
@@ -2246,6 +2253,125 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     </div>
   );
 
+  // Handle download medical record
+  const handleDownloadDoctorRecord = (record: MedicalRecord) => {
+    if (record.fileData && record.fileName) {
+      const link = document.createElement('a');
+      link.href = record.fileData;
+      link.download = record.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({
+        title: "Download Started",
+        description: `Downloading ${record.fileName}`,
+      });
+    } else {
+      toast({
+        title: "No file available",
+        description: "This record does not have a file attached",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const renderMedicalRecords = () => {
+    // Get patient names for records
+    const getPatientName = (patientId: string) => {
+      const patient = servicePatients.find(p => p.id === patientId);
+      return patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient';
+    };
+
+    const getRecordIcon = (recordType: string) => {
+      switch (recordType?.toLowerCase()) {
+        case 'lab_result':
+          return <Activity className="h-5 w-5 text-purple-600" />;
+        case 'diagnosis':
+          return <Stethoscope className="h-5 w-5 text-blue-600" />;
+        case 'treatment':
+          return <Heart className="h-5 w-5 text-red-600" />;
+        case 'prescription':
+          return <Pill className="h-5 w-5 text-green-600" />;
+        default:
+          return <FileText className="h-5 w-5 text-gray-600" />;
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold" data-testid="text-medical-records-title">Medical Records</h1>
+          <p className="text-muted-foreground">View medical records assigned to you by admin</p>
+        </div>
+
+        {doctorRecordsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : doctorMedicalRecords.length === 0 ? (
+          <Card className="p-8 text-center">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="font-semibold mb-2">No Medical Records Assigned</h3>
+            <p className="text-muted-foreground">Medical records assigned to you by admin will appear here</p>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {doctorMedicalRecords.map((record) => (
+              <Card key={record.id} className="hover-elevate" data-testid={`medical-record-card-${record.id}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center">
+                      {getRecordIcon(record.recordType)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold" data-testid={`record-title-${record.id}`}>{record.title}</h4>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                        <Badge variant="outline" className="text-xs">
+                          <User className="h-3 w-3 mr-1" />
+                          {getPatientName(record.patientId)}
+                        </Badge>
+                        <span className="hidden sm:inline">-</span>
+                        <span className="hidden sm:inline">{record.recordType}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{record.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">
+                        {record.recordDate ? format(new Date(record.recordDate), 'MMM dd, yyyy') : 'N/A'}
+                      </p>
+                      <Badge variant={record.fileData ? "default" : "secondary"} className="mt-1">
+                        {record.fileData ? "Has File" : "No File"}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => handleDownloadDoctorRecord(record)}
+                        disabled={!record.fileData}
+                        data-testid={`button-download-record-${record.id}`}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  {record.fileName && (
+                    <div className="mt-2 pl-16">
+                      <Badge variant="outline" className="text-xs font-normal">
+                        <FileText className="h-3 w-3 mr-1" />
+                        {record.fileName}
+                      </Badge>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderTemplates = () => {
     const myTemplates = opdTemplates.filter((t: any) => t.createdBy === doctorId && !t.isSystemTemplate);
     const systemTemplates = opdTemplates.filter((t: any) => t.isSystemTemplate);
@@ -3061,6 +3187,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       case "appointments": return renderAppointments();
       case "schedules": return renderSchedules();
       case "prescriptions": return renderPrescriptions();
+      case "medical-records": return renderMedicalRecords();
       case "templates": return renderTemplates();
       case "patient-monitoring": return <PatientMonitoringPage />;
       case "hospital-services": return <HospitalServices currentUserRole="DOCTOR" />;
@@ -3163,7 +3290,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Clinical Services</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu className="space-y-1">
-                    {menuItems.filter(item => ['appointments', 'patients', 'prescriptions', 'templates', 'patient-monitoring', 'hospital-services'].includes(item.id)).map((item) => (
+                    {menuItems.filter(item => ['appointments', 'patients', 'prescriptions', 'medical-records', 'templates', 'patient-monitoring', 'hospital-services'].includes(item.id)).map((item) => (
                       <SidebarMenuItem key={item.id}>
                         <SidebarMenuButton asChild data-testid={`nav-${item.id}`}>
                           <Button
