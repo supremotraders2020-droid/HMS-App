@@ -4231,10 +4231,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         logoImage = await pdfDoc.embedPng(logoBytes);
       }
       
-      // Header dimensions
-      const headerStartY = height - 20;
-      const logoWidth = 140;
-      const logoHeight = 45;
+      // Header dimensions (logo should be 60-80px height as per requirements)
+      const headerStartY = height - 15;
+      const logoWidth = 180;
+      const logoHeight = 70;
       const leftMargin = 30;
       const rightMargin = width - 30;
       
@@ -4250,14 +4250,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Hospital details to the right of logo
-      const textStartX = leftMargin + logoWidth + 20;
+      const textStartX = leftMargin + logoWidth + 15;
       const hospitalNameColor = rgb(0.29, 0.15, 0.55); // Purple color matching logo
       
       // Hospital Name (Bold, larger font)
       firstPage.drawText('Gravity Hospital & Research Centre', {
         x: textStartX,
-        y: headerStartY - 14,
-        size: 14,
+        y: headerStartY - 20,
+        size: 15,
         font: helveticaBold,
         color: hospitalNameColor,
       });
@@ -4265,7 +4265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hospital Address
       firstPage.drawText('Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,', {
         x: textStartX,
-        y: headerStartY - 28,
+        y: headerStartY - 36,
         size: 9,
         font: helveticaFont,
         color: rgb(0.3, 0.3, 0.3),
@@ -4273,7 +4273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       firstPage.drawText('Pimpri-Chinchwad, Maharashtra - 411062', {
         x: textStartX,
-        y: headerStartY - 40,
+        y: headerStartY - 49,
         size: 9,
         font: helveticaFont,
         color: rgb(0.3, 0.3, 0.3),
@@ -4282,14 +4282,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Contact Numbers
       firstPage.drawText('Contact: 7796513130, 7769651310', {
         x: textStartX,
-        y: headerStartY - 54,
+        y: headerStartY - 63,
         size: 9,
         font: helveticaBold,
         color: rgb(0.2, 0.2, 0.2),
       });
       
       // Horizontal divider line below hospital details
-      const dividerY = headerStartY - 65;
+      const dividerY = headerStartY - 78;
       firstPage.drawLine({
         start: { x: leftMargin, y: dividerY },
         end: { x: rightMargin, y: dividerY },
