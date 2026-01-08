@@ -6960,6 +6960,22 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // Get available beds by ward (excludes occupied beds) - for real-time dropdown
+  app.get("/api/bed-management/beds/ward/:wardName/available", async (req, res) => {
+    try {
+      const availableWardBeds = await db.select().from(beds)
+        .where(and(
+          eq(beds.wardName, req.params.wardName),
+          eq(beds.occupancyStatus, "AVAILABLE"),
+          eq(beds.isActive, true)
+        ))
+        .orderBy(beds.bedNumber);
+      res.json(availableWardBeds);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch available ward beds" });
+    }
+  });
+
   app.get("/api/bed-management/beds/:id", async (req, res) => {
     try {
       const bed = await db.select().from(beds)

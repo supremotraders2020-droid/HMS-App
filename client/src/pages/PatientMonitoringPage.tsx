@@ -90,6 +90,13 @@ export default function PatientMonitoringPage() {
     queryKey: ["/api/doctors"]
   });
 
+  // Fetch available beds for the selected ward with real-time refresh
+  const { data: availableBeds = [], isLoading: loadingBeds } = useQuery<any[]>({
+    queryKey: ["/api/bed-management/beds/ward", newSessionData.ward, "available"],
+    enabled: !!newSessionData.ward && showNewSession,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds for real-time updates
+  });
+
   const selectedSession = sessions.find(s => s.id === selectedSessionId);
 
   const uniquePatients = Array.from(
@@ -208,7 +215,7 @@ export default function PatientMonitoringPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Ward *</Label>
-                  <Select value={newSessionData.ward} onValueChange={(v) => setNewSessionData({...newSessionData, ward: v})}>
+                  <Select value={newSessionData.ward} onValueChange={(v) => setNewSessionData({...newSessionData, ward: v, bedNumber: ""})}>
                     <SelectTrigger data-testid="select-ward">
                       <SelectValue />
                     </SelectTrigger>
@@ -219,7 +226,33 @@ export default function PatientMonitoringPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Bed Number *</Label>
-                  <Input value={newSessionData.bedNumber} onChange={(e) => setNewSessionData({...newSessionData, bedNumber: e.target.value})} placeholder="e.g., ICU-5" data-testid="input-bed" />
+                  <Select 
+                    value={newSessionData.bedNumber} 
+                    onValueChange={(v) => setNewSessionData({...newSessionData, bedNumber: v})}
+                    disabled={loadingBeds}
+                  >
+                    <SelectTrigger data-testid="select-bed">
+                      <SelectValue placeholder={loadingBeds ? "Loading beds..." : availableBeds.length === 0 ? "No available beds" : "Select bed"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableBeds.length === 0 ? (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          No available beds in {newSessionData.ward}
+                        </div>
+                      ) : (
+                        availableBeds.map((bed: any) => (
+                          <SelectItem key={bed.id} value={bed.bedNumber}>
+                            {bed.bedNumber} - {bed.bedType || 'Standard'}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {availableBeds.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {availableBeds.length} bed{availableBeds.length !== 1 ? 's' : ''} available
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
