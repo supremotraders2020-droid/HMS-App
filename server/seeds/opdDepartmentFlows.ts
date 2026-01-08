@@ -21,9 +21,14 @@ export const OPD_DEPARTMENT_FLOW_DATA = [
       { id: "pulse_rhythm", name: "Pulse Rhythm", type: "select", options: ["Regular", "Irregular", "Irregularly Irregular"] }
     ]),
     flowLogicRules: JSON.stringify([
-      { condition: { symptom: "chest_pain", modifier: "exertional" }, action: { tests: ["ECG", "Troponin"], priority: "urgent" } },
-      { condition: { symptom: "breathlessness", modifier: "NYHA >= II" }, action: { tests: ["Echocardiography"], priority: "routine" } },
-      { condition: { symptom: "syncope" }, action: { tests: ["ECG", "Holter Monitor"], referral: "Electrophysiology" } }
+      { condition: { symptom: "chest_pain" }, action: { tests: ["ECG"], priority: "routine" } },
+      { condition: { symptom: "chest_pain", modifier: "severe" }, action: { tests: ["ECG", "Troponin"], priority: "urgent" } },
+      { condition: { symptom: "breathlessness" }, action: { tests: ["Chest X-Ray"], priority: "routine" } },
+      { condition: { symptom: "breathlessness", modifier: "NYHA III" }, action: { tests: ["Echocardiography"], priority: "urgent" } },
+      { condition: { symptom: "breathlessness", modifier: "NYHA IV" }, action: { tests: ["Echocardiography", "BNP"], priority: "urgent" } },
+      { condition: { symptom: "palpitations" }, action: { tests: ["ECG", "Holter Monitor"], priority: "routine" } },
+      { condition: { symptom: "syncope" }, action: { tests: ["ECG", "Holter Monitor"], referral: "Electrophysiology", priority: "urgent" } },
+      { condition: { symptom: "fatigue", modifier: "severe" }, action: { tests: ["CBC", "Thyroid Profile"], priority: "routine" } }
     ]),
     suggestedTests: JSON.stringify([
       { testName: "ECG", condition: "chest_pain OR palpitations", mandatory: false },
@@ -56,8 +61,12 @@ export const OPD_DEPARTMENT_FLOW_DATA = [
       { id: "edema", name: "Edema", type: "select", options: ["None", "Pitting +", "Pitting ++", "Pitting +++"] }
     ]),
     flowLogicRules: JSON.stringify([
+      { condition: { symptom: "limb_pain" }, action: { tests: ["Doppler Ultrasound"], priority: "routine" } },
+      { condition: { symptom: "limb_pain", modifier: "severe" }, action: { tests: ["Doppler Ultrasound", "CT Angiography"], priority: "urgent" } },
       { condition: { symptom: "claudication" }, action: { tests: ["ABI", "Doppler Ultrasound"], priority: "routine" } },
-      { condition: { symptom: "non_healing_ulcer" }, action: { tests: ["Infection Markers", "Doppler Ultrasound"], priority: "urgent" } }
+      { condition: { symptom: "claudication", modifier: "severe" }, action: { tests: ["ABI", "CT Angiography"], priority: "urgent" } },
+      { condition: { symptom: "non_healing_ulcer" }, action: { tests: ["Infection Markers", "Doppler Ultrasound"], priority: "urgent" } },
+      { condition: { symptom: "limb_discoloration" }, action: { tests: ["Doppler Ultrasound"], priority: "routine" } }
     ]),
     suggestedTests: JSON.stringify([
       { testName: "Ankle-Brachial Index (ABI)", condition: "claudication OR limb_pain", mandatory: false },
@@ -176,8 +185,13 @@ export const OPD_DEPARTMENT_FLOW_DATA = [
       { id: "nasal_endoscopy", name: "Nasal Endoscopy (if indicated)", type: "select", options: ["Not Done", "Normal", "Abnormal - DNS", "Abnormal - Polyp", "Abnormal - Other"] }
     ]),
     flowLogicRules: JSON.stringify([
-      { condition: { symptom: "hearing_loss", modifier: "> 2 weeks" }, action: { tests: ["Audiometry"], priority: "routine" } },
-      { condition: { symptom: "voice_change", modifier: "> 3 weeks" }, action: { tests: ["Laryngoscopy"], priority: "routine" } }
+      { condition: { symptom: "ear_pain" }, action: { tests: ["Otoscopy"], priority: "routine" } },
+      { condition: { symptom: "ear_pain", modifier: "severe" }, action: { tests: ["Otoscopy", "CT Temporal Bone"], priority: "urgent" } },
+      { condition: { symptom: "hearing_loss" }, action: { tests: ["Audiometry"], priority: "routine" } },
+      { condition: { symptom: "hearing_loss", modifier: "severe" }, action: { tests: ["Audiometry", "BERA"], priority: "urgent" } },
+      { condition: { symptom: "nasal_block" }, action: { tests: ["X-Ray PNS"], priority: "routine" } },
+      { condition: { symptom: "throat_pain" }, action: { tests: ["CBC"], priority: "routine" } },
+      { condition: { symptom: "voice_change" }, action: { tests: ["Laryngoscopy"], priority: "routine" } }
     ]),
     suggestedTests: JSON.stringify([
       { testName: "Audiometry", condition: "hearing loss > 2 weeks", mandatory: false },
@@ -235,8 +249,12 @@ export const OPD_DEPARTMENT_FLOW_DATA = [
       { id: "vitals_trend", name: "Vitals Trend", type: "select", options: ["Stable", "Improving", "Deteriorating"] }
     ]),
     flowLogicRules: JSON.stringify([
-      { condition: { observation: "vitals_trend", value: "Stable" }, action: { plan: "OPD Management", priority: "routine" } },
-      { condition: { observation: "ecg", value: "abnormal" }, action: { referral: "Cardiology", priority: "urgent" } }
+      { condition: { symptom: "acute_pain" }, action: { tests: ["CBC", "ECG"], priority: "urgent" } },
+      { condition: { symptom: "acute_pain", modifier: "VAS 7-10" }, action: { tests: ["ECG", "Troponin", "CBC"], priority: "urgent" } },
+      { condition: { symptom: "breathlessness" }, action: { tests: ["Chest X-Ray", "SpO2"], priority: "urgent" } },
+      { condition: { symptom: "breathlessness", modifier: "severe" }, action: { tests: ["ABG", "CT Chest"], priority: "urgent" } },
+      { condition: { symptom: "dizziness" }, action: { tests: ["ECG", "Blood Sugar"], priority: "routine" } },
+      { condition: { observation: "vitals_trend", value: "Deteriorating" }, action: { referral: "ICU Admission", priority: "urgent" } }
     ]),
     suggestedTests: JSON.stringify([
       { testName: "ECG", condition: "chest pain OR dizziness", mandatory: false },
@@ -680,3 +698,6 @@ export async function seedOpdDepartmentFlows() {
   
   console.log("OPD Department Flows seeding complete!");
 }
+
+// Run if called directly
+seedOpdDepartmentFlows();
