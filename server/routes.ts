@@ -1816,9 +1816,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message += ` File attached: ${parsed.data.fileName}`;
           }
           
-          // Use the doctor's ID from the doctors table for notification
+          // Find the doctor's user account by matching name
+          const allUsers = await storage.getUsers();
+          const doctorNameNormalized = matchedDoctor.name.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
+          const doctorUser = allUsers.find((u: { id: string; username: string; role: string }) => {
+            const usernameNormalized = u.username.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
+            return u.role === 'DOCTOR' && (
+              usernameNormalized === doctorNameNormalized ||
+              usernameNormalized.includes(doctorNameNormalized) ||
+              doctorNameNormalized.includes(usernameNormalized) ||
+              usernameNormalized.split(' ')[0] === doctorNameNormalized.split(' ')[0]
+            );
+          });
+          
+          // Use the doctor's user ID for notification (so it shows in their portal)
+          const notificationUserId = doctorUser ? doctorUser.id : matchedDoctor.id;
+          
           await storage.createUserNotification({
-            userId: matchedDoctor.id,
+            userId: notificationUserId,
             userRole: "DOCTOR",
             title: "Medical Record Assigned",
             message: message,

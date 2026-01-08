@@ -646,13 +646,9 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   
   const matchingServicePatientIds = matchingServicePatients.map(sp => sp.id);
 
-  // Filter records for this patient (by username, userId, patientName, or service_patient ID)
-  const patientRecords = medicalRecords.filter(r => 
-    r.patientId === username || 
-    r.patientId === patientId || 
-    r.patientId === patientName ||
-    matchingServicePatientIds.includes(r.patientId)
-  );
+  // Backend now handles patient data isolation - records returned are already filtered for this patient
+  // No additional frontend filtering needed as the API only returns records for the logged-in patient
+  const patientRecords = medicalRecords;
 
   // Filter consent forms for this patient
   const patientConsents = allConsents.filter(c => 
