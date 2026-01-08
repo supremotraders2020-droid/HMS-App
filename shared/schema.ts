@@ -4747,3 +4747,107 @@ export const insertOpdConsultationsSchema = createInsertSchema(opdConsultations)
 });
 export type InsertOpdConsultations = z.infer<typeof insertOpdConsultationsSchema>;
 export type OpdConsultations = typeof opdConsultations.$inferSelect;
+
+// ========== Diagnostic Test Orders (from Prescriptions to Technician Portal) ==========
+export const diagnosticTestOrders = pgTable("diagnostic_test_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Source Information
+  prescriptionId: varchar("prescription_id"), // Link to prescription if from doctor
+  consultationId: varchar("consultation_id"), // Link to OPD consultation
+  
+  // Patient Information
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientAge: text("patient_age"),
+  patientGender: text("patient_gender"),
+  
+  // Doctor Information
+  doctorId: varchar("doctor_id").notNull(),
+  doctorName: text("doctor_name").notNull(),
+  
+  // Test Information
+  testName: text("test_name").notNull(),
+  testType: text("test_type").notNull(), // MRI, CT, X-RAY, ECG, LAB, etc.
+  department: text("department").notNull(), // Radiology, Pathology, Cardiology, etc.
+  
+  // Priority & Status
+  priority: text("priority").notNull().default("ROUTINE"), // ROUTINE, URGENT, STAT
+  status: text("status").notNull().default("PENDING"), // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  
+  // Assignment
+  assignedTechnicianId: varchar("assigned_technician_id"),
+  assignedTechnicianName: text("assigned_technician_name"),
+  
+  // Notes
+  clinicalNotes: text("clinical_notes"),
+  specialInstructions: text("special_instructions"),
+  
+  // Timestamps
+  orderedDate: timestamp("ordered_date").defaultNow(),
+  scheduledDate: timestamp("scheduled_date"),
+  completedDate: timestamp("completed_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDiagnosticTestOrdersSchema = createInsertSchema(diagnosticTestOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDiagnosticTestOrders = z.infer<typeof insertDiagnosticTestOrdersSchema>;
+export type DiagnosticTestOrders = typeof diagnosticTestOrders.$inferSelect;
+
+// ========== Technician Reports (Submitted by Technicians) ==========
+export const technicianReports = pgTable("technician_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Link to Test Order
+  testOrderId: varchar("test_order_id").notNull(),
+  
+  // Patient Information
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  
+  // Doctor Information (for notifications)
+  doctorId: varchar("doctor_id").notNull(),
+  doctorName: text("doctor_name").notNull(),
+  
+  // Test Information
+  testName: text("test_name").notNull(),
+  testType: text("test_type").notNull(),
+  department: text("department").notNull(),
+  
+  // Technician Information
+  technicianId: varchar("technician_id").notNull(),
+  technicianName: text("technician_name").notNull(),
+  
+  // Report Content
+  findings: text("findings").notNull(),
+  conclusion: text("conclusion").notNull(),
+  recommendations: text("recommendations"),
+  
+  // File Attachment
+  fileName: text("file_name"),
+  fileType: text("file_type"),
+  fileData: text("file_data"), // Base64 encoded file
+  
+  // Status
+  status: text("status").notNull().default("SUBMITTED"), // DRAFT, SUBMITTED, VERIFIED, REJECTED
+  verifiedBy: varchar("verified_by"),
+  verifiedAt: timestamp("verified_at"),
+  
+  // Timestamps
+  reportDate: timestamp("report_date").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTechnicianReportsSchema = createInsertSchema(technicianReports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertTechnicianReports = z.infer<typeof insertTechnicianReportsSchema>;
+export type TechnicianReports = typeof technicianReports.$inferSelect;

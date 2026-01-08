@@ -24,6 +24,7 @@ import {
   staffMaster, shiftRoster, taskLogs, attendanceLogs, leaveRequests, overtimeLogs, staffPerformanceMetrics, rosterAuditLogs,
   insuranceProviders, patientInsurance, insuranceClaims, insuranceClaimDocuments, insuranceClaimLogs, insuranceProviderChecklists,
   opdPrescriptionTemplates, opdTemplateVersions, nurseDepartmentPreferences, departmentNurseAssignments,
+  diagnosticTestOrders, technicianReports,
   type OpdPrescriptionTemplate, type InsertOpdPrescriptionTemplate,
   type NurseDepartmentPreferences, type InsertNurseDepartmentPreferences,
   type OpdTemplateVersion, type InsertOpdTemplateVersion,
@@ -5155,6 +5156,97 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log(`Initialized ${HOSPITAL_DEPARTMENTS.length} departments for nurse assignments!`);
+  }
+
+  // ========== DIAGNOSTIC TEST ORDERS ==========
+  async createDiagnosticTestOrder(order: any): Promise<any> {
+    const result = await db.insert(diagnosticTestOrders).values(order).returning();
+    return result[0];
+  }
+
+  async getAllDiagnosticTestOrders(): Promise<any[]> {
+    return await db.select().from(diagnosticTestOrders).orderBy(desc(diagnosticTestOrders.orderedDate));
+  }
+
+  async getDiagnosticTestOrderById(id: string): Promise<any | undefined> {
+    const result = await db.select().from(diagnosticTestOrders).where(eq(diagnosticTestOrders.id, id));
+    return result[0];
+  }
+
+  async getDiagnosticTestOrdersByPatient(patientId: string): Promise<any[]> {
+    return await db.select().from(diagnosticTestOrders).where(eq(diagnosticTestOrders.patientId, patientId)).orderBy(desc(diagnosticTestOrders.orderedDate));
+  }
+
+  async getDiagnosticTestOrdersByDoctor(doctorId: string): Promise<any[]> {
+    return await db.select().from(diagnosticTestOrders).where(eq(diagnosticTestOrders.doctorId, doctorId)).orderBy(desc(diagnosticTestOrders.orderedDate));
+  }
+
+  async getDiagnosticTestOrdersByStatus(status: string): Promise<any[]> {
+    return await db.select().from(diagnosticTestOrders).where(eq(diagnosticTestOrders.status, status)).orderBy(desc(diagnosticTestOrders.orderedDate));
+  }
+
+  async getPendingDiagnosticTestOrders(): Promise<any[]> {
+    return await db.select().from(diagnosticTestOrders)
+      .where(sql`${diagnosticTestOrders.status} IN ('PENDING', 'IN_PROGRESS')`)
+      .orderBy(desc(diagnosticTestOrders.orderedDate));
+  }
+
+  async updateDiagnosticTestOrder(id: string, updates: any): Promise<any | undefined> {
+    const result = await db.update(diagnosticTestOrders)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(diagnosticTestOrders.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDiagnosticTestOrder(id: string): Promise<boolean> {
+    await db.delete(diagnosticTestOrders).where(eq(diagnosticTestOrders.id, id));
+    return true;
+  }
+
+  // ========== TECHNICIAN REPORTS ==========
+  async createTechnicianReport(report: any): Promise<any> {
+    const result = await db.insert(technicianReports).values(report).returning();
+    return result[0];
+  }
+
+  async getAllTechnicianReports(): Promise<any[]> {
+    return await db.select().from(technicianReports).orderBy(desc(technicianReports.reportDate));
+  }
+
+  async getTechnicianReportById(id: string): Promise<any | undefined> {
+    const result = await db.select().from(technicianReports).where(eq(technicianReports.id, id));
+    return result[0];
+  }
+
+  async getTechnicianReportsByPatient(patientId: string): Promise<any[]> {
+    return await db.select().from(technicianReports).where(eq(technicianReports.patientId, patientId)).orderBy(desc(technicianReports.reportDate));
+  }
+
+  async getTechnicianReportsByDoctor(doctorId: string): Promise<any[]> {
+    return await db.select().from(technicianReports).where(eq(technicianReports.doctorId, doctorId)).orderBy(desc(technicianReports.reportDate));
+  }
+
+  async getTechnicianReportsByTechnician(technicianId: string): Promise<any[]> {
+    return await db.select().from(technicianReports).where(eq(technicianReports.technicianId, technicianId)).orderBy(desc(technicianReports.reportDate));
+  }
+
+  async getTechnicianReportByTestOrder(testOrderId: string): Promise<any | undefined> {
+    const result = await db.select().from(technicianReports).where(eq(technicianReports.testOrderId, testOrderId));
+    return result[0];
+  }
+
+  async updateTechnicianReport(id: string, updates: any): Promise<any | undefined> {
+    const result = await db.update(technicianReports)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(technicianReports.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTechnicianReport(id: string): Promise<boolean> {
+    await db.delete(technicianReports).where(eq(technicianReports.id, id));
+    return true;
   }
 }
 

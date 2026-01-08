@@ -654,6 +654,28 @@ export interface IStorage {
   getRolePermission(role: string, module: string): Promise<any | undefined>;
   getRolePermissions(role: string): Promise<any[]>;
   upsertRolePermission(permission: any): Promise<any>;
+  
+  // ========== DIAGNOSTIC TEST ORDERS ==========
+  createDiagnosticTestOrder(order: any): Promise<any>;
+  getAllDiagnosticTestOrders(): Promise<any[]>;
+  getDiagnosticTestOrderById(id: string): Promise<any | undefined>;
+  getDiagnosticTestOrdersByPatient(patientId: string): Promise<any[]>;
+  getDiagnosticTestOrdersByDoctor(doctorId: string): Promise<any[]>;
+  getDiagnosticTestOrdersByStatus(status: string): Promise<any[]>;
+  getPendingDiagnosticTestOrders(): Promise<any[]>;
+  updateDiagnosticTestOrder(id: string, updates: any): Promise<any | undefined>;
+  deleteDiagnosticTestOrder(id: string): Promise<boolean>;
+  
+  // ========== TECHNICIAN REPORTS ==========
+  createTechnicianReport(report: any): Promise<any>;
+  getAllTechnicianReports(): Promise<any[]>;
+  getTechnicianReportById(id: string): Promise<any | undefined>;
+  getTechnicianReportsByPatient(patientId: string): Promise<any[]>;
+  getTechnicianReportsByDoctor(doctorId: string): Promise<any[]>;
+  getTechnicianReportsByTechnician(technicianId: string): Promise<any[]>;
+  getTechnicianReportByTestOrder(testOrderId: string): Promise<any | undefined>;
+  updateTechnicianReport(id: string, updates: any): Promise<any | undefined>;
+  deleteTechnicianReport(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
