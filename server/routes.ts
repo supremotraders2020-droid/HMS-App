@@ -13417,6 +13417,17 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // Seed ICU beds endpoint
+  app.post("/api/icu/seed-beds", requireAuth, requireRole(["ADMIN", "SUPER_ADMIN"]), async (req, res) => {
+    try {
+      await storage.seedIcuBeds();
+      res.json({ success: true, message: "ICU beds seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding ICU beds:", error);
+      res.status(500).json({ error: "Failed to seed ICU beds" });
+    }
+  });
+
   // ========== DEPARTMENT NURSE ASSIGNMENTS ==========
   app.get("/api/department-nurse-assignments", requireAuth, async (req, res) => {
     try {
@@ -14070,6 +14081,63 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // ========== ICU MONITORING SYSTEM ==========
+
+  // ========== ICU DROPDOWN DATA ENDPOINTS ==========
+  
+  // Get admitted patients for ICU chart creation
+  app.get("/api/icu/admitted-patients", requireAuth, async (req, res) => {
+    try {
+      const patients = await storage.getAdmittedPatientsWithDetails();
+      res.json(patients);
+    } catch (error) {
+      console.error("Error fetching admitted patients:", error);
+      res.status(500).json({ error: "Failed to fetch admitted patients" });
+    }
+  });
+
+  // Get available ICU beds
+  app.get("/api/icu/available-beds", requireAuth, async (req, res) => {
+    try {
+      const beds = await storage.getAvailableIcuBeds();
+      res.json(beds);
+    } catch (error) {
+      console.error("Error fetching available ICU beds:", error);
+      res.status(500).json({ error: "Failed to fetch available ICU beds" });
+    }
+  });
+
+  // Get ICU doctors
+  app.get("/api/icu/doctors", requireAuth, async (req, res) => {
+    try {
+      const doctors = await storage.getIcuDoctors();
+      res.json(doctors);
+    } catch (error) {
+      console.error("Error fetching ICU doctors:", error);
+      res.status(500).json({ error: "Failed to fetch ICU doctors" });
+    }
+  });
+
+  // Get ICU nurses (nurses with ICU in department preferences)
+  app.get("/api/icu/nurses", requireAuth, async (req, res) => {
+    try {
+      const nurses = await storage.getIcuNurses();
+      res.json(nurses);
+    } catch (error) {
+      console.error("Error fetching ICU nurses:", error);
+      res.status(500).json({ error: "Failed to fetch ICU nurses" });
+    }
+  });
+
+  // Get all beds (for bed management)
+  app.get("/api/beds", requireAuth, async (req, res) => {
+    try {
+      const beds = await storage.getAllBeds();
+      res.json(beds);
+    } catch (error) {
+      console.error("Error fetching beds:", error);
+      res.status(500).json({ error: "Failed to fetch beds" });
+    }
+  });
 
   // ICU Charts - Main record management
   app.post("/api/icu-charts", requireAuth, async (req, res) => {

@@ -48,14 +48,35 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
     chartDate: format(new Date(), "yyyy-MM-dd"),
     admittingConsultant: "",
     icuConsultant: "",
+    assignedNurse: "",
   });
 
   const { data: icuCharts = [], isLoading: chartsLoading } = useQuery<IcuCharts[]>({
     queryKey: ["/api/icu-charts"],
   });
 
-  const { data: patients = [] } = useQuery<ServicePatient[]>({
-    queryKey: ["/api/service-patients"],
+  // Fetch admitted patients for dropdown
+  const { data: admittedPatients = [], refetch: refetchPatients } = useQuery<any[]>({
+    queryKey: ["/api/icu/admitted-patients"],
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+  });
+
+  // Fetch available ICU beds for dropdown
+  const { data: availableBeds = [], refetch: refetchBeds } = useQuery<any[]>({
+    queryKey: ["/api/icu/available-beds"],
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+  });
+
+  // Fetch ICU doctors for dropdown
+  const { data: icuDoctors = [], refetch: refetchDoctors } = useQuery<any[]>({
+    queryKey: ["/api/icu/doctors"],
+    refetchInterval: 60000, // Auto-refresh every minute
+  });
+
+  // Fetch ICU nurses for dropdown
+  const { data: icuNurses = [], refetch: refetchNurses } = useQuery<any[]>({
+    queryKey: ["/api/icu/nurses"],
+    refetchInterval: 60000, // Auto-refresh every minute
   });
 
   const { data: completeChart } = useQuery({
@@ -87,7 +108,11 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
         chartDate: format(new Date(), "yyyy-MM-dd"),
         admittingConsultant: "",
         icuConsultant: "",
+        assignedNurse: "",
       });
+      // Refresh dropdowns after chart creation
+      refetchPatients();
+      refetchBeds();
       toast({ title: "ICU Chart created successfully" });
     },
     onError: () => {
@@ -102,7 +127,7 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
   );
 
   const handlePatientSelect = (patientId: string) => {
-    const patient = patients.find(p => p.id === patientId);
+    const patient = admittedPatients.find(p => p.id === patientId);
     if (patient) {
       setNewChart(prev => ({
         ...prev,
@@ -111,8 +136,19 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
         age: patient.dateOfBirth ? String(Math.floor((Date.now() - new Date(patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))) : "",
         sex: patient.gender || "",
         bloodGroup: patient.bloodType || "",
+        dateOfAdmission: patient.admissionDate || format(new Date(), "yyyy-MM-dd"),
       }));
     }
+  };
+
+  const handleBedSelect = (bedNumber: string) => {
+    setNewChart(prev => ({ ...prev, bedNo: bedNumber }));
+    // Trigger refresh of available beds after selection
+    refetchBeds();
+  };
+
+  const handleDoctorSelect = (doctorName: string, field: 'admittingConsultant' | 'icuConsultant') => {
+    setNewChart(prev => ({ ...prev, [field]: doctorName }));
   };
 
   const canEdit = userRole === "DOCTOR" || userRole === "NURSE" || userRole === "ADMIN" || userRole === "SUPER_ADMIN";
@@ -177,15 +213,15 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Select Patient</Label>
+                    <Label>Select Admitted Patient</Label>
                     <Select onValueChange={handlePatientSelect}>
                       <SelectTrigger data-testid="select-patient">
-                        <SelectValue placeholder="Select patient" />
+                        <SelectValue placeholder={admittedPatients.length === 0 ? "No admitted patients" : "Select patient"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {patients.map(patient => (
+                        {admittedPatients.map(patient => (
                           <SelectItem key={patient.id} value={patient.id}>
-                            {patient.firstName} {patient.lastName}
+                            {patient.firstName} {patient.lastName} - {patient.wardType || "Ward"}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -251,13 +287,19 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Bed Number</Label>
-                    <Input
-                      value={newChart.bedNo}
-                      onChange={e => setNewChart(prev => ({ ...prev, bedNo: e.target.value }))}
-                      placeholder="e.g., ICU-01"
-                      data-testid="input-bed-no"
-                    />
+                    <Label>ICU Bed Number</Label>
+                    <Select value={newChart.bedNo} onValueChange={handleBedSelect}>
+                      <SelectTrigger data-testid="select-bed-no">
+                        <SelectValue placeholder={availableBeds.length === 0 ? "No available ICU beds" : "Select ICU bed"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableBeds.map(bed => (
+                          <SelectItem key={bed.id} value={bed.bedNumber}>
+                            {bed.bedNumber} {bed.hasVentilatorCapability ? "(Ventilator)" : ""} {bed.isIsolationBed ? "(Isolation)" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -274,22 +316,50 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Admitting Consultant</Label>
-                    <Input
-                      value={newChart.admittingConsultant}
-                      onChange={e => setNewChart(prev => ({ ...prev, admittingConsultant: e.target.value }))}
-                      placeholder="Doctor name"
-                      data-testid="input-admitting-consultant"
-                    />
+                    <Select value={newChart.admittingConsultant} onValueChange={v => handleDoctorSelect(v, 'admittingConsultant')}>
+                      <SelectTrigger data-testid="select-admitting-consultant">
+                        <SelectValue placeholder={icuDoctors.length === 0 ? "No ICU doctors available" : "Select doctor"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {icuDoctors.map(doctor => (
+                          <SelectItem key={doctor.id} value={doctor.fullName}>
+                            Dr. {doctor.fullName} - {doctor.department || "ICU"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>ICU Consultant</Label>
-                    <Input
-                      value={newChart.icuConsultant}
-                      onChange={e => setNewChart(prev => ({ ...prev, icuConsultant: e.target.value }))}
-                      placeholder="ICU consultant name"
-                      data-testid="input-icu-consultant"
-                    />
+                    <Select value={newChart.icuConsultant} onValueChange={v => handleDoctorSelect(v, 'icuConsultant')}>
+                      <SelectTrigger data-testid="select-icu-consultant">
+                        <SelectValue placeholder={icuDoctors.length === 0 ? "No ICU doctors available" : "Select ICU consultant"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {icuDoctors.map(doctor => (
+                          <SelectItem key={doctor.id} value={doctor.fullName}>
+                            Dr. {doctor.fullName} - {doctor.department || "ICU"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Assigned ICU Nurse</Label>
+                  <Select value={newChart.assignedNurse} onValueChange={v => setNewChart(prev => ({ ...prev, assignedNurse: v }))}>
+                    <SelectTrigger data-testid="select-assigned-nurse">
+                      <SelectValue placeholder={icuNurses.length === 0 ? "No ICU nurses available" : "Select ICU nurse"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {icuNurses.map(nurse => (
+                        <SelectItem key={nurse.nurseId} value={nurse.nurseName}>
+                          {nurse.nurseName} - {nurse.primaryDepartment === "ICU" ? "Primary ICU" : nurse.secondaryDepartment === "ICU" ? "Secondary ICU" : "Tertiary ICU"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <Button 

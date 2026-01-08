@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, desc, and, lt, sql } from "drizzle-orm";
+import { eq, desc, and, lt, sql, or } from "drizzle-orm";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 import bcrypt from "bcrypt";
 
@@ -113,6 +113,7 @@ import {
   faceEmbeddings, biometricConsent, faceRecognitionLogs, faceAttendance, faceRecognitionSettings, duplicatePatientAlerts,
   referralSources, patientReferrals,
   hospitalServiceDepartments, hospitalServices,
+  beds, type Bed, type InsertBed,
   type FaceEmbedding, type InsertFaceEmbedding,
   type BiometricConsent, type InsertBiometricConsent,
   type FaceRecognitionLog, type InsertFaceRecognitionLog,
@@ -5114,6 +5115,115 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log(`Seeded ${nursePreferences.length} nurse department preferences successfully!`);
+  }
+
+  // ========== ICU DROPDOWN DATA METHODS ==========
+  
+  // Get all beds
+  async getAllBeds(): Promise<Bed[]> {
+    return await db.select().from(beds).orderBy(beds.bedNumber);
+  }
+  
+  // Get available ICU beds (department = ICU/Critical Care and status = available)
+  async getAvailableIcuBeds(): Promise<Bed[]> {
+    return await db.select().from(beds)
+      .where(and(
+        or(
+          eq(beds.department, "ICU"),
+          eq(beds.department, "Critical Care")
+        ),
+        eq(beds.occupancyStatus, "available"),
+        eq(beds.isActive, true)
+      ))
+      .orderBy(beds.bedNumber);
+  }
+  
+  // Get ICU doctors (staff with role DOCTOR and department containing ICU)
+  async getIcuDoctors(): Promise<StaffMaster[]> {
+    const allDoctors = await db.select().from(staffMaster)
+      .where(and(
+        eq(staffMaster.role, "DOCTOR"),
+        eq(staffMaster.status, "ACTIVE")
+      ))
+      .orderBy(staffMaster.fullName);
+    
+    // Filter for ICU-related departments
+    return allDoctors.filter(doc => 
+      doc.department?.toLowerCase().includes("icu") ||
+      doc.department?.toLowerCase().includes("intensive") ||
+      doc.department?.toLowerCase().includes("critical") ||
+      doc.department?.toLowerCase().includes("casualty") ||
+      doc.department === "General Medicine" ||
+      doc.department === "Emergency"
+    );
+  }
+  
+  // Get nurses with ICU as one of their department preferences
+  async getIcuNurses(): Promise<any[]> {
+    const allPreferences = await db.select().from(nurseDepartmentPreferences)
+      .orderBy(nurseDepartmentPreferences.nurseName);
+    
+    // Filter for nurses with ICU in any of their preferences
+    return allPreferences.filter(nurse => 
+      nurse.primaryDepartment === "ICU" ||
+      nurse.secondaryDepartment === "ICU" ||
+      nurse.tertiaryDepartment === "ICU"
+    );
+  }
+  
+  // Get admitted patients (with active admission status)
+  async getAdmittedPatientsWithDetails(): Promise<any[]> {
+    const activeAdmissions = await this.getActiveAdmissions();
+    const patientsWithAdmissions = [];
+    
+    for (const admission of activeAdmissions) {
+      const patient = await this.getServicePatientById(admission.patientId);
+      if (patient) {
+        patientsWithAdmissions.push({
+          ...patient,
+          admissionId: admission.id,
+          admissionDate: admission.admissionDate,
+          wardType: admission.department,
+          bedNumber: admission.roomNumber
+        });
+      }
+    }
+    
+    return patientsWithAdmissions;
+  }
+
+  // Seed ICU beds if not exist
+  async seedIcuBeds(): Promise<void> {
+    const existingBeds = await db.select().from(beds).limit(1);
+    if (existingBeds.length > 0) {
+      console.log("Beds already exist, skipping ICU bed seed...");
+      return;
+    }
+
+    console.log("Seeding ICU beds...");
+    
+    const icuBeds = [];
+    for (let i = 1; i <= 20; i++) {
+      icuBeds.push({
+        bedNumber: `ICU-${i.toString().padStart(2, '0')}`,
+        bedName: `ICU Bed ${i}`,
+        categoryId: "icu-standard",
+        wardName: "Intensive Care Unit",
+        floor: "2",
+        department: "Critical Care",
+        occupancyStatus: "available",
+        hasOxygenCapability: true,
+        hasVentilatorCapability: i <= 10, // First 10 beds have ventilator
+        isIsolationBed: i === 19 || i === 20, // Last 2 are isolation beds
+        isActive: true
+      });
+    }
+
+    for (const bed of icuBeds) {
+      await db.insert(beds).values(bed);
+    }
+
+    console.log(`Seeded ${icuBeds.length} ICU beds successfully!`);
   }
 
   // ========== DEPARTMENT NURSE ASSIGNMENTS ==========
