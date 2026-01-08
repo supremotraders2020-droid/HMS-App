@@ -71,8 +71,12 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   insuranceClaims, insertInsuranceClaimSchema,
   hospitalPackages, insertHospitalPackageSchema,
   overrideRequests, insertOverrideRequestSchema,
-  medicineCatalog, insertMedicineCatalogSchema
+  medicineCatalog, insertMedicineCatalogSchema,
+  // Smart OPD Flow Engine
+  opdDepartmentFlows, insertOpdDepartmentFlowsSchema,
+  opdConsultations, insertOpdConsultationsSchema
 } from "@shared/schema";
+import { seedOpdDepartmentFlows, OPD_DEPARTMENT_FLOW_DATA } from "./seeds/opdDepartmentFlows";
 import { getChatbotResponse, getChatbotStats } from "./openai";
 import { notificationService } from "./notification-service";
 import { aiEngines } from "./ai-engines";
@@ -13307,6 +13311,260 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error initializing department nurse assignments:", error);
       res.status(500).json({ error: "Failed to initialize department nurse assignments" });
+    }
+  });
+
+  // ========== SMART OPD FLOW ENGINE ==========
+
+  // Get all OPD department flows
+  app.get("/api/opd-flows", requireAuth, async (req, res) => {
+    try {
+      const flows = await db.select().from(opdDepartmentFlows).where(eq(opdDepartmentFlows.isActive, true)).orderBy(opdDepartmentFlows.sortOrder);
+      res.json(flows);
+    } catch (error) {
+      console.error("Error fetching OPD flows:", error);
+      res.status(500).json({ error: "Failed to fetch OPD flows" });
+    }
+  });
+
+  // Get specific department flow
+  app.get("/api/opd-flows/:departmentCode", requireAuth, async (req, res) => {
+    try {
+      const [flow] = await db.select().from(opdDepartmentFlows).where(eq(opdDepartmentFlows.departmentCode, req.params.departmentCode));
+      if (!flow) {
+        return res.status(404).json({ error: "Department flow not found" });
+      }
+      res.json(flow);
+    } catch (error) {
+      console.error("Error fetching OPD flow:", error);
+      res.status(500).json({ error: "Failed to fetch OPD flow" });
+    }
+  });
+
+  // Seed OPD flows
+  app.post("/api/opd-flows/seed", requireAuth, requireRole(["ADMIN", "SUPER_ADMIN"]), async (req, res) => {
+    try {
+      await seedOpdDepartmentFlows();
+      res.json({ success: true, message: "OPD department flows seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding OPD flows:", error);
+      res.status(500).json({ error: "Failed to seed OPD flows" });
+    }
+  });
+
+  // ========== OPD CONSULTATIONS ==========
+
+  // Get all consultations (with filters)
+  app.get("/api/opd-consultations", requireAuth, async (req, res) => {
+    try {
+      const { doctorId, patientId, status, date } = req.query;
+      let query = db.select().from(opdConsultations).orderBy(desc(opdConsultations.consultationDate));
+      
+      const consultations = await query;
+      
+      let filtered = consultations;
+      if (doctorId) {
+        filtered = filtered.filter(c => c.doctorId === doctorId);
+      }
+      if (patientId) {
+        filtered = filtered.filter(c => c.patientId === patientId);
+      }
+      if (status) {
+        filtered = filtered.filter(c => c.status === status);
+      }
+      if (date) {
+        const targetDate = new Date(date as string).toDateString();
+        filtered = filtered.filter(c => c.consultationDate && new Date(c.consultationDate).toDateString() === targetDate);
+      }
+      
+      res.json(filtered);
+    } catch (error) {
+      console.error("Error fetching OPD consultations:", error);
+      res.status(500).json({ error: "Failed to fetch OPD consultations" });
+    }
+  });
+
+  // Get specific consultation
+  app.get("/api/opd-consultations/:id", requireAuth, async (req, res) => {
+    try {
+      const [consultation] = await db.select().from(opdConsultations).where(eq(opdConsultations.id, req.params.id));
+      if (!consultation) {
+        return res.status(404).json({ error: "Consultation not found" });
+      }
+      res.json(consultation);
+    } catch (error) {
+      console.error("Error fetching consultation:", error);
+      res.status(500).json({ error: "Failed to fetch consultation" });
+    }
+  });
+
+  // Create new OPD consultation
+  app.post("/api/opd-consultations", requireAuth, requireRole(["DOCTOR", "ADMIN", "SUPER_ADMIN"]), async (req, res) => {
+    try {
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
+      const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      const consultationNumber = `OPD-${dateStr}-${randomSuffix}`;
+      
+      const consultationData = {
+        ...req.body,
+        consultationNumber,
+        consultationDate: now,
+        startTime: now,
+        status: 'in_progress'
+      };
+      
+      const [newConsultation] = await db.insert(opdConsultations).values(consultationData).returning();
+      res.status(201).json(newConsultation);
+    } catch (error) {
+      console.error("Error creating OPD consultation:", error);
+      res.status(500).json({ error: "Failed to create OPD consultation" });
+    }
+  });
+
+  // Update OPD consultation
+  app.patch("/api/opd-consultations/:id", requireAuth, requireRole(["DOCTOR", "ADMIN", "SUPER_ADMIN"]), async (req, res) => {
+    try {
+      const updateData = { ...req.body, updatedAt: new Date() };
+      
+      // If completing the consultation, set end time
+      if (req.body.status === 'completed') {
+        updateData.endTime = new Date();
+      }
+      
+      const [updated] = await db.update(opdConsultations)
+        .set(updateData)
+        .where(eq(opdConsultations.id, req.params.id))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Consultation not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating consultation:", error);
+      res.status(500).json({ error: "Failed to update consultation" });
+    }
+  });
+
+  // Apply flow logic rules to get suggestions
+  app.post("/api/opd-flows/apply-rules", requireAuth, async (req, res) => {
+    try {
+      const { departmentCode, selectedSymptoms, observations } = req.body;
+      
+      // Get the department flow
+      const [flow] = await db.select().from(opdDepartmentFlows).where(eq(opdDepartmentFlows.departmentCode, departmentCode));
+      if (!flow) {
+        return res.status(404).json({ error: "Department flow not found" });
+      }
+      
+      const flowRules = JSON.parse(flow.flowLogicRules);
+      const suggestedTests: any[] = [];
+      const suggestedReferrals: any[] = [];
+      const alerts: string[] = [];
+      
+      // Parse symptoms and observations
+      const symptomIds = selectedSymptoms.map((s: any) => s.symptomId || s.id);
+      const observationMap = new Map(observations.map((o: any) => [o.fieldId || o.id, o.value]));
+      
+      // Apply each rule
+      for (const rule of flowRules) {
+        let conditionMet = false;
+        
+        if (rule.condition?.symptom) {
+          const hasSymptom = symptomIds.includes(rule.condition.symptom);
+          if (hasSymptom) {
+            // Check modifier if present
+            if (rule.condition.modifier) {
+              const symptom = selectedSymptoms.find((s: any) => (s.symptomId || s.id) === rule.condition.symptom);
+              if (symptom && (symptom.severity === rule.condition.modifier || symptom.duration === rule.condition.modifier || symptom.notes?.includes(rule.condition.modifier))) {
+                conditionMet = true;
+              }
+            } else {
+              conditionMet = true;
+            }
+          }
+        }
+        
+        if (rule.condition?.observation) {
+          const obsValue = observationMap.get(rule.condition.observation);
+          if (obsValue && rule.condition.value) {
+            if (rule.condition.value.startsWith('>')) {
+              const threshold = parseFloat(rule.condition.value.substring(1).trim());
+              if (parseFloat(obsValue) > threshold) conditionMet = true;
+            } else if (rule.condition.value.startsWith('>=')) {
+              const threshold = parseFloat(rule.condition.value.substring(2).trim());
+              if (parseFloat(obsValue) >= threshold) conditionMet = true;
+            } else if (obsValue === rule.condition.value || obsValue.includes(rule.condition.value)) {
+              conditionMet = true;
+            }
+          }
+        }
+        
+        if (conditionMet && rule.action) {
+          if (rule.action.tests) {
+            for (const test of rule.action.tests) {
+              if (!suggestedTests.find(t => t.testName === test)) {
+                suggestedTests.push({ testName: test, priority: rule.action.priority || 'routine', reason: JSON.stringify(rule.condition) });
+              }
+            }
+          }
+          if (rule.action.referral) {
+            if (!suggestedReferrals.find(r => r.department === rule.action.referral)) {
+              suggestedReferrals.push({ department: rule.action.referral, reason: JSON.stringify(rule.condition) });
+            }
+          }
+          if (rule.action.note) {
+            alerts.push(rule.action.note);
+          }
+        }
+      }
+      
+      res.json({ suggestedTests, suggestedReferrals, alerts });
+    } catch (error) {
+      console.error("Error applying flow rules:", error);
+      res.status(500).json({ error: "Failed to apply flow rules" });
+    }
+  });
+
+  // Get patient's OPD consultation history
+  app.get("/api/patients/:patientId/opd-history", requireAuth, async (req, res) => {
+    try {
+      const consultations = await db.select()
+        .from(opdConsultations)
+        .where(eq(opdConsultations.patientId, req.params.patientId))
+        .orderBy(desc(opdConsultations.consultationDate));
+      res.json(consultations);
+    } catch (error) {
+      console.error("Error fetching patient OPD history:", error);
+      res.status(500).json({ error: "Failed to fetch patient OPD history" });
+    }
+  });
+
+  // Get doctor's consultations for today
+  app.get("/api/doctors/:doctorId/todays-consultations", requireAuth, async (req, res) => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const consultations = await db.select()
+        .from(opdConsultations)
+        .where(eq(opdConsultations.doctorId, req.params.doctorId))
+        .orderBy(desc(opdConsultations.consultationDate));
+      
+      // Filter for today
+      const todaysConsultations = consultations.filter(c => {
+        if (!c.consultationDate) return false;
+        const cDate = new Date(c.consultationDate);
+        return cDate >= today && cDate < tomorrow;
+      });
+      
+      res.json(todaysConsultations);
+    } catch (error) {
+      console.error("Error fetching today's consultations:", error);
+      res.status(500).json({ error: "Failed to fetch today's consultations" });
     }
   });
 
