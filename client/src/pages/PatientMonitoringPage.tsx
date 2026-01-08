@@ -92,7 +92,12 @@ export default function PatientMonitoringPage() {
 
   // Fetch available beds for the selected ward with real-time refresh
   const { data: availableBeds = [], isLoading: loadingBeds } = useQuery<any[]>({
-    queryKey: ["/api/bed-management/beds/ward", newSessionData.ward, "available"],
+    queryKey: ["/api/bed-management/beds/ward/available", newSessionData.ward],
+    queryFn: async () => {
+      const response = await fetch(`/api/bed-management/beds/ward/${newSessionData.ward}/available`);
+      if (!response.ok) throw new Error("Failed to fetch available beds");
+      return response.json();
+    },
     enabled: !!newSessionData.ward && showNewSession,
     refetchInterval: 3000, // Auto-refresh every 3 seconds for real-time updates
   });
