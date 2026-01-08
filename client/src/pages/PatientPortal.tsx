@@ -1003,7 +1003,7 @@ Description: ${record.description}
               </div>
             </motion.div>
 
-            {/* Enhanced Stat Cards with animations and loading skeletons */}
+            {/* Enhanced Stat Cards with gradient backgrounds matching DoctorPortal style */}
             <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
               {[
                 { 
@@ -1012,8 +1012,10 @@ Description: ${record.description}
                   value: appointments.length, 
                   subtitle: "Lifetime visits", 
                   icon: Calendar, 
-                  color: "blue",
-                  gradient: "from-blue-500 to-blue-600"
+                  cardGradient: "bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent",
+                  iconBg: "bg-blue-500/10",
+                  iconColor: "text-blue-500",
+                  valueColor: "text-blue-600 dark:text-blue-400"
                 },
                 { 
                   id: "upcoming", 
@@ -1021,8 +1023,10 @@ Description: ${record.description}
                   value: upcomingAppointments.length, 
                   subtitle: "Scheduled appointments", 
                   icon: Clock, 
-                  color: "emerald",
-                  gradient: "from-emerald-500 to-emerald-600"
+                  cardGradient: "bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent",
+                  iconBg: "bg-emerald-500/10",
+                  iconColor: "text-emerald-500",
+                  valueColor: "text-emerald-600 dark:text-emerald-400"
                 },
                 { 
                   id: "records", 
@@ -1030,8 +1034,10 @@ Description: ${record.description}
                   value: patientRecords.length, 
                   subtitle: "Medical documents", 
                   icon: FileText, 
-                  color: "purple",
-                  gradient: "from-purple-500 to-purple-600"
+                  cardGradient: "bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent",
+                  iconBg: "bg-purple-500/10",
+                  iconColor: "text-purple-500",
+                  valueColor: "text-purple-600 dark:text-purple-400"
                 },
                 { 
                   id: "bills", 
@@ -1039,8 +1045,10 @@ Description: ${record.description}
                   value: `₹${patientBill?.status === 'pending' ? Number(patientBill.totalAmount || 0).toLocaleString('en-IN') : '0'}`, 
                   subtitle: "Outstanding amount", 
                   icon: IndianRupee, 
-                  color: "orange",
-                  gradient: "from-orange-500 to-orange-600"
+                  cardGradient: "bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent",
+                  iconBg: "bg-orange-500/10",
+                  iconColor: "text-orange-500",
+                  valueColor: "text-orange-600 dark:text-orange-400"
                 }
               ].map((stat, index) => (
                 <motion.div
@@ -1050,25 +1058,22 @@ Description: ${record.description}
                   transition={{ delay: index * 0.1 + 0.3, duration: 0.4 }}
                 >
                   <Card 
-                    className="group relative overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300" 
+                    className={`group relative overflow-hidden border-0 ${stat.cardGradient} hover-elevate transition-all duration-300`}
                     data-testid={`card-${stat.id}`}
                     role="region"
                     aria-label={`${stat.title}: ${stat.value}`}
                   >
-                    {/* Subtle gradient background on hover */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-                    
-                    <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2 relative">
+                    <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                       <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
                       <motion.div 
-                        className={`h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-${stat.color}-500/10 flex items-center justify-center`}
+                        className={`h-9 w-9 sm:h-10 sm:w-10 rounded-xl ${stat.iconBg} flex items-center justify-center`}
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         transition={{ type: "spring", stiffness: 400 }}
                       >
-                        <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 text-${stat.color}-500`} />
+                        <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} />
                       </motion.div>
                     </CardHeader>
-                    <CardContent className="relative">
+                    <CardContent>
                       {isDataLoading ? (
                         <div className="space-y-2">
                           <Skeleton className="h-8 w-16" />
@@ -1077,7 +1082,7 @@ Description: ${record.description}
                       ) : (
                         <>
                           <motion.div 
-                            className={`text-2xl sm:text-3xl font-bold text-${stat.color}-600 dark:text-${stat.color}-400`}
+                            className={`text-2xl sm:text-3xl font-bold ${stat.valueColor}`}
                             data-testid={`text-${stat.id}`}
                             initial={{ scale: 0.5 }}
                             animate={{ scale: 1 }}
