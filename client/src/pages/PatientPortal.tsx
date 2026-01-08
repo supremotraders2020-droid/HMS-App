@@ -431,6 +431,12 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     queryKey: [`/api/lab-reports/patient/${username}`],
   });
 
+  // Fetch diagnostic reports for this patient (technician submitted reports)
+  const { data: diagnosticReports = [], isLoading: diagnosticReportsLoading } = useQuery<any[]>({
+    queryKey: [`/api/patients/${username}/diagnostic-reports`],
+    refetchInterval: 3000, // Real-time sync
+  });
+
   // State for Health Guide section
   const [selectedDisease, setSelectedDisease] = useState<any | null>(null);
   const [diseaseSearchQuery, setDiseaseSearchQuery] = useState("");
@@ -2096,6 +2102,136 @@ Description: ${record.description}
                       <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                       <p className="text-muted-foreground">No medical documents found</p>
                       <p className="text-sm text-muted-foreground mt-1">Your medical documents will appear here once uploaded by your healthcare provider</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+
+            {/* Diagnostic Reports Section - Reports from Technicians */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Activity className="h-5 w-5 text-green-500" />
+                Diagnostic Test Reports ({diagnosticReports.length})
+              </h3>
+              <div className="grid gap-4">
+                {diagnosticReportsLoading ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
+                      <p className="text-muted-foreground mt-2">Loading diagnostic reports...</p>
+                    </CardContent>
+                  </Card>
+                ) : diagnosticReports.length > 0 ? diagnosticReports.map((report: any) => (
+                  <Card key={report.id} className="hover-elevate" data-testid={`diagnostic-report-${report.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                          <Activity className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold" data-testid={`report-title-${report.id}`}>{report.testName}</h4>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                            <span>{report.department}</span>
+                            <span>-</span>
+                            <span>By: {report.technicianName}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{report.conclusion}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">
+                            {report.reportDate ? format(new Date(report.reportDate), 'yyyy-MM-dd') : 'N/A'}
+                          </p>
+                          <Badge variant="default" className="bg-green-500 mt-1">
+                            {report.status || 'Submitted'}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => {
+                              const printContent = `
+                                <html>
+                                <head>
+                                  <title>Diagnostic Report - ${report.testName}</title>
+                                  <style>
+                                    body { font-family: Arial, sans-serif; padding: 40px; }
+                                    .header { text-align: center; border-bottom: 2px solid #1a56db; padding-bottom: 15px; margin-bottom: 25px; }
+                                    .hospital { font-size: 26px; font-weight: bold; color: #1a56db; }
+                                    .section { margin: 18px 0; }
+                                    .section-title { font-weight: bold; color: #1a56db; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
+                                    .label { font-weight: 600; color: #374151; }
+                                    .value { color: #111; margin-top: 3px; }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="header">
+                                    <div class="hospital">Gravity Hospital</div>
+                                    <div>Diagnostic Report</div>
+                                  </div>
+                                  <div class="section">
+                                    <div class="section-title">Test Details</div>
+                                    <p><span class="label">Test Name:</span> ${report.testName}</p>
+                                    <p><span class="label">Department:</span> ${report.department}</p>
+                                    <p><span class="label">Date:</span> ${report.reportDate ? format(new Date(report.reportDate), 'yyyy-MM-dd') : 'N/A'}</p>
+                                    <p><span class="label">Technician:</span> ${report.technicianName}</p>
+                                  </div>
+                                  <div class="section">
+                                    <div class="section-title">Findings</div>
+                                    <p>${report.findings || 'N/A'}</p>
+                                  </div>
+                                  <div class="section">
+                                    <div class="section-title">Conclusion</div>
+                                    <p>${report.conclusion || 'N/A'}</p>
+                                  </div>
+                                  ${report.recommendations ? `<div class="section"><div class="section-title">Recommendations</div><p>${report.recommendations}</p></div>` : ''}
+                                </body>
+                                </html>
+                              `;
+                              const printWindow = window.open('', '_blank');
+                              if (printWindow) {
+                                printWindow.document.write(printContent);
+                                printWindow.document.close();
+                              }
+                            }}
+                            data-testid={`button-view-diagnostic-${report.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            onClick={() => {
+                              if (report.fileData) {
+                                const link = document.createElement('a');
+                                link.href = report.fileData;
+                                link.download = report.fileName || `diagnostic-report-${report.id}.pdf`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              } else {
+                                toast({
+                                  title: "No File Available",
+                                  description: "This report doesn't have an attached file.",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                            data-testid={`button-download-diagnostic-${report.id}`}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Activity className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">No diagnostic test reports found</p>
+                      <p className="text-sm text-muted-foreground mt-1">Your diagnostic test reports will appear here once completed by the lab technician</p>
                     </CardContent>
                   </Card>
                 )}
