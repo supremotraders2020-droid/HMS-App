@@ -145,7 +145,17 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
   });
 
   const submitReportMutation = useMutation({
-    mutationFn: async (data: { testId: string; findings: string; conclusion: string; recommendations: string }) => {
+    mutationFn: async (data: { 
+      testOrderId: string; 
+      findings: string; 
+      conclusion: string; 
+      recommendations: string;
+      fileName?: string;
+      fileType?: string;
+      fileData?: string;
+      technicianId: string;
+      technicianName: string;
+    }) => {
       const response = await apiRequest("POST", "/api/technician/submit-report", data);
       return response;
     },
@@ -181,7 +191,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
     setIsUploadDialogOpen(true);
   };
 
-  const handleSubmitReport = () => {
+  const handleSubmitReport = async () => {
     if (!selectedTest) return;
     if (!reportForm.findings.trim() || !reportForm.conclusion.trim()) {
       toast({
@@ -191,11 +201,33 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
       });
       return;
     }
+
+    let fileData: string | undefined;
+    let fileName: string | undefined;
+    let fileType: string | undefined;
+
+    if (reportForm.attachmentFile) {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(reportForm.attachmentFile!);
+      });
+      fileData = await base64Promise;
+      fileName = reportForm.attachmentFile.name;
+      fileType = reportForm.attachmentFile.type;
+    }
+
     submitReportMutation.mutate({
-      testId: selectedTest.id,
+      testOrderId: selectedTest.id,
       findings: reportForm.findings,
       conclusion: reportForm.conclusion,
       recommendations: reportForm.recommendations,
+      fileName,
+      fileType,
+      fileData,
+      technicianId: currentUserId,
+      technicianName: currentUserName
     });
   };
 
