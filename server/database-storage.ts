@@ -122,7 +122,40 @@ import {
   type ReferralSource, type InsertReferralSource,
   type PatientReferral, type InsertPatientReferral,
   type HospitalServiceDepartment, type InsertHospitalServiceDepartment,
-  type HospitalService, type InsertHospitalService
+  type HospitalService, type InsertHospitalService,
+  icuCharts, icuVitalCharts, icuHemodynamicMonitoring, icuSedationMonitoring,
+  icuVentilatorSettings, icuAbgReports, icuAirwayCare, icuDailyInvestigations,
+  icuDiabeticChart, icuPlayOfDay, icuCuffPressure, icuEttTracheostomy,
+  icuDuration, icuFluidBalanceTarget, icuIntakeChart, icuOutputChart,
+  icuMedicationOrders, icuNursingRemarks, icuNursingDuty, icuFluidOrders,
+  icuNutritionChart, icuBodyMarking, icuNurseDiary, icuOnceOnlyDrugs,
+  icuPreviousDayNotes, icuAllergyPrecautions,
+  type IcuCharts, type InsertIcuCharts,
+  type IcuVitalCharts, type InsertIcuVitalCharts,
+  type IcuHemodynamicMonitoring, type InsertIcuHemodynamicMonitoring,
+  type IcuSedationMonitoring, type InsertIcuSedationMonitoring,
+  type IcuVentilatorSettings, type InsertIcuVentilatorSettings,
+  type IcuAbgReports, type InsertIcuAbgReports,
+  type IcuAirwayCare, type InsertIcuAirwayCare,
+  type IcuDailyInvestigations, type InsertIcuDailyInvestigations,
+  type IcuDiabeticChart, type InsertIcuDiabeticChart,
+  type IcuPlayOfDay, type InsertIcuPlayOfDay,
+  type IcuCuffPressure, type InsertIcuCuffPressure,
+  type IcuEttTracheostomy, type InsertIcuEttTracheostomy,
+  type IcuDuration, type InsertIcuDuration,
+  type IcuFluidBalanceTarget, type InsertIcuFluidBalanceTarget,
+  type IcuIntakeChart, type InsertIcuIntakeChart,
+  type IcuOutputChart, type InsertIcuOutputChart,
+  type IcuMedicationOrders, type InsertIcuMedicationOrders,
+  type IcuNursingRemarks, type InsertIcuNursingRemarks,
+  type IcuNursingDuty, type InsertIcuNursingDuty,
+  type IcuFluidOrders, type InsertIcuFluidOrders,
+  type IcuNutritionChart, type InsertIcuNutritionChart,
+  type IcuBodyMarking, type InsertIcuBodyMarking,
+  type IcuNurseDiary, type InsertIcuNurseDiary,
+  type IcuOnceOnlyDrugs, type InsertIcuOnceOnlyDrugs,
+  type IcuPreviousDayNotes, type InsertIcuPreviousDayNotes,
+  type IcuAllergyPrecautions, type InsertIcuAllergyPrecautions
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -5247,6 +5280,598 @@ export class DatabaseStorage implements IStorage {
   async deleteTechnicianReport(id: string): Promise<boolean> {
     await db.delete(technicianReports).where(eq(technicianReports.id, id));
     return true;
+  }
+
+  // ========== ICU MONITORING SYSTEM ==========
+  
+  // ICU Charts (Main record)
+  async createIcuChart(chart: InsertIcuCharts): Promise<IcuCharts> {
+    const result = await db.insert(icuCharts).values(chart).returning();
+    return result[0];
+  }
+
+  async getAllIcuCharts(): Promise<IcuCharts[]> {
+    return await db.select().from(icuCharts).orderBy(desc(icuCharts.createdAt));
+  }
+
+  async getIcuChartById(id: string): Promise<IcuCharts | undefined> {
+    const result = await db.select().from(icuCharts).where(eq(icuCharts.id, id));
+    return result[0];
+  }
+
+  async getIcuChartsByPatient(patientId: string): Promise<IcuCharts[]> {
+    return await db.select().from(icuCharts).where(eq(icuCharts.patientId, patientId)).orderBy(desc(icuCharts.chartDate));
+  }
+
+  async getIcuChartsByDate(chartDate: string): Promise<IcuCharts[]> {
+    return await db.select().from(icuCharts).where(eq(icuCharts.chartDate, chartDate));
+  }
+
+  async updateIcuChart(id: string, updates: Partial<InsertIcuCharts>): Promise<IcuCharts | undefined> {
+    const result = await db.update(icuCharts).set({ ...updates, updatedAt: new Date() }).where(eq(icuCharts.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuChart(id: string): Promise<boolean> {
+    await db.delete(icuCharts).where(eq(icuCharts.id, id));
+    return true;
+  }
+
+  // ICU Vital Charts
+  async createIcuVitalChart(vital: InsertIcuVitalCharts): Promise<IcuVitalCharts> {
+    const result = await db.insert(icuVitalCharts).values(vital).returning();
+    return result[0];
+  }
+
+  async getIcuVitalChartsByChartId(icuChartId: string): Promise<IcuVitalCharts[]> {
+    return await db.select().from(icuVitalCharts).where(eq(icuVitalCharts.icuChartId, icuChartId));
+  }
+
+  async updateIcuVitalChart(id: string, updates: Partial<InsertIcuVitalCharts>): Promise<IcuVitalCharts | undefined> {
+    const result = await db.update(icuVitalCharts).set(updates).where(eq(icuVitalCharts.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuVitalChart(id: string): Promise<boolean> {
+    await db.delete(icuVitalCharts).where(eq(icuVitalCharts.id, id));
+    return true;
+  }
+
+  // ICU Hemodynamic Monitoring
+  async createIcuHemodynamicEntry(entry: InsertIcuHemodynamicMonitoring): Promise<IcuHemodynamicMonitoring> {
+    const result = await db.insert(icuHemodynamicMonitoring).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuHemodynamicByChartId(icuChartId: string): Promise<IcuHemodynamicMonitoring[]> {
+    return await db.select().from(icuHemodynamicMonitoring).where(eq(icuHemodynamicMonitoring.icuChartId, icuChartId));
+  }
+
+  async updateIcuHemodynamicEntry(id: string, updates: Partial<InsertIcuHemodynamicMonitoring>): Promise<IcuHemodynamicMonitoring | undefined> {
+    const result = await db.update(icuHemodynamicMonitoring).set(updates).where(eq(icuHemodynamicMonitoring.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuHemodynamicEntry(id: string): Promise<boolean> {
+    await db.delete(icuHemodynamicMonitoring).where(eq(icuHemodynamicMonitoring.id, id));
+    return true;
+  }
+
+  // ICU Sedation Monitoring
+  async createIcuSedationEntry(entry: InsertIcuSedationMonitoring): Promise<IcuSedationMonitoring> {
+    const result = await db.insert(icuSedationMonitoring).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuSedationByChartId(icuChartId: string): Promise<IcuSedationMonitoring[]> {
+    return await db.select().from(icuSedationMonitoring).where(eq(icuSedationMonitoring.icuChartId, icuChartId));
+  }
+
+  async updateIcuSedationEntry(id: string, updates: Partial<InsertIcuSedationMonitoring>): Promise<IcuSedationMonitoring | undefined> {
+    const result = await db.update(icuSedationMonitoring).set(updates).where(eq(icuSedationMonitoring.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuSedationEntry(id: string): Promise<boolean> {
+    await db.delete(icuSedationMonitoring).where(eq(icuSedationMonitoring.id, id));
+    return true;
+  }
+
+  // ICU Ventilator Settings
+  async createIcuVentilatorEntry(entry: InsertIcuVentilatorSettings): Promise<IcuVentilatorSettings> {
+    const result = await db.insert(icuVentilatorSettings).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuVentilatorByChartId(icuChartId: string): Promise<IcuVentilatorSettings[]> {
+    return await db.select().from(icuVentilatorSettings).where(eq(icuVentilatorSettings.icuChartId, icuChartId));
+  }
+
+  async updateIcuVentilatorEntry(id: string, updates: Partial<InsertIcuVentilatorSettings>): Promise<IcuVentilatorSettings | undefined> {
+    const result = await db.update(icuVentilatorSettings).set(updates).where(eq(icuVentilatorSettings.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuVentilatorEntry(id: string): Promise<boolean> {
+    await db.delete(icuVentilatorSettings).where(eq(icuVentilatorSettings.id, id));
+    return true;
+  }
+
+  // ICU ABG Reports
+  async createIcuAbgReport(report: InsertIcuAbgReports): Promise<IcuAbgReports> {
+    const result = await db.insert(icuAbgReports).values(report).returning();
+    return result[0];
+  }
+
+  async getIcuAbgByChartId(icuChartId: string): Promise<IcuAbgReports[]> {
+    return await db.select().from(icuAbgReports).where(eq(icuAbgReports.icuChartId, icuChartId));
+  }
+
+  async updateIcuAbgReport(id: string, updates: Partial<InsertIcuAbgReports>): Promise<IcuAbgReports | undefined> {
+    const result = await db.update(icuAbgReports).set(updates).where(eq(icuAbgReports.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuAbgReport(id: string): Promise<boolean> {
+    await db.delete(icuAbgReports).where(eq(icuAbgReports.id, id));
+    return true;
+  }
+
+  // ICU Airway Care
+  async createIcuAirwayCare(entry: InsertIcuAirwayCare): Promise<IcuAirwayCare> {
+    const result = await db.insert(icuAirwayCare).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuAirwayCareByChartId(icuChartId: string): Promise<IcuAirwayCare[]> {
+    return await db.select().from(icuAirwayCare).where(eq(icuAirwayCare.icuChartId, icuChartId));
+  }
+
+  async updateIcuAirwayCare(id: string, updates: Partial<InsertIcuAirwayCare>): Promise<IcuAirwayCare | undefined> {
+    const result = await db.update(icuAirwayCare).set(updates).where(eq(icuAirwayCare.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuAirwayCare(id: string): Promise<boolean> {
+    await db.delete(icuAirwayCare).where(eq(icuAirwayCare.id, id));
+    return true;
+  }
+
+  // ICU Daily Investigations
+  async createIcuDailyInvestigation(investigation: InsertIcuDailyInvestigations): Promise<IcuDailyInvestigations> {
+    const result = await db.insert(icuDailyInvestigations).values(investigation).returning();
+    return result[0];
+  }
+
+  async getIcuDailyInvestigationByChartId(icuChartId: string): Promise<IcuDailyInvestigations | undefined> {
+    const result = await db.select().from(icuDailyInvestigations).where(eq(icuDailyInvestigations.icuChartId, icuChartId));
+    return result[0];
+  }
+
+  async updateIcuDailyInvestigation(id: string, updates: Partial<InsertIcuDailyInvestigations>): Promise<IcuDailyInvestigations | undefined> {
+    const result = await db.update(icuDailyInvestigations).set(updates).where(eq(icuDailyInvestigations.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuDailyInvestigation(id: string): Promise<boolean> {
+    await db.delete(icuDailyInvestigations).where(eq(icuDailyInvestigations.id, id));
+    return true;
+  }
+
+  // ICU Diabetic Chart
+  async createIcuDiabeticEntry(entry: InsertIcuDiabeticChart): Promise<IcuDiabeticChart> {
+    const result = await db.insert(icuDiabeticChart).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuDiabeticByChartId(icuChartId: string): Promise<IcuDiabeticChart[]> {
+    return await db.select().from(icuDiabeticChart).where(eq(icuDiabeticChart.icuChartId, icuChartId));
+  }
+
+  async updateIcuDiabeticEntry(id: string, updates: Partial<InsertIcuDiabeticChart>): Promise<IcuDiabeticChart | undefined> {
+    const result = await db.update(icuDiabeticChart).set(updates).where(eq(icuDiabeticChart.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuDiabeticEntry(id: string): Promise<boolean> {
+    await db.delete(icuDiabeticChart).where(eq(icuDiabeticChart.id, id));
+    return true;
+  }
+
+  // ICU Play of Day
+  async createIcuPlayOfDay(entry: InsertIcuPlayOfDay): Promise<IcuPlayOfDay> {
+    const result = await db.insert(icuPlayOfDay).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuPlayOfDayByChartId(icuChartId: string): Promise<IcuPlayOfDay | undefined> {
+    const result = await db.select().from(icuPlayOfDay).where(eq(icuPlayOfDay.icuChartId, icuChartId));
+    return result[0];
+  }
+
+  async updateIcuPlayOfDay(id: string, updates: Partial<InsertIcuPlayOfDay>): Promise<IcuPlayOfDay | undefined> {
+    const result = await db.update(icuPlayOfDay).set(updates).where(eq(icuPlayOfDay.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuPlayOfDay(id: string): Promise<boolean> {
+    await db.delete(icuPlayOfDay).where(eq(icuPlayOfDay.id, id));
+    return true;
+  }
+
+  // ICU Cuff Pressure
+  async createIcuCuffPressure(entry: InsertIcuCuffPressure): Promise<IcuCuffPressure> {
+    const result = await db.insert(icuCuffPressure).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuCuffPressureByChartId(icuChartId: string): Promise<IcuCuffPressure | undefined> {
+    const result = await db.select().from(icuCuffPressure).where(eq(icuCuffPressure.icuChartId, icuChartId));
+    return result[0];
+  }
+
+  async updateIcuCuffPressure(id: string, updates: Partial<InsertIcuCuffPressure>): Promise<IcuCuffPressure | undefined> {
+    const result = await db.update(icuCuffPressure).set(updates).where(eq(icuCuffPressure.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuCuffPressure(id: string): Promise<boolean> {
+    await db.delete(icuCuffPressure).where(eq(icuCuffPressure.id, id));
+    return true;
+  }
+
+  // ICU ETT/Tracheostomy
+  async createIcuEttTracheostomy(entry: InsertIcuEttTracheostomy): Promise<IcuEttTracheostomy> {
+    const result = await db.insert(icuEttTracheostomy).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuEttTracheostomyByChartId(icuChartId: string): Promise<IcuEttTracheostomy | undefined> {
+    const result = await db.select().from(icuEttTracheostomy).where(eq(icuEttTracheostomy.icuChartId, icuChartId));
+    return result[0];
+  }
+
+  async updateIcuEttTracheostomy(id: string, updates: Partial<InsertIcuEttTracheostomy>): Promise<IcuEttTracheostomy | undefined> {
+    const result = await db.update(icuEttTracheostomy).set(updates).where(eq(icuEttTracheostomy.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuEttTracheostomy(id: string): Promise<boolean> {
+    await db.delete(icuEttTracheostomy).where(eq(icuEttTracheostomy.id, id));
+    return true;
+  }
+
+  // ICU Duration
+  async createIcuDuration(entry: InsertIcuDuration): Promise<IcuDuration> {
+    const result = await db.insert(icuDuration).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuDurationByChartId(icuChartId: string): Promise<IcuDuration | undefined> {
+    const result = await db.select().from(icuDuration).where(eq(icuDuration.icuChartId, icuChartId));
+    return result[0];
+  }
+
+  async updateIcuDuration(id: string, updates: Partial<InsertIcuDuration>): Promise<IcuDuration | undefined> {
+    const result = await db.update(icuDuration).set(updates).where(eq(icuDuration.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuDuration(id: string): Promise<boolean> {
+    await db.delete(icuDuration).where(eq(icuDuration.id, id));
+    return true;
+  }
+
+  // ICU Fluid Balance Target
+  async createIcuFluidBalanceTarget(entry: InsertIcuFluidBalanceTarget): Promise<IcuFluidBalanceTarget> {
+    const result = await db.insert(icuFluidBalanceTarget).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuFluidBalanceTargetByChartId(icuChartId: string): Promise<IcuFluidBalanceTarget | undefined> {
+    const result = await db.select().from(icuFluidBalanceTarget).where(eq(icuFluidBalanceTarget.icuChartId, icuChartId));
+    return result[0];
+  }
+
+  async updateIcuFluidBalanceTarget(id: string, updates: Partial<InsertIcuFluidBalanceTarget>): Promise<IcuFluidBalanceTarget | undefined> {
+    const result = await db.update(icuFluidBalanceTarget).set(updates).where(eq(icuFluidBalanceTarget.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuFluidBalanceTarget(id: string): Promise<boolean> {
+    await db.delete(icuFluidBalanceTarget).where(eq(icuFluidBalanceTarget.id, id));
+    return true;
+  }
+
+  // ICU Intake Chart
+  async createIcuIntakeEntry(entry: InsertIcuIntakeChart): Promise<IcuIntakeChart> {
+    const result = await db.insert(icuIntakeChart).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuIntakeByChartId(icuChartId: string): Promise<IcuIntakeChart[]> {
+    return await db.select().from(icuIntakeChart).where(eq(icuIntakeChart.icuChartId, icuChartId));
+  }
+
+  async updateIcuIntakeEntry(id: string, updates: Partial<InsertIcuIntakeChart>): Promise<IcuIntakeChart | undefined> {
+    const result = await db.update(icuIntakeChart).set(updates).where(eq(icuIntakeChart.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuIntakeEntry(id: string): Promise<boolean> {
+    await db.delete(icuIntakeChart).where(eq(icuIntakeChart.id, id));
+    return true;
+  }
+
+  // ICU Output Chart
+  async createIcuOutputEntry(entry: InsertIcuOutputChart): Promise<IcuOutputChart> {
+    const result = await db.insert(icuOutputChart).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuOutputByChartId(icuChartId: string): Promise<IcuOutputChart[]> {
+    return await db.select().from(icuOutputChart).where(eq(icuOutputChart.icuChartId, icuChartId));
+  }
+
+  async updateIcuOutputEntry(id: string, updates: Partial<InsertIcuOutputChart>): Promise<IcuOutputChart | undefined> {
+    const result = await db.update(icuOutputChart).set(updates).where(eq(icuOutputChart.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuOutputEntry(id: string): Promise<boolean> {
+    await db.delete(icuOutputChart).where(eq(icuOutputChart.id, id));
+    return true;
+  }
+
+  // ICU Medication Orders
+  async createIcuMedicationOrder(order: InsertIcuMedicationOrders): Promise<IcuMedicationOrders> {
+    const result = await db.insert(icuMedicationOrders).values(order).returning();
+    return result[0];
+  }
+
+  async getIcuMedicationOrdersByChartId(icuChartId: string): Promise<IcuMedicationOrders[]> {
+    return await db.select().from(icuMedicationOrders).where(eq(icuMedicationOrders.icuChartId, icuChartId));
+  }
+
+  async updateIcuMedicationOrder(id: string, updates: Partial<InsertIcuMedicationOrders>): Promise<IcuMedicationOrders | undefined> {
+    const result = await db.update(icuMedicationOrders).set(updates).where(eq(icuMedicationOrders.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuMedicationOrder(id: string): Promise<boolean> {
+    await db.delete(icuMedicationOrders).where(eq(icuMedicationOrders.id, id));
+    return true;
+  }
+
+  // ICU Nursing Remarks
+  async createIcuNursingRemark(remark: InsertIcuNursingRemarks): Promise<IcuNursingRemarks> {
+    const result = await db.insert(icuNursingRemarks).values(remark).returning();
+    return result[0];
+  }
+
+  async getIcuNursingRemarksByChartId(icuChartId: string): Promise<IcuNursingRemarks[]> {
+    return await db.select().from(icuNursingRemarks).where(eq(icuNursingRemarks.icuChartId, icuChartId));
+  }
+
+  async updateIcuNursingRemark(id: string, updates: Partial<InsertIcuNursingRemarks>): Promise<IcuNursingRemarks | undefined> {
+    const result = await db.update(icuNursingRemarks).set(updates).where(eq(icuNursingRemarks.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuNursingRemark(id: string): Promise<boolean> {
+    await db.delete(icuNursingRemarks).where(eq(icuNursingRemarks.id, id));
+    return true;
+  }
+
+  // ICU Nursing Duty
+  async createIcuNursingDuty(duty: InsertIcuNursingDuty): Promise<IcuNursingDuty> {
+    const result = await db.insert(icuNursingDuty).values(duty).returning();
+    return result[0];
+  }
+
+  async getIcuNursingDutyByChartId(icuChartId: string): Promise<IcuNursingDuty[]> {
+    return await db.select().from(icuNursingDuty).where(eq(icuNursingDuty.icuChartId, icuChartId));
+  }
+
+  async updateIcuNursingDuty(id: string, updates: Partial<InsertIcuNursingDuty>): Promise<IcuNursingDuty | undefined> {
+    const result = await db.update(icuNursingDuty).set(updates).where(eq(icuNursingDuty.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuNursingDuty(id: string): Promise<boolean> {
+    await db.delete(icuNursingDuty).where(eq(icuNursingDuty.id, id));
+    return true;
+  }
+
+  // ICU Fluid Orders
+  async createIcuFluidOrder(order: InsertIcuFluidOrders): Promise<IcuFluidOrders> {
+    const result = await db.insert(icuFluidOrders).values(order).returning();
+    return result[0];
+  }
+
+  async getIcuFluidOrdersByChartId(icuChartId: string): Promise<IcuFluidOrders[]> {
+    return await db.select().from(icuFluidOrders).where(eq(icuFluidOrders.icuChartId, icuChartId));
+  }
+
+  async updateIcuFluidOrder(id: string, updates: Partial<InsertIcuFluidOrders>): Promise<IcuFluidOrders | undefined> {
+    const result = await db.update(icuFluidOrders).set(updates).where(eq(icuFluidOrders.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuFluidOrder(id: string): Promise<boolean> {
+    await db.delete(icuFluidOrders).where(eq(icuFluidOrders.id, id));
+    return true;
+  }
+
+  // ICU Nutrition Chart
+  async createIcuNutritionEntry(entry: InsertIcuNutritionChart): Promise<IcuNutritionChart> {
+    const result = await db.insert(icuNutritionChart).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuNutritionByChartId(icuChartId: string): Promise<IcuNutritionChart[]> {
+    return await db.select().from(icuNutritionChart).where(eq(icuNutritionChart.icuChartId, icuChartId));
+  }
+
+  async updateIcuNutritionEntry(id: string, updates: Partial<InsertIcuNutritionChart>): Promise<IcuNutritionChart | undefined> {
+    const result = await db.update(icuNutritionChart).set(updates).where(eq(icuNutritionChart.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuNutritionEntry(id: string): Promise<boolean> {
+    await db.delete(icuNutritionChart).where(eq(icuNutritionChart.id, id));
+    return true;
+  }
+
+  // ICU Body Marking
+  async createIcuBodyMarking(marking: InsertIcuBodyMarking): Promise<IcuBodyMarking> {
+    const result = await db.insert(icuBodyMarking).values(marking).returning();
+    return result[0];
+  }
+
+  async getIcuBodyMarkingsByChartId(icuChartId: string): Promise<IcuBodyMarking[]> {
+    return await db.select().from(icuBodyMarking).where(eq(icuBodyMarking.icuChartId, icuChartId));
+  }
+
+  async updateIcuBodyMarking(id: string, updates: Partial<InsertIcuBodyMarking>): Promise<IcuBodyMarking | undefined> {
+    const result = await db.update(icuBodyMarking).set(updates).where(eq(icuBodyMarking.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuBodyMarking(id: string): Promise<boolean> {
+    await db.delete(icuBodyMarking).where(eq(icuBodyMarking.id, id));
+    return true;
+  }
+
+  // ICU Nurse Diary
+  async createIcuNurseDiaryEntry(entry: InsertIcuNurseDiary): Promise<IcuNurseDiary> {
+    const result = await db.insert(icuNurseDiary).values(entry).returning();
+    return result[0];
+  }
+
+  async getIcuNurseDiaryByChartId(icuChartId: string): Promise<IcuNurseDiary[]> {
+    return await db.select().from(icuNurseDiary).where(eq(icuNurseDiary.icuChartId, icuChartId));
+  }
+
+  async updateIcuNurseDiaryEntry(id: string, updates: Partial<InsertIcuNurseDiary>): Promise<IcuNurseDiary | undefined> {
+    const result = await db.update(icuNurseDiary).set(updates).where(eq(icuNurseDiary.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuNurseDiaryEntry(id: string): Promise<boolean> {
+    await db.delete(icuNurseDiary).where(eq(icuNurseDiary.id, id));
+    return true;
+  }
+
+  // ICU Once Only Drugs
+  async createIcuOnceOnlyDrug(drug: InsertIcuOnceOnlyDrugs): Promise<IcuOnceOnlyDrugs> {
+    const result = await db.insert(icuOnceOnlyDrugs).values(drug).returning();
+    return result[0];
+  }
+
+  async getIcuOnceOnlyDrugsByChartId(icuChartId: string): Promise<IcuOnceOnlyDrugs[]> {
+    return await db.select().from(icuOnceOnlyDrugs).where(eq(icuOnceOnlyDrugs.icuChartId, icuChartId));
+  }
+
+  async updateIcuOnceOnlyDrug(id: string, updates: Partial<InsertIcuOnceOnlyDrugs>): Promise<IcuOnceOnlyDrugs | undefined> {
+    const result = await db.update(icuOnceOnlyDrugs).set(updates).where(eq(icuOnceOnlyDrugs.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuOnceOnlyDrug(id: string): Promise<boolean> {
+    await db.delete(icuOnceOnlyDrugs).where(eq(icuOnceOnlyDrugs.id, id));
+    return true;
+  }
+
+  // ICU Previous Day Notes
+  async createIcuPreviousDayNotes(notes: InsertIcuPreviousDayNotes): Promise<IcuPreviousDayNotes> {
+    const result = await db.insert(icuPreviousDayNotes).values(notes).returning();
+    return result[0];
+  }
+
+  async getIcuPreviousDayNotesByChartId(icuChartId: string): Promise<IcuPreviousDayNotes | undefined> {
+    const result = await db.select().from(icuPreviousDayNotes).where(eq(icuPreviousDayNotes.icuChartId, icuChartId));
+    return result[0];
+  }
+
+  async updateIcuPreviousDayNotes(id: string, updates: Partial<InsertIcuPreviousDayNotes>): Promise<IcuPreviousDayNotes | undefined> {
+    const result = await db.update(icuPreviousDayNotes).set(updates).where(eq(icuPreviousDayNotes.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuPreviousDayNotes(id: string): Promise<boolean> {
+    await db.delete(icuPreviousDayNotes).where(eq(icuPreviousDayNotes.id, id));
+    return true;
+  }
+
+  // ICU Allergy Precautions
+  async createIcuAllergyPrecautions(precautions: InsertIcuAllergyPrecautions): Promise<IcuAllergyPrecautions> {
+    const result = await db.insert(icuAllergyPrecautions).values(precautions).returning();
+    return result[0];
+  }
+
+  async getIcuAllergyPrecautionsByChartId(icuChartId: string): Promise<IcuAllergyPrecautions | undefined> {
+    const result = await db.select().from(icuAllergyPrecautions).where(eq(icuAllergyPrecautions.icuChartId, icuChartId));
+    return result[0];
+  }
+
+  async updateIcuAllergyPrecautions(id: string, updates: Partial<InsertIcuAllergyPrecautions>): Promise<IcuAllergyPrecautions | undefined> {
+    const result = await db.update(icuAllergyPrecautions).set(updates).where(eq(icuAllergyPrecautions.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuAllergyPrecautions(id: string): Promise<boolean> {
+    await db.delete(icuAllergyPrecautions).where(eq(icuAllergyPrecautions.id, id));
+    return true;
+  }
+
+  // Get complete ICU chart with all related data
+  async getCompleteIcuChart(icuChartId: string): Promise<any> {
+    const chart = await this.getIcuChartById(icuChartId);
+    if (!chart) return null;
+
+    const [
+      vitalCharts, hemodynamic, sedation, ventilator, abgReports, airwayCare,
+      dailyInvestigations, diabeticChart, playOfDay, cuffPressure, ettTracheostomy,
+      duration, fluidBalanceTarget, intakeChart, outputChart, medicationOrders,
+      nursingRemarks, nursingDuty, fluidOrders, nutritionChart, bodyMarkings,
+      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions
+    ] = await Promise.all([
+      this.getIcuVitalChartsByChartId(icuChartId),
+      this.getIcuHemodynamicByChartId(icuChartId),
+      this.getIcuSedationByChartId(icuChartId),
+      this.getIcuVentilatorByChartId(icuChartId),
+      this.getIcuAbgByChartId(icuChartId),
+      this.getIcuAirwayCareByChartId(icuChartId),
+      this.getIcuDailyInvestigationByChartId(icuChartId),
+      this.getIcuDiabeticByChartId(icuChartId),
+      this.getIcuPlayOfDayByChartId(icuChartId),
+      this.getIcuCuffPressureByChartId(icuChartId),
+      this.getIcuEttTracheostomyByChartId(icuChartId),
+      this.getIcuDurationByChartId(icuChartId),
+      this.getIcuFluidBalanceTargetByChartId(icuChartId),
+      this.getIcuIntakeByChartId(icuChartId),
+      this.getIcuOutputByChartId(icuChartId),
+      this.getIcuMedicationOrdersByChartId(icuChartId),
+      this.getIcuNursingRemarksByChartId(icuChartId),
+      this.getIcuNursingDutyByChartId(icuChartId),
+      this.getIcuFluidOrdersByChartId(icuChartId),
+      this.getIcuNutritionByChartId(icuChartId),
+      this.getIcuBodyMarkingsByChartId(icuChartId),
+      this.getIcuNurseDiaryByChartId(icuChartId),
+      this.getIcuOnceOnlyDrugsByChartId(icuChartId),
+      this.getIcuPreviousDayNotesByChartId(icuChartId),
+      this.getIcuAllergyPrecautionsByChartId(icuChartId)
+    ]);
+
+    return {
+      ...chart,
+      vitalCharts, hemodynamic, sedation, ventilator, abgReports, airwayCare,
+      dailyInvestigations, diabeticChart, playOfDay, cuffPressure, ettTracheostomy,
+      duration, fluidBalanceTarget, intakeChart, outputChart, medicationOrders,
+      nursingRemarks, nursingDuty, fluidOrders, nutritionChart, bodyMarkings,
+      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions
+    };
   }
 }
 

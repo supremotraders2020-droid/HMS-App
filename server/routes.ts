@@ -74,7 +74,17 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   medicineCatalog, insertMedicineCatalogSchema,
   // Smart OPD Flow Engine
   opdDepartmentFlows, insertOpdDepartmentFlowsSchema,
-  opdConsultations, insertOpdConsultationsSchema
+  opdConsultations, insertOpdConsultationsSchema,
+  // ICU Monitoring
+  insertIcuChartsSchema, insertIcuVitalChartsSchema, insertIcuHemodynamicMonitoringSchema,
+  insertIcuSedationMonitoringSchema, insertIcuVentilatorSettingsSchema, insertIcuAbgReportsSchema,
+  insertIcuAirwayCareSchema, insertIcuDailyInvestigationsSchema, insertIcuDiabeticChartSchema,
+  insertIcuPlayOfDaySchema, insertIcuCuffPressureSchema, insertIcuEttTracheostomySchema,
+  insertIcuDurationSchema, insertIcuFluidBalanceTargetSchema, insertIcuIntakeChartSchema,
+  insertIcuOutputChartSchema, insertIcuMedicationOrdersSchema, insertIcuNursingRemarksSchema,
+  insertIcuNursingDutySchema, insertIcuFluidOrdersSchema, insertIcuNutritionChartSchema,
+  insertIcuBodyMarkingSchema, insertIcuNurseDiarySchema, insertIcuOnceOnlyDrugsSchema,
+  insertIcuPreviousDayNotesSchema, insertIcuAllergyPrecautionsSchema
 } from "@shared/schema";
 import { seedOpdDepartmentFlows, OPD_DEPARTMENT_FLOW_DATA } from "./seeds/opdDepartmentFlows";
 import { getChatbotResponse, getChatbotStats } from "./openai";
@@ -14056,6 +14066,630 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error fetching patients for technician:", error);
       res.status(500).json({ error: "Failed to fetch patients" });
+    }
+  });
+
+  // ========== ICU MONITORING SYSTEM ==========
+
+  // ICU Charts - Main record management
+  app.post("/api/icu-charts", requireAuth, async (req, res) => {
+    try {
+      const chart = await storage.createIcuChart(req.body);
+      res.status(201).json(chart);
+    } catch (error) {
+      console.error("Error creating ICU chart:", error);
+      res.status(500).json({ error: "Failed to create ICU chart" });
+    }
+  });
+
+  app.get("/api/icu-charts", requireAuth, async (req, res) => {
+    try {
+      const charts = await storage.getAllIcuCharts();
+      res.json(charts);
+    } catch (error) {
+      console.error("Error fetching ICU charts:", error);
+      res.status(500).json({ error: "Failed to fetch ICU charts" });
+    }
+  });
+
+  app.get("/api/icu-charts/:id", requireAuth, async (req, res) => {
+    try {
+      const chart = await storage.getIcuChartById(req.params.id);
+      if (!chart) {
+        return res.status(404).json({ error: "ICU chart not found" });
+      }
+      res.json(chart);
+    } catch (error) {
+      console.error("Error fetching ICU chart:", error);
+      res.status(500).json({ error: "Failed to fetch ICU chart" });
+    }
+  });
+
+  app.get("/api/icu-charts/:id/complete", requireAuth, async (req, res) => {
+    try {
+      const completeChart = await storage.getCompleteIcuChart(req.params.id);
+      if (!completeChart) {
+        return res.status(404).json({ error: "ICU chart not found" });
+      }
+      res.json(completeChart);
+    } catch (error) {
+      console.error("Error fetching complete ICU chart:", error);
+      res.status(500).json({ error: "Failed to fetch complete ICU chart" });
+    }
+  });
+
+  app.get("/api/patients/:patientId/icu-charts", requireAuth, async (req, res) => {
+    try {
+      const charts = await storage.getIcuChartsByPatient(req.params.patientId);
+      res.json(charts);
+    } catch (error) {
+      console.error("Error fetching patient ICU charts:", error);
+      res.status(500).json({ error: "Failed to fetch patient ICU charts" });
+    }
+  });
+
+  app.patch("/api/icu-charts/:id", requireAuth, async (req, res) => {
+    try {
+      const chart = await storage.updateIcuChart(req.params.id, req.body);
+      res.json(chart);
+    } catch (error) {
+      console.error("Error updating ICU chart:", error);
+      res.status(500).json({ error: "Failed to update ICU chart" });
+    }
+  });
+
+  app.delete("/api/icu-charts/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteIcuChart(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting ICU chart:", error);
+      res.status(500).json({ error: "Failed to delete ICU chart" });
+    }
+  });
+
+  // ICU Vital Charts
+  app.post("/api/icu-charts/:chartId/vitals", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuVitalChart({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating ICU vital entry:", error);
+      res.status(500).json({ error: "Failed to create vital entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/vitals", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuVitalChartsByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching ICU vitals:", error);
+      res.status(500).json({ error: "Failed to fetch vitals" });
+    }
+  });
+
+  app.patch("/api/icu-vitals/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuVitalChart(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating ICU vital:", error);
+      res.status(500).json({ error: "Failed to update vital" });
+    }
+  });
+
+  app.delete("/api/icu-vitals/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteIcuVitalChart(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting ICU vital:", error);
+      res.status(500).json({ error: "Failed to delete vital" });
+    }
+  });
+
+  // ICU Hemodynamic Monitoring
+  app.post("/api/icu-charts/:chartId/hemodynamic", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuHemodynamicEntry({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating hemodynamic entry:", error);
+      res.status(500).json({ error: "Failed to create hemodynamic entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/hemodynamic", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuHemodynamicByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching hemodynamic data:", error);
+      res.status(500).json({ error: "Failed to fetch hemodynamic data" });
+    }
+  });
+
+  // ICU Sedation Monitoring
+  app.post("/api/icu-charts/:chartId/sedation", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuSedationEntry({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating sedation entry:", error);
+      res.status(500).json({ error: "Failed to create sedation entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/sedation", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuSedationByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching sedation data:", error);
+      res.status(500).json({ error: "Failed to fetch sedation data" });
+    }
+  });
+
+  // ICU Ventilator Settings
+  app.post("/api/icu-charts/:chartId/ventilator", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuVentilatorEntry({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating ventilator entry:", error);
+      res.status(500).json({ error: "Failed to create ventilator entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/ventilator", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuVentilatorByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching ventilator data:", error);
+      res.status(500).json({ error: "Failed to fetch ventilator data" });
+    }
+  });
+
+  // ICU ABG Reports
+  app.post("/api/icu-charts/:chartId/abg", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuAbgReport({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating ABG report:", error);
+      res.status(500).json({ error: "Failed to create ABG report" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/abg", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuAbgByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching ABG reports:", error);
+      res.status(500).json({ error: "Failed to fetch ABG reports" });
+    }
+  });
+
+  // ICU Airway Care
+  app.post("/api/icu-charts/:chartId/airway-care", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuAirwayCare({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating airway care entry:", error);
+      res.status(500).json({ error: "Failed to create airway care entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/airway-care", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuAirwayCareByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching airway care data:", error);
+      res.status(500).json({ error: "Failed to fetch airway care data" });
+    }
+  });
+
+  // ICU Daily Investigations
+  app.post("/api/icu-charts/:chartId/daily-investigations", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuDailyInvestigation({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating daily investigation:", error);
+      res.status(500).json({ error: "Failed to create daily investigation" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/daily-investigations", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.getIcuDailyInvestigationByChartId(req.params.chartId);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching daily investigation:", error);
+      res.status(500).json({ error: "Failed to fetch daily investigation" });
+    }
+  });
+
+  // ICU Diabetic Chart
+  app.post("/api/icu-charts/:chartId/diabetic", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuDiabeticEntry({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating diabetic entry:", error);
+      res.status(500).json({ error: "Failed to create diabetic entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/diabetic", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuDiabeticByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching diabetic data:", error);
+      res.status(500).json({ error: "Failed to fetch diabetic data" });
+    }
+  });
+
+  // ICU Intake Chart
+  app.post("/api/icu-charts/:chartId/intake", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuIntakeEntry({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating intake entry:", error);
+      res.status(500).json({ error: "Failed to create intake entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/intake", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuIntakeByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching intake data:", error);
+      res.status(500).json({ error: "Failed to fetch intake data" });
+    }
+  });
+
+  // ICU Output Chart
+  app.post("/api/icu-charts/:chartId/output", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuOutputEntry({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating output entry:", error);
+      res.status(500).json({ error: "Failed to create output entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/output", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuOutputByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching output data:", error);
+      res.status(500).json({ error: "Failed to fetch output data" });
+    }
+  });
+
+  // ICU Medication Orders
+  app.post("/api/icu-charts/:chartId/medication-orders", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuMedicationOrder({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating medication order:", error);
+      res.status(500).json({ error: "Failed to create medication order" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/medication-orders", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuMedicationOrdersByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching medication orders:", error);
+      res.status(500).json({ error: "Failed to fetch medication orders" });
+    }
+  });
+
+  // ICU Nursing Remarks
+  app.post("/api/icu-charts/:chartId/nursing-remarks", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuNursingRemark({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating nursing remark:", error);
+      res.status(500).json({ error: "Failed to create nursing remark" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/nursing-remarks", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuNursingRemarksByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching nursing remarks:", error);
+      res.status(500).json({ error: "Failed to fetch nursing remarks" });
+    }
+  });
+
+  // ICU Nursing Duty
+  app.post("/api/icu-charts/:chartId/nursing-duty", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuNursingDuty({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating nursing duty:", error);
+      res.status(500).json({ error: "Failed to create nursing duty" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/nursing-duty", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuNursingDutyByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching nursing duty:", error);
+      res.status(500).json({ error: "Failed to fetch nursing duty" });
+    }
+  });
+
+  // ICU Fluid Orders
+  app.post("/api/icu-charts/:chartId/fluid-orders", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuFluidOrder({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating fluid order:", error);
+      res.status(500).json({ error: "Failed to create fluid order" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/fluid-orders", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuFluidOrdersByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching fluid orders:", error);
+      res.status(500).json({ error: "Failed to fetch fluid orders" });
+    }
+  });
+
+  // ICU Nutrition Chart
+  app.post("/api/icu-charts/:chartId/nutrition", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuNutritionEntry({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating nutrition entry:", error);
+      res.status(500).json({ error: "Failed to create nutrition entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/nutrition", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuNutritionByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching nutrition data:", error);
+      res.status(500).json({ error: "Failed to fetch nutrition data" });
+    }
+  });
+
+  // ICU Body Marking
+  app.post("/api/icu-charts/:chartId/body-marking", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuBodyMarking({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating body marking:", error);
+      res.status(500).json({ error: "Failed to create body marking" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/body-marking", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuBodyMarkingsByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching body markings:", error);
+      res.status(500).json({ error: "Failed to fetch body markings" });
+    }
+  });
+
+  // ICU Nurse Diary
+  app.post("/api/icu-charts/:chartId/nurse-diary", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuNurseDiaryEntry({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating nurse diary entry:", error);
+      res.status(500).json({ error: "Failed to create nurse diary entry" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/nurse-diary", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuNurseDiaryByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching nurse diary:", error);
+      res.status(500).json({ error: "Failed to fetch nurse diary" });
+    }
+  });
+
+  // ICU Once Only Drugs
+  app.post("/api/icu-charts/:chartId/once-only-drugs", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuOnceOnlyDrug({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating once only drug:", error);
+      res.status(500).json({ error: "Failed to create once only drug" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/once-only-drugs", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getIcuOnceOnlyDrugsByChartId(req.params.chartId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching once only drugs:", error);
+      res.status(500).json({ error: "Failed to fetch once only drugs" });
+    }
+  });
+
+  // ICU Allergy Precautions
+  app.post("/api/icu-charts/:chartId/allergy-precautions", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuAllergyPrecautions({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating allergy precautions:", error);
+      res.status(500).json({ error: "Failed to create allergy precautions" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/allergy-precautions", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.getIcuAllergyPrecautionsByChartId(req.params.chartId);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching allergy precautions:", error);
+      res.status(500).json({ error: "Failed to fetch allergy precautions" });
+    }
+  });
+
+  // ICU Play of Day
+  app.post("/api/icu-charts/:chartId/play-of-day", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuPlayOfDay({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating play of day:", error);
+      res.status(500).json({ error: "Failed to create play of day" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/play-of-day", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.getIcuPlayOfDayByChartId(req.params.chartId);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching play of day:", error);
+      res.status(500).json({ error: "Failed to fetch play of day" });
+    }
+  });
+
+  // ICU Cuff Pressure
+  app.post("/api/icu-charts/:chartId/cuff-pressure", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuCuffPressure({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating cuff pressure:", error);
+      res.status(500).json({ error: "Failed to create cuff pressure" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/cuff-pressure", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.getIcuCuffPressureByChartId(req.params.chartId);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching cuff pressure:", error);
+      res.status(500).json({ error: "Failed to fetch cuff pressure" });
+    }
+  });
+
+  // ICU ETT/Tracheostomy
+  app.post("/api/icu-charts/:chartId/ett-tracheostomy", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuEttTracheostomy({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating ETT/Tracheostomy:", error);
+      res.status(500).json({ error: "Failed to create ETT/Tracheostomy" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/ett-tracheostomy", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.getIcuEttTracheostomyByChartId(req.params.chartId);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching ETT/Tracheostomy:", error);
+      res.status(500).json({ error: "Failed to fetch ETT/Tracheostomy" });
+    }
+  });
+
+  // ICU Duration
+  app.post("/api/icu-charts/:chartId/duration", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuDuration({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating ICU duration:", error);
+      res.status(500).json({ error: "Failed to create ICU duration" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/duration", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.getIcuDurationByChartId(req.params.chartId);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching ICU duration:", error);
+      res.status(500).json({ error: "Failed to fetch ICU duration" });
+    }
+  });
+
+  // ICU Fluid Balance Target
+  app.post("/api/icu-charts/:chartId/fluid-balance-target", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuFluidBalanceTarget({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating fluid balance target:", error);
+      res.status(500).json({ error: "Failed to create fluid balance target" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/fluid-balance-target", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.getIcuFluidBalanceTargetByChartId(req.params.chartId);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching fluid balance target:", error);
+      res.status(500).json({ error: "Failed to fetch fluid balance target" });
+    }
+  });
+
+  // ICU Previous Day Notes
+  app.post("/api/icu-charts/:chartId/previous-day-notes", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.createIcuPreviousDayNotes({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating previous day notes:", error);
+      res.status(500).json({ error: "Failed to create previous day notes" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/previous-day-notes", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.getIcuPreviousDayNotesByChartId(req.params.chartId);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error fetching previous day notes:", error);
+      res.status(500).json({ error: "Failed to fetch previous day notes" });
     }
   });
 

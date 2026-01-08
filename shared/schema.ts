@@ -4851,3 +4851,467 @@ export const insertTechnicianReportsSchema = createInsertSchema(technicianReport
 });
 export type InsertTechnicianReports = z.infer<typeof insertTechnicianReportsSchema>;
 export type TechnicianReports = typeof technicianReports.$inferSelect;
+
+// ========== ICU MONITORING SYSTEM ==========
+
+// ICU Chart - Main record for each patient's daily ICU monitoring
+export const icuCharts = pgTable("icu_charts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  age: text("age"),
+  sex: text("sex"),
+  bloodGroup: text("blood_group"),
+  weight: text("weight"),
+  diagnosis: text("diagnosis"),
+  dateOfAdmission: text("date_of_admission"),
+  ward: text("ward"),
+  bedNo: text("bed_no"),
+  chartDate: text("chart_date").notNull(), // Date of this chart
+  admittingConsultant: text("admitting_consultant"),
+  icuConsultant: text("icu_consultant"),
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIcuChartsSchema = createInsertSchema(icuCharts).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertIcuCharts = z.infer<typeof insertIcuChartsSchema>;
+export type IcuCharts = typeof icuCharts.$inferSelect;
+
+// ICU Vital Chart - Hourly vital signs (24 hours)
+export const icuVitalCharts = pgTable("icu_vital_charts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  hour: text("hour").notNull(), // 00:00 to 23:00
+  temperature: text("temperature"),
+  coreTemp: text("core_temp"),
+  skinTemp: text("skin_temp"),
+  pulse: text("pulse"),
+  bp: text("bp"),
+  cvp: text("cvp"),
+  respiratoryRate: text("respiratory_rate"),
+  spo2: text("spo2"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuVitalChartsSchema = createInsertSchema(icuVitalCharts).omit({ id: true, createdAt: true });
+export type InsertIcuVitalCharts = z.infer<typeof insertIcuVitalChartsSchema>;
+export type IcuVitalCharts = typeof icuVitalCharts.$inferSelect;
+
+// Hemodynamic Monitoring
+export const icuHemodynamicMonitoring = pgTable("icu_hemodynamic_monitoring", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  time: text("time").notNull(),
+  heartRate: text("heart_rate"),
+  map: text("map"), // Mean Arterial Pressure
+  cvp: text("cvp"),
+  icp: text("icp"), // Intracranial Pressure
+  cpp: text("cpp"), // Cerebral Perfusion Pressure
+  inotropeName: text("inotrope_name"),
+  inotropeDose: text("inotrope_dose"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuHemodynamicMonitoringSchema = createInsertSchema(icuHemodynamicMonitoring).omit({ id: true, createdAt: true });
+export type InsertIcuHemodynamicMonitoring = z.infer<typeof insertIcuHemodynamicMonitoringSchema>;
+export type IcuHemodynamicMonitoring = typeof icuHemodynamicMonitoring.$inferSelect;
+
+// Sedation Monitoring
+export const icuSedationMonitoring = pgTable("icu_sedation_monitoring", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  time: text("time").notNull(),
+  sedationScore: text("sedation_score"),
+  drugName: text("drug_name"),
+  dose: text("dose"),
+  remarks: text("remarks"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuSedationMonitoringSchema = createInsertSchema(icuSedationMonitoring).omit({ id: true, createdAt: true });
+export type InsertIcuSedationMonitoring = z.infer<typeof insertIcuSedationMonitoringSchema>;
+export type IcuSedationMonitoring = typeof icuSedationMonitoring.$inferSelect;
+
+// Ventilator Settings
+export const icuVentilatorSettings = pgTable("icu_ventilator_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  time: text("time").notNull(),
+  mode: text("mode"),
+  fio2: text("fio2"),
+  expTidalVolume: text("exp_tidal_volume"),
+  expMinVolume: text("exp_min_volume"),
+  setTidalVolume: text("set_tidal_volume"),
+  setMinVolume: text("set_min_volume"),
+  respRatePerMin: text("resp_rate_per_min"),
+  spontaneousRrPerMin: text("spontaneous_rr_per_min"),
+  simvRatePerMin: text("simv_rate_per_min"),
+  peepCpap: text("peep_cpap"),
+  autoPeep: text("auto_peep"),
+  peakAirwayPressure: text("peak_airway_pressure"),
+  pressureSupport: text("pressure_support"),
+  ieRatio: text("ie_ratio"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuVentilatorSettingsSchema = createInsertSchema(icuVentilatorSettings).omit({ id: true, createdAt: true });
+export type InsertIcuVentilatorSettings = z.infer<typeof insertIcuVentilatorSettingsSchema>;
+export type IcuVentilatorSettings = typeof icuVentilatorSettings.$inferSelect;
+
+// ABG Reports
+export const icuAbgReports = pgTable("icu_abg_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  time: text("time").notNull(),
+  ph: text("ph"),
+  pco2: text("pco2"),
+  po2: text("po2"),
+  sbc: text("sbc"),
+  be: text("be"),
+  sao2: text("sao2"),
+  svo2: text("svo2"),
+  lactate: text("lactate"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuAbgReportsSchema = createInsertSchema(icuAbgReports).omit({ id: true, createdAt: true });
+export type InsertIcuAbgReports = z.infer<typeof insertIcuAbgReportsSchema>;
+export type IcuAbgReports = typeof icuAbgReports.$inferSelect;
+
+// Airway Care (Secretions & Position)
+export const icuAirwayCare = pgTable("icu_airway_care", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  time: text("time").notNull(),
+  secretions: text("secretions"), // Yes/No
+  secretionType: text("secretion_type"), // Thick/Thin
+  patientPosition: text("patient_position"),
+  airwayGuarded: text("airway_guarded"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuAirwayCareSchema = createInsertSchema(icuAirwayCare).omit({ id: true, createdAt: true });
+export type InsertIcuAirwayCare = z.infer<typeof insertIcuAirwayCareSchema>;
+export type IcuAirwayCare = typeof icuAirwayCare.$inferSelect;
+
+// Daily Investigations
+export const icuDailyInvestigations = pgTable("icu_daily_investigations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  hb: text("hb"),
+  wbc: text("wbc"),
+  urea: text("urea"),
+  creatinine: text("creatinine"),
+  electrolytes: text("electrolytes"),
+  ptAptt: text("pt_aptt"),
+  lfts: text("lfts"),
+  bsl: text("bsl"),
+  sputumRCulture: text("sputum_r_culture"),
+  urineRCulture: text("urine_r_culture"),
+  bloodCulture: text("blood_culture"),
+  xrayChest: text("xray_chest"),
+  abg: text("abg"),
+  anyOther: text("any_other"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuDailyInvestigationsSchema = createInsertSchema(icuDailyInvestigations).omit({ id: true, createdAt: true });
+export type InsertIcuDailyInvestigations = z.infer<typeof insertIcuDailyInvestigationsSchema>;
+export type IcuDailyInvestigations = typeof icuDailyInvestigations.$inferSelect;
+
+// Diabetic Flow Chart
+export const icuDiabeticChart = pgTable("icu_diabetic_chart", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  time: text("time").notNull(),
+  bsl: text("bsl"),
+  insulin: text("insulin"),
+  na: text("na"),
+  k: text("k"),
+  cl: text("cl"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuDiabeticChartSchema = createInsertSchema(icuDiabeticChart).omit({ id: true, createdAt: true });
+export type InsertIcuDiabeticChart = z.infer<typeof insertIcuDiabeticChartSchema>;
+export type IcuDiabeticChart = typeof icuDiabeticChart.$inferSelect;
+
+// Play of the Day (Daily Notes)
+export const icuPlayOfDay = pgTable("icu_play_of_day", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  notes: text("notes"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuPlayOfDaySchema = createInsertSchema(icuPlayOfDay).omit({ id: true, createdAt: true });
+export type InsertIcuPlayOfDay = z.infer<typeof insertIcuPlayOfDaySchema>;
+export type IcuPlayOfDay = typeof icuPlayOfDay.$inferSelect;
+
+// Cuff Pressure
+export const icuCuffPressure = pgTable("icu_cuff_pressure", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  morning: text("morning"),
+  evening: text("evening"),
+  night: text("night"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuCuffPressureSchema = createInsertSchema(icuCuffPressure).omit({ id: true, createdAt: true });
+export type InsertIcuCuffPressure = z.infer<typeof insertIcuCuffPressureSchema>;
+export type IcuCuffPressure = typeof icuCuffPressure.$inferSelect;
+
+// ETT/Tracheostomy Details
+export const icuEttTracheostomy = pgTable("icu_ett_tracheostomy", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  tubeType: text("tube_type"), // ETT or Tracheostomy
+  size: text("size"),
+  cutTiedAt: text("cut_tied_at"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuEttTracheostomySchema = createInsertSchema(icuEttTracheostomy).omit({ id: true, createdAt: true });
+export type InsertIcuEttTracheostomy = z.infer<typeof insertIcuEttTracheostomySchema>;
+export type IcuEttTracheostomy = typeof icuEttTracheostomy.$inferSelect;
+
+// ICU Duration Summary
+export const icuDuration = pgTable("icu_duration", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  daysIntubated: integer("days_intubated"),
+  daysVentilated: integer("days_ventilated"),
+  daysIcuStay: integer("days_icu_stay"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuDurationSchema = createInsertSchema(icuDuration).omit({ id: true, createdAt: true });
+export type InsertIcuDuration = z.infer<typeof insertIcuDurationSchema>;
+export type IcuDuration = typeof icuDuration.$inferSelect;
+
+// Fluid Balance Target
+export const icuFluidBalanceTarget = pgTable("icu_fluid_balance_target", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  targetIntake: text("target_intake"),
+  targetOutput: text("target_output"),
+  netBalanceGoal: text("net_balance_goal"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuFluidBalanceTargetSchema = createInsertSchema(icuFluidBalanceTarget).omit({ id: true, createdAt: true });
+export type InsertIcuFluidBalanceTarget = z.infer<typeof insertIcuFluidBalanceTargetSchema>;
+export type IcuFluidBalanceTarget = typeof icuFluidBalanceTarget.$inferSelect;
+
+// Intake Chart (Hourly)
+export const icuIntakeChart = pgTable("icu_intake_chart", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  timeSlot: text("time_slot").notNull(),
+  line1: text("line1"),
+  line2: text("line2"),
+  line3: text("line3"),
+  line4: text("line4"),
+  line5: text("line5"),
+  line6: text("line6"),
+  totalIntake: text("total_intake"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuIntakeChartSchema = createInsertSchema(icuIntakeChart).omit({ id: true, createdAt: true });
+export type InsertIcuIntakeChart = z.infer<typeof insertIcuIntakeChartSchema>;
+export type IcuIntakeChart = typeof icuIntakeChart.$inferSelect;
+
+// Output Chart (Hourly)
+export const icuOutputChart = pgTable("icu_output_chart", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  timeSlot: text("time_slot").notNull(),
+  urineHourly: text("urine_hourly"),
+  otherLosses: text("other_losses"),
+  totalOutput: text("total_output"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuOutputChartSchema = createInsertSchema(icuOutputChart).omit({ id: true, createdAt: true });
+export type InsertIcuOutputChart = z.infer<typeof insertIcuOutputChartSchema>;
+export type IcuOutputChart = typeof icuOutputChart.$inferSelect;
+
+// Doctor's Medication Order
+export const icuMedicationOrders = pgTable("icu_medication_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  srNo: integer("sr_no"),
+  drugName: text("drug_name").notNull(),
+  route: text("route"),
+  dose: text("dose"),
+  frequency: text("frequency"),
+  time: text("time"),
+  doctorSignature: text("doctor_signature"),
+  doctorId: varchar("doctor_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuMedicationOrdersSchema = createInsertSchema(icuMedicationOrders).omit({ id: true, createdAt: true });
+export type InsertIcuMedicationOrders = z.infer<typeof insertIcuMedicationOrdersSchema>;
+export type IcuMedicationOrders = typeof icuMedicationOrders.$inferSelect;
+
+// Nursing Remarks
+export const icuNursingRemarks = pgTable("icu_nursing_remarks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  time: text("time").notNull(),
+  initials: text("initials"),
+  remarks: text("remarks"),
+  nurseId: varchar("nurse_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuNursingRemarksSchema = createInsertSchema(icuNursingRemarks).omit({ id: true, createdAt: true });
+export type InsertIcuNursingRemarks = z.infer<typeof insertIcuNursingRemarksSchema>;
+export type IcuNursingRemarks = typeof icuNursingRemarks.$inferSelect;
+
+// Nursing Duty (Sisters on Duty)
+export const icuNursingDuty = pgTable("icu_nursing_duty", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  shift: text("shift").notNull(), // Morning, Evening, Night
+  name: text("name"),
+  empNo: text("emp_no"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuNursingDutySchema = createInsertSchema(icuNursingDuty).omit({ id: true, createdAt: true });
+export type InsertIcuNursingDuty = z.infer<typeof insertIcuNursingDutySchema>;
+export type IcuNursingDuty = typeof icuNursingDuty.$inferSelect;
+
+// Fluid Orders
+export const icuFluidOrders = pgTable("icu_fluid_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  fluidName: text("fluid_name").notNull(),
+  rate: text("rate"),
+  duration: text("duration"),
+  remarks: text("remarks"),
+  orderedBy: varchar("ordered_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuFluidOrdersSchema = createInsertSchema(icuFluidOrders).omit({ id: true, createdAt: true });
+export type InsertIcuFluidOrders = z.infer<typeof insertIcuFluidOrdersSchema>;
+export type IcuFluidOrders = typeof icuFluidOrders.$inferSelect;
+
+// Nutrition Chart
+export const icuNutritionChart = pgTable("icu_nutrition_chart", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  typeOfFeed: text("type_of_feed"),
+  route: text("route"),
+  quantity: text("quantity"),
+  frequency: text("frequency"),
+  remarks: text("remarks"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuNutritionChartSchema = createInsertSchema(icuNutritionChart).omit({ id: true, createdAt: true });
+export type InsertIcuNutritionChart = z.infer<typeof insertIcuNutritionChartSchema>;
+export type IcuNutritionChart = typeof icuNutritionChart.$inferSelect;
+
+// Body Marking / Pressure Sore Chart
+export const icuBodyMarking = pgTable("icu_body_marking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  markedArea: text("marked_area"),
+  typeOfInjury: text("type_of_injury"),
+  grade: text("grade"),
+  date: text("date"),
+  remarks: text("remarks"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuBodyMarkingSchema = createInsertSchema(icuBodyMarking).omit({ id: true, createdAt: true });
+export type InsertIcuBodyMarking = z.infer<typeof insertIcuBodyMarkingSchema>;
+export type IcuBodyMarking = typeof icuBodyMarking.$inferSelect;
+
+// Nurse Diary (Important Events During Shift)
+export const icuNurseDiary = pgTable("icu_nurse_diary", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  time: text("time").notNull(),
+  eventDescription: text("event_description"),
+  nurseId: varchar("nurse_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuNurseDiarySchema = createInsertSchema(icuNurseDiary).omit({ id: true, createdAt: true });
+export type InsertIcuNurseDiary = z.infer<typeof insertIcuNurseDiarySchema>;
+export type IcuNurseDiary = typeof icuNurseDiary.$inferSelect;
+
+// Once Only Drugs
+export const icuOnceOnlyDrugs = pgTable("icu_once_only_drugs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  drugName: text("drug_name").notNull(),
+  dose: text("dose"),
+  route: text("route"),
+  time: text("time"),
+  doctorSign: text("doctor_sign"),
+  doctorId: varchar("doctor_id"),
+  timeGiven: text("time_given"),
+  nurseSign: text("nurse_sign"),
+  nurseId: varchar("nurse_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuOnceOnlyDrugsSchema = createInsertSchema(icuOnceOnlyDrugs).omit({ id: true, createdAt: true });
+export type InsertIcuOnceOnlyDrugs = z.infer<typeof insertIcuOnceOnlyDrugsSchema>;
+export type IcuOnceOnlyDrugs = typeof icuOnceOnlyDrugs.$inferSelect;
+
+// Previous Day Notes
+export const icuPreviousDayNotes = pgTable("icu_previous_day_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  notes: text("notes"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuPreviousDayNotesSchema = createInsertSchema(icuPreviousDayNotes).omit({ id: true, createdAt: true });
+export type InsertIcuPreviousDayNotes = z.infer<typeof insertIcuPreviousDayNotesSchema>;
+export type IcuPreviousDayNotes = typeof icuPreviousDayNotes.$inferSelect;
+
+// Allergies & Special Precautions
+export const icuAllergyPrecautions = pgTable("icu_allergy_precautions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  drugAllergy: text("drug_allergy"),
+  foodAllergy: text("food_allergy"),
+  otherAllergy: text("other_allergy"),
+  specialPrecautions: text("special_precautions"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuAllergyPrecautionsSchema = createInsertSchema(icuAllergyPrecautions).omit({ id: true, createdAt: true });
+export type InsertIcuAllergyPrecautions = z.infer<typeof insertIcuAllergyPrecautionsSchema>;
+export type IcuAllergyPrecautions = typeof icuAllergyPrecautions.$inferSelect;

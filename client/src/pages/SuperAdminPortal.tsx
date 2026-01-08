@@ -1,4 +1,5 @@
 import { useState } from "react";
+import IcuMonitoringPage from "./IcuMonitoringPage";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,8 @@ type SuperAdminSection =
   | "claims"
   | "packages"
   | "audit"
-  | "settings";
+  | "settings"
+  | "icu-monitoring";
 
 import { 
   HMS_MODULES, 
@@ -139,6 +141,7 @@ export default function SuperAdminPortal({ section = "dashboard" }: SuperAdminPo
     packages: { title: "Hospital Packages", description: "Create OPD/IPD packages and pricing models" },
     audit: { title: "Audit Logs", description: "Immutable audit trail of all critical actions" },
     settings: { title: "System Settings", description: "Configure hospital system parameters" },
+    "icu-monitoring": { title: "ICU Monitoring", description: "Comprehensive ICU patient monitoring and charting" },
   };
 
   const currentSection = sectionTitles[section] || sectionTitles.dashboard;
@@ -189,6 +192,7 @@ export default function SuperAdminPortal({ section = "dashboard" }: SuperAdminPo
         {section === "packages" && <PackagesSection />}
         {section === "audit" && <AuditSection />}
         {section === "settings" && <SettingsSection />}
+        {section === "icu-monitoring" && <IcuMonitoringPage userRole="SUPER_ADMIN" />}
       </div>
     </div>
   );

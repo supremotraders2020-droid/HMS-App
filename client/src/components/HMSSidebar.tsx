@@ -48,7 +48,8 @@ import {
   Receipt,
   Pill,
   Syringe,
-  History
+  History,
+  Heart
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -103,6 +104,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Swab Monitoring", url: "/swab-monitoring", icon: FlaskConical, roles: ["ADMIN"] },
       { title: "Disease Knowledge", url: "/disease-knowledge", icon: BookOpen, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"] },
       { title: "Patient Monitoring", url: "/patient-monitoring", icon: Stethoscope, roles: ["ADMIN", "DOCTOR", "NURSE"] },
+      { title: "ICU Monitoring", url: "/icu-monitoring", icon: Heart, roles: ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE"] },
       { title: "Patient Barcode", url: "/patient-barcode", icon: QrCode, roles: ["ADMIN", "DOCTOR", "NURSE"] },
       { title: "Staff Management", url: "/staff-management", icon: UserCheck, roles: ["ADMIN", "OPD_MANAGER", "DOCTOR", "NURSE"] },
       { title: "Insurance", url: "/insurance-management", icon: Shield, roles: ["ADMIN"] },
@@ -307,7 +309,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {getMenuItems(currentRole).filter(item => 
-                ['OPD Service', 'Patient Service', 'Patient Tracking', 'Patient Monitoring', 'Biometric Service', 'Prescriptions', 'Staff Management', 'Services & Surgeries'].includes(item.title)
+                ['OPD Service', 'Patient Service', 'Patient Tracking', 'Patient Monitoring', 'ICU Monitoring', 'Biometric Service', 'Prescriptions', 'Staff Management', 'Services & Surgeries'].includes(item.title)
               ).map((item, index) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 

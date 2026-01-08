@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import PatientMonitoringPage from "./PatientMonitoringPage";
+import IcuMonitoringPage from "./IcuMonitoringPage";
 import StaffSelfService from "@/components/StaffSelfService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -874,6 +875,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     { id: "diagnostic-reports", title: "Diagnostic Reports", icon: Activity },
     { id: "templates", title: "Rx Templates", icon: ClipboardList },
     { id: "patient-monitoring", title: "Patient Monitoring", icon: MonitorCheck },
+    { id: "icu-monitoring", title: "ICU Monitoring", icon: Heart },
     { id: "hospital-services", title: "Services & Surgeries", icon: Scissors },
     { id: "staff-management", title: "Staff Management", icon: UserCheck },
     { id: "notifications", title: "Notifications", icon: Bell, badge: unreadNotifications.length },
@@ -3355,6 +3357,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       case "diagnostic-reports": return renderDiagnosticReports();
       case "templates": return renderTemplates();
       case "patient-monitoring": return <PatientMonitoringPage />;
+      case "icu-monitoring": return <IcuMonitoringPage userRole="DOCTOR" userId={doctorId} onBack={() => setActiveSection("dashboard")} />;
       case "hospital-services": return <HospitalServices currentUserRole="DOCTOR" />;
       case "staff-management": return <StaffSelfService userId={doctorId} userName={doctorName} userRole="DOCTOR" />;
       case "notifications": return renderNotifications();
@@ -3455,7 +3458,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Clinical Services</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu className="space-y-1">
-                    {menuItems.filter(item => ['appointments', 'patients', 'prescriptions', 'medical-records', 'templates', 'patient-monitoring', 'hospital-services'].includes(item.id)).map((item) => (
+                    {menuItems.filter(item => ['appointments', 'patients', 'prescriptions', 'medical-records', 'templates', 'patient-monitoring', 'icu-monitoring', 'hospital-services'].includes(item.id)).map((item) => (
                       <SidebarMenuItem key={item.id}>
                         <SidebarMenuButton asChild data-testid={`nav-${item.id}`}>
                           <Button

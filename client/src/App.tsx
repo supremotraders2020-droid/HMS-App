@@ -36,6 +36,7 @@ import DiseaseKnowledge from "@/pages/DiseaseKnowledge";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import PrescriptionsPage from "@/pages/PrescriptionsPage";
 import PatientMonitoringPage from "@/pages/PatientMonitoringPage";
+import IcuMonitoringPage from "@/pages/IcuMonitoringPage";
 import BedManagementPage from "@/pages/BedManagementPage";
 import BloodBankPage from "@/pages/BloodBankPage";
 import MedicalStoreManagement from "@/pages/MedicalStoreManagement";
@@ -468,6 +469,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           </div>
         )}
       </Route>
+      <Route path="/super-admin/icu-monitoring">
+        {currentUser.role === "SUPER_ADMIN" ? (
+          <SuperAdminPortal section="icu-monitoring" />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only Super Administrators can access this portal.</p>
+          </div>
+        )}
+      </Route>
 
       {/* Prescriptions Route - for OPD Manager and Doctor */}
       <Route path="/prescriptions">
@@ -491,6 +502,18 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only medical staff can access Patient Monitoring.</p>
+          </div>
+        )}
+      </Route>
+
+      {/* ICU Monitoring Route - for Super Admin, Admin, Doctor, Nurse */}
+      <Route path="/icu-monitoring">
+        {["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE"].includes(currentUser.role) ? (
+          <IcuMonitoringPage userRole={currentUser.role} userId={currentUser.id} />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only medical staff can access ICU Monitoring.</p>
           </div>
         )}
       </Route>
