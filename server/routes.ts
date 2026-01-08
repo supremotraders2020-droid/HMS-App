@@ -13646,6 +13646,322 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ========== TECHNICIAN PORTAL ROUTES ==========
+  
+  // Get all pending/upcoming tests for technician
+  app.get("/api/technician/pending-tests", requireAuth, async (req, res) => {
+    try {
+      const tests = await storage.getPendingDiagnosticTestOrders();
+      // Format for frontend
+      const formattedTests = tests.map(test => ({
+        id: test.id,
+        patientId: test.patientId,
+        patientName: test.patientName,
+        testName: test.testName,
+        testType: test.testType,
+        department: test.department,
+        orderedBy: test.doctorName,
+        orderedDate: test.orderedDate ? new Date(test.orderedDate).toLocaleDateString() : new Date().toLocaleDateString(),
+        priority: test.priority || "ROUTINE",
+        status: test.status || "PENDING",
+        notes: test.clinicalNotes
+      }));
+      res.json(formattedTests);
+    } catch (error) {
+      console.error("Error fetching pending tests:", error);
+      res.status(500).json({ error: "Failed to fetch pending tests" });
+    }
+  });
+
+  // Get technician's submitted reports
+  app.get("/api/technician/reports/:technicianId", requireAuth, async (req, res) => {
+    try {
+      const reports = await storage.getTechnicianReportsByTechnician(req.params.technicianId);
+      const formattedReports = reports.map(report => ({
+        id: report.id,
+        patientId: report.patientId,
+        patientName: report.patientName,
+        testName: report.testName,
+        department: report.department,
+        technicianId: report.technicianId,
+        technicianName: report.technicianName,
+        reportDate: report.reportDate ? new Date(report.reportDate).toLocaleDateString() : new Date().toLocaleDateString(),
+        findings: report.findings,
+        conclusion: report.conclusion,
+        attachmentUrl: report.fileData,
+        status: report.status || "SUBMITTED",
+        createdAt: report.createdAt
+      }));
+      res.json(formattedReports);
+    } catch (error) {
+      console.error("Error fetching technician reports:", error);
+      res.status(500).json({ error: "Failed to fetch technician reports" });
+    }
+  });
+
+  // Get technician notifications (uses user notifications system)
+  app.get("/api/technician/notifications/:userId", requireAuth, async (req, res) => {
+    try {
+      const notifications = await storage.getUserNotifications(req.params.userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching technician notifications:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // Submit a report for a test
+  app.post("/api/technician/submit-report", requireAuth, async (req, res) => {
+    try {
+      const { testOrderId, findings, conclusion, recommendations, fileName, fileType, fileData, technicianId, technicianName } = req.body;
+      
+      // Get the test order
+      const testOrder = await storage.getDiagnosticTestOrderById(testOrderId);
+      if (!testOrder) {
+        return res.status(404).json({ error: "Test order not found" });
+      }
+
+      // Create the report
+      const report = await storage.createTechnicianReport({
+        testOrderId,
+        patientId: testOrder.patientId,
+        patientName: testOrder.patientName,
+        doctorId: testOrder.doctorId,
+        doctorName: testOrder.doctorName,
+        testName: testOrder.testName,
+        testType: testOrder.testType,
+        department: testOrder.department,
+        technicianId,
+        technicianName,
+        findings,
+        conclusion,
+        recommendations,
+        fileName,
+        fileType,
+        fileData,
+        status: "SUBMITTED",
+        reportDate: new Date()
+      });
+
+      // Update test order status to COMPLETED
+      await storage.updateDiagnosticTestOrder(testOrderId, {
+        status: "COMPLETED",
+        completedDate: new Date()
+      });
+
+      // Send notifications to all related roles
+      const notificationMessage = `Diagnostic report ready: ${testOrder.testName} for ${testOrder.patientName}`;
+      
+      // Notify Doctor - find user by doctor name
+      const allUsers = await storage.getAllUsers();
+      const doctorUser = allUsers.find(u => {
+        const doctorNameNormalized = testOrder.doctorName?.toLowerCase().trim() || "";
+        const usernameNormalized = u.username?.toLowerCase().trim() || "";
+        const fullNameNormalized = u.fullName?.toLowerCase().trim() || "";
+        return fullNameNormalized.includes(doctorNameNormalized) || 
+               doctorNameNormalized.includes(usernameNormalized) ||
+               usernameNormalized.includes(doctorNameNormalized.split(" ")[0]);
+      });
+      
+      if (doctorUser) {
+        await storage.createUserNotification({
+          userId: doctorUser.id,
+          title: "Diagnostic Report Ready",
+          message: notificationMessage,
+          type: "lab_report",
+          priority: "high",
+          isRead: false,
+          actionUrl: `/doctor-portal?tab=reports&reportId=${report.id}`
+        });
+        notificationService.sendToUser(doctorUser.id, {
+          type: "DIAGNOSTIC_REPORT",
+          title: "Diagnostic Report Ready",
+          message: notificationMessage,
+          reportId: report.id
+        });
+      }
+
+      // Notify Patient - find user by patient email
+      const servicePatients = await storage.getAllServicePatients();
+      const patient = servicePatients.find(p => p.id === testOrder.patientId);
+      if (patient?.email) {
+        const patientUser = allUsers.find(u => u.email === patient.email);
+        if (patientUser) {
+          await storage.createUserNotification({
+            userId: patientUser.id,
+            title: "Your Test Report is Ready",
+            message: `Your ${testOrder.testName} report is now available for viewing.`,
+            type: "lab_report",
+            priority: "high",
+            isRead: false,
+            actionUrl: `/patient-portal?tab=reports&reportId=${report.id}`
+          });
+          notificationService.sendToUser(patientUser.id, {
+            type: "DIAGNOSTIC_REPORT",
+            title: "Your Test Report is Ready",
+            message: `Your ${testOrder.testName} report is now available.`,
+            reportId: report.id
+          });
+        }
+      }
+
+      // Notify Admin users
+      const adminUsers = allUsers.filter(u => u.role === "ADMIN" || u.role === "SUPER_ADMIN");
+      for (const admin of adminUsers) {
+        await storage.createUserNotification({
+          userId: admin.id,
+          title: "New Diagnostic Report Submitted",
+          message: notificationMessage,
+          type: "lab_report",
+          priority: "normal",
+          isRead: false,
+          actionUrl: `/admin-dashboard?tab=reports&reportId=${report.id}`
+        });
+        notificationService.sendToUser(admin.id, {
+          type: "DIAGNOSTIC_REPORT",
+          title: "New Diagnostic Report Submitted",
+          message: notificationMessage,
+          reportId: report.id
+        });
+      }
+
+      // Notify Technician (self-confirmation)
+      await storage.createUserNotification({
+        userId: technicianId,
+        title: "Report Submitted Successfully",
+        message: `Your report for ${testOrder.testName} has been submitted.`,
+        type: "lab_report",
+        priority: "normal",
+        isRead: false
+      });
+
+      res.json({ success: true, report });
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      res.status(500).json({ error: "Failed to submit report" });
+    }
+  });
+
+  // Create test order from prescription (called when doctor finalizes prescription with tests)
+  app.post("/api/diagnostic-test-orders", requireAuth, async (req, res) => {
+    try {
+      const orderData = req.body;
+      const testOrder = await storage.createDiagnosticTestOrder({
+        ...orderData,
+        status: "PENDING",
+        orderedDate: new Date()
+      });
+
+      // Notify technicians
+      const allUsers = await storage.getAllUsers();
+      const technicians = allUsers.filter(u => u.role === "TECHNICIAN");
+      for (const tech of technicians) {
+        await storage.createUserNotification({
+          userId: tech.id,
+          title: "New Test Order",
+          message: `New ${orderData.testName} ordered for ${orderData.patientName}`,
+          type: "test_order",
+          priority: orderData.priority === "STAT" ? "urgent" : "normal",
+          isRead: false,
+          actionUrl: `/technician-portal?testId=${testOrder.id}`
+        });
+        notificationService.sendToUser(tech.id, {
+          type: "NEW_TEST_ORDER",
+          title: "New Test Order",
+          message: `New ${orderData.testName} ordered for ${orderData.patientName}`,
+          testOrderId: testOrder.id,
+          priority: orderData.priority
+        });
+      }
+
+      res.json(testOrder);
+    } catch (error) {
+      console.error("Error creating test order:", error);
+      res.status(500).json({ error: "Failed to create test order" });
+    }
+  });
+
+  // Get all test orders (for admin)
+  app.get("/api/diagnostic-test-orders", requireAuth, async (req, res) => {
+    try {
+      const orders = await storage.getAllDiagnosticTestOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching test orders:", error);
+      res.status(500).json({ error: "Failed to fetch test orders" });
+    }
+  });
+
+  // Get technician reports by patient (for patient portal)
+  app.get("/api/patients/:patientId/diagnostic-reports", requireAuth, async (req, res) => {
+    try {
+      const reports = await storage.getTechnicianReportsByPatient(req.params.patientId);
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching patient diagnostic reports:", error);
+      res.status(500).json({ error: "Failed to fetch diagnostic reports" });
+    }
+  });
+
+  // Get technician reports by doctor (for doctor portal)
+  app.get("/api/doctors/:doctorId/diagnostic-reports", requireAuth, async (req, res) => {
+    try {
+      // Get doctor's user info to find associated tests
+      const doctorUser = await storage.getUser(req.params.doctorId);
+      if (!doctorUser) {
+        return res.status(404).json({ error: "Doctor not found" });
+      }
+      
+      // Find reports where doctorId matches or doctor name matches
+      const allReports = await storage.getAllTechnicianReports();
+      const doctorReports = allReports.filter(r => {
+        const doctorNameNormalized = doctorUser.fullName?.toLowerCase().trim() || "";
+        const usernameNormalized = doctorUser.username?.toLowerCase().trim() || "";
+        const reportDoctorNameNormalized = r.doctorName?.toLowerCase().trim() || "";
+        return r.doctorId === req.params.doctorId || 
+               reportDoctorNameNormalized.includes(usernameNormalized) ||
+               usernameNormalized.includes(reportDoctorNameNormalized.split(" ")[0]);
+      });
+      res.json(doctorReports);
+    } catch (error) {
+      console.error("Error fetching doctor diagnostic reports:", error);
+      res.status(500).json({ error: "Failed to fetch diagnostic reports" });
+    }
+  });
+
+  // Get all technician reports (for admin)
+  app.get("/api/technician-reports", requireAuth, async (req, res) => {
+    try {
+      const reports = await storage.getAllTechnicianReports();
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching all technician reports:", error);
+      res.status(500).json({ error: "Failed to fetch reports" });
+    }
+  });
+
+  // Update test order status
+  app.patch("/api/diagnostic-test-orders/:id", requireAuth, async (req, res) => {
+    try {
+      const updated = await storage.updateDiagnosticTestOrder(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating test order:", error);
+      res.status(500).json({ error: "Failed to update test order" });
+    }
+  });
+
+  // Get service patients for technician portal search
+  app.get("/api/technician/patients", requireAuth, async (req, res) => {
+    try {
+      const patients = await storage.getAllServicePatients();
+      res.json(patients);
+    } catch (error) {
+      console.error("Error fetching patients for technician:", error);
+      res.status(500).json({ error: "Failed to fetch patients" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
