@@ -70,6 +70,141 @@ import { HOSPITAL_DEPARTMENTS } from "@shared/schema";
 
 type TabType = "patients" | "admit" | "doctor_visits" | "billing";
 
+interface PatientMovement {
+  id: number;
+  trackingPatientId: string;
+  eventType: string;
+  fromLocation: string | null;
+  toLocation: string | null;
+  performedBy: string | null;
+  notes: string | null;
+  occurredAt: string;
+}
+
+function PatientMovementTimeline({ patientId }: { patientId: string }) {
+  const { data: movements = [], isLoading } = useQuery<PatientMovement[]>({
+    queryKey: ["/api/tracking/patients", patientId, "movements"],
+    refetchInterval: 30000,
+    enabled: Boolean(patientId),
+  });
+
+  const normalizeEventType = (eventType: string) => eventType?.toLowerCase() || '';
+
+  const getEventIcon = (eventType: string) => {
+    const normalized = normalizeEventType(eventType);
+    switch (normalized) {
+      case 'admission':
+        return <Plus className="h-4 w-4 text-green-600" />;
+      case 'discharge':
+        return <LogOut className="h-4 w-4 text-blue-600" />;
+      case 'icu_transfer':
+        return <HeartPulse className="h-4 w-4 text-red-600" />;
+      case 'ward_transfer':
+        return <Bed className="h-4 w-4 text-purple-600" />;
+      default:
+        return <MapPin className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getEventColor = (eventType: string) => {
+    const normalized = normalizeEventType(eventType);
+    switch (normalized) {
+      case 'admission':
+        return 'border-green-500 bg-green-50 dark:bg-green-900/20';
+      case 'discharge':
+        return 'border-blue-500 bg-blue-50 dark:bg-blue-900/20';
+      case 'icu_transfer':
+        return 'border-red-500 bg-red-50 dark:bg-red-900/20';
+      case 'ward_transfer':
+        return 'border-purple-500 bg-purple-50 dark:bg-purple-900/20';
+      default:
+        return 'border-gray-500 bg-gray-50 dark:bg-gray-900/20';
+    }
+  };
+
+  const formatDateTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return {
+      date: date.toLocaleDateString(),
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            Movement Timeline
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center text-muted-foreground py-4">Loading...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          Movement Timeline
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {movements.length === 0 ? (
+          <div className="text-center text-muted-foreground py-4">
+            No movement history recorded
+          </div>
+        ) : (
+          <div className="relative space-y-4">
+            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-muted" />
+            {movements.map((movement) => {
+              const { date, time } = formatDateTime(movement.occurredAt);
+              return (
+                <div key={movement.id} className="relative pl-10">
+                  <div className="absolute left-2 top-2 w-4 h-4 rounded-full bg-background border-2 border-primary flex items-center justify-center">
+                    {getEventIcon(movement.eventType)}
+                  </div>
+                  <div className={cn("p-3 rounded-lg border-l-4", getEventColor(movement.eventType))}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium capitalize">
+                        {movement.eventType.replace('_', ' ')}
+                      </span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>{date} {time}</span>
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {movement.fromLocation && movement.toLocation && (
+                        <div className="flex items-center gap-2">
+                          <span>{movement.fromLocation}</span>
+                          <ChevronRight className="h-4 w-4" />
+                          <span className="font-medium">{movement.toLocation}</span>
+                        </div>
+                      )}
+                      {movement.notes && (
+                        <p className="mt-1 text-xs">{movement.notes}</p>
+                      )}
+                      {movement.performedBy && (
+                        <p className="mt-1 text-xs">By: {movement.performedBy}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function PatientTrackingService() {
   const [activeTab, setActiveTab] = useState<TabType>("patients");
   const [searchQuery, setSearchQuery] = useState("");
@@ -1341,6 +1476,8 @@ export default function PatientTrackingService() {
                                     </div>
                                   </CardContent>
                                 </Card>
+
+                                <PatientMovementTimeline patientId={patient.id} />
                               </div>
                             </DialogContent>
                           </Dialog>
