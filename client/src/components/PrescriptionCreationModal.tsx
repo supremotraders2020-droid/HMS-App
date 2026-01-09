@@ -625,6 +625,23 @@ export default function PrescriptionCreationModal({
           signedByName: doctorName,
           userRole,
         });
+
+        // Create diagnostic test orders for each suggested test (for Technician Portal)
+        if (suggestedTests.length > 0) {
+          for (const testName of suggestedTests) {
+            await apiRequest('POST', '/api/diagnostic-test-orders', {
+              patientId,
+              patientName,
+              testName,
+              testType: 'diagnostic',
+              department: 'Radiology',
+              doctorId,
+              doctorName,
+              priority: 'ROUTINE',
+              clinicalNotes: diagnosis || chiefComplaints || '',
+            });
+          }
+        }
       }
 
       return response;
@@ -632,9 +649,13 @@ export default function PrescriptionCreationModal({
     onSuccess: (_, finalize) => {
       queryClient.invalidateQueries({ queryKey: ['/api/prescriptions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/prescriptions/doctor', doctorId] });
+      if (finalize) {
+        queryClient.invalidateQueries({ queryKey: ['/api/technician/pending-tests'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/diagnostic-test-orders'] });
+      }
       toast({ 
         title: finalize ? "Prescription finalized successfully" : "Prescription saved as draft",
-        description: finalize ? "Patient has been notified" : "You can finalize it later"
+        description: finalize ? "Patient has been notified and tests sent to technicians" : "You can finalize it later"
       });
       resetForm();
       onClose();
