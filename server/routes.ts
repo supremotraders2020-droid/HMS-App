@@ -13964,6 +13964,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       if (doctorUser) {
         await storage.createUserNotification({
           userId: doctorUser.id,
+          userRole: doctorUser.role || "DOCTOR",
           title: "Diagnostic Report Ready",
           message: notificationMessage,
           type: "lab_report",
@@ -13987,6 +13988,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         if (patientUser) {
           await storage.createUserNotification({
             userId: patientUser.id,
+            userRole: patientUser.role || "PATIENT",
             title: "Your Test Report is Ready",
             message: `Your ${testOrder.testName} report is now available for viewing.`,
             type: "lab_report",
@@ -14008,6 +14010,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       for (const admin of adminUsers) {
         await storage.createUserNotification({
           userId: admin.id,
+          userRole: admin.role,
           title: "New Diagnostic Report Submitted",
           message: notificationMessage,
           type: "lab_report",
@@ -14026,6 +14029,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       // Notify Technician (self-confirmation)
       await storage.createUserNotification({
         userId: technicianId,
+        userRole: "TECHNICIAN",
         title: "Report Submitted Successfully",
         message: `Your report for ${testOrder.testName} has been submitted.`,
         type: "lab_report",
