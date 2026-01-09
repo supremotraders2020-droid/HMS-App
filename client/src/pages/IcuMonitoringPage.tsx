@@ -53,6 +53,7 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
 
   const { data: icuCharts = [], isLoading: chartsLoading } = useQuery<IcuCharts[]>({
     queryKey: ["/api/icu-charts"],
+    refetchInterval: 5000, // Real-time refresh every 5 seconds
   });
 
   // Fetch admitted patients for dropdown

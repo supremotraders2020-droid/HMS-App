@@ -480,6 +480,7 @@ export default function PatientTrackingService() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts"] });
       toast({
         title: "Transferred to Ward",
         description: "Patient has been transferred from ICU to ward successfully.",
