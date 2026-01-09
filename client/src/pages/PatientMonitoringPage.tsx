@@ -610,7 +610,7 @@ export default function PatientMonitoringPage() {
                   <AllergiesTab sessionId={selectedSession.id} />
                 </TabsContent>
                 <TabsContent value="tests">
-                  <TestsTab sessionId={selectedSession.id} patientId={selectedSession.patientId} patientName={selectedSession.patientName} />
+                  <TestsTab sessionId={selectedSession.id} patientId={selectedSession.patientId} patientName={selectedSession.patientName} admittingConsultant={selectedSession.admittingConsultant} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -2309,14 +2309,14 @@ const TEST_CATEGORIES = {
   }
 };
 
-function TestsTab({ sessionId, patientId, patientName }: { sessionId: string; patientId: string; patientName: string }) {
+function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { sessionId: string; patientId: string; patientName: string; admittingConsultant?: string }) {
   const { toast } = useToast();
   const [showOrderDialog, setShowOrderDialog] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("PATHOLOGY");
-  const [selectedTests, setSelectedTests] = useState<string[]>([]);
+  const [selectedTests, setSelectedTests] = useState<{name: string; type: string; department: string; category: string}[]>([]);
   const [priority, setPriority] = useState("ROUTINE");
   const [clinicalNotes, setClinicalNotes] = useState("");
-  const [doctorName, setDoctorName] = useState("");
+  const [doctorName, setDoctorName] = useState(admittingConsultant || "");
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(["PATHOLOGY"]);
 
   const { data: tests = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/patient-monitoring/sessions", sessionId, "tests"],
@@ -2356,23 +2356,40 @@ function TestsTab({ sessionId, patientId, patientName }: { sessionId: string; pa
       return;
     }
 
-    const category = TEST_CATEGORIES[selectedCategory as keyof typeof TEST_CATEGORIES];
-    selectedTests.forEach(testName => {
-      const test = category.tests.find(t => t.name === testName);
-      if (test) {
-        orderTestsMutation.mutate({
-          testName: test.name,
-          testType: test.type,
-          department: test.department,
-          category: selectedCategory,
-          priority,
-          clinicalNotes,
-          doctorName,
-          patientId,
-          patientName,
-        });
-      }
+    selectedTests.forEach(test => {
+      orderTestsMutation.mutate({
+        testName: test.name,
+        testType: test.type,
+        department: test.department,
+        category: test.category,
+        priority,
+        clinicalNotes,
+        doctorName,
+        patientId,
+        patientName,
+      });
     });
+  };
+
+  const toggleTest = (test: {name: string; type: string; department: string}, category: string) => {
+    const exists = selectedTests.find(t => t.name === test.name && t.category === category);
+    if (exists) {
+      setSelectedTests(selectedTests.filter(t => !(t.name === test.name && t.category === category)));
+    } else {
+      setSelectedTests([...selectedTests, { ...test, category }]);
+    }
+  };
+
+  const isTestSelected = (testName: string, category: string) => {
+    return selectedTests.some(t => t.name === testName && t.category === category);
+  };
+
+  const toggleCategory = (category: string) => {
+    if (expandedCategories.includes(category)) {
+      setExpandedCategories(expandedCategories.filter(c => c !== category));
+    } else {
+      setExpandedCategories([...expandedCategories, category]);
+    }
   };
 
   const groupedTests = tests.reduce((acc: Record<string, any[]>, test: any) => {
@@ -2442,38 +2459,47 @@ function TestsTab({ sessionId, patientId, patientName }: { sessionId: string; pa
               </div>
 
               <div>
-                <Label>Test Category</Label>
-                <Select value={selectedCategory} onValueChange={(v) => { setSelectedCategory(v); setSelectedTests([]); }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(TEST_CATEGORIES).map(([key, cat]) => (
-                      <SelectItem key={key} value={key}>{cat.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Available Tests</Label>
-                <ScrollArea className="h-48 border rounded-md p-2 mt-1">
-                  <div className="space-y-1">
-                    {TEST_CATEGORIES[selectedCategory as keyof typeof TEST_CATEGORIES]?.tests.map((test) => (
-                      <label key={test.name} className="flex items-center gap-2 p-2 rounded hover-elevate cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedTests.includes(test.name)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedTests([...selectedTests, test.name]);
-                            } else {
-                              setSelectedTests(selectedTests.filter(t => t !== test.name));
-                            }
-                          }}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{test.name}</span>
-                        <Badge variant="outline" className="ml-auto text-xs">{test.department}</Badge>
-                      </label>
+                <Label>Select Tests from Multiple Categories</Label>
+                <ScrollArea className="h-64 border rounded-md p-2 mt-1">
+                  <div className="space-y-2">
+                    {Object.entries(TEST_CATEGORIES).map(([categoryKey, category]) => (
+                      <div key={categoryKey} className="border rounded-md overflow-hidden">
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between p-2 bg-muted/50 hover-elevate text-left"
+                          onClick={() => toggleCategory(categoryKey)}
+                        >
+                          <span className="font-medium text-sm">{category.label}</span>
+                          <div className="flex items-center gap-2">
+                            {selectedTests.filter(t => t.category === categoryKey).length > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                {selectedTests.filter(t => t.category === categoryKey).length} selected
+                              </Badge>
+                            )}
+                            {expandedCategories.includes(categoryKey) ? (
+                              <XCircle className="w-4 h-4" />
+                            ) : (
+                              <Plus className="w-4 h-4" />
+                            )}
+                          </div>
+                        </button>
+                        {expandedCategories.includes(categoryKey) && (
+                          <div className="p-2 space-y-1">
+                            {category.tests.map((test) => (
+                              <label key={test.name} className="flex items-center gap-2 p-2 rounded hover-elevate cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isTestSelected(test.name, categoryKey)}
+                                  onChange={() => toggleTest(test, categoryKey)}
+                                  className="rounded"
+                                />
+                                <span className="text-sm">{test.name}</span>
+                                <Badge variant="outline" className="ml-auto text-xs">{test.department}</Badge>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </ScrollArea>
@@ -2483,12 +2509,13 @@ function TestsTab({ sessionId, patientId, patientName }: { sessionId: string; pa
                 <div>
                   <Label>Selected Tests ({selectedTests.length})</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {selectedTests.map(test => (
-                      <Badge key={test} variant="secondary" className="gap-1">
-                        {test}
+                    {selectedTests.map((test, idx) => (
+                      <Badge key={`${test.category}-${test.name}-${idx}`} variant="secondary" className="gap-1">
+                        {test.name}
+                        <span className="text-xs opacity-70">({TEST_CATEGORIES[test.category as keyof typeof TEST_CATEGORIES]?.label.split(' ')[0]})</span>
                         <XCircle 
                           className="w-3 h-3 cursor-pointer" 
-                          onClick={() => setSelectedTests(selectedTests.filter(t => t !== test))}
+                          onClick={() => setSelectedTests(selectedTests.filter(t => !(t.name === test.name && t.category === test.category)))}
                         />
                       </Badge>
                     ))}
