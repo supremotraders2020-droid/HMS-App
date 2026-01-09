@@ -724,6 +724,12 @@ export default function PatientTrackingService() {
                         </div>
                         <div className="flex flex-wrap items-center gap-4">
                           <Badge className={getStatusBadge(patient.status)}>{patient.status}</Badge>
+                          {patient.isInIcu && (
+                            <Badge className="bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300">
+                              <HeartPulse className="h-3 w-3 mr-1" />
+                              In ICU
+                            </Badge>
+                          )}
                           <div className="text-center">
                             <p className="text-sm text-muted-foreground">Attending</p>
                             <p className="font-medium">{patient.doctor}</p>
