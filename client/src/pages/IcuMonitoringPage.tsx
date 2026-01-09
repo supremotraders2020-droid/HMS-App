@@ -178,21 +178,21 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+    <div className="space-y-4 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onBack && (
-            <Button variant="outline" size="sm" onClick={onBack} data-testid="button-back">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+            <Button variant="outline" size="sm" onClick={onBack} data-testid="button-back" className="shrink-0">
+              <ArrowLeft className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
             </Button>
           )}
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Activity className="w-6 h-6 text-primary" />
-              ICU Monitoring
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
+              <span className="truncate">ICU Monitoring</span>
             </h1>
-            <p className="text-muted-foreground">Comprehensive ICU patient monitoring and charting</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Comprehensive ICU patient monitoring and charting</p>
           </div>
         </div>
 

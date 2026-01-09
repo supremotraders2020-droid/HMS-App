@@ -185,22 +185,22 @@ export default function PatientMonitoringPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)]">
-      <div className="px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-transparent space-y-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-primary/10">
-              <Hospital className="h-6 w-6 text-primary" />
+    <div className="flex flex-col h-[calc(100vh-80px)] page-background-subtle">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-primary/5 to-transparent space-y-3 sm:space-y-4 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="p-2 sm:p-3 rounded-xl bg-primary/10 shrink-0">
+              <Hospital className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">Patient Monitoring</h1>
-              <p className="text-sm text-muted-foreground">ICU Chart & Nursing Workflow (NABH-Compliant)</p>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-semibold tracking-tight truncate">Patient Monitoring</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">ICU Chart & Nursing Workflow (NABH-Compliant)</p>
             </div>
           </div>
           <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
             <DialogTrigger asChild>
-              <Button className="gap-2" data-testid="button-new-session">
-                <PlusCircle className="h-4 w-4" /> New Session
+              <Button className="gap-2 w-full sm:w-auto" data-testid="button-new-session">
+                <PlusCircle className="h-4 w-4" /> <span>New Session</span>
               </Button>
             </DialogTrigger>
           <DialogContent className="max-w-lg">

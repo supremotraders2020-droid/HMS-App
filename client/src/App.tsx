@@ -797,8 +797,10 @@ function AppContent() {
                     <ThemeSwitcher />
                   </div>
                 </header>
-                <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
-                  <Router currentUser={currentUser} currentPath="/" />
+                <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6 page-background-mesh">
+                  <div className="animate-fade-in">
+                    <Router currentUser={currentUser} currentPath="/" />
+                  </div>
                 </main>
               </div>
               <FloatingChatButton onNavigate={(path) => setLocation(path)} />

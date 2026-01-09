@@ -826,112 +826,124 @@ export default function PatientTrackingService() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 text-white">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Activity className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">Patient Tracking System</h1>
-                <div className="flex items-center gap-2 text-white/80 text-sm">
-                  <MapPin className="h-4 w-4" />
-                  <span>Inpatient Wing, Gravity Hospital</span>
+    <div className="min-h-screen page-background-mesh">
+      <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 text-white animate-fade-in">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Activity className="h-6 w-6 sm:h-8 sm:w-8 shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold truncate">Patient Tracking System</h1>
+                <div className="flex items-center gap-2 text-white/80 text-xs sm:text-sm">
+                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                  <span className="truncate">Inpatient Wing, Gravity Hospital</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-lg">
-                <Phone className="h-4 w-4" />
-                <span className="text-sm">Nursing: +91 20 1234 5683</span>
+            <div className="flex flex-wrap gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm">
+                <Phone className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">Nursing: </span>
+                <span>+91 20 1234 5683</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-lg">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm">24/7 Patient Care</span>
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                <span>24/7 Patient Care</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-wrap gap-2 mb-6 bg-muted/50 p-1 rounded-lg">
-          {tabs.map((tab) => (
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 sm:mb-6 bg-muted/50 p-1 rounded-lg overflow-x-auto animate-slide-in-left">
+          {tabs.map((tab, index) => (
             <Button
               key={tab.id}
               variant={activeTab === tab.id ? "default" : "ghost"}
               onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-2"
+              className={cn(
+                "flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 transition-all duration-200",
+                `animation-delay-${index * 100}`
+              )}
               data-testid={`tab-${tab.id}`}
             >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
+              <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span className="hidden xs:inline sm:inline">{tab.label}</span>
             </Button>
           ))}
         </div>
 
         {activeTab === "patients" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Patients</p>
-                      <p className="text-3xl font-bold">{patients.length}</p>
+          <div className="space-y-4 sm:space-y-6 animate-fade-in-up">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+              <Card className="stagger-item hospital-stat-card">
+                <CardContent className="p-3 sm:pt-6 sm:px-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Patients</p>
+                      <p className="text-xl sm:text-3xl font-bold">{patients.length}</p>
                     </div>
-                    <Bed className="h-10 w-10 text-purple-500" />
+                    <div className="stat-icon-container p-2 sm:p-3 rounded-full shrink-0">
+                      <Bed className="h-5 w-5 sm:h-8 sm:w-8 text-purple-500" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Critical</p>
-                      <p className="text-3xl font-bold text-red-600">{criticalPatients.length}</p>
+              <Card className="stagger-item hospital-stat-card">
+                <CardContent className="p-3 sm:pt-6 sm:px-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Critical</p>
+                      <p className="text-xl sm:text-3xl font-bold text-red-600">{criticalPatients.length}</p>
                     </div>
-                    <AlertCircle className="h-10 w-10 text-red-500" />
+                    <div className="stat-icon-container p-2 sm:p-3 rounded-full shrink-0 bg-red-500/10">
+                      <AlertCircle className="h-5 w-5 sm:h-8 sm:w-8 text-red-500" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Admitted</p>
-                      <p className="text-3xl font-bold text-blue-600">{admittedPatients.length}</p>
+              <Card className="stagger-item hospital-stat-card">
+                <CardContent className="p-3 sm:pt-6 sm:px-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Admitted</p>
+                      <p className="text-xl sm:text-3xl font-bold text-blue-600">{admittedPatients.length}</p>
                     </div>
-                    <User className="h-10 w-10 text-blue-500" />
+                    <div className="stat-icon-container p-2 sm:p-3 rounded-full shrink-0">
+                      <User className="h-5 w-5 sm:h-8 sm:w-8 text-blue-500" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">ICU Beds</p>
-                      <p className="text-3xl font-bold">{patients.filter(p => p.room.includes("ICU")).length}</p>
+              <Card className="stagger-item hospital-stat-card">
+                <CardContent className="p-3 sm:pt-6 sm:px-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">ICU Beds</p>
+                      <p className="text-xl sm:text-3xl font-bold">{patients.filter(p => p.room.includes("ICU")).length}</p>
                     </div>
-                    <Heart className="h-10 w-10 text-pink-500" />
+                    <div className="stat-icon-container p-2 sm:p-3 rounded-full shrink-0 bg-pink-500/10">
+                      <Heart className="h-5 w-5 sm:h-8 sm:w-8 text-pink-500" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 animate-fade-in">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by name or room..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 input-enhanced"
                   data-testid="input-search-patients"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48" data-testid="select-status-filter">
+                <SelectTrigger className="w-full sm:w-48" data-testid="select-status-filter">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
