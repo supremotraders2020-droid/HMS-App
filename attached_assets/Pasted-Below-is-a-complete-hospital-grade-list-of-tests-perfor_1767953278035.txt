@@ -1,0 +1,256 @@
+Below is a complete, hospital-grade list of tests performed by technicians, grouped department-wise (practical + EMR/HMS ready).
+
+🔬 PATHOLOGY / LABORATORY TESTS
+🧪 Hematology
+
+Complete Blood Count (CBC)
+
+Hemoglobin (Hb)
+
+Total / Differential Count
+
+Platelet Count
+
+ESR
+
+Peripheral Smear
+
+Blood Group & Rh Typing
+
+Coagulation Profile (PT, INR, APTT)
+
+Bleeding Time / Clotting Time
+
+Reticulocyte Count
+
+🧪 Biochemistry
+
+Fasting / PP Blood Sugar
+
+HbA1c
+
+Lipid Profile
+
+Liver Function Test (LFT)
+
+Kidney Function Test (KFT)
+
+Electrolytes (Na, K, Cl)
+
+Serum Calcium / Phosphorus
+
+Uric Acid
+
+Amylase / Lipase
+
+Cardiac Enzymes (Troponin, CK-MB)
+
+Thyroid Profile (T3, T4, TSH)
+
+🧫 Serology / Immunology
+
+CRP
+
+ASO
+
+RA Factor
+
+ANA
+
+HIV
+
+HBsAg
+
+HCV
+
+Dengue (NS1, IgM, IgG)
+
+Widal Test
+
+VDRL
+
+🦠 Microbiology
+
+Urine Culture
+
+Blood Culture
+
+Sputum Culture
+
+Stool Examination
+
+Gram Stain
+
+AFB / CBNAAT
+
+KOH Mount
+
+Sensitivity Testing
+
+🩻 RADIOLOGY & IMAGING TESTS
+🩻 X-Ray
+
+Chest X-ray
+
+Limb X-ray
+
+Spine X-ray
+
+Abdomen X-ray
+
+Skull X-ray
+
+📸 Ultrasound (USG)
+
+Whole Abdomen
+
+Pelvis
+
+Obstetric USG
+
+TVS
+
+Doppler Study
+
+Soft Tissue USG
+
+🧠 Advanced Imaging
+
+CT Scan (Brain, Chest, Abdomen)
+
+MRI (Brain, Spine, Joint)
+
+MR Angiography
+
+CT Angiography
+
+🧪 Special Imaging
+
+Mammography
+
+BMD (DEXA Scan)
+
+❤️ CARDIOLOGY DIAGNOSTIC TESTS
+
+ECG
+
+2D Echo
+
+TMT (Stress Test)
+
+Holter Monitoring
+
+ABPM (24-hr BP Monitoring)
+
+Cardiac Doppler
+
+🫁 PULMONARY & RESPIRATORY TESTS
+
+Pulmonary Function Test (PFT)
+
+Spirometry
+
+Peak Flow Test
+
+Sleep Study (Polysomnography)
+
+ABG (Arterial Blood Gas)
+
+🧪 NEURO DIAGNOSTIC TESTS
+
+EEG
+
+EMG
+
+NCV (Nerve Conduction Velocity)
+
+🩸 BLOOD BANK TESTS
+
+Blood Grouping
+
+Cross Matching
+
+Antibody Screening
+
+Component Separation
+
+Transfusion Compatibility Testing
+
+🩺 DIALYSIS & RENAL TESTS
+
+Pre-Dialysis Assessment
+
+Post-Dialysis Vitals
+
+Dialysis Adequacy Tests
+
+Access Flow Check
+
+🧠 ENDOSCOPY & CATH LAB
+🔍 Endoscopy
+
+Upper GI Endoscopy
+
+Colonoscopy
+
+Sigmoidoscopy
+
+Bronchoscopy
+
+❤️ Cath Lab
+
+Coronary Angiography
+
+Peripheral Angiography
+
+Temporary Pacemaker Setup
+
+👁️ OPHTHALMOLOGY TESTS
+
+Visual Acuity Test
+
+Refraction
+
+Tonometry
+
+Fundus Photography
+
+OCT
+
+🦷 DENTAL LAB TESTS
+
+Dental X-ray
+
+Impression Casting
+
+Crown & Bridge Work
+
+🧠 REHABILITATION ASSESSMENTS
+
+Muscle Power Testing
+
+Gait Analysis
+
+Range of Motion Assessment
+
+Pain Scale Evaluation
+
+✅ HMS / TECHNICIAN PORTAL READY CATEGORIES
+
+For your Technician Portal, group tests like this:
+
+Lab Tests
+
+Imaging Tests
+
+Cardiology Diagnostics
+
+Neuro Diagnostics
+
+Pulmonary Tests
+
+Blood Bank
+
+Dialysis
+
+Endoscopy / Cath Lab

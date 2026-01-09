@@ -14211,7 +14211,24 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.get("/api/icu-charts", requireAuth, async (req, res) => {
     try {
       const charts = await storage.getAllIcuCharts();
-      res.json(charts);
+      // Only return charts for patients currently in ICU
+      const trackingPatients = await storage.getAllTrackingPatients();
+      const patientsInIcu = new Set(
+        trackingPatients
+          .filter(p => p.isInIcu === true)
+          .map(p => p.id)
+      );
+      // Also include patients matched by name for legacy compatibility
+      const patientsInIcuByName = new Set(
+        trackingPatients
+          .filter(p => p.isInIcu === true)
+          .map(p => p.name.toLowerCase())
+      );
+      const activeCharts = charts.filter(chart => 
+        patientsInIcu.has(chart.patientId || '') || 
+        patientsInIcuByName.has((chart.patientName || '').toLowerCase())
+      );
+      res.json(activeCharts);
     } catch (error) {
       console.error("Error fetching ICU charts:", error);
       res.status(500).json({ error: "Failed to fetch ICU charts" });
