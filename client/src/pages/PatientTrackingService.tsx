@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Activity, 
   MapPin, 
@@ -41,7 +43,15 @@ import {
   Calendar,
   Wind,
   ExternalLink,
-  ClipboardList
+  ClipboardList,
+  Droplets,
+  Syringe,
+  FileText,
+  TestTube2,
+  Clipboard,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -76,7 +86,6 @@ export default function PatientTrackingService() {
   const [selectedDoctorVisitPatientId, setSelectedDoctorVisitPatientId] = useState<string>("");
   const [historyPatient, setHistoryPatient] = useState<TrackingPatient | null>(null);
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
 
   // Fetch patient monitoring sessions to link tracking with monitoring
   const { data: monitoringSessions = [] } = useQuery<any[]>({
@@ -90,21 +99,46 @@ export default function PatientTrackingService() {
     );
   };
 
-  // Navigate to Patient Monitoring with the session
-  const goToPatientMonitoring = (patientName: string) => {
-    const session = findMonitoringSession(patientName);
-    if (session) {
-      // Store session ID in sessionStorage for Patient Monitoring to pick up
-      sessionStorage.setItem('selectedMonitoringSession', session.id);
-      setLocation('/patient-monitoring');
-    } else {
-      toast({
-        title: "No Monitoring Session",
-        description: "No active monitoring session found for this patient. Please create one in Patient Monitoring.",
-        variant: "destructive"
-      });
-    }
-  };
+  // State for viewing monitoring details inline
+  const [monitoringViewPatient, setMonitoringViewPatient] = useState<TrackingPatient | null>(null);
+  const monitoringSession = monitoringViewPatient ? findMonitoringSession(monitoringViewPatient.name) : null;
+  const monitoringSessionId = monitoringSession?.id;
+
+  // Fetch all monitoring data for inline display
+  const { data: monitoringVitals = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/vitals", monitoringSessionId],
+    enabled: !!monitoringSessionId
+  });
+
+  const { data: monitoringInotropes = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/inotropes", monitoringSessionId],
+    enabled: !!monitoringSessionId
+  });
+
+  const { data: monitoringVentilator = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/ventilator", monitoringSessionId],
+    enabled: !!monitoringSessionId
+  });
+
+  const { data: monitoringIO = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/io", monitoringSessionId],
+    enabled: !!monitoringSessionId
+  });
+
+  const { data: monitoringProcedures = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/procedures", monitoringSessionId],
+    enabled: !!monitoringSessionId
+  });
+
+  const { data: monitoringTests = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/tests", monitoringSessionId],
+    enabled: !!monitoringSessionId
+  });
+
+  const { data: monitoringNotes = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/notes", monitoringSessionId],
+    enabled: !!monitoringSessionId
+  });
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<TrackingPatient[]>({
     queryKey: ["/api/tracking/patients"],
@@ -791,100 +825,303 @@ export default function PatientTrackingService() {
                               <p className="font-medium">{new Date(patient.dischargeDate).toLocaleDateString()}</p>
                             </div>
                           )}
-                          <Dialog>
+                          <Dialog open={monitoringViewPatient?.id === patient.id} onOpenChange={(open) => !open && setMonitoringViewPatient(null)}>
                             <DialogTrigger asChild>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setSelectedPatientId(patient.id)}
+                                onClick={() => setMonitoringViewPatient(patient)}
                                 data-testid={`button-view-history-${patient.id}`}
                               >
                                 View Details
                                 <ChevronRight className="h-4 w-4 ml-1" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Patient History: {patient.name}</DialogTitle>
-                              </DialogHeader>
-                              <div className="flex justify-end mb-4">
-                                <Button 
-                                  onClick={() => goToPatientMonitoring(patient.name)}
-                                  className="gap-2"
-                                  data-testid={`button-full-monitoring-${patient.id}`}
-                                >
-                                  <ClipboardList className="h-4 w-4" />
-                                  View Full Monitoring Data
-                                  <ExternalLink className="h-4 w-4" />
-                                </Button>
-                              </div>
-                              {patientHistory && (
-                                <div className="space-y-4">
-                                  <div>
-                                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                                      <Activity className="h-4 w-4" /> Recent Vitals
-                                    </h4>
-                                    {patientHistory.vitals.length > 0 ? (
-                                      <div className="space-y-2">
-                                        {patientHistory.vitals.slice(0, 3).map((v) => (
-                                          <div key={v.id} className="p-3 border rounded-lg text-sm">
-                                            <div className="grid grid-cols-3 gap-2">
-                                              <span>Temp: {v.temperature}F</span>
-                                              <span>HR: {v.heartRate} bpm</span>
-                                              <span>BP: {v.bloodPressureSystolic}/{v.bloodPressureDiastolic}</span>
-                                              <span>RR: {v.respiratoryRate}/min</span>
-                                              <span>SpO2: {v.oxygenSaturation}%</span>
-                                            </div>
-                                            <p className="text-muted-foreground mt-1">
-                                              {new Date(v.recordedAt).toLocaleString()} by {v.recordedBy}
-                                            </p>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <p className="text-muted-foreground">No vitals recorded</p>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                                      <Pill className="h-4 w-4" /> Medications
-                                    </h4>
-                                    {patientHistory.medications.length > 0 ? (
-                                      <div className="space-y-2">
-                                        {patientHistory.medications.slice(0, 5).map((m) => (
-                                          <div key={m.id} className="p-3 border rounded-lg text-sm">
-                                            <p className="font-medium">{m.name} - {m.dosage}</p>
-                                            <p className="text-muted-foreground">
-                                              {m.route} | {m.frequency} | by {m.administeredBy}
-                                            </p>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <p className="text-muted-foreground">No medications recorded</p>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                                      <Utensils className="h-4 w-4" /> Recent Meals
-                                    </h4>
-                                    {patientHistory.meals.length > 0 ? (
-                                      <div className="space-y-2">
-                                        {patientHistory.meals.slice(0, 3).map((m) => (
-                                          <div key={m.id} className="p-3 border rounded-lg text-sm">
-                                            <p className="font-medium">{m.mealType}: {m.description}</p>
-                                            <p className="text-muted-foreground">
-                                              {m.calories} cal | {m.consumptionPercentage}% consumed
-                                            </p>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <p className="text-muted-foreground">No meals recorded</p>
-                                    )}
-                                  </div>
+                            <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+                              <DialogHeader className="border-b pb-3">
+                                <DialogTitle className="flex items-center gap-3">
+                                  <ClipboardList className="h-5 w-5 text-primary" />
+                                  Patient Monitoring: {patient.name}
+                                </DialogTitle>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  <Badge variant="outline">{patient.age} yrs, {patient.gender}</Badge>
+                                  <Badge variant="outline">Room: {patient.room}</Badge>
+                                  <Badge className={getStatusBadge(patient.status)}>{patient.status}</Badge>
+                                  {patient.isInIcu && (
+                                    <Badge className="bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300">
+                                      <HeartPulse className="h-3 w-3 mr-1" />
+                                      In ICU
+                                    </Badge>
+                                  )}
                                 </div>
-                              )}
+                              </DialogHeader>
+                              
+                              <ScrollArea className="flex-1 pr-4">
+                                {!monitoringSession ? (
+                                  <div className="py-8 text-center text-muted-foreground">
+                                    <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                                    <p>No monitoring session found for this patient.</p>
+                                    <p className="text-sm mt-1">Please create a monitoring session in Patient Monitoring first.</p>
+                                  </div>
+                                ) : (
+                                  <Accordion type="multiple" defaultValue={["vitals", "overview"]} className="space-y-2">
+                                    {/* Overview Section */}
+                                    <AccordionItem value="overview" className="border rounded-lg px-4">
+                                      <AccordionTrigger className="hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                          <Activity className="h-4 w-4 text-blue-500" />
+                                          <span>Overview</span>
+                                          <Badge variant="outline" className="ml-2 text-xs">Session Info</Badge>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
+                                          <div className="text-center p-3 bg-muted/50 rounded-lg">
+                                            <p className="text-2xl font-bold text-blue-500">{monitoringVitals.length}</p>
+                                            <p className="text-xs text-muted-foreground">Vitals Records</p>
+                                          </div>
+                                          <div className="text-center p-3 bg-muted/50 rounded-lg">
+                                            <p className="text-2xl font-bold text-purple-500">{monitoringInotropes.length}</p>
+                                            <p className="text-xs text-muted-foreground">Inotrope Entries</p>
+                                          </div>
+                                          <div className="text-center p-3 bg-muted/50 rounded-lg">
+                                            <p className="text-2xl font-bold text-cyan-500">{monitoringIO.length}</p>
+                                            <p className="text-xs text-muted-foreground">I/O Records</p>
+                                          </div>
+                                          <div className="text-center p-3 bg-muted/50 rounded-lg">
+                                            <p className="text-2xl font-bold text-orange-500">{monitoringTests.length}</p>
+                                            <p className="text-xs text-muted-foreground">Tests Ordered</p>
+                                          </div>
+                                        </div>
+                                        <div className="mt-3 p-3 border rounded-lg text-sm">
+                                          <div className="grid grid-cols-2 gap-2">
+                                            <div><span className="text-muted-foreground">Diagnosis:</span> <span className="font-medium">{patient.diagnosis}</span></div>
+                                            <div><span className="text-muted-foreground">Doctor:</span> <span className="font-medium">{patient.doctor}</span></div>
+                                            <div><span className="text-muted-foreground">Admitted:</span> <span className="font-medium">{new Date(patient.admissionDate).toLocaleDateString()}</span></div>
+                                            <div><span className="text-muted-foreground">Session Date:</span> <span className="font-medium">{new Date(monitoringSession.sessionDate).toLocaleDateString()}</span></div>
+                                          </div>
+                                        </div>
+                                      </AccordionContent>
+                                    </AccordionItem>
+
+                                    {/* Vitals Section */}
+                                    <AccordionItem value="vitals" className="border rounded-lg px-4">
+                                      <AccordionTrigger className="hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                          <Heart className="h-4 w-4 text-red-500" />
+                                          <span>Vitals</span>
+                                          <Badge variant="outline" className="ml-2 text-xs">{monitoringVitals.length} records</Badge>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                        {monitoringVitals.length > 0 ? (
+                                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {monitoringVitals.slice(0, 10).map((v: any) => (
+                                              <div key={v.id} className="p-3 border rounded-lg text-sm">
+                                                <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                                                  <span><strong>HR:</strong> {v.heartRate} bpm</span>
+                                                  <span><strong>BP:</strong> {v.systolicBp}/{v.diastolicBp}</span>
+                                                  <span><strong>SpO2:</strong> {v.spo2}%</span>
+                                                  <span><strong>Temp:</strong> {v.temperature}°C</span>
+                                                  <span><strong>RR:</strong> {v.respiratoryRate}/min</span>
+                                                </div>
+                                                <p className="text-muted-foreground mt-1 text-xs">
+                                                  {v.timeSlot} - {new Date(v.recordedAt).toLocaleString()}
+                                                </p>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="text-muted-foreground py-4 text-center">No vitals recorded</p>
+                                        )}
+                                      </AccordionContent>
+                                    </AccordionItem>
+
+                                    {/* Inotropes Section */}
+                                    <AccordionItem value="inotropes" className="border rounded-lg px-4">
+                                      <AccordionTrigger className="hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                          <Syringe className="h-4 w-4 text-purple-500" />
+                                          <span>Inotropes & Medications</span>
+                                          <Badge variant="outline" className="ml-2 text-xs">{monitoringInotropes.length} entries</Badge>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                        {monitoringInotropes.length > 0 ? (
+                                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {monitoringInotropes.map((i: any) => (
+                                              <div key={i.id} className="p-3 border rounded-lg text-sm">
+                                                <p className="font-medium">{i.drugName}</p>
+                                                <div className="grid grid-cols-2 gap-2 mt-1 text-muted-foreground">
+                                                  <span>Dose: {i.dose} {i.unit}</span>
+                                                  <span>Rate: {i.rate} {i.rateUnit}</span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-1">{i.timeSlot}</p>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="text-muted-foreground py-4 text-center">No inotropes recorded</p>
+                                        )}
+                                      </AccordionContent>
+                                    </AccordionItem>
+
+                                    {/* Ventilator Section */}
+                                    <AccordionItem value="ventilator" className="border rounded-lg px-4">
+                                      <AccordionTrigger className="hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                          <Wind className="h-4 w-4 text-cyan-500" />
+                                          <span>Ventilator Settings</span>
+                                          <Badge variant="outline" className="ml-2 text-xs">{monitoringVentilator.length} records</Badge>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                        {monitoringVentilator.length > 0 ? (
+                                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {monitoringVentilator.map((v: any) => (
+                                              <div key={v.id} className="p-3 border rounded-lg text-sm">
+                                                <p className="font-medium">Mode: {v.mode}</p>
+                                                <div className="grid grid-cols-3 gap-2 mt-1 text-muted-foreground">
+                                                  <span>FiO2: {v.fio2}%</span>
+                                                  <span>PEEP: {v.peep}</span>
+                                                  <span>TV: {v.tidalVolume}ml</span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-1">{v.timeSlot}</p>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="text-muted-foreground py-4 text-center">No ventilator settings recorded</p>
+                                        )}
+                                      </AccordionContent>
+                                    </AccordionItem>
+
+                                    {/* I/O Balance Section */}
+                                    <AccordionItem value="io" className="border rounded-lg px-4">
+                                      <AccordionTrigger className="hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                          <ArrowUpDown className="h-4 w-4 text-green-500" />
+                                          <span>Intake/Output Balance</span>
+                                          <Badge variant="outline" className="ml-2 text-xs">{monitoringIO.length} records</Badge>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                        {monitoringIO.length > 0 ? (
+                                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {monitoringIO.map((io: any) => (
+                                              <div key={io.id} className="p-3 border rounded-lg text-sm flex items-center justify-between">
+                                                <div>
+                                                  <p className="font-medium flex items-center gap-1">
+                                                    {io.type === 'intake' ? (
+                                                      <TrendingUp className="h-4 w-4 text-green-500" />
+                                                    ) : (
+                                                      <TrendingDown className="h-4 w-4 text-red-500" />
+                                                    )}
+                                                    {io.category}
+                                                  </p>
+                                                  <p className="text-xs text-muted-foreground">{io.description}</p>
+                                                </div>
+                                                <Badge variant={io.type === 'intake' ? 'default' : 'secondary'}>
+                                                  {io.amount} ml
+                                                </Badge>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="text-muted-foreground py-4 text-center">No I/O records</p>
+                                        )}
+                                      </AccordionContent>
+                                    </AccordionItem>
+
+                                    {/* Procedures Section */}
+                                    <AccordionItem value="procedures" className="border rounded-lg px-4">
+                                      <AccordionTrigger className="hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                          <Stethoscope className="h-4 w-4 text-indigo-500" />
+                                          <span>Procedures</span>
+                                          <Badge variant="outline" className="ml-2 text-xs">{monitoringProcedures.length} records</Badge>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                        {monitoringProcedures.length > 0 ? (
+                                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {monitoringProcedures.map((p: any) => (
+                                              <div key={p.id} className="p-3 border rounded-lg text-sm">
+                                                <p className="font-medium">{p.procedureName}</p>
+                                                <p className="text-muted-foreground text-xs mt-1">{p.notes}</p>
+                                                <p className="text-xs text-muted-foreground">{new Date(p.performedAt).toLocaleString()}</p>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="text-muted-foreground py-4 text-center">No procedures recorded</p>
+                                        )}
+                                      </AccordionContent>
+                                    </AccordionItem>
+
+                                    {/* Tests Section */}
+                                    <AccordionItem value="tests" className="border rounded-lg px-4">
+                                      <AccordionTrigger className="hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                          <TestTube2 className="h-4 w-4 text-orange-500" />
+                                          <span>Diagnostic Tests</span>
+                                          <Badge variant="outline" className="ml-2 text-xs">{monitoringTests.length} orders</Badge>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                        {monitoringTests.length > 0 ? (
+                                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {monitoringTests.map((t: any) => (
+                                              <div key={t.id} className="p-3 border rounded-lg text-sm flex items-center justify-between">
+                                                <div>
+                                                  <p className="font-medium">{t.testName}</p>
+                                                  <p className="text-xs text-muted-foreground">{t.category} - {t.priority}</p>
+                                                </div>
+                                                <Badge variant={
+                                                  t.status === 'COMPLETED' ? 'default' :
+                                                  t.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
+                                                }>
+                                                  {t.status}
+                                                </Badge>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="text-muted-foreground py-4 text-center">No tests ordered</p>
+                                        )}
+                                      </AccordionContent>
+                                    </AccordionItem>
+
+                                    {/* Notes Section */}
+                                    <AccordionItem value="notes" className="border rounded-lg px-4">
+                                      <AccordionTrigger className="hover:no-underline">
+                                        <div className="flex items-center gap-2">
+                                          <FileText className="h-4 w-4 text-gray-500" />
+                                          <span>Clinical Notes</span>
+                                          <Badge variant="outline" className="ml-2 text-xs">{monitoringNotes.length} notes</Badge>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent>
+                                        {monitoringNotes.length > 0 ? (
+                                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {monitoringNotes.map((n: any) => (
+                                              <div key={n.id} className="p-3 border rounded-lg text-sm">
+                                                <div className="flex items-center justify-between mb-1">
+                                                  <Badge variant="outline">{n.noteType}</Badge>
+                                                  <span className="text-xs text-muted-foreground">{new Date(n.createdAt).toLocaleString()}</span>
+                                                </div>
+                                                <p className="text-muted-foreground">{n.content}</p>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="text-muted-foreground py-4 text-center">No notes recorded</p>
+                                        )}
+                                      </AccordionContent>
+                                    </AccordionItem>
+                                  </Accordion>
+                                )}
+                              </ScrollArea>
                             </DialogContent>
                           </Dialog>
                           <Select
