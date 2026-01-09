@@ -7196,6 +7196,29 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         source: "PATIENT_MONITORING",
         status: "PENDING",
       });
+
+      // Notify all technicians about the new test order from Patient Monitoring
+      const allUsers = await storage.getAllUsers();
+      const technicians = allUsers.filter(u => u.role === "TECHNICIAN");
+      for (const tech of technicians) {
+        await storage.createUserNotification({
+          userId: tech.id,
+          title: "New Test Order",
+          message: `New ${req.body.testName} ordered for ${req.body.patientName}`,
+          type: "test_order",
+          priority: req.body.priority === "STAT" ? "urgent" : "normal",
+          isRead: false,
+          actionUrl: `/technician-portal?testId=${testOrder.id}`
+        });
+        notificationService.sendToUser(tech.id, {
+          type: "NEW_TEST_ORDER",
+          title: "New Test Order",
+          message: `New ${req.body.testName} ordered for ${req.body.patientName}`,
+          testOrderId: testOrder.id,
+          priority: req.body.priority
+        });
+      }
+
       res.status(201).json(testOrder);
     } catch (error) {
       console.error("Error creating test order:", error);
@@ -14316,6 +14339,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Create test order from prescription (called when doctor finalizes prescription with tests)
+  // NOTE: Technician notifications are NOT sent here - only tests from Patient Monitoring trigger technician notifications
   app.post("/api/diagnostic-test-orders", requireAuth, async (req, res) => {
     try {
       const orderData = req.body;
@@ -14325,27 +14349,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         orderedDate: new Date()
       });
 
-      // Notify technicians
-      const allUsers = await storage.getAllUsers();
-      const technicians = allUsers.filter(u => u.role === "TECHNICIAN");
-      for (const tech of technicians) {
-        await storage.createUserNotification({
-          userId: tech.id,
-          title: "New Test Order",
-          message: `New ${orderData.testName} ordered for ${orderData.patientName}`,
-          type: "test_order",
-          priority: orderData.priority === "STAT" ? "urgent" : "normal",
-          isRead: false,
-          actionUrl: `/technician-portal?testId=${testOrder.id}`
-        });
-        notificationService.sendToUser(tech.id, {
-          type: "NEW_TEST_ORDER",
-          title: "New Test Order",
-          message: `New ${orderData.testName} ordered for ${orderData.patientName}`,
-          testOrderId: testOrder.id,
-          priority: orderData.priority
-        });
-      }
+      // Do NOT notify technicians for prescription-based tests
+      // Only tests ordered through Patient Monitoring → Tests tab go to Technician Portal
 
       res.json(testOrder);
     } catch (error) {

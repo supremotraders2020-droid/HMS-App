@@ -5338,7 +5338,7 @@ export class DatabaseStorage implements IStorage {
 
   async getPendingDiagnosticTestOrders(): Promise<any[]> {
     return await db.select().from(diagnosticTestOrders)
-      .where(sql`${diagnosticTestOrders.status} IN ('PENDING', 'SAMPLE_COLLECTED', 'IN_PROGRESS')`)
+      .where(sql`${diagnosticTestOrders.status} IN ('PENDING', 'SAMPLE_COLLECTED', 'IN_PROGRESS') AND ${diagnosticTestOrders.source} = 'PATIENT_MONITORING'`)
       .orderBy(desc(diagnosticTestOrders.orderedDate));
   }
 
