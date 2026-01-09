@@ -14170,6 +14170,17 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // ICU Charts - Main record management
   app.post("/api/icu-charts", requireAuth, async (req, res) => {
     try {
+      // Check if patient already has an active ICU chart to prevent duplicates
+      const existingCharts = await storage.getAllIcuCharts();
+      const existingChart = existingCharts.find(
+        c => c.patientId === req.body.patientId || c.patientName === req.body.patientName
+      );
+      
+      if (existingChart) {
+        // Return existing chart instead of creating duplicate
+        return res.status(200).json(existingChart);
+      }
+      
       const chart = await storage.createIcuChart(req.body);
       res.status(201).json(chart);
     } catch (error) {
