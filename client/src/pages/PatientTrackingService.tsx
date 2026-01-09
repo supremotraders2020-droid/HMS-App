@@ -35,7 +35,10 @@ import {
   Stethoscope,
   IndianRupee,
   Save,
-  HeartPulse
+  HeartPulse,
+  History,
+  Calendar,
+  Wind
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -68,6 +71,7 @@ export default function PatientTrackingService() {
   const [selectedMealsPatientId, setSelectedMealsPatientId] = useState<string>("");
   const [doctorVisitPatientPopoverOpen, setDoctorVisitPatientPopoverOpen] = useState(false);
   const [selectedDoctorVisitPatientId, setSelectedDoctorVisitPatientId] = useState<string>("");
+  const [historyPatient, setHistoryPatient] = useState<TrackingPatient | null>(null);
   const { toast } = useToast();
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<TrackingPatient[]>({
@@ -106,6 +110,16 @@ export default function PatientTrackingService() {
     queryKey: ["/api/bed-management/beds/available"],
     refetchInterval: 5000, // Real-time updates every 5 seconds
   });
+
+  // Helper function to calculate days since a date
+  const calculateDays = (dateString: string | Date | null | undefined): number => {
+    if (!dateString) return 0;
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   // Filter doctors by department (matching specialty to department)
   const filteredDoctors = selectedAdmitDepartment
@@ -896,6 +910,172 @@ export default function PatientTrackingService() {
                               </AlertDialogContent>
                             </AlertDialog>
                           )}
+                          <Dialog open={historyPatient?.id === patient.id} onOpenChange={(open) => !open && setHistoryPatient(null)}>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                                onClick={() => setHistoryPatient(patient)}
+                                data-testid={`button-history-${patient.id}`}
+                              >
+                                <History className="h-4 w-4 mr-1" />
+                                History
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                  <History className="h-5 w-5 text-purple-600" />
+                                  Patient History - {patient.name}
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-6 mt-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <Card>
+                                    <CardHeader className="pb-2">
+                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <User className="h-4 w-4 text-muted-foreground" />
+                                        Patient Details
+                                      </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-2 text-sm">
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Name:</span>
+                                        <span className="font-medium">{patient.name}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Age:</span>
+                                        <span>{patient.age} years</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Gender:</span>
+                                        <span className="capitalize">{patient.gender}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Blood Group:</span>
+                                        <span>{patient.bloodGroup || "N/A"}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Room:</span>
+                                        <span>{patient.room}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Diagnosis:</span>
+                                        <span>{patient.diagnosis || "N/A"}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Attending Doctor:</span>
+                                        <span>{patient.attendingDoctor || "N/A"}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Status:</span>
+                                        <Badge variant={patient.status === "critical" ? "destructive" : patient.status === "stable" ? "default" : "secondary"}>
+                                          {patient.status}
+                                        </Badge>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+
+                                  <Card>
+                                    <CardHeader className="pb-2">
+                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                                        Admission & Stay Duration
+                                      </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3 text-sm">
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Admission Date:</span>
+                                        <span className="font-medium">
+                                          {patient.admissionDate ? new Date(patient.admissionDate).toLocaleDateString() : "N/A"}
+                                        </span>
+                                      </div>
+                                      <div className="border-t pt-3 space-y-2">
+                                        <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                          <div className="flex items-center gap-2">
+                                            <Bed className="h-4 w-4 text-blue-600" />
+                                            <span className="text-blue-700 dark:text-blue-300">Total Hospital Stay:</span>
+                                          </div>
+                                          <span className="font-bold text-blue-700 dark:text-blue-300">
+                                            {calculateDays(patient.admissionDate)} days
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                          <div className="flex items-center gap-2">
+                                            <Bed className="h-4 w-4 text-green-600" />
+                                            <span className="text-green-700 dark:text-green-300">General Ward:</span>
+                                          </div>
+                                          <span className="font-bold text-green-700 dark:text-green-300">
+                                            {patient.isInIcu 
+                                              ? (patient.icuTransferDate 
+                                                  ? calculateDays(patient.admissionDate) - calculateDays(patient.icuTransferDate)
+                                                  : 0)
+                                              : calculateDays(patient.admissionDate)
+                                            } days
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                          <div className="flex items-center gap-2">
+                                            <HeartPulse className="h-4 w-4 text-red-600" />
+                                            <span className="text-red-700 dark:text-red-300">ICU Stay:</span>
+                                          </div>
+                                          <span className="font-bold text-red-700 dark:text-red-300">
+                                            {patient.isInIcu && patient.icuTransferDate 
+                                              ? calculateDays(patient.icuTransferDate)
+                                              : (patient.icuDays || 0)
+                                            } days
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
+                                          <div className="flex items-center gap-2">
+                                            <Wind className="h-4 w-4 text-cyan-600" />
+                                            <span className="text-cyan-700 dark:text-cyan-300">Ventilator:</span>
+                                          </div>
+                                          <span className="font-bold text-cyan-700 dark:text-cyan-300">
+                                            {patient.ventilatorDays || 0} days
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                </div>
+
+                                <Card>
+                                  <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                      <Activity className="h-4 w-4 text-muted-foreground" />
+                                      Additional Information
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="space-y-2 text-sm">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Currently in ICU:</span>
+                                        <Badge variant={patient.isInIcu ? "destructive" : "secondary"}>
+                                          {patient.isInIcu ? "Yes" : "No"}
+                                        </Badge>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Department:</span>
+                                        <span>{patient.department || "N/A"}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Assigned Nurse:</span>
+                                        <span>{patient.assignedNurse || "N/A"}</span>
+                                      </div>
+                                      {patient.icuTransferDate && (
+                                        <div className="flex justify-between">
+                                          <span className="text-muted-foreground">ICU Transfer Date:</span>
+                                          <span>{new Date(patient.icuTransferDate).toLocaleDateString()}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       </div>
                     </CardContent>

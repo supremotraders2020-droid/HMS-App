@@ -1148,10 +1148,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Transfer patient to ICU (set isInIcu = true)
+  // Transfer patient to ICU (set isInIcu = true and record icuTransferDate)
   app.patch("/api/tracking/patients/:id/transfer-icu", async (req, res) => {
     try {
-      const patient = await storage.updateTrackingPatient(req.params.id, { isInIcu: true });
+      const patient = await storage.updateTrackingPatient(req.params.id, { 
+        isInIcu: true,
+        icuTransferDate: new Date()
+      });
       if (!patient) {
         return res.status(404).json({ error: "Patient not found" });
       }
@@ -1162,13 +1165,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Transfer patient to Ward (set isInIcu = false)
+  // Transfer patient to Ward (set isInIcu = false and update icuDays)
   app.patch("/api/tracking/patients/:id/transfer-ward", async (req, res) => {
     try {
-      const patient = await storage.updateTrackingPatient(req.params.id, { isInIcu: false });
-      if (!patient) {
+      // First get the current patient to calculate ICU days
+      const currentPatient = await storage.getTrackingPatientById(req.params.id);
+      if (!currentPatient) {
         return res.status(404).json({ error: "Patient not found" });
       }
+      
+      // Calculate ICU days
+      let icuDays = currentPatient.icuDays || 0;
+      if (currentPatient.icuTransferDate) {
+        const now = new Date();
+        const icuStart = new Date(currentPatient.icuTransferDate);
+        const daysInIcu = Math.ceil((now.getTime() - icuStart.getTime()) / (1000 * 60 * 60 * 24));
+        icuDays += daysInIcu;
+      }
+      
+      const patient = await storage.updateTrackingPatient(req.params.id, { 
+        isInIcu: false,
+        icuDays: icuDays,
+        icuTransferDate: null
+      });
       res.json(patient);
     } catch (error) {
       console.error("Error transferring patient to ward:", error);
