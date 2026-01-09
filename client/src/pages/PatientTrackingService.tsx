@@ -426,7 +426,8 @@ export default function PatientTrackingService() {
   const switchToIcuMutation = useMutation({
     mutationFn: async (patient: TrackingPatient) => {
       const today = new Date().toISOString().split('T')[0];
-      return await apiRequest("POST", "/api/icu-charts", {
+      // Create ICU chart
+      await apiRequest("POST", "/api/icu-charts", {
         patientId: patient.id,
         patientName: patient.name,
         age: patient.age?.toString() || "",
@@ -439,6 +440,8 @@ export default function PatientTrackingService() {
         admittingConsultant: patient.doctor || "",
         icuConsultant: patient.doctor || "",
       });
+      // Update patient's ICU status
+      return await apiRequest("PATCH", `/api/tracking/patients/${patient.id}/transfer-icu`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
@@ -452,6 +455,26 @@ export default function PatientTrackingService() {
       toast({
         title: "Transfer Failed",
         description: "Failed to transfer patient to ICU. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const transferToWardMutation = useMutation({
+    mutationFn: async (patientId: string) => {
+      return await apiRequest("PATCH", `/api/tracking/patients/${patientId}/transfer-ward`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      toast({
+        title: "Transferred to Ward",
+        description: "Patient has been transferred from ICU to ward successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Transfer Failed",
+        description: "Failed to transfer patient to ward. Please try again.",
         variant: "destructive",
       });
     },
@@ -817,29 +840,49 @@ export default function PatientTrackingService() {
                           {patient.status !== "discharged" && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
-                                  data-testid={`button-switch-icu-${patient.id}`}
-                                >
-                                  <HeartPulse className="h-4 w-4 mr-1" />
-                                  Switch to ICU
-                                </Button>
+                                {patient.isInIcu ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                    data-testid={`button-transfer-ward-${patient.id}`}
+                                  >
+                                    <Bed className="h-4 w-4 mr-1" />
+                                    Transfer to Ward
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
+                                    data-testid={`button-switch-icu-${patient.id}`}
+                                  >
+                                    <HeartPulse className="h-4 w-4 mr-1" />
+                                    Switch to ICU
+                                  </Button>
+                                )}
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Transfer Patient to ICU</AlertDialogTitle>
+                                  <AlertDialogTitle>
+                                    {patient.isInIcu ? "Transfer Patient to Ward" : "Transfer Patient to ICU"}
+                                  </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Are you sure you want to transfer {patient.name} to ICU? An ICU monitoring chart will be created automatically with the patient's details.
+                                    {patient.isInIcu 
+                                      ? `Are you sure you want to transfer ${patient.name} from ICU to ward?`
+                                      : `Are you sure you want to transfer ${patient.name} to ICU? An ICU monitoring chart will be created automatically with the patient's details.`
+                                    }
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => switchToIcuMutation.mutate(patient)}
-                                    className="bg-cyan-600 hover:bg-cyan-700"
-                                    data-testid={`button-confirm-switch-icu-${patient.id}`}
+                                    onClick={() => patient.isInIcu 
+                                      ? transferToWardMutation.mutate(patient.id)
+                                      : switchToIcuMutation.mutate(patient)
+                                    }
+                                    className={patient.isInIcu ? "bg-orange-600 hover:bg-orange-700" : "bg-cyan-600 hover:bg-cyan-700"}
+                                    data-testid={patient.isInIcu ? `button-confirm-transfer-ward-${patient.id}` : `button-confirm-switch-icu-${patient.id}`}
                                   >
                                     Confirm Transfer
                                   </AlertDialogAction>

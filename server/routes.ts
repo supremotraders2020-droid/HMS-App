@@ -1148,6 +1148,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Transfer patient to ICU (set isInIcu = true)
+  app.patch("/api/tracking/patients/:id/transfer-icu", async (req, res) => {
+    try {
+      const patient = await storage.updateTrackingPatient(req.params.id, { isInIcu: true });
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      console.error("Error transferring patient to ICU:", error);
+      res.status(500).json({ error: "Failed to transfer patient to ICU" });
+    }
+  });
+
+  // Transfer patient to Ward (set isInIcu = false)
+  app.patch("/api/tracking/patients/:id/transfer-ward", async (req, res) => {
+    try {
+      const patient = await storage.updateTrackingPatient(req.params.id, { isInIcu: false });
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      console.error("Error transferring patient to ward:", error);
+      res.status(500).json({ error: "Failed to transfer patient to ward" });
+    }
+  });
+
   // Delete tracking patient (permanent removal)
   app.delete("/api/tracking/patients/:id", async (req, res) => {
     try {

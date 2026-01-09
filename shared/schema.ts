@@ -252,6 +252,7 @@ export const trackingPatients = pgTable("tracking_patients", {
   doctor: text("doctor").notNull(),
   nurse: text("nurse"),
   notes: text("notes"),
+  isInIcu: boolean("is_in_icu").notNull().default(false),
 });
 
 export const insertTrackingPatientSchema = createInsertSchema(trackingPatients).omit({
