@@ -87,10 +87,7 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
 
   const createChartMutation = useMutation({
     mutationFn: async (data: typeof newChart) => {
-      return apiRequest("/api/icu-charts", {
-        method: "POST",
-        body: JSON.stringify({ ...data, createdBy: userId }),
-      });
+      return apiRequest("POST", "/api/icu-charts", { ...data, createdBy: userId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/icu-charts"] });
@@ -590,10 +587,7 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/icu-charts/${chartId}/vitals`, {
-        method: "POST",
-        body: JSON.stringify({ ...newEntry, recordedBy: userId }),
-      });
+      return apiRequest("POST", `/api/icu-charts/${chartId}/vitals`, { ...newEntry, recordedBy: userId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
@@ -753,10 +747,7 @@ function VentilatorSection({ chartId, data, canEdit, userId }: { chartId: string
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/icu-charts/${chartId}/ventilator`, {
-        method: "POST",
-        body: JSON.stringify({ ...newEntry, recordedBy: userId }),
-      });
+      return apiRequest("POST", `/api/icu-charts/${chartId}/ventilator`, { ...newEntry, recordedBy: userId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
@@ -918,10 +909,7 @@ function HemodynamicSection({ chartId, data, canEdit, userId }: { chartId: strin
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/icu-charts/${chartId}/hemodynamic`, {
-        method: "POST",
-        body: JSON.stringify({ ...newEntry, recordedBy: userId }),
-      });
+      return apiRequest("POST", `/api/icu-charts/${chartId}/hemodynamic`, { ...newEntry, recordedBy: userId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
@@ -1124,10 +1112,7 @@ function MedicationsSection({ chartId, ordersData, onceOnlyData, canEdit, userId
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/icu-charts/${chartId}/medication-orders`, {
-        method: "POST",
-        body: JSON.stringify({ ...newOrder, doctorId: userId }),
-      });
+      return apiRequest("POST", `/api/icu-charts/${chartId}/medication-orders`, { ...newOrder, doctorId: userId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
@@ -1417,10 +1402,7 @@ function NursingSection({ chartId, remarksData, dutyData, diaryData, canEdit, us
 
   const addRemarkMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/icu-charts/${chartId}/nursing-remarks`, {
-        method: "POST",
-        body: JSON.stringify({ ...newRemark, nurseId: userId }),
-      });
+      return apiRequest("POST", `/api/icu-charts/${chartId}/nursing-remarks`, { ...newRemark, nurseId: userId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
