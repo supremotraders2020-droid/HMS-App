@@ -574,6 +574,14 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async updateTrackingPatient(id: string, updates: Partial<TrackingPatient>): Promise<TrackingPatient | undefined> {
+    const result = await db.update(trackingPatients)
+      .set(updates)
+      .where(eq(trackingPatients.id, id))
+      .returning();
+    return result[0];
+  }
+
   async dischargeTrackingPatient(id: string, dischargeDate: Date): Promise<TrackingPatient | undefined> {
     const result = await db.update(trackingPatients)
       .set({ status: "discharged", dischargeDate })
