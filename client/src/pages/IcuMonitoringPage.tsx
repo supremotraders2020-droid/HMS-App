@@ -489,6 +489,9 @@ function IcuChartDetail({ chart, completeData, canEdit, userId }: {
               <TabsTrigger value="body" className="gap-1" data-testid="tab-body">
                 <User className="w-3 h-3" /> Body Chart
               </TabsTrigger>
+              <TabsTrigger value="tests" className="gap-1" data-testid="tab-tests">
+                <Beaker className="w-3 h-3" /> Tests
+              </TabsTrigger>
             </TabsList>
           </ScrollArea>
 
@@ -554,6 +557,16 @@ function IcuChartDetail({ chart, completeData, canEdit, userId }: {
               allergyData={completeData?.allergyPrecautions}
               canEdit={canEdit} 
               userId={userId} 
+            />
+          </TabsContent>
+
+          <TabsContent value="tests" className="mt-4">
+            <TestsSection 
+              chartId={chart.id}
+              patientId={chart.patientId || ""}
+              patientName={chart.patientName || ""}
+              canEdit={canEdit}
+              userId={userId}
             />
           </TabsContent>
         </Tabs>
@@ -1610,6 +1623,463 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
           <p className="text-muted-foreground">No allergy information recorded</p>
         )}
       </div>
+    </div>
+  );
+}
+
+// Test Categories with all tests from hospital list
+const TEST_CATEGORIES = {
+  PATHOLOGY: {
+    name: "Pathology / Lab Tests",
+    icon: FlaskConical,
+    color: "text-purple-500",
+    tests: [
+      { name: "Complete Blood Count (CBC)", type: "LAB", department: "Pathology" },
+      { name: "Hemoglobin (Hb)", type: "LAB", department: "Pathology" },
+      { name: "Total / Differential Count", type: "LAB", department: "Pathology" },
+      { name: "Platelet Count", type: "LAB", department: "Pathology" },
+      { name: "ESR", type: "LAB", department: "Pathology" },
+      { name: "Peripheral Smear", type: "LAB", department: "Pathology" },
+      { name: "Blood Group & Rh Typing", type: "LAB", department: "Pathology" },
+      { name: "Coagulation Profile (PT, INR, APTT)", type: "LAB", department: "Pathology" },
+      { name: "Bleeding Time / Clotting Time", type: "LAB", department: "Pathology" },
+      { name: "Reticulocyte Count", type: "LAB", department: "Pathology" },
+      { name: "Fasting / PP Blood Sugar", type: "LAB", department: "Biochemistry" },
+      { name: "HbA1c", type: "LAB", department: "Biochemistry" },
+      { name: "Lipid Profile", type: "LAB", department: "Biochemistry" },
+      { name: "Liver Function Test (LFT)", type: "LAB", department: "Biochemistry" },
+      { name: "Kidney Function Test (KFT)", type: "LAB", department: "Biochemistry" },
+      { name: "Electrolytes (Na, K, Cl)", type: "LAB", department: "Biochemistry" },
+      { name: "Serum Calcium / Phosphorus", type: "LAB", department: "Biochemistry" },
+      { name: "Uric Acid", type: "LAB", department: "Biochemistry" },
+      { name: "Amylase / Lipase", type: "LAB", department: "Biochemistry" },
+      { name: "Cardiac Enzymes (Troponin, CK-MB)", type: "LAB", department: "Biochemistry" },
+      { name: "Thyroid Profile (T3, T4, TSH)", type: "LAB", department: "Biochemistry" },
+      { name: "CRP", type: "LAB", department: "Serology" },
+      { name: "ASO", type: "LAB", department: "Serology" },
+      { name: "RA Factor", type: "LAB", department: "Serology" },
+      { name: "ANA", type: "LAB", department: "Serology" },
+      { name: "HIV", type: "LAB", department: "Serology" },
+      { name: "HBsAg", type: "LAB", department: "Serology" },
+      { name: "HCV", type: "LAB", department: "Serology" },
+      { name: "Dengue (NS1, IgM, IgG)", type: "LAB", department: "Serology" },
+      { name: "Widal Test", type: "LAB", department: "Serology" },
+      { name: "VDRL", type: "LAB", department: "Serology" },
+      { name: "Urine Culture", type: "LAB", department: "Microbiology" },
+      { name: "Blood Culture", type: "LAB", department: "Microbiology" },
+      { name: "Sputum Culture", type: "LAB", department: "Microbiology" },
+      { name: "Stool Examination", type: "LAB", department: "Microbiology" },
+      { name: "Gram Stain", type: "LAB", department: "Microbiology" },
+      { name: "AFB / CBNAAT", type: "LAB", department: "Microbiology" },
+      { name: "KOH Mount", type: "LAB", department: "Microbiology" },
+      { name: "Sensitivity Testing", type: "LAB", department: "Microbiology" },
+    ]
+  },
+  RADIOLOGY: {
+    name: "Radiology & Imaging",
+    icon: BarChart3,
+    color: "text-blue-500",
+    tests: [
+      { name: "Chest X-ray", type: "X-RAY", department: "Radiology" },
+      { name: "Limb X-ray", type: "X-RAY", department: "Radiology" },
+      { name: "Spine X-ray", type: "X-RAY", department: "Radiology" },
+      { name: "Abdomen X-ray", type: "X-RAY", department: "Radiology" },
+      { name: "Skull X-ray", type: "X-RAY", department: "Radiology" },
+      { name: "USG Whole Abdomen", type: "ULTRASOUND", department: "Radiology" },
+      { name: "USG Pelvis", type: "ULTRASOUND", department: "Radiology" },
+      { name: "Obstetric USG", type: "ULTRASOUND", department: "Radiology" },
+      { name: "TVS", type: "ULTRASOUND", department: "Radiology" },
+      { name: "Doppler Study", type: "ULTRASOUND", department: "Radiology" },
+      { name: "Soft Tissue USG", type: "ULTRASOUND", department: "Radiology" },
+      { name: "CT Scan Brain", type: "CT", department: "Radiology" },
+      { name: "CT Scan Chest", type: "CT", department: "Radiology" },
+      { name: "CT Scan Abdomen", type: "CT", department: "Radiology" },
+      { name: "MRI Brain", type: "MRI", department: "Radiology" },
+      { name: "MRI Spine", type: "MRI", department: "Radiology" },
+      { name: "MRI Joint", type: "MRI", department: "Radiology" },
+      { name: "MR Angiography", type: "MRI", department: "Radiology" },
+      { name: "CT Angiography", type: "CT", department: "Radiology" },
+      { name: "Mammography", type: "IMAGING", department: "Radiology" },
+      { name: "BMD (DEXA Scan)", type: "IMAGING", department: "Radiology" },
+    ]
+  },
+  CARDIOLOGY: {
+    name: "Cardiology Diagnostics",
+    icon: Heart,
+    color: "text-red-500",
+    tests: [
+      { name: "ECG", type: "ECG", department: "Cardiology" },
+      { name: "2D Echo", type: "ECHO", department: "Cardiology" },
+      { name: "TMT (Stress Test)", type: "TMT", department: "Cardiology" },
+      { name: "Holter Monitoring", type: "HOLTER", department: "Cardiology" },
+      { name: "ABPM (24-hr BP Monitoring)", type: "ABPM", department: "Cardiology" },
+      { name: "Cardiac Doppler", type: "DOPPLER", department: "Cardiology" },
+    ]
+  },
+  NEURO: {
+    name: "Neuro Diagnostics",
+    icon: Activity,
+    color: "text-cyan-500",
+    tests: [
+      { name: "EEG", type: "EEG", department: "Neurology" },
+      { name: "EMG", type: "EMG", department: "Neurology" },
+      { name: "NCV (Nerve Conduction Velocity)", type: "NCV", department: "Neurology" },
+    ]
+  },
+  PULMONARY: {
+    name: "Pulmonary Tests",
+    icon: Wind,
+    color: "text-green-500",
+    tests: [
+      { name: "Pulmonary Function Test (PFT)", type: "PFT", department: "Pulmonology" },
+      { name: "Spirometry", type: "PFT", department: "Pulmonology" },
+      { name: "Peak Flow Test", type: "PFT", department: "Pulmonology" },
+      { name: "Sleep Study (Polysomnography)", type: "SLEEP", department: "Pulmonology" },
+      { name: "ABG (Arterial Blood Gas)", type: "ABG", department: "Pulmonology" },
+    ]
+  },
+  BLOOD_BANK: {
+    name: "Blood Bank",
+    icon: Droplets,
+    color: "text-rose-500",
+    tests: [
+      { name: "Blood Grouping", type: "BB", department: "Blood Bank" },
+      { name: "Cross Matching", type: "BB", department: "Blood Bank" },
+      { name: "Antibody Screening", type: "BB", department: "Blood Bank" },
+      { name: "Component Separation", type: "BB", department: "Blood Bank" },
+      { name: "Transfusion Compatibility Testing", type: "BB", department: "Blood Bank" },
+    ]
+  },
+  DIALYSIS: {
+    name: "Dialysis",
+    icon: Syringe,
+    color: "text-amber-500",
+    tests: [
+      { name: "Pre-Dialysis Assessment", type: "DIALYSIS", department: "Nephrology" },
+      { name: "Post-Dialysis Vitals", type: "DIALYSIS", department: "Nephrology" },
+      { name: "Dialysis Adequacy Tests", type: "DIALYSIS", department: "Nephrology" },
+      { name: "Access Flow Check", type: "DIALYSIS", department: "Nephrology" },
+    ]
+  },
+  ENDOSCOPY: {
+    name: "Endoscopy / Cath Lab",
+    icon: Stethoscope,
+    color: "text-indigo-500",
+    tests: [
+      { name: "Upper GI Endoscopy", type: "ENDO", department: "Gastroenterology" },
+      { name: "Colonoscopy", type: "ENDO", department: "Gastroenterology" },
+      { name: "Sigmoidoscopy", type: "ENDO", department: "Gastroenterology" },
+      { name: "Bronchoscopy", type: "ENDO", department: "Pulmonology" },
+      { name: "Coronary Angiography", type: "CATH", department: "Cardiology" },
+      { name: "Peripheral Angiography", type: "CATH", department: "Cardiology" },
+      { name: "Temporary Pacemaker Setup", type: "CATH", department: "Cardiology" },
+    ]
+  },
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  SAMPLE_COLLECTED: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  IN_PROGRESS: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  REPORT_UPLOADED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  COMPLETED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+  CANCELLED: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300",
+};
+
+function TestsSection({ chartId, patientId, patientName, canEdit, userId }: { 
+  chartId: string; 
+  patientId: string;
+  patientName: string;
+  canEdit: boolean; 
+  userId?: string 
+}) {
+  const { toast } = useToast();
+  const [showOrderDialog, setShowOrderDialog] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("PATHOLOGY");
+  const [selectedTests, setSelectedTests] = useState<string[]>([]);
+  const [priority, setPriority] = useState("ROUTINE");
+  const [clinicalNotes, setClinicalNotes] = useState("");
+  const [doctorName, setDoctorName] = useState("");
+
+  const { data: tests = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/icu-charts", chartId, "tests"],
+    refetchInterval: 5000,
+  });
+
+  const orderTestsMutation = useMutation({
+    mutationFn: async (testData: any) => {
+      return apiRequest("POST", `/api/icu-charts/${chartId}/tests`, testData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "tests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/technician/pending-tests"] });
+      setShowOrderDialog(false);
+      setSelectedTests([]);
+      setClinicalNotes("");
+      toast({ title: "Tests ordered successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to order tests", variant: "destructive" });
+    }
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ testId, status }: { testId: string; status: string }) => {
+      return apiRequest("PATCH", `/api/diagnostic-test-orders/${testId}/status`, { status, sampleCollectedBy: userId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "tests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/technician/pending-tests"] });
+      toast({ title: "Test status updated" });
+    },
+  });
+
+  const handleOrderTests = () => {
+    if (!doctorName || selectedTests.length === 0) {
+      toast({ title: "Please select tests and enter doctor name", variant: "destructive" });
+      return;
+    }
+
+    const category = TEST_CATEGORIES[selectedCategory as keyof typeof TEST_CATEGORIES];
+    selectedTests.forEach(testName => {
+      const test = category.tests.find(t => t.name === testName);
+      if (test) {
+        orderTestsMutation.mutate({
+          testName: test.name,
+          testType: test.type,
+          department: test.department,
+          category: selectedCategory,
+          priority,
+          clinicalNotes,
+          doctorId: userId || "",
+          doctorName,
+          patientId,
+          patientName,
+        });
+      }
+    });
+  };
+
+  const groupedTests = tests.reduce((acc: Record<string, any[]>, test: any) => {
+    const cat = test.category || "PATHOLOGY";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(test);
+    return acc;
+  }, {});
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold flex items-center gap-2">
+          <Beaker className="w-4 h-4 text-purple-500" />
+          Diagnostic Tests
+        </h3>
+        {canEdit && (
+          <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
+            <DialogTrigger asChild>
+              <Button size="sm" data-testid="button-order-test">
+                <Plus className="w-4 h-4 mr-1" />
+                Order Tests
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Order Diagnostic Tests - {patientName}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Ordering Doctor</Label>
+                    <Input 
+                      value={doctorName} 
+                      onChange={(e) => setDoctorName(e.target.value)}
+                      placeholder="Dr. Name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Priority</Label>
+                    <Select value={priority} onValueChange={setPriority}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ROUTINE">Routine</SelectItem>
+                        <SelectItem value="URGENT">Urgent</SelectItem>
+                        <SelectItem value="STAT">STAT (Immediate)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Test Category</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {Object.entries(TEST_CATEGORIES).map(([key, cat]) => {
+                      const Icon = cat.icon;
+                      return (
+                        <Button
+                          key={key}
+                          variant={selectedCategory === key ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCategory(key);
+                            setSelectedTests([]);
+                          }}
+                          className="gap-1"
+                        >
+                          <Icon className={`w-3 h-3 ${cat.color}`} />
+                          {cat.name}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Select Tests</Label>
+                  <ScrollArea className="h-48 border rounded-md p-2 mt-2">
+                    <div className="space-y-1">
+                      {TEST_CATEGORIES[selectedCategory as keyof typeof TEST_CATEGORIES]?.tests.map(test => (
+                        <div key={test.name} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={test.name}
+                            checked={selectedTests.includes(test.name)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedTests([...selectedTests, test.name]);
+                              } else {
+                                setSelectedTests(selectedTests.filter(t => t !== test.name));
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <label htmlFor={test.name} className="text-sm cursor-pointer flex-1">
+                            {test.name}
+                            <span className="text-muted-foreground ml-2">({test.department})</span>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  {selectedTests.length > 0 && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTests.length} test(s) selected
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label>Clinical Notes</Label>
+                  <Textarea
+                    value={clinicalNotes}
+                    onChange={(e) => setClinicalNotes(e.target.value)}
+                    placeholder="Any special instructions or clinical notes..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setShowOrderDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleOrderTests}
+                    disabled={orderTestsMutation.isPending || selectedTests.length === 0}
+                  >
+                    {orderTestsMutation.isPending ? "Ordering..." : `Order ${selectedTests.length} Test(s)`}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">Loading tests...</div>
+      ) : tests.length === 0 ? (
+        <Card className="p-8 text-center">
+          <Beaker className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">No tests ordered for this patient yet</p>
+          {canEdit && (
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => setShowOrderDialog(true)}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Order First Test
+            </Button>
+          )}
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {Object.entries(TEST_CATEGORIES).map(([categoryKey, category]) => {
+            const categoryTests = groupedTests[categoryKey] || [];
+            if (categoryTests.length === 0) return null;
+
+            const Icon = category.icon;
+            return (
+              <Card key={categoryKey} className="p-4">
+                <h4 className="font-medium flex items-center gap-2 mb-3">
+                  <Icon className={`w-4 h-4 ${category.color}`} />
+                  {category.name}
+                  <Badge variant="secondary">{categoryTests.length}</Badge>
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="text-left p-2">Test Name</th>
+                        <th className="text-left p-2">Priority</th>
+                        <th className="text-left p-2">Status</th>
+                        <th className="text-left p-2">Ordered By</th>
+                        <th className="text-left p-2">Date</th>
+                        {canEdit && <th className="text-left p-2">Actions</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categoryTests.map((test: any) => (
+                        <tr key={test.id} className="border-b">
+                          <td className="p-2 font-medium">{test.testName}</td>
+                          <td className="p-2">
+                            <Badge variant={test.priority === "STAT" ? "destructive" : test.priority === "URGENT" ? "default" : "secondary"}>
+                              {test.priority}
+                            </Badge>
+                          </td>
+                          <td className="p-2">
+                            <span className={`px-2 py-1 rounded-full text-xs ${STATUS_COLORS[test.status] || STATUS_COLORS.PENDING}`}>
+                              {test.status?.replace(/_/g, " ")}
+                            </span>
+                          </td>
+                          <td className="p-2">{test.doctorName}</td>
+                          <td className="p-2">
+                            {test.orderedDate ? format(new Date(test.orderedDate), "dd/MM/yyyy HH:mm") : "-"}
+                          </td>
+                          {canEdit && (
+                            <td className="p-2">
+                              {test.status === "PENDING" && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => updateStatusMutation.mutate({ testId: test.id, status: "SAMPLE_COLLECTED" })}
+                                >
+                                  Collect Sample
+                                </Button>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

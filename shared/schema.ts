@@ -4762,6 +4762,8 @@ export const diagnosticTestOrders = pgTable("diagnostic_test_orders", {
   // Source Information
   prescriptionId: varchar("prescription_id"), // Link to prescription if from doctor
   consultationId: varchar("consultation_id"), // Link to OPD consultation
+  icuChartId: varchar("icu_chart_id"), // Link to ICU chart if from ICU
+  source: text("source").default("PRESCRIPTION"), // PRESCRIPTION, OPD, ICU
   
   // Patient Information
   patientId: varchar("patient_id").notNull(),
@@ -4777,10 +4779,13 @@ export const diagnosticTestOrders = pgTable("diagnostic_test_orders", {
   testName: text("test_name").notNull(),
   testType: text("test_type").notNull(), // MRI, CT, X-RAY, ECG, LAB, etc.
   department: text("department").notNull(), // Radiology, Pathology, Cardiology, etc.
+  category: text("category"), // PATHOLOGY, RADIOLOGY, CARDIOLOGY, NEURO, PULMONARY, BLOOD_BANK, DIALYSIS, ENDOSCOPY
   
   // Priority & Status
   priority: text("priority").notNull().default("ROUTINE"), // ROUTINE, URGENT, STAT
-  status: text("status").notNull().default("PENDING"), // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  status: text("status").notNull().default("PENDING"), // PENDING, SAMPLE_COLLECTED, IN_PROGRESS, REPORT_UPLOADED, COMPLETED, CANCELLED
+  sampleCollectedAt: timestamp("sample_collected_at"),
+  sampleCollectedBy: text("sample_collected_by"),
   
   // Assignment
   assignedTechnicianId: varchar("assigned_technician_id"),

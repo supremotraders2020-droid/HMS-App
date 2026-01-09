@@ -14291,6 +14291,57 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ICU Patient Tests - Get tests for ICU chart
+  app.get("/api/icu-charts/:chartId/tests", requireAuth, async (req, res) => {
+    try {
+      const tests = await storage.getDiagnosticTestOrdersByIcuChart(req.params.chartId);
+      res.json(tests);
+    } catch (error) {
+      console.error("Error fetching ICU tests:", error);
+      res.status(500).json({ error: "Failed to fetch ICU tests" });
+    }
+  });
+
+  // ICU Patient Tests - Order new test from ICU
+  app.post("/api/icu-charts/:chartId/tests", requireAuth, async (req, res) => {
+    try {
+      const chart = await storage.getIcuChartById(req.params.chartId);
+      if (!chart) {
+        return res.status(404).json({ error: "ICU chart not found" });
+      }
+      const testOrder = await storage.createDiagnosticTestOrder({
+        ...req.body,
+        icuChartId: req.params.chartId,
+        source: "ICU",
+        patientId: chart.patientId || "",
+        patientName: chart.patientName || "",
+        patientAge: chart.age?.toString() || "",
+        patientGender: chart.sex || "",
+      });
+      res.status(201).json(testOrder);
+    } catch (error) {
+      console.error("Error creating ICU test order:", error);
+      res.status(500).json({ error: "Failed to create test order" });
+    }
+  });
+
+  // Update test status (sample collected, in progress, etc.)
+  app.patch("/api/diagnostic-test-orders/:id/status", requireAuth, async (req, res) => {
+    try {
+      const { status, sampleCollectedBy } = req.body;
+      const updates: any = { status, updatedAt: new Date() };
+      if (status === "SAMPLE_COLLECTED") {
+        updates.sampleCollectedAt = new Date();
+        updates.sampleCollectedBy = sampleCollectedBy;
+      }
+      const test = await storage.updateDiagnosticTestOrder(req.params.id, updates);
+      res.json(test);
+    } catch (error) {
+      console.error("Error updating test status:", error);
+      res.status(500).json({ error: "Failed to update test status" });
+    }
+  });
+
   // ICU Vital Charts
   app.post("/api/icu-charts/:chartId/vitals", requireAuth, async (req, res) => {
     try {
