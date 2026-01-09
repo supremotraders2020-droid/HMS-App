@@ -123,6 +123,24 @@ export default function OPDService() {
     staleTime: 0,
   });
 
+  // Fetch schedule-based availability as fallback when no pre-generated slots exist
+  interface ScheduleAvailability {
+    doctorName: string;
+    available: number;
+    booked: number;
+    total: number;
+  }
+  const { data: scheduleAvailability = [] } = useQuery<ScheduleAvailability[]>({
+    queryKey: ["/api/schedule-availability", selectedDate],
+    queryFn: async () => {
+      const response = await fetch(`/api/schedule-availability?date=${selectedDate}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!selectedDate,
+    staleTime: 0,
+  });
+
   // Fetch booking form doctor's schedule blocks (for generating available slots)
   const bookingDoctor = doctors.find(d => d.id === bookingDoctorId);
   const { data: bookingDoctorSchedules = [] } = useQuery<DoctorSchedule[]>({
@@ -309,6 +327,21 @@ export default function OPDService() {
       const dateMatches = s.slotDate === selectedDate;
       return nameMatches && dateMatches;
     });
+    
+    // If no pre-generated slots, use schedule-based availability as fallback
+    if (doctorSlots.length === 0 && scheduleAvailability.length > 0) {
+      const scheduleMatch = scheduleAvailability.find(sa => {
+        const saName = sa.doctorName.replace(/^Dr\.?\s*/i, '').toLowerCase();
+        return saName.includes(doctorName) || doctorName.includes(saName);
+      });
+      if (scheduleMatch) {
+        return {
+          available: scheduleMatch.available,
+          booked: scheduleMatch.booked,
+          total: scheduleMatch.total
+        };
+      }
+    }
     
     // Also count legacy appointments (booked via /api/appointments without slot system)
     const legacyAppointments = appointments.filter(apt => {

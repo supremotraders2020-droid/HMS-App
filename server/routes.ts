@@ -3607,17 +3607,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all time slots for a specific date (for admin dashboard)
+  // Returns pre-generated slots from database only (no virtual slot fabrication)
   app.get("/api/time-slots/all", async (req, res) => {
     try {
       const { date } = req.query;
       if (!date) {
         return res.status(400).json({ error: "Date is required" });
       }
+      
+      // Return persisted slots from database
       const slots = await databaseStorage.getAllTimeSlotsForDate(date as string);
       res.json(slots);
     } catch (error) {
       console.error("Error fetching all time slots:", error);
       res.status(500).json({ error: "Failed to fetch time slots" });
+    }
+  });
+
+  // Get schedule-based slot availability for a date (computes from doctor_schedules)
+  // Returns computed slot counts per doctor based on their schedule blocks
+  app.get("/api/schedule-availability", async (req, res) => {
+    try {
+      const { date } = req.query;
+      if (!date) {
+        return res.status(400).json({ error: "Date is required" });
+      }
+      
+      const requestedDate = new Date(date as string);
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayOfWeek = dayNames[requestedDate.getDay()];
+      
+      // Get all doctor schedules for this day
+      const allSchedules = await databaseStorage.getAllDoctorSchedules();
+      const daySchedules = allSchedules.filter(s => 
+        s.isAvailable && (s.day === dayOfWeek || s.specificDate === date)
+      );
+      
+      // Get all users to map user IDs to doctor names
+      const allUsers = await storage.getAllUsers();
+      
+      // Get existing appointments for this date
+      const allAppointments = await databaseStorage.getAllAppointments();
+      const dateAppointments = allAppointments.filter(apt => 
+        apt.appointmentDate === date && 
+        apt.status !== 'cancelled' && 
+        apt.status !== 'completed'
+      );
+      
+      // Parse time to minutes
+      const parseTime = (timeStr: string): number => {
+        const cleanTime = timeStr.trim();
+        const ampmMatch = cleanTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+        if (ampmMatch) {
+          let hours = parseInt(ampmMatch[1]);
+          const minutes = parseInt(ampmMatch[2]);
+          const period = ampmMatch[3]?.toUpperCase();
+          if (period === 'PM' && hours !== 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
+          return hours * 60 + minutes;
+        }
+        const parts = cleanTime.split(':');
+        return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+      };
+      
+      // Compute available slots per doctor (keyed by user ID which schedules use)
+      const availability: Record<string, { doctorName: string; userId: string; available: number; booked: number; total: number }> = {};
+      
+      for (const schedule of daySchedules) {
+        // Find doctor name from users table
+        let doctorName = '';
+        const doctorUser = allUsers.find(u => u.id === schedule.doctorId);
+        if (doctorUser && doctorUser.name) {
+          doctorName = doctorUser.name;
+        }
+        if (!doctorName) continue;
+        
+        const startMins = parseTime(schedule.startTime);
+        const endMins = parseTime(schedule.endTime);
+        const slotDuration = 30;
+        const totalSlots = Math.floor((endMins - startMins) / slotDuration);
+        
+        // Count booked appointments for this doctor (by user ID) in this schedule's time range
+        const doctorAppointments = dateAppointments.filter(apt => {
+          // Match by doctorId (user ID) since appointments store user IDs
+          if (apt.doctorId !== schedule.doctorId) return false;
+          
+          // Check if appointment falls within this schedule's time range
+          if (apt.timeSlot) {
+            const aptStartStr = apt.timeSlot.split(' - ')[0];
+            const aptMins = parseTime(aptStartStr);
+            return aptMins >= startMins && aptMins < endMins;
+          }
+          return true; // Count if no time slot specified
+        });
+        
+        // Initialize or accumulate for this doctor
+        const key = schedule.doctorId; // Use user ID as key to aggregate schedules
+        if (!availability[key]) {
+          availability[key] = { doctorName, userId: schedule.doctorId, available: 0, booked: 0, total: 0 };
+        }
+        
+        const bookedCount = Math.min(doctorAppointments.length, totalSlots);
+        availability[key].total += totalSlots;
+        availability[key].booked += bookedCount;
+        availability[key].available += (totalSlots - bookedCount);
+      }
+      
+      res.json(Object.values(availability));
+    } catch (error) {
+      console.error("Error fetching schedule availability:", error);
+      res.status(500).json({ error: "Failed to fetch schedule availability" });
     }
   });
 
