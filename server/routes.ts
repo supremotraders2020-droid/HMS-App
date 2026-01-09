@@ -6910,10 +6910,17 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.post("/api/patient-monitoring/sessions/:sessionId/tests", async (req, res) => {
+  app.post("/api/patient-monitoring/sessions/:sessionId/tests", requireAuth, async (req, res) => {
     try {
+      // Use the logged-in user's ID as doctorId if not provided
+      const userId = (req as any).session?.user?.id;
+      const userName = (req as any).session?.user?.name || req.body.doctorName;
+      const doctorId = req.body.doctorId || userId || "SYSTEM";
+      const doctorName = req.body.doctorName || userName || "System";
       const testOrder = await storage.createDiagnosticTestOrder({
         ...req.body,
+        doctorId,
+        doctorName,
         sessionId: req.params.sessionId,
         source: "PATIENT_MONITORING",
         status: "PENDING",
