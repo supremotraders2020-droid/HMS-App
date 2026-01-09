@@ -68,7 +68,7 @@ import {
 import type { TrackingPatient, Medication, Meal, Vitals, ServicePatient, Doctor, DoctorVisit, PatientBill } from "@shared/schema";
 import { HOSPITAL_DEPARTMENTS } from "@shared/schema";
 
-type TabType = "patients" | "admit" | "doctor_visits" | "billing";
+type TabType = "patients" | "admit" | "doctor_visits" | "billing" | "ipd_history";
 
 interface PatientMovement {
   id: number;
@@ -822,6 +822,7 @@ export default function PatientTrackingService() {
     { id: "admit" as TabType, label: "Admit Patient", icon: Plus },
     { id: "doctor_visits" as TabType, label: "Doctor Visit", icon: Stethoscope },
     { id: "billing" as TabType, label: "Billing", icon: IndianRupee },
+    { id: "ipd_history" as TabType, label: "IPD History", icon: History },
   ];
 
   return (
@@ -2095,7 +2096,322 @@ export default function PatientTrackingService() {
             </Card>
           </div>
         )}
+
+        {activeTab === "ipd_history" && (
+          <IPDHistoryTab patients={patients} />
+        )}
       </div>
+    </div>
+  );
+}
+
+function IPDHistoryTab({ patients }: { patients: TrackingPatient[] }) {
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("1month");
+  
+  const { data: allMovements = [], isLoading: movementsLoading } = useQuery<PatientMovement[]>({
+    queryKey: ["/api/tracking/movements/all"],
+  });
+
+  const sortedPatients = [...patients].sort((a, b) => 
+    new Date(b.admissionDate).getTime() - new Date(a.admissionDate).getTime()
+  );
+
+  const filterByDate = (date: Date | string) => {
+    const admissionDate = new Date(date);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - admissionDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    switch (dateFilter) {
+      case "1week": return diffDays <= 7;
+      case "2weeks": return diffDays <= 14;
+      case "1month": return diffDays <= 30;
+      case "3months": return diffDays <= 90;
+      case "all": return true;
+      default: return true;
+    }
+  };
+
+  const filteredPatients = sortedPatients.filter(p => {
+    const matchesDepartment = departmentFilter === "all" || (p.department && p.department === departmentFilter);
+    const matchesDate = filterByDate(p.admissionDate);
+    return matchesDepartment && matchesDate;
+  });
+
+  const getPatientMovements = (patientId: string) => {
+    return allMovements
+      .filter(m => m.trackingPatientId === patientId)
+      .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
+  };
+
+  const formatDateTime = (dateStr: string | Date) => {
+    const date = new Date(dateStr);
+    return date.toLocaleString('en-IN', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const downloadCSV = () => {
+    const headers = [
+      "Patient Name", "Age", "Gender", "Blood Group", "Current Department", "Room", 
+      "Diagnosis", "Attending Doctor", "Status", "Admission Date & Time", 
+      "Discharge Date", "ICU Days", "Ventilator Days", "Department Transfers"
+    ];
+
+    const rows = filteredPatients.map(p => {
+      const movements = getPatientMovements(p.id);
+      const transferHistory = movements.map(m => 
+        `${m.eventType}: ${m.fromLocation || 'N/A'} → ${m.toLocation || 'N/A'} (${formatDateTime(m.occurredAt)})`
+      ).join(" | ");
+
+      return [
+        p.name || "Unknown",
+        p.age || 0,
+        p.gender || "Unknown",
+        p.bloodGroup || "Not recorded",
+        p.department || "Unassigned",
+        p.room || "N/A",
+        p.diagnosis || "Not specified",
+        p.doctor || "Not assigned",
+        p.status || "Unknown",
+        p.admissionDate ? formatDateTime(p.admissionDate) : "Not recorded",
+        p.dischargeDate ? formatDateTime(p.dischargeDate) : "Still admitted",
+        p.icuDays || 0,
+        p.ventilatorDays || 0,
+        transferHistory || "No transfers recorded"
+      ];
+    });
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `IPD_History_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  const uniqueDepartments = Array.from(new Set(patients.map(p => p.department).filter(Boolean))).sort();
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              IPD Patient History
+            </CardTitle>
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Time Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1week">Last 1 Week</SelectItem>
+                  <SelectItem value="2weeks">Last 2 Weeks</SelectItem>
+                  <SelectItem value="1month">Last 1 Month</SelectItem>
+                  <SelectItem value="3months">Last 3 Months</SelectItem>
+                  <SelectItem value="all">All Time</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  {uniqueDepartments.map(dept => (
+                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={downloadCSV} variant="outline" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Download CSV
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200">
+              <CardContent className="pt-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-blue-600">{filteredPatients.length}</p>
+                  <p className="text-sm text-muted-foreground">Total Patients</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200">
+              <CardContent className="pt-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">
+                    {filteredPatients.filter(p => p.status === "discharged").length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Discharged</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-red-50 dark:bg-red-900/20 border-red-200">
+              <CardContent className="pt-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-red-600">
+                    {filteredPatients.filter(p => p.status === "critical").length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Critical</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200">
+              <CardContent className="pt-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-600">
+                    {filteredPatients.filter(p => p.isInIcu).length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">In ICU</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {movementsLoading ? (
+            <div className="text-center py-8">Loading patient history...</div>
+          ) : (
+            <ScrollArea className="h-[600px]">
+              <div className="space-y-4">
+                {filteredPatients.map((patient) => {
+                  const movements = getPatientMovements(patient.id);
+                  return (
+                    <Card key={patient.id} className="border-l-4 border-l-primary">
+                      <CardContent className="p-4">
+                        <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <User className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-lg">{patient.name}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {patient.age} yrs, {patient.gender} | Blood: {patient.bloodGroup || "N/A"}
+                                </p>
+                              </div>
+                              <Badge className={
+                                patient.status === "critical" ? "bg-red-100 text-red-800" :
+                                patient.status === "discharged" ? "bg-gray-100 text-gray-800" :
+                                patient.status === "stable" ? "bg-green-100 text-green-800" :
+                                "bg-blue-100 text-blue-800"
+                              }>
+                                {patient.status}
+                              </Badge>
+                              {patient.isInIcu && (
+                                <Badge className="bg-cyan-100 text-cyan-800">
+                                  <HeartPulse className="h-3 w-3 mr-1" />
+                                  ICU
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                              <div>
+                                <span className="text-muted-foreground">Department:</span>
+                                <p className="font-medium">{patient.department || "Unassigned"}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Room:</span>
+                                <p className="font-medium">{patient.room || "N/A"}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Doctor:</span>
+                                <p className="font-medium">{patient.doctor || "Not assigned"}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Diagnosis:</span>
+                                <p className="font-medium">{patient.diagnosis || "Not specified"}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-4 text-sm">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4 text-green-500" />
+                                <span className="text-muted-foreground">Admitted:</span>
+                                <span className="font-medium">{formatDateTime(patient.admissionDate)}</span>
+                              </div>
+                              {patient.dischargeDate && (
+                                <div className="flex items-center gap-1">
+                                  <LogOut className="h-4 w-4 text-blue-500" />
+                                  <span className="text-muted-foreground">Discharged:</span>
+                                  <span className="font-medium">{formatDateTime(patient.dischargeDate)}</span>
+                                </div>
+                              )}
+                              {(patient.icuDays || 0) > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <HeartPulse className="h-4 w-4 text-red-500" />
+                                  <span className="font-medium">{patient.icuDays} ICU Days</span>
+                                </div>
+                              )}
+                              {(patient.ventilatorDays || 0) > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <Wind className="h-4 w-4 text-cyan-500" />
+                                  <span className="font-medium">{patient.ventilatorDays} Ventilator Days</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {movements.length > 0 && (
+                            <div className="lg:w-80 bg-muted/30 rounded-lg p-3">
+                              <h4 className="font-medium text-sm mb-2 flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                Department Transfers ({movements.length})
+                              </h4>
+                              <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {movements.map((m, idx) => (
+                                  <div key={m.id} className="flex items-start gap-2 text-xs">
+                                    <div className={`w-2 h-2 rounded-full mt-1.5 ${
+                                      m.eventType === 'ADMISSION' ? 'bg-green-500' :
+                                      m.eventType === 'DISCHARGE' ? 'bg-blue-500' :
+                                      m.eventType === 'TRANSFER' ? 'bg-purple-500' :
+                                      'bg-gray-500'
+                                    }`} />
+                                    <div className="flex-1">
+                                      <p className="font-medium">{m.eventType}</p>
+                                      <p className="text-muted-foreground">
+                                        {m.fromLocation || "N/A"} → {m.toLocation || "N/A"}
+                                      </p>
+                                      <p className="text-muted-foreground">
+                                        {formatDateTime(m.occurredAt)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+
+                {filteredPatients.length === 0 && (
+                  <div className="text-center py-12">
+                    <History className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No patients found for the selected filters.</p>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1409,6 +1409,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all patient movements for IPD history
+  app.get("/api/tracking/movements/all", async (req, res) => {
+    try {
+      const movements = await db.select()
+        .from(patientMovementLog)
+        .orderBy(desc(patientMovementLog.occurredAt));
+      res.json(movements);
+    } catch (error) {
+      console.error("Failed to fetch all patient movements:", error);
+      res.status(500).json({ error: "Failed to fetch all patient movements" });
+    }
+  });
+
   // Add medication to patient
   app.post("/api/tracking/patients/:id/meds", async (req, res) => {
     try {
