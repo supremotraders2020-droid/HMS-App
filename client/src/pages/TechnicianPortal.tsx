@@ -133,7 +133,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
   });
 
   const { data: pendingTests = [], isLoading: testsLoading } = useQuery<PendingTest[]>({
-    queryKey: ["/api/technician/pending-tests", selectedDepartment],
+    queryKey: ["/api/technician/pending-tests"],
   });
 
   const { data: submittedReports = [], isLoading: reportsLoading } = useQuery<TechnicianReport[]>({
