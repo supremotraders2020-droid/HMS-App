@@ -1195,6 +1195,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update tracking patient department
+  app.patch("/api/tracking/patients/:id/department", async (req, res) => {
+    try {
+      const { department } = req.body;
+      if (!department) {
+        return res.status(400).json({ error: "Department is required" });
+      }
+      const patient = await storage.updateTrackingPatient(req.params.id, { department });
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      console.error("Error updating patient department:", error);
+      res.status(500).json({ error: "Failed to update department" });
+    }
+  });
+
   // Delete tracking patient (permanent removal)
   app.delete("/api/tracking/patients/:id", async (req, res) => {
     try {

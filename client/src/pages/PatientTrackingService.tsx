@@ -66,6 +66,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import type { TrackingPatient, Medication, Meal, Vitals, ServicePatient, Doctor, DoctorVisit, PatientBill } from "@shared/schema";
+import { HOSPITAL_DEPARTMENTS } from "@shared/schema";
 
 type TabType = "patients" | "admit" | "doctor_visits" | "billing";
 
@@ -479,6 +480,26 @@ export default function PatientTrackingService() {
       toast({
         title: "Status Updated",
         description: "Patient status has been updated.",
+      });
+    },
+  });
+
+  const updateDepartmentMutation = useMutation({
+    mutationFn: async ({ id, department }: { id: string; department: string }) => {
+      return await apiRequest("PATCH", `/api/tracking/patients/${id}/department`, { department });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      toast({
+        title: "Department Updated",
+        description: "Patient department has been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update department.",
+        variant: "destructive",
       });
     },
   });
@@ -1136,6 +1157,19 @@ export default function PatientTrackingService() {
                               <SelectItem value="critical">Critical</SelectItem>
                               <SelectItem value="stable">Stable</SelectItem>
                               <SelectItem value="discharged">Discharged</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={patient.department}
+                            onValueChange={(department) => updateDepartmentMutation.mutate({ id: patient.id, department })}
+                          >
+                            <SelectTrigger className="w-40" data-testid={`select-department-${patient.id}`}>
+                              <SelectValue placeholder="Department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {HOSPITAL_DEPARTMENTS.map((dept) => (
+                                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           {patient.status !== "discharged" && (
