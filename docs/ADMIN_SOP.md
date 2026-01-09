@@ -1,10 +1,11 @@
 # Administrator Standard Operating Procedure (SOP)
 ## HMS Core - Hospital Management System
 
-**Version**: 1.0  
-**Effective Date**: December 2024  
+**Version**: 1.1  
+**Effective Date**: January 2026  
 **Applicable To**: All System Administrators at Gravity Hospital  
-**Document Type**: User Manual & SOP
+**Document Type**: User Manual & SOP  
+**Last Updated**: January 9, 2026
 
 ---
 
@@ -1701,10 +1702,62 @@ As Admin, ensure:
 
 ---
 
+## Recent Updates (January 2026)
+
+### New Role: TECHNICIAN
+
+A ninth role has been added to the system:
+
+| Role | Description | Access |
+|------|-------------|--------|
+| TECHNICIAN | Diagnostic technicians | Patient Monitoring tests only |
+
+**Technician Workflow Isolation:**
+- Technicians receive tests ONLY from Patient Monitoring module
+- Tests ordered via Prescription Management route to Medical Store
+- Reduces notification noise and focuses technician attention
+
+### Dashboard Statistics Updates
+
+Dashboard stat cards now reflect accurate real-time data:
+
+| Card | Data Source |
+|------|-------------|
+| Active Patients | `tracking_patients` table (actual hospital patients) |
+| Critical Alerts | `/api/critical-alerts` endpoint |
+| Pending Tests | Patient Monitoring source tests only |
+
+### OPD Scheduling Enhancements
+
+**Schedule-Based Availability:**
+- Doctor cards show real-time slot availability based on schedule configuration
+- Non-working days display informative message with scheduled working days
+- Doctor identity mapping via `doctorTableId` for reliable schedule matching
+
+### Smart OPD Flow Engine
+
+24 department-specific consultation workflows now available:
+- Symptom-driven forms with auto-observations
+- Intelligent test and referral suggestions
+- Department-specific clinical workflows
+
+**Departments covered:** Cardiothoracic Surgery, Cardiovascular Surgery, Cathlab, Vascular Surgery, ENT, General Surgery, ICU & Casualty, Neuro Surgery, OBGY, Oncology, Orthopedic Surgery, Pediatrics (3 subspecialties), Pain Management, Plastic Surgery, Uro Surgery, Pathology, Radiology, Rehabilitation, Gastroenterology
+
+### ICU Patient Monitoring
+
+27 monitoring data tables for comprehensive critical care:
+- NABH-compliant 24-hour data collection
+- Shift-based logging (Morning/Evening/Night)
+- Critical value alerts with auto-escalation
+- Integration with Technician Portal for diagnostic tests
+
+---
+
 ## Document Control
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 1.1 | January 2026 | Added Technician Portal, Dashboard updates, OPD scheduling enhancements, Smart OPD Flow | HMS Core Team |
 | 1.0 | December 2024 | Initial release | HMS Core Team |
 
 ---

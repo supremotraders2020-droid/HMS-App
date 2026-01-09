@@ -1,10 +1,11 @@
 # OPD Manager Standard Operating Procedure (SOP)
 ## HMS Core - Hospital Management System
 
-**Version**: 1.0  
-**Effective Date**: December 2024  
+**Version**: 1.1  
+**Effective Date**: January 2026  
 **Applicable To**: All OPD Managers at Gravity Hospital  
-**Document Type**: User Manual & SOP
+**Document Type**: User Manual & SOP  
+**Last Updated**: January 9, 2026
 
 ---
 
@@ -1085,10 +1086,42 @@ Your data entry directly impacts hospital operations. HMS Core requires real dat
 
 ---
 
+## Recent Updates (January 2026)
+
+### Schedule-Based Availability Display
+
+The OPD Service now shows improved doctor availability information:
+
+**Doctor Card Changes:**
+- When a doctor HAS schedule for selected date: Shows "X available, Y booked / Z total"
+- When a doctor has NO schedule for selected date: Shows "No clinic hours for this date (Available: Mon, Wed, Fri)"
+
+**Slot Panel Improvements:**
+- Slot detail panel only displays time slots when doctor has active schedule for selected date
+- Non-working days show informative message with list of doctor's scheduled working days
+- Schedule blocks remain visible to show overall availability pattern
+
+**How to Use:**
+1. Navigate to OPD Service → Doctors tab
+2. Select a date using the date picker
+3. Doctor cards automatically update to show availability for that date
+4. Click on a doctor to view available time slots
+5. If no slots available, check the displayed working days and select appropriate date
+
+### Doctor Identity Mapping
+
+The system now uses reliable `doctorTableId` mapping:
+- Eliminates issues with name variations (Dr. prefix, duplicate names)
+- Ensures accurate schedule-to-appointment reconciliation
+- Improves reporting accuracy
+
+---
+
 ## Document Control
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 1.1 | January 2026 | Added schedule-based availability display, doctor identity mapping | HMS Core Team |
 | 1.0 | December 2024 | Initial release | HMS Core Team |
 
 ---

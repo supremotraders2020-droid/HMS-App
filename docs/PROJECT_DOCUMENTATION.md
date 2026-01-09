@@ -32,6 +32,7 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 - **Accessibility**: Support for multiple themes, responsive design, and multi-language consent forms
 
 ### Target Users
+- Super Administrators
 - Hospital Administrators
 - Medical Doctors
 - Nursing Staff
@@ -39,13 +40,14 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 - Patients
 - Pathology Lab Staff
 - Medical Store Staff
+- Diagnostic Technicians
 
 ### Key Highlights
 
 | Feature | Description |
 |---------|-------------|
 | **Hospital** | Gravity Hospital (Single-Tenant) |
-| **User Roles** | 7 roles: ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE |
+| **User Roles** | 9 roles: SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE, TECHNICIAN |
 | **Internal Services** | 24 departments with 4,830+ services (including 1,148 pathology tests) |
 | **Portals** | 3 specialized portals (Patient, Doctor, Staff) |
 | **Security** | AES-256 encryption, bcrypt password hashing, HIPAA compliance |
@@ -67,7 +69,7 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 | **PIN Code** | 411062 |
 | **Country** | India |
 | **Status** | Active |
-| **System** | HMS Core v2.0 |
+| **System** | HMS Core v2.5.0 |
 
 ### Hospital Departments
 - Emergency Medicine
@@ -109,7 +111,7 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 
 | Feature | Description |
 |---------|-------------|
-| Role-Based Access | 7 distinct user roles with customized dashboards |
+| Role-Based Access | 9 distinct user roles with customized dashboards |
 | Multi-Theme Support | 6 color themes (Healthcare Blue, Medical Teal, Clinical Green, Warm Coral, Purple, Indigo) |
 | Dark/Light Mode | Full dark mode support for reduced eye strain |
 | Real-time Notifications | WebSocket-powered instant updates |
@@ -127,6 +129,9 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 
 ```
 +----------------------------------------------------------+
+|                     SUPER_ADMIN                           |
+|  (Enterprise control, system config, audit management)    |
++----------------------------------------------------------+
 |                        ADMIN                              |
 |  (Full system access, user management, settings)          |
 +----------------------------------------------------------+
@@ -134,9 +139,9 @@ HMS Core (Hospital Management System Core) is a comprehensive, enterprise-grade 
 |  (Clinical care,    |  (Assigned     |  (OPD operations, |
 |   prescriptions)    |  patients only)|   scheduling)     |
 +----------------------------------------------------------+
-|   PATHOLOGY_LAB     |  MEDICAL_STORE |                   |
-|  (Lab tests,        |  (Dispensing,  |                   |
-|   sample mgmt)      |  pharmacy ops) |                   |
+|   PATHOLOGY_LAB     |  MEDICAL_STORE |   TECHNICIAN      |
+|  (Lab tests,        |  (Dispensing,  |  (Diagnostic      |
+|   sample mgmt)      |  pharmacy ops) |   testing)        |
 +----------------------------------------------------------+
 |                       PATIENT                             |
 |         (Personal health, appointments)                   |
@@ -831,6 +836,39 @@ npm run dev
 
 ## Recent Updates
 
+### January 2026
+
+**OPD Scheduling Enhancements:**
+- Schedule-based availability display on doctor cards
+- Real-time slot availability with "X available, Y booked / Z total"
+- Non-working days show informative message with scheduled days
+- Doctor identity mapping via `doctorTableId` for reliable schedule matching
+- New API endpoint: `/api/schedule-availability`
+
+**Technician Portal & Workflow:**
+- New TECHNICIAN role added (ninth user role)
+- Workflow isolation: Technicians receive only Patient Monitoring tests
+- Prescription-based tests route to Medical Store instead
+- Dedicated portal with pending tests dashboard
+
+**Smart OPD Flow Engine:**
+- 24 department-specific consultation workflows
+- Symptom-driven forms with auto-observations
+- Intelligent test and referral suggestions
+- Rule-based clinical logic engine
+
+**ICU Patient Monitoring:**
+- 27 comprehensive monitoring data tables
+- NABH-compliant 24-hour data collection
+- Shift-based logging (Morning/Evening/Night)
+- Critical value alerts with auto-escalation
+- Integration with Technician Portal
+
+**Dashboard Updates:**
+- Active Patients card shows real `tracking_patients` count
+- Critical Alerts card displays actual critical alert count
+- Consistent data between summary cards and detailed panels
+
 ### December 2025
 - **BMW Report Filtering**: Click report type buttons (Daily/Monthly/MPCB/Annual) to filter the Generated Reports list to show only that type
 - **Report Preview Dialogs**: Detailed statistics, category breakdown, and bag listings with "Save to Reports" option
@@ -844,8 +882,8 @@ npm run dev
 
 For technical support or queries regarding HMS Core, please contact the development team.
 
-**Version**: 2.0.0  
-**Last Updated**: December 2025  
+**Version**: 2.5.0  
+**Last Updated**: January 2026  
 **Developed for**: Gravity Hospital, Pune
 
 ---

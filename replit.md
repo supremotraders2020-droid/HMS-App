@@ -21,7 +21,7 @@ The backend uses Node.js with Express, Drizzle ORM for type-safe database intera
 ### Feature Specifications
 Gravity AI Manager encompasses 23 core modules with robust role-based access control (RBAC) for SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE, and TECHNICIAN roles. Key features include:
 - **Authentication & RBAC**: Session-based authentication, daily Doctor Oath, and role-based UI filtering.
-- **OPD Service & Smart OPD Consultation**: Doctor scheduling, appointment booking, Google Maps integration, department-specific clinical workflows (23 departments), symptom-driven forms, auto-observations, and intelligent test/referral suggestions using a flow logic rule engine.
+- **OPD Service & Smart OPD Consultation**: Doctor scheduling, appointment booking, Google Maps integration, department-specific clinical workflows (24 departments), symptom-driven forms, auto-observations, and intelligent test/referral suggestions using a flow logic rule engine.
 - **Patient Management**: Demographics, admission, medical records, insurance, tracking, and NABH-compliant ICU Chart & Nursing Workflow (24-hour data collection, shift-based logging, critical alerts).
 - **Inventory Service**: Stock management with alerts for disposables, medicines, and equipment.
 - **Biometric Service**: Fingerprint/facial recognition with AES-256 encryption and HIPAA compliance.
@@ -76,3 +76,39 @@ Gravity AI Manager encompasses 23 core modules with robust role-based access con
 
 ### AI Integration
 - **OpenAI API**: Utilized for GPT-4o for chatbot, health tips, and personalized care plans.
+
+## Recent Enhancements (January 2026)
+
+### OPD Scheduling Improvements
+- **Schedule-Based Availability**: Doctor cards display real-time slot availability based on schedule configuration
+- **Smart Display Logic**: When doctors have clinic hours, shows "X available, Y booked / Z total"; when no schedule exists for a date, shows "No clinic hours for this date (Available: [scheduled days])"
+- **Doctor Identity Mapping**: Reliable `doctorTableId` mapping between `doctors` and `users` tables eliminates name-matching issues
+- **Conditional Slot Panel**: Time slots only display when doctor has active schedule for selected date
+
+### Technician Portal Workflow Isolation
+- **Source-Based Test Filtering**: Technician Portal exclusively receives tests from Patient Monitoring module
+- **Clear Workflow Separation**: Tests from Prescription Management route to Medical Store, not Technician Portal
+- **Notification Isolation**: Technician notifications only triggered for Patient Monitoring test orders
+
+### Dashboard Real-Time Statistics
+- **Active Patients Card**: Shows actual count from `tracking_patients` table
+- **Critical Alerts Card**: Displays real-time critical alert count from `/api/critical-alerts`
+- **Data Consistency**: All dashboard stat cards use correct data sources
+
+### Smart OPD Flow Engine
+- **24 Department-Specific Workflows**: Each department has customized consultation flow
+- **Symptom-Driven Forms**: Auto-generated observations based on symptom selection
+- **Intelligent Suggestions**: Rule-based test and referral recommendations
+
+### ICU Patient Monitoring
+- **27 Monitoring Data Tables**: Comprehensive critical care tracking
+- **NABH Compliance**: 24-hour data collection with shift-based logging
+- **Critical Value Alerts**: Auto-escalation for abnormal values
+- **Technician Integration**: Diagnostic test orders from Patient Monitoring route to Technician Portal
+
+## Documentation Updates (January 2026)
+- **docs/RECENT_UPDATES.md**: Comprehensive changelog for all recent changes
+- **docs/TECHNICIAN_SOP.md**: New SOP for Technician role with workflow isolation details
+- **docs/SUPER_ADMIN_SOP.md**: Enterprise control documentation for Super Admin
+- **Updated SOPs**: OPD_MANAGER_SOP.md, ADMIN_SOP.md, DOCTOR_SOP.md updated with January 2026 changes
+- **docs/PROJECT_DOCUMENTATION.md**: Updated with architecture changes and new features

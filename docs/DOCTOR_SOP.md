@@ -1,10 +1,11 @@
 # Doctor Standard Operating Procedure (SOP)
 ## HMS Core - Hospital Management System
 
-**Version**: 1.0  
-**Effective Date**: December 2024  
+**Version**: 1.1  
+**Effective Date**: January 2026  
 **Applicable To**: All Doctors at Gravity Hospital  
-**Document Type**: User Manual & SOP
+**Document Type**: User Manual & SOP  
+**Last Updated**: January 9, 2026
 
 ---
 
@@ -1050,10 +1051,63 @@ If you encounter system issues:
 
 ---
 
+## Recent Updates (January 2026)
+
+### Smart OPD Consultation Flow
+
+The OPD Service now features department-specific clinical workflows:
+
+**24 Department Workflows:**
+- Each department has customized consultation flow
+- Symptom-driven forms with auto-generated observations
+- Intelligent test and referral suggestions based on symptoms
+
+**How to Use:**
+1. Open patient consultation from Appointments
+2. System automatically detects patient's department
+3. Follow the guided workflow with department-specific forms
+4. Review auto-generated observations and suggested tests
+5. Accept or modify recommendations before finalizing
+
+### Enhanced Schedule Display
+
+**Doctor Card Improvements:**
+- See real-time availability for any selected date
+- Non-working days show list of scheduled working days
+- Slot counts display: available, booked, and total
+
+**Slot Panel Updates:**
+- Only shows time slots when you have schedule for selected date
+- Non-working days display informative message
+- Schedule blocks visible to show overall availability pattern
+
+### ICU Patient Monitoring Integration
+
+**Ordering Diagnostic Tests:**
+- Tests ordered from Patient Monitoring → Tests Tab route to Technician Portal
+- Technicians are automatically notified for Patient Monitoring tests
+- Results visible across all authorized roles once uploaded
+
+**Workflow:**
+1. Open ICU patient monitoring session
+2. Navigate to Tests tab
+3. Order diagnostic test with urgency level
+4. Technician receives notification
+5. View results when uploaded
+
+### Diagnostic Report Visibility
+
+- Diagnostic reports now visible across all authorized user roles
+- Reports ordered from Patient Monitoring accessible to Doctors, Nurses, Technicians
+- Working notification system ensures timely alerts
+
+---
+
 ## Document Control
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 1.1 | January 2026 | Added Smart OPD Flow, Enhanced scheduling, ICU integration | HMS Core Team |
 | 1.0 | December 2024 | Initial release | HMS Core Team |
 
 ---
