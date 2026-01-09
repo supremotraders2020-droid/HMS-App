@@ -4605,45 +4605,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Patient not found" });
       }
       
-      // 1. OPD History - Get all OPD appointments
-      const opdHistory = await db.select().from(appointments)
-        .where(eq(appointments.patientId, patientId))
-        .orderBy(desc(appointments.appointmentDate));
+      // Use patient name for lookups in tables that don't have patientId FK
+      const patientName = patient.name;
       
-      // 2. IPD History - Get tracking patient data (admissions, ward, ICU stays)
-      const ipdHistory = await db.select().from(trackingPatients)
-        .where(eq(trackingPatients.patientDbId, patientId))
-        .orderBy(desc(trackingPatients.admissionDate));
+      // 1. OPD History - Get appointments by patient name
+      let opdHistory: any[] = [];
+      try {
+        opdHistory = await db.select().from(appointments)
+          .where(eq(appointments.patientName, patientName));
+      } catch (e) { console.log("No OPD history found"); }
       
-      // 3. Medication History - Get all prescriptions for this patient
-      const medicationHistory = await db.select().from(prescriptions)
-        .where(eq(prescriptions.patientId, patientId))
-        .orderBy(desc(prescriptions.createdAt));
+      // 2. IPD History - Get tracking patient data by patient name
+      let ipdHistory: any[] = [];
+      try {
+        ipdHistory = await db.select().from(trackingPatients)
+          .where(eq(trackingPatients.name, patientName))
+          .orderBy(desc(trackingPatients.admissionDate));
+      } catch (e) { console.log("No IPD history found"); }
       
-      // 4. Consent Records - Get all patient consents
-      const consentRecords = await db.select().from(patientConsents)
-        .where(eq(patientConsents.patientId, patientId))
-        .orderBy(desc(patientConsents.uploadedAt));
+      // 3. Medication History - Get prescriptions by patientId
+      let medicationHistory: any[] = [];
+      try {
+        medicationHistory = await db.select().from(prescriptions)
+          .where(eq(prescriptions.patientId, patientId))
+          .orderBy(desc(prescriptions.createdAt));
+      } catch (e) { console.log("No medication history found"); }
       
-      // 5. Billing & Payments - Get all patient bills
-      const billingHistory = await db.select().from(patientBills)
-        .where(eq(patientBills.patientId, patientId))
-        .orderBy(desc(patientBills.billDate));
+      // 4. Consent Records - Get patient consents
+      let consentRecords: any[] = [];
+      try {
+        consentRecords = await db.select().from(patientConsents)
+          .where(eq(patientConsents.patientId, patientId))
+          .orderBy(desc(patientConsents.uploadedAt));
+      } catch (e) { console.log("No consent records found"); }
       
-      // Get bill payments for each bill
-      const billIds = billingHistory.map(b => b.id);
-      const payments = billIds.length > 0 
-        ? await db.select().from(billPayments).where(sql`${billPayments.billId} = ANY(${billIds})`)
-        : [];
-      
-      // Get patient insurance
-      const insurance = await db.select().from(patientInsurance)
-        .where(eq(patientInsurance.patientId, patientId));
+      // 5. Billing History
+      let bills: any[] = [];
+      let payments: any[] = [];
+      let insurance: any[] = [];
+      try {
+        bills = await db.select().from(patientBills)
+          .where(eq(patientBills.patientId, patientId))
+          .orderBy(desc(patientBills.billDate));
+        
+        if (bills.length > 0) {
+          const billIds = bills.map(b => b.id);
+          payments = await db.select().from(billPayments)
+            .where(sql`${billPayments.billId} IN (${sql.join(billIds.map(id => sql`${id}`), sql`, `)})`);
+        }
+        
+        insurance = await db.select().from(patientInsurance)
+          .where(eq(patientInsurance.patientId, patientId));
+      } catch (e) { console.log("No billing history found"); }
       
       // Get medical records
-      const records = await db.select().from(medicalRecords)
-        .where(eq(medicalRecords.patientId, patientId))
-        .orderBy(desc(medicalRecords.recordDate));
+      let records: any[] = [];
+      try {
+        records = await db.select().from(medicalRecords)
+          .where(eq(medicalRecords.patientId, patientId))
+          .orderBy(desc(medicalRecords.recordDate));
+      } catch (e) { console.log("No medical records found"); }
       
       res.json({
         patient,
@@ -4652,7 +4673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         medicationHistory,
         consentRecords,
         billingHistory: {
-          bills: billingHistory,
+          bills,
           payments,
           insurance
         },
