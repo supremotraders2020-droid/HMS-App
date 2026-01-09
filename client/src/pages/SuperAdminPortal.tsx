@@ -151,30 +151,30 @@ export default function SuperAdminPortal({ section = "dashboard" }: SuperAdminPo
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-rose-50/30 to-purple-50/30 dark:from-slate-900 dark:via-rose-950/20 dark:to-purple-950/20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-rose-900 via-purple-800 to-indigo-900 text-white shadow-lg">
-        <div className="px-6 py-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20">
-                <Crown className="h-7 w-7 text-yellow-400" />
+      <div className="bg-gradient-to-r from-rose-900 via-purple-800 to-indigo-900 text-white shadow-lg animate-fade-in">
+        <div className="px-3 sm:px-6 py-3 sm:py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <div className="bg-white/10 backdrop-blur-sm p-2 sm:p-3 rounded-xl border border-white/20 shrink-0">
+                <Crown className="h-5 w-5 sm:h-7 sm:w-7 text-yellow-400" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold flex items-center gap-2">
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-xl font-bold flex items-center gap-2 truncate">
                   {currentSection.title}
                 </h1>
-                <p className="text-purple-200 text-sm">
+                <p className="text-purple-200 text-xs sm:text-sm truncate">
                   {currentSection.description}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="border-green-400 text-green-400 bg-green-500/10">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <Badge variant="outline" className="border-green-400 text-green-400 bg-green-500/10 text-xs">
                 <ShieldCheck className="h-3 w-3 mr-1" />
-                HIPAA Compliant
+                <span className="hidden xs:inline">HIPAA </span>Compliant
               </Badge>
-              <Badge variant="outline" className="border-blue-400 text-blue-400 bg-blue-500/10">
+              <Badge variant="outline" className="border-blue-400 text-blue-400 bg-blue-500/10 text-xs">
                 <Shield className="h-3 w-3 mr-1" />
-                NABH Certified
+                <span className="hidden xs:inline">NABH </span>Certified
               </Badge>
             </div>
           </div>
@@ -182,7 +182,7 @@ export default function SuperAdminPortal({ section = "dashboard" }: SuperAdminPo
       </div>
 
       {/* Main Content - Full Width */}
-      <div className="p-6">
+      <div className="p-3 sm:p-6 animate-fade-in-up">
         {section === "dashboard" && <DashboardSection />}
         {section === "users" && <UsersSection />}
         {section === "billing" && <BillingSection />}
@@ -218,23 +218,23 @@ function DashboardSection() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard Overview</h2>
-        <p className="text-slate-600 dark:text-slate-400">System-wide statistics and pending actions</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Dashboard Overview</h2>
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">System-wide statistics and pending actions</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {stats.map((stat, idx) => (
-          <Card key={idx}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</p>
-                  <p className="text-3xl font-bold mt-1">{stat.value}</p>
+          <Card key={idx} className="stagger-item hospital-stat-card">
+            <CardContent className="p-3 sm:pt-6 sm:px-6">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">{stat.label}</p>
+                  <p className="text-xl sm:text-3xl font-bold mt-1">{stat.value}</p>
                 </div>
-                <div className={`p-3 rounded-full bg-${stat.color}-100 dark:bg-${stat.color}-900/30`}>
+                <div className={`p-2 sm:p-3 rounded-full shrink-0 bg-${stat.color}-100 dark:bg-${stat.color}-900/30`}>
                   <stat.icon className={`h-6 w-6 text-${stat.color}-600 dark:text-${stat.color}-400`} />
                 </div>
               </div>

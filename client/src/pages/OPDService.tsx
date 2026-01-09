@@ -647,29 +647,30 @@ export default function OPDService() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen page-background-mesh">
       {/* OPD Header */}
-      <div className="bg-gradient-to-r from-primary via-primary/90 to-primary text-primary-foreground">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Stethoscope className="h-8 w-8" />
-              <div>
-                <h1 className="text-2xl font-bold">OPD - Outpatient Department</h1>
-                <div className="flex items-center gap-2 text-primary-foreground/80 text-sm">
-                  <MapPin className="h-4 w-4" />
-                  <span>OPD Wing, Gravity Hospital</span>
+      <div className="bg-gradient-to-r from-primary via-primary/90 to-primary text-primary-foreground animate-fade-in">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <Stethoscope className="h-6 w-6 sm:h-8 sm:w-8 shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold truncate">OPD - Outpatient Department</h1>
+                <div className="flex items-center gap-2 text-primary-foreground/80 text-xs sm:text-sm">
+                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                  <span className="truncate">OPD Wing, Gravity Hospital</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-lg">
-                <Phone className="h-4 w-4" />
-                <span className="text-sm">OPD: +91 20 1234 5679</span>
+            <div className="flex flex-wrap gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm">
+                <Phone className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden xs:inline">OPD: </span>
+                <span>+91 20 1234 5679</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-lg">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm">Mon-Sat: 8AM-8PM</span>
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                <span>Mon-Sat: 8AM-8PM</span>
               </div>
             </div>
           </div>
@@ -677,21 +678,21 @@ export default function OPDService() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 py-2">
+      <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b animate-slide-in-left">
+        <div className="container mx-auto px-2 sm:px-4">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-1 sm:gap-2 py-2">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
                 variant={activeTab === tab.id ? "default" : "ghost"}
-                className={`h-14 flex items-center justify-center gap-2 ${
+                className={`h-10 sm:h-14 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-4 ${
                   activeTab === tab.id ? "bg-primary text-primary-foreground" : ""
                 }`}
                 onClick={() => setActiveTab(tab.id)}
                 data-testid={`tab-${tab.id}`}
               >
-                <tab.icon className="h-5 w-5" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <tab.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                <span className="hidden sm:inline truncate">{tab.label}</span>
               </Button>
             ))}
           </div>
@@ -699,7 +700,7 @@ export default function OPDService() {
       </div>
 
       {/* Content Area */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 animate-fade-in-up">
         {/* Doctor Schedules Tab */}
         {activeTab === "schedules" && (
           <div className="space-y-6">
