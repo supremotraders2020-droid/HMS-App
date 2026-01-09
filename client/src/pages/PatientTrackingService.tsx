@@ -488,11 +488,17 @@ export default function PatientTrackingService() {
     mutationFn: async ({ id, department }: { id: string; department: string }) => {
       return await apiRequest("PATCH", `/api/tracking/patients/${id}/department`, { department });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      // If department is ICU, also invalidate ICU charts for real-time display
+      if (variables.department === "ICU") {
+        queryClient.invalidateQueries({ queryKey: ["/api/icu-charts"] });
+      }
       toast({
         title: "Department Updated",
-        description: "Patient department has been updated successfully.",
+        description: variables.department === "ICU" 
+          ? "Patient transferred to ICU and ICU chart created."
+          : "Patient department has been updated successfully.",
       });
     },
     onError: () => {
@@ -1172,39 +1178,6 @@ export default function PatientTrackingService() {
                               ))}
                             </SelectContent>
                           </Select>
-                          {patient.status !== "discharged" && patient.isInIcu && (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                                  data-testid={`button-transfer-ward-${patient.id}`}
-                                >
-                                  <Bed className="h-4 w-4 mr-1" />
-                                  Transfer to Ward
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Transfer Patient to Ward</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to transfer {patient.name} from ICU to ward?
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => transferToWardMutation.mutate(patient.id)}
-                                    className="bg-orange-600 hover:bg-orange-700"
-                                    data-testid={`button-confirm-transfer-ward-${patient.id}`}
-                                  >
-                                    Confirm Transfer
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
                           <Dialog open={historyPatient?.id === patient.id} onOpenChange={(open) => !open && setHistoryPatient(null)}>
                             <DialogTrigger asChild>
                               <Button
