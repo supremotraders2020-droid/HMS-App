@@ -84,7 +84,8 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   insertIcuOutputChartSchema, insertIcuMedicationOrdersSchema, insertIcuNursingRemarksSchema,
   insertIcuNursingDutySchema, insertIcuFluidOrdersSchema, insertIcuNutritionChartSchema,
   insertIcuBodyMarkingSchema, insertIcuNurseDiarySchema, insertIcuOnceOnlyDrugsSchema,
-  insertIcuPreviousDayNotesSchema, insertIcuAllergyPrecautionsSchema
+  insertIcuPreviousDayNotesSchema, insertIcuAllergyPrecautionsSchema,
+  appointments, trackingPatients, patientConsents, patientBills, billPayments, patientInsurance, medicalRecords
 } from "@shared/schema";
 import { seedOpdDepartmentFlows, OPD_DEPARTMENT_FLOW_DATA } from "./seeds/opdDepartmentFlows";
 import { getChatbotResponse, getChatbotStats } from "./openai";
@@ -4605,9 +4606,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // 1. OPD History - Get all OPD appointments
-      const opdHistory = await db.select().from(opdAppointments)
-        .where(eq(opdAppointments.patientId, patientId))
-        .orderBy(desc(opdAppointments.appointmentDate));
+      const opdHistory = await db.select().from(appointments)
+        .where(eq(appointments.patientId, patientId))
+        .orderBy(desc(appointments.appointmentDate));
       
       // 2. IPD History - Get tracking patient data (admissions, ward, ICU stays)
       const ipdHistory = await db.select().from(trackingPatients)
