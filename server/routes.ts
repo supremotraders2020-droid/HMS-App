@@ -1202,11 +1202,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!department) {
         return res.status(400).json({ error: "Department is required" });
       }
-      const patient = await storage.updateTrackingPatient(req.params.id, { department });
-      if (!patient) {
+      
+      // Get current patient data
+      const currentPatient = await storage.getTrackingPatientById(req.params.id);
+      if (!currentPatient) {
         return res.status(404).json({ error: "Patient not found" });
       }
-      res.json(patient);
+      
+      // If department is ICU, also set isInIcu flag and create ICU chart
+      if (department === "ICU" && !currentPatient.isInIcu) {
+        const patient = await storage.updateTrackingPatient(req.params.id, { 
+          department,
+          isInIcu: true,
+          icuTransferDate: new Date()
+        });
+        
+        // Auto-create ICU chart for the patient
+        try {
+          const today = new Date().toISOString().split('T')[0];
+          await storage.createIcuChart({
+            patientId: currentPatient.id,
+            patientName: currentPatient.name,
+            age: String(currentPatient.age),
+            sex: currentPatient.gender,
+            diagnosis: currentPatient.diagnosis,
+            ward: "ICU",
+            bedNo: currentPatient.room,
+            chartDate: today,
+            dateOfAdmission: today,
+            admittingConsultant: currentPatient.doctor,
+            icuConsultant: currentPatient.doctor
+          });
+        } catch (chartError) {
+          console.log("ICU chart may already exist for this patient");
+        }
+        
+        res.json(patient);
+      } else if (department !== "ICU" && currentPatient.isInIcu) {
+        // If moving out of ICU, calculate ICU days and update
+        let icuDays = currentPatient.icuDays || 0;
+        if (currentPatient.icuTransferDate) {
+          const now = new Date();
+          const icuStart = new Date(currentPatient.icuTransferDate);
+          const daysInIcu = Math.ceil((now.getTime() - icuStart.getTime()) / (1000 * 60 * 60 * 24));
+          icuDays += daysInIcu;
+        }
+        
+        const patient = await storage.updateTrackingPatient(req.params.id, { 
+          department,
+          isInIcu: false,
+          icuDays: icuDays,
+          icuTransferDate: null
+        });
+        res.json(patient);
+      } else {
+        // Just update department
+        const patient = await storage.updateTrackingPatient(req.params.id, { department });
+        res.json(patient);
+      }
     } catch (error) {
       console.error("Error updating patient department:", error);
       res.status(500).json({ error: "Failed to update department" });
