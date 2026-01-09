@@ -269,6 +269,27 @@ export const insertTrackingPatientSchema = createInsertSchema(trackingPatients).
 export type InsertTrackingPatient = z.infer<typeof insertTrackingPatientSchema>;
 export type TrackingPatient = typeof trackingPatients.$inferSelect;
 
+// Patient Movement Log - tracks all patient movements with timestamps
+export const patientMovementLog = pgTable("patient_movement_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  trackingPatientId: varchar("tracking_patient_id").notNull(),
+  eventType: text("event_type").notNull(), // admission, ward_transfer, icu_transfer, icu_discharge, discharge, manual_note
+  fromLocation: text("from_location"),
+  toLocation: text("to_location"),
+  bedId: varchar("bed_id"),
+  performedBy: text("performed_by"),
+  notes: text("notes"),
+  occurredAt: timestamp("occurred_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPatientMovementLogSchema = createInsertSchema(patientMovementLog).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPatientMovementLog = z.infer<typeof insertPatientMovementLogSchema>;
+export type PatientMovementLog = typeof patientMovementLog.$inferSelect;
+
 // Medications table
 export const medications = pgTable("medications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
