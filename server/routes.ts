@@ -1217,24 +1217,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icuTransferDate: new Date()
         });
         
-        // Auto-create ICU chart for the patient
-        try {
-          const today = new Date().toISOString().split('T')[0];
-          await storage.createIcuChart({
-            patientId: currentPatient.id,
-            patientName: currentPatient.name,
-            age: String(currentPatient.age),
-            sex: currentPatient.gender,
-            diagnosis: currentPatient.diagnosis,
-            ward: "ICU",
-            bedNo: currentPatient.room,
-            chartDate: today,
-            dateOfAdmission: today,
-            admittingConsultant: currentPatient.doctor,
-            icuConsultant: currentPatient.doctor
-          });
-        } catch (chartError) {
-          console.log("ICU chart may already exist for this patient");
+        // Check if ICU chart already exists for this patient before creating
+        const existingCharts = await storage.getIcuChartsByPatient(currentPatient.id);
+        if (existingCharts.length === 0) {
+          // Auto-create ICU chart for the patient only if none exists
+          try {
+            const today = new Date().toISOString().split('T')[0];
+            await storage.createIcuChart({
+              patientId: currentPatient.id,
+              patientName: currentPatient.name,
+              age: String(currentPatient.age),
+              sex: currentPatient.gender,
+              diagnosis: currentPatient.diagnosis,
+              ward: "ICU",
+              bedNo: currentPatient.room,
+              chartDate: today,
+              dateOfAdmission: today,
+              admittingConsultant: currentPatient.doctor,
+              icuConsultant: currentPatient.doctor
+            });
+          } catch (chartError) {
+            console.log("Error creating ICU chart:", chartError);
+          }
         }
         
         res.json(patient);
