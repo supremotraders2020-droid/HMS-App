@@ -1172,52 +1172,32 @@ export default function PatientTrackingService() {
                               ))}
                             </SelectContent>
                           </Select>
-                          {patient.status !== "discharged" && (
+                          {patient.status !== "discharged" && patient.isInIcu && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                {patient.isInIcu ? (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                                    data-testid={`button-transfer-ward-${patient.id}`}
-                                  >
-                                    <Bed className="h-4 w-4 mr-1" />
-                                    Transfer to Ward
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
-                                    data-testid={`button-switch-icu-${patient.id}`}
-                                  >
-                                    <HeartPulse className="h-4 w-4 mr-1" />
-                                    Switch to ICU
-                                  </Button>
-                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                  data-testid={`button-transfer-ward-${patient.id}`}
+                                >
+                                  <Bed className="h-4 w-4 mr-1" />
+                                  Transfer to Ward
+                                </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    {patient.isInIcu ? "Transfer Patient to Ward" : "Transfer Patient to ICU"}
-                                  </AlertDialogTitle>
+                                  <AlertDialogTitle>Transfer Patient to Ward</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    {patient.isInIcu 
-                                      ? `Are you sure you want to transfer ${patient.name} from ICU to ward?`
-                                      : `Are you sure you want to transfer ${patient.name} to ICU? An ICU monitoring chart will be created automatically with the patient's details.`
-                                    }
+                                    Are you sure you want to transfer {patient.name} from ICU to ward?
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => patient.isInIcu 
-                                      ? transferToWardMutation.mutate(patient.id)
-                                      : switchToIcuMutation.mutate(patient)
-                                    }
-                                    className={patient.isInIcu ? "bg-orange-600 hover:bg-orange-700" : "bg-cyan-600 hover:bg-cyan-700"}
-                                    data-testid={patient.isInIcu ? `button-confirm-transfer-ward-${patient.id}` : `button-confirm-switch-icu-${patient.id}`}
+                                    onClick={() => transferToWardMutation.mutate(patient.id)}
+                                    className="bg-orange-600 hover:bg-orange-700"
+                                    data-testid={`button-confirm-transfer-ward-${patient.id}`}
                                   >
                                     Confirm Transfer
                                   </AlertDialogAction>
