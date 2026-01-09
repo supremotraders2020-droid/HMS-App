@@ -5348,6 +5348,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(diagnosticTestOrders.orderedDate));
   }
 
+  async getDiagnosticTestOrdersBySession(sessionId: string): Promise<any[]> {
+    return await db.select().from(diagnosticTestOrders)
+      .where(eq(diagnosticTestOrders.sessionId, sessionId))
+      .orderBy(desc(diagnosticTestOrders.orderedDate));
+  }
+
   async updateDiagnosticTestOrder(id: string, updates: any): Promise<any | undefined> {
     const result = await db.update(diagnosticTestOrders)
       .set({ ...updates, updatedAt: new Date() })

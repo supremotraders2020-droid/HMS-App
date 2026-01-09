@@ -663,6 +663,7 @@ export interface IStorage {
   getDiagnosticTestOrdersByDoctor(doctorId: string): Promise<any[]>;
   getDiagnosticTestOrdersByStatus(status: string): Promise<any[]>;
   getDiagnosticTestOrdersByIcuChart(icuChartId: string): Promise<any[]>;
+  getDiagnosticTestOrdersBySession(sessionId: string): Promise<any[]>;
   getPendingDiagnosticTestOrders(): Promise<any[]>;
   updateDiagnosticTestOrder(id: string, updates: any): Promise<any | undefined>;
   deleteDiagnosticTestOrder(id: string): Promise<boolean>;

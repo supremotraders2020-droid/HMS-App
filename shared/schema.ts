@@ -4763,7 +4763,8 @@ export const diagnosticTestOrders = pgTable("diagnostic_test_orders", {
   prescriptionId: varchar("prescription_id"), // Link to prescription if from doctor
   consultationId: varchar("consultation_id"), // Link to OPD consultation
   icuChartId: varchar("icu_chart_id"), // Link to ICU chart if from ICU
-  source: text("source").default("PRESCRIPTION"), // PRESCRIPTION, OPD, ICU
+  sessionId: varchar("session_id"), // Link to Patient Monitoring session
+  source: text("source").default("PRESCRIPTION"), // PRESCRIPTION, OPD, ICU, PATIENT_MONITORING
   
   // Patient Information
   patientId: varchar("patient_id").notNull(),

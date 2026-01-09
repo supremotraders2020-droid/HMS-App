@@ -6899,6 +6899,32 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ========== PATIENT MONITORING TESTS ==========
+  app.get("/api/patient-monitoring/sessions/:sessionId/tests", async (req, res) => {
+    try {
+      const tests = await storage.getDiagnosticTestOrdersBySession(req.params.sessionId);
+      res.json(tests);
+    } catch (error) {
+      console.error("Error fetching session tests:", error);
+      res.status(500).json({ error: "Failed to fetch tests" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/sessions/:sessionId/tests", async (req, res) => {
+    try {
+      const testOrder = await storage.createDiagnosticTestOrder({
+        ...req.body,
+        sessionId: req.params.sessionId,
+        source: "PATIENT_MONITORING",
+        status: "PENDING",
+      });
+      res.status(201).json(testOrder);
+    } catch (error) {
+      console.error("Error creating test order:", error);
+      res.status(500).json({ error: "Failed to create test order" });
+    }
+  });
+
   // ========== AUDIT LOG ==========
   app.get("/api/patient-monitoring/audit/:sessionId", async (req, res) => {
     try {

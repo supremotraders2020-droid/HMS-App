@@ -22,7 +22,8 @@ import {
   FileText, Pill, AlertTriangle, Users, Shield,
   PlusCircle, RefreshCw, Download, Stethoscope,
   Wind, Syringe, FlaskConical, ClipboardList, Baby,
-  BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays, ArrowLeft
+  BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays, ArrowLeft,
+  Beaker, Plus, CheckCircle, XCircle, Loader2
 } from "lucide-react";
 
 const HOUR_SLOTS = [
@@ -563,6 +564,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="airway" className="text-xs gap-1.5 data-[state=active]:bg-background"><BedDouble className="h-3.5 w-3.5" />Lines/Tubes</TabsTrigger>
                   <TabsTrigger value="staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Duty Staff</TabsTrigger>
                   <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
+                  <TabsTrigger value="tests" className="text-xs gap-1.5 data-[state=active]:bg-background"><Beaker className="h-3.5 w-3.5" />Tests</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -606,6 +608,9 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="allergies">
                   <AllergiesTab sessionId={selectedSession.id} />
+                </TabsContent>
+                <TabsContent value="tests">
+                  <TestsTab sessionId={selectedSession.id} patientId={selectedSession.patientId} patientName={selectedSession.patientName} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -2186,6 +2191,372 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
               {record.fallRisk && <Badge variant="destructive">Fall Risk</Badge>}
               {record.pressureUlcerRisk && <Badge variant="destructive">Pressure Ulcer Risk</Badge>}
             </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Test categories for diagnostic tests
+const TEST_CATEGORIES = {
+  PATHOLOGY: {
+    label: "Pathology / Lab Tests",
+    icon: "beaker",
+    color: "purple",
+    tests: [
+      { name: "Complete Blood Count (CBC)", type: "PATHOLOGY", department: "Pathology" },
+      { name: "Comprehensive Metabolic Panel (CMP)", type: "PATHOLOGY", department: "Pathology" },
+      { name: "Liver Function Test (LFT)", type: "PATHOLOGY", department: "Pathology" },
+      { name: "Renal Function Test (RFT/KFT)", type: "PATHOLOGY", department: "Pathology" },
+      { name: "Coagulation Profile (PT/INR/aPTT)", type: "PATHOLOGY", department: "Pathology" },
+      { name: "Arterial Blood Gas (ABG)", type: "PATHOLOGY", department: "Pathology" },
+      { name: "Blood Culture & Sensitivity", type: "PATHOLOGY", department: "Microbiology" },
+      { name: "Urine Culture & Sensitivity", type: "PATHOLOGY", department: "Microbiology" },
+      { name: "Procalcitonin (PCT)", type: "PATHOLOGY", department: "Pathology" },
+      { name: "C-Reactive Protein (CRP)", type: "PATHOLOGY", department: "Pathology" },
+      { name: "D-Dimer", type: "PATHOLOGY", department: "Pathology" },
+      { name: "Serum Lactate", type: "PATHOLOGY", department: "Pathology" },
+      { name: "Troponin I/T", type: "PATHOLOGY", department: "Pathology" },
+      { name: "BNP/NT-proBNP", type: "PATHOLOGY", department: "Pathology" },
+      { name: "Thyroid Profile (T3/T4/TSH)", type: "PATHOLOGY", department: "Pathology" },
+    ]
+  },
+  RADIOLOGY: {
+    label: "Radiology & Imaging",
+    icon: "scan",
+    color: "blue",
+    tests: [
+      { name: "Chest X-Ray (CXR)", type: "RADIOLOGY", department: "Radiology" },
+      { name: "CT Scan - Head", type: "RADIOLOGY", department: "Radiology" },
+      { name: "CT Scan - Chest", type: "RADIOLOGY", department: "Radiology" },
+      { name: "CT Scan - Abdomen", type: "RADIOLOGY", department: "Radiology" },
+      { name: "CT Pulmonary Angiography (CTPA)", type: "RADIOLOGY", department: "Radiology" },
+      { name: "MRI Brain", type: "RADIOLOGY", department: "Radiology" },
+      { name: "USG Abdomen", type: "RADIOLOGY", department: "Radiology" },
+      { name: "2D Echocardiography", type: "RADIOLOGY", department: "Cardiology" },
+      { name: "Bedside USG - POCUS", type: "RADIOLOGY", department: "ICU" },
+      { name: "Portable X-Ray", type: "RADIOLOGY", department: "Radiology" },
+    ]
+  },
+  CARDIOLOGY: {
+    label: "Cardiology Tests",
+    icon: "heart",
+    color: "red",
+    tests: [
+      { name: "12-Lead ECG", type: "CARDIOLOGY", department: "Cardiology" },
+      { name: "Cardiac Enzymes", type: "CARDIOLOGY", department: "Pathology" },
+      { name: "Stress Test/TMT", type: "CARDIOLOGY", department: "Cardiology" },
+      { name: "Holter Monitoring", type: "CARDIOLOGY", department: "Cardiology" },
+      { name: "Coronary Angiography", type: "CARDIOLOGY", department: "Cath Lab" },
+    ]
+  },
+  NEURO: {
+    label: "Neurological Tests",
+    icon: "brain",
+    color: "indigo",
+    tests: [
+      { name: "EEG", type: "NEURO", department: "Neurology" },
+      { name: "Nerve Conduction Study (NCS)", type: "NEURO", department: "Neurology" },
+      { name: "Lumbar Puncture/CSF Analysis", type: "NEURO", department: "Neurology" },
+      { name: "Transcranial Doppler", type: "NEURO", department: "Neurology" },
+    ]
+  },
+  PULMONARY: {
+    label: "Pulmonary Tests",
+    icon: "wind",
+    color: "cyan",
+    tests: [
+      { name: "Pulmonary Function Test (PFT)", type: "PULMONARY", department: "Pulmonology" },
+      { name: "Bronchoscopy", type: "PULMONARY", department: "Pulmonology" },
+      { name: "Sputum Culture", type: "PULMONARY", department: "Microbiology" },
+      { name: "BAL (Bronchoalveolar Lavage)", type: "PULMONARY", department: "Pulmonology" },
+    ]
+  },
+  BLOOD_BANK: {
+    label: "Blood Bank",
+    icon: "droplet",
+    color: "rose",
+    tests: [
+      { name: "Blood Grouping & Rh Typing", type: "BLOOD_BANK", department: "Blood Bank" },
+      { name: "Cross Match", type: "BLOOD_BANK", department: "Blood Bank" },
+      { name: "Coombs Test (Direct/Indirect)", type: "BLOOD_BANK", department: "Blood Bank" },
+      { name: "Blood Component Request", type: "BLOOD_BANK", department: "Blood Bank" },
+    ]
+  },
+  DIALYSIS: {
+    label: "Dialysis & Renal",
+    icon: "filter",
+    color: "amber",
+    tests: [
+      { name: "Hemodialysis", type: "DIALYSIS", department: "Nephrology" },
+      { name: "CRRT (Continuous Renal Replacement)", type: "DIALYSIS", department: "ICU" },
+      { name: "Peritoneal Dialysis", type: "DIALYSIS", department: "Nephrology" },
+      { name: "Dialysis Adequacy (Kt/V)", type: "DIALYSIS", department: "Nephrology" },
+    ]
+  },
+  ENDOSCOPY: {
+    label: "Endoscopy & Cath Lab",
+    icon: "scan",
+    color: "green",
+    tests: [
+      { name: "Upper GI Endoscopy", type: "ENDOSCOPY", department: "Gastroenterology" },
+      { name: "Colonoscopy", type: "ENDOSCOPY", department: "Gastroenterology" },
+      { name: "ERCP", type: "ENDOSCOPY", department: "Gastroenterology" },
+      { name: "Coronary Angiography", type: "ENDOSCOPY", department: "Cath Lab" },
+      { name: "Pacemaker Implantation", type: "ENDOSCOPY", department: "Cath Lab" },
+    ]
+  }
+};
+
+function TestsTab({ sessionId, patientId, patientName }: { sessionId: string; patientId: string; patientName: string }) {
+  const { toast } = useToast();
+  const [showOrderDialog, setShowOrderDialog] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("PATHOLOGY");
+  const [selectedTests, setSelectedTests] = useState<string[]>([]);
+  const [priority, setPriority] = useState("ROUTINE");
+  const [clinicalNotes, setClinicalNotes] = useState("");
+  const [doctorName, setDoctorName] = useState("");
+
+  const { data: tests = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/sessions", sessionId, "tests"],
+    refetchInterval: 5000,
+  });
+
+  const orderTestsMutation = useMutation({
+    mutationFn: async (testData: any) => {
+      return apiRequest("POST", `/api/patient-monitoring/sessions/${sessionId}/tests`, testData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/patient-monitoring/sessions", sessionId, "tests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/technician/pending-tests"] });
+      setShowOrderDialog(false);
+      setSelectedTests([]);
+      setClinicalNotes("");
+      toast({ title: "Tests ordered successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to order tests", variant: "destructive" });
+    }
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ testId, status }: { testId: string; status: string }) => {
+      return apiRequest("PATCH", `/api/diagnostic-test-orders/${testId}/status`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/patient-monitoring/sessions", sessionId, "tests"] });
+      toast({ title: "Test status updated" });
+    },
+  });
+
+  const handleOrderTests = () => {
+    if (!doctorName || selectedTests.length === 0) {
+      toast({ title: "Please select tests and enter doctor name", variant: "destructive" });
+      return;
+    }
+
+    const category = TEST_CATEGORIES[selectedCategory as keyof typeof TEST_CATEGORIES];
+    selectedTests.forEach(testName => {
+      const test = category.tests.find(t => t.name === testName);
+      if (test) {
+        orderTestsMutation.mutate({
+          testName: test.name,
+          testType: test.type,
+          department: test.department,
+          category: selectedCategory,
+          priority,
+          clinicalNotes,
+          doctorName,
+          patientId,
+          patientName,
+        });
+      }
+    });
+  };
+
+  const groupedTests = tests.reduce((acc: Record<string, any[]>, test: any) => {
+    const cat = test.category || "PATHOLOGY";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(test);
+    return acc;
+  }, {});
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30">Pending</Badge>;
+      case "SAMPLE_COLLECTED":
+        return <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30">Sample Collected</Badge>;
+      case "IN_PROGRESS":
+        return <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">In Progress</Badge>;
+      case "REPORT_UPLOADED":
+        return <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">Report Ready</Badge>;
+      case "COMPLETED":
+        return <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30"><CheckCircle className="w-3 h-3 mr-1" />Completed</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Beaker className="w-5 h-5 text-purple-500" />
+          Diagnostic Tests
+        </CardTitle>
+        <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
+          <DialogTrigger asChild>
+            <Button size="sm" data-testid="button-order-test-pm">
+              <Plus className="w-4 h-4 mr-1" />
+              Order Tests
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order Diagnostic Tests - {patientName}</DialogTitle>
+              <DialogDescription>Select tests from categories and order them for the patient.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Ordering Doctor</Label>
+                  <Input 
+                    value={doctorName} 
+                    onChange={(e) => setDoctorName(e.target.value)}
+                    placeholder="Dr. Name"
+                  />
+                </div>
+                <div>
+                  <Label>Priority</Label>
+                  <Select value={priority} onValueChange={setPriority}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ROUTINE">Routine</SelectItem>
+                      <SelectItem value="URGENT">Urgent</SelectItem>
+                      <SelectItem value="STAT">STAT (Emergency)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label>Test Category</Label>
+                <Select value={selectedCategory} onValueChange={(v) => { setSelectedCategory(v); setSelectedTests([]); }}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(TEST_CATEGORIES).map(([key, cat]) => (
+                      <SelectItem key={key} value={key}>{cat.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Available Tests</Label>
+                <ScrollArea className="h-48 border rounded-md p-2 mt-1">
+                  <div className="space-y-1">
+                    {TEST_CATEGORIES[selectedCategory as keyof typeof TEST_CATEGORIES]?.tests.map((test) => (
+                      <label key={test.name} className="flex items-center gap-2 p-2 rounded hover-elevate cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedTests.includes(test.name)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTests([...selectedTests, test.name]);
+                            } else {
+                              setSelectedTests(selectedTests.filter(t => t !== test.name));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{test.name}</span>
+                        <Badge variant="outline" className="ml-auto text-xs">{test.department}</Badge>
+                      </label>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {selectedTests.length > 0 && (
+                <div>
+                  <Label>Selected Tests ({selectedTests.length})</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedTests.map(test => (
+                      <Badge key={test} variant="secondary" className="gap-1">
+                        {test}
+                        <XCircle 
+                          className="w-3 h-3 cursor-pointer" 
+                          onClick={() => setSelectedTests(selectedTests.filter(t => t !== test))}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <Label>Clinical Notes (Optional)</Label>
+                <Textarea 
+                  value={clinicalNotes} 
+                  onChange={(e) => setClinicalNotes(e.target.value)}
+                  placeholder="Add clinical context or special instructions..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowOrderDialog(false)}>Cancel</Button>
+                <Button 
+                  onClick={handleOrderTests} 
+                  disabled={selectedTests.length === 0 || !doctorName || orderTestsMutation.isPending}
+                >
+                  {orderTestsMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
+                  Order {selectedTests.length} Test{selectedTests.length !== 1 ? "s" : ""}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+        ) : tests.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">No diagnostic tests ordered yet</p>
+        ) : (
+          <div className="space-y-6">
+            {Object.entries(groupedTests).map(([category, catTests]) => (
+              <div key={category}>
+                <h4 className="font-medium text-sm text-muted-foreground mb-2">
+                  {TEST_CATEGORIES[category as keyof typeof TEST_CATEGORIES]?.label || category}
+                </h4>
+                <div className="space-y-2">
+                  {catTests.map((test: any) => (
+                    <div key={test.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{test.testName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {test.department} | Ordered: {format(new Date(test.createdAt), "dd MMM yyyy HH:mm")}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(test.status)}
+                        {test.status === "PENDING" && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => updateStatusMutation.mutate({ testId: test.id, status: "SAMPLE_COLLECTED" })}
+                          >
+                            Mark Sample Collected
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
