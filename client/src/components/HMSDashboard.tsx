@@ -207,6 +207,18 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
     queryKey: ['/api/appointments'],
   });
 
+  // Fetch active patient count from tracking system
+  const { data: activePatientData } = useQuery<{ count: number }>({
+    queryKey: ['/api/tracking/patients/active-count'],
+  });
+
+  // Fetch critical alerts for stat card (same data as CriticalAlertsPanel)
+  const { data: criticalAlertsData = [] } = useQuery<CriticalAlert[]>({
+    queryKey: ['/api/critical-alerts'],
+    refetchInterval: 10000,
+  });
+  const activeCriticalAlerts = criticalAlertsData.filter(alert => alert.status === 'active');
+
   // For NURSE: fetch assigned patients to filter activity logs
   const { data: assignedPatients = [] } = useQuery<ServicePatient[]>({
     queryKey: currentRole === "NURSE" && userId 
@@ -277,10 +289,13 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
     return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   };
 
-  // Dashboard data with real appointment counts
+  // Dashboard data with real counts from database
+  const activePatientCount = activePatientData?.count ?? 0;
+  const criticalAlertCount = activeCriticalAlerts.length;
+
   const getDashboardData = (role: UserRole) => {
     const commonStats = [
-      { title: "Active Patients", value: appointments.length.toString(), change: "+12%", icon: Users, urgent: false },
+      { title: "Active Patients", value: activePatientCount.toString(), change: "+12%", icon: Users, urgent: false },
       { title: "Today's Appointments", value: todayAppointments.length.toString(), change: "Live", icon: Calendar, urgent: false }
     ];
 
@@ -294,7 +309,7 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
       ADMIN: [
         ...commonStats,
         { title: "System Uptime", value: "99.9%", change: "+0.1%", icon: Shield, urgent: false },
-        { title: "Critical Alerts", value: "3", change: "-2", icon: AlertTriangle, urgent: true }
+        { title: "Critical Alerts", value: criticalAlertCount.toString(), change: criticalAlertCount > 0 ? "Active" : "None", icon: AlertTriangle, urgent: criticalAlertCount > 0 }
       ],
       DOCTOR: [
         { title: "My Patients", value: "42", change: "+3", icon: Users, urgent: false },

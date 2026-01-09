@@ -1055,6 +1055,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ========== PATIENT TRACKING SERVICE ROUTES ==========
 
+  // Get active patient count (patients not discharged)
+  app.get("/api/tracking/patients/active-count", async (_req, res) => {
+    try {
+      const patients = await storage.getAllTrackingPatients();
+      const activePatients = patients.filter((p: any) => 
+        p.status !== 'discharged' && p.status !== 'Discharged'
+      );
+      res.json({ count: activePatients.length, patients: activePatients });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch active patient count" });
+    }
+  });
+
   // Get all tracking patients
   app.get("/api/tracking/patients", async (_req, res) => {
     try {
