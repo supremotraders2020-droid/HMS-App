@@ -53,7 +53,8 @@ import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/s
 import type { ServicePatient, MedicalRecord, PatientConsent, Doctor, IdCardScan, CriticalAlert } from "@shared/schema";
 import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, ImageIcon, ExternalLink } from "lucide-react";
+import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, ImageIcon, ExternalLink, ClipboardList, Bed, DollarSign, History, ChevronRight } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const patientFormSchema = insertServicePatientSchema.extend({
   firstName: z.string().min(1, "First name is required"),
@@ -114,6 +115,12 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [referralUrgency, setReferralUrgency] = useState("CRITICAL");
   const [referralClinicalHistory, setReferralClinicalHistory] = useState("");
   const [referralSpecialInstructions, setReferralSpecialInstructions] = useState("");
+  
+  // Longitudinal Patient Profile States
+  const [allPatientsSearch, setAllPatientsSearch] = useState("");
+  const [selectedProfilePatient, setSelectedProfilePatient] = useState<ServicePatient | null>(null);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [profileActiveSection, setProfileActiveSection] = useState("opd");
   
   // ID Card Scanning States
   const [selectedIdCardType, setSelectedIdCardType] = useState<string>("");
@@ -415,6 +422,34 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
+  });
+
+  // Fetch longitudinal patient profile when a patient is selected
+  const { data: longitudinalProfile, isLoading: profileLoading } = useQuery({
+    queryKey: ["/api/service-patients", selectedProfilePatient?.id, "longitudinal-profile"],
+    queryFn: async () => {
+      if (!selectedProfilePatient?.id) return null;
+      const response = await fetch(`/api/service-patients/${selectedProfilePatient.id}/longitudinal-profile`, {
+        headers: {
+          'x-user-id': currentUserId || '',
+          'x-user-role': currentRole
+        }
+      });
+      if (!response.ok) throw new Error("Failed to fetch profile");
+      return response.json();
+    },
+    enabled: !!selectedProfilePatient?.id && showProfileDialog
+  });
+
+  // Filter patients for the "All Patients" tab
+  const filteredAllPatients = patients.filter((patient) => {
+    const searchLower = allPatientsSearch.toLowerCase();
+    return (
+      `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchLower) ||
+      patient.phone?.toLowerCase().includes(searchLower) ||
+      patient.email?.toLowerCase().includes(searchLower) ||
+      patient.id.toLowerCase().includes(searchLower)
+    );
   });
 
   const patientForm = useForm({
@@ -865,7 +900,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid gap-1 bg-blue-50 dark:bg-slate-800 p-1 mb-6">
             <TabsTrigger 
               value="patients" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
@@ -881,6 +916,14 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
             >
               <FileText className="h-4 w-4" />
               Medical Records
+            </TabsTrigger>
+            <TabsTrigger 
+              value="all-patients" 
+              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white" 
+              data-testid="tab-all-patients"
+            >
+              <History className="h-4 w-4" />
+              List of All Patients
             </TabsTrigger>
           </TabsList>
 
@@ -1857,8 +1900,364 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
             </Card>
           </TabsContent>
 
+          {/* List of All Patients Tab - Longitudinal Patient Profile */}
+          <TabsContent value="all-patients" className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <History className="h-5 w-5 text-blue-600" />
+                    Complete Patient Journey
+                  </CardTitle>
+                  <CardDescription>View comprehensive longitudinal patient profiles with full medical history</CardDescription>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search by name, phone, email, or ID..."
+                    value={allPatientsSearch}
+                    onChange={(e) => setAllPatientsSearch(e.target.value)}
+                    className="pl-9 w-80"
+                    data-testid="input-search-all-patients"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {patientsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  </div>
+                ) : filteredAllPatients.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No patients found</h3>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      {allPatientsSearch ? "Try adjusting your search terms" : "Register patients to see them here"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg font-medium text-sm text-slate-600 dark:text-slate-300">
+                      <div className="col-span-3">Patient Name</div>
+                      <div className="col-span-2">Gender / DOB</div>
+                      <div className="col-span-2">Phone</div>
+                      <div className="col-span-3">Email</div>
+                      <div className="col-span-2 text-right">Action</div>
+                    </div>
+                    <ScrollArea className="h-[400px]">
+                      {filteredAllPatients.map((patient) => (
+                        <div 
+                          key={patient.id} 
+                          className="grid grid-cols-12 gap-4 px-4 py-3 border-b hover:bg-slate-50 dark:hover:bg-slate-800/50 items-center cursor-pointer"
+                          onClick={() => {
+                            setSelectedProfilePatient(patient);
+                            setShowProfileDialog(true);
+                          }}
+                          data-testid={`patient-row-${patient.id}`}
+                        >
+                          <div className="col-span-3 flex items-center gap-3">
+                            <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                              <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-slate-900 dark:text-white">
+                                {patient.firstName} {patient.lastName}
+                              </p>
+                              <p className="text-xs text-slate-500">ID: {patient.id.slice(0, 8)}...</p>
+                            </div>
+                          </div>
+                          <div className="col-span-2 text-sm text-slate-600 dark:text-slate-300">
+                            <Badge variant="outline" className="mr-2">{patient.gender}</Badge>
+                            {patient.dateOfBirth}
+                          </div>
+                          <div className="col-span-2 text-sm text-slate-600 dark:text-slate-300">
+                            {patient.phone || "—"}
+                          </div>
+                          <div className="col-span-3 text-sm text-slate-600 dark:text-slate-300 truncate">
+                            {patient.email || "—"}
+                          </div>
+                          <div className="col-span-2 text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-blue-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProfilePatient(patient);
+                                setShowProfileDialog(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View Profile
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                    <div className="text-sm text-slate-500 text-center pt-2">
+                      Showing {filteredAllPatients.length} of {patients.length} patients
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
         </Tabs>
       </div>
+
+      {/* Longitudinal Patient Profile Dialog */}
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5 text-blue-600" />
+              Complete Patient Profile - {selectedProfilePatient?.firstName} {selectedProfilePatient?.lastName}
+            </DialogTitle>
+            <DialogDescription>
+              Comprehensive longitudinal view of patient's entire healthcare journey
+            </DialogDescription>
+          </DialogHeader>
+          
+          {profileLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span className="ml-2">Loading patient profile...</span>
+            </div>
+          ) : longitudinalProfile ? (
+            <ScrollArea className="flex-1 pr-4">
+              <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full">
+                <TabsList className="grid w-full grid-cols-5 mb-4">
+                  <TabsTrigger value="opd" className="flex items-center gap-1 text-xs">
+                    <ClipboardList className="h-3 w-3" />
+                    OPD History
+                  </TabsTrigger>
+                  <TabsTrigger value="ipd" className="flex items-center gap-1 text-xs">
+                    <Bed className="h-3 w-3" />
+                    IPD History
+                  </TabsTrigger>
+                  <TabsTrigger value="medication" className="flex items-center gap-1 text-xs">
+                    <Pill className="h-3 w-3" />
+                    Medication
+                  </TabsTrigger>
+                  <TabsTrigger value="consent" className="flex items-center gap-1 text-xs">
+                    <FileCheck className="h-3 w-3" />
+                    Consents
+                  </TabsTrigger>
+                  <TabsTrigger value="billing" className="flex items-center gap-1 text-xs">
+                    <DollarSign className="h-3 w-3" />
+                    Billing
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* OPD History Section */}
+                <TabsContent value="opd" className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <ClipboardList className="h-4 w-4 text-blue-500" />
+                        OPD Visits ({longitudinalProfile.opdHistory?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {longitudinalProfile.opdHistory?.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No OPD visits recorded</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {longitudinalProfile.opdHistory?.map((visit: any) => (
+                            <div key={visit.id} className="p-3 border rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="outline">{visit.department || "General"}</Badge>
+                                <span className="text-xs text-muted-foreground">{new Date(visit.appointmentDate).toLocaleDateString()}</span>
+                              </div>
+                              <p className="text-sm"><strong>Doctor:</strong> {visit.doctorName || "N/A"}</p>
+                              <p className="text-sm"><strong>Diagnosis:</strong> {visit.diagnosis || visit.reasonForVisit || "N/A"}</p>
+                              <p className="text-sm"><strong>Status:</strong> <Badge variant={visit.status === "completed" ? "default" : "secondary"}>{visit.status}</Badge></p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* IPD History Section */}
+                <TabsContent value="ipd" className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Bed className="h-4 w-4 text-green-500" />
+                        IPD Admissions ({longitudinalProfile.ipdHistory?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {longitudinalProfile.ipdHistory?.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No IPD admissions recorded</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {longitudinalProfile.ipdHistory?.map((admission: any) => (
+                            <div key={admission.id} className="p-3 border rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant={admission.status === "admitted" ? "default" : "secondary"}>{admission.status}</Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {admission.admissionDate ? new Date(admission.admissionDate).toLocaleDateString() : "N/A"}
+                                </span>
+                              </div>
+                              <p className="text-sm"><strong>Ward/Room:</strong> {admission.room || admission.ward || "N/A"}</p>
+                              <p className="text-sm"><strong>Department:</strong> {admission.department || "N/A"}</p>
+                              <p className="text-sm"><strong>Diagnosis:</strong> {admission.diagnosis || "N/A"}</p>
+                              <p className="text-sm"><strong>Doctor:</strong> {admission.doctor || "N/A"}</p>
+                              {admission.isInIcu && (
+                                <Badge variant="destructive" className="mt-2">ICU Stay: {admission.icuDays || 0} days</Badge>
+                              )}
+                              {admission.dischargeDate && (
+                                <p className="text-sm text-green-600"><strong>Discharged:</strong> {new Date(admission.dischargeDate).toLocaleDateString()}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Medication History Section */}
+                <TabsContent value="medication" className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Pill className="h-4 w-4 text-purple-500" />
+                        Prescriptions ({longitudinalProfile.medicationHistory?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {longitudinalProfile.medicationHistory?.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No prescriptions recorded</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {longitudinalProfile.medicationHistory?.map((rx: any) => (
+                            <div key={rx.id} className="p-3 border rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant={rx.status === "finalized" ? "default" : "secondary"}>{rx.status}</Badge>
+                                <span className="text-xs text-muted-foreground">{rx.createdAt ? new Date(rx.createdAt).toLocaleDateString() : "N/A"}</span>
+                              </div>
+                              <p className="text-sm"><strong>Diagnosis:</strong> {rx.diagnosis || "N/A"}</p>
+                              <p className="text-sm"><strong>Doctor:</strong> {rx.doctorName || "N/A"}</p>
+                              {rx.medicines && rx.medicines.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-xs font-medium text-muted-foreground mb-1">Medicines:</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {rx.medicines.map((med: any, idx: number) => (
+                                      <Badge key={idx} variant="outline" className="text-xs">
+                                        {med.name || med.medicineName} - {med.dosage}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Consent Records Section */}
+                <TabsContent value="consent" className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <FileCheck className="h-4 w-4 text-orange-500" />
+                        Consent Forms ({longitudinalProfile.consentRecords?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {longitudinalProfile.consentRecords?.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No consent forms on record</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {longitudinalProfile.consentRecords?.map((consent: any) => (
+                            <div key={consent.id} className="p-3 border rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="outline">{consent.consentType}</Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {consent.uploadedAt ? new Date(consent.uploadedAt).toLocaleDateString() : "N/A"}
+                                </span>
+                              </div>
+                              <p className="text-sm font-medium">{consent.title}</p>
+                              {consent.description && <p className="text-sm text-muted-foreground">{consent.description}</p>}
+                              <p className="text-xs text-green-600 mt-1">File: {consent.fileName}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Billing Section */}
+                <TabsContent value="billing" className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-green-500" />
+                        Billing & Payments
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Insurance Info */}
+                      {longitudinalProfile.billingHistory?.insurance?.length > 0 && (
+                        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            Insurance Information
+                          </h4>
+                          {longitudinalProfile.billingHistory.insurance.map((ins: any) => (
+                            <div key={ins.id} className="text-sm">
+                              <p><strong>Provider:</strong> {ins.providerName}</p>
+                              <p><strong>Policy:</strong> {ins.policyNumber}</p>
+                              <p><strong>Coverage:</strong> {ins.coverageAmount ? `₹${ins.coverageAmount}` : "N/A"}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Bills */}
+                      {longitudinalProfile.billingHistory?.bills?.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No billing records</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {longitudinalProfile.billingHistory?.bills?.map((bill: any) => (
+                            <div key={bill.id} className="p-3 border rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant={bill.paymentStatus === "paid" ? "default" : bill.paymentStatus === "partial" ? "secondary" : "destructive"}>
+                                  {bill.paymentStatus}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {bill.billDate ? new Date(bill.billDate).toLocaleDateString() : "N/A"}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <p><strong>Total:</strong> ₹{bill.totalAmount || 0}</p>
+                                <p><strong>Paid:</strong> ₹{bill.paidAmount || 0}</p>
+                                <p><strong>Pending:</strong> ₹{(bill.totalAmount || 0) - (bill.paidAmount || 0)}</p>
+                                <p><strong>Bill #:</strong> {bill.billNumber || bill.id.slice(0, 8)}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </ScrollArea>
+          ) : (
+            <p className="text-center py-8 text-muted-foreground">No profile data available</p>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Patient Detail Dialog */}
       <Dialog open={showPatientDetailDialog} onOpenChange={setShowPatientDetailDialog}>

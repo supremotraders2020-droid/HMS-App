@@ -4585,6 +4585,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get complete longitudinal patient profile (all history sections)
+  app.get("/api/service-patients/:id/longitudinal-profile", async (req, res) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      const userRole = req.headers['x-user-role'] as string;
+      
+      const allowedRoles = ['ADMIN', 'DOCTOR', 'NURSE', 'OPD_MANAGER', 'SUPER_ADMIN'];
+      if (!userId || !userRole || !allowedRoles.includes(userRole)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const patientId = req.params.id;
+      
+      // Get patient basic info
+      const [patient] = await db.select().from(servicePatients).where(eq(servicePatients.id, patientId));
+      if (!patient) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+      
+      // 1. OPD History - Get all OPD appointments
+      const opdHistory = await db.select().from(opdAppointments)
+        .where(eq(opdAppointments.patientId, patientId))
+        .orderBy(desc(opdAppointments.appointmentDate));
+      
+      // 2. IPD History - Get tracking patient data (admissions, ward, ICU stays)
+      const ipdHistory = await db.select().from(trackingPatients)
+        .where(eq(trackingPatients.patientDbId, patientId))
+        .orderBy(desc(trackingPatients.admissionDate));
+      
+      // 3. Medication History - Get all prescriptions for this patient
+      const medicationHistory = await db.select().from(prescriptions)
+        .where(eq(prescriptions.patientId, patientId))
+        .orderBy(desc(prescriptions.createdAt));
+      
+      // 4. Consent Records - Get all patient consents
+      const consentRecords = await db.select().from(patientConsents)
+        .where(eq(patientConsents.patientId, patientId))
+        .orderBy(desc(patientConsents.uploadedAt));
+      
+      // 5. Billing & Payments - Get all patient bills
+      const billingHistory = await db.select().from(patientBills)
+        .where(eq(patientBills.patientId, patientId))
+        .orderBy(desc(patientBills.billDate));
+      
+      // Get bill payments for each bill
+      const billIds = billingHistory.map(b => b.id);
+      const payments = billIds.length > 0 
+        ? await db.select().from(billPayments).where(sql`${billPayments.billId} = ANY(${billIds})`)
+        : [];
+      
+      // Get patient insurance
+      const insurance = await db.select().from(patientInsurance)
+        .where(eq(patientInsurance.patientId, patientId));
+      
+      // Get medical records
+      const records = await db.select().from(medicalRecords)
+        .where(eq(medicalRecords.patientId, patientId))
+        .orderBy(desc(medicalRecords.recordDate));
+      
+      res.json({
+        patient,
+        opdHistory,
+        ipdHistory,
+        medicationHistory,
+        consentRecords,
+        billingHistory: {
+          bills: billingHistory,
+          payments,
+          insurance
+        },
+        medicalRecords: records
+      });
+    } catch (error) {
+      console.error("Failed to fetch longitudinal profile:", error);
+      res.status(500).json({ error: "Failed to fetch patient profile" });
+    }
+  });
+
   // ========== MEDICINES DATABASE API ==========
   
   // Get all medicines with optional search
