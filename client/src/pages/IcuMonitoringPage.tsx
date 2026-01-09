@@ -1782,10 +1782,15 @@ function TestsSection({ chartId, patientId, patientName, canEdit, userId }: {
   const [priority, setPriority] = useState("ROUTINE");
   const [clinicalNotes, setClinicalNotes] = useState("");
   const [doctorName, setDoctorName] = useState("");
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
 
   const { data: tests = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/icu-charts", chartId, "tests"],
     refetchInterval: 5000,
+  });
+
+  const { data: doctors = [] } = useQuery<any[]>({
+    queryKey: ["/api/doctors"],
   });
 
   const orderTestsMutation = useMutation({
@@ -1817,8 +1822,8 @@ function TestsSection({ chartId, patientId, patientName, canEdit, userId }: {
   });
 
   const handleOrderTests = () => {
-    if (!doctorName || selectedTests.length === 0) {
-      toast({ title: "Please select tests and enter doctor name", variant: "destructive" });
+    if (!selectedDoctorId || selectedTests.length === 0) {
+      toast({ title: "Please select tests and choose a doctor", variant: "destructive" });
       return;
     }
 
@@ -1861,22 +1866,38 @@ function TestsSection({ chartId, patientId, patientName, canEdit, userId }: {
             <DialogTrigger asChild>
               <Button size="sm" data-testid="button-order-test">
                 <Plus className="w-4 h-4 mr-1" />
-                Order Tests
+                Perform Tests
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Order Diagnostic Tests - {patientName}</DialogTitle>
+                <DialogTitle>Perform Diagnostic Tests - {patientName}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Ordering Doctor</Label>
-                    <Input 
-                      value={doctorName} 
-                      onChange={(e) => setDoctorName(e.target.value)}
-                      placeholder="Dr. Name"
-                    />
+                    <Select 
+                      value={selectedDoctorId} 
+                      onValueChange={(value) => {
+                        setSelectedDoctorId(value);
+                        const doctor = doctors.find((d: any) => d.id?.toString() === value);
+                        if (doctor) {
+                          setDoctorName(`Dr. ${doctor.name}`);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Doctor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {doctors.map((doctor: any) => (
+                          <SelectItem key={doctor.id} value={doctor.id?.toString()}>
+                            Dr. {doctor.name} - {doctor.specialty || doctor.department}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label>Priority</Label>
