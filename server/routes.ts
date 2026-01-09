@@ -85,7 +85,8 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   insertIcuNursingDutySchema, insertIcuFluidOrdersSchema, insertIcuNutritionChartSchema,
   insertIcuBodyMarkingSchema, insertIcuNurseDiarySchema, insertIcuOnceOnlyDrugsSchema,
   insertIcuPreviousDayNotesSchema, insertIcuAllergyPrecautionsSchema,
-  appointments, trackingPatients, patientConsents, patientBills, billPayments, patientInsurance, medicalRecords
+  appointments, trackingPatients, patientConsents, patientBills, billPayments, patientInsurance, medicalRecords,
+  patientMovementLog, insertPatientMovementLogSchema
 } from "@shared/schema";
 import { seedOpdDepartmentFlows, OPD_DEPARTMENT_FLOW_DATA } from "./seeds/opdDepartmentFlows";
 import { getChatbotResponse, getChatbotStats } from "./openai";
@@ -1086,6 +1087,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const newPatient = await storage.createTrackingPatient(parsed.data);
       
+      // Log admission movement
+      try {
+        await db.insert(patientMovementLog).values({
+          trackingPatientId: newPatient.id,
+          eventType: 'admission',
+          fromLocation: 'External',
+          toLocation: parsed.data.department || 'General Ward',
+          performedBy: parsed.data.doctor,
+          notes: `Patient admitted to ${parsed.data.department || 'General Ward'}, Room: ${parsed.data.room}`,
+          occurredAt: new Date()
+        });
+      } catch (logError) {
+        console.error("Failed to log admission movement:", logError);
+      }
+      
       // If a nurse is assigned, update their assignment status with room and doctor info
       if (parsed.data.nurse) {
         try {
@@ -1098,7 +1114,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Updated nurse assignment for ${parsed.data.nurse}: Room ${parsed.data.room}, Doctor ${parsed.data.doctor}`);
         } catch (nurseError) {
           console.error("Failed to update nurse assignment:", nurseError);
-          // Don't fail the admission if nurse assignment update fails
         }
       }
       
@@ -1131,6 +1146,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updated = await storage.dischargeTrackingPatient(req.params.id, new Date());
       if (!updated) {
         return res.status(404).json({ error: "Patient not found" });
+      }
+      
+      // Log discharge movement
+      if (patient) {
+        try {
+          await db.insert(patientMovementLog).values({
+            trackingPatientId: req.params.id,
+            eventType: 'discharge',
+            fromLocation: patient.department || 'Ward',
+            toLocation: 'Discharged',
+            performedBy: patient.doctor,
+            notes: `Patient discharged from ${patient.department || 'Ward'}`,
+            occurredAt: new Date()
+          });
+        } catch (logError) {
+          console.error("Failed to log discharge movement:", logError);
+        }
       }
       
       // Clear nurse assignment when patient is discharged
@@ -1210,6 +1242,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Patient not found" });
       }
       
+      const previousDepartment = currentPatient.department;
+      
       // If department is ICU, also set isInIcu flag and create ICU chart
       if (department === "ICU" && !currentPatient.isInIcu) {
         const patient = await storage.updateTrackingPatient(req.params.id, { 
@@ -1218,10 +1252,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icuTransferDate: new Date()
         });
         
+        // Log ICU transfer movement
+        try {
+          await db.insert(patientMovementLog).values({
+            trackingPatientId: req.params.id,
+            eventType: 'icu_transfer',
+            fromLocation: previousDepartment,
+            toLocation: 'ICU',
+            performedBy: currentPatient.doctor,
+            notes: `Patient transferred to ICU from ${previousDepartment}`,
+            occurredAt: new Date()
+          });
+        } catch (logError) {
+          console.error("Failed to log ICU transfer:", logError);
+        }
+        
         // Check if ICU chart already exists for this patient before creating
         const existingCharts = await storage.getIcuChartsByPatient(currentPatient.id);
         if (existingCharts.length === 0) {
-          // Auto-create ICU chart for the patient only if none exists
           try {
             const today = new Date().toISOString().split('T')[0];
             await storage.createIcuChart({
@@ -1259,10 +1307,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
           icuDays: icuDays,
           icuTransferDate: null
         });
+        
+        // Log ICU discharge / ward transfer movement
+        try {
+          await db.insert(patientMovementLog).values({
+            trackingPatientId: req.params.id,
+            eventType: 'ward_transfer',
+            fromLocation: 'ICU',
+            toLocation: department,
+            performedBy: currentPatient.doctor,
+            notes: `Patient transferred from ICU to ${department}`,
+            occurredAt: new Date()
+          });
+        } catch (logError) {
+          console.error("Failed to log ward transfer:", logError);
+        }
+        
         res.json(patient);
       } else {
-        // Just update department
+        // Just update department (ward to ward transfer)
         const patient = await storage.updateTrackingPatient(req.params.id, { department });
+        
+        // Log ward transfer movement
+        if (previousDepartment !== department) {
+          try {
+            await db.insert(patientMovementLog).values({
+              trackingPatientId: req.params.id,
+              eventType: 'ward_transfer',
+              fromLocation: previousDepartment,
+              toLocation: department,
+              performedBy: currentPatient.doctor,
+              notes: `Patient transferred from ${previousDepartment} to ${department}`,
+              occurredAt: new Date()
+            });
+          } catch (logError) {
+            console.error("Failed to log ward transfer:", logError);
+          }
+        }
+        
         res.json(patient);
       }
     } catch (error) {
@@ -1294,6 +1376,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(history);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch tracking history" });
+    }
+  });
+
+  // Get patient movement timeline
+  app.get("/api/tracking/patients/:id/movements", async (req, res) => {
+    try {
+      const movements = await db.select()
+        .from(patientMovementLog)
+        .where(eq(patientMovementLog.trackingPatientId, req.params.id))
+        .orderBy(desc(patientMovementLog.occurredAt));
+      res.json(movements);
+    } catch (error) {
+      console.error("Failed to fetch patient movements:", error);
+      res.status(500).json({ error: "Failed to fetch patient movements" });
     }
   });
 
