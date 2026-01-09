@@ -3626,6 +3626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get schedule-based slot availability for a date (computes from doctor_schedules)
   // Returns computed slot counts per doctor based on their schedule blocks
+  // Also indicates which doctors have schedules for this day vs no schedule
   app.get("/api/schedule-availability", async (req, res) => {
     try {
       const { date } = req.query;
@@ -3637,14 +3638,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const dayOfWeek = dayNames[requestedDate.getDay()];
       
-      // Get all doctor schedules for this day
+      // Get all doctor schedules
       const allSchedules = await databaseStorage.getAllDoctorSchedules();
+      
+      // Get schedules for this specific day
       const daySchedules = allSchedules.filter(s => 
         s.isAvailable && (s.day === dayOfWeek || s.specificDate === date)
       );
       
       // Get all users to map user IDs to doctor names
       const allUsers = await storage.getAllUsers();
+      const doctorUsers = allUsers.filter(u => u.role === 'DOCTOR');
       
       // Get existing appointments for this date
       const allAppointments = await databaseStorage.getAllAppointments();
@@ -3670,42 +3674,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
       };
       
-      // Compute available slots per doctor (keyed by user ID which schedules use)
-      const availability: Record<string, { doctorName: string; userId: string; available: number; booked: number; total: number }> = {};
+      // Get all doctors from doctors table to map names to doctor IDs
+      const allDoctors = await databaseStorage.getAllDoctors();
       
-      for (const schedule of daySchedules) {
-        // Find doctor name from users table
-        let doctorName = '';
-        const doctorUser = allUsers.find(u => u.id === schedule.doctorId);
-        if (doctorUser && doctorUser.name) {
-          doctorName = doctorUser.name;
+      // Build availability map for all doctors with schedules
+      interface DoctorAvailability {
+        doctorName: string;
+        userId: string;
+        doctorTableId: string | null;
+        hasScheduleToday: boolean;
+        scheduledDays: string[];
+        available: number;
+        booked: number;
+        total: number;
+      }
+      
+      const availability: Record<string, DoctorAvailability> = {};
+      
+      // First, identify all doctors who have ANY schedule
+      for (const user of doctorUsers) {
+        const userSchedules = allSchedules.filter(s => s.doctorId === user.id && s.isAvailable);
+        if (userSchedules.length > 0) {
+          const scheduledDays = [...new Set(userSchedules.map(s => s.day).filter(Boolean))] as string[];
+          const hasScheduleToday = daySchedules.some(s => s.doctorId === user.id);
+          
+          // Find matching doctor table entry by name
+          const matchingDoctor = allDoctors.find(d => {
+            const dName = d.name.replace(/^Dr\.?\s*/i, '').toLowerCase();
+            const uName = user.name.replace(/^Dr\.?\s*/i, '').toLowerCase();
+            return dName === uName;
+          });
+          
+          availability[user.id] = {
+            doctorName: user.name,
+            userId: user.id,
+            doctorTableId: matchingDoctor?.id || null,
+            hasScheduleToday,
+            scheduledDays,
+            available: 0,
+            booked: 0,
+            total: 0
+          };
         }
-        if (!doctorName) continue;
+      }
+      
+      // Calculate slot counts for doctors with schedules today
+      for (const schedule of daySchedules) {
+        const key = schedule.doctorId;
+        if (!availability[key]) continue;
         
         const startMins = parseTime(schedule.startTime);
         const endMins = parseTime(schedule.endTime);
         const slotDuration = 30;
         const totalSlots = Math.floor((endMins - startMins) / slotDuration);
         
-        // Count booked appointments for this doctor (by user ID) in this schedule's time range
+        // Count booked appointments for this doctor in this schedule's time range
         const doctorAppointments = dateAppointments.filter(apt => {
-          // Match by doctorId (user ID) since appointments store user IDs
           if (apt.doctorId !== schedule.doctorId) return false;
-          
-          // Check if appointment falls within this schedule's time range
           if (apt.timeSlot) {
             const aptStartStr = apt.timeSlot.split(' - ')[0];
             const aptMins = parseTime(aptStartStr);
             return aptMins >= startMins && aptMins < endMins;
           }
-          return true; // Count if no time slot specified
+          return true;
         });
-        
-        // Initialize or accumulate for this doctor
-        const key = schedule.doctorId; // Use user ID as key to aggregate schedules
-        if (!availability[key]) {
-          availability[key] = { doctorName, userId: schedule.doctorId, available: 0, booked: 0, total: 0 };
-        }
         
         const bookedCount = Math.min(doctorAppointments.length, totalSlots);
         availability[key].total += totalSlots;

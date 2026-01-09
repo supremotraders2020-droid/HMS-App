@@ -126,6 +126,10 @@ export default function OPDService() {
   // Fetch schedule-based availability as fallback when no pre-generated slots exist
   interface ScheduleAvailability {
     doctorName: string;
+    userId: string;
+    doctorTableId: string | null;
+    hasScheduleToday: boolean;
+    scheduledDays: string[];
     available: number;
     booked: number;
     total: number;
@@ -311,34 +315,76 @@ export default function OPDService() {
     }));
   };
 
+  // Helper to get schedule metadata for a doctor
+  const getDoctorScheduleInfo = (doctorId: string): { hasScheduleToday: boolean; scheduledDays: string[] } | null => {
+    // First try to match by doctorTableId (preferred - exact ID match)
+    const scheduleMatchById = scheduleAvailability.find(sa => sa.doctorTableId === doctorId);
+    if (scheduleMatchById) {
+      return {
+        hasScheduleToday: scheduleMatchById.hasScheduleToday,
+        scheduledDays: scheduleMatchById.scheduledDays
+      };
+    }
+    
+    // Fallback to name matching if ID not found
+    const doctor = doctors.find(d => d.id === doctorId);
+    if (!doctor) return null;
+    
+    const doctorName = doctor.name.replace(/^Dr\.?\s*/i, '').toLowerCase();
+    const scheduleMatch = scheduleAvailability.find(sa => {
+      const saName = sa.doctorName.replace(/^Dr\.?\s*/i, '').toLowerCase();
+      return saName === doctorName;
+    });
+    
+    if (scheduleMatch) {
+      return {
+        hasScheduleToday: scheduleMatch.hasScheduleToday,
+        scheduledDays: scheduleMatch.scheduledDays
+      };
+    }
+    return null;
+  };
+
   // Helper to get slot counts for a specific doctor
-  // Note: doctorId in doctors table differs from doctorId in time_slots (user ID)
-  // So we match by doctor name instead
+  // Uses doctorTableId for exact matching when available
   const getDoctorSlotCounts = (doctorId: string) => {
     const doctor = doctors.find(d => d.id === doctorId);
-    if (!doctor) return { available: 0, booked: 0, total: 0 };
+    if (!doctor) return { available: 0, booked: 0, total: 0, hasScheduleToday: false };
     
     // Match slots by doctor name (partial match to handle "Dr." prefix variations)
     // Also filter by selectedDate to ensure date-specific counts
     const doctorName = doctor.name.replace(/^Dr\.?\s*/i, '').toLowerCase();
     const doctorSlots = allDoctorSlots.filter(s => {
       const slotDoctorName = (s.doctorName || '').replace(/^Dr\.?\s*/i, '').toLowerCase();
-      const nameMatches = slotDoctorName.includes(doctorName) || doctorName.includes(slotDoctorName);
+      const nameMatches = slotDoctorName === doctorName;
       const dateMatches = s.slotDate === selectedDate;
       return nameMatches && dateMatches;
     });
     
     // If no pre-generated slots, use schedule-based availability as fallback
     if (doctorSlots.length === 0 && scheduleAvailability.length > 0) {
+      // First try to match by doctorTableId (exact ID match)
+      const scheduleMatchById = scheduleAvailability.find(sa => sa.doctorTableId === doctorId);
+      if (scheduleMatchById) {
+        return {
+          available: scheduleMatchById.available,
+          booked: scheduleMatchById.booked,
+          total: scheduleMatchById.total,
+          hasScheduleToday: scheduleMatchById.hasScheduleToday
+        };
+      }
+      
+      // Fallback to exact name match
       const scheduleMatch = scheduleAvailability.find(sa => {
         const saName = sa.doctorName.replace(/^Dr\.?\s*/i, '').toLowerCase();
-        return saName.includes(doctorName) || doctorName.includes(saName);
+        return saName === doctorName;
       });
       if (scheduleMatch) {
         return {
           available: scheduleMatch.available,
           booked: scheduleMatch.booked,
-          total: scheduleMatch.total
+          total: scheduleMatch.total,
+          hasScheduleToday: scheduleMatch.hasScheduleToday
         };
       }
     }
@@ -380,7 +426,7 @@ export default function OPDService() {
     
     booked += uniqueLegacyCount;
     const total = doctorSlots.length + uniqueLegacyCount;
-    return { available, booked, total };
+    return { available, booked, total, hasScheduleToday: doctorSlots.length > 0 };
   };
 
   // WebSocket listener for real-time slot updates
@@ -673,6 +719,8 @@ export default function OPDService() {
             <div className="grid gap-6 md:grid-cols-2">
               {doctors.map((doctor) => {
                 const slotCounts = getDoctorSlotCounts(doctor.id);
+                const scheduleInfo = getDoctorScheduleInfo(doctor.id);
+                const hasScheduleToday = slotCounts.hasScheduleToday;
                 return (
                 <Card key={doctor.id} className="hover-elevate" data-testid={`card-doctor-${doctor.id}`}>
                   <CardHeader className="flex flex-row items-center gap-4">
@@ -684,25 +732,36 @@ export default function OPDService() {
                     <div className="flex-1">
                       <CardTitle className="text-lg">{doctor.name}</CardTitle>
                       <Badge variant="secondary" className="mt-1">{doctor.specialty}</Badge>
-                      <div className="flex items-center gap-3 mt-2 text-xs">
-                        <button 
-                          onClick={() => setSlotFilters(prev => ({ ...prev, [doctor.id]: prev[doctor.id] === 'available' ? 'all' : 'available' }))}
-                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilters[doctor.id] === 'available' ? 'ring-2 ring-green-500 bg-green-500/20' : 'hover:bg-green-500/10'}`}
-                          data-testid={`filter-available-${doctor.id}`}
-                        >
-                          <div className="w-2 h-2 rounded-full bg-green-500" />
-                          <span className="text-green-600 dark:text-green-400 font-medium">{slotCounts.available} available</span>
-                        </button>
-                        <button 
-                          onClick={() => setSlotFilters(prev => ({ ...prev, [doctor.id]: prev[doctor.id] === 'booked' ? 'all' : 'booked' }))}
-                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilters[doctor.id] === 'booked' ? 'ring-2 ring-orange-500 bg-orange-500/20' : 'hover:bg-orange-500/10'}`}
-                          data-testid={`filter-booked-${doctor.id}`}
-                        >
-                          <div className="w-2 h-2 rounded-full bg-orange-500" />
-                          <span className="text-orange-600 dark:text-orange-400 font-medium">{slotCounts.booked} booked</span>
-                        </button>
-                        <span className="text-muted-foreground">/ {slotCounts.total} total</span>
-                      </div>
+                      {hasScheduleToday ? (
+                        <div className="flex items-center gap-3 mt-2 text-xs">
+                          <button 
+                            onClick={() => setSlotFilters(prev => ({ ...prev, [doctor.id]: prev[doctor.id] === 'available' ? 'all' : 'available' }))}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilters[doctor.id] === 'available' ? 'ring-2 ring-green-500 bg-green-500/20' : 'hover:bg-green-500/10'}`}
+                            data-testid={`filter-available-${doctor.id}`}
+                          >
+                            <div className="w-2 h-2 rounded-full bg-green-500" />
+                            <span className="text-green-600 dark:text-green-400 font-medium">{slotCounts.available} available</span>
+                          </button>
+                          <button 
+                            onClick={() => setSlotFilters(prev => ({ ...prev, [doctor.id]: prev[doctor.id] === 'booked' ? 'all' : 'booked' }))}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-pointer transition-all ${slotFilters[doctor.id] === 'booked' ? 'ring-2 ring-orange-500 bg-orange-500/20' : 'hover:bg-orange-500/10'}`}
+                            data-testid={`filter-booked-${doctor.id}`}
+                          >
+                            <div className="w-2 h-2 rounded-full bg-orange-500" />
+                            <span className="text-orange-600 dark:text-orange-400 font-medium">{slotCounts.booked} booked</span>
+                          </button>
+                          <span className="text-muted-foreground">/ {slotCounts.total} total</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 mt-2 text-xs">
+                          <span className="text-muted-foreground">No clinic hours for this date</span>
+                          {scheduleInfo?.scheduledDays && scheduleInfo.scheduledDays.length > 0 && (
+                            <span className="text-muted-foreground/70">
+                              (Available: {scheduleInfo.scheduledDays.join(', ')})
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <Button
                       variant={selectedDoctor === doctor.id ? "default" : "outline"}
@@ -745,7 +804,22 @@ export default function OPDService() {
                           </div>
                         )}
 
-                        {/* Individual Time Slots from Database + Legacy Appointments */}
+                        {/* Show message when no schedule for selected date */}
+                        {!hasScheduleToday && (
+                          <div className="text-center py-6 text-muted-foreground">
+                            <Calendar className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                            <p>No clinic hours scheduled for this date</p>
+                            {scheduleInfo?.scheduledDays && scheduleInfo.scheduledDays.length > 0 && (
+                              <p className="text-sm mt-1">
+                                This doctor is available on: {scheduleInfo.scheduledDays.join(', ')}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Individual Time Slots from Database + Legacy Appointments - only show when schedule exists */}
+                        {hasScheduleToday && (
+                          <>
                         <span className="text-sm text-muted-foreground">Time Slots (30-min intervals)</span>
                         <div className="flex flex-wrap gap-2">
                           {(() => {
@@ -830,6 +904,8 @@ export default function OPDService() {
                             <p className="text-sm text-muted-foreground">No slots scheduled for this date</p>
                           )}
                         </div>
+                          </>
+                        )}
                       </div>
                     </CardContent>
                   )}
