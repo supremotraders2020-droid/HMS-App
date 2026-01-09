@@ -191,6 +191,24 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
     setIsUploadDialogOpen(true);
   };
 
+  const handleDownloadReport = (report: any) => {
+    if (report.fileData && report.fileName) {
+      const link = document.createElement('a');
+      link.href = report.fileData;
+      link.download = report.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: "Download started", description: `Downloading ${report.fileName}` });
+    } else {
+      toast({ 
+        title: "No file attached", 
+        description: "This report does not have an attached file to download.",
+        variant: "destructive" 
+      });
+    }
+  };
+
   const handleSubmitReport = async () => {
     if (!selectedTest) return;
     if (!reportForm.findings.trim() || !reportForm.conclusion.trim()) {
@@ -481,6 +499,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
                             <Button
                               size="sm"
                               variant="outline"
+                              onClick={() => handleDownloadReport(report)}
                               data-testid={`button-download-${report.id}`}
                             >
                               <Download className="w-4 h-4 mr-1" />
@@ -687,7 +706,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
             <Button variant="outline" onClick={() => setIsViewReportDialogOpen(false)}>
               Close
             </Button>
-            <Button data-testid="button-download-report">
+            <Button onClick={() => selectedReport && handleDownloadReport(selectedReport)} data-testid="button-download-report">
               <Download className="w-4 h-4 mr-2" />
               Download PDF
             </Button>
