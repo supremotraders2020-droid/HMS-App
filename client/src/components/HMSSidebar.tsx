@@ -442,6 +442,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
                   { title: "Insurance", url: "/super-admin/insurance", icon: Building2 },
                   { title: "Claims", url: "/super-admin/claims", icon: ClipboardList },
                   { title: "Hospital Packages", url: "/super-admin/packages", icon: Package },
+                  { title: "Diagnostic Reports", url: "/super-admin/diagnostic-reports", icon: FileText },
                   { title: "Audit Logs", url: "/super-admin/audit", icon: History },
                   { title: "Settings", url: "/super-admin/settings", icon: Settings },
                 ].map((item) => (

@@ -300,9 +300,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     queryKey: ['/api/doctors', doctorId, 'medical-records'],
   });
 
-  // Fetch diagnostic reports for this doctor (tests ordered by this doctor)
+  // Fetch diagnostic reports for this doctor (tests ordered by this doctor) - secure session-aware endpoint
   const { data: diagnosticReports = [], isLoading: diagnosticReportsLoading } = useQuery<any[]>({
-    queryKey: ['/api/doctors', doctorId, 'diagnostic-reports'],
+    queryKey: ['/api/doctor/my-diagnostic-reports'],
     refetchInterval: 3000, // Real-time sync
   });
 

@@ -104,7 +104,8 @@ type SuperAdminSection =
   | "packages"
   | "audit"
   | "settings"
-  | "icu-monitoring";
+  | "icu-monitoring"
+  | "diagnostic-reports";
 
 import { 
   HMS_MODULES, 
@@ -142,6 +143,7 @@ export default function SuperAdminPortal({ section = "dashboard" }: SuperAdminPo
     audit: { title: "Audit Logs", description: "Immutable audit trail of all critical actions" },
     settings: { title: "System Settings", description: "Configure hospital system parameters" },
     "icu-monitoring": { title: "ICU Monitoring", description: "Comprehensive ICU patient monitoring and charting" },
+    "diagnostic-reports": { title: "Diagnostic Reports", description: "View all technician-submitted diagnostic reports" },
   };
 
   const currentSection = sectionTitles[section] || sectionTitles.dashboard;
@@ -193,6 +195,7 @@ export default function SuperAdminPortal({ section = "dashboard" }: SuperAdminPo
         {section === "audit" && <AuditSection />}
         {section === "settings" && <SettingsSection />}
         {section === "icu-monitoring" && <IcuMonitoringPage userRole="SUPER_ADMIN" />}
+        {section === "diagnostic-reports" && <DiagnosticReportsSection />}
       </div>
     </div>
   );
@@ -2736,6 +2739,224 @@ function SettingsSection() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function DiagnosticReportsSection() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewingReport, setViewingReport] = useState<any | null>(null);
+
+  const { data: reports = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/technician-reports"],
+    refetchInterval: 5000,
+  });
+
+  const filteredReports = reports.filter(
+    (r) =>
+      r.patientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.testName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.doctorName?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleDownload = (report: any) => {
+    if (report.fileData) {
+      const link = document.createElement("a");
+      link.href = report.fileData;
+      link.download = `${report.testName || "Report"}_${report.patientName || "Patient"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleView = (report: any) => {
+    setViewingReport(report);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Diagnostic Reports
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400">
+            All technician-submitted diagnostic reports
+          </p>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Search by patient, test, or doctor..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 w-72"
+            data-testid="input-admin-diagnostic-search"
+          />
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+            </div>
+          ) : filteredReports.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+              <p className="text-slate-500 dark:text-slate-400">
+                No diagnostic reports found
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Patient</TableHead>
+                  <TableHead>Test</TableHead>
+                  <TableHead>Doctor</TableHead>
+                  <TableHead>Technician</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredReports.map((report) => (
+                  <TableRow key={report.id}>
+                    <TableCell className="font-medium">
+                      {report.patientName || "Unknown"}
+                    </TableCell>
+                    <TableCell>{report.testName || "N/A"}</TableCell>
+                    <TableCell>{report.doctorName || "N/A"}</TableCell>
+                    <TableCell>{report.technicianName || "N/A"}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          report.status === "completed"
+                            ? "default"
+                            : report.status === "pending"
+                            ? "secondary"
+                            : "outline"
+                        }
+                      >
+                        {report.status || "Pending"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {report.createdAt
+                        ? new Date(report.createdAt).toLocaleDateString()
+                        : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleView(report)}
+                          data-testid={`button-admin-view-report-${report.id}`}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {report.fileData && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleDownload(report)}
+                            data-testid={`button-admin-download-report-${report.id}`}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!viewingReport} onOpenChange={() => setViewingReport(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {viewingReport?.testName || "Diagnostic Report"}
+            </DialogTitle>
+            <DialogDescription>
+              Report for {viewingReport?.patientName || "Patient"}
+            </DialogDescription>
+          </DialogHeader>
+          {viewingReport && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Patient</Label>
+                  <p className="font-medium">{viewingReport.patientName}</p>
+                </div>
+                <div>
+                  <Label>Doctor</Label>
+                  <p className="font-medium">{viewingReport.doctorName}</p>
+                </div>
+                <div>
+                  <Label>Technician</Label>
+                  <p className="font-medium">{viewingReport.technicianName}</p>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge>{viewingReport.status}</Badge>
+                </div>
+              </div>
+
+              {viewingReport.findings && (
+                <div>
+                  <Label>Findings</Label>
+                  <p className="mt-1 whitespace-pre-wrap bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                    {viewingReport.findings}
+                  </p>
+                </div>
+              )}
+
+              {viewingReport.interpretation && (
+                <div>
+                  <Label>Interpretation</Label>
+                  <p className="mt-1 whitespace-pre-wrap bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                    {viewingReport.interpretation}
+                  </p>
+                </div>
+              )}
+
+              {viewingReport.fileData && (
+                <div className="border rounded-lg overflow-hidden">
+                  <iframe
+                    src={viewingReport.fileData}
+                    className="w-full h-96"
+                    title="Report PDF"
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2">
+                {viewingReport.fileData && (
+                  <Button onClick={() => handleDownload(viewingReport)}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => setViewingReport(null)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

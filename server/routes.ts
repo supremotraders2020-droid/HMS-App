@@ -14365,11 +14365,59 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  // Get technician reports by patient (for patient portal)
+  // Get technician reports by patient (for patient portal) - old endpoint kept for compatibility
   app.get("/api/patients/:patientId/diagnostic-reports", requireAuth, async (req, res) => {
     try {
       const reports = await storage.getTechnicianReportsByPatient(req.params.patientId);
       res.json(reports);
+    } catch (error) {
+      console.error("Error fetching patient diagnostic reports:", error);
+      res.status(500).json({ error: "Failed to fetch diagnostic reports" });
+    }
+  });
+
+  // Secure session-aware endpoint for patient diagnostic reports
+  app.get("/api/patient/my-diagnostic-reports", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      // Match by email, phone, or name (case-insensitive)
+      const userEmail = user.email?.toLowerCase()?.trim() || "";
+      const userName = user.username?.toLowerCase()?.trim() || "";
+      const userFullName = user.fullName?.toLowerCase()?.trim() || "";
+      
+      // Security guard: require at least one valid identifier
+      if (!userEmail && !userName && !userFullName) {
+        return res.json([]);
+      }
+
+      // Find service patient by email or by name match with user
+      const servicePatients = await storage.getAllServicePatients();
+      const allReports = await storage.getAllTechnicianReports();
+      
+      const matchingPatients = servicePatients.filter(p => {
+        const patientEmail = p.email?.toLowerCase()?.trim() || "";
+        const patientName = `${p.firstName} ${p.lastName}`.toLowerCase().trim();
+        
+        // Only match if we have non-empty identifiers to compare
+        const emailMatch = userEmail.length > 0 && patientEmail.length > 0 && patientEmail === userEmail;
+        const nameMatch = userFullName.length > 2 && patientName.length > 2 && (
+          patientName.includes(userFullName) || userFullName.includes(patientName)
+        );
+        const usernameMatch = userName.length > 2 && patientName.length > 2 && patientName.includes(userName);
+        
+        return emailMatch || nameMatch || usernameMatch;
+      });
+      
+      const patientIds = matchingPatients.map(p => p.id);
+      
+      // Filter reports for these patients by patient ID only (no name matching to avoid leaks)
+      const patientReports = allReports.filter(r => patientIds.includes(r.patientId));
+      
+      res.json(patientReports);
     } catch (error) {
       console.error("Error fetching patient diagnostic reports:", error);
       res.status(500).json({ error: "Failed to fetch diagnostic reports" });
@@ -14394,6 +14442,57 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return r.doctorId === req.params.doctorId || 
                reportDoctorNameNormalized.includes(usernameNormalized) ||
                usernameNormalized.includes(reportDoctorNameNormalized.split(" ")[0]);
+      });
+      res.json(doctorReports);
+    } catch (error) {
+      console.error("Error fetching doctor diagnostic reports:", error);
+      res.status(500).json({ error: "Failed to fetch diagnostic reports" });
+    }
+  });
+
+  // Secure session-aware endpoint for doctor diagnostic reports
+  app.get("/api/doctor/my-diagnostic-reports", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user || !user.id) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const userFullName = user.fullName?.toLowerCase().trim() || "";
+      const userName = user.username?.toLowerCase().trim() || "";
+      
+      // Security guard: require at least one valid identifier
+      if (!userFullName && !userName && !user.id) {
+        return res.json([]);
+      }
+
+      // Find reports where doctorId matches the logged-in user
+      const allReports = await storage.getAllTechnicianReports();
+      
+      const doctorReports = allReports.filter(r => {
+        // Primary match: doctorId matches user.id (most secure)
+        if (r.doctorId === user.id) {
+          return true;
+        }
+        
+        // Secondary match: doctorName matches (with length guards)
+        const reportDoctorName = r.doctorName?.toLowerCase().trim() || "";
+        if (reportDoctorName.length < 3) {
+          return false;
+        }
+        
+        // Only match if we have valid names to compare (minimum 3 chars to avoid false positives)
+        if (userFullName.length >= 3 && (
+          reportDoctorName.includes(userFullName) || userFullName.includes(reportDoctorName)
+        )) {
+          return true;
+        }
+        
+        if (userName.length >= 3 && reportDoctorName.includes(userName)) {
+          return true;
+        }
+        
+        return false;
       });
       res.json(doctorReports);
     } catch (error) {

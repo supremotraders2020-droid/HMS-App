@@ -483,6 +483,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           </div>
         )}
       </Route>
+      <Route path="/super-admin/diagnostic-reports">
+        {currentUser.role === "SUPER_ADMIN" ? (
+          <SuperAdminPortal section="diagnostic-reports" />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only Super Administrators can access this portal.</p>
+          </div>
+        )}
+      </Route>
 
       {/* Prescriptions Route - for OPD Manager and Doctor */}
       <Route path="/prescriptions">
