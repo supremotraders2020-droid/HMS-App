@@ -34,7 +34,8 @@ import {
   ChevronsUpDown,
   Stethoscope,
   IndianRupee,
-  Save
+  Save,
+  HeartPulse
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -422,6 +423,40 @@ export default function PatientTrackingService() {
     },
   });
 
+  const switchToIcuMutation = useMutation({
+    mutationFn: async (patient: TrackingPatient) => {
+      const today = new Date().toISOString().split('T')[0];
+      return await apiRequest("POST", "/api/icu-charts", {
+        patientId: patient.id,
+        patientName: patient.name,
+        age: patient.age?.toString() || "",
+        sex: patient.gender || "",
+        diagnosis: patient.diagnosis || "",
+        dateOfAdmission: patient.admissionDate ? new Date(patient.admissionDate).toISOString().split('T')[0] : today,
+        ward: "ICU",
+        bedNo: patient.room || "",
+        chartDate: today,
+        admittingConsultant: patient.doctor || "",
+        icuConsultant: patient.doctor || "",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/patients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts"] });
+      toast({
+        title: "Transferred to ICU",
+        description: "Patient has been transferred to ICU. ICU chart created successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Transfer Failed",
+        description: "Failed to transfer patient to ICU. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       admitted: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
@@ -785,28 +820,28 @@ export default function PatientTrackingService() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                  data-testid={`button-discharge-${patient.id}`}
+                                  className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
+                                  data-testid={`button-switch-icu-${patient.id}`}
                                 >
-                                  <LogOut className="h-4 w-4 mr-1" />
-                                  Discharge
+                                  <HeartPulse className="h-4 w-4 mr-1" />
+                                  Switch to ICU
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Discharge Patient</AlertDialogTitle>
+                                  <AlertDialogTitle>Transfer Patient to ICU</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Are you sure you want to discharge {patient.name}? The patient will be marked as discharged with today's date.
+                                    Are you sure you want to transfer {patient.name} to ICU? An ICU monitoring chart will be created automatically with the patient's details.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => dischargePatientMutation.mutate(patient.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                    data-testid={`button-confirm-discharge-${patient.id}`}
+                                    onClick={() => switchToIcuMutation.mutate(patient)}
+                                    className="bg-cyan-600 hover:bg-cyan-700"
+                                    data-testid={`button-confirm-switch-icu-${patient.id}`}
                                   >
-                                    Confirm Discharge
+                                    Confirm Transfer
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
