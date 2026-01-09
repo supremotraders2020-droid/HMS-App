@@ -83,6 +83,20 @@ export default function PatientMonitoringPage() {
     queryKey: ["/api/patient-monitoring/sessions"]
   });
 
+  // Check for session ID passed from Patient Tracking
+  useEffect(() => {
+    const storedSessionId = sessionStorage.getItem('selectedMonitoringSession');
+    if (storedSessionId && sessions.length > 0) {
+      const session = sessions.find(s => s.id === storedSessionId);
+      if (session) {
+        setSelectedSessionId(storedSessionId);
+        setSelectedDate(new Date(session.sessionDate));
+        setShowCalendar(false);
+        sessionStorage.removeItem('selectedMonitoringSession');
+      }
+    }
+  }, [sessions]);
+
   const { data: patients = [] } = useQuery<any[]>({
     queryKey: ["/api/patients/service"]
   });

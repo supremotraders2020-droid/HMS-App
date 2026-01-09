@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,9 @@ import {
   HeartPulse,
   History,
   Calendar,
-  Wind
+  Wind,
+  ExternalLink,
+  ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -73,6 +76,35 @@ export default function PatientTrackingService() {
   const [selectedDoctorVisitPatientId, setSelectedDoctorVisitPatientId] = useState<string>("");
   const [historyPatient, setHistoryPatient] = useState<TrackingPatient | null>(null);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  // Fetch patient monitoring sessions to link tracking with monitoring
+  const { data: monitoringSessions = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/sessions"],
+  });
+
+  // Helper to find monitoring session for a patient
+  const findMonitoringSession = (patientName: string) => {
+    return monitoringSessions.find((s: any) => 
+      s.patientName?.toLowerCase() === patientName?.toLowerCase()
+    );
+  };
+
+  // Navigate to Patient Monitoring with the session
+  const goToPatientMonitoring = (patientName: string) => {
+    const session = findMonitoringSession(patientName);
+    if (session) {
+      // Store session ID in sessionStorage for Patient Monitoring to pick up
+      sessionStorage.setItem('selectedMonitoringSession', session.id);
+      setLocation('/patient-monitoring');
+    } else {
+      toast({
+        title: "No Monitoring Session",
+        description: "No active monitoring session found for this patient. Please create one in Patient Monitoring.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<TrackingPatient[]>({
     queryKey: ["/api/tracking/patients"],
@@ -775,6 +807,17 @@ export default function PatientTrackingService() {
                               <DialogHeader>
                                 <DialogTitle>Patient History: {patient.name}</DialogTitle>
                               </DialogHeader>
+                              <div className="flex justify-end mb-4">
+                                <Button 
+                                  onClick={() => goToPatientMonitoring(patient.name)}
+                                  className="gap-2"
+                                  data-testid={`button-full-monitoring-${patient.id}`}
+                                >
+                                  <ClipboardList className="h-4 w-4" />
+                                  View Full Monitoring Data
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              </div>
                               {patientHistory && (
                                 <div className="space-y-4">
                                   <div>
