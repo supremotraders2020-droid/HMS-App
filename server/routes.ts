@@ -247,6 +247,9 @@ const requirePermission = (module: HMSModule, action: HMSAction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static files from server/public (body-diagram, hospital-logo, etc.)
+  app.use(express.static(path.join(process.cwd(), 'server/public')));
+  
   // Serve static consent PDF files from server/public/consents
   app.use('/consents', express.static(path.join(process.cwd(), 'server/public/consents')));
   
