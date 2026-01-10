@@ -70,7 +70,7 @@ class NotificationService {
     console.log("WebSocket notification service initialized");
   }
 
-  private sendToUser(userId: string, data: any) {
+  sendToUser(userId: string, data: any) {
     const userClients = this.clients.get(userId);
     if (userClients) {
       const message = JSON.stringify(data);
@@ -617,6 +617,176 @@ class NotificationService {
       isRead: false,
       metadata: null
     });
+  }
+
+  // ========== TECHNICIAN TEST ORDER NOTIFICATIONS ==========
+
+  async notifyTechniciansNewTestOrder(testOrder: {
+    id: string;
+    testName: string;
+    testType: string;
+    patientId: string;
+    patientName: string;
+    doctorId: string;
+    doctorName: string;
+    priority?: string;
+    sessionId?: string;
+  }) {
+    try {
+      const technicians = await storage.getUsersByRole('TECHNICIAN');
+      
+      for (const tech of technicians) {
+        await this.createAndPushNotification({
+          userId: tech.id,
+          userRole: "TECHNICIAN",
+          type: "test_order",
+          title: "New Test Order",
+          message: `Dr. ${testOrder.doctorName} ordered ${testOrder.testName} for ${testOrder.patientName}`,
+          relatedEntityType: "diagnostic_test_order",
+          relatedEntityId: testOrder.id,
+          isRead: false,
+          metadata: JSON.stringify({
+            testOrderId: testOrder.id,
+            testName: testOrder.testName,
+            testType: testOrder.testType,
+            patientName: testOrder.patientName,
+            doctorName: testOrder.doctorName,
+            priority: testOrder.priority || 'routine',
+            actionUrl: `/technician-portal?tab=upcoming&testId=${testOrder.id}`
+          })
+        });
+      }
+
+      // Broadcast real-time update to all technicians
+      this.broadcast({
+        type: "technician_notification",
+        event: "new_test_order",
+        testOrder: {
+          id: testOrder.id,
+          testName: testOrder.testName,
+          testType: testOrder.testType,
+          patientName: testOrder.patientName,
+          doctorName: testOrder.doctorName,
+          priority: testOrder.priority
+        }
+      }, "TECHNICIAN");
+
+      console.log(`Test order notification sent to ${technicians.length} technicians for ${testOrder.testName}`);
+    } catch (error) {
+      console.error("Error notifying technicians:", error);
+    }
+  }
+
+  async notifyDiagnosticReportReady(report: {
+    id: string;
+    testOrderId: string;
+    testName: string;
+    testType: string;
+    patientId: string;
+    patientName: string;
+    doctorId: string;
+    doctorName: string;
+    technicianName: string;
+    reportUrl?: string;
+  }) {
+    try {
+      const allUsers = await storage.getAllUsers();
+      
+      // Find the doctor user
+      const doctorUser = allUsers.find(u => {
+        const doctorNameNorm = report.doctorName?.toLowerCase().trim() || "";
+        const nameNorm = u.name?.toLowerCase().trim() || "";
+        return nameNorm.includes(doctorNameNorm) || 
+               doctorNameNorm.includes(nameNorm) ||
+               u.username?.toLowerCase().includes(doctorNameNorm.split(" ")[0]?.toLowerCase() || "");
+      });
+
+      // Notify Doctor with action link
+      if (doctorUser) {
+        await this.createAndPushNotification({
+          userId: doctorUser.id,
+          userRole: "DOCTOR",
+          type: "lab_report",
+          title: "Diagnostic Report Ready",
+          message: `${report.testName} report for ${report.patientName} is ready for review`,
+          relatedEntityType: "technician_report",
+          relatedEntityId: report.id,
+          isRead: false,
+          metadata: JSON.stringify({
+            reportId: report.id,
+            testName: report.testName,
+            patientName: report.patientName,
+            technicianName: report.technicianName,
+            reportUrl: report.reportUrl,
+            actionUrl: `/doctor-portal?tab=reports&reportId=${report.id}`
+          })
+        });
+      }
+
+      // Find patient user
+      const servicePatients = await storage.getAllServicePatients();
+      const patient = servicePatients.find(p => p.id === report.patientId);
+      if (patient?.email) {
+        const patientUser = allUsers.find(u => u.email === patient.email);
+        if (patientUser) {
+          await this.createAndPushNotification({
+            userId: patientUser.id,
+            userRole: "PATIENT",
+            type: "lab_report",
+            title: "Your Test Report is Ready",
+            message: `Your ${report.testName} report is now available for viewing`,
+            relatedEntityType: "technician_report",
+            relatedEntityId: report.id,
+            isRead: false,
+            metadata: JSON.stringify({
+              reportId: report.id,
+              testName: report.testName,
+              reportUrl: report.reportUrl,
+              actionUrl: `/lab-reports?reportId=${report.id}`
+            })
+          });
+        }
+      }
+
+      // Notify all Admins
+      const admins = await storage.getUsersByRole('ADMIN');
+      for (const admin of admins) {
+        await this.createAndPushNotification({
+          userId: admin.id,
+          userRole: "ADMIN",
+          type: "lab_report",
+          title: "New Diagnostic Report Submitted",
+          message: `${report.testName} report for ${report.patientName} submitted by ${report.technicianName}`,
+          relatedEntityType: "technician_report",
+          relatedEntityId: report.id,
+          isRead: false,
+          metadata: JSON.stringify({
+            reportId: report.id,
+            testName: report.testName,
+            patientName: report.patientName,
+            doctorName: report.doctorName,
+            technicianName: report.technicianName,
+            actionUrl: `/notification-service?tab=notifications`
+          })
+        });
+      }
+
+      // Broadcast real-time update
+      this.broadcast({
+        type: "diagnostic_report_ready",
+        event: "report_submitted",
+        report: {
+          id: report.id,
+          testName: report.testName,
+          patientName: report.patientName,
+          doctorName: report.doctorName
+        }
+      });
+
+      console.log(`Diagnostic report notification sent for ${report.testName}`);
+    } catch (error) {
+      console.error("Error notifying about diagnostic report:", error);
+    }
   }
 
   // ========== LEAVE STATUS NOTIFICATIONS ==========

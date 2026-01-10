@@ -7361,21 +7361,18 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         status: "PENDING",
       });
 
-      // Notify all technicians about the new test order from Patient Monitoring
-      const allUsers = await storage.getAllUsers();
-      const technicians = allUsers.filter(u => u.role === "TECHNICIAN");
-      for (const tech of technicians) {
-        await storage.createUserNotification({
-          userId: tech.id,
-          userRole: tech.role,
-          title: "New Test Order",
-          message: `New ${req.body.testName} ordered for ${req.body.patientName}`,
-          type: "test_order",
-          isRead: false,
-          relatedEntityId: testOrder.id,
-          relatedEntityType: "diagnostic_test_order"
-        });
-      }
+      // Send real-time notifications to all technicians
+      await notificationService.notifyTechniciansNewTestOrder({
+        id: testOrder.id,
+        testName: req.body.testName,
+        testType: req.body.testType || "Pathology",
+        patientId: req.body.patientId,
+        patientName: req.body.patientName,
+        doctorId,
+        doctorName,
+        priority: req.body.priority || "routine",
+        sessionId: req.params.sessionId
+      });
 
       res.status(201).json(testOrder);
     } catch (error) {
@@ -14401,84 +14398,19 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         reportFileName: fileName || null
       });
 
-      // Send notifications to all related roles
-      const notificationMessage = `Diagnostic report ready: ${testOrder.testName} for ${testOrder.patientName}`;
-      
-      // Notify Doctor - find user by doctor name
-      const allUsers = await storage.getAllUsers();
-      const doctorUser = allUsers.find(u => {
-        const doctorNameNormalized = testOrder.doctorName?.toLowerCase().trim() || "";
-        const usernameNormalized = u.username?.toLowerCase().trim() || "";
-        const fullNameNormalized = u.fullName?.toLowerCase().trim() || "";
-        return fullNameNormalized.includes(doctorNameNormalized) || 
-               doctorNameNormalized.includes(usernameNormalized) ||
-               usernameNormalized.includes(doctorNameNormalized.split(" ")[0]);
+      // Send real-time notifications to doctor, patient, and admins
+      await notificationService.notifyDiagnosticReportReady({
+        id: report.id,
+        testOrderId,
+        testName: testOrder.testName || "",
+        testType: testOrder.testType || "Pathology",
+        patientId: testOrder.patientId || "",
+        patientName: testOrder.patientName || "",
+        doctorId: testOrder.doctorId || "",
+        doctorName: testOrder.doctorName || "",
+        technicianName,
+        reportUrl: fileData
       });
-      
-      if (doctorUser) {
-        await storage.createUserNotification({
-          userId: doctorUser.id,
-          userRole: doctorUser.role || "DOCTOR",
-          title: "Diagnostic Report Ready",
-          message: notificationMessage,
-          type: "lab_report",
-          priority: "high",
-          isRead: false,
-          actionUrl: `/doctor-portal?tab=reports&reportId=${report.id}`
-        });
-        notificationService.sendToUser(doctorUser.id, {
-          type: "DIAGNOSTIC_REPORT",
-          title: "Diagnostic Report Ready",
-          message: notificationMessage,
-          reportId: report.id
-        });
-      }
-
-      // Notify Patient - find user by patient email
-      const servicePatients = await storage.getAllServicePatients();
-      const patient = servicePatients.find(p => p.id === testOrder.patientId);
-      if (patient?.email) {
-        const patientUser = allUsers.find(u => u.email === patient.email);
-        if (patientUser) {
-          await storage.createUserNotification({
-            userId: patientUser.id,
-            userRole: patientUser.role || "PATIENT",
-            title: "Your Test Report is Ready",
-            message: `Your ${testOrder.testName} report is now available for viewing.`,
-            type: "lab_report",
-            priority: "high",
-            isRead: false,
-            actionUrl: `/patient-portal?tab=reports&reportId=${report.id}`
-          });
-          notificationService.sendToUser(patientUser.id, {
-            type: "DIAGNOSTIC_REPORT",
-            title: "Your Test Report is Ready",
-            message: `Your ${testOrder.testName} report is now available.`,
-            reportId: report.id
-          });
-        }
-      }
-
-      // Notify Admin users
-      const adminUsers = allUsers.filter(u => u.role === "ADMIN" || u.role === "SUPER_ADMIN");
-      for (const admin of adminUsers) {
-        await storage.createUserNotification({
-          userId: admin.id,
-          userRole: admin.role,
-          title: "New Diagnostic Report Submitted",
-          message: notificationMessage,
-          type: "lab_report",
-          priority: "normal",
-          isRead: false,
-          actionUrl: `/admin-dashboard?tab=reports&reportId=${report.id}`
-        });
-        notificationService.sendToUser(admin.id, {
-          type: "DIAGNOSTIC_REPORT",
-          title: "New Diagnostic Report Submitted",
-          message: notificationMessage,
-          reportId: report.id
-        });
-      }
 
       // Notify Technician (self-confirmation)
       await storage.createUserNotification({
@@ -14487,7 +14419,6 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         title: "Report Submitted Successfully",
         message: `Your report for ${testOrder.testName} has been submitted.`,
         type: "lab_report",
-        priority: "normal",
         isRead: false
       });
 
