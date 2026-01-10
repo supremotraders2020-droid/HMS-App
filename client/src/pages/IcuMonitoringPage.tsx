@@ -1250,6 +1250,16 @@ function MedicationsSection({ chartId, ordersData, onceOnlyData, canEdit, userId
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      return apiRequest("PATCH", `/api/icu-medication/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Medication order updated" });
+    },
+  });
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -1337,17 +1347,25 @@ function MedicationsSection({ chartId, ordersData, onceOnlyData, canEdit, userId
               {ordersData.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="border p-4 text-center text-muted-foreground">
-                    No medication orders
+                    No medication orders. {canEdit && "Click 'Add Order' to add medications."}
                   </td>
                 </tr>
               ) : (
                 ordersData.map((order: any, idx: number) => (
                   <tr key={order.id}>
                     <td className="border p-2">{idx + 1}</td>
-                    <td className="border p-2 font-medium">{order.drugName}</td>
-                    <td className="border p-2 text-center">{order.dose || "-"}</td>
-                    <td className="border p-2 text-center">{order.route || "-"}</td>
-                    <td className="border p-2 text-center">{order.frequency || "-"}</td>
+                    <td className="border p-2 font-medium">
+                      <EditableCell value={order.drugName} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: order.id, field: "drugName", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={order.dose} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: order.id, field: "dose", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={order.route} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: order.id, field: "route", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={order.frequency} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: order.id, field: "frequency", value: v })} />
+                    </td>
                   </tr>
                 ))
               )}
@@ -1406,6 +1424,28 @@ function LabsSection({ chartId, abgData, investigationsData, diabeticData, canEd
   canEdit: boolean; 
   userId?: string 
 }) {
+  const { toast } = useToast();
+  
+  const updateAbgMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      return apiRequest("PATCH", `/api/icu-abg/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "ABG data updated" });
+    },
+  });
+
+  const updateDiabeticMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      return apiRequest("PATCH", `/api/icu-diabetic/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Diabetic chart updated" });
+    },
+  });
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -1430,19 +1470,31 @@ function LabsSection({ chartId, abgData, investigationsData, diabeticData, canEd
               {abgData.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="border p-4 text-center text-muted-foreground">
-                    No ABG reports
+                    No ABG reports recorded.
                   </td>
                 </tr>
               ) : (
                 abgData.map((entry: any) => (
                   <tr key={entry.id}>
                     <td className="border p-2 font-medium">{entry.time}</td>
-                    <td className="border p-2 text-center">{entry.ph || "-"}</td>
-                    <td className="border p-2 text-center">{entry.pco2 || "-"}</td>
-                    <td className="border p-2 text-center">{entry.po2 || "-"}</td>
-                    <td className="border p-2 text-center">{entry.be || "-"}</td>
-                    <td className="border p-2 text-center">{entry.sao2 || "-"}</td>
-                    <td className="border p-2 text-center">{entry.lactate || "-"}</td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.ph} canEdit={canEdit} onSave={(v) => updateAbgMutation.mutate({ id: entry.id, field: "ph", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.pco2} canEdit={canEdit} onSave={(v) => updateAbgMutation.mutate({ id: entry.id, field: "pco2", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.po2} canEdit={canEdit} onSave={(v) => updateAbgMutation.mutate({ id: entry.id, field: "po2", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.be} canEdit={canEdit} onSave={(v) => updateAbgMutation.mutate({ id: entry.id, field: "be", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.sao2} canEdit={canEdit} onSave={(v) => updateAbgMutation.mutate({ id: entry.id, field: "sao2", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.lactate} canEdit={canEdit} onSave={(v) => updateAbgMutation.mutate({ id: entry.id, field: "lactate", value: v })} />
+                    </td>
                   </tr>
                 ))
               )}
@@ -1493,18 +1545,28 @@ function LabsSection({ chartId, abgData, investigationsData, diabeticData, canEd
               {diabeticData.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="border p-4 text-center text-muted-foreground">
-                    No diabetic chart entries
+                    No diabetic chart entries recorded.
                   </td>
                 </tr>
               ) : (
                 diabeticData.map((entry: any) => (
                   <tr key={entry.id}>
                     <td className="border p-2 font-medium">{entry.time}</td>
-                    <td className="border p-2 text-center">{entry.bsl || "-"}</td>
-                    <td className="border p-2 text-center">{entry.insulin || "-"}</td>
-                    <td className="border p-2 text-center">{entry.na || "-"}</td>
-                    <td className="border p-2 text-center">{entry.k || "-"}</td>
-                    <td className="border p-2 text-center">{entry.cl || "-"}</td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.bsl} canEdit={canEdit} onSave={(v) => updateDiabeticMutation.mutate({ id: entry.id, field: "bsl", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.insulin} canEdit={canEdit} onSave={(v) => updateDiabeticMutation.mutate({ id: entry.id, field: "insulin", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.na} canEdit={canEdit} onSave={(v) => updateDiabeticMutation.mutate({ id: entry.id, field: "na", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.k} canEdit={canEdit} onSave={(v) => updateDiabeticMutation.mutate({ id: entry.id, field: "k", value: v })} />
+                    </td>
+                    <td className="border p-2 text-center">
+                      <EditableCell value={entry.cl} canEdit={canEdit} onSave={(v) => updateDiabeticMutation.mutate({ id: entry.id, field: "cl", value: v })} />
+                    </td>
                   </tr>
                 ))
               )}
@@ -1537,6 +1599,26 @@ function NursingSection({ chartId, remarksData, dutyData, diaryData, canEdit, us
       setShowAddRemark(false);
       setNewRemark({ time: "", remarks: "" });
       toast({ title: "Nursing remark added" });
+    },
+  });
+
+  const updateRemarkMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      return apiRequest("PATCH", `/api/icu-nursing-remark/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Nursing remark updated" });
+    },
+  });
+
+  const updateDiaryMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      return apiRequest("PATCH", `/api/icu-nurse-diary/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Diary entry updated" });
     },
   });
 
@@ -1590,13 +1672,15 @@ function NursingSection({ chartId, remarksData, dutyData, diaryData, canEdit, us
 
         <div className="space-y-2">
           {remarksData.length === 0 ? (
-            <p className="text-muted-foreground">No nursing remarks</p>
+            <p className="text-muted-foreground">No nursing remarks. {canEdit && "Click 'Add Remark' to record observations."}</p>
           ) : (
             remarksData.map((remark: any) => (
               <Card key={remark.id} className="p-3">
                 <div className="flex items-start gap-2">
                   <Badge variant="outline">{remark.time}</Badge>
-                  <p className="text-sm">{remark.remarks}</p>
+                  <div className="flex-1 text-sm">
+                    <EditableCell value={remark.remarks} canEdit={canEdit} onSave={(v) => updateRemarkMutation.mutate({ id: remark.id, field: "remarks", value: v })} />
+                  </div>
                 </div>
               </Card>
             ))
@@ -1630,13 +1714,15 @@ function NursingSection({ chartId, remarksData, dutyData, diaryData, canEdit, us
         </h4>
         <div className="space-y-2">
           {diaryData.length === 0 ? (
-            <p className="text-muted-foreground">No diary entries</p>
+            <p className="text-muted-foreground">No diary entries recorded.</p>
           ) : (
             diaryData.map((entry: any) => (
               <Card key={entry.id} className="p-3">
                 <div className="flex items-start gap-2">
                   <Badge variant="secondary">{entry.time}</Badge>
-                  <p className="text-sm">{entry.eventDescription}</p>
+                  <div className="flex-1 text-sm">
+                    <EditableCell value={entry.eventDescription} canEdit={canEdit} onSave={(v) => updateDiaryMutation.mutate({ id: entry.id, field: "eventDescription", value: v })} />
+                  </div>
                 </div>
               </Card>
             ))
@@ -1654,6 +1740,18 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
   canEdit: boolean; 
   userId?: string 
 }) {
+  const { toast } = useToast();
+  
+  const updateMarkingMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      return apiRequest("PATCH", `/api/icu-body-marking/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Body marking updated" });
+    },
+  });
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -1674,7 +1772,7 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
           <div className="space-y-4">
             <h4 className="font-medium">Recorded Markings</h4>
             {markingsData.length === 0 ? (
-              <p className="text-muted-foreground">No body markings recorded</p>
+              <p className="text-muted-foreground">No body markings recorded.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border">
@@ -1689,10 +1787,18 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
                   <tbody>
                     {markingsData.map((marking: any) => (
                       <tr key={marking.id}>
-                        <td className="border p-2">{marking.markedArea || "-"}</td>
-                        <td className="border p-2 text-center">{marking.typeOfInjury || "-"}</td>
-                        <td className="border p-2 text-center">{marking.grade || "-"}</td>
-                        <td className="border p-2 text-center">{marking.date || "-"}</td>
+                        <td className="border p-2">
+                          <EditableCell value={marking.markedArea} canEdit={canEdit} onSave={(v) => updateMarkingMutation.mutate({ id: marking.id, field: "markedArea", value: v })} />
+                        </td>
+                        <td className="border p-2 text-center">
+                          <EditableCell value={marking.typeOfInjury} canEdit={canEdit} onSave={(v) => updateMarkingMutation.mutate({ id: marking.id, field: "typeOfInjury", value: v })} />
+                        </td>
+                        <td className="border p-2 text-center">
+                          <EditableCell value={marking.grade} canEdit={canEdit} onSave={(v) => updateMarkingMutation.mutate({ id: marking.id, field: "grade", value: v })} />
+                        </td>
+                        <td className="border p-2 text-center">
+                          <EditableCell value={marking.date} canEdit={canEdit} onSave={(v) => updateMarkingMutation.mutate({ id: marking.id, field: "date", value: v })} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
