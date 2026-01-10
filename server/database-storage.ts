@@ -5179,25 +5179,37 @@ export class DatabaseStorage implements IStorage {
     );
   }
   
-  // Get admitted patients (with active admission status)
+  // Get ICU-admitted patients from tracking_patients table (real-time ICU data)
   async getAdmittedPatientsWithDetails(): Promise<any[]> {
-    const activeAdmissions = await this.getActiveAdmissions();
-    const patientsWithAdmissions = [];
+    // Fetch only patients currently in ICU (is_in_icu = true)
+    const icuPatients = await db.select().from(trackingPatients)
+      .where(eq(trackingPatients.isInIcu, true))
+      .orderBy(desc(trackingPatients.admissionDate));
     
-    for (const admission of activeAdmissions) {
-      const patient = await this.getServicePatientById(admission.patientId);
-      if (patient) {
-        patientsWithAdmissions.push({
-          ...patient,
-          admissionId: admission.id,
-          admissionDate: admission.admissionDate,
-          wardType: admission.department,
-          bedNumber: admission.roomNumber
-        });
-      }
-    }
-    
-    return patientsWithAdmissions;
+    // Format the data for the frontend dropdown
+    return icuPatients.map(patient => {
+      // Parse name into firstName/lastName
+      const nameParts = (patient.name || '').split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      return {
+        id: patient.id,
+        firstName,
+        lastName,
+        name: patient.name,
+        admissionDate: patient.admissionDate,
+        wardType: 'ICU',
+        bedNumber: patient.room,
+        department: patient.department,
+        diagnosis: patient.diagnosis,
+        gender: patient.gender,
+        age: patient.age,
+        bloodType: patient.bloodGroup,
+        doctor: patient.doctor,
+        status: patient.status
+      };
+    });
   }
 
   // Seed ICU beds if not exist
