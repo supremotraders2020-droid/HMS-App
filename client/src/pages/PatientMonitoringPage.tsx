@@ -23,7 +23,7 @@ import {
   PlusCircle, RefreshCw, Download, Stethoscope,
   Wind, Syringe, FlaskConical, ClipboardList, Baby,
   BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays, ArrowLeft,
-  Beaker, Plus, CheckCircle, XCircle, Loader2
+  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye
 } from "lucide-react";
 
 const HOUR_SLOTS = [
@@ -2582,6 +2582,33 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {test.status === "COMPLETED" && test.fileUrl && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => window.open(test.fileUrl, '_blank')}
+                            >
+                              <Eye className="w-3 h-3 mr-1" />
+                              View
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = test.fileUrl;
+                                link.download = `${test.testName}_Report.pdf`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
+                            </Button>
+                          </>
+                        )}
                         {getStatusBadge(test.status)}
                         {test.status === "PENDING" && (
                           <Button 
