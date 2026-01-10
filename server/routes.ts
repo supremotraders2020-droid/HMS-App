@@ -7367,19 +7367,13 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       for (const tech of technicians) {
         await storage.createUserNotification({
           userId: tech.id,
+          userRole: tech.role,
           title: "New Test Order",
           message: `New ${req.body.testName} ordered for ${req.body.patientName}`,
           type: "test_order",
-          priority: req.body.priority === "STAT" ? "urgent" : "normal",
           isRead: false,
-          actionUrl: `/technician-portal?testId=${testOrder.id}`
-        });
-        notificationService.sendToUser(tech.id, {
-          type: "NEW_TEST_ORDER",
-          title: "New Test Order",
-          message: `New ${req.body.testName} ordered for ${req.body.patientName}`,
-          testOrderId: testOrder.id,
-          priority: req.body.priority
+          relatedEntityId: testOrder.id,
+          relatedEntityType: "diagnostic_test_order"
         });
       }
 
