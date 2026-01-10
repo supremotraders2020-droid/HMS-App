@@ -15022,6 +15022,26 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  app.patch("/api/icu-ventilator/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuVentilatorEntry(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating ventilator entry:", error);
+      res.status(500).json({ error: "Failed to update ventilator entry" });
+    }
+  });
+
+  app.patch("/api/icu-hemodynamic/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuHemodynamicEntry(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating hemodynamic entry:", error);
+      res.status(500).json({ error: "Failed to update hemodynamic entry" });
+    }
+  });
+
   // ICU ABG Reports
   app.post("/api/icu-charts/:chartId/abg", requireAuth, async (req, res) => {
     try {
@@ -15040,6 +15060,86 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error fetching ABG reports:", error);
       res.status(500).json({ error: "Failed to fetch ABG reports" });
+    }
+  });
+
+  app.patch("/api/icu-abg/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuAbgReport(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating ABG report:", error);
+      res.status(500).json({ error: "Failed to update ABG report" });
+    }
+  });
+
+  app.patch("/api/icu-diabetic/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuDiabeticEntry(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating diabetic entry:", error);
+      res.status(500).json({ error: "Failed to update diabetic entry" });
+    }
+  });
+
+  app.patch("/api/icu-intake/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuIntakeEntry(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating intake entry:", error);
+      res.status(500).json({ error: "Failed to update intake entry" });
+    }
+  });
+
+  app.patch("/api/icu-output/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuOutputEntry(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating output entry:", error);
+      res.status(500).json({ error: "Failed to update output entry" });
+    }
+  });
+
+  app.patch("/api/icu-medication/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuMedicationOrder(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating medication order:", error);
+      res.status(500).json({ error: "Failed to update medication order" });
+    }
+  });
+
+  app.patch("/api/icu-nursing-remark/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuNursingRemark(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating nursing remark:", error);
+      res.status(500).json({ error: "Failed to update nursing remark" });
+    }
+  });
+
+  app.patch("/api/icu-nurse-diary/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuNurseDiaryEntry(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating nurse diary entry:", error);
+      res.status(500).json({ error: "Failed to update nurse diary entry" });
+    }
+  });
+
+  app.patch("/api/icu-body-marking/:id", requireAuth, async (req, res) => {
+    try {
+      const entry = await storage.updateIcuBodyMarking(req.params.id, req.body);
+      res.json(entry);
+    } catch (error) {
+      console.error("Error updating body marking:", error);
+      res.status(500).json({ error: "Failed to update body marking" });
     }
   });
 
