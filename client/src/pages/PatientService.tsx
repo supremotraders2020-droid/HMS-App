@@ -2008,13 +2008,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
       {/* Longitudinal Patient Profile Dialog */}
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <History className="h-5 w-5 text-blue-600" />
-              Complete Patient Profile - {selectedProfilePatient?.firstName} {selectedProfilePatient?.lastName}
+        <DialogContent className="max-w-5xl w-[95vw] md:w-full max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
+              <History className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+              <span className="truncate">Complete Patient Profile - {selectedProfilePatient?.firstName} {selectedProfilePatient?.lastName}</span>
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">
               Comprehensive longitudinal view of patient's entire healthcare journey
             </DialogDescription>
           </DialogHeader>
@@ -2025,30 +2025,32 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               <span className="ml-2">Loading patient profile...</span>
             </div>
           ) : longitudinalProfile ? (
-            <ScrollArea className="flex-1 pr-4">
-              <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full">
-                <TabsList className="grid w-full grid-cols-5 mb-4">
-                  <TabsTrigger value="opd" className="flex items-center gap-1 text-xs">
-                    <ClipboardList className="h-3 w-3" />
-                    OPD History
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full flex-1 flex flex-col min-h-0">
+                <TabsList className="flex-shrink-0 grid w-full grid-cols-5 sm:grid-cols-5 mb-4 h-auto">
+                  <TabsTrigger value="opd" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                    <ClipboardList className="h-3 w-3 hidden sm:block" />
+                    <span>OPD</span>
                   </TabsTrigger>
-                  <TabsTrigger value="ipd" className="flex items-center gap-1 text-xs">
-                    <Bed className="h-3 w-3" />
-                    IPD History
+                  <TabsTrigger value="ipd" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                    <Bed className="h-3 w-3 hidden sm:block" />
+                    <span>IPD</span>
                   </TabsTrigger>
-                  <TabsTrigger value="medication" className="flex items-center gap-1 text-xs">
-                    <Pill className="h-3 w-3" />
-                    Medication
+                  <TabsTrigger value="medication" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                    <Pill className="h-3 w-3 hidden sm:block" />
+                    <span>Meds</span>
                   </TabsTrigger>
-                  <TabsTrigger value="consent" className="flex items-center gap-1 text-xs">
-                    <FileCheck className="h-3 w-3" />
-                    Consents
+                  <TabsTrigger value="consent" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                    <FileCheck className="h-3 w-3 hidden sm:block" />
+                    <span>Consents</span>
                   </TabsTrigger>
-                  <TabsTrigger value="billing" className="flex items-center gap-1 text-xs">
-                    <DollarSign className="h-3 w-3" />
-                    Billing
+                  <TabsTrigger value="billing" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                    <DollarSign className="h-3 w-3 hidden sm:block" />
+                    <span>Billing</span>
                   </TabsTrigger>
                 </TabsList>
+                
+                <ScrollArea className="flex-1 min-h-0 pr-2 sm:pr-4" style={{ height: 'calc(85vh - 180px)', maxHeight: '500px' }}>
 
                 {/* OPD History Section */}
                 <TabsContent value="opd" className="space-y-4">
@@ -2251,8 +2253,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                     </CardContent>
                   </Card>
                 </TabsContent>
+                </ScrollArea>
               </Tabs>
-            </ScrollArea>
+            </div>
           ) : (
             <p className="text-center py-8 text-muted-foreground">No profile data available</p>
           )}
