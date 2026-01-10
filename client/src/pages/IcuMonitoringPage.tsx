@@ -14,7 +14,71 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plus, Search, Calendar, User, Thermometer, BarChart3, FileText, AlertTriangle, Stethoscope, Syringe, Beaker, FlaskConical, Scale, Timer, BedDouble, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
+import { Pencil, Check, X } from "lucide-react";
 import type { IcuCharts, ServicePatient } from "@shared/schema";
+
+function EditableCell({ 
+  value, 
+  onSave, 
+  canEdit,
+  type = "text"
+}: { 
+  value: string | number | null; 
+  onSave: (newValue: string) => void;
+  canEdit: boolean;
+  type?: "text" | "number";
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(String(value || ""));
+
+  const handleSave = () => {
+    onSave(editValue);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(String(value || ""));
+    setIsEditing(false);
+  };
+
+  if (!canEdit) {
+    return <span>{value || "-"}</span>;
+  }
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-1">
+        <Input
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          className="h-7 w-16 text-xs px-1"
+          type={type}
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSave();
+            if (e.key === "Escape") handleCancel();
+          }}
+        />
+        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSave}>
+          <Check className="h-3 w-3 text-green-600" />
+        </Button>
+        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancel}>
+          <X className="h-3 w-3 text-red-600" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded group flex items-center justify-center gap-1"
+      onClick={() => setIsEditing(true)}
+    >
+      <span>{value || "-"}</span>
+      <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50" />
+    </div>
+  );
+}
 
 interface IcuMonitoringPageProps {
   userRole: string;
@@ -597,6 +661,16 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      return apiRequest("PATCH", `/api/icu-vitals/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Vital updated" });
+    },
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -708,19 +782,31 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
             {data.length === 0 ? (
               <tr>
                 <td colSpan={7} className="border p-4 text-center text-muted-foreground">
-                  No vital signs recorded
+                  No vital signs recorded. {canEdit && "Click 'Record Vitals' to add data."}
                 </td>
               </tr>
             ) : (
               data.map((entry: any) => (
                 <tr key={entry.id}>
                   <td className="border p-2 font-medium">{entry.hour}</td>
-                  <td className="border p-2 text-center">{entry.temperature || "-"}</td>
-                  <td className="border p-2 text-center">{entry.pulse || "-"}</td>
-                  <td className="border p-2 text-center">{entry.bp || "-"}</td>
-                  <td className="border p-2 text-center">{entry.respiratoryRate || "-"}</td>
-                  <td className="border p-2 text-center">{entry.spo2 || "-"}</td>
-                  <td className="border p-2 text-center">{entry.cvp || "-"}</td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.temperature} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "temperature", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.pulse} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "pulse", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.bp} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "bp", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.respiratoryRate} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "respiratoryRate", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.spo2} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "spo2", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.cvp} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "cvp", value: v })} />
+                  </td>
                 </tr>
               ))
             )}
@@ -754,6 +840,16 @@ function VentilatorSection({ chartId, data, canEdit, userId }: { chartId: string
       setShowAddForm(false);
       setNewEntry({ time: "", mode: "", fio2: "", setTidalVolume: "", respRatePerMin: "", peepCpap: "", pressureSupport: "", ieRatio: "" });
       toast({ title: "Ventilator settings recorded" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      return apiRequest("PATCH", `/api/icu-ventilator/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Ventilator setting updated" });
     },
   });
 
@@ -872,19 +968,31 @@ function VentilatorSection({ chartId, data, canEdit, userId }: { chartId: string
             {data.length === 0 ? (
               <tr>
                 <td colSpan={7} className="border p-4 text-center text-muted-foreground">
-                  No ventilator settings recorded
+                  No ventilator settings recorded. {canEdit && "Click 'Record Settings' to add data."}
                 </td>
               </tr>
             ) : (
               data.map((entry: any) => (
                 <tr key={entry.id}>
                   <td className="border p-2 font-medium">{entry.time}</td>
-                  <td className="border p-2 text-center">{entry.mode || "-"}</td>
-                  <td className="border p-2 text-center">{entry.fio2 || "-"}</td>
-                  <td className="border p-2 text-center">{entry.setTidalVolume || "-"}</td>
-                  <td className="border p-2 text-center">{entry.respRatePerMin || "-"}</td>
-                  <td className="border p-2 text-center">{entry.peepCpap || "-"}</td>
-                  <td className="border p-2 text-center">{entry.pressureSupport || "-"}</td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.mode} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "mode", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.fio2} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "fio2", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.setTidalVolume} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "setTidalVolume", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.respRatePerMin} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "respRatePerMin", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.peepCpap} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "peepCpap", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.pressureSupport} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "pressureSupport", value: v })} />
+                  </td>
                 </tr>
               ))
             )}
@@ -916,6 +1024,16 @@ function HemodynamicSection({ chartId, data, canEdit, userId }: { chartId: strin
       setShowAddForm(false);
       setNewEntry({ time: "", heartRate: "", map: "", cvp: "", inotropeName: "", inotropeDose: "" });
       toast({ title: "Hemodynamic data recorded" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      return apiRequest("PATCH", `/api/icu-hemodynamic/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Hemodynamic data updated" });
     },
   });
 
@@ -1018,18 +1136,28 @@ function HemodynamicSection({ chartId, data, canEdit, userId }: { chartId: strin
             {data.length === 0 ? (
               <tr>
                 <td colSpan={6} className="border p-4 text-center text-muted-foreground">
-                  No hemodynamic data recorded
+                  No hemodynamic data recorded. {canEdit && "Click 'Record Data' to add data."}
                 </td>
               </tr>
             ) : (
               data.map((entry: any) => (
                 <tr key={entry.id}>
                   <td className="border p-2 font-medium">{entry.time}</td>
-                  <td className="border p-2 text-center">{entry.heartRate || "-"}</td>
-                  <td className="border p-2 text-center">{entry.map || "-"}</td>
-                  <td className="border p-2 text-center">{entry.cvp || "-"}</td>
-                  <td className="border p-2 text-center">{entry.inotropeName || "-"}</td>
-                  <td className="border p-2 text-center">{entry.inotropeDose || "-"}</td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.heartRate} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "heartRate", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.map} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "map", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.cvp} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "cvp", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.inotropeName} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "inotropeName", value: v })} />
+                  </td>
+                  <td className="border p-2 text-center">
+                    <EditableCell value={entry.inotropeDose} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "inotropeDose", value: v })} />
+                  </td>
                 </tr>
               ))
             )}
