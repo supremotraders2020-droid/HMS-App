@@ -11,7 +11,7 @@ import { HMS_MODULES, HMS_ACTIONS, DEFAULT_PERMISSIONS } from "../shared/permiss
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db, pool } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, or } from "drizzle-orm";
 import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
   patientBarcodes, insertPatientBarcodeSchema, barcodeScanLogs, insertBarcodeScanLogSchema, servicePatients,
   patientMonitoringSessions, insertPatientMonitoringSessionSchema,
@@ -4862,13 +4862,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Use patient name for lookups in tables that don't have patientId FK
-      const patientName = patient.name;
+      const patientName = `${patient.firstName} ${patient.lastName}`.trim();
       
-      // 1. OPD History - Get appointments by patient name
+      // 1. OPD History - Get appointments by patient name or patient ID
       let opdHistory: any[] = [];
       try {
         opdHistory = await db.select().from(appointments)
-          .where(eq(appointments.patientName, patientName));
+          .where(or(
+            eq(appointments.patientName, patientName),
+            eq(appointments.patientId, patientId)
+          ))
+          .orderBy(desc(appointments.createdAt));
       } catch (e) { console.log("No OPD history found"); }
       
       // 2. IPD History - Get tracking patient data by patient name
@@ -4902,7 +4906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         bills = await db.select().from(patientBills)
           .where(eq(patientBills.patientId, patientId))
-          .orderBy(desc(patientBills.billDate));
+          .orderBy(desc(patientBills.createdAt));
         
         if (bills.length > 0) {
           const billIds = bills.map(b => b.id);
