@@ -14393,10 +14393,12 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         reportDate: new Date()
       });
 
-      // Update test order status to COMPLETED
+      // Update test order status to COMPLETED and store report URL
       await storage.updateDiagnosticTestOrder(testOrderId, {
         status: "COMPLETED",
-        completedDate: new Date()
+        completedDate: new Date(),
+        reportUrl: fileData || null,
+        reportFileName: fileName || null
       });
 
       // Send notifications to all related roles

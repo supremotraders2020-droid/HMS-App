@@ -2582,12 +2582,12 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {test.status === "COMPLETED" && test.fileUrl && (
+                        {test.status === "COMPLETED" && test.reportUrl && (
                           <>
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => window.open(test.fileUrl, '_blank')}
+                              onClick={() => window.open(test.reportUrl, '_blank')}
                             >
                               <Eye className="w-3 h-3 mr-1" />
                               View
@@ -2597,8 +2597,8 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
                               variant="outline"
                               onClick={() => {
                                 const link = document.createElement('a');
-                                link.href = test.fileUrl;
-                                link.download = `${test.testName}_Report.pdf`;
+                                link.href = test.reportUrl;
+                                link.download = test.reportFileName || `${test.testName}_Report.pdf`;
                                 document.body.appendChild(link);
                                 link.click();
                                 document.body.removeChild(link);

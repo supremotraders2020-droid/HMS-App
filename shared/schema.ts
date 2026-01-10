@@ -4817,6 +4817,10 @@ export const diagnosticTestOrders = pgTable("diagnostic_test_orders", {
   clinicalNotes: text("clinical_notes"),
   specialInstructions: text("special_instructions"),
   
+  // Report (when technician uploads)
+  reportUrl: text("report_url"),
+  reportFileName: text("report_file_name"),
+  
   // Timestamps
   orderedDate: timestamp("ordered_date").defaultNow(),
   scheduledDate: timestamp("scheduled_date"),
