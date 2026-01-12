@@ -67,7 +67,7 @@ export default function PatientMonitoringPage() {
     age: 30,
     sex: "Male",
     admissionDateTime: new Date(),
-    ward: "ICU",
+    ward: "",
     bedNumber: "",
     bloodGroup: "",
     weightKg: "",
@@ -97,9 +97,9 @@ export default function PatientMonitoringPage() {
     }
   }, [sessions]);
 
-  // Fetch only ICU-admitted patients (patients currently in ICU beds) with real-time refresh
-  const { data: icuAdmittedPatients = [], isLoading: loadingIcuPatients } = useQuery<any[]>({
-    queryKey: ["/api/icu/admitted-patients"],
+  // Fetch all admitted/tracking patients (not just ICU) with real-time refresh
+  const { data: admittedPatients = [], isLoading: loadingAdmittedPatients } = useQuery<any[]>({
+    queryKey: ["/api/tracking/patients"],
     refetchInterval: 5000, // Real-time refresh every 5 seconds
   });
 
@@ -166,21 +166,19 @@ export default function PatientMonitoringPage() {
   });
 
   const handlePatientSelect = (patientId: string) => {
-    // First check ICU-admitted patients
-    const icuPatient = icuAdmittedPatients.find((p: any) => p.id.toString() === patientId);
-    if (icuPatient) {
-      const patientName = `${icuPatient.firstName || ''} ${icuPatient.lastName || ''}`.trim() || icuPatient.name || 'Unknown';
+    // Find from all admitted/tracking patients
+    const trackingPatient = admittedPatients.find((p: any) => p.id.toString() === patientId);
+    if (trackingPatient) {
+      const patientName = trackingPatient.name || `${trackingPatient.firstName || ''} ${trackingPatient.lastName || ''}`.trim() || 'Unknown';
       setNewSessionData({
         ...newSessionData,
         patientId: patientId,
         patientName: patientName,
-        uhid: icuPatient.uhidNumber || `UHID-${icuPatient.id.slice(0, 8)}`,
-        age: icuPatient.age || 30,
-        sex: icuPatient.gender || "Male",
-        bloodGroup: icuPatient.bloodType || "",
-        ward: "ICU",
-        bedNumber: icuPatient.bedNumber || "",
-        primaryDiagnosis: icuPatient.diagnosis || ""
+        uhid: trackingPatient.uhidNumber || trackingPatient.uhid || `UHID-${trackingPatient.id.slice(0, 8)}`,
+        age: trackingPatient.age || 30,
+        sex: trackingPatient.gender || "Male",
+        bloodGroup: trackingPatient.bloodType || trackingPatient.bloodGroup || "",
+        primaryDiagnosis: trackingPatient.diagnosis || trackingPatient.primaryDiagnosis || ""
       });
       return;
     }
@@ -238,21 +236,22 @@ export default function PatientMonitoringPage() {
             <div className="space-y-4 py-4 max-h-[60vh] overflow-auto">
               <div className="space-y-2">
                 <Label>Select Admitted Patient *</Label>
-                <Select onValueChange={handlePatientSelect} disabled={loadingIcuPatients}>
+                <Select onValueChange={handlePatientSelect} disabled={loadingAdmittedPatients}>
                   <SelectTrigger data-testid="select-patient">
-                    <SelectValue placeholder={loadingIcuPatients ? "Loading ICU patients..." : "Select patient"} />
+                    <SelectValue placeholder={loadingAdmittedPatients ? "Loading patients..." : "Select patient"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {icuAdmittedPatients.length === 0 ? (
+                    {admittedPatients.length === 0 ? (
                       <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        No ICU-admitted patients found
+                        No admitted patients found
                       </div>
                     ) : (
-                      icuAdmittedPatients.map((p: any) => {
-                        const displayName = `${p.firstName || ''} ${p.lastName || ''}`.trim() || p.name || 'Unknown Patient';
+                      admittedPatients.map((p: any) => {
+                        const displayName = p.name || `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Unknown Patient';
+                        const wardInfo = p.ward || p.currentWard || p.department || '';
                         return (
                           <SelectItem key={p.id} value={p.id.toString()}>
-                            {displayName} - ICU
+                            {displayName}{wardInfo ? ` - ${wardInfo}` : ''}
                           </SelectItem>
                         );
                       })
@@ -268,9 +267,9 @@ export default function PatientMonitoringPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Ward *</Label>
-                  <Select value={newSessionData.ward} onValueChange={(v) => setNewSessionData({...newSessionData, ward: v, bedNumber: ""})}>
+                  <Select value={newSessionData.ward || undefined} onValueChange={(v) => setNewSessionData({...newSessionData, ward: v, bedNumber: ""})}>
                     <SelectTrigger data-testid="select-ward">
-                      <SelectValue />
+                      <SelectValue placeholder="Select ward" />
                     </SelectTrigger>
                     <SelectContent>
                       {WARDS.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
@@ -282,10 +281,18 @@ export default function PatientMonitoringPage() {
                   <Select 
                     value={newSessionData.bedNumber} 
                     onValueChange={(v) => setNewSessionData({...newSessionData, bedNumber: v})}
-                    disabled={loadingBeds}
+                    disabled={!newSessionData.ward || loadingBeds}
                   >
                     <SelectTrigger data-testid="select-bed">
-                      <SelectValue placeholder={loadingBeds ? "Loading beds..." : availableBeds.length === 0 ? "No available beds" : "Select bed"} />
+                      <SelectValue placeholder={
+                        !newSessionData.ward 
+                          ? "Select ward first" 
+                          : loadingBeds 
+                            ? "Loading beds..." 
+                            : availableBeds.length === 0 
+                              ? "No available beds" 
+                              : "Select bed"
+                      } />
                     </SelectTrigger>
                     <SelectContent>
                       {availableBeds.length === 0 ? (
@@ -301,7 +308,7 @@ export default function PatientMonitoringPage() {
                       )}
                     </SelectContent>
                   </Select>
-                  {availableBeds.length > 0 && (
+                  {newSessionData.ward && availableBeds.length > 0 && (
                     <p className="text-xs text-muted-foreground">
                       {availableBeds.length} bed{availableBeds.length !== 1 ? 's' : ''} available
                     </p>
@@ -345,7 +352,7 @@ export default function PatientMonitoringPage() {
               <Button variant="outline" onClick={() => setShowNewSession(false)}>Cancel</Button>
               <Button 
                 onClick={() => createSessionMutation.mutate(newSessionData)} 
-                disabled={!newSessionData.patientId || !newSessionData.bedNumber || !newSessionData.primaryDiagnosis || !newSessionData.admittingConsultant || createSessionMutation.isPending} 
+                disabled={!newSessionData.patientId || !newSessionData.ward || !newSessionData.bedNumber || !newSessionData.primaryDiagnosis || !newSessionData.admittingConsultant || createSessionMutation.isPending} 
                 data-testid="button-create-session"
               >
                 {createSessionMutation.isPending ? "Creating..." : "Start Session"}
