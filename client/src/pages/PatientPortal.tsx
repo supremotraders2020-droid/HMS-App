@@ -149,6 +149,7 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
   const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
   const [viewRecordDialogOpen, setViewRecordDialogOpen] = useState(false);
   const [showClaimDialog, setShowClaimDialog] = useState(false);
+  const [viewingDiagnosticReport, setViewingDiagnosticReport] = useState<{url: string; testName: string} | null>(null);
   const [claimForm, setClaimForm] = useState({
     claimType: "Reimbursement",
     insuranceProviderId: "",
@@ -2151,48 +2152,14 @@ Description: ${record.description}
                             size="icon" 
                             variant="ghost" 
                             onClick={() => {
-                              const printContent = `
-                                <html>
-                                <head>
-                                  <title>Diagnostic Report - ${report.testName}</title>
-                                  <style>
-                                    body { font-family: Arial, sans-serif; padding: 40px; }
-                                    .header { text-align: center; border-bottom: 2px solid #1a56db; padding-bottom: 15px; margin-bottom: 25px; }
-                                    .hospital { font-size: 26px; font-weight: bold; color: #1a56db; }
-                                    .section { margin: 18px 0; }
-                                    .section-title { font-weight: bold; color: #1a56db; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
-                                    .label { font-weight: 600; color: #374151; }
-                                    .value { color: #111; margin-top: 3px; }
-                                  </style>
-                                </head>
-                                <body>
-                                  <div class="header">
-                                    <div class="hospital">Gravity Hospital</div>
-                                    <div>Diagnostic Report</div>
-                                  </div>
-                                  <div class="section">
-                                    <div class="section-title">Test Details</div>
-                                    <p><span class="label">Test Name:</span> ${report.testName}</p>
-                                    <p><span class="label">Department:</span> ${report.department}</p>
-                                    <p><span class="label">Date:</span> ${report.reportDate ? format(new Date(report.reportDate), 'yyyy-MM-dd') : 'N/A'}</p>
-                                    <p><span class="label">Technician:</span> ${report.technicianName}</p>
-                                  </div>
-                                  <div class="section">
-                                    <div class="section-title">Findings</div>
-                                    <p>${report.findings || 'N/A'}</p>
-                                  </div>
-                                  <div class="section">
-                                    <div class="section-title">Conclusion</div>
-                                    <p>${report.conclusion || 'N/A'}</p>
-                                  </div>
-                                  ${report.recommendations ? `<div class="section"><div class="section-title">Recommendations</div><p>${report.recommendations}</p></div>` : ''}
-                                </body>
-                                </html>
-                              `;
-                              const printWindow = window.open('', '_blank');
-                              if (printWindow) {
-                                printWindow.document.write(printContent);
-                                printWindow.document.close();
+                              if (report.fileData) {
+                                setViewingDiagnosticReport({ url: report.fileData, testName: report.testName });
+                              } else {
+                                toast({
+                                  title: "No File Available",
+                                  description: "This report doesn't have an attached file. The technician has not uploaded a report yet.",
+                                  variant: "destructive"
+                                });
                               }
                             }}
                             data-testid={`button-view-diagnostic-${report.id}`}
@@ -2396,6 +2363,40 @@ Description: ${record.description}
                     </div>
                   </div>
                 )}
+              </DialogContent>
+            </Dialog>
+
+            {/* Diagnostic Report View Dialog */}
+            <Dialog open={!!viewingDiagnosticReport} onOpenChange={() => setViewingDiagnosticReport(null)}>
+              <DialogContent className="max-w-4xl max-h-[90vh]">
+                <DialogHeader>
+                  <DialogTitle>Test Report - {viewingDiagnosticReport?.testName}</DialogTitle>
+                  <DialogDescription>Uploaded test report from the technician</DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col items-center justify-center min-h-[400px]">
+                  {viewingDiagnosticReport?.url && (
+                    viewingDiagnosticReport.url.startsWith('data:image') ? (
+                      <img 
+                        src={viewingDiagnosticReport.url} 
+                        alt={`Report for ${viewingDiagnosticReport.testName}`}
+                        className="max-w-full max-h-[70vh] object-contain rounded-lg border"
+                      />
+                    ) : viewingDiagnosticReport.url.startsWith('data:application/pdf') ? (
+                      <embed 
+                        src={viewingDiagnosticReport.url}
+                        type="application/pdf"
+                        className="w-full h-[70vh] rounded-lg border"
+                      />
+                    ) : (
+                      <div className="text-center">
+                        <p className="mb-4">Unable to preview this file type.</p>
+                        <Button onClick={() => window.open(viewingDiagnosticReport.url, '_blank')}>
+                          Open in New Tab
+                        </Button>
+                      </div>
+                    )
+                  )}
+                </div>
               </DialogContent>
             </Dialog>
           </div>
