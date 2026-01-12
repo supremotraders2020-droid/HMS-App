@@ -81,8 +81,9 @@ interface TechnicianReport {
   technicianId: string;
   technicianName: string;
   reportDate: string;
-  findings: string;
-  conclusion: string;
+  recommendations?: string;
+  fileName?: string;
+  fileData?: string;
   attachmentUrl?: string;
   status: "DRAFT" | "SUBMITTED" | "VERIFIED";
   createdAt: string;
@@ -126,8 +127,6 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
   const [selectedReport, setSelectedReport] = useState<TechnicianReport | null>(null);
   
   const [reportForm, setReportForm] = useState({
-    findings: "",
-    conclusion: "",
     recommendations: "",
     attachmentFile: null as File | null
   });
@@ -147,8 +146,6 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
   const submitReportMutation = useMutation({
     mutationFn: async (data: { 
       testOrderId: string; 
-      findings: string; 
-      conclusion: string; 
       recommendations: string;
       fileName?: string;
       fileType?: string;
@@ -168,7 +165,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
       queryClient.invalidateQueries({ queryKey: ["/api/technician/reports"] });
       setIsUploadDialogOpen(false);
       setSelectedTest(null);
-      setReportForm({ findings: "", conclusion: "", recommendations: "", attachmentFile: null });
+      setReportForm({ recommendations: "", attachmentFile: null });
     },
     onError: () => {
       toast({
@@ -209,12 +206,23 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
     }
   };
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
   const handleSubmitReport = async () => {
     if (!selectedTest) return;
-    if (!reportForm.findings.trim() || !reportForm.conclusion.trim()) {
+    if (!reportForm.attachmentFile) {
       toast({
-        title: "Missing Information",
-        description: "Please provide findings and conclusion for the report.",
+        title: "Missing Report File",
+        description: "Please attach a report file (PDF, JPEG, PNG, or DICOM).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (reportForm.attachmentFile.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File Too Large",
+        description: "Maximum file size is 10MB. Please choose a smaller file.",
         variant: "destructive",
       });
       return;
@@ -224,22 +232,18 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
     let fileName: string | undefined;
     let fileType: string | undefined;
 
-    if (reportForm.attachmentFile) {
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(reportForm.attachmentFile!);
-      });
-      fileData = await base64Promise;
-      fileName = reportForm.attachmentFile.name;
-      fileType = reportForm.attachmentFile.type;
-    }
+    const reader = new FileReader();
+    const base64Promise = new Promise<string>((resolve, reject) => {
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(reportForm.attachmentFile!);
+    });
+    fileData = await base64Promise;
+    fileName = reportForm.attachmentFile.name;
+    fileType = reportForm.attachmentFile.type;
 
     submitReportMutation.mutate({
       testOrderId: selectedTest.id,
-      findings: reportForm.findings,
-      conclusion: reportForm.conclusion,
       recommendations: reportForm.recommendations,
       fileName,
       fileType,
@@ -585,27 +589,59 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="findings">Findings *</Label>
-              <Textarea
-                id="findings"
-                value={reportForm.findings}
-                onChange={(e) => setReportForm({ ...reportForm, findings: e.target.value })}
-                placeholder="Enter detailed findings from the diagnostic test..."
-                rows={4}
-                data-testid="input-findings"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="conclusion">Conclusion *</Label>
-              <Textarea
-                id="conclusion"
-                value={reportForm.conclusion}
-                onChange={(e) => setReportForm({ ...reportForm, conclusion: e.target.value })}
-                placeholder="Enter your conclusion/impression..."
-                rows={3}
-                data-testid="input-conclusion"
-              />
+              <Label>Attach Report File *</Label>
+              <div 
+                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.dcm"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 10 * 1024 * 1024) {
+                        toast({
+                          title: "File Too Large",
+                          description: "Maximum file size is 10MB. Please choose a smaller file.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      setReportForm({ ...reportForm, attachmentFile: file });
+                    }
+                  }}
+                  data-testid="input-file"
+                />
+                {reportForm.attachmentFile ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="w-10 h-10 text-primary" />
+                    <p className="font-medium">{reportForm.attachmentFile.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {(reportForm.attachmentFile.size / (1024 * 1024)).toFixed(2)} MB
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setReportForm({ ...reportForm, attachmentFile: null });
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                    >
+                      Remove File
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="w-10 h-10 text-muted-foreground" />
+                    <p className="font-medium">Click to upload report file</p>
+                    <p className="text-sm text-muted-foreground">PDF, JPEG, PNG, DICOM (max 10MB)</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -618,25 +654,6 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
                 rows={2}
                 data-testid="input-recommendations"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Attach Report File (Optional)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.dcm"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setReportForm({ ...reportForm, attachmentFile: file });
-                    }
-                  }}
-                  data-testid="input-file"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">Supported: PDF, JPEG, PNG, DICOM</p>
             </div>
           </div>
           <DialogFooter>
@@ -692,14 +709,21 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
                   <p className="font-medium">{selectedReport.reportDate}</p>
                 </div>
               </div>
-              <div>
-                <Label className="text-muted-foreground">Findings</Label>
-                <p className="mt-1 p-3 bg-muted rounded-md">{selectedReport.findings}</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground">Conclusion</Label>
-                <p className="mt-1 p-3 bg-muted rounded-md">{selectedReport.conclusion}</p>
-              </div>
+              {selectedReport.recommendations && (
+                <div>
+                  <Label className="text-muted-foreground">Recommendations</Label>
+                  <p className="mt-1 p-3 bg-muted rounded-md">{selectedReport.recommendations}</p>
+                </div>
+              )}
+              {selectedReport.fileData && (
+                <div>
+                  <Label className="text-muted-foreground">Attached Report</Label>
+                  <div className="mt-1 p-3 bg-muted rounded-md flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary" />
+                    <span>{selectedReport.fileName || 'Report file'}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
@@ -708,7 +732,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
             </Button>
             <Button onClick={() => selectedReport && handleDownloadReport(selectedReport)} data-testid="button-download-report">
               <Download className="w-4 h-4 mr-2" />
-              Download PDF
+              Download Report
             </Button>
           </DialogFooter>
         </DialogContent>
