@@ -97,6 +97,13 @@ export default function PatientMonitoringPage() {
     }
   }, [sessions]);
 
+  // Fetch only ICU-admitted patients (patients currently in ICU beds) with real-time refresh
+  const { data: icuAdmittedPatients = [], isLoading: loadingIcuPatients } = useQuery<any[]>({
+    queryKey: ["/api/icu/admitted-patients"],
+    refetchInterval: 5000, // Real-time refresh every 5 seconds
+  });
+
+  // Fallback to all patients for existing sessions display
   const { data: patients = [] } = useQuery<any[]>({
     queryKey: ["/api/patients/service"]
   });
@@ -159,6 +166,26 @@ export default function PatientMonitoringPage() {
   });
 
   const handlePatientSelect = (patientId: string) => {
+    // First check ICU-admitted patients
+    const icuPatient = icuAdmittedPatients.find((p: any) => p.id.toString() === patientId);
+    if (icuPatient) {
+      const patientName = `${icuPatient.firstName || ''} ${icuPatient.lastName || ''}`.trim() || icuPatient.name || 'Unknown';
+      setNewSessionData({
+        ...newSessionData,
+        patientId: patientId,
+        patientName: patientName,
+        uhid: icuPatient.uhidNumber || `UHID-${icuPatient.id.slice(0, 8)}`,
+        age: icuPatient.age || 30,
+        sex: icuPatient.gender || "Male",
+        bloodGroup: icuPatient.bloodType || "",
+        ward: "ICU",
+        bedNumber: icuPatient.bedNumber || "",
+        primaryDiagnosis: icuPatient.diagnosis || ""
+      });
+      return;
+    }
+    
+    // Fallback to general patients list
     const patient = patients.find((p: any) => p.id.toString() === patientId);
     if (patient) {
       const patientName = `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || patient.name || 'Unknown';
@@ -210,20 +237,26 @@ export default function PatientMonitoringPage() {
             </DialogHeader>
             <div className="space-y-4 py-4 max-h-[60vh] overflow-auto">
               <div className="space-y-2">
-                <Label>Select Patient *</Label>
-                <Select onValueChange={handlePatientSelect}>
+                <Label>Select Admitted Patient *</Label>
+                <Select onValueChange={handlePatientSelect} disabled={loadingIcuPatients}>
                   <SelectTrigger data-testid="select-patient">
-                    <SelectValue placeholder="Search patient..." />
+                    <SelectValue placeholder={loadingIcuPatients ? "Loading ICU patients..." : "Select patient"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {patients.map((p: any) => {
-                      const displayName = `${p.firstName || ''} ${p.lastName || ''}`.trim() || p.name || 'Unknown Patient';
-                      return (
-                        <SelectItem key={p.id} value={p.id.toString()}>
-                          {displayName} - {p.uhidNumber || p.phone || `ID: ${p.id.slice(0, 8)}`}
-                        </SelectItem>
-                      );
-                    })}
+                    {icuAdmittedPatients.length === 0 ? (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        No ICU-admitted patients found
+                      </div>
+                    ) : (
+                      icuAdmittedPatients.map((p: any) => {
+                        const displayName = `${p.firstName || ''} ${p.lastName || ''}`.trim() || p.name || 'Unknown Patient';
+                        return (
+                          <SelectItem key={p.id} value={p.id.toString()}>
+                            {displayName} - ICU
+                          </SelectItem>
+                        );
+                      })
+                    )}
                   </SelectContent>
                 </Select>
                 {newSessionData.patientName && (
