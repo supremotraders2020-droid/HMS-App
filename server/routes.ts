@@ -14634,35 +14634,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   // ========== ICU DROPDOWN DATA ENDPOINTS ==========
   
-  // Get admitted patients for ICU chart creation - from occupied ICU beds
+  // Get admitted patients for ICU chart creation - patients currently in ICU
   app.get("/api/icu/admitted-patients", requireAuth, async (req, res) => {
     try {
-      // First, get patients from bed allocations in ICU wards (active allocations)
-      const icuWards = ['ICU', 'MICU', 'SICU', 'NICU', 'CCU', 'HDU'];
-      const activeAllocations = await db.select().from(bedAllocations)
-        .where(sql`${bedAllocations.releaseDatetime} IS NULL`);
-      
-      // Filter to only ICU ward allocations
-      const icuAllocations = activeAllocations.filter(a => 
-        icuWards.some(ward => a.wardName?.toUpperCase().includes(ward))
-      );
-      
-      // If we have ICU bed allocations, use those
-      if (icuAllocations.length > 0) {
-        const icuPatients = icuAllocations.map(allocation => ({
-          id: allocation.patientId,
-          name: allocation.patientName,
-          firstName: allocation.patientName?.split(' ')[0] || '',
-          lastName: allocation.patientName?.split(' ').slice(1).join(' ') || '',
-          wardType: allocation.wardName,
-          bedNumber: allocation.bedNumber,
-          admissionDate: allocation.allocationDatetime,
-          status: 'admitted'
-        }));
-        return res.json(icuPatients);
-      }
-      
-      // Fallback to tracking_patients with isInIcu flag
+      // Fetch patients with isInIcu = true from tracking_patients
       const patients = await storage.getAdmittedPatientsWithDetails();
       res.json(patients);
     } catch (error) {
