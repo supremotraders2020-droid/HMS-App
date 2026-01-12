@@ -14374,6 +14374,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(404).json({ error: "Test order not found" });
       }
 
+      // Use recommendations as findings if findings not provided (form uses recommendations field)
+      const reportFindings = findings || recommendations || "See attached report";
+      const reportConclusion = conclusion || "Report submitted - see attached file for details";
+
       // Create the report
       const report = await storage.createTechnicianReport({
         testOrderId,
@@ -14386,8 +14390,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         department: testOrder.department,
         technicianId,
         technicianName,
-        findings,
-        conclusion,
+        findings: reportFindings,
+        conclusion: reportConclusion,
         recommendations,
         fileName,
         fileType,
