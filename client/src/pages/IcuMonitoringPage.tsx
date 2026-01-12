@@ -380,12 +380,12 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
                     <Label>Admitting Consultant</Label>
                     <Select value={newChart.admittingConsultant} onValueChange={v => handleDoctorSelect(v, 'admittingConsultant')}>
                       <SelectTrigger data-testid="select-admitting-consultant">
-                        <SelectValue placeholder={icuDoctors.length === 0 ? "No ICU doctors available" : "Select doctor"} />
+                        <SelectValue placeholder={icuDoctors.length === 0 ? "No doctors available" : "Select doctor"} />
                       </SelectTrigger>
                       <SelectContent>
                         {icuDoctors.map(doctor => (
                           <SelectItem key={doctor.id} value={doctor.fullName}>
-                            Dr. {doctor.fullName} - {doctor.department || "ICU"}
+                            Dr. {doctor.fullName} - {doctor.department || "General"}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -395,12 +395,12 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
                     <Label>ICU Consultant</Label>
                     <Select value={newChart.icuConsultant} onValueChange={v => handleDoctorSelect(v, 'icuConsultant')}>
                       <SelectTrigger data-testid="select-icu-consultant">
-                        <SelectValue placeholder={icuDoctors.length === 0 ? "No ICU doctors available" : "Select ICU consultant"} />
+                        <SelectValue placeholder={icuDoctors.length === 0 ? "No doctors available" : "Select ICU consultant"} />
                       </SelectTrigger>
                       <SelectContent>
                         {icuDoctors.map(doctor => (
                           <SelectItem key={doctor.id} value={doctor.fullName}>
-                            Dr. {doctor.fullName} - {doctor.department || "ICU"}
+                            Dr. {doctor.fullName} - {doctor.department || "General"}
                           </SelectItem>
                         ))}
                       </SelectContent>

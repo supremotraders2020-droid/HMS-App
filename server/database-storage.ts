@@ -5146,7 +5146,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(beds.bedNumber);
   }
   
-  // Get ICU doctors (staff with role DOCTOR and department containing ICU)
+  // Get all doctors for ICU consultant dropdowns (show ALL doctors, not just ICU-specific)
   async getIcuDoctors(): Promise<StaffMaster[]> {
     const allDoctors = await db.select().from(staffMaster)
       .where(and(
@@ -5155,15 +5155,7 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(staffMaster.fullName);
     
-    // Filter for ICU-related departments
-    return allDoctors.filter(doc => 
-      doc.department?.toLowerCase().includes("icu") ||
-      doc.department?.toLowerCase().includes("intensive") ||
-      doc.department?.toLowerCase().includes("critical") ||
-      doc.department?.toLowerCase().includes("casualty") ||
-      doc.department === "General Medicine" ||
-      doc.department === "Emergency"
-    );
+    return allDoctors;
   }
   
   // Get nurses with ICU as one of their department preferences
