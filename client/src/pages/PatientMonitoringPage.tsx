@@ -33,7 +33,6 @@ const HOUR_SLOTS = [
 ];
 
 const SHIFTS = ["MORNING", "EVENING", "NIGHT"] as const;
-const WARDS = ["ICU", "MICU", "SICU", "NICU", "CCU", "GENERAL", "EMERGENCY", "OT", "RECOVERY", "HDU"] as const;
 
 type Session = {
   id: string;
@@ -111,6 +110,15 @@ export default function PatientMonitoringPage() {
   const { data: doctors = [] } = useQuery<any[]>({
     queryKey: ["/api/doctors"]
   });
+
+  // Fetch all unique ward names from bed management
+  const { data: allBeds = [] } = useQuery<any[]>({
+    queryKey: ["/api/bed-management/beds"],
+    enabled: showNewSession,
+  });
+  
+  // Extract unique ward names from beds
+  const wardNames = Array.from(new Set(allBeds.map((bed: any) => bed.wardName).filter(Boolean))).sort();
 
   // Fetch available beds for the selected ward with real-time refresh
   const { data: availableBeds = [], isLoading: loadingBeds } = useQuery<any[]>({
@@ -272,7 +280,13 @@ export default function PatientMonitoringPage() {
                       <SelectValue placeholder="Select ward" />
                     </SelectTrigger>
                     <SelectContent>
-                      {WARDS.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+                      {wardNames.length === 0 ? (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          Loading wards...
+                        </div>
+                      ) : (
+                        wardNames.map((w: string) => <SelectItem key={w} value={w}>{w}</SelectItem>)
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
