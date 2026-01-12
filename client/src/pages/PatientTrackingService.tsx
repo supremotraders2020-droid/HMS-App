@@ -209,6 +209,7 @@ export default function PatientTrackingService() {
   const [activeTab, setActiveTab] = useState<TabType>("patients");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [admitPatientPopoverOpen, setAdmitPatientPopoverOpen] = useState(false);
   const [selectedAdmitPatientName, setSelectedAdmitPatientName] = useState<string>("");
@@ -737,8 +738,11 @@ export default function PatientTrackingService() {
     const matchesSearch = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       patient.room.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || patient.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesDepartment = departmentFilter === "all" || patient.department === departmentFilter;
+    return matchesSearch && matchesStatus && matchesDepartment;
   });
+
+  const uniqueDepartments = Array.from(new Set(patients.map(p => p.department).filter(Boolean))).sort();
 
   const criticalPatients = patients.filter(p => p.status === "critical");
   const admittedPatients = patients.filter(p => p.status === "admitted");
@@ -952,6 +956,17 @@ export default function PatientTrackingService() {
                   <SelectItem value="critical">Critical</SelectItem>
                   <SelectItem value="stable">Stable</SelectItem>
                   <SelectItem value="discharged">Discharged</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger className="w-full sm:w-48" data-testid="select-department-filter">
+                  <SelectValue placeholder="All Departments" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  {uniqueDepartments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
