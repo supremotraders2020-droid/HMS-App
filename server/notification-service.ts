@@ -723,29 +723,63 @@ class NotificationService {
         });
       }
 
-      // Find patient user
+      // Find patient user - try multiple matching strategies
+      let patientUserId: string | null = null;
+      
+      // Strategy 1: Try to find by email via service patients
       const servicePatients = await storage.getAllServicePatients();
       const patient = servicePatients.find(p => p.id === report.patientId);
       if (patient?.email) {
-        const patientUser = allUsers.find(u => u.email === patient.email);
-        if (patientUser) {
-          await this.createAndPushNotification({
-            userId: patientUser.id,
-            userRole: "PATIENT",
-            type: "lab_report",
-            title: "Your Test Report is Ready",
-            message: `Your ${report.testName} report is now available for viewing`,
-            relatedEntityType: "technician_report",
-            relatedEntityId: report.id,
-            isRead: false,
-            metadata: JSON.stringify({
-              reportId: report.id,
-              testName: report.testName,
-              reportUrl: report.reportUrl,
-              actionUrl: `/lab-reports?reportId=${report.id}`
-            })
-          });
+        const patientUserByEmail = allUsers.find(u => u.email === patient.email);
+        if (patientUserByEmail) {
+          patientUserId = patientUserByEmail.id;
         }
+      }
+      
+      // Strategy 2: If patientId is a user ID, use it directly
+      if (!patientUserId && report.patientId) {
+        const directPatientUser = allUsers.find(u => u.id === report.patientId && u.role === "PATIENT");
+        if (directPatientUser) {
+          patientUserId = directPatientUser.id;
+        }
+      }
+      
+      // Strategy 3: Match by patient name to find user with same name
+      if (!patientUserId && report.patientName) {
+        const patientNameNorm = report.patientName.toLowerCase().trim();
+        const patientByName = allUsers.find(u => {
+          if (u.role !== "PATIENT") return false;
+          const userName = u.name?.toLowerCase().trim() || "";
+          return userName === patientNameNorm || 
+                 userName.includes(patientNameNorm) || 
+                 patientNameNorm.includes(userName);
+        });
+        if (patientByName) {
+          patientUserId = patientByName.id;
+        }
+      }
+      
+      // Send notification if patient user found
+      if (patientUserId) {
+        await this.createAndPushNotification({
+          userId: patientUserId,
+          userRole: "PATIENT",
+          type: "lab_report",
+          title: "Your Test Report is Ready",
+          message: `Your ${report.testName} report is now available for viewing`,
+          relatedEntityType: "technician_report",
+          relatedEntityId: report.id,
+          isRead: false,
+          metadata: JSON.stringify({
+            reportId: report.id,
+            testName: report.testName,
+            reportUrl: report.reportUrl,
+            actionUrl: `/lab-reports?reportId=${report.id}`
+          })
+        });
+        console.log(`Patient notification sent to user ${patientUserId} for report ${report.testName}`);
+      } else {
+        console.log(`Could not find patient user for report notification: patientId=${report.patientId}, patientName=${report.patientName}`);
       }
 
       // Notify all Admins

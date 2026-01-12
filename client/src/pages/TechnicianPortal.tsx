@@ -45,7 +45,8 @@ import {
   Eye,
   Send,
   Stethoscope,
-  Activity
+  Activity,
+  RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -523,8 +524,21 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
         <TabsContent value="notifications" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Notifications & Alerts</CardTitle>
-              <CardDescription>Suggested tests and updates from doctors</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Notifications & Alerts</CardTitle>
+                  <CardDescription>Suggested tests and updates from doctors</CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/technician/notifications"] })}
+                  data-testid="button-refresh-notifications"
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Refresh
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {notificationsLoading ? (

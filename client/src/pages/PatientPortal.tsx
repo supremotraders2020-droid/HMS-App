@@ -81,7 +81,8 @@ import {
   FileCheck,
   XCircle,
   Scissors,
-  ClipboardList
+  ClipboardList,
+  RefreshCw
 } from "lucide-react";
 import HospitalServices from "@/pages/HospitalServices";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -387,7 +388,8 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     notifications: userNotifications, 
     markAsRead, 
     markAllAsRead,
-    unreadCount 
+    unreadCount,
+    refetch: refetchNotifications
   } = useNotifications({
     userId: username,
     userRole: "patient",
@@ -2611,14 +2613,25 @@ Description: ${record.description}
                     <p className="text-white/80">Stay updated with your health alerts</p>
                   </div>
                 </div>
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  data-testid="button-mark-all-read"
-                  onClick={() => markAllAsRead()}
-                >
-                  Mark all as read
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    data-testid="button-refresh-notifications"
+                    onClick={() => refetchNotifications()}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Refresh
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    data-testid="button-mark-all-read"
+                    onClick={() => markAllAsRead()}
+                  >
+                    Mark all as read
+                  </Button>
+                </div>
               </div>
             </div>
 

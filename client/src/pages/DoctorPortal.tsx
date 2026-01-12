@@ -83,7 +83,8 @@ import {
   Home,
   UserCheck,
   Scissors,
-  Download
+  Download,
+  RefreshCw
 } from "lucide-react";
 import HospitalServices from "@/pages/HospitalServices";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -190,7 +191,8 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     isLoading: notificationsLoading,
     markAsRead: markNotificationRead,
     markAllAsRead: markAllNotificationsRead,
-    deleteNotification
+    deleteNotification,
+    refetch: refetchNotifications
   } = useNotifications({ userId: notificationUserId, userRole: "DOCTOR" });
   const [editingSchedule, setEditingSchedule] = useState<{day: string; slots: DoctorSchedule[]} | null>(null);
   const [slotsToDelete, setSlotsToDelete] = useState<string[]>([]);
@@ -2955,6 +2957,15 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                 {unreadNotificationCount} unread
               </Badge>
             )}
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => refetchNotifications()}
+              data-testid="button-refresh-notifications"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
             <Button variant="outline" onClick={() => markAllNotificationsRead()} data-testid="button-mark-all-read">
               <CheckCircle className="h-4 w-4 mr-2" />
               Mark All Read
