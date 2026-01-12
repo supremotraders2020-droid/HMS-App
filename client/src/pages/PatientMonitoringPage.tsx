@@ -2364,6 +2364,7 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
   const [clinicalNotes, setClinicalNotes] = useState("");
   const [doctorName, setDoctorName] = useState(admittingConsultant || "");
   const [expandedCategories, setExpandedCategories] = useState<string[]>(["PATHOLOGY"]);
+  const [viewingReport, setViewingReport] = useState<{url: string; testName: string} | null>(null);
 
   const { data: tests = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/patient-monitoring/sessions", sessionId, "tests"],
@@ -2620,7 +2621,7 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => window.open(test.reportUrl, '_blank')}
+                              onClick={() => setViewingReport({ url: test.reportUrl, testName: test.testName })}
                             >
                               <Eye className="w-3 h-3 mr-1" />
                               View
@@ -2660,6 +2661,40 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
             ))}
           </div>
         )}
+
+        {/* Report Viewing Dialog */}
+        <Dialog open={!!viewingReport} onOpenChange={() => setViewingReport(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>Test Report - {viewingReport?.testName}</DialogTitle>
+              <DialogDescription>Uploaded test report from the technician</DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              {viewingReport?.url && (
+                viewingReport.url.startsWith('data:image') ? (
+                  <img 
+                    src={viewingReport.url} 
+                    alt={`Report for ${viewingReport.testName}`}
+                    className="max-w-full max-h-[70vh] object-contain rounded-lg border"
+                  />
+                ) : viewingReport.url.startsWith('data:application/pdf') ? (
+                  <embed 
+                    src={viewingReport.url}
+                    type="application/pdf"
+                    className="w-full h-[70vh] rounded-lg border"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <p className="mb-4">Unable to preview this file type.</p>
+                    <Button onClick={() => window.open(viewingReport.url, '_blank')}>
+                      Open in New Tab
+                    </Button>
+                  </div>
+                )
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
