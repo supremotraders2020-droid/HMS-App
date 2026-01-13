@@ -37,6 +37,7 @@ import {
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { PatientRegistrationModal } from "@/components/PatientRegistrationModal";
 import type { Doctor, Appointment, Schedule, Medicine, DoctorSchedule, DoctorTimeSlot } from "@shared/schema";
 
 const OPD_LOCATIONS = [
@@ -70,6 +71,18 @@ export default function OPDService() {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  // Patient registration modal state
+  const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
+  const [registrationAppointmentData, setRegistrationAppointmentData] = useState<{
+    appointmentId?: string;
+    appointmentTime?: string;
+    appointmentDate?: string;
+    doctorName?: string;
+    department?: string;
+    patientName?: string;
+    phone?: string;
+  } | null>(null);
   
   // Booking form state
   const [bookingDoctorId, setBookingDoctorId] = useState<string>("");
@@ -1281,21 +1294,16 @@ export default function OPDService() {
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                           : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
                         const openPatientRegistration = () => {
-                          const nameParts = apt.patientName.trim().split(' ');
-                          const firstName = nameParts[0] || '';
-                          const lastName = nameParts.slice(1).join(' ') || '';
-                          const params = new URLSearchParams({
-                            prefill: 'true',
-                            firstName,
-                            lastName,
-                            phone: apt.patientPhone || '',
+                          setRegistrationAppointmentData({
                             appointmentId: apt.appointmentId || '',
                             appointmentTime: apt.timeSlot || '',
+                            appointmentDate: apt.appointmentDate || '',
                             doctorName: doctor?.name || '',
                             department: doctor?.specialty || '',
-                            appointmentDate: apt.appointmentDate || ''
+                            patientName: apt.patientName || '',
+                            phone: apt.patientPhone || '',
                           });
-                          window.open(`/patient-service?${params.toString()}`, '_blank');
+                          setShowPatientRegistrationModal(true);
                         };
                         return (
                           <tr 
@@ -1771,6 +1779,17 @@ export default function OPDService() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Patient Registration Modal */}
+      <PatientRegistrationModal
+        open={showPatientRegistrationModal}
+        onOpenChange={setShowPatientRegistrationModal}
+        appointmentData={registrationAppointmentData || undefined}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+          setRegistrationAppointmentData(null);
+        }}
+      />
     </div>
   );
 }
