@@ -469,6 +469,30 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     },
   });
 
+  // Handle URL params for prefilling patient registration form
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldPrefill = urlParams.get('prefill') === 'true';
+    
+    if (shouldPrefill) {
+      const firstName = urlParams.get('firstName') || '';
+      const lastName = urlParams.get('lastName') || '';
+      const phone = urlParams.get('phone') || '';
+      
+      // Prefill the form
+      if (firstName) patientForm.setValue('firstName', firstName);
+      if (lastName) patientForm.setValue('lastName', lastName);
+      if (phone) patientForm.setValue('phone', phone);
+      
+      // Open the registration dialog
+      setShowNewPatientDialog(true);
+      
+      // Clean URL params after prefilling
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [patientForm]);
+
   const recordForm = useForm({
     resolver: zodResolver(medicalRecordFormSchema),
     defaultValues: {

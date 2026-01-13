@@ -1264,8 +1264,27 @@ export default function OPDService() {
             <div className="grid gap-4 md:grid-cols-2">
               {scheduledAppointments.map((apt) => {
                 const doctor = getDoctorById(apt.doctorId);
+                const openPatientRegistration = () => {
+                  const nameParts = apt.patientName.trim().split(' ');
+                  const firstName = nameParts[0] || '';
+                  const lastName = nameParts.slice(1).join(' ') || '';
+                  const phone = apt.patientPhone || '';
+                  const params = new URLSearchParams({
+                    prefill: 'true',
+                    firstName,
+                    lastName,
+                    phone,
+                    appointmentId: apt.appointmentId || ''
+                  });
+                  window.open(`/patient-service?${params.toString()}`, '_blank');
+                };
                 return (
-                  <Card key={apt.id} className="hover-elevate" data-testid={`card-checkin-${apt.id}`}>
+                  <Card 
+                    key={apt.id} 
+                    className="hover-elevate cursor-pointer" 
+                    data-testid={`card-checkin-${apt.id}`}
+                    onClick={openPatientRegistration}
+                  >
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-3">
@@ -1277,6 +1296,10 @@ export default function OPDService() {
                           <div>
                             <h3 className="font-semibold">{apt.patientName}</h3>
                             <p className="text-sm text-muted-foreground">{apt.appointmentId}</p>
+                            <p className="text-xs text-primary flex items-center gap-1 mt-1">
+                              <ExternalLink className="h-3 w-3" />
+                              Click to register patient
+                            </p>
                           </div>
                         </div>
                         <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
@@ -1295,7 +1318,10 @@ export default function OPDService() {
                       </div>
                       <Button
                         className="w-full mt-4"
-                        onClick={() => checkInMutation.mutate(apt.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          checkInMutation.mutate(apt.id);
+                        }}
                         disabled={checkInMutation.isPending}
                         data-testid={`button-quick-checkin-${apt.id}`}
                       >
