@@ -292,8 +292,8 @@ class NotificationService {
     const locationInfo = location ? ` at ${location}` : '';
     const deptInfo = department ? ` (${department})` : '';
 
-    // Delete the pending notifications for this appointment
-    await storage.deleteUserNotificationsByAppointment(appointmentId);
+    // Mark the pending notifications as read (preserve notification history)
+    await storage.markUserNotificationsReadByAppointment(appointmentId);
 
     // Notify the patient - Confirmed
     await this.createAndPushNotification({
@@ -356,8 +356,8 @@ class NotificationService {
     const locationInfo = location ? ` at ${location}` : '';
     const deptInfo = department ? ` (${department})` : '';
 
-    // Delete the pending notifications for this appointment
-    await storage.deleteUserNotificationsByAppointment(appointmentId);
+    // Mark the pending notifications as read (preserve notification history)
+    await storage.markUserNotificationsReadByAppointment(appointmentId);
 
     if (cancelledBy === 'doctor') {
       // Notify the patient - Cancelled by doctor
