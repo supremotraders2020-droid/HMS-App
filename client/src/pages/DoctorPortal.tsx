@@ -2110,10 +2110,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
                         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
                         .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-                        .medicines { margin-top: 10px; }
-                        .medicine { background: #f3f4f6; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #1a56db; }
-                        .medicine-name { font-weight: 600; }
-                        .medicine-details { font-size: 13px; color: #4b5563; }
+                        .medicines-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        .medicines-table th { background: #1a56db; color: white; padding: 10px 8px; text-align: left; font-size: 12px; font-weight: 600; }
+                        .medicines-table td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+                        .medicines-table tr:nth-child(even) { background: #f9fafb; }
+                        .medicines-table tr:hover { background: #f3f4f6; }
                         .footer { margin-top: 50px; border-top: 1px solid #ddd; padding-top: 20px; }
                         .signature-line { margin-top: 40px; text-align: right; }
                         .signature-line .line { border-top: 1px solid #333; width: 200px; margin-left: auto; margin-bottom: 5px; }
@@ -2186,9 +2187,31 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       <!-- Medicines -->
                       <div class="section">
                         <div class="section-title">Medicines</div>
-                        <div class="medicines">
-                          ${rx.medicines.map(m => `<div class="medicine"><span class="medicine-name">${m}</span></div>`).join('')}
-                        </div>
+                        <table class="medicines-table">
+                          <thead>
+                            <tr>
+                              <th style="width: 40px;">Sr.</th>
+                              <th>Medicine Name</th>
+                              <th style="width: 120px;">Dosage</th>
+                              <th style="width: 100px;">Frequency</th>
+                              <th style="width: 100px;">Duration</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            ${rx.medicines.map((m, idx) => {
+                              const parts = m.split(' - ');
+                              const medicineName = parts[0] || m;
+                              const dosageInfo = parts[1] || '-';
+                              const formMatch = medicineName.match(/^(Tab|Cap|Syp|Inj|Powder|Cream|Oint|Drop|Gel|Susp|Sachet)\s+/i);
+                              const form = formMatch ? formMatch[1] : '';
+                              const nameWithoutForm = formMatch ? medicineName.replace(formMatch[0], '') : medicineName;
+                              const strengthMatch = nameWithoutForm.match(/\s+(\d+(?:mg|ml|gm|mcg)?)\s*$/i);
+                              const strength = strengthMatch ? strengthMatch[1] : '';
+                              const cleanName = strengthMatch ? nameWithoutForm.replace(strengthMatch[0], '') : nameWithoutForm;
+                              return '<tr><td>' + (idx + 1) + '</td><td><strong>' + (form ? form + ' ' : '') + cleanName.trim() + '</strong></td><td>' + (strength || '-') + '</td><td>' + dosageInfo + '</td><td>As prescribed</td></tr>';
+                            }).join('')}
+                          </tbody>
+                        </table>
                       </div>
                       
                       <!-- Instructions -->
