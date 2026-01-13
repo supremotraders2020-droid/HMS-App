@@ -548,7 +548,7 @@ export default function OPDService() {
     return matchesSearch && matchesStatus;
   });
 
-  const scheduledAppointments = appointments.filter((apt) => apt.status === "scheduled");
+  const scheduledAppointments = appointments.filter((apt) => apt.status === "scheduled" || apt.status === "confirmed");
 
   const getDoctorById = (id: string) => doctors.find((d) => d.id === id);
 
