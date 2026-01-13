@@ -122,6 +122,15 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profileActiveSection, setProfileActiveSection] = useState("opd");
   
+  // Appointment prefill data from Check-in
+  const [prefillAppointmentData, setPrefillAppointmentData] = useState<{
+    appointmentId: string;
+    appointmentTime: string;
+    doctorName: string;
+    department: string;
+    appointmentDate: string;
+  } | null>(null);
+  
   // ID Card Scanning States
   const [selectedIdCardType, setSelectedIdCardType] = useState<string>("");
   const [frontImage, setFrontImage] = useState<string | null>(null);
@@ -478,11 +487,27 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       const firstName = urlParams.get('firstName') || '';
       const lastName = urlParams.get('lastName') || '';
       const phone = urlParams.get('phone') || '';
+      const appointmentId = urlParams.get('appointmentId') || '';
+      const appointmentTime = urlParams.get('appointmentTime') || '';
+      const doctorName = urlParams.get('doctorName') || '';
+      const department = urlParams.get('department') || '';
+      const appointmentDate = urlParams.get('appointmentDate') || '';
       
       // Prefill the form
       if (firstName) patientForm.setValue('firstName', firstName);
       if (lastName) patientForm.setValue('lastName', lastName);
       if (phone) patientForm.setValue('phone', phone);
+      
+      // Store appointment data for display
+      if (appointmentId || appointmentTime || doctorName) {
+        setPrefillAppointmentData({
+          appointmentId,
+          appointmentTime,
+          doctorName,
+          department,
+          appointmentDate
+        });
+      }
       
       // Open the registration dialog
       setShowNewPatientDialog(true);
@@ -548,6 +573,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       setReferralUrgency("ROUTINE");
       setReferralClinicalHistory("");
       setReferralSpecialInstructions("");
+      // Clear appointment prefill data
+      setPrefillAppointmentData(null);
     },
     onError: () => {
       toast({ title: "Registration Failed", description: "Unable to register patient. Please try again.", variant: "destructive" });
@@ -990,6 +1017,48 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           Enter patient demographic and contact information
                         </DialogDescription>
                       </DialogHeader>
+                      
+                      {/* Appointment Data Display (from Check-in) */}
+                      {prefillAppointmentData && (
+                        <div className="mb-4 p-4 border border-green-200 dark:border-green-800 rounded-lg bg-green-50/50 dark:bg-green-900/20">
+                          <div className="flex items-center gap-2 mb-3">
+                            <ClipboardList className="h-5 w-5 text-green-600" />
+                            <h3 className="font-semibold text-green-900 dark:text-green-100">Appointment Details</h3>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            {prefillAppointmentData.appointmentId && (
+                              <div>
+                                <span className="text-muted-foreground">Appointment ID:</span>
+                                <p className="font-medium">{prefillAppointmentData.appointmentId}</p>
+                              </div>
+                            )}
+                            {prefillAppointmentData.appointmentDate && (
+                              <div>
+                                <span className="text-muted-foreground">Date:</span>
+                                <p className="font-medium">{prefillAppointmentData.appointmentDate}</p>
+                              </div>
+                            )}
+                            {prefillAppointmentData.appointmentTime && (
+                              <div>
+                                <span className="text-muted-foreground">Time:</span>
+                                <p className="font-medium">{prefillAppointmentData.appointmentTime}</p>
+                              </div>
+                            )}
+                            {prefillAppointmentData.doctorName && (
+                              <div>
+                                <span className="text-muted-foreground">Consultant:</span>
+                                <p className="font-medium">{prefillAppointmentData.doctorName}</p>
+                              </div>
+                            )}
+                            {prefillAppointmentData.department && (
+                              <div>
+                                <span className="text-muted-foreground">OPD Dept:</span>
+                                <p className="font-medium">{prefillAppointmentData.department}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                       
                       {/* ID Card Scanning & Alert System */}
                       <div className="mb-4 p-4 border border-blue-200 dark:border-blue-800 rounded-lg bg-blue-50/50 dark:bg-blue-900/20">

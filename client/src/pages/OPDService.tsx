@@ -1280,6 +1280,23 @@ export default function OPDService() {
                         const statusStyle = apt.status === 'confirmed' 
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                           : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+                        const openPatientRegistration = () => {
+                          const nameParts = apt.patientName.trim().split(' ');
+                          const firstName = nameParts[0] || '';
+                          const lastName = nameParts.slice(1).join(' ') || '';
+                          const params = new URLSearchParams({
+                            prefill: 'true',
+                            firstName,
+                            lastName,
+                            phone: apt.patientPhone || '',
+                            appointmentId: apt.appointmentId || '',
+                            appointmentTime: apt.timeSlot || '',
+                            doctorName: doctor?.name || '',
+                            department: doctor?.specialty || '',
+                            appointmentDate: apt.appointmentDate || ''
+                          });
+                          window.open(`/patient-service?${params.toString()}`, '_blank');
+                        };
                         return (
                           <tr 
                             key={apt.id} 
@@ -1287,7 +1304,11 @@ export default function OPDService() {
                             data-testid={`row-checkin-${apt.id}`}
                           >
                             <td className="px-4 py-3">
-                              <div className="flex items-center gap-3">
+                              <div 
+                                className="flex items-center gap-3 cursor-pointer hover:text-primary transition-colors"
+                                onDoubleClick={openPatientRegistration}
+                                title="Double-click to open registration form"
+                              >
                                 <Avatar className="h-8 w-8">
                                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs">
                                     {apt.patientName.split(' ').map(n => n[0]).join('')}
