@@ -1261,78 +1261,77 @@ export default function OPDService() {
               </CardContent>
             </Card>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              {scheduledAppointments.map((apt) => {
-                const doctor = getDoctorById(apt.doctorId);
-                const openPatientRegistration = () => {
-                  const nameParts = apt.patientName.trim().split(' ');
-                  const firstName = nameParts[0] || '';
-                  const lastName = nameParts.slice(1).join(' ') || '';
-                  const phone = apt.patientPhone || '';
-                  const params = new URLSearchParams({
-                    prefill: 'true',
-                    firstName,
-                    lastName,
-                    phone,
-                    appointmentId: apt.appointmentId || ''
-                  });
-                  window.open(`/patient-service?${params.toString()}`, '_blank');
-                };
-                return (
-                  <Card 
-                    key={apt.id} 
-                    className="hover-elevate cursor-pointer" 
-                    data-testid={`card-checkin-${apt.id}`}
-                    onClick={openPatientRegistration}
-                  >
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                              {apt.patientName.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h3 className="font-semibold">{apt.patientName}</h3>
-                            <p className="text-sm text-muted-foreground">{apt.appointmentId}</p>
-                            <p className="text-xs text-primary flex items-center gap-1 mt-1">
-                              <ExternalLink className="h-3 w-3" />
-                              Click to register patient
-                            </p>
-                          </div>
-                        </div>
-                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                          SCHEDULED
-                        </Badge>
-                      </div>
-                      <div className="mt-4 space-y-2 text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span>{doctor?.name}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>{apt.timeSlot}</span>
-                        </div>
-                      </div>
-                      <Button
-                        className="w-full mt-4"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          checkInMutation.mutate(apt.id);
-                        }}
-                        disabled={checkInMutation.isPending}
-                        data-testid={`button-quick-checkin-${apt.id}`}
-                      >
-                        <UserCheck className="h-4 w-4 mr-2" />
-                        Check In Patient
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Patient Name</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Appointment Time</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Doctor</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scheduledAppointments.map((apt) => {
+                        const doctor = getDoctorById(apt.doctorId);
+                        const statusStyle = apt.status === 'confirmed' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+                        return (
+                          <tr 
+                            key={apt.id} 
+                            className="border-b last:border-0 hover:bg-muted/30 transition-colors"
+                            data-testid={`row-checkin-${apt.id}`}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs">
+                                    {apt.patientName.split(' ').map(n => n[0]).join('')}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium">{apt.patientName}</p>
+                                  <p className="text-xs text-muted-foreground">{apt.appointmentId}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span>{apt.timeSlot}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-sm">{doctor?.name || 'N/A'}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge className={statusStyle}>
+                                {apt.status.toUpperCase()}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Button
+                                size="sm"
+                                onClick={() => checkInMutation.mutate(apt.id)}
+                                disabled={checkInMutation.isPending}
+                                data-testid={`button-quick-checkin-${apt.id}`}
+                              >
+                                <UserCheck className="h-4 w-4 mr-2" />
+                                Check-In
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
 
             {scheduledAppointments.length === 0 && (
               <Card className="p-8 text-center">
