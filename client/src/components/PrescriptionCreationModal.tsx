@@ -27,7 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send, Printer, ChevronsUpDown, Check, X, Lightbulb, Filter, Sparkles, FileStack, Stethoscope, Building2, ClipboardList, Activity, Beaker, UserCheck, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Pill, FileText, Clock, AlertCircle, CheckCircle, Loader2, Save, Send, Printer, ChevronsUpDown, Check, X, Lightbulb, Filter, Sparkles, FileStack, Stethoscope, Building2, ClipboardList, Activity, Beaker, UserCheck, ChevronRight, Search } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Prescription, Medicine, ServicePatient, LabTestCatalog, OpdPrescriptionTemplate, OpdDepartmentFlows } from "@shared/schema";
 
@@ -971,68 +971,75 @@ export default function PrescriptionCreationModal({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[90vw] max-w-[500px] p-0" align="start">
-                        <Command shouldFilter={false}>
-                          <CommandInput
-                            placeholder="Search templates..."
-                            value={templateSearch}
-                            onValueChange={setTemplateSearch}
-                            data-testid="input-template-search"
-                          />
-                          <CommandList className="max-h-[300px] overflow-y-auto">
-                            {isLoadingTemplates ? (
-                              <div className="p-4 text-center text-sm text-muted-foreground">
-                                <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
-                                Loading templates...
-                              </div>
-                            ) : filteredTemplates.length === 0 ? (
-                              <CommandEmpty>No templates found.</CommandEmpty>
-                            ) : (
-                              Object.entries(groupedTemplates).map(([category, templates]) => {
-                                const categoryTemplates = templates.filter(t =>
-                                  !templateSearch ||
-                                  t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
-                                  t.description?.toLowerCase().includes(templateSearch.toLowerCase())
-                                );
-                                if (categoryTemplates.length === 0) return null;
-                                return (
-                                  <CommandGroup key={category} heading={category}>
-                                    {categoryTemplates.map((template) => (
-                                      <CommandItem
-                                        key={template.id}
-                                        value={template.id}
-                                        onSelect={() => applyTemplate(template)}
-                                        className="flex items-start gap-2 py-2"
-                                        data-testid={`template-item-${template.slug}`}
-                                      >
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2">
-                                            <span className="font-medium">{template.name}</span>
-                                            {template.isSystemTemplate && (
-                                              <Badge variant="secondary" className="text-xs">System</Badge>
+                        <div className="flex flex-col">
+                          <div className="flex items-center border-b px-3 py-2">
+                            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                            <input
+                              type="text"
+                              placeholder="Search templates..."
+                              value={templateSearch}
+                              onChange={(e) => setTemplateSearch(e.target.value)}
+                              className="flex h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                              data-testid="input-template-search"
+                            />
+                          </div>
+                          <ScrollArea className="h-[300px]">
+                            <div className="p-2">
+                              {isLoadingTemplates ? (
+                                <div className="p-4 text-center text-sm text-muted-foreground">
+                                  <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+                                  Loading templates...
+                                </div>
+                              ) : filteredTemplates.length === 0 ? (
+                                <div className="py-6 text-center text-sm text-muted-foreground">No templates found.</div>
+                              ) : (
+                                Object.entries(groupedTemplates).map(([category, templates]) => {
+                                  const categoryTemplates = templates.filter(t =>
+                                    !templateSearch ||
+                                    t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
+                                    t.description?.toLowerCase().includes(templateSearch.toLowerCase())
+                                  );
+                                  if (categoryTemplates.length === 0) return null;
+                                  return (
+                                    <div key={category} className="mb-3">
+                                      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{category}</div>
+                                      {categoryTemplates.map((template) => (
+                                        <div
+                                          key={template.id}
+                                          onClick={() => applyTemplate(template)}
+                                          className="flex items-start gap-2 py-2 px-2 rounded-md cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                                          data-testid={`template-item-${template.slug}`}
+                                        >
+                                          <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                              <span className="font-medium">{template.name}</span>
+                                              {template.isSystemTemplate && (
+                                                <Badge variant="secondary" className="text-xs">System</Badge>
+                                              )}
+                                            </div>
+                                            {template.description && (
+                                              <p className="text-xs text-muted-foreground mt-0.5">
+                                                {template.description}
+                                              </p>
                                             )}
-                                          </div>
-                                          {template.description && (
-                                            <p className="text-xs text-muted-foreground mt-0.5">
-                                              {template.description}
-                                            </p>
-                                          )}
-                                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                                            {template.followUpDays && (
-                                              <span>Follow-up: {template.followUpDays} days</span>
-                                            )}
-                                            {template.usageCount && template.usageCount > 0 && (
-                                              <span>Used: {template.usageCount}x</span>
-                                            )}
+                                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                              {template.followUpDays && (
+                                                <span>Follow-up: {template.followUpDays} days</span>
+                                              )}
+                                              {template.usageCount && template.usageCount > 0 && (
+                                                <span>Used: {template.usageCount}x</span>
+                                              )}
+                                            </div>
                                           </div>
                                         </div>
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                );
-                              })
-                            )}
-                          </CommandList>
-                        </Command>
+                                      ))}
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
+                          </ScrollArea>
+                        </div>
                       </PopoverContent>
                     </Popover>
                   </div>
