@@ -739,7 +739,7 @@ export default function PrescriptionCreationModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) { resetSmartOpdState(); onClose(); } }}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
@@ -752,7 +752,7 @@ export default function PrescriptionCreationModal({
 
         <ScrollArea className="flex-1 min-h-0 pr-4">
           <Tabs defaultValue="patient" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-4">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 mb-4">
               <TabsTrigger value="patient" data-testid="tab-patient">Patient Info</TabsTrigger>
               <TabsTrigger value="clinical" data-testid="tab-clinical">Clinical</TabsTrigger>
               <TabsTrigger value="medicines" data-testid="tab-medicines">Medicines</TabsTrigger>
@@ -785,7 +785,7 @@ export default function PrescriptionCreationModal({
                   
                   <Separator />
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Patient Name</Label>
                       <Input
@@ -970,7 +970,7 @@ export default function PrescriptionCreationModal({
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[500px] p-0" align="start">
+                      <PopoverContent className="w-[90vw] max-w-[500px] p-0" align="start">
                         <Command shouldFilter={false}>
                           <CommandInput
                             placeholder="Search templates..."
@@ -978,7 +978,7 @@ export default function PrescriptionCreationModal({
                             onValueChange={setTemplateSearch}
                             data-testid="input-template-search"
                           />
-                          <CommandList>
+                          <CommandList className="max-h-[300px] overflow-y-auto">
                             {isLoadingTemplates ? (
                               <div className="p-4 text-center text-sm text-muted-foreground">
                                 <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
@@ -1054,7 +1054,7 @@ export default function PrescriptionCreationModal({
                       rows={2}
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Diagnosis *</Label>
                       <Textarea
@@ -1090,8 +1090,8 @@ export default function PrescriptionCreationModal({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2 col-span-2 relative">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-2 sm:col-span-2 relative">
                       <Label>Medicine Name *</Label>
                       <Input
                         data-testid="input-medicine-name"
@@ -1137,7 +1137,7 @@ export default function PrescriptionCreationModal({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label>Strength</Label>
                       <Input
@@ -1317,7 +1317,7 @@ export default function PrescriptionCreationModal({
                       rows={3}
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Diet Advice</Label>
                       <Textarea
@@ -1339,7 +1339,7 @@ export default function PrescriptionCreationModal({
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Investigations Advised</Label>
                       <Textarea
