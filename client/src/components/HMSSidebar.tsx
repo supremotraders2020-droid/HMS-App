@@ -112,7 +112,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Patient Analytics", url: "/patient-analytics", icon: Activity, roles: ["ADMIN"] },
       { title: "Chatbot Service", url: "/chatbot-service", icon: MessageCircle, roles: ["ADMIN", "DOCTOR", "PATIENT", "NURSE"] },
       { title: "Notification Service", url: "/notification-service", icon: Bell, roles: ["ADMIN", "DOCTOR", "NURSE", "PATIENT"] },
-      { title: "Consents", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] },
+      { title: "Consents & Certificate", url: "/consent-forms", icon: FileCheck, roles: ["ADMIN"] },
       { title: "Medical Stores", url: "/medical-stores", icon: Package, roles: ["ADMIN"] },
       { title: "Pathology Lab", url: "/pathology-lab-portal", icon: FlaskConical, roles: ["ADMIN"] },
       { title: "Services & Surgeries", url: "/hospital-services", icon: Scissors, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER", "PATIENT", "PATHOLOGY_LAB", "MEDICAL_STORE", "SUPER_ADMIN"] }
