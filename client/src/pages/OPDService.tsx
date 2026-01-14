@@ -802,28 +802,49 @@ export default function OPDService() {
     printWindow.document.close();
   };
 
-  // Print button click handler - check if registration saved, if not show modal first
+  // Print button click handler - always prints directly
   const handlePrintClick = (apt: Appointment) => {
     const doctor = getDoctorById(apt.doctorId);
     const savedReg = savedRegistrations[apt.appointmentId || ''];
     
     if (savedReg) {
-      // Registration already saved, print directly
+      // Registration already saved, print with full details
       executePrint(apt, savedReg);
     } else {
-      // Open registration modal first, set flag to print after save
-      setPendingPrintAppointmentId(apt.appointmentId || null);
-      setPrintAfterSave(true);
-      setRegistrationAppointmentData({
+      // No registration saved, print with appointment data only
+      const nameParts = (apt.patientName || '').split(' ');
+      const basicRegData: SavedRegistrationData = {
         appointmentId: apt.appointmentId || '',
         appointmentTime: apt.timeSlot || '',
-        appointmentDate: apt.appointmentDate || '',
-        doctorName: doctor?.name || '',
-        department: doctor?.specialty || '',
-        patientName: apt.patientName || '',
+        prefix: '',
+        firstName: nameParts[0] || '',
+        middleName: nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '',
+        surname: nameParts.length > 1 ? nameParts[nameParts.length - 1] : '',
+        dateOfBirth: '',
+        age: '',
+        gender: '',
+        weight: '',
+        height: '',
+        maritalStatus: '',
+        occupation: '',
+        allergy: '',
+        referralDoctor: doctor?.name || '',
+        languagePreferred: '',
+        mobileNo: apt.patientPhone || '',
+        email: '',
+        phoneOffice: '',
         phone: apt.patientPhone || '',
-      });
-      setShowPatientRegistrationModal(true);
+        address: '',
+        country: 'India',
+        state: '',
+        city: '',
+        area: '',
+        pincode: '',
+        consultationCharges: '',
+        insuranceProvider: '',
+        insuranceNumber: '',
+      };
+      executePrint(apt, basicRegData);
     }
   };
 
