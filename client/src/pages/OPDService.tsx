@@ -69,6 +69,7 @@ export default function OPDService() {
   const [selectedSlot, setSelectedSlot] = useState<DoctorTimeSlot | null>(null);
   const [showSlotDetail, setShowSlotDetail] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [checkinTimeFilter, setCheckinTimeFilter] = useState<string>("today");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
@@ -561,7 +562,60 @@ export default function OPDService() {
     return matchesSearch && matchesStatus;
   });
 
-  const scheduledAppointments = appointments.filter((apt) => apt.status === "scheduled" || apt.status === "confirmed");
+  // Helper function to filter appointments by time period
+  const getDateRangeFilter = (filter: string) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (filter) {
+      case "today":
+        return (date: string) => {
+          const aptDate = new Date(date);
+          return aptDate >= today && aptDate < new Date(today.getTime() + 24 * 60 * 60 * 1000);
+        };
+      case "weekly":
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 7);
+        return (date: string) => {
+          const aptDate = new Date(date);
+          return aptDate >= weekStart && aptDate < weekEnd;
+        };
+      case "monthly":
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        return (date: string) => {
+          const aptDate = new Date(date);
+          return aptDate >= monthStart && aptDate <= monthEnd;
+        };
+      case "quarterly":
+        const quarter = Math.floor(now.getMonth() / 3);
+        const quarterStart = new Date(now.getFullYear(), quarter * 3, 1);
+        const quarterEnd = new Date(now.getFullYear(), quarter * 3 + 3, 0);
+        return (date: string) => {
+          const aptDate = new Date(date);
+          return aptDate >= quarterStart && aptDate <= quarterEnd;
+        };
+      case "yearly":
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+        const yearEnd = new Date(now.getFullYear(), 11, 31);
+        return (date: string) => {
+          const aptDate = new Date(date);
+          return aptDate >= yearStart && aptDate <= yearEnd;
+        };
+      default:
+        return () => true;
+    }
+  };
+
+  const dateRangeFilter = getDateRangeFilter(checkinTimeFilter);
+  
+  // Include scheduled, confirmed, checked-in, and completed appointments in Check-in tab
+  const scheduledAppointments = appointments.filter((apt) => 
+    (apt.status === "scheduled" || apt.status === "confirmed" || apt.status === "checked-in" || apt.status === "completed") &&
+    dateRangeFilter(apt.appointmentDate)
+  );
 
   const getDoctorById = (id: string) => doctors.find((d) => d.id === id);
 
@@ -1262,14 +1316,28 @@ export default function OPDService() {
           <div className="space-y-6">
             <Card className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
               <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <UserCheck className="h-6 w-6 text-primary" />
-                  <div>
-                    <h2 className="text-lg font-semibold">Patient Check-in</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {scheduledAppointments.length} patients waiting for check-in
-                    </p>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-3">
+                    <UserCheck className="h-6 w-6 text-primary" />
+                    <div>
+                      <h2 className="text-lg font-semibold">Patient Check-in</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {scheduledAppointments.length} patients
+                      </p>
+                    </div>
                   </div>
+                  <Select value={checkinTimeFilter} onValueChange={setCheckinTimeFilter}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Time period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="quarterly">Quarterly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
@@ -1290,9 +1358,20 @@ export default function OPDService() {
                     <tbody>
                       {scheduledAppointments.map((apt) => {
                         const doctor = getDoctorById(apt.doctorId);
-                        const statusStyle = apt.status === 'confirmed' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+                        const getCheckinStatusStyle = (status: string) => {
+                          switch (status) {
+                            case 'confirmed':
+                              return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+                            case 'checked-in':
+                              return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+                            case 'completed':
+                              return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+                            default:
+                              return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+                          }
+                        };
+                        const statusStyle = getCheckinStatusStyle(apt.status);
+                        const isAlreadyCheckedIn = apt.status === 'checked-in' || apt.status === 'completed';
                         const openPatientRegistration = () => {
                           setRegistrationAppointmentData({
                             appointmentId: apt.appointmentId || '',
@@ -1343,15 +1422,21 @@ export default function OPDService() {
                               </Badge>
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <Button
-                                size="sm"
-                                onClick={() => checkInMutation.mutate(apt.id)}
-                                disabled={checkInMutation.isPending}
-                                data-testid={`button-quick-checkin-${apt.id}`}
-                              >
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Check-In
-                              </Button>
+                              {isAlreadyCheckedIn ? (
+                                <Badge variant="outline" className="text-muted-foreground">
+                                  {apt.status === 'completed' ? 'Completed' : 'Checked-In'}
+                                </Badge>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={() => checkInMutation.mutate(apt.id)}
+                                  disabled={checkInMutation.isPending}
+                                  data-testid={`button-quick-checkin-${apt.id}`}
+                                >
+                                  <UserCheck className="h-4 w-4 mr-2" />
+                                  Check-In
+                                </Button>
+                              )}
                             </td>
                           </tr>
                         );
@@ -1364,7 +1449,7 @@ export default function OPDService() {
 
             {scheduledAppointments.length === 0 && (
               <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No patients waiting for check-in</p>
+                <p className="text-muted-foreground">No patients found for the selected time period</p>
               </Card>
             )}
           </div>
