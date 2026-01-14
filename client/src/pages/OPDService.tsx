@@ -683,7 +683,7 @@ export default function OPDService() {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
           .header { text-align: center; border-bottom: 3px solid #0066cc; padding-bottom: 20px; margin-bottom: 20px; }
-          .logo { font-size: 28px; font-weight: bold; color: #0066cc; margin-bottom: 5px; }
+          .logo-img { height: 60px; margin-bottom: 8px; }
           .hospital-name { font-size: 24px; font-weight: bold; color: #333; }
           .hospital-details { font-size: 12px; color: #666; margin-top: 5px; }
           .form-title { text-align: center; font-size: 18px; font-weight: bold; margin: 20px 0; background: #f0f0f0; padding: 10px; }
@@ -703,7 +703,7 @@ export default function OPDService() {
       </head>
       <body>
         <div class="header">
-          <div class="logo">GRAVITY</div>
+          <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
           <div class="hospital-name">GRAVITY HOSPITAL</div>
           <div class="hospital-details">
             Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062<br/>
@@ -882,7 +882,7 @@ export default function OPDService() {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
           .header { text-align: center; border-bottom: 3px solid #0066cc; padding-bottom: 20px; margin-bottom: 20px; }
-          .logo { font-size: 28px; font-weight: bold; color: #0066cc; margin-bottom: 5px; }
+          .logo-img { height: 60px; margin-bottom: 8px; }
           .hospital-name { font-size: 24px; font-weight: bold; color: #333; }
           .hospital-details { font-size: 12px; color: #666; margin-top: 5px; }
           .report-title { text-align: center; font-size: 18px; font-weight: bold; margin: 20px 0; background: #f0f0f0; padding: 10px; }
@@ -898,7 +898,7 @@ export default function OPDService() {
       </head>
       <body>
         <div class="header">
-          <div class="logo">GRAVITY</div>
+          <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
           <div class="hospital-name">GRAVITY HOSPITAL</div>
           <div class="hospital-details">
             Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062<br/>
