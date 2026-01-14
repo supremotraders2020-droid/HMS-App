@@ -32,7 +32,8 @@ import {
   Package,
   Tag,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Printer
 } from "lucide-react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -618,6 +619,179 @@ export default function OPDService() {
   );
 
   const getDoctorById = (id: string) => doctors.find((d) => d.id === id);
+
+  // Print individual patient registration form
+  const printPatientRegistration = (apt: Appointment) => {
+    const doctor = getDoctorById(apt.doctorId);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Patient Registration - ${apt.patientName}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+          .header { text-align: center; border-bottom: 3px solid #0066cc; padding-bottom: 20px; margin-bottom: 20px; }
+          .logo { font-size: 28px; font-weight: bold; color: #0066cc; margin-bottom: 5px; }
+          .hospital-name { font-size: 24px; font-weight: bold; color: #333; }
+          .hospital-details { font-size: 12px; color: #666; margin-top: 5px; }
+          .form-title { text-align: center; font-size: 18px; font-weight: bold; margin: 20px 0; background: #f0f0f0; padding: 10px; }
+          .section { margin-bottom: 20px; }
+          .section-title { font-size: 14px; font-weight: bold; background: #e8e8e8; padding: 8px; margin-bottom: 10px; }
+          .row { display: flex; border-bottom: 1px solid #ddd; }
+          .label { width: 180px; padding: 8px; font-weight: bold; background: #f9f9f9; border-right: 1px solid #ddd; }
+          .value { flex: 1; padding: 8px; }
+          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
+          @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">GRAVITY</div>
+          <div class="hospital-name">GRAVITY HOSPITAL</div>
+          <div class="hospital-details">
+            Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062<br/>
+            Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com
+          </div>
+        </div>
+
+        <div class="form-title">PATIENT REGISTRATION FORM</div>
+
+        <div class="section">
+          <div class="section-title">Appointment Details</div>
+          <div class="row"><div class="label">Appointment ID</div><div class="value">${apt.appointmentId || 'N/A'}</div></div>
+          <div class="row"><div class="label">Appointment Date</div><div class="value">${apt.appointmentDate || 'N/A'}</div></div>
+          <div class="row"><div class="label">Time Slot</div><div class="value">${apt.timeSlot || 'N/A'}</div></div>
+          <div class="row"><div class="label">Consulting Doctor</div><div class="value">${doctor?.name || 'N/A'}</div></div>
+          <div class="row"><div class="label">Department</div><div class="value">${doctor?.specialty || 'N/A'}</div></div>
+          <div class="row"><div class="label">Status</div><div class="value">${apt.status?.toUpperCase() || 'N/A'}</div></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Patient Information</div>
+          <div class="row"><div class="label">Patient Name</div><div class="value">${apt.patientName || 'N/A'}</div></div>
+          <div class="row"><div class="label">Phone Number</div><div class="value">${apt.patientPhone || 'N/A'}</div></div>
+          <div class="row"><div class="label">Email</div><div class="value">${apt.patientEmail || 'N/A'}</div></div>
+          <div class="row"><div class="label">Symptoms</div><div class="value">${apt.symptoms || 'N/A'}</div></div>
+        </div>
+
+        <div class="footer">
+          <p>This is a computer-generated document. No signature required.</p>
+          <p>Generated on: ${new Date().toLocaleString('en-IN')}</p>
+        </div>
+
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+  };
+
+  // Print all patients in table format
+  const printAllPatients = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const timeFilterLabels: Record<string, string> = {
+      today: "Today",
+      weekly: "This Week",
+      monthly: "This Month",
+      quarterly: "This Quarter",
+      yearly: "This Year"
+    };
+
+    const patientRows = scheduledAppointments.map(apt => {
+      const doctor = getDoctorById(apt.doctorId);
+      return `
+        <tr>
+          <td>${apt.patientName}</td>
+          <td>${apt.appointmentId || 'N/A'}</td>
+          <td>${apt.appointmentDate}</td>
+          <td>${apt.timeSlot || 'N/A'}</td>
+          <td>${doctor?.name || 'N/A'}</td>
+          <td>${doctor?.specialty || 'N/A'}</td>
+          <td>${apt.status?.toUpperCase() || 'N/A'}</td>
+          <td>${apt.patientPhone || 'N/A'}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Patient Check-in Report - ${timeFilterLabels[checkinTimeFilter]}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+          .header { text-align: center; border-bottom: 3px solid #0066cc; padding-bottom: 20px; margin-bottom: 20px; }
+          .logo { font-size: 28px; font-weight: bold; color: #0066cc; margin-bottom: 5px; }
+          .hospital-name { font-size: 24px; font-weight: bold; color: #333; }
+          .hospital-details { font-size: 12px; color: #666; margin-top: 5px; }
+          .report-title { text-align: center; font-size: 18px; font-weight: bold; margin: 20px 0; background: #f0f0f0; padding: 10px; }
+          .report-info { text-align: center; margin-bottom: 20px; font-size: 14px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+          th { background: #0066cc; color: white; padding: 10px 8px; text-align: left; font-weight: bold; }
+          td { padding: 8px; border-bottom: 1px solid #ddd; }
+          tr:nth-child(even) { background: #f9f9f9; }
+          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
+          .total { text-align: right; font-weight: bold; margin-top: 15px; font-size: 14px; }
+          @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">GRAVITY</div>
+          <div class="hospital-name">GRAVITY HOSPITAL</div>
+          <div class="hospital-details">
+            Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062<br/>
+            Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com
+          </div>
+        </div>
+
+        <div class="report-title">PATIENT CHECK-IN REPORT</div>
+        <div class="report-info">
+          Period: <strong>${timeFilterLabels[checkinTimeFilter]}</strong> | 
+          Generated on: ${new Date().toLocaleString('en-IN')}
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Patient Name</th>
+              <th>Appointment ID</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Doctor</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${patientRows}
+          </tbody>
+        </table>
+
+        <div class="total">Total Patients: ${scheduledAppointments.length}</div>
+
+        <div class="footer">
+          <p>This is a computer-generated report. No signature required.</p>
+        </div>
+
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+  };
 
   const tabs = [
     { id: "schedules" as TabType, label: "Doctor Schedules", icon: Calendar },
@@ -1326,18 +1500,29 @@ export default function OPDService() {
                       </p>
                     </div>
                   </div>
-                  <Select value={checkinTimeFilter} onValueChange={setCheckinTimeFilter}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Time period" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="quarterly">Quarterly</SelectItem>
-                      <SelectItem value="yearly">Yearly</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-2">
+                    <Select value={checkinTimeFilter} onValueChange={setCheckinTimeFilter}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue placeholder="Time period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      variant="outline" 
+                      size="default"
+                      onClick={printAllPatients}
+                      disabled={scheduledAppointments.length === 0}
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Print All
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1352,7 +1537,8 @@ export default function OPDService() {
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Appointment Time</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Doctor</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
-                        <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Action</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Action</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Print</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1421,7 +1607,7 @@ export default function OPDService() {
                                 {apt.status.toUpperCase()}
                               </Badge>
                             </td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="px-4 py-3 text-center">
                               {isAlreadyCheckedIn ? (
                                 <Badge variant="outline" className="text-muted-foreground">
                                   {apt.status === 'completed' ? 'Completed' : 'Checked-In'}
@@ -1437,6 +1623,16 @@ export default function OPDService() {
                                   Check-In
                                 </Button>
                               )}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => printPatientRegistration(apt)}
+                                title="Print patient registration form"
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
                             </td>
                           </tr>
                         );
