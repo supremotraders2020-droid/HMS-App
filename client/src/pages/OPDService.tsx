@@ -38,8 +38,9 @@ import {
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { PatientRegistrationModal } from "@/components/PatientRegistrationModal";
+import { PatientRegistrationModal, type SavedRegistrationData } from "@/components/PatientRegistrationModal";
 import type { Doctor, Appointment, Schedule, Medicine, DoctorSchedule, DoctorTimeSlot } from "@shared/schema";
+import { Eye } from "lucide-react";
 
 const OPD_LOCATIONS = [
   { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park", address: "Koregaon Park, Pune, Maharashtra 411001", mapUrl: "https://www.google.com/maps/search/?api=1&query=Koregaon+Park+Pune" },
@@ -85,6 +86,27 @@ export default function OPDService() {
     patientName?: string;
     phone?: string;
   } | null>(null);
+  
+  // Saved registrations per appointment (keyed by appointmentId) - persisted to localStorage
+  const [savedRegistrations, setSavedRegistrations] = useState<Record<string, SavedRegistrationData>>(() => {
+    try {
+      const stored = localStorage.getItem('opd_saved_registrations');
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [pendingPrintAppointmentId, setPendingPrintAppointmentId] = useState<string | null>(null);
+  const [printAfterSave, setPrintAfterSave] = useState(false);
+  
+  // Persist savedRegistrations to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('opd_saved_registrations', JSON.stringify(savedRegistrations));
+    } catch {
+      // localStorage might be full or unavailable
+    }
+  }, [savedRegistrations]);
   
   // Booking form state
   const [bookingDoctorId, setBookingDoctorId] = useState<string>("");
@@ -620,17 +642,43 @@ export default function OPDService() {
 
   const getDoctorById = (id: string) => doctors.find((d) => d.id === id);
 
-  // Print individual patient registration form
-  const printPatientRegistration = (apt: Appointment) => {
+  // Handle registration save success
+  const handleRegistrationSaveSuccess = (data: SavedRegistrationData) => {
+    if (data.appointmentId) {
+      setSavedRegistrations(prev => ({
+        ...prev,
+        [data.appointmentId!]: data
+      }));
+      
+      // If print was pending, trigger print now
+      if (printAfterSave && pendingPrintAppointmentId === data.appointmentId) {
+        const apt = appointments.find(a => a.appointmentId === data.appointmentId);
+        if (apt) {
+          setTimeout(() => {
+            executePrint(apt, data);
+          }, 500);
+        }
+      }
+    }
+    setPendingPrintAppointmentId(null);
+    setPrintAfterSave(false);
+  };
+
+  // Execute the actual print with registration data
+  const executePrint = (apt: Appointment, regData: SavedRegistrationData) => {
     const doctor = getDoctorById(apt.doctorId);
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    const fullName = `${regData.prefix || ''} ${regData.firstName || ''} ${regData.middleName || ''} ${regData.surname || ''}`.trim();
+    const maritalStatusMap: Record<string, string> = { 'SINGLE': 'Single', 'MARRIED': 'Married', 'DIVORCED': 'Divorced', 'WIDOWED': 'Widowed' };
+    const genderMap: Record<string, string> = { 'M': 'Male', 'F': 'Female', 'O': 'Other' };
 
     const printContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Patient Registration - ${apt.patientName}</title>
+        <title>Patient Registration - ${fullName}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
@@ -639,12 +687,17 @@ export default function OPDService() {
           .hospital-name { font-size: 24px; font-weight: bold; color: #333; }
           .hospital-details { font-size: 12px; color: #666; margin-top: 5px; }
           .form-title { text-align: center; font-size: 18px; font-weight: bold; margin: 20px 0; background: #f0f0f0; padding: 10px; }
-          .section { margin-bottom: 20px; }
-          .section-title { font-size: 14px; font-weight: bold; background: #e8e8e8; padding: 8px; margin-bottom: 10px; }
-          .row { display: flex; border-bottom: 1px solid #ddd; }
-          .label { width: 180px; padding: 8px; font-weight: bold; background: #f9f9f9; border-right: 1px solid #ddd; }
-          .value { flex: 1; padding: 8px; }
-          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
+          .section { margin-bottom: 15px; }
+          .section-title { font-size: 14px; font-weight: bold; background: #e8e8e8; padding: 8px; margin-bottom: 8px; }
+          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+          .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0; }
+          .field { border: 1px solid #ddd; padding: 6px 8px; }
+          .field-label { font-size: 10px; color: #666; text-transform: uppercase; }
+          .field-value { font-size: 13px; font-weight: 500; min-height: 18px; }
+          .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #666; border-top: 1px solid #ddd; padding-top: 15px; }
+          .signature-area { display: flex; justify-content: space-between; margin-top: 40px; padding: 0 40px; }
+          .signature-box { text-align: center; }
+          .signature-line { border-top: 1px solid #333; width: 150px; margin-top: 40px; }
           @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
         </style>
       </head>
@@ -661,25 +714,82 @@ export default function OPDService() {
         <div class="form-title">PATIENT REGISTRATION FORM</div>
 
         <div class="section">
-          <div class="section-title">Appointment Details</div>
-          <div class="row"><div class="label">Appointment ID</div><div class="value">${apt.appointmentId || 'N/A'}</div></div>
-          <div class="row"><div class="label">Appointment Date</div><div class="value">${apt.appointmentDate || 'N/A'}</div></div>
-          <div class="row"><div class="label">Time Slot</div><div class="value">${apt.timeSlot || 'N/A'}</div></div>
-          <div class="row"><div class="label">Consulting Doctor</div><div class="value">${doctor?.name || 'N/A'}</div></div>
-          <div class="row"><div class="label">Department</div><div class="value">${doctor?.specialty || 'N/A'}</div></div>
-          <div class="row"><div class="label">Status</div><div class="value">${apt.status?.toUpperCase() || 'N/A'}</div></div>
+          <div class="section-title">Personal Information</div>
+          <div class="grid-4">
+            <div class="field"><div class="field-label">Prefix</div><div class="field-value">${regData.prefix || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Surname</div><div class="field-value">${regData.surname || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Name</div><div class="field-value">${regData.firstName || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Middle Name</div><div class="field-value">${regData.middleName || 'N/A'}</div></div>
+          </div>
+          <div class="grid-4">
+            <div class="field"><div class="field-label">Date of Birth</div><div class="field-value">${regData.dateOfBirth || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Age</div><div class="field-value">${regData.age || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Sex</div><div class="field-value">${genderMap[regData.gender || ''] || regData.gender || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Wt.(Kg)</div><div class="field-value">${regData.weight || 'N/A'}</div></div>
+          </div>
+          <div class="grid-4">
+            <div class="field"><div class="field-label">Ht.(Cm)</div><div class="field-value">${regData.height || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Marital Status</div><div class="field-value">${maritalStatusMap[regData.maritalStatus || ''] || regData.maritalStatus || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Occupation</div><div class="field-value">${regData.occupation || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Allergy</div><div class="field-value">${regData.allergy || 'None'}</div></div>
+          </div>
         </div>
 
         <div class="section">
-          <div class="section-title">Patient Information</div>
-          <div class="row"><div class="label">Patient Name</div><div class="value">${apt.patientName || 'N/A'}</div></div>
-          <div class="row"><div class="label">Phone Number</div><div class="value">${apt.patientPhone || 'N/A'}</div></div>
-          <div class="row"><div class="label">Email</div><div class="value">${apt.patientEmail || 'N/A'}</div></div>
-          <div class="row"><div class="label">Symptoms</div><div class="value">${apt.symptoms || 'N/A'}</div></div>
+          <div class="section-title">Appointment Details</div>
+          <div class="grid-4">
+            <div class="field"><div class="field-label">Appointment ID</div><div class="field-value">${apt.appointmentId || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Date</div><div class="field-value">${apt.appointmentDate || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Time</div><div class="field-value">${regData.appointmentTime || apt.timeSlot || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Language</div><div class="field-value">${regData.languagePreferred || 'N/A'}</div></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><div class="field-label">Consulting Doctor / Referral</div><div class="field-value">${regData.referralDoctor || doctor?.name || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Department</div><div class="field-value">${doctor?.specialty || 'N/A'}</div></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Contact Information</div>
+          <div class="grid-4">
+            <div class="field"><div class="field-label">Contact No / Mobile</div><div class="field-value">${regData.mobileNo || regData.phone || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Email ID</div><div class="field-value">${regData.email || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Ph.No (Off/Resi.)</div><div class="field-value">${regData.phoneOffice || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Country</div><div class="field-value">${regData.country || 'India'}</div></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><div class="field-label">Address</div><div class="field-value">${regData.address || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Area / Locality</div><div class="field-value">${regData.area || 'N/A'}</div></div>
+          </div>
+          <div class="grid-4">
+            <div class="field"><div class="field-label">State</div><div class="field-value">${regData.state || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">City</div><div class="field-value">${regData.city || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Pincode</div><div class="field-value">${regData.pincode || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Consultation Charges</div><div class="field-value">${regData.consultationCharges ? '₹' + regData.consultationCharges : 'N/A'}</div></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Insurance Information</div>
+          <div class="grid-2">
+            <div class="field"><div class="field-label">Insurance Provider</div><div class="field-value">${regData.insuranceProvider || 'N/A'}</div></div>
+            <div class="field"><div class="field-label">Insurance No. / Policy Number</div><div class="field-value">${regData.insuranceNumber || 'N/A'}</div></div>
+          </div>
+        </div>
+
+        <div class="signature-area">
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Patient Signature</p>
+          </div>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p>Staff Signature</p>
+          </div>
         </div>
 
         <div class="footer">
-          <p>This is a computer-generated document. No signature required.</p>
+          <p>This is a computer-generated document.</p>
           <p>Generated on: ${new Date().toLocaleString('en-IN')}</p>
         </div>
 
@@ -690,6 +800,48 @@ export default function OPDService() {
 
     printWindow.document.write(printContent);
     printWindow.document.close();
+  };
+
+  // Print button click handler - check if registration saved, if not show modal first
+  const handlePrintClick = (apt: Appointment) => {
+    const doctor = getDoctorById(apt.doctorId);
+    const savedReg = savedRegistrations[apt.appointmentId || ''];
+    
+    if (savedReg) {
+      // Registration already saved, print directly
+      executePrint(apt, savedReg);
+    } else {
+      // Open registration modal first, set flag to print after save
+      setPendingPrintAppointmentId(apt.appointmentId || null);
+      setPrintAfterSave(true);
+      setRegistrationAppointmentData({
+        appointmentId: apt.appointmentId || '',
+        appointmentTime: apt.timeSlot || '',
+        appointmentDate: apt.appointmentDate || '',
+        doctorName: doctor?.name || '',
+        department: doctor?.specialty || '',
+        patientName: apt.patientName || '',
+        phone: apt.patientPhone || '',
+      });
+      setShowPatientRegistrationModal(true);
+    }
+  };
+
+  // VIEW button click handler - opens registration modal to view/edit
+  const handleViewClick = (apt: Appointment) => {
+    const doctor = getDoctorById(apt.doctorId);
+    setRegistrationAppointmentData({
+      appointmentId: apt.appointmentId || '',
+      appointmentTime: apt.timeSlot || '',
+      appointmentDate: apt.appointmentDate || '',
+      doctorName: doctor?.name || '',
+      department: doctor?.specialty || '',
+      patientName: apt.patientName || '',
+      phone: apt.patientPhone || '',
+    });
+    setPrintAfterSave(false);
+    setPendingPrintAppointmentId(null);
+    setShowPatientRegistrationModal(true);
   };
 
   // Print all patients in table format
@@ -1538,6 +1690,7 @@ export default function OPDService() {
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Doctor</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
                         <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Action</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">View</th>
                         <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Print</th>
                       </tr>
                     </thead>
@@ -1628,7 +1781,17 @@ export default function OPDService() {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                onClick={() => printPatientRegistration(apt)}
+                                onClick={() => handleViewClick(apt)}
+                                title="View/Edit patient registration form"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handlePrintClick(apt)}
                                 title="Print patient registration form"
                               >
                                 <Printer className="h-4 w-4" />
@@ -2064,8 +2227,17 @@ export default function OPDService() {
       {/* Patient Registration Modal */}
       <PatientRegistrationModal
         open={showPatientRegistrationModal}
-        onOpenChange={setShowPatientRegistrationModal}
+        onOpenChange={(open) => {
+          setShowPatientRegistrationModal(open);
+          if (!open) {
+            setPrintAfterSave(false);
+            setPendingPrintAppointmentId(null);
+          }
+        }}
         appointmentData={registrationAppointmentData || undefined}
+        savedRegistration={registrationAppointmentData?.appointmentId ? savedRegistrations[registrationAppointmentData.appointmentId] : undefined}
+        onSaveSuccess={handleRegistrationSaveSuccess}
+        printAfterSave={printAfterSave}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
           setRegistrationAppointmentData(null);

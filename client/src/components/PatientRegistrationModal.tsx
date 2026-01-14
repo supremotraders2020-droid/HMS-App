@@ -65,6 +65,8 @@ const patientRegistrationSchema = z.object({
 
 type PatientRegistrationFormData = z.infer<typeof patientRegistrationSchema>;
 
+export type { PatientRegistrationFormData };
+
 interface AppointmentData {
   appointmentId?: string;
   appointmentTime?: string;
@@ -75,11 +77,19 @@ interface AppointmentData {
   phone?: string;
 }
 
+export interface SavedRegistrationData extends PatientRegistrationFormData {
+  appointmentId?: string;
+  savedAt?: string;
+}
+
 interface PatientRegistrationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appointmentData?: AppointmentData;
   onSuccess?: () => void;
+  savedRegistration?: SavedRegistrationData;
+  onSaveSuccess?: (data: SavedRegistrationData) => void;
+  printAfterSave?: boolean;
 }
 
 const INDIAN_STATES = [
@@ -103,6 +113,9 @@ export function PatientRegistrationModal({
   onOpenChange,
   appointmentData,
   onSuccess,
+  savedRegistration,
+  onSaveSuccess,
+  printAfterSave,
 }: PatientRegistrationModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -142,7 +155,16 @@ export function PatientRegistrationModal({
   });
 
   useEffect(() => {
-    if (open && appointmentData) {
+    if (open && savedRegistration) {
+      Object.keys(savedRegistration).forEach((key) => {
+        if (key !== 'appointmentId' && key !== 'savedAt') {
+          const value = savedRegistration[key as keyof PatientRegistrationFormData];
+          if (value !== undefined) {
+            form.setValue(key as keyof PatientRegistrationFormData, value);
+          }
+        }
+      });
+    } else if (open && appointmentData) {
       const nameParts = appointmentData.patientName?.split(" ") || [];
       const firstName = nameParts[0] || "";
       const surname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
@@ -156,7 +178,7 @@ export function PatientRegistrationModal({
       form.setValue("appointmentTime", appointmentData.appointmentTime || "");
       form.setValue("referralDoctor", appointmentData.doctorName || "SELF");
     }
-  }, [open, appointmentData, form]);
+  }, [open, appointmentData, savedRegistration, form]);
 
   const calculateAge = (dob: string): string => {
     if (!dob) return "";
@@ -199,15 +221,24 @@ export function PatientRegistrationModal({
         insuranceNumber: data.insuranceNumber || "",
       };
       const response = await apiRequest("POST", "/api/patients/service", payload);
-      return response.json();
+      return { ...data, response: await response.json() };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["/api/patients/service"] });
       queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+      
+      const savedData: SavedRegistrationData = {
+        ...result,
+        appointmentId: appointmentData?.appointmentId,
+        savedAt: new Date().toISOString(),
+      };
+      
       toast({
         title: "Patient Registered",
-        description: "New patient has been added successfully",
+        description: printAfterSave ? "Registration saved. Print window will open." : "New patient has been added successfully",
       });
+      
+      onSaveSuccess?.(savedData);
       form.reset();
       onOpenChange(false);
       onSuccess?.();
