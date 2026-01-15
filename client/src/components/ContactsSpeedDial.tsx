@@ -135,7 +135,7 @@ const INITIAL_CONTACTS: ContactSection[] = [
 export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSection, setActiveSection] = useState<string>("management");
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [contacts, setContacts] = useState<ContactSection[]>(INITIAL_CONTACTS);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -148,6 +148,10 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
   });
 
   const isAdmin = currentRole === "ADMIN" || currentRole === "SUPER_ADMIN";
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSection(prev => prev === sectionId ? null : sectionId);
+  };
 
   const filteredSections = useMemo(() => {
     return contacts.map(section => {
@@ -262,13 +266,13 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
         
         <CardContent className="pt-0">
           <ScrollArea className="w-full">
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-2 mb-2">
               {filteredSections.map((section) => (
                 <Button
                   key={section.id}
-                  variant={activeSection === section.id ? "default" : "outline"}
+                  variant={expandedSection === section.id ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setActiveSection(section.id)}
+                  onClick={() => toggleSection(section.id)}
                   className="flex items-center gap-1.5 flex-shrink-0"
                 >
                   <section.icon className="h-4 w-4" />
@@ -283,7 +287,7 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
           
           <AnimatePresence mode="wait">
             {filteredSections.map((section) => (
-              activeSection === section.id && (
+              expandedSection === section.id && (
                 <motion.div
                   key={section.id}
                   initial={{ opacity: 0, y: 10 }}
