@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -121,28 +120,10 @@ const HOSPITAL_CONTACTS: ContactSection[] = [
   }
 ];
 
-const ALL_DEPARTMENTS = [
-  "All Departments",
-  "Anaesthesia",
-  "Cardiology",
-  "Dermatology",
-  "ENT",
-  "General Medicine",
-  "Gynecology",
-  "ICU",
-  "Neurology",
-  "Operation Theatre",
-  "Orthopedics",
-  "Pathology Lab",
-  "Pediatrics",
-  "Radiology",
-  "Surgery"
-];
 
 export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("All Departments");
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     management: true,
     anaesthesia: false,
@@ -169,15 +150,12 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
           contact.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (contact.department?.toLowerCase().includes(searchQuery.toLowerCase()));
         
-        const matchesDepartment = selectedDepartment === "All Departments" || 
-          contact.department === selectedDepartment;
-        
-        return matchesSearch && matchesDepartment;
+        return matchesSearch;
       });
       
       return { ...section, contacts: filteredContacts };
     }).filter(section => section.contacts.length > 0);
-  }, [currentRole, searchQuery, selectedDepartment]);
+  }, [currentRole, searchQuery]);
 
   const totalContacts = filteredSections.reduce((sum, section) => sum + section.contacts.length, 0);
 
@@ -225,27 +203,14 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search contacts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-white/80 dark:bg-slate-800/80"
-              />
-            </div>
-            
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-              <SelectTrigger className="w-full sm:w-[180px] bg-white/80 dark:bg-slate-800/80">
-                <SelectValue placeholder="Department" />
-              </SelectTrigger>
-              <SelectContent>
-                {ALL_DEPARTMENTS.map(dept => (
-                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search contacts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-white/80 dark:bg-slate-800/80"
+            />
           </div>
         </div>
       </CardHeader>
