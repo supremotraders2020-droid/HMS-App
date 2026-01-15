@@ -90,6 +90,7 @@ import HospitalServices from "@/pages/HospitalServices";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
 import DoctorOathModal from "@/components/DoctorOathModal";
 import PrescriptionCreationModal from "@/components/PrescriptionCreationModal";
+import { ContactsSpeedDial } from "@/components/ContactsSpeedDial";
 
 const LOCATIONS = [
   { id: "koregaon_park", name: "Gravity Hospital - Koregaon Park", address: "Koregaon Park, Pune, Maharashtra 411001", mapUrl: "https://www.google.com/maps/search/?api=1&query=Koregaon+Park+Pune" },
@@ -897,6 +898,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
         <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-primary/5 to-transparent" />
         <Stethoscope className="absolute right-6 top-1/2 -translate-y-1/2 h-20 w-20 text-primary/10" />
       </div>
+
+      {/* Hospital Speed Dial */}
+      <ContactsSpeedDial currentRole="DOCTOR" />
 
       {/* Enhanced Stat Cards Grid */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

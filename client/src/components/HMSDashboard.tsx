@@ -57,7 +57,7 @@ function CriticalAlertsPanel() {
 
   const activeAlerts = criticalAlerts.filter(alert => alert.status === 'active');
 
-  const handleAcknowledge = async (alertId: number) => {
+  const handleAcknowledge = async (alertId: string) => {
     try {
       await apiRequest("PATCH", `/api/critical-alerts/${alertId}/acknowledge`, {});
       queryClient.invalidateQueries({ queryKey: ['/api/critical-alerts'] });
@@ -66,7 +66,7 @@ function CriticalAlertsPanel() {
     }
   };
 
-  const handleResolve = async (alertId: number) => {
+  const handleResolve = async (alertId: string) => {
     try {
       await apiRequest("PATCH", `/api/critical-alerts/${alertId}/resolve`, { resolutionNotes: "Resolved by admin" });
       queryClient.invalidateQueries({ queryKey: ['/api/critical-alerts'] });
