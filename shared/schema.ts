@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean, decimal, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean, decimal, pgEnum, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -5283,6 +5283,8 @@ export const icuBodyMarking = pgTable("icu_body_marking", {
   grade: text("grade"),
   date: text("date"),
   remarks: text("remarks"),
+  positionX: real("position_x"),
+  positionY: real("position_y"),
   recordedBy: varchar("recorded_by"),
   createdAt: timestamp("created_at").defaultNow(),
 });

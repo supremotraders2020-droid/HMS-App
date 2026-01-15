@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import React from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -1741,6 +1742,10 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
   userId?: string 
 }) {
   const { toast } = useToast();
+  const [selectedMarker, setSelectedMarker] = useState<{x: number; y: number} | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newMarking, setNewMarking] = useState({ markedArea: "", typeOfInjury: "", grade: "" });
+  const imgContainerRef = React.useRef<HTMLDivElement>(null);
   
   const updateMarkingMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
@@ -1752,6 +1757,52 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
     },
   });
 
+  const addMarkingMutation = useMutation({
+    mutationFn: async (data: { chartId: string; markedArea: string; typeOfInjury: string; grade: string; positionX: number; positionY: number }) => {
+      return apiRequest("POST", `/api/icu-body-marking`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Body marking added successfully" });
+      setSelectedMarker(null);
+      setShowAddDialog(false);
+      setNewMarking({ markedArea: "", typeOfInjury: "", grade: "" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add body marking", variant: "destructive" });
+    }
+  });
+
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!canEdit) return;
+    
+    const container = imgContainerRef.current;
+    if (!container) return;
+    
+    const rect = container.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    setSelectedMarker({ x, y });
+    setShowAddDialog(true);
+  };
+
+  const handleSaveMarking = () => {
+    if (!selectedMarker || !newMarking.markedArea) {
+      toast({ title: "Please enter the marked area", variant: "destructive" });
+      return;
+    }
+    
+    addMarkingMutation.mutate({
+      chartId,
+      markedArea: newMarking.markedArea,
+      typeOfInjury: newMarking.typeOfInjury || "Pressure Sore",
+      grade: newMarking.grade || "1",
+      positionX: selectedMarker.x,
+      positionY: selectedMarker.y
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -1759,14 +1810,41 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
           <User className="w-4 h-4 text-indigo-500" />
           Body Marking / Pressure Sore Chart
         </h3>
+        {canEdit && (
+          <p className="text-sm text-muted-foreground">Click on the body diagram to add a marking</p>
+        )}
         
         <div className="grid md:grid-cols-2 gap-6">
           <div className="flex justify-center">
-            <img 
-              src="/body-diagram.png" 
-              alt="Body diagram for marking pressure sores" 
-              className="max-h-80 object-contain border rounded-lg p-2"
-            />
+            <div 
+              ref={imgContainerRef}
+              onClick={handleImageClick}
+              className={`relative max-h-80 border rounded-lg p-2 ${canEdit ? 'cursor-crosshair hover:border-primary' : ''}`}
+              style={{ width: 'fit-content' }}
+            >
+              <img 
+                src="/body-diagram.png" 
+                alt="Body diagram for marking pressure sores" 
+                className="max-h-72 object-contain pointer-events-none select-none"
+                draggable={false}
+              />
+              {selectedMarker && (
+                <div 
+                  className="absolute w-5 h-5 bg-red-500 border-2 border-white rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1/2 animate-pulse z-10"
+                  style={{ left: `${selectedMarker.x}%`, top: `${selectedMarker.y}%` }}
+                />
+              )}
+              {markingsData.map((marking: any, index: number) => (
+                marking.positionX !== undefined && marking.positionY !== undefined && (
+                  <div 
+                    key={marking.id || index}
+                    className="absolute w-4 h-4 bg-blue-500 border-2 border-white rounded-full shadow-md transform -translate-x-1/2 -translate-y-1/2 z-10 hover:scale-125 transition-transform"
+                    style={{ left: `${marking.positionX}%`, top: `${marking.positionY}%` }}
+                    title={`${marking.markedArea}: ${marking.typeOfInjury} (Grade ${marking.grade})`}
+                  />
+                )
+              ))}
+            </div>
           </div>
           
           <div className="space-y-4">
@@ -1839,6 +1917,77 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
           <p className="text-muted-foreground">No allergy information recorded</p>
         )}
       </div>
+
+      <Dialog open={showAddDialog} onOpenChange={(open) => {
+        setShowAddDialog(open);
+        if (!open) {
+          setSelectedMarker(null);
+          setNewMarking({ markedArea: "", typeOfInjury: "", grade: "" });
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Body Marking</DialogTitle>
+            <DialogDescription>
+              Enter details for the marked area on the body diagram.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="markedArea">Marked Area *</Label>
+              <Input
+                id="markedArea"
+                placeholder="e.g., Left shoulder, Right hip"
+                value={newMarking.markedArea}
+                onChange={(e) => setNewMarking(prev => ({ ...prev, markedArea: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="typeOfInjury">Type of Injury</Label>
+              <Select value={newMarking.typeOfInjury} onValueChange={(v) => setNewMarking(prev => ({ ...prev, typeOfInjury: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pressure Sore">Pressure Sore</SelectItem>
+                  <SelectItem value="Wound">Wound</SelectItem>
+                  <SelectItem value="Bruise">Bruise</SelectItem>
+                  <SelectItem value="Ulcer">Ulcer</SelectItem>
+                  <SelectItem value="Rash">Rash</SelectItem>
+                  <SelectItem value="Swelling">Swelling</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="grade">Grade / Severity</Label>
+              <Select value={newMarking.grade} onValueChange={(v) => setNewMarking(prev => ({ ...prev, grade: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select grade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Grade 1 - Mild</SelectItem>
+                  <SelectItem value="2">Grade 2 - Moderate</SelectItem>
+                  <SelectItem value="3">Grade 3 - Severe</SelectItem>
+                  <SelectItem value="4">Grade 4 - Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowAddDialog(false);
+              setSelectedMarker(null);
+              setNewMarking({ markedArea: "", typeOfInjury: "", grade: "" });
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveMarking} disabled={addMarkingMutation.isPending}>
+              {addMarkingMutation.isPending ? "Saving..." : "Save Marking"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -15081,6 +15081,26 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  app.post("/api/icu-body-marking", requireAuth, async (req, res) => {
+    try {
+      const { chartId, markedArea, typeOfInjury, grade, positionX, positionY } = req.body;
+      const entry = await storage.createIcuBodyMarking({
+        icuChartId: chartId,
+        markedArea,
+        typeOfInjury,
+        grade,
+        positionX,
+        positionY,
+        date: new Date().toLocaleDateString("en-IN"),
+        recordedBy: req.user?.id
+      });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating body marking:", error);
+      res.status(500).json({ error: "Failed to create body marking" });
+    }
+  });
+
   // ICU Airway Care
   app.post("/api/icu-charts/:chartId/airway-care", requireAuth, async (req, res) => {
     try {
