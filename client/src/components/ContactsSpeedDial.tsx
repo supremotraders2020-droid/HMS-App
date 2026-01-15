@@ -294,8 +294,9 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="mt-3"
                 >
-                  <ScrollArea className="max-h-[350px]">
+                  <div className="max-h-[280px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
                     <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" : "space-y-2"}>
                       {section.contacts.map((contact) => (
                         <div
@@ -356,7 +357,7 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
                         </div>
                       ))}
                     </div>
-                  </ScrollArea>
+                  </div>
                 </motion.div>
               )
             ))}
