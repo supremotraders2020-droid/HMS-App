@@ -191,21 +191,42 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
   };
 
   return (
-    <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50/80 via-indigo-50/80 to-purple-50/80 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30">
-      <CardHeader className="pb-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500 rounded-lg">
-              <Phone className="h-5 w-5 text-white" />
+    <Card className="border-0 shadow-lg bg-gradient-to-b from-slate-50 to-slate-100/50 dark:from-slate-900 dark:to-slate-950">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-blue-500 rounded-xl">
+                <Phone className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-lg font-semibold">Hospital Speed Dial</CardTitle>
+                <p className="text-sm text-muted-foreground">{totalContacts} contacts available</p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-lg">Hospital Speed Dial</CardTitle>
-              <p className="text-sm text-muted-foreground">{totalContacts} contacts available</p>
+            
+            <div className="flex items-center gap-2">
+              <div className="flex items-center border rounded-md overflow-visible bg-white/80 dark:bg-slate-800/80">
+                <Button
+                  variant={viewMode === "grid" ? "secondary" : "ghost"}
+                  size="icon"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                  size="icon"
+                  onClick={() => setViewMode("list")}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search contacts..."
@@ -216,7 +237,7 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
             </div>
             
             <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-              <SelectTrigger className="w-[180px] bg-white/80 dark:bg-slate-800/80">
+              <SelectTrigger className="w-full sm:w-[180px] bg-white/80 dark:bg-slate-800/80">
                 <SelectValue placeholder="Department" />
               </SelectTrigger>
               <SelectContent>
@@ -225,135 +246,111 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
                 ))}
               </SelectContent>
             </Select>
-            
-            <div className="flex items-center border rounded-md bg-white/80 dark:bg-slate-800/80">
-              <Button
-                variant={viewMode === "grid" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         </div>
       </CardHeader>
       
       <CardContent className="pt-0">
-        <ScrollArea className="max-h-[400px]">
-          <div className="space-y-3">
-            <AnimatePresence>
-              {filteredSections.map((section) => (
-                <Collapsible
-                  key={section.id}
-                  open={openSections[section.id]}
-                  onOpenChange={() => toggleSection(section.id)}
-                >
-                  <CollapsibleTrigger asChild>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="w-full flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg cursor-pointer hover-elevate"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 rounded-md">
-                          <section.icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <span className="font-medium text-sm">{section.title}</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {section.contacts.length}
-                        </Badge>
+        <div className="space-y-2">
+          <AnimatePresence>
+            {filteredSections.map((section) => (
+              <Collapsible
+                key={section.id}
+                open={openSections[section.id]}
+                onOpenChange={() => toggleSection(section.id)}
+              >
+                <CollapsibleTrigger asChild>
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg cursor-pointer hover-elevate"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded-md bg-blue-500/10 dark:bg-blue-400/10">
+                        <section.icon className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                       </div>
-                      {openSections[section.id] ? (
-                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </motion.div>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent>
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className={`mt-2 ${viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2" : "space-y-2"}`}
-                    >
-                      {section.contacts.map((contact) => (
-                        <motion.div
-                          key={contact.id}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className={`
-                            ${viewMode === "grid" 
-                              ? "p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700" 
-                              : "p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between"
-                            }
-                            ${contact.isEmergency ? "ring-2 ring-red-400 dark:ring-red-600" : ""}
-                          `}
-                        >
-                          <div className={viewMode === "list" ? "flex items-center gap-4 flex-1" : ""}>
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                {contact.isEmergency && (
-                                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                                )}
-                                <span className="font-medium text-sm truncate">{contact.name}</span>
-                              </div>
-                            </div>
-                            
-                            <div className={viewMode === "list" ? "flex items-center gap-4" : "space-y-1"}>
-                              <p className="text-xs text-muted-foreground">{contact.role}</p>
-                              {contact.department && (
-                                <Badge variant="outline" className="text-xs">
-                                  {contact.department}
-                                </Badge>
-                              )}
-                              <p className="text-xs font-mono text-blue-600 dark:text-blue-400">{contact.mobile}</p>
-                            </div>
+                      <span className="font-medium text-sm">{section.title}</span>
+                      <span className="text-xs text-muted-foreground font-medium ml-1">
+                        {section.contacts.length}
+                      </span>
+                    </div>
+                    <ChevronDown 
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${openSections[section.id] ? "rotate-180" : ""}`} 
+                    />
+                  </motion.div>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className={`mt-2 mb-2 pl-2 ${viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" : "space-y-2"}`}
+                  >
+                    {section.contacts.map((contact) => (
+                      <motion.div
+                        key={contact.id}
+                        initial={{ opacity: 0, x: -5 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className={`
+                          p-3 bg-white dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-700/50
+                          ${viewMode === "list" ? "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : ""}
+                          ${contact.isEmergency ? "ring-2 ring-red-400/60 dark:ring-red-500/50" : ""}
+                        `}
+                      >
+                        <div className={viewMode === "list" ? "flex-1" : ""}>
+                          <div className="flex items-center gap-2 mb-1">
+                            {contact.isEmergency && (
+                              <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+                            )}
+                            <span className="font-medium text-sm truncate">{contact.name}</span>
                           </div>
                           
-                          <div className={`flex items-center gap-1 ${viewMode === "grid" ? "mt-3" : ""}`}>
-                            <Button
-                              size="sm"
-                              onClick={() => handleCall(contact.mobile)}
-                            >
-                              <Phone className="h-3.5 w-3.5 mr-1" />
-                              Call
-                            </Button>
-                            {contact.whatsapp && (
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => handleWhatsApp(contact.whatsapp!)}
-                              >
-                                <MessageCircle className="h-4 w-4" />
-                              </Button>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span>{contact.role}</span>
+                            {contact.department && (
+                              <>
+                                <span className="text-slate-300 dark:text-slate-600">|</span>
+                                <span>{contact.department}</span>
+                              </>
                             )}
                           </div>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-            </AnimatePresence>
-            
-            {filteredSections.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No contacts found matching your search.</p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+                          <p className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-1">{contact.mobile}</p>
+                        </div>
+                        
+                        <div className={`flex items-center gap-1.5 ${viewMode === "grid" ? "mt-3" : "mt-2 sm:mt-0"}`}>
+                          <Button
+                            size="sm"
+                            onClick={() => handleCall(contact.mobile)}
+                          >
+                            <Phone className="h-3.5 w-3.5 mr-1" />
+                            Call
+                          </Button>
+                          {contact.whatsapp && (
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => handleWhatsApp(contact.whatsapp!)}
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </CollapsibleContent>
+              </Collapsible>
+            ))}
+          </AnimatePresence>
+          
+          {filteredSections.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>No contacts found matching your search.</p>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
