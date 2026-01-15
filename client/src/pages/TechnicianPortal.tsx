@@ -671,18 +671,6 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="findings">Test Findings / Report *</Label>
-              <Textarea
-                id="findings"
-                value={reportForm.findings}
-                onChange={(e) => setReportForm({ ...reportForm, findings: e.target.value })}
-                placeholder="Enter detailed findings of the test (e.g., observations, measurements, impressions)..."
-                rows={4}
-                data-testid="input-findings"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="recommendations">Recommendations (Optional)</Label>
               <Textarea
                 id="recommendations"
@@ -746,17 +734,6 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
                   <Label className="text-muted-foreground text-xs">Report Date</Label>
                   <p className="font-medium">{selectedReport.reportDate}</p>
                 </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <Label className="text-muted-foreground text-xs">Test Findings / Report</Label>
-                {selectedReport.findings ? (
-                  <div className="mt-2 p-4 bg-muted rounded-md whitespace-pre-wrap text-sm">
-                    {selectedReport.findings}
-                  </div>
-                ) : (
-                  <p className="mt-2 text-muted-foreground italic text-sm">No findings recorded</p>
-                )}
               </div>
 
               {selectedReport.recommendations && (
