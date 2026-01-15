@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Phone,
@@ -11,8 +10,7 @@ import {
   Search,
   LayoutGrid,
   List,
-  ChevronDown,
-  AlertTriangle,
+    AlertTriangle,
   Building2,
   Stethoscope,
   UserCog,
@@ -118,21 +116,7 @@ const HOSPITAL_CONTACTS: ContactSection[] = [
 export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    management: true,
-    anaesthesia: true,
-    reference: true,
-    inhouse: true,
-    technicians: true,
-    icu: true
-  });
-
-  const toggleSection = (sectionId: string) => {
-    setOpenSections(prev => ({
-      ...prev,
-      [sectionId]: !prev[sectionId]
-    }));
-  };
+  const [activeSection, setActiveSection] = useState<string>("management");
 
   const filteredSections = useMemo(() => {
     return HOSPITAL_CONTACTS.map(section => {
@@ -210,106 +194,98 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
       </CardHeader>
       
       <CardContent className="pt-0">
-        <ScrollArea className="max-h-[500px]">
-          <div className="space-y-2">
-            <AnimatePresence>
-              {filteredSections.map((section) => (
-                <Collapsible
-                  key={section.id}
-                  open={openSections[section.id]}
-                  onOpenChange={() => toggleSection(section.id)}
-                >
-                  <CollapsibleTrigger asChild>
-                    <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg cursor-pointer hover-elevate"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-md bg-blue-500/10 dark:bg-blue-400/10">
-                          <section.icon className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                        </div>
-                        <span className="font-medium text-sm">{section.title}</span>
-                        <span className="text-xs text-muted-foreground font-medium ml-1">
-                          {section.contacts.length}
-                        </span>
-                      </div>
-                      <ChevronDown 
-                        className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${openSections[section.id] ? "rotate-180" : ""}`} 
-                      />
-                    </motion.div>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className={`mt-2 mb-2 ${viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" : "space-y-2"}`}
-                    >
-                      {section.contacts.map((contact) => (
-                        <div
-                          key={contact.id}
-                          className={`
-                            p-3 bg-white dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-700/50
-                            ${viewMode === "list" ? "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : ""}
-                            ${contact.isEmergency ? "ring-2 ring-red-400/60 dark:ring-red-500/50" : ""}
-                          `}
-                        >
-                          <div className={viewMode === "list" ? "flex-1" : ""}>
-                            <div className="flex items-center gap-2 mb-1">
-                              {contact.isEmergency && (
-                                <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
-                              )}
-                              <span className="font-medium text-sm truncate">{contact.name}</span>
-                            </div>
-                            
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                              <span>{contact.role}</span>
-                              {contact.department && (
-                                <>
-                                  <span className="text-slate-300 dark:text-slate-600">|</span>
-                                  <span>{contact.department}</span>
-                                </>
-                              )}
-                            </div>
-                            <p className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-1">{contact.mobile}</p>
-                          </div>
-                          
-                          <div className={`flex items-center gap-1.5 ${viewMode === "grid" ? "mt-3" : "mt-2 sm:mt-0"}`}>
-                            <Button
-                              size="sm"
-                              onClick={() => handleCall(contact.mobile)}
-                            >
-                              <Phone className="h-3.5 w-3.5 mr-1" />
-                              Call
-                            </Button>
-                            {contact.whatsapp && (
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => handleWhatsApp(contact.whatsapp!)}
-                              >
-                                <MessageCircle className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-            </AnimatePresence>
-            
-            {filteredSections.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No contacts found matching your search.</p>
-              </div>
-            )}
+        <ScrollArea className="w-full pb-2">
+          <div className="flex gap-2 mb-4">
+            {filteredSections.map((section) => (
+              <Button
+                key={section.id}
+                variant={activeSection === section.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveSection(section.id)}
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                <section.icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{section.title}</span>
+                <span className="text-xs opacity-70">{section.contacts.length}</span>
+              </Button>
+            ))}
           </div>
         </ScrollArea>
+        
+        <AnimatePresence mode="wait">
+          {filteredSections.map((section) => (
+            activeSection === section.id && (
+              <motion.div
+                key={section.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ScrollArea className="max-h-[350px]">
+                  <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" : "space-y-2"}>
+                    {section.contacts.map((contact) => (
+                      <div
+                        key={contact.id}
+                        className={`
+                          p-3 bg-white dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-700/50
+                          ${viewMode === "list" ? "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : ""}
+                          ${contact.isEmergency ? "ring-2 ring-red-400/60 dark:ring-red-500/50" : ""}
+                        `}
+                      >
+                        <div className={viewMode === "list" ? "flex-1" : ""}>
+                          <div className="flex items-center gap-2 mb-1">
+                            {contact.isEmergency && (
+                              <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+                            )}
+                            <span className="font-medium text-sm truncate">{contact.name}</span>
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span>{contact.role}</span>
+                            {contact.department && (
+                              <>
+                                <span className="text-slate-300 dark:text-slate-600">|</span>
+                                <span>{contact.department}</span>
+                              </>
+                            )}
+                          </div>
+                          <p className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-1">{contact.mobile}</p>
+                        </div>
+                        
+                        <div className={`flex items-center gap-1.5 ${viewMode === "grid" ? "mt-3" : "mt-2 sm:mt-0"}`}>
+                          <Button
+                            size="sm"
+                            onClick={() => handleCall(contact.mobile)}
+                          >
+                            <Phone className="h-3.5 w-3.5 mr-1" />
+                            Call
+                          </Button>
+                          {contact.whatsapp && (
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => handleWhatsApp(contact.whatsapp!)}
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </motion.div>
+            )
+          ))}
+        </AnimatePresence>
+        
+        {filteredSections.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p>No contacts found matching your search.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
