@@ -1,0 +1,292 @@
+🧲 RADIOLOGY MODULE – MASTER SCAN LIST
+1️⃣ CT SCAN (Computed Tomography)
+CT Brain
+
+Plain CT Brain
+
+CT Brain with Contrast
+
+CT Brain Trauma
+
+CT Brain Stroke Protocol
+
+CT Brain Angiography
+
+CT Brain Venography
+
+CT Head & Neck
+
+CT PNS
+
+CT Orbit
+
+CT Temporal Bone
+
+CT Neck Soft Tissue
+
+CT Neck Angiography
+
+CT Chest
+
+CT Chest Plain
+
+CT Chest Contrast
+
+HRCT Chest
+
+CT Pulmonary Angiography (CTPA)
+
+CT Chest Trauma
+
+CT Abdomen & Pelvis
+
+CT Abdomen Plain
+
+CT Abdomen with Contrast
+
+CT KUB
+
+CT Abdomen + Pelvis
+
+CT Triple Phase Liver
+
+CT Pancreas Protocol
+
+CT Urography
+
+CT Spine
+
+CT Cervical Spine
+
+CT Dorsal Spine
+
+CT Lumbar Spine
+
+CT Whole Spine
+
+CT Spine Trauma
+
+CT Cardiac & Vascular
+
+CT Coronary Angiography
+
+CT Aortogram
+
+CT Peripheral Angiography
+
+CT Renal Angiography
+
+CT Mesenteric Angiography
+
+2️⃣ MRI (Magnetic Resonance Imaging)
+MRI Brain
+
+MRI Brain Plain
+
+MRI Brain with Contrast
+
+MRI Brain Epilepsy Protocol
+
+MRI Brain Stroke Protocol
+
+MRI Brain Tumor Protocol
+
+MRI Brain Angiography (MRA)
+
+MR Venography (MRV)
+
+MRI Spine
+
+MRI Cervical Spine
+
+MRI Dorsal Spine
+
+MRI Lumbar Spine
+
+MRI Whole Spine
+
+MRI Head & Neck
+
+MRI Orbit
+
+MRI PNS
+
+MRI Internal Auditory Canal (IAC)
+
+MRI Neck Soft Tissue
+
+MRI Chest & Abdomen
+
+MRI Liver
+
+MRCP
+
+MRI Pancreas
+
+MRI Abdomen
+
+MRI Pelvis
+
+MRI Musculoskeletal
+
+MRI Knee
+
+MRI Shoulder
+
+MRI Ankle
+
+MRI Wrist
+
+MRI Hip
+
+MRI Elbow
+
+MRI Cardiac & Vascular
+
+Cardiac MRI
+
+MR Angiography (Peripheral)
+
+MR Renal Angiography
+
+3️⃣ USG (Ultrasound / Sonography)
+General Ultrasound
+
+USG Whole Abdomen
+
+USG Upper Abdomen
+
+USG Lower Abdomen
+
+USG KUB
+
+USG Pelvis (Male/Female)
+
+Obstetric & Gynec
+
+USG Early Pregnancy
+
+USG NT Scan
+
+USG Anomaly Scan
+
+USG Growth Scan
+
+USG Doppler Pregnancy
+
+USG TVS
+
+Small Parts
+
+USG Thyroid
+
+USG Breast
+
+USG Scrotum
+
+USG Soft Tissue
+
+USG Neck
+
+Doppler Studies
+
+Carotid Doppler
+
+Venous Doppler (Upper / Lower Limb)
+
+Arterial Doppler (Upper / Lower Limb)
+
+Renal Doppler
+
+Portal Doppler
+
+Obstetric Doppler
+
+Interventional USG
+
+USG Guided FNAC
+
+USG Guided Biopsy
+
+USG Guided Drainage
+
+4️⃣ X-RAY (Digital Radiography)
+Chest
+
+X-Ray Chest PA
+
+X-Ray Chest AP
+
+X-Ray Chest Lateral
+
+Abdomen
+
+X-Ray Abdomen Erect
+
+X-Ray Abdomen Supine
+
+Spine
+
+X-Ray Cervical Spine
+
+X-Ray Dorsal Spine
+
+X-Ray Lumbar Spine
+
+X-Ray Whole Spine
+
+Limbs & Joints
+
+X-Ray Shoulder
+
+X-Ray Elbow
+
+X-Ray Wrist
+
+X-Ray Hand
+
+X-Ray Hip
+
+X-Ray Knee
+
+X-Ray Ankle
+
+X-Ray Foot
+
+Skull & Face
+
+X-Ray Skull
+
+X-Ray PNS
+
+X-Ray Mandible
+
+X-Ray Nasal Bone
+
+Special X-Rays
+
+IVP
+
+MCU
+
+HSG
+
+Barium Swallow
+
+Barium Meal
+
+Barium Enema
+
+5️⃣ SPECIAL RADIOLOGY / ADVANCED STUDIES
+
+CT Angiography
+
+MR Angiography
+
+CT / MRI Enterography
+
+CT / MRI Fistulogram
+
+PET-CT (if oncology)
+
+Bone Densitometry (DEXA)

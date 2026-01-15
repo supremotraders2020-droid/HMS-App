@@ -46,8 +46,11 @@ import {
   Send,
   Stethoscope,
   Activity,
-  RefreshCw
+  RefreshCw,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -353,9 +356,10 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
       </div>
 
       <Tabs defaultValue="pending" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="pending" data-testid="tab-pending">Upcoming Tests</TabsTrigger>
           <TabsTrigger value="reports" data-testid="tab-reports">Submitted Reports</TabsTrigger>
+          <TabsTrigger value="scans" data-testid="tab-scans">Scan Catalog</TabsTrigger>
           <TabsTrigger value="notifications" data-testid="tab-notifications">Notifications</TabsTrigger>
         </TabsList>
 
@@ -519,6 +523,10 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="scans" className="space-y-4">
+          <ScanCatalogTab />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-4">
@@ -752,5 +760,175 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Radiology Master Scan List
+const RADIOLOGY_SCAN_CATALOG = {
+  CT_SCAN: {
+    title: "CT SCAN (Computed Tomography)",
+    subcategories: [
+      { name: "CT Brain", scans: ["Plain CT Brain", "CT Brain with Contrast", "CT Brain Trauma", "CT Brain Stroke Protocol", "CT Brain Angiography", "CT Brain Venography"] },
+      { name: "CT Head & Neck", scans: ["CT PNS", "CT Orbit", "CT Temporal Bone", "CT Neck Soft Tissue", "CT Neck Angiography"] },
+      { name: "CT Chest", scans: ["CT Chest Plain", "CT Chest Contrast", "HRCT Chest", "CT Pulmonary Angiography (CTPA)", "CT Chest Trauma"] },
+      { name: "CT Abdomen & Pelvis", scans: ["CT Abdomen Plain", "CT Abdomen with Contrast", "CT KUB", "CT Abdomen + Pelvis", "CT Triple Phase Liver", "CT Pancreas Protocol", "CT Urography"] },
+      { name: "CT Spine", scans: ["CT Cervical Spine", "CT Dorsal Spine", "CT Lumbar Spine", "CT Whole Spine", "CT Spine Trauma"] },
+      { name: "CT Cardiac & Vascular", scans: ["CT Coronary Angiography", "CT Aortogram", "CT Peripheral Angiography", "CT Renal Angiography", "CT Mesenteric Angiography"] }
+    ]
+  },
+  MRI: {
+    title: "MRI (Magnetic Resonance Imaging)",
+    subcategories: [
+      { name: "MRI Brain", scans: ["MRI Brain Plain", "MRI Brain with Contrast", "MRI Brain Epilepsy Protocol", "MRI Brain Stroke Protocol", "MRI Brain Tumor Protocol", "MRI Brain Angiography (MRA)", "MR Venography (MRV)"] },
+      { name: "MRI Spine", scans: ["MRI Cervical Spine", "MRI Dorsal Spine", "MRI Lumbar Spine", "MRI Whole Spine"] },
+      { name: "MRI Head & Neck", scans: ["MRI Orbit", "MRI PNS", "MRI Internal Auditory Canal (IAC)", "MRI Neck Soft Tissue"] },
+      { name: "MRI Chest & Abdomen", scans: ["MRI Liver", "MRCP", "MRI Pancreas", "MRI Abdomen", "MRI Pelvis"] },
+      { name: "MRI Musculoskeletal", scans: ["MRI Knee", "MRI Shoulder", "MRI Ankle", "MRI Wrist", "MRI Hip", "MRI Elbow"] },
+      { name: "MRI Cardiac & Vascular", scans: ["Cardiac MRI", "MR Angiography (Peripheral)", "MR Renal Angiography"] }
+    ]
+  },
+  USG: {
+    title: "USG (Ultrasound / Sonography)",
+    subcategories: [
+      { name: "General Ultrasound", scans: ["USG Whole Abdomen", "USG Upper Abdomen", "USG Lower Abdomen", "USG KUB", "USG Pelvis (Male/Female)"] },
+      { name: "Obstetric & Gynec", scans: ["USG Early Pregnancy", "USG NT Scan", "USG Anomaly Scan", "USG Growth Scan", "USG Doppler Pregnancy", "USG TVS"] },
+      { name: "Small Parts", scans: ["USG Thyroid", "USG Breast", "USG Scrotum", "USG Soft Tissue", "USG Neck"] },
+      { name: "Doppler Studies", scans: ["Carotid Doppler", "Venous Doppler (Upper / Lower Limb)", "Arterial Doppler (Upper / Lower Limb)", "Renal Doppler", "Portal Doppler", "Obstetric Doppler"] },
+      { name: "Interventional USG", scans: ["USG Guided FNAC", "USG Guided Biopsy", "USG Guided Drainage"] }
+    ]
+  },
+  XRAY: {
+    title: "X-RAY (Digital Radiography)",
+    subcategories: [
+      { name: "Chest", scans: ["X-Ray Chest PA", "X-Ray Chest AP", "X-Ray Chest Lateral"] },
+      { name: "Abdomen", scans: ["X-Ray Abdomen Erect", "X-Ray Abdomen Supine"] },
+      { name: "Spine", scans: ["X-Ray Cervical Spine", "X-Ray Dorsal Spine", "X-Ray Lumbar Spine", "X-Ray Whole Spine"] },
+      { name: "Limbs & Joints", scans: ["X-Ray Shoulder", "X-Ray Elbow", "X-Ray Wrist", "X-Ray Hand", "X-Ray Hip", "X-Ray Knee", "X-Ray Ankle", "X-Ray Foot"] },
+      { name: "Skull & Face", scans: ["X-Ray Skull", "X-Ray PNS", "X-Ray Mandible", "X-Ray Nasal Bone"] },
+      { name: "Special X-Rays", scans: ["IVP", "MCU", "HSG", "Barium Swallow", "Barium Meal", "Barium Enema"] }
+    ]
+  },
+  SPECIAL: {
+    title: "Special Radiology / Advanced Studies",
+    subcategories: [
+      { name: "Advanced Studies", scans: ["CT Angiography", "MR Angiography", "CT / MRI Enterography", "CT / MRI Fistulogram", "PET-CT (if oncology)", "Bone Densitometry (DEXA)"] }
+    ]
+  }
+};
+
+function ScanCatalogTab() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(["CT_SCAN"]);
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category) 
+        : [...prev, category]
+    );
+  };
+
+  const filterScans = (scans: string[]) => {
+    if (!searchTerm) return scans;
+    return scans.filter(scan => scan.toLowerCase().includes(searchTerm.toLowerCase()));
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch(category) {
+      case "CT_SCAN": return <Activity className="w-5 h-5 text-blue-500" />;
+      case "MRI": return <Activity className="w-5 h-5 text-purple-500" />;
+      case "USG": return <Activity className="w-5 h-5 text-green-500" />;
+      case "XRAY": return <Activity className="w-5 h-5 text-amber-500" />;
+      case "SPECIAL": return <Activity className="w-5 h-5 text-red-500" />;
+      default: return <Activity className="w-5 h-5" />;
+    }
+  };
+
+  const totalScans = Object.values(RADIOLOGY_SCAN_CATALOG).reduce(
+    (total, category) => total + category.subcategories.reduce((sum, sub) => sum + sub.scans.length, 0), 0
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div>
+            <CardTitle>Radiology Scan Catalog</CardTitle>
+            <CardDescription>Complete list of {totalScans} available diagnostic scans</CardDescription>
+          </div>
+          <div className="flex-1">
+            <div className="relative max-w-md ml-auto">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search scans..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[500px]">
+          <div className="space-y-4">
+            {Object.entries(RADIOLOGY_SCAN_CATALOG).map(([key, category]) => {
+              const hasMatchingScans = category.subcategories.some(sub => filterScans(sub.scans).length > 0);
+              if (searchTerm && !hasMatchingScans) return null;
+              
+              return (
+                <div key={key} className="border rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => toggleCategory(key)}
+                    className="w-full flex items-center justify-between p-4 bg-muted/50 text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      {getCategoryIcon(key)}
+                      <span className="font-semibold">{category.title}</span>
+                      <Badge variant="secondary" className="ml-2">
+                        {category.subcategories.reduce((sum, sub) => sum + sub.scans.length, 0)} scans
+                      </Badge>
+                    </div>
+                    {expandedCategories.includes(key) ? (
+                      <ChevronDown className="w-5 h-5" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5" />
+                    )}
+                  </button>
+                  
+                  {expandedCategories.includes(key) && (
+                    <div className="p-4 space-y-4">
+                      {category.subcategories.map((subcategory, idx) => {
+                        const filteredScans = filterScans(subcategory.scans);
+                        if (searchTerm && filteredScans.length === 0) return null;
+                        
+                        return (
+                          <div key={idx} className="space-y-2">
+                            <h4 className="font-medium text-sm text-muted-foreground border-b pb-1">
+                              {subcategory.name}
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                              {filteredScans.map((scan, scanIdx) => (
+                                <div 
+                                  key={scanIdx}
+                                  className="flex items-center gap-2 p-2 bg-background border rounded-md text-sm"
+                                >
+                                  <div className="w-2 h-2 rounded-full bg-primary/60" />
+                                  {scan}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 }
