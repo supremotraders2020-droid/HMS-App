@@ -211,12 +211,12 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
                 placeholder="Search contacts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 bg-white/80 dark:bg-slate-800/80"
+                className="pl-9 bg-white/80 dark:bg-slate-800/80"
               />
             </div>
             
             <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-              <SelectTrigger className="w-[180px] h-9 bg-white/80 dark:bg-slate-800/80">
+              <SelectTrigger className="w-[180px] bg-white/80 dark:bg-slate-800/80">
                 <SelectValue placeholder="Department" />
               </SelectTrigger>
               <SelectContent>
@@ -229,16 +229,14 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
             <div className="flex items-center border rounded-md bg-white/80 dark:bg-slate-800/80">
               <Button
                 variant={viewMode === "grid" ? "secondary" : "ghost"}
-                size="sm"
-                className="h-9 px-3"
+                size="icon"
                 onClick={() => setViewMode("grid")}
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
               <Button
                 variant={viewMode === "list" ? "secondary" : "ghost"}
-                size="sm"
-                className="h-9 px-3"
+                size="icon"
                 onClick={() => setViewMode("list")}
               >
                 <List className="h-4 w-4" />
@@ -262,7 +260,7 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="w-full flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg cursor-pointer hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
+                      className="w-full flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg cursor-pointer hover-elevate"
                     >
                       <div className="flex items-center gap-3">
                         <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 rounded-md">
@@ -325,8 +323,6 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
                           <div className={`flex items-center gap-1 ${viewMode === "grid" ? "mt-3" : ""}`}>
                             <Button
                               size="sm"
-                              variant="default"
-                              className="h-8 px-3 bg-green-600 hover:bg-green-700"
                               onClick={() => handleCall(contact.mobile)}
                             >
                               <Phone className="h-3.5 w-3.5 mr-1" />
@@ -334,12 +330,11 @@ export function ContactsSpeedDial({ currentRole }: ContactsSpeedDialProps) {
                             </Button>
                             {contact.whatsapp && (
                               <Button
-                                size="sm"
+                                size="icon"
                                 variant="outline"
-                                className="h-8 px-2 text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-950"
                                 onClick={() => handleWhatsApp(contact.whatsapp!)}
                               >
-                                <MessageCircle className="h-3.5 w-3.5" />
+                                <MessageCircle className="h-4 w-4" />
                               </Button>
                             )}
                           </div>
