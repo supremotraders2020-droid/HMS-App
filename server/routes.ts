@@ -14341,7 +14341,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         reportDate: report.reportDate ? new Date(report.reportDate).toLocaleDateString() : new Date().toLocaleDateString(),
         findings: report.findings,
         conclusion: report.conclusion,
+        recommendations: report.recommendations,
         attachmentUrl: report.fileData,
+        fileData: report.fileData,
+        fileName: report.fileName,
         status: report.status || "SUBMITTED",
         createdAt: report.createdAt
       }));

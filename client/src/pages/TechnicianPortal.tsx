@@ -85,6 +85,7 @@ interface TechnicianReport {
   technicianId: string;
   technicianName: string;
   reportDate: string;
+  findings?: string;
   recommendations?: string;
   fileName?: string;
   fileData?: string;
@@ -131,6 +132,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
   const [selectedReport, setSelectedReport] = useState<TechnicianReport | null>(null);
   
   const [reportForm, setReportForm] = useState({
+    findings: "",
     recommendations: "",
     attachmentFile: null as File | null
   });
@@ -150,6 +152,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
   const submitReportMutation = useMutation({
     mutationFn: async (data: { 
       testOrderId: string; 
+      findings: string;
       recommendations: string;
       fileName?: string;
       fileType?: string;
@@ -169,7 +172,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
       queryClient.invalidateQueries({ queryKey: ["/api/technician/reports"] });
       setIsUploadDialogOpen(false);
       setSelectedTest(null);
-      setReportForm({ recommendations: "", attachmentFile: null });
+      setReportForm({ findings: "", recommendations: "", attachmentFile: null });
     },
     onError: () => {
       toast({
@@ -248,6 +251,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
 
     submitReportMutation.mutate({
       testOrderId: selectedTest.id,
+      findings: reportForm.findings,
       recommendations: reportForm.recommendations,
       fileName,
       fileType,
@@ -667,6 +671,18 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="findings">Test Findings / Report *</Label>
+              <Textarea
+                id="findings"
+                value={reportForm.findings}
+                onChange={(e) => setReportForm({ ...reportForm, findings: e.target.value })}
+                placeholder="Enter detailed findings of the test (e.g., observations, measurements, impressions)..."
+                rows={4}
+                data-testid="input-findings"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="recommendations">Recommendations (Optional)</Label>
               <Textarea
                 id="recommendations"
@@ -704,7 +720,7 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
       </Dialog>
 
       <Dialog open={isViewReportDialogOpen} onOpenChange={setIsViewReportDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>View Report</DialogTitle>
             <DialogDescription>
@@ -715,34 +731,49 @@ export default function TechnicianPortal({ currentUserId, currentUserName, curre
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">Patient</Label>
+                  <Label className="text-muted-foreground text-xs">Patient</Label>
                   <p className="font-medium">{selectedReport.patientName}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Test</Label>
+                  <Label className="text-muted-foreground text-xs">Test</Label>
                   <p className="font-medium">{selectedReport.testName}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Department</Label>
+                  <Label className="text-muted-foreground text-xs">Department</Label>
                   <p className="font-medium">{selectedReport.department}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Report Date</Label>
+                  <Label className="text-muted-foreground text-xs">Report Date</Label>
                   <p className="font-medium">{selectedReport.reportDate}</p>
                 </div>
               </div>
+
+              <div className="border-t pt-4">
+                <Label className="text-muted-foreground text-xs">Test Findings / Report</Label>
+                {selectedReport.findings ? (
+                  <div className="mt-2 p-4 bg-muted rounded-md whitespace-pre-wrap text-sm">
+                    {selectedReport.findings}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-muted-foreground italic text-sm">No findings recorded</p>
+                )}
+              </div>
+
               {selectedReport.recommendations && (
                 <div>
-                  <Label className="text-muted-foreground">Recommendations</Label>
-                  <p className="mt-1 p-3 bg-muted rounded-md">{selectedReport.recommendations}</p>
+                  <Label className="text-muted-foreground text-xs">Recommendations</Label>
+                  <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md text-sm">
+                    {selectedReport.recommendations}
+                  </div>
                 </div>
               )}
+
               {selectedReport.fileData && (
                 <div>
-                  <Label className="text-muted-foreground">Attached Report</Label>
-                  <div className="mt-1 p-3 bg-muted rounded-md flex items-center gap-2">
+                  <Label className="text-muted-foreground text-xs">Attached Report File</Label>
+                  <div className="mt-2 p-3 bg-muted rounded-md flex items-center gap-2">
                     <FileText className="w-5 h-5 text-primary" />
-                    <span>{selectedReport.fileName || 'Report file'}</span>
+                    <span className="text-sm">{selectedReport.fileName || 'Report file'}</span>
                   </div>
                 </div>
               )}
