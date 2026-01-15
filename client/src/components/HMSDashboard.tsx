@@ -38,6 +38,7 @@ import {
 import type { ActivityLog, Appointment, ServicePatient, CriticalAlert } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { ContactsSpeedDial } from "@/components/ContactsSpeedDial";
 
 type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB" | "TECHNICIAN";
 
@@ -515,6 +516,11 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
             </div>
           </div>
         </motion.div>
+
+        {/* Hospital Speed Dial - For Admin, Doctor, Nurse, OPD Manager */}
+        {(currentRole === "ADMIN" || currentRole === "DOCTOR" || currentRole === "NURSE" || currentRole === "OPD_MANAGER") && (
+          <ContactsSpeedDial currentRole={currentRole} />
+        )}
 
         {/* OPD Info Section - Only for OPD Manager */}
         {currentRole === "OPD_MANAGER" && (
