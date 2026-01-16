@@ -769,20 +769,21 @@ export default function PatientMonitoringPage() {
                   toast({ title: "Generating Report", description: "Fetching all patient data..." });
                   try {
                     const sessionId = selectedSession.id;
+                    const fetchOpts = { credentials: 'include' as RequestCredentials };
                     const [vitals, injections, mar, ventilator, abgLab, intake, output, diabetic, onceOnly, shiftNotes, airway, dutyStaff, allergies] = await Promise.all([
-                      fetch(`/api/patient-monitoring/vitals/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/inotropes/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/mar/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/ventilator/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/abg-lab/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/intake/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/output/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/diabetic/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/once-only/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/shift-notes/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/airway/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/duty-staff/${sessionId}`).then(r => r.json()).catch(() => []),
-                      fetch(`/api/patient-monitoring/allergies/${sessionId}`).then(r => r.json()).catch(() => [])
+                      fetch(`/api/patient-monitoring/vitals/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/inotropes/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/mar/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/ventilator/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/abg-lab/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/intake/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/output/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/diabetic/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/once-only/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/shift-notes/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/airway/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/duty-staff/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
+                      fetch(`/api/patient-monitoring/allergies/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => [])
                     ]);
                     
                     const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN') : '-';
