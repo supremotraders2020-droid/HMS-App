@@ -5372,3 +5372,657 @@ export const icuDoctorNurseNotes = pgTable("icu_doctor_nurse_notes", {
 export const insertIcuDoctorNurseNotesSchema = createInsertSchema(icuDoctorNurseNotes).omit({ id: true, createdAt: true });
 export type InsertIcuDoctorNurseNotes = z.infer<typeof insertIcuDoctorNurseNotesSchema>;
 export type IcuDoctorNurseNotes = typeof icuDoctorNurseNotes.$inferSelect;
+
+// =====================================================
+// OPERATION & OT MODULE - Surgical Workflow System
+// =====================================================
+
+// OT Case Status Enum
+export const otCaseStatusEnum = pgEnum("ot_case_status", ["SCHEDULED", "PRE_OP", "INTRA_OP", "POST_OP", "COMPLETED", "CANCELLED"]);
+
+// Master OT Case table - links to patient, OPD/IPD
+export const otCases = pgTable("ot_cases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  uhid: text("uhid").notNull(),
+  opdVisitId: varchar("opd_visit_id"),
+  ipdAdmissionId: varchar("ipd_admission_id"),
+  surgeonId: varchar("surgeon_id").notNull(),
+  surgeonName: text("surgeon_name").notNull(),
+  anaesthetistId: varchar("anaesthetist_id"),
+  anaesthetistName: text("anaesthetist_name"),
+  otRoom: text("ot_room").notNull(),
+  procedureName: text("procedure_name").notNull(),
+  procedureCode: text("procedure_code"),
+  diagnosis: text("diagnosis"),
+  scheduledDate: text("scheduled_date").notNull(),
+  scheduledTime: text("scheduled_time").notNull(),
+  estimatedDuration: integer("estimated_duration"), // in minutes
+  urgencyLevel: text("urgency_level").default("elective"), // elective, urgent, emergency
+  status: text("status").default("SCHEDULED"),
+  createdBy: varchar("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOtCaseSchema = createInsertSchema(otCases).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertOtCase = z.infer<typeof insertOtCaseSchema>;
+export type OtCase = typeof otCases.$inferSelect;
+
+// OT Case Team Members
+export const otCaseTeam = pgTable("ot_case_team", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  staffId: varchar("staff_id").notNull(),
+  staffName: text("staff_name").notNull(),
+  role: text("role").notNull(), // SURGEON, ANAESTHETIST, OT_NURSE, ASSISTANT
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  assignedBy: varchar("assigned_by"),
+});
+
+export const insertOtCaseTeamSchema = createInsertSchema(otCaseTeam).omit({ id: true, assignedAt: true });
+export type InsertOtCaseTeam = z.infer<typeof insertOtCaseTeamSchema>;
+export type OtCaseTeam = typeof otCaseTeam.$inferSelect;
+
+// Pre-Op Counselling Form
+export const otPreopCounselling = pgTable("ot_preop_counselling", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  counsellingDateTime: timestamp("counselling_datetime").defaultNow(),
+  procedureExplained: boolean("procedure_explained").default(false),
+  risksExplained: text("risks_explained"), // JSON array of risks discussed
+  alternativesDiscussed: text("alternatives_discussed"),
+  expectedOutcome: text("expected_outcome"),
+  recoveryTimeline: text("recovery_timeline"),
+  patientQuestions: text("patient_questions"),
+  patientUnderstandingConfirmed: boolean("patient_understanding_confirmed").default(false),
+  patientSignature: text("patient_signature"),
+  patientSignedAt: timestamp("patient_signed_at"),
+  doctorSignature: text("doctor_signature"),
+  doctorId: varchar("doctor_id"),
+  doctorName: text("doctor_name"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtPreopCounsellingSchema = createInsertSchema(otPreopCounselling).omit({ id: true, createdAt: true });
+export type InsertOtPreopCounselling = z.infer<typeof insertOtPreopCounsellingSchema>;
+export type OtPreopCounselling = typeof otPreopCounselling.$inferSelect;
+
+// Pre-Op Checklist (NABH Compliant)
+export const otPreopChecklist = pgTable("ot_preop_checklist", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  // Patient Identification
+  patientIdentityVerified: boolean("patient_identity_verified").default(false),
+  wristbandVerified: boolean("wristband_verified").default(false),
+  allergiesDocumented: boolean("allergies_documented").default(false),
+  allergyDetails: text("allergy_details"),
+  // Consent
+  consentSigned: boolean("consent_signed").default(false),
+  siteMarked: boolean("site_marked").default(false),
+  siteMarkingVerified: boolean("site_marking_verified").default(false),
+  // Pre-Op Preparation
+  npoStatus: boolean("npo_status").default(false),
+  npoHours: integer("npo_hours"),
+  preOpMedsGiven: boolean("preop_meds_given").default(false),
+  preOpMedsDetails: text("preop_meds_details"),
+  bloodTypeCrossmatched: boolean("blood_type_crossmatched").default(false),
+  bloodUnits: integer("blood_units"),
+  // Investigations
+  labsReviewed: boolean("labs_reviewed").default(false),
+  ecgReviewed: boolean("ecg_reviewed").default(false),
+  xrayReviewed: boolean("xray_reviewed").default(false),
+  imagingReviewed: boolean("imaging_reviewed").default(false),
+  investigationNotes: text("investigation_notes"),
+  // Personal Effects
+  jewelleryRemoved: boolean("jewellery_removed").default(false),
+  denturesRemoved: boolean("dentures_removed").default(false),
+  contactLensesRemoved: boolean("contact_lenses_removed").default(false),
+  valuablesSecured: boolean("valuables_secured").default(false),
+  // IV Access
+  ivAccessEstablished: boolean("iv_access_established").default(false),
+  ivSite: text("iv_site"),
+  // Completion
+  completedBy: varchar("completed_by"),
+  completedByName: text("completed_by_name"),
+  completedAt: timestamp("completed_at"),
+  verifiedBy: varchar("verified_by"),
+  verifiedByName: text("verified_by_name"),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtPreopChecklistSchema = createInsertSchema(otPreopChecklist).omit({ id: true, createdAt: true });
+export type InsertOtPreopChecklist = z.infer<typeof insertOtPreopChecklistSchema>;
+export type OtPreopChecklist = typeof otPreopChecklist.$inferSelect;
+
+// Pre-Anaesthetic Evaluation (PAE)
+export const otPreanaestheticEval = pgTable("ot_preanaesthetic_eval", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  // ASA Classification
+  asaGrade: text("asa_grade"), // I, II, III, IV, V, VI
+  // Medical History
+  previousAnaesthesia: text("previous_anaesthesia"), // none, general, spinal, complications
+  previousAnaesthesiaComplications: text("previous_anaesthesia_complications"),
+  familyAnaesthesiaHistory: text("family_anaesthesia_history"),
+  // Airway Assessment
+  mallampatiScore: text("mallampati_score"), // I, II, III, IV
+  thyroMentalDistance: text("thyro_mental_distance"),
+  mouthOpening: text("mouth_opening"),
+  neckMobility: text("neck_mobility"),
+  dentition: text("dentition"),
+  difficultAirwayAnticipated: boolean("difficult_airway_anticipated").default(false),
+  // Systemic Examination
+  cardiovascular: text("cardiovascular"),
+  respiratory: text("respiratory"),
+  neurological: text("neurological"),
+  hepatoRenal: text("hepato_renal"),
+  endocrine: text("endocrine"),
+  // Current Medications
+  currentMedications: text("current_medications"),
+  anticoagulants: text("anticoagulants"),
+  // Labs Reviewed
+  hemoglobin: text("hemoglobin"),
+  bloodSugar: text("blood_sugar"),
+  creatinine: text("creatinine"),
+  coagulationProfile: text("coagulation_profile"),
+  // Fasting Status
+  lastSolidFood: timestamp("last_solid_food"),
+  lastLiquidIntake: timestamp("last_liquid_intake"),
+  fastingAdequate: boolean("fasting_adequate").default(false),
+  // Anaesthesia Plan
+  proposedAnaesthesia: text("proposed_anaesthesia"), // general, spinal, epidural, local, combined
+  specialPrecautions: text("special_precautions"),
+  // Risk Assessment
+  riskScore: text("risk_score"),
+  riskNotes: text("risk_notes"),
+  // Signatures
+  anaesthetistId: varchar("anaesthetist_id"),
+  anaesthetistName: text("anaesthetist_name"),
+  anaesthetistSignature: text("anaesthetist_signature"),
+  evaluationAt: timestamp("evaluation_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtPreanaestheticEvalSchema = createInsertSchema(otPreanaestheticEval).omit({ id: true, createdAt: true });
+export type InsertOtPreanaestheticEval = z.infer<typeof insertOtPreanaestheticEvalSchema>;
+export type OtPreanaestheticEval = typeof otPreanaestheticEval.$inferSelect;
+
+// Surgical Safety Checklist (WHO Based)
+export const otSafetyChecklist = pgTable("ot_safety_checklist", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  // Sign In (Before Anaesthesia)
+  signInTime: timestamp("sign_in_time"),
+  patientConfirmedIdentity: boolean("patient_confirmed_identity").default(false),
+  siteMarkedConfirmed: boolean("site_marked_confirmed").default(false),
+  anaesthesiaSafetyCheckComplete: boolean("anaesthesia_safety_check_complete").default(false),
+  pulseOximeterFunctioning: boolean("pulse_oximeter_functioning").default(false),
+  knownAllergyConfirmed: boolean("known_allergy_confirmed").default(false),
+  difficultAirwayRisk: boolean("difficult_airway_risk").default(false),
+  aspirationRisk: boolean("aspiration_risk").default(false),
+  bloodLossRisk: boolean("blood_loss_risk").default(false),
+  signInBy: varchar("sign_in_by"),
+  signInByName: text("sign_in_by_name"),
+  // Time Out (Before Incision)
+  timeOutTime: timestamp("time_out_time"),
+  allTeamMembersIntroduced: boolean("all_team_members_introduced").default(false),
+  patientNameProcedureSiteConfirmed: boolean("patient_name_procedure_site_confirmed").default(false),
+  antibioticProphylaxisGiven: boolean("antibiotic_prophylaxis_given").default(false),
+  antibioticTime: timestamp("antibiotic_time"),
+  criticalEventsReviewed: boolean("critical_events_reviewed").default(false),
+  surgeonConcerns: text("surgeon_concerns"),
+  anaesthetistConcerns: text("anaesthetist_concerns"),
+  nursingConcerns: text("nursing_concerns"),
+  steriiltyConfirmed: boolean("sterility_confirmed").default(false),
+  equipmentIssues: text("equipment_issues"),
+  imagingDisplayed: boolean("imaging_displayed").default(false),
+  timeOutBy: varchar("time_out_by"),
+  timeOutByName: text("time_out_by_name"),
+  // Sign Out (Before Patient Leaves OT)
+  signOutTime: timestamp("sign_out_time"),
+  procedureRecorded: boolean("procedure_recorded").default(false),
+  instrumentSwabNeedleCountCorrect: boolean("instrument_swab_needle_count_correct").default(false),
+  specimenLabelled: boolean("specimen_labelled").default(false),
+  specimenDetails: text("specimen_details"),
+  equipmentProblemsAddressed: boolean("equipment_problems_addressed").default(false),
+  recoveryPlanCommunicated: boolean("recovery_plan_communicated").default(false),
+  signOutBy: varchar("sign_out_by"),
+  signOutByName: text("sign_out_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtSafetyChecklistSchema = createInsertSchema(otSafetyChecklist).omit({ id: true, createdAt: true });
+export type InsertOtSafetyChecklist = z.infer<typeof insertOtSafetyChecklistSchema>;
+export type OtSafetyChecklist = typeof otSafetyChecklist.$inferSelect;
+
+// Pre-Op Assessment Form
+export const otPreopAssessment = pgTable("ot_preop_assessment", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  // Vitals
+  temperature: text("temperature"),
+  pulse: text("pulse"),
+  bloodPressureSystolic: text("blood_pressure_systolic"),
+  bloodPressureDiastolic: text("blood_pressure_diastolic"),
+  respiratoryRate: text("respiratory_rate"),
+  spo2: text("spo2"),
+  weight: text("weight"),
+  height: text("height"),
+  bmi: text("bmi"),
+  // Clinical Assessment
+  generalCondition: text("general_condition"),
+  levelOfConsciousness: text("level_of_consciousness"),
+  painScore: integer("pain_score"),
+  // Diagnosis
+  primaryDiagnosis: text("primary_diagnosis"),
+  secondaryDiagnosis: text("secondary_diagnosis"),
+  comorbidities: text("comorbidities"),
+  // Planned Procedure
+  plannedProcedure: text("planned_procedure"),
+  side: text("side"), // left, right, bilateral, midline
+  specialEquipmentNeeded: text("special_equipment_needed"),
+  // Consent
+  consentVerified: boolean("consent_verified").default(false),
+  consentType: text("consent_type"),
+  // Assessment
+  assessmentNotes: text("assessment_notes"),
+  assessedBy: varchar("assessed_by"),
+  assessedByName: text("assessed_by_name"),
+  assessmentAt: timestamp("assessment_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtPreopAssessmentSchema = createInsertSchema(otPreopAssessment).omit({ id: true, createdAt: true });
+export type InsertOtPreopAssessment = z.infer<typeof insertOtPreopAssessmentSchema>;
+export type OtPreopAssessment = typeof otPreopAssessment.$inferSelect;
+
+// Re-Evaluation Form (if patient condition changes)
+export const otReEvaluation = pgTable("ot_re_evaluation", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  reasonForReeval: text("reason_for_reeval"),
+  changesSinceAssessment: text("changes_since_assessment"),
+  newFindings: text("new_findings"),
+  revisedPlan: text("revised_plan"),
+  fitForSurgery: boolean("fit_for_surgery").default(true),
+  postponementReason: text("postponement_reason"),
+  reevalBy: varchar("reeval_by"),
+  reevalByName: text("reeval_by_name"),
+  reevalAt: timestamp("reeval_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtReEvaluationSchema = createInsertSchema(otReEvaluation).omit({ id: true, createdAt: true });
+export type InsertOtReEvaluation = z.infer<typeof insertOtReEvaluationSchema>;
+export type OtReEvaluation = typeof otReEvaluation.$inferSelect;
+
+// Surgery Informed Consent
+export const otConsentSurgery = pgTable("ot_consent_surgery", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  consentVersion: text("consent_version"),
+  procedureName: text("procedure_name"),
+  procedureExplanation: text("procedure_explanation"),
+  risksExplained: text("risks_explained"),
+  alternativesExplained: text("alternatives_explained"),
+  additionalProceduresConsent: boolean("additional_procedures_consent").default(false),
+  bloodTransfusionConsent: boolean("blood_transfusion_consent").default(false),
+  photographyConsent: boolean("photography_consent").default(false),
+  teachingConsent: boolean("teaching_consent").default(false),
+  patientName: text("patient_name"),
+  patientRelationship: text("patient_relationship"), // self, spouse, parent, guardian
+  patientSignature: text("patient_signature"),
+  patientSignedAt: timestamp("patient_signed_at"),
+  witnessName: text("witness_name"),
+  witnessSignature: text("witness_signature"),
+  doctorId: varchar("doctor_id"),
+  doctorName: text("doctor_name"),
+  doctorSignature: text("doctor_signature"),
+  doctorSignedAt: timestamp("doctor_signed_at"),
+  language: text("language").default("english"), // english, hindi, marathi
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtConsentSurgerySchema = createInsertSchema(otConsentSurgery).omit({ id: true, createdAt: true });
+export type InsertOtConsentSurgery = z.infer<typeof insertOtConsentSurgerySchema>;
+export type OtConsentSurgery = typeof otConsentSurgery.$inferSelect;
+
+// Anaesthesia Informed Consent
+export const otConsentAnaesthesia = pgTable("ot_consent_anaesthesia", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  consentVersion: text("consent_version"),
+  anaesthesiaType: text("anaesthesia_type"),
+  anaesthesiaExplanation: text("anaesthesia_explanation"),
+  risksExplained: text("risks_explained"),
+  alternativesExplained: text("alternatives_explained"),
+  postOpPainManagementExplained: boolean("postop_pain_management_explained").default(false),
+  patientName: text("patient_name"),
+  patientRelationship: text("patient_relationship"),
+  patientSignature: text("patient_signature"),
+  patientSignedAt: timestamp("patient_signed_at"),
+  witnessName: text("witness_name"),
+  witnessSignature: text("witness_signature"),
+  anaesthetistId: varchar("anaesthetist_id"),
+  anaesthetistName: text("anaesthetist_name"),
+  anaesthetistSignature: text("anaesthetist_signature"),
+  anaesthetistSignedAt: timestamp("anaesthetist_signed_at"),
+  language: text("language").default("english"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtConsentAnaesthesiaSchema = createInsertSchema(otConsentAnaesthesia).omit({ id: true, createdAt: true });
+export type InsertOtConsentAnaesthesia = z.infer<typeof insertOtConsentAnaesthesiaSchema>;
+export type OtConsentAnaesthesia = typeof otConsentAnaesthesia.$inferSelect;
+
+// Anaesthesia Record (Intra-Op)
+export const otAnaesthesiaRecord = pgTable("ot_anaesthesia_record", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  anaesthesiaType: text("anaesthesia_type"), // general, spinal, epidural, local, regional, combined
+  inductionTime: timestamp("induction_time"),
+  intubationTime: timestamp("intubation_time"),
+  extubationTime: timestamp("extubation_time"),
+  anaesthesiaEndTime: timestamp("anaesthesia_end_time"),
+  // Drugs Given (JSON array)
+  inductionDrugs: text("induction_drugs"),
+  maintenanceDrugs: text("maintenance_drugs"),
+  muscleRelaxants: text("muscle_relaxants"),
+  analgesics: text("analgesics"),
+  antiemetics: text("antiemetics"),
+  vasopressors: text("vasopressors"),
+  otherDrugs: text("other_drugs"),
+  // Airway
+  airwayDevice: text("airway_device"), // ETT, LMA, mask
+  airwaySize: text("airway_size"),
+  intubationAttempts: integer("intubation_attempts"),
+  ventilationMode: text("ventilation_mode"),
+  tidalVolume: text("tidal_volume"),
+  peep: text("peep"),
+  // Fluids
+  ivFluids: text("iv_fluids"),
+  bloodProducts: text("blood_products"),
+  estimatedBloodLoss: text("estimated_blood_loss"),
+  urineOutput: text("urine_output"),
+  // Vitals Trend (stored as JSON time series)
+  vitalsTrend: text("vitals_trend"),
+  // Monitoring
+  monitoringDevices: text("monitoring_devices"),
+  invasiveLines: text("invasive_lines"),
+  // Complications
+  complications: text("complications"),
+  interventions: text("interventions"),
+  // Notes
+  anaesthesistNotes: text("anaesthesist_notes"),
+  handoverNotes: text("handover_notes"),
+  // Signatures
+  anaesthetistId: varchar("anaesthetist_id"),
+  anaesthetistName: text("anaesthetist_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtAnaesthesiaRecordSchema = createInsertSchema(otAnaesthesiaRecord).omit({ id: true, createdAt: true });
+export type InsertOtAnaesthesiaRecord = z.infer<typeof insertOtAnaesthesiaRecordSchema>;
+export type OtAnaesthesiaRecord = typeof otAnaesthesiaRecord.$inferSelect;
+
+// Intra-Operative Time Log
+export const otTimeLog = pgTable("ot_time_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  eventType: text("event_type").notNull(), // PATIENT_IN, ANAESTHESIA_START, INCISION, CRITICAL_EVENT, SPECIMEN_SENT, CLOSURE_START, CLOSURE_END, ANAESTHESIA_END, PATIENT_OUT
+  eventTime: timestamp("event_time").notNull(),
+  description: text("description"),
+  recordedBy: varchar("recorded_by"),
+  recordedByName: text("recorded_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtTimeLogSchema = createInsertSchema(otTimeLog).omit({ id: true, createdAt: true });
+export type InsertOtTimeLog = z.infer<typeof insertOtTimeLogSchema>;
+export type OtTimeLog = typeof otTimeLog.$inferSelect;
+
+// Surgeon Notes (Operative Notes)
+export const otSurgeonNotes = pgTable("ot_surgeon_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  preOpDiagnosis: text("preop_diagnosis"),
+  postOpDiagnosis: text("postop_diagnosis"),
+  procedurePerformed: text("procedure_performed"),
+  indication: text("indication"),
+  // Operative Details
+  position: text("position"), // supine, prone, lateral, lithotomy
+  incision: text("incision"),
+  findings: text("findings"),
+  procedureSteps: text("procedure_steps"),
+  implants: text("implants"),
+  // Specimens
+  specimens: text("specimens"),
+  specimenSentToLab: boolean("specimen_sent_to_lab").default(false),
+  // Blood & Fluids
+  estimatedBloodLoss: text("estimated_blood_loss"),
+  bloodTransfused: text("blood_transfused"),
+  fluidBalance: text("fluid_balance"),
+  // Drains & Lines
+  drainsPlaced: text("drains_placed"),
+  cathetersPlaced: text("catheters_placed"),
+  // Closure
+  closureTechnique: text("closure_technique"),
+  sutureMaterial: text("suture_material"),
+  skinClosure: text("skin_closure"),
+  dressing: text("dressing"),
+  // Outcome
+  complications: text("complications"),
+  outcome: text("outcome"),
+  // Post-Op Instructions
+  postOpOrders: text("postop_orders"),
+  antibiotics: text("antibiotics"),
+  painManagement: text("pain_management"),
+  dietInstructions: text("diet_instructions"),
+  mobilizationPlan: text("mobilization_plan"),
+  followUp: text("follow_up"),
+  // Signatures
+  surgeonId: varchar("surgeon_id"),
+  surgeonName: text("surgeon_name"),
+  assistantSurgeonName: text("assistant_surgeon_name"),
+  dictatedAt: timestamp("dictated_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtSurgeonNotesSchema = createInsertSchema(otSurgeonNotes).omit({ id: true, createdAt: true });
+export type InsertOtSurgeonNotes = z.infer<typeof insertOtSurgeonNotesSchema>;
+export type OtSurgeonNotes = typeof otSurgeonNotes.$inferSelect;
+
+// Post-Op Assessment
+export const otPostopAssessment = pgTable("ot_postop_assessment", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  assessmentTime: timestamp("assessment_time").defaultNow(),
+  // Vitals
+  temperature: text("temperature"),
+  pulse: text("pulse"),
+  bloodPressureSystolic: text("blood_pressure_systolic"),
+  bloodPressureDiastolic: text("blood_pressure_diastolic"),
+  respiratoryRate: text("respiratory_rate"),
+  spo2: text("spo2"),
+  // Recovery Status
+  consciousnessLevel: text("consciousness_level"), // alert, drowsy, unresponsive
+  aldreteScore: integer("aldrete_score"), // 0-10
+  painScore: integer("pain_score"), // 0-10
+  nauseaVomiting: text("nausea_vomiting"),
+  // Wound
+  woundCondition: text("wound_condition"),
+  drainOutput: text("drain_output"),
+  bleeding: text("bleeding"),
+  // Complications
+  complications: text("complications"),
+  complicationDetails: text("complication_details"),
+  // Discharge Readiness
+  dischargeReadiness: text("discharge_readiness"), // ready, needs observation, needs ICU
+  destinationUnit: text("destination_unit"),
+  // Notes
+  assessmentNotes: text("assessment_notes"),
+  assessedBy: varchar("assessed_by"),
+  assessedByName: text("assessed_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtPostopAssessmentSchema = createInsertSchema(otPostopAssessment).omit({ id: true, createdAt: true });
+export type InsertOtPostopAssessment = z.infer<typeof insertOtPostopAssessmentSchema>;
+export type OtPostopAssessment = typeof otPostopAssessment.$inferSelect;
+
+// Post-Op Monitoring Chart
+export const otMonitoringChart = pgTable("ot_monitoring_chart", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  recordTime: timestamp("record_time").notNull(),
+  // Vitals
+  temperature: text("temperature"),
+  pulse: text("pulse"),
+  bloodPressureSystolic: text("blood_pressure_systolic"),
+  bloodPressureDiastolic: text("blood_pressure_diastolic"),
+  respiratoryRate: text("respiratory_rate"),
+  spo2: text("spo2"),
+  painScore: integer("pain_score"),
+  // Consciousness
+  consciousnessLevel: text("consciousness_level"),
+  pupilReaction: text("pupil_reaction"),
+  // Intake/Output
+  ivFluidIntake: text("iv_fluid_intake"),
+  oralIntake: text("oral_intake"),
+  urineOutput: text("urine_output"),
+  drainOutput: text("drain_output"),
+  // Wound
+  woundCondition: text("wound_condition"),
+  dressingCondition: text("dressing_condition"),
+  // Flags
+  hypotensionFlag: boolean("hypotension_flag").default(false),
+  bleedingFlag: boolean("bleeding_flag").default(false),
+  respiratoryDistressFlag: boolean("respiratory_distress_flag").default(false),
+  painUncontrolledFlag: boolean("pain_uncontrolled_flag").default(false),
+  // Notes
+  notes: text("notes"),
+  interventions: text("interventions"),
+  recordedBy: varchar("recorded_by"),
+  recordedByName: text("recorded_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtMonitoringChartSchema = createInsertSchema(otMonitoringChart).omit({ id: true, createdAt: true });
+export type InsertOtMonitoringChart = z.infer<typeof insertOtMonitoringChartSchema>;
+export type OtMonitoringChart = typeof otMonitoringChart.$inferSelect;
+
+// Labour Chart (for obstetric surgeries)
+export const otLabourChart = pgTable("ot_labour_chart", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  recordTime: timestamp("record_time").notNull(),
+  // Labour Stage
+  labourStage: text("labour_stage"), // 1st, 2nd, 3rd
+  cervicalDilation: text("cervical_dilation"),
+  cervicalEffacement: text("cervical_effacement"),
+  fetalStation: text("fetal_station"),
+  // Contractions
+  contractionFrequency: text("contraction_frequency"),
+  contractionDuration: text("contraction_duration"),
+  contractionIntensity: text("contraction_intensity"),
+  // Fetal Monitoring
+  fetalHeartRate: text("fetal_heart_rate"),
+  fetalHeartRateVariability: text("fhr_variability"),
+  decelerations: text("decelerations"),
+  // Maternal Vitals
+  maternalPulse: text("maternal_pulse"),
+  maternalBP: text("maternal_bp"),
+  maternalTemp: text("maternal_temp"),
+  // Membranes
+  membraneStatus: text("membrane_status"), // intact, ruptured
+  ruptureTime: timestamp("rupture_time"),
+  amnioticFluidColor: text("amniotic_fluid_color"),
+  // Interventions
+  interventions: text("interventions"),
+  medications: text("medications"),
+  notes: text("notes"),
+  recordedBy: varchar("recorded_by"),
+  recordedByName: text("recorded_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtLabourChartSchema = createInsertSchema(otLabourChart).omit({ id: true, createdAt: true });
+export type InsertOtLabourChart = z.infer<typeof insertOtLabourChartSchema>;
+export type OtLabourChart = typeof otLabourChart.$inferSelect;
+
+// Neonate Sheet (for deliveries)
+export const otNeonateSheet = pgTable("ot_neonate_sheet", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  birthTime: timestamp("birth_time"),
+  gender: text("gender"),
+  birthWeight: text("birth_weight"),
+  birthLength: text("birth_length"),
+  headCircumference: text("head_circumference"),
+  // APGAR Scores
+  apgar1min: integer("apgar_1min"),
+  apgar5min: integer("apgar_5min"),
+  apgar10min: integer("apgar_10min"),
+  // Resuscitation
+  resuscitationRequired: boolean("resuscitation_required").default(false),
+  resuscitationDetails: text("resuscitation_details"),
+  oxygenGiven: boolean("oxygen_given").default(false),
+  intubated: boolean("intubated").default(false),
+  // Initial Assessment
+  skinColor: text("skin_color"),
+  respiratoryEffort: text("respiratory_effort"),
+  heartRate: text("heart_rate"),
+  muscleTone: text("muscle_tone"),
+  reflexes: text("reflexes"),
+  // Congenital Anomalies
+  anomaliesDetected: boolean("anomalies_detected").default(false),
+  anomalyDetails: text("anomaly_details"),
+  // Cord
+  cordClamped: boolean("cord_clamped").default(true),
+  cordBloodCollected: boolean("cord_blood_collected").default(false),
+  // Feeding
+  breastfeedingInitiated: boolean("breastfeeding_initiated").default(false),
+  firstFeedTime: timestamp("first_feed_time"),
+  // Vitamin K
+  vitaminKGiven: boolean("vitamin_k_given").default(false),
+  eyeProphylaxis: boolean("eye_prophylaxis").default(false),
+  // Identification
+  footprintTaken: boolean("footprint_taken").default(false),
+  wristbandApplied: boolean("wristband_applied").default(false),
+  neonateId: text("neonate_id"),
+  // Notes
+  notes: text("notes"),
+  recordedBy: varchar("recorded_by"),
+  recordedByName: text("recorded_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtNeonateSheetSchema = createInsertSchema(otNeonateSheet).omit({ id: true, createdAt: true });
+export type InsertOtNeonateSheet = z.infer<typeof insertOtNeonateSheetSchema>;
+export type OtNeonateSheet = typeof otNeonateSheet.$inferSelect;
+
+// OT Audit Log
+export const otAuditLog = pgTable("ot_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseId: varchar("case_id").notNull(),
+  entityType: text("entity_type").notNull(), // case, consent, checklist, etc.
+  entityId: varchar("entity_id"),
+  action: text("action").notNull(), // CREATE, UPDATE, VIEW, PRINT, SIGN
+  fieldChanged: text("field_changed"),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  metadata: text("metadata"),
+  userId: varchar("user_id").notNull(),
+  userName: text("user_name"),
+  userRole: text("user_role"),
+  ipAddress: text("ip_address"),
+  timestamp: timestamp("timestamp").defaultNow(),
+})
+
+export const insertOtAuditLogSchema = createInsertSchema(otAuditLog).omit({ id: true, timestamp: true });
+export type InsertOtAuditLog = z.infer<typeof insertOtAuditLogSchema>;
+export type OtAuditLog = typeof otAuditLog.$inferSelect;
