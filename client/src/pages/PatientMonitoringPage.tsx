@@ -820,13 +820,13 @@ export default function PatientMonitoringPage() {
                 <TabsList className="inline-flex flex-wrap h-auto gap-1 p-1.5 bg-muted/50 rounded-lg">
                   <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Overview</TabsTrigger>
                   <TabsTrigger value="vitals" className="text-xs gap-1.5 data-[state=active]:bg-background"><Heart className="h-3.5 w-3.5" />Vitals</TabsTrigger>
-                  <TabsTrigger value="inotropes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Inotropes</TabsTrigger>
+                  <TabsTrigger value="inotropes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Injection</TabsTrigger>
                   <TabsTrigger value="ventilator" className="text-xs gap-1.5 data-[state=active]:bg-background"><Wind className="h-3.5 w-3.5" />Ventilator</TabsTrigger>
                   <TabsTrigger value="abg-lab" className="text-xs gap-1.5 data-[state=active]:bg-background"><FlaskConical className="h-3.5 w-3.5" />ABG/Lab</TabsTrigger>
                   <TabsTrigger value="intake" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Intake</TabsTrigger>
                   <TabsTrigger value="output" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Output</TabsTrigger>
                   <TabsTrigger value="diabetic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Diabetic</TabsTrigger>
-                  <TabsTrigger value="mar" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />MAR</TabsTrigger>
+                  <TabsTrigger value="mar" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />Medicines</TabsTrigger>
                   <TabsTrigger value="once-only" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />Once-Only</TabsTrigger>
                   <TabsTrigger value="notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Shift Notes</TabsTrigger>
                   <TabsTrigger value="airway" className="text-xs gap-1.5 data-[state=active]:bg-background"><BedDouble className="h-3.5 w-3.5" />Lines/Tubes</TabsTrigger>
@@ -1142,7 +1142,7 @@ function OverviewTab({ session }: { session: Session }) {
               <div className="p-1.5 rounded-md bg-teal-500/10">
                 <Pill className="h-4 w-4" />
               </div>
-              Drugs / MAR Summary
+              Drugs / Medicines Summary
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-3">
@@ -2121,7 +2121,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/mar", data),
     onSuccess: () => { 
       refetch(); 
-      toast({ title: "MAR Entry Added", description: "Medication recorded successfully" });
+      toast({ title: "Medicine Entry Added", description: "Medication recorded successfully" });
       setForm({ medicineName: "", dose: "", route: "", frequency: "", scheduledTime: "" });
       setDialogOpen(false);
     },
@@ -2147,14 +2147,14 @@ function MARTab({ sessionId }: { sessionId: string }) {
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Medication Administration Record (MAR)</CardTitle>
+        <CardTitle className="text-lg">Medicines</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Medicine</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add MAR Entry</DialogTitle>
+              <DialogTitle>Add Medicine</DialogTitle>
               <DialogDescription>Record medication administration</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
