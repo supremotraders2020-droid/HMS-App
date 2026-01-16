@@ -220,24 +220,56 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
     const handlePrintIcuChart = async () => {
       toast({ title: "Generating Report", description: "Preparing ICU chart for print..." });
       try {
+        const formatTime = (d: string | null | undefined) => {
+          if (!d) return '-';
+          try { return new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }); } catch { return '-'; }
+        };
+        const formatDate = (d: string | null | undefined) => {
+          if (!d) return '-';
+          try { return new Date(d).toLocaleDateString('en-IN'); } catch { return '-'; }
+        };
+
+        const generateTable = (title: string, headers: string[], rows: any[], renderRow: (r: any) => string) => {
+          if (!rows || !Array.isArray(rows) || rows.length === 0) return `<h2>${title}</h2><p class="no-data">No data recorded</p>`;
+          try {
+            const headerHtml = headers.map(h => `<th>${h}</th>`).join('');
+            const bodyHtml = rows.map(r => { try { return renderRow(r); } catch { return '<tr><td colspan="99">-</td></tr>'; } }).join('');
+            return `<h2>${title}</h2><table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+          } catch { return `<h2>${title}</h2><p class="no-data">Error loading data</p>`; }
+        };
+
+        const chartData = completeChart as any || {};
+        const vitals = chartData.vitalCharts || [];
+        const ventilator = chartData.ventilator || [];
+        const hemodynamic = chartData.hemodynamic || [];
+        const intakeData = chartData.intakeChart || [];
+        const outputData = chartData.outputChart || [];
+        const medications = chartData.medicationOrders || [];
+        const onceOnly = chartData.onceOnlyDrugs || [];
+        const abgData = chartData.abgReports || [];
+        const diabeticData = chartData.diabeticChart || [];
+        const nursingRemarks = chartData.nursingRemarks || [];
+        const notes = chartData.doctorNurseNotes || [];
+
         const printContent = `
           <html>
           <head>
             <title>ICU Chart - ${selectedChart.patientName}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 20px; font-size: 11px; }
-              h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 18px; }
-              h2 { color: #2d3748; margin-top: 25px; font-size: 14px; background: #f7fafc; padding: 8px; border-left: 3px solid #3182ce; }
-              .header { margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-              .info-row { display: flex; gap: 8px; }
-              .label { font-weight: bold; color: #4a5568; min-width: 120px; }
-              table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 15px; }
-              th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
+              body { font-family: Arial, sans-serif; padding: 20px; font-size: 10px; }
+              h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 16px; }
+              h2 { color: #2d3748; margin-top: 20px; font-size: 12px; background: #f7fafc; padding: 6px; border-left: 3px solid #3182ce; }
+              .header { margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+              .info-row { display: flex; gap: 6px; }
+              .label { font-weight: bold; color: #4a5568; min-width: 100px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 6px; margin-bottom: 12px; font-size: 9px; }
+              th, td { border: 1px solid #e2e8f0; padding: 4px 6px; text-align: left; }
               th { background: #edf2f7; font-weight: 600; }
               tr:nth-child(even) { background: #f7fafc; }
-              .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 10px; }
+              .no-data { color: #a0aec0; font-style: italic; margin: 8px 0; }
+              .footer { margin-top: 25px; padding-top: 10px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 9px; }
               @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-              @page { margin: 15mm; }
+              @page { margin: 10mm; }
             </style>
           </head>
           <body>
@@ -252,24 +284,52 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
               <div class="info-row"><span class="label">Admitting Consultant:</span> ${selectedChart.admittingConsultant || '-'}</div>
               <div class="info-row"><span class="label">ICU Consultant:</span> ${selectedChart.icuConsultant || '-'}</div>
               <div class="info-row"><span class="label">Diagnosis:</span> ${selectedChart.diagnosis || '-'}</div>
-              <div class="info-row"><span class="label">Ventilator:</span> ${selectedChart.isVentilated ? 'Yes' : 'No'}</div>
+              <div class="info-row"><span class="label">Ventilator:</span> ${(selectedChart as any).isVentilated ? 'Yes' : 'No'}</div>
             </div>
-            
-            <h2>Patient Information</h2>
-            <table>
-              <tr><th>Field</th><th>Value</th></tr>
-              <tr><td>Patient Name</td><td>${selectedChart.patientName || '-'}</td></tr>
-              <tr><td>Bed Number</td><td>${selectedChart.bedNo || '-'}</td></tr>
-              <tr><td>Age</td><td>${selectedChart.age || '-'}</td></tr>
-              <tr><td>Sex</td><td>${selectedChart.sex || '-'}</td></tr>
-              <tr><td>Blood Group</td><td>${selectedChart.bloodGroup || '-'}</td></tr>
-              <tr><td>Diagnosis</td><td>${selectedChart.diagnosis || '-'}</td></tr>
-              <tr><td>Admitting Consultant</td><td>${selectedChart.admittingConsultant || '-'}</td></tr>
-              <tr><td>ICU Consultant</td><td>${selectedChart.icuConsultant || '-'}</td></tr>
-              <tr><td>Date of Admission</td><td>${selectedChart.dateOfAdmission || '-'}</td></tr>
-              <tr><td>Chart Date</td><td>${selectedChart.chartDate || '-'}</td></tr>
-              <tr><td>On Ventilator</td><td>${selectedChart.isVentilated ? 'Yes' : 'No'}</td></tr>
-            </table>
+
+            ${generateTable('Vitals', ['Time', 'HR', 'BP', 'Temp', 'RR', 'SpO2', 'GCS'], vitals, (r: any) => 
+              `<tr><td>${r.hourSlot || formatTime(r.recordedAt)}</td><td>${r.heartRate || '-'}</td><td>${r.systolicBp || '-'}/${r.diastolicBp || '-'}</td><td>${r.temperature ? r.temperature + '°C' : '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td><td>${r.gcsTotal || '-'}</td></tr>`
+            )}
+
+            ${generateTable('Ventilator Settings', ['Time', 'Mode', 'FiO2', 'PEEP', 'Tidal Vol', 'RR Set', 'PS'], ventilator, (r: any) => 
+              `<tr><td>${formatTime(r.recordedAt)}</td><td>${r.mode || '-'}</td><td>${r.fio2 || '-'}%</td><td>${r.peep || '-'}</td><td>${r.tidalVolume || '-'}</td><td>${r.respiratoryRateSet || '-'}</td><td>${r.pressureSupport || '-'}</td></tr>`
+            )}
+
+            ${generateTable('Hemodynamic Monitoring', ['Time', 'CVP', 'MAP', 'Art Line', 'Cardiac Output', 'SVR'], hemodynamic, (r: any) => 
+              `<tr><td>${formatTime(r.recordedAt)}</td><td>${r.cvp || '-'}</td><td>${r.map || '-'}</td><td>${r.arterialLine || '-'}</td><td>${r.cardiacOutput || '-'}</td><td>${r.svr || '-'}</td></tr>`
+            )}
+
+            ${generateTable('Intake (I/O Balance)', ['Time', 'Type', 'Volume (ml)', 'Route'], intakeData, (r: any) => 
+              `<tr><td>${r.hourSlot || formatTime(r.recordedAt)}</td><td>${r.intakeType || '-'}</td><td>${r.volume || '-'}</td><td>${r.route || '-'}</td></tr>`
+            )}
+
+            ${generateTable('Output (I/O Balance)', ['Time', 'Type', 'Volume (ml)', 'Color'], outputData, (r: any) => 
+              `<tr><td>${r.hourSlot || formatTime(r.recordedAt)}</td><td>${r.outputType || '-'}</td><td>${r.volume || '-'}</td><td>${r.color || '-'}</td></tr>`
+            )}
+
+            ${generateTable('Medication Orders', ['Drug', 'Dose', 'Route', 'Frequency', 'Start Date', 'Status'], medications, (r: any) => 
+              `<tr><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.frequency || '-'}</td><td>${formatDate(r.startDate)}</td><td>${r.status || '-'}</td></tr>`
+            )}
+
+            ${generateTable('Once-Only Drugs', ['Drug', 'Dose', 'Route', 'Given At', 'Given By'], onceOnly, (r: any) => 
+              `<tr><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${formatTime(r.givenAt)}</td><td>${r.givenBy || '-'}</td></tr>`
+            )}
+
+            ${generateTable('ABG Reports', ['Time', 'pH', 'pCO2', 'pO2', 'HCO3', 'Lactate', 'BE'], abgData, (r: any) => 
+              `<tr><td>${formatTime(r.recordedAt)}</td><td>${r.ph || '-'}</td><td>${r.pco2 || '-'}</td><td>${r.po2 || '-'}</td><td>${r.hco3 || '-'}</td><td>${r.lactate || '-'}</td><td>${r.baseExcess || '-'}</td></tr>`
+            )}
+
+            ${generateTable('Diabetic Chart', ['Time', 'Blood Sugar', 'Insulin Type', 'Dose'], diabeticData, (r: any) => 
+              `<tr><td>${r.checkTime || formatTime(r.recordedAt)}</td><td>${r.bloodSugar || '-'} mg/dL</td><td>${r.insulinType || '-'}</td><td>${r.insulinDose || '-'}</td></tr>`
+            )}
+
+            ${generateTable('Nursing Remarks', ['Shift', 'Remarks', 'Nurse', 'Time'], nursingRemarks, (r: any) => 
+              `<tr><td>${r.shift || '-'}</td><td>${r.remarks || '-'}</td><td>${r.nurseName || '-'}</td><td>${formatTime(r.createdAt)}</td></tr>`
+            )}
+
+            ${generateTable('Doctor & Nurse Notes', ['Time', 'Note Type', 'Notes', 'Recorded By'], notes, (r: any) => 
+              `<tr><td>${formatTime(r.createdAt)}</td><td>${r.noteType || '-'}</td><td>${r.notes || '-'}</td><td>${r.recordedBy || '-'}</td></tr>`
+            )}
 
             <div class="footer">
               <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital ICU Monitoring System</p>
