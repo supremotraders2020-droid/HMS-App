@@ -812,7 +812,7 @@ export default function PatientMonitoringPage() {
                 }}
                 data-testid="button-export-pdf"
               >
-                  <Download className="h-4 w-4" /> Export PDF
+                  <Download className="h-4 w-4" /> Print
                 </Button>
               </div>
 
