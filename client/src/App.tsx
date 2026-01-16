@@ -51,6 +51,7 @@ import HospitalServices from "@/pages/HospitalServices";
 import SuperAdminPortal from "@/pages/SuperAdminPortal";
 import TechnicianPortal from "@/pages/TechnicianPortal";
 import SmartOPDConsultation from "@/pages/SmartOPDConsultation";
+import OperationOTPage from "@/pages/OperationOTPage";
 
 type UserRole = "SUPER_ADMIN" | "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB" | "TECHNICIAN";
 
@@ -528,6 +529,18 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only medical staff can access ICU Monitoring.</p>
+          </div>
+        )}
+      </Route>
+
+      {/* Operation & OT Route - for Super Admin, Admin, Doctor, Nurse */}
+      <Route path="/operation-ot">
+        {["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE"].includes(currentUser.role) ? (
+          <OperationOTPage userRole={currentUser.role} userId={currentUser.id} />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only medical staff can access Operation & OT.</p>
           </div>
         )}
       </Route>
