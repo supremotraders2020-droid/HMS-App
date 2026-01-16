@@ -979,26 +979,31 @@ function CounsellingForm({ existing, onSubmit, isLoading }: { existing: any; onS
 
 function ChecklistForm({ existing, onSubmit, isLoading }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean }) {
   const checklistItems = [
-    { key: "identityVerified", label: "Patient identity verified (wristband, verbal)" },
-    { key: "siteMarked", label: "Surgical site marked" },
-    { key: "consentSigned", label: "Consent form signed" },
-    { key: "npoConfirmed", label: "NPO status confirmed (fasting)" },
-    { key: "allergiesChecked", label: "Allergies checked and documented" },
-    { key: "bloodGroupVerified", label: "Blood group verified" },
-    { key: "bloodArranged", label: "Blood products arranged (if needed)" },
-    { key: "investigationsComplete", label: "All investigations complete and reviewed" },
-    { key: "medicationsReviewed", label: "Current medications reviewed" },
-    { key: "anticoagulantsDiscontinued", label: "Anticoagulants discontinued (if applicable)" },
-    { key: "preOpMedsGiven", label: "Pre-operative medications given" },
-    { key: "ivLineSecured", label: "IV line secured" },
-    { key: "prosthesesRemoved", label: "Prostheses/jewelry removed" },
-    { key: "dentalCheckDone", label: "Dental/airway assessment done" },
-    { key: "skinPrepComplete", label: "Skin preparation complete" },
-    { key: "bowelPrepDone", label: "Bowel preparation done (if required)" },
-    { key: "catheterInserted", label: "Urinary catheter inserted (if required)" },
-    { key: "compressionStockings", label: "DVT prophylaxis (compression stockings/heparin)" },
-    { key: "antibioticsProphylaxis", label: "Prophylactic antibiotics given" },
-    { key: "patientCounselled", label: "Patient counselled about procedure" },
+    { key: "generalConsentObtained", label: "General Consent Obtained?" },
+    { key: "surgeryConsentObtained", label: "Surgery/Procedural Consent Obtained?" },
+    { key: "anaesthesiaConsentObtained", label: "Anaesthesia Consent Obtained?" },
+    { key: "specificConsent", label: "Specific Consent? (if applicable)" },
+    { key: "areaPrepared", label: "Prepared the area for Operation?" },
+    { key: "spinalEpiduralPrep", label: "Prepared patient for Spinal/Epidural etc...?" },
+    { key: "jewelleryRemoved", label: "Removed Jewellery?" },
+    { key: "denturesRemoved", label: "Removed Dentures?" },
+    { key: "spectaclesRemoved", label: "Removed Spectacles / Contact Lens?" },
+    { key: "nailPolishRemoved", label: "Removed Nail Polish / Make up?" },
+    { key: "hairPinsRemoved", label: "Removed Hair Pins / Clips?" },
+    { key: "reportsCollected", label: "Reports of Lab, ECG, X-Ray etc.. collected & attached to file?" },
+    { key: "preMedicationsGiven", label: "Pre-Medications given and charged?" },
+    { key: "preOpAntibioticsGiven", label: "Pre-Operative antibiotics given? Test Dose/Full Dose" },
+    { key: "hsMedicationsGiven", label: "H. S. Medications given?" },
+    { key: "vitalSignsChecked", label: "Vital Signs checked?" },
+    { key: "ivLinesSecured", label: "I. V. Lines secured?" },
+    { key: "bladderEmptied", label: "Bladder emptied / Catheterization done with time?" },
+    { key: "mouthWashGiven", label: "Mouth Wash / Gargles given?" },
+    { key: "bathGiven", label: "Bath given?" },
+    { key: "enemaGiven", label: "Enaema / Bowel Wash given? (if indicated)" },
+    { key: "theatreDressGiven", label: "Patient's theatre dress given?" },
+    { key: "bloodArranged", label: "Blood arranged, consent taken, mentioned no of units?" },
+    { key: "materialsSent", label: "Materials, Drugs, Equipments sent with the patient?" },
+    { key: "patientShiftedToOT", label: "Patient shifted to OT?" },
   ];
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -1013,14 +1018,15 @@ function ChecklistForm({ existing, onSubmit, isLoading }: { existing: any; onSub
       completedBy: formData.get("completedBy"),
       completedAt: new Date().toISOString(),
       remarks: formData.get("remarks"),
+      receivedByOTStaff: formData.get("receivedByOTStaff"),
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Completed By</Label>
-        <Input name="completedBy" defaultValue={existing?.completedBy} placeholder="Nurse/Staff name" required />
+        <Label>Name of the Staff</Label>
+        <Input name="completedBy" defaultValue={existing?.completedBy} placeholder="Staff name" required />
       </div>
 
       <div className="border rounded-lg p-4 max-h-[400px] overflow-y-auto">
@@ -1034,10 +1040,15 @@ function ChecklistForm({ existing, onSubmit, isLoading }: { existing: any; onSub
                 defaultChecked={existing?.[item.key]} 
                 className="h-4 w-4 mt-0.5" 
               />
-              <span className="text-sm">{idx + 1}. {item.label}</span>
+              <span className="text-sm">[{idx + 1}] {item.label}</span>
             </label>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Received to the O.T. by / Name of OT Staff</Label>
+        <Input name="receivedByOTStaff" defaultValue={existing?.receivedByOTStaff} placeholder="OT Staff name" />
       </div>
 
       <div className="space-y-2">
