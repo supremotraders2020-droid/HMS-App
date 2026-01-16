@@ -770,28 +770,52 @@ export default function PatientMonitoringPage() {
                   try {
                     const sessionId = selectedSession.id;
                     const fetchOpts = { credentials: 'include' as RequestCredentials };
+                    
+                    const fetchData = async (url: string) => {
+                      try {
+                        const r = await fetch(url, fetchOpts);
+                        if (r.ok) {
+                          const data = await r.json();
+                          return Array.isArray(data) ? data : [];
+                        }
+                        return [];
+                      } catch {
+                        return [];
+                      }
+                    };
+                    
                     const [vitals, injections, mar, ventilator, abgLab, intake, output, diabetic, onceOnly, shiftNotes, airway, dutyStaff, allergies] = await Promise.all([
-                      fetch(`/api/patient-monitoring/vitals/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/inotropes/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/mar/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/ventilator/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/abg-lab/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/intake/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/output/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/diabetic/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/once-only/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/shift-notes/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/airway/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/duty-staff/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => []),
-                      fetch(`/api/patient-monitoring/allergies/${sessionId}`, fetchOpts).then(r => r.ok ? r.json() : []).catch(() => [])
+                      fetchData(`/api/patient-monitoring/vitals/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/inotropes/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/mar/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/ventilator/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/abg-lab/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/intake/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/output/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/diabetic/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/once-only/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/shift-notes/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/airway/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/duty-staff/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/allergies/${sessionId}`)
                     ]);
                     
-                    const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN') : '-';
-                    const formatTime = (d: string) => d ? new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-';
+                    const formatDate = (d: string | null | undefined) => {
+                      if (!d) return '-';
+                      try { return new Date(d).toLocaleDateString('en-IN'); } catch { return '-'; }
+                    };
+                    const formatTime = (d: string | null | undefined) => {
+                      if (!d) return '-';
+                      try { return new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }); } catch { return '-'; }
+                    };
                     
                     const generateTable = (title: string, headers: string[], rows: any[], renderRow: (r: any) => string) => {
-                      if (!rows || rows.length === 0) return `<h2>${title}</h2><p class="no-data">No data recorded</p>`;
-                      return `<h2>${title}</h2><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(renderRow).join('')}</tbody></table>`;
+                      if (!rows || !Array.isArray(rows) || rows.length === 0) return `<h2>${title}</h2><p class="no-data">No data recorded</p>`;
+                      try {
+                        const headerHtml = headers.map(h => `<th>${h}</th>`).join('');
+                        const bodyHtml = rows.map(r => { try { return renderRow(r); } catch { return '<tr><td colspan="99">Error</td></tr>'; } }).join('');
+                        return `<h2>${title}</h2><table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+                      } catch { return `<h2>${title}</h2><p class="no-data">Error loading data</p>`; }
                     };
 
                     const printContent = `
