@@ -15530,7 +15530,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       // Get user name for recording
       let recordedByName = "";
       if (req.body.recordedBy) {
-        const user = await storage.getUserById(req.body.recordedBy);
+        const user = await storage.getUser(req.body.recordedBy);
         if (user) {
           recordedByName = user.fullName || user.username || "";
         }
