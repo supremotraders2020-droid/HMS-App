@@ -1235,7 +1235,7 @@ function OverviewTab({ session }: { session: Session }) {
                         <Badge variant="outline" className="text-[10px] px-1 py-0">{n.shift}</Badge>
                         <span>{n.nurseName || "Nurse"}</span>
                       </div>
-                      <p className="text-xs mt-1 line-clamp-2">{n.generalNotes || n.notes || "No notes"}</p>
+                      <p className="text-xs mt-1 line-clamp-2">{n.observation || n.noteContent || n.generalNotes || n.notes || "No notes"}</p>
                     </div>
                   ))}
                 </div>
@@ -2407,7 +2407,7 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
                   </div>
                   <span className="text-xs text-muted-foreground">{format(new Date(r.noteTime), "dd/MM HH:mm")} - {r.nurseName}</span>
                 </div>
-                <p className="text-sm">{r.noteContent}</p>
+                <p className="text-sm">{r.observation || r.noteContent || "No content"}</p>
               </Card>
             ))}
           </div>
