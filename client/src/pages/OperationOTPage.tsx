@@ -18,7 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   Scissors, Plus, Search, Calendar as CalendarIcon, Clock, User, 
   FileText, ClipboardList, CheckCircle, AlertCircle, Activity,
-  Users, ChevronRight, ArrowLeft, Stethoscope
+  Users, ChevronRight, ArrowLeft, Stethoscope, Printer
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -82,6 +82,44 @@ const priorityColors: Record<string, string> = {
   urgent: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
   emergency: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
 };
+
+// Print helper function for OT forms
+function printForm(title: string, content: string) {
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${title} - Gravity Hospital</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+            h1 { color: #1a365d; border-bottom: 2px solid #2b6cb0; padding-bottom: 10px; font-size: 18px; }
+            h2 { color: #2d3748; font-size: 14px; margin-top: 20px; }
+            .header { background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+            .field { margin: 8px 0; display: flex; }
+            .field-label { font-weight: bold; width: 200px; color: #4a5568; }
+            .field-value { flex: 1; }
+            .checklist-item { padding: 4px 0; display: flex; align-items: center; gap: 8px; }
+            .checked { color: #38a169; }
+            .unchecked { color: #e53e3e; }
+            .section { margin: 15px 0; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; }
+            .footer { margin-top: 30px; font-size: 12px; color: #718096; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <h1>Gravity Hospital - ${title}</h1>
+          ${content}
+          <div class="footer">Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity AI Manager</div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 250);
+  }
+}
 
 export default function OperationOTPage({ userRole, userId }: OperationOTPageProps) {
   const { toast } = useToast();
@@ -968,7 +1006,37 @@ function CounsellingForm({ existing, onSubmit, isLoading }: { existing: any; onS
         <Textarea name="notes" defaultValue={existing?.notes} placeholder="Any additional counselling notes..." />
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {existing && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const content = `
+                <div class="section">
+                  <div class="field"><span class="field-label">Counselled By:</span><span class="field-value">${existing.counselledBy || "N/A"}</span></div>
+                  <div class="field"><span class="field-label">Counselled At:</span><span class="field-value">${existing.counselledAt ? format(new Date(existing.counselledAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
+                  <div class="field"><span class="field-label">Attendees:</span><span class="field-value">${existing.attendees || "N/A"}</span></div>
+                </div>
+                <h2>Counselling Checklist</h2>
+                <div class="section">
+                  <div class="checklist-item"><span class="${existing.procedureExplained ? 'checked' : 'unchecked'}">[${existing.procedureExplained ? 'Yes' : 'No'}]</span> Procedure explained in detail</div>
+                  <div class="checklist-item"><span class="${existing.risksExplained ? 'checked' : 'unchecked'}">[${existing.risksExplained ? 'Yes' : 'No'}]</span> Risks and complications explained</div>
+                  <div class="checklist-item"><span class="${existing.alternativesDiscussed ? 'checked' : 'unchecked'}">[${existing.alternativesDiscussed ? 'Yes' : 'No'}]</span> Alternative treatments discussed</div>
+                  <div class="checklist-item"><span class="${existing.questionsAnswered ? 'checked' : 'unchecked'}">[${existing.questionsAnswered ? 'Yes' : 'No'}]</span> Patient questions answered</div>
+                </div>
+                <div class="section">
+                  <div class="field"><span class="field-label">Expected Outcome:</span><span class="field-value">${existing.expectedOutcome || "N/A"}</span></div>
+                  <div class="field"><span class="field-label">Patient Understanding:</span><span class="field-value">${existing.patientUnderstanding || "N/A"}</span></div>
+                  <div class="field"><span class="field-label">Notes:</span><span class="field-value">${existing.notes || "N/A"}</span></div>
+                </div>
+              `;
+              printForm("Pre-Op Counselling Record", content);
+            }}
+          >
+            <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
+        )}
         <Button type="submit" disabled={isLoading}>
           {isLoading ? "Saving..." : "Save Counselling Record"}
         </Button>
@@ -1056,7 +1124,33 @@ function ChecklistForm({ existing, onSubmit, isLoading }: { existing: any; onSub
         <Textarea name="remarks" defaultValue={existing?.remarks} placeholder="Any additional notes or exceptions..." />
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {existing && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const checklistHtml = checklistItems.map((item, idx) => 
+                `<div class="checklist-item"><span class="${existing[item.key] ? 'checked' : 'unchecked'}">[${existing[item.key] ? 'Yes' : 'No'}]</span> [${idx + 1}] ${item.label}</div>`
+              ).join('');
+              const content = `
+                <div class="section">
+                  <div class="field"><span class="field-label">Name of Staff:</span><span class="field-value">${existing.completedBy || "N/A"}</span></div>
+                  <div class="field"><span class="field-label">Completed At:</span><span class="field-value">${existing.completedAt ? format(new Date(existing.completedAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
+                </div>
+                <h2>Pre-Operative Checklist Items</h2>
+                <div class="section">${checklistHtml}</div>
+                <div class="section">
+                  <div class="field"><span class="field-label">Received by OT Staff:</span><span class="field-value">${existing.receivedByOTStaff || "N/A"}</span></div>
+                  <div class="field"><span class="field-label">Remarks:</span><span class="field-value">${existing.remarks || "N/A"}</span></div>
+                </div>
+              `;
+              printForm("Pre-Operative Checklist", content);
+            }}
+          >
+            <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
+        )}
         <Button type="submit" disabled={isLoading}>
           {isLoading ? "Saving..." : "Complete Checklist"}
         </Button>
@@ -1247,9 +1341,56 @@ function PAEForm({ existing, onSubmit, isLoading }: { existing: any; onSubmit: (
           <input type="checkbox" name="fitForSurgery" defaultChecked={existing?.fitForSurgery !== false} className="h-4 w-4" />
           <span className="font-medium">Patient is fit for surgery under proposed anaesthesia</span>
         </label>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Evaluation"}
-        </Button>
+        <div className="flex gap-2">
+          {existing && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const content = `
+                  <div class="section">
+                    <div class="field"><span class="field-label">Evaluated By:</span><span class="field-value">${existing.evaluatedBy || "N/A"}</span></div>
+                    <div class="field"><span class="field-label">Evaluated At:</span><span class="field-value">${existing.evaluatedAt ? format(new Date(existing.evaluatedAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
+                  </div>
+                  <h2>Clinical Assessment</h2>
+                  <div class="section">
+                    <div class="field"><span class="field-label">ASA Grade:</span><span class="field-value">${existing.asaGrade || "N/A"}</span></div>
+                    <div class="field"><span class="field-label">Mallampati Score:</span><span class="field-value">${existing.mallampatiScore || "N/A"}</span></div>
+                    <div class="field"><span class="field-label">Airway Assessment:</span><span class="field-value">${existing.airwayAssessment || "N/A"}</span></div>
+                  </div>
+                  <h2>Vital Signs</h2>
+                  <div class="section">
+                    <div class="field"><span class="field-label">Heart Rate:</span><span class="field-value">${existing.heartRate || "N/A"} bpm</span></div>
+                    <div class="field"><span class="field-label">Blood Pressure:</span><span class="field-value">${existing.bloodPressureSystolic || "N/A"}/${existing.bloodPressureDiastolic || "N/A"} mmHg</span></div>
+                    <div class="field"><span class="field-label">SpO2:</span><span class="field-value">${existing.spo2 || "N/A"}%</span></div>
+                    <div class="field"><span class="field-label">Temperature:</span><span class="field-value">${existing.temperature || "N/A"}°C</span></div>
+                    <div class="field"><span class="field-label">Weight:</span><span class="field-value">${existing.weight || "N/A"} kg</span></div>
+                    <div class="field"><span class="field-label">Height:</span><span class="field-value">${existing.height || "N/A"} cm</span></div>
+                  </div>
+                  <h2>Medical History</h2>
+                  <div class="section">
+                    <div class="field"><span class="field-label">Comorbidities:</span><span class="field-value">${existing.comorbidities || "N/A"}</span></div>
+                    <div class="field"><span class="field-label">Current Medications:</span><span class="field-value">${existing.currentMedications || "N/A"}</span></div>
+                    <div class="field"><span class="field-label">Known Allergies:</span><span class="field-value">${existing.allergies || "N/A"}</span></div>
+                    <div class="field"><span class="field-label">Previous Anaesthesia:</span><span class="field-value">${existing.previousAnaesthesia || "N/A"}</span></div>
+                  </div>
+                  <h2>Plan</h2>
+                  <div class="section">
+                    <div class="field"><span class="field-label">Anaesthesia Plan:</span><span class="field-value">${existing.anaesthesiaPlan || "N/A"}</span></div>
+                    <div class="field"><span class="field-label">Special Considerations:</span><span class="field-value">${existing.specialConsiderations || "N/A"}</span></div>
+                    <div class="field"><span class="field-label">Fit for Surgery:</span><span class="field-value">${existing.fitForSurgery !== false ? "Yes" : "No"}</span></div>
+                  </div>
+                `;
+                printForm("Pre-Anaesthetic Evaluation", content);
+              }}
+            >
+              <Printer className="h-4 w-4 mr-1" /> Print
+            </Button>
+          )}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save Evaluation"}
+          </Button>
+        </div>
       </div>
     </form>
   );
@@ -1408,7 +1549,51 @@ function SafetyChecklistForm({ existing, onSubmit, isLoading }: { existing: any;
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-end border-t pt-4">
+      <div className="flex justify-end gap-2 border-t pt-4">
+        {existing && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const content = `
+                <div class="section">
+                  <div class="field"><span class="field-label">Completed By:</span><span class="field-value">${existing.signInCompletedBy || "N/A"}</span></div>
+                  <div class="field"><span class="field-label">Completed At:</span><span class="field-value">${existing.signInCompletedAt ? format(new Date(existing.signInCompletedAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
+                </div>
+                <h2>Sign In (Before Induction)</h2>
+                <div class="section">
+                  <div class="checklist-item"><span class="${existing.patientConfirmedIdentity ? 'checked' : 'unchecked'}">[${existing.patientConfirmedIdentity ? 'Yes' : 'No'}]</span> Patient has confirmed identity, site, procedure, consent</div>
+                  <div class="checklist-item"><span class="${existing.siteMarkedConfirmed ? 'checked' : 'unchecked'}">[${existing.siteMarkedConfirmed ? 'Yes' : 'No'}]</span> Site marked/not applicable</div>
+                  <div class="checklist-item"><span class="${existing.anaesthesiaSafetyChecked ? 'checked' : 'unchecked'}">[${existing.anaesthesiaSafetyChecked ? 'Yes' : 'No'}]</span> Anaesthesia safety check completed</div>
+                  <div class="checklist-item"><span class="${existing.pulseOximeterFunctioning ? 'checked' : 'unchecked'}">[${existing.pulseOximeterFunctioning ? 'Yes' : 'No'}]</span> Pulse oximeter on patient and functioning</div>
+                  <div class="checklist-item"><span class="${existing.allergyConfirmed ? 'checked' : 'unchecked'}">[${existing.allergyConfirmed ? 'Yes' : 'No'}]</span> Known allergy confirmed</div>
+                  <div class="field"><span class="field-label">Difficult Airway Risk:</span><span class="field-value">${existing.difficultAirwayRisk || "N/A"}</span></div>
+                  <div class="field"><span class="field-label">Aspiration Risk:</span><span class="field-value">${existing.aspirationRisk || "N/A"}</span></div>
+                  <div class="field"><span class="field-label">Blood Loss Risk:</span><span class="field-value">${existing.bloodLossRisk || "N/A"}</span></div>
+                </div>
+                <h2>Time Out (Before Skin Incision)</h2>
+                <div class="section">
+                  <div class="checklist-item"><span class="${existing.timeOutDone ? 'checked' : 'unchecked'}">[${existing.timeOutDone ? 'Yes' : 'No'}]</span> Time Out performed</div>
+                  <div class="checklist-item"><span class="${existing.teamIntroduced ? 'checked' : 'unchecked'}">[${existing.teamIntroduced ? 'Yes' : 'No'}]</span> All team members introduced</div>
+                  <div class="checklist-item"><span class="${existing.procedureConfirmed ? 'checked' : 'unchecked'}">[${existing.procedureConfirmed ? 'Yes' : 'No'}]</span> Surgeon, anaesthetist, nurse confirm procedure</div>
+                  <div class="checklist-item"><span class="${existing.antibioticGiven ? 'checked' : 'unchecked'}">[${existing.antibioticGiven ? 'Yes' : 'No'}]</span> Antibiotic prophylaxis given within last 60 minutes</div>
+                  <div class="checklist-item"><span class="${existing.imagingDisplayed ? 'checked' : 'unchecked'}">[${existing.imagingDisplayed ? 'Yes' : 'No'}]</span> Essential imaging displayed (or N/A)</div>
+                </div>
+                <h2>Sign Out (Before Patient Leaves)</h2>
+                <div class="section">
+                  <div class="checklist-item"><span class="${existing.signOutDone ? 'checked' : 'unchecked'}">[${existing.signOutDone ? 'Yes' : 'No'}]</span> Sign Out performed</div>
+                  <div class="checklist-item"><span class="${existing.specimenLabeled ? 'checked' : 'unchecked'}">[${existing.specimenLabeled ? 'Yes' : 'No'}]</span> Specimen labelled correctly (or N/A)</div>
+                  <div class="checklist-item"><span class="${existing.instrumentCountCorrect ? 'checked' : 'unchecked'}">[${existing.instrumentCountCorrect ? 'Yes' : 'No'}]</span> Instrument, sponge, and needle counts complete</div>
+                  <div class="field"><span class="field-label">Equipment Issues:</span><span class="field-value">${existing.equipmentIssues || "None"}</span></div>
+                  <div class="field"><span class="field-label">Recovery Plan:</span><span class="field-value">${existing.recoveryPlan || "N/A"}</span></div>
+                </div>
+              `;
+              printForm("WHO Surgical Safety Checklist", content);
+            }}
+          >
+            <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
+        )}
         <Button type="submit" disabled={isLoading}>
           {isLoading ? "Saving..." : "Save Safety Checklist"}
         </Button>
