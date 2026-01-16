@@ -468,6 +468,29 @@ Comprehensive Indian medicine reference.
 - Manufacturer information
 - CSV import capability for bulk updates
 
+### 14. IPD Investigation Chart
+Comprehensive lab test and imaging documentation for inpatient monitoring.
+
+**Features:**
+- Date-based investigation entries
+- 50+ investigation fields organized by category
+- Nurse attribution and timestamp tracking
+
+**Lab Test Categories:**
+- **Screening**: Blood Group, HIV, HBSAg, HCV
+- **Haematology**: HB/PCV, TLC, DLC, ESR, Platelets, Parasites, BT/CT, PT/APTT, Blood Sugar
+- **Renal Function Tests**: BUN, Creatinine, Electrolytes (Na/K/Cl, Ca/Phos/Mag)
+- **Liver Function Tests**: Bilirubin, SGOT/SGPT, Alkaline Phosphatase, Proteins, Viral Markers
+- **Cardiac Enzymes**: CPK-MB, LDH, Troponin
+- **Lipid Profile**: Cholesterol, Triglycerides, HDL/LDL/VLDL
+- **Other Tests**: Urine/Stool/Sputum examination
+
+**Imaging & Diagnostics:**
+- ECG, 2D Echo, USG, Doppler
+- X-Rays, CT Scan/MRI
+- Histopathology, Fluid Analysis
+- Other Investigations (free text)
+
 ---
 
 ## Use Cases

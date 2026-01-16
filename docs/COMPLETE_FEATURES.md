@@ -113,7 +113,7 @@ HMS Core is a comprehensive Hospital Management System for Gravity Hospital with
 
 ---
 
-## Module 6: Patient Monitoring (NABH Compliant - 14 Sub-modules)
+## Module 6: Patient Monitoring (NABH Compliant - 16 Sub-modules)
 
 ### ICU Chart System
 24-hour data collection with shift-based logging
@@ -132,7 +132,19 @@ HMS Core is a comprehensive Hospital Management System for Gravity Hospital with
 11. **Nursing Shift Notes** - Observations and handover
 12. **Airway, Lines & Tubes** - ETT, central lines, Foley
 13. **Staff on Duty** - Nurse assignments per shift
-14. **Allergies & Precautions** - Always visible banner
+14. **Allergies & Precautions** - Drug/food allergies with isolation precautions and risk flags
+15. **Investigation Chart** - Comprehensive lab tests and imaging results (50+ fields)
+16. **Tests** - Diagnostic test ordering and tracking
+
+### Investigation Chart Details
+- **Screening**: Blood Group, HIV, HBSAg, HCV
+- **Haematology**: HB/PCV, TLC, DLC, ESR, Platelets, Parasites, BT/CT, PT/APTT, Blood Sugar
+- **Renal Function**: BUN, Creatinine, Electrolytes (Na/K/Cl, Ca/Phos/Mag)
+- **Liver Function**: Bilirubin, SGOT/SGPT, Alk Phos, Proteins, Albumin, Viral Markers
+- **Cardiac Enzymes**: CPK-MB, LDH, Troponin
+- **Lipid Profile**: Cholesterol, Triglycerides, HDL/LDL/VLDL
+- **Other Tests**: Urine/Stool/Sputum examination
+- **Imaging**: ECG, 2D Echo, USG, Doppler, X-Rays, CT/MRI, Histopathology, Fluid Analysis
 
 ### Critical Alerts
 - Automatic alerts for abnormal values

@@ -604,7 +604,121 @@ Doctor Orders → Scheduled Times → Nurse Administers → Documents in MAR
 8. Document pressure relief measures
 9. Sign and save
 
-#### 5.4.14 Fall Risk Assessment
+#### 5.4.14 Allergies & Precautions
+**Purpose**: Document patient allergies and special precautions
+
+**Adding Allergy Record**
+1. Click "Add Details" button (only shows when no record exists)
+2. Enter details:
+   | Field | Description |
+   |-------|-------------|
+   | Drug Allergies | Specific drug reactions |
+   | Food Allergies | Food-related allergies |
+   | Isolation Precautions | None, Contact, Droplet, Airborne, Reverse |
+   | Fall Risk | Check if patient at risk |
+   | Pressure Ulcer Risk | Check if at risk |
+3. Save record
+4. Information displayed as badges for quick reference
+
+**Allergy Display**
+- Drug allergies shown with orange icon
+- Food allergies displayed prominently
+- Precaution badges visible at all times
+
+#### 5.4.15 Investigation Chart
+**Purpose**: Record comprehensive laboratory and imaging investigation results
+
+**Adding Investigation Entry**
+1. Click "Add Entry" button
+2. Select investigation date
+3. Fill in relevant sections:
+
+**Screening Section**
+| Field | Description |
+|-------|-------------|
+| Blood Group | Patient blood type |
+| HIV | HIV test result |
+| HBSAg | Hepatitis B result |
+| HCV | Hepatitis C result |
+
+**Haematology Section**
+| Field | Description |
+|-------|-------------|
+| HB / PCV | Hemoglobin and PCV |
+| TLC | Total Leucocyte Count |
+| DLC - P/L/E/M/B | Differential Leucocyte Count |
+| ESR | Erythrocyte Sedimentation Rate |
+| Platelets | Platelet count |
+| Parasites | Blood parasites |
+| BT / CT | Bleeding Time / Clotting Time |
+| PT / APTT | Prothrombin Time / APTT |
+| Blood Sugar Fasting | Fasting glucose |
+| PP / Random | Post-prandial or random sugar |
+
+**Renal Function Tests**
+| Field | Description |
+|-------|-------------|
+| BUN | Blood Urea Nitrogen |
+| Sr. Creatinine | Serum Creatinine |
+| Sr. Na / K / Cl | Electrolytes |
+| Sr. Cal. / Phos. / Mag. | Calcium, Phosphorus, Magnesium |
+| Acid Phos. / Uric Acid | Acid Phosphatase and Uric Acid |
+
+**Liver Function Tests**
+| Field | Description |
+|-------|-------------|
+| Sr. Bilirubin Total | Total Bilirubin |
+| Direct / Indirect | Direct and Indirect Bilirubin |
+| S.G.O.T. / S.G.P.T. | Liver enzymes |
+| Sr. Alkphos. | Alkaline Phosphatase |
+| Sr. Proteins Total | Total Proteins |
+| Albumin | Serum Albumin |
+| Viral Markers | Viral hepatitis markers |
+| Sr. Amylase / Lipase | Pancreatic enzymes |
+
+**Cardiac Enzymes**
+| Field | Description |
+|-------|-------------|
+| CPK MB | Creatine Kinase MB |
+| Sr. LDH | Lactate Dehydrogenase |
+| Tropi | Troponin levels |
+
+**Lipid Profile**
+| Field | Description |
+|-------|-------------|
+| Total Cholesterol | Total cholesterol |
+| Triglycerides | Triglyceride level |
+| HDL / LDL / VLDL | Lipid fractions |
+
+**Other Tests**
+| Field | Description |
+|-------|-------------|
+| Urine Routine | Urinalysis results |
+| Stool Routine | Stool examination |
+| Sputum Examination | Sputum analysis |
+
+**Imaging & Diagnostics**
+| Field | Description |
+|-------|-------------|
+| ECG | Electrocardiogram findings |
+| 2D Echo | Echocardiography report |
+| USG | Ultrasound findings |
+| Doppler | Doppler study results |
+| X-Rays | X-ray interpretations |
+| CT Scan / MRI | Advanced imaging |
+| Histopathology | Tissue analysis |
+| Fluid Analysis | Body fluid analysis |
+| Other Investigations | Additional tests |
+
+4. Save entry
+5. View saved entries with date stamps
+
+**Viewing Investigation History**
+- All entries displayed by date
+- Expandable sections for each category
+- Nurse attribution for each entry
+
+#### 5.4.16 Fall Risk Assessment
 **Purpose**: Prevent patient falls using Morse Fall Scale
 
 **Morse Fall Scale**

@@ -419,6 +419,8 @@ Gravity AI Manager is a comprehensive Hospital Management System designed for Gr
 | Vitals Monitoring | Real-time vital signs |
 | Critical Alerts | High-priority patient alerts |
 | Order Entry | Order tests, medications |
+| Investigation Chart | View/record comprehensive lab and imaging results |
+| Allergies & Precautions | View/add drug/food allergies and special precautions |
 
 ## 3.8 Hospital Services
 | Feature | Description |
@@ -463,7 +465,7 @@ Gravity AI Manager is a comprehensive Hospital Management System designed for Gr
 | Shift Summary | Current shift patient assignments |
 | Quick Actions | Common task shortcuts |
 
-## 4.2 Patient Monitoring (14 Sub-modules)
+## 4.2 Patient Monitoring (16 Sub-modules)
 | Sub-module | Description |
 |------------|-------------|
 | Vitals Recording | Heart rate, BP, temperature, SpO2, respiratory rate |
@@ -480,6 +482,8 @@ Gravity AI Manager is a comprehensive Hospital Management System designed for Gr
 | Fluid Balance | 24-hour fluid calculations |
 | Blood Transfusion | Transfusion monitoring |
 | Procedure Log | Bedside procedures documentation |
+| Allergies & Precautions | Drug/food allergies, isolation precautions, risk flags |
+| Investigation Chart | 50+ lab tests and imaging fields (Blood, Renal, Liver, Cardiac, Lipid, Imaging) |
 
 **Features**:
 - Shift-based logging (Morning, Evening, Night)
@@ -487,6 +491,7 @@ Gravity AI Manager is a comprehensive Hospital Management System designed for Gr
 - Critical value alerts
 - 24-hour data collection
 - NABH-compliant documentation
+- Comprehensive investigation tracking with date-based entries
 
 ## 4.3 Bed Management
 | Feature | Description |

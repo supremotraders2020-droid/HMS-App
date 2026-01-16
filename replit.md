@@ -106,6 +106,17 @@ Gravity AI Manager encompasses 23 core modules with robust role-based access con
 - **Critical Value Alerts**: Auto-escalation for abnormal values
 - **Technician Integration**: Diagnostic test orders from Patient Monitoring route to Technician Portal
 
+### IPD Investigation Chart (January 16, 2026)
+- **Comprehensive Investigation Tab**: New tab in Patient Monitoring after Allergies
+- **50+ Investigation Fields**: Blood screening, Haematology, Renal/Liver Function, Cardiac Enzymes, Lipid Profile, Other Tests
+- **Imaging & Diagnostics**: ECG, Echo, USG, Doppler, X-Rays, CT/MRI, Histopathology, Fluid Analysis
+- **Date-Based Entries**: Each entry includes date and nurse attribution
+
+### ICU Allergy & Precautions Add Form (January 16, 2026)
+- **Add Allergy Button**: Appears when no allergy data exists
+- **Allergy Fields**: Drug Allergies, Food Allergies, Isolation Precautions
+- **Risk Flags**: Fall Risk, Pressure Ulcer Risk checkboxes
+
 ## Documentation Updates (January 2026)
 - **docs/RECENT_UPDATES.md**: Comprehensive changelog for all recent changes
 - **docs/TECHNICIAN_SOP.md**: New SOP for Technician role with workflow isolation details
