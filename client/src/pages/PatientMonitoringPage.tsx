@@ -503,7 +503,66 @@ export default function PatientMonitoringPage() {
       </div>
 
       <div className="flex-1 overflow-auto bg-background p-6">
-        {!selectedDate ? (
+        {!selectedDate && patientTypeFilter === "old" && sessionsFilteredByType.length > 0 ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Clock className="h-5 w-5 text-muted-foreground" />
+                Old Patient Records (Before Last 7 Days)
+              </h3>
+              <Badge variant="secondary" className="text-sm">
+                {uniquePatients.length} patient{uniquePatients.length !== 1 ? 's' : ''}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {uniquePatients.map((patient) => {
+                const patientSessions = sessionsFilteredByType.filter(s => s.patientId === patient.id);
+                const latestSession = patientSessions[0];
+                return (
+                  <Card 
+                    key={patient.id} 
+                    className="cursor-pointer hover-elevate"
+                    onClick={() => {
+                      if (latestSession) {
+                        setSelectedPatientFilter(patient.id);
+                        setSelectedDate(parseISO(latestSession.sessionDate));
+                      }
+                    }}
+                  >
+                    <CardContent className="pt-4">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium block truncate">{patient.name}</span>
+                          <span className="text-sm text-muted-foreground">UHID: {patient.uhid}</span>
+                        </div>
+                        <Badge variant="outline" className="text-xs shrink-0">
+                          {patientSessions.length} session{patientSessions.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                        <Clock className="h-3 w-3" />
+                        <span>Last: {latestSession ? format(parseISO(latestSession.sessionDate), "dd MMM yyyy") : "N/A"}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              Click a patient card to view their session details, or use the calendar to select a specific date.
+            </p>
+          </div>
+        ) : !selectedDate && patientTypeFilter === "old" && sessionsFilteredByType.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mb-6">
+              <Clock className="h-12 w-12 opacity-40" />
+            </div>
+            <h2 className="text-xl font-medium mb-2">No Old Patient Records</h2>
+            <p className="text-sm text-center max-w-md">
+              No monitoring sessions older than 7 days found. Old patient records will appear here after 7 days from their session date.
+            </p>
+          </div>
+        ) : !selectedDate ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
               <CalendarDays className="h-12 w-12 text-primary opacity-60" />
