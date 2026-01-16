@@ -1543,11 +1543,18 @@ function MedicationsSection({ chartId, ordersData, onceOnlyData, canEdit, userId
 }) {
   const { toast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showStatForm, setShowStatForm] = useState(false);
   const [newOrder, setNewOrder] = useState({
     drugName: "",
     dose: "",
     route: "",
     frequency: "",
+    time: "",
+  });
+  const [newStatDrug, setNewStatDrug] = useState({
+    drugName: "",
+    dose: "",
+    route: "",
     time: "",
   });
 
@@ -1570,6 +1577,18 @@ function MedicationsSection({ chartId, ordersData, onceOnlyData, canEdit, userId
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
       toast({ title: "Medication order updated" });
+    },
+  });
+
+  const addStatMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/icu-charts/${chartId}/once-only-drugs`, { ...newStatDrug, givenBy: userId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      setShowStatForm(false);
+      setNewStatDrug({ drugName: "", dose: "", route: "", time: "" });
+      toast({ title: "STAT drug added" });
     },
   });
 
@@ -1688,10 +1707,71 @@ function MedicationsSection({ chartId, ordersData, onceOnlyData, canEdit, userId
       </div>
 
       <div className="space-y-4">
-        <h4 className="font-medium flex items-center gap-2">
-          <Syringe className="w-4 h-4" />
-          Once Only / STAT Drugs
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="font-medium flex items-center gap-2">
+            <Syringe className="w-4 h-4" />
+            Once Only / STAT Drugs
+          </h4>
+          {canEdit && (
+            <Button size="sm" onClick={() => setShowStatForm(!showStatForm)} data-testid="button-add-stat">
+              <Plus className="w-4 h-4 mr-1" />
+              Add STAT
+            </Button>
+          )}
+        </div>
+
+        {showStatForm && (
+          <Card className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="space-y-2">
+                <Label>Drug Name</Label>
+                <Input
+                  value={newStatDrug.drugName}
+                  onChange={e => setNewStatDrug(prev => ({ ...prev, drugName: e.target.value }))}
+                  placeholder="Drug name"
+                  data-testid="input-stat-name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Dose</Label>
+                <Input
+                  value={newStatDrug.dose}
+                  onChange={e => setNewStatDrug(prev => ({ ...prev, dose: e.target.value }))}
+                  placeholder="e.g., 500mg"
+                  data-testid="input-stat-dose"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Route</Label>
+                <Select value={newStatDrug.route} onValueChange={v => setNewStatDrug(prev => ({ ...prev, route: v }))}>
+                  <SelectTrigger data-testid="select-stat-route">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["IV", "IM", "SC", "PO", "Oral", "Topical", "Inhalation"].map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Ordered Time</Label>
+                <Input
+                  type="time"
+                  value={newStatDrug.time}
+                  onChange={e => setNewStatDrug(prev => ({ ...prev, time: e.target.value }))}
+                  data-testid="input-stat-time"
+                />
+              </div>
+              <div className="flex items-end">
+                <Button onClick={() => addStatMutation.mutate()} disabled={!newStatDrug.drugName || addStatMutation.isPending} data-testid="button-save-stat">
+                  Save
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm border">
             <thead>
