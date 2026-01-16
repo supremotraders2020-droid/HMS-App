@@ -2303,8 +2303,22 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
   const { toast } = useToast();
   const [selectedMarker, setSelectedMarker] = useState<{x: number; y: number} | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAddAllergy, setShowAddAllergy] = useState(false);
   const [newMarking, setNewMarking] = useState({ markedArea: "", typeOfInjury: "", grade: "" });
+  const [newAllergy, setNewAllergy] = useState({ drugAllergy: "", foodAllergy: "", otherAllergy: "", specialPrecautions: "" });
   const imgContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const addAllergyMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/icu-charts/${chartId}/allergy-precautions`, newAllergy);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      setShowAddAllergy(false);
+      setNewAllergy({ drugAllergy: "", foodAllergy: "", otherAllergy: "", specialPrecautions: "" });
+      toast({ title: "Allergy information saved" });
+    },
+  });
   
   const updateMarkingMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
@@ -2447,10 +2461,65 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
       </div>
 
       <div className="space-y-4">
-        <h4 className="font-medium flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-500" />
-          Allergies & Special Precautions
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="font-medium flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            Allergies & Special Precautions
+          </h4>
+          {canEdit && !allergyData && (
+            <Button size="sm" onClick={() => setShowAddAllergy(!showAddAllergy)} data-testid="button-add-allergy">
+              <Plus className="w-4 h-4 mr-1" />
+              Add
+            </Button>
+          )}
+        </div>
+
+        {showAddAllergy && (
+          <Card className="p-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Drug Allergy</Label>
+                <Input 
+                  value={newAllergy.drugAllergy} 
+                  onChange={e => setNewAllergy(prev => ({ ...prev, drugAllergy: e.target.value }))} 
+                  placeholder="e.g., Penicillin" 
+                  data-testid="input-drug-allergy" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Food Allergy</Label>
+                <Input 
+                  value={newAllergy.foodAllergy} 
+                  onChange={e => setNewAllergy(prev => ({ ...prev, foodAllergy: e.target.value }))} 
+                  placeholder="e.g., Peanuts" 
+                  data-testid="input-food-allergy" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Other Allergy</Label>
+                <Input 
+                  value={newAllergy.otherAllergy} 
+                  onChange={e => setNewAllergy(prev => ({ ...prev, otherAllergy: e.target.value }))} 
+                  placeholder="e.g., Latex" 
+                  data-testid="input-other-allergy" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Special Precautions</Label>
+                <Input 
+                  value={newAllergy.specialPrecautions} 
+                  onChange={e => setNewAllergy(prev => ({ ...prev, specialPrecautions: e.target.value }))} 
+                  placeholder="e.g., Fall risk" 
+                  data-testid="input-precautions" 
+                />
+              </div>
+            </div>
+            <Button className="mt-4" onClick={() => addAllergyMutation.mutate()} disabled={addAllergyMutation.isPending} data-testid="button-save-allergy">
+              Save
+            </Button>
+          </Card>
+        )}
+
         {allergyData ? (
           <Card className="p-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -2472,7 +2541,7 @@ function BodyChartSection({ chartId, markingsData, allergyData, canEdit, userId 
               </div>
             </div>
           </Card>
-        ) : (
+        ) : !showAddAllergy && (
           <p className="text-muted-foreground">No allergy information recorded</p>
         )}
       </div>
