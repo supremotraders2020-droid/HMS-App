@@ -15524,6 +15524,39 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ICU Doctor & Nurse Notes
+  app.post("/api/icu-charts/:chartId/notes", requireAuth, async (req, res) => {
+    try {
+      // Get user name for recording
+      let recordedByName = "";
+      if (req.body.recordedBy) {
+        const user = await storage.getUserById(req.body.recordedBy);
+        if (user) {
+          recordedByName = user.fullName || user.username || "";
+        }
+      }
+      const entry = await storage.createIcuDoctorNurseNote({ 
+        ...req.body, 
+        icuChartId: req.params.chartId,
+        recordedByName 
+      });
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating doctor/nurse note:", error);
+      res.status(500).json({ error: "Failed to create note" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/notes", requireAuth, async (req, res) => {
+    try {
+      const notes = await storage.getIcuDoctorNurseNotesByChartId(req.params.chartId);
+      res.json(notes);
+    } catch (error) {
+      console.error("Error fetching doctor/nurse notes:", error);
+      res.status(500).json({ error: "Failed to fetch notes" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service

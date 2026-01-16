@@ -5355,3 +5355,20 @@ export const icuAllergyPrecautions = pgTable("icu_allergy_precautions", {
 export const insertIcuAllergyPrecautionsSchema = createInsertSchema(icuAllergyPrecautions).omit({ id: true, createdAt: true });
 export type InsertIcuAllergyPrecautions = z.infer<typeof insertIcuAllergyPrecautionsSchema>;
 export type IcuAllergyPrecautions = typeof icuAllergyPrecautions.$inferSelect;
+
+// Doctor & Nurse Notes (for ICU Charts)
+export const icuDoctorNurseNotes = pgTable("icu_doctor_nurse_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  noteType: text("note_type").notNull(), // "doctor" or "nurse"
+  content: text("content").notNull(),
+  priority: text("priority").default("normal"), // "normal", "important", "critical"
+  shiftTime: text("shift_time"), // "morning", "evening", "night"
+  recordedBy: varchar("recorded_by"),
+  recordedByName: text("recorded_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuDoctorNurseNotesSchema = createInsertSchema(icuDoctorNurseNotes).omit({ id: true, createdAt: true });
+export type InsertIcuDoctorNurseNotes = z.infer<typeof insertIcuDoctorNurseNotesSchema>;
+export type IcuDoctorNurseNotes = typeof icuDoctorNurseNotes.$inferSelect;

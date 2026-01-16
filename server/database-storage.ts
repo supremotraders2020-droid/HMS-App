@@ -130,7 +130,7 @@ import {
   icuDuration, icuFluidBalanceTarget, icuIntakeChart, icuOutputChart,
   icuMedicationOrders, icuNursingRemarks, icuNursingDuty, icuFluidOrders,
   icuNutritionChart, icuBodyMarking, icuNurseDiary, icuOnceOnlyDrugs,
-  icuPreviousDayNotes, icuAllergyPrecautions,
+  icuPreviousDayNotes, icuAllergyPrecautions, icuDoctorNurseNotes,
   type IcuCharts, type InsertIcuCharts,
   type IcuVitalCharts, type InsertIcuVitalCharts,
   type IcuHemodynamicMonitoring, type InsertIcuHemodynamicMonitoring,
@@ -5967,6 +5967,18 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
+  // ICU Doctor & Nurse Notes
+  async createIcuDoctorNurseNote(note: any): Promise<any> {
+    const result = await db.insert(icuDoctorNurseNotes).values(note).returning();
+    return result[0];
+  }
+
+  async getIcuDoctorNurseNotesByChartId(icuChartId: string): Promise<any[]> {
+    return await db.select().from(icuDoctorNurseNotes)
+      .where(eq(icuDoctorNurseNotes.icuChartId, icuChartId))
+      .orderBy(desc(icuDoctorNurseNotes.createdAt));
+  }
+
   // Get complete ICU chart with all related data
   async getCompleteIcuChart(icuChartId: string): Promise<any> {
     const chart = await this.getIcuChartById(icuChartId);
@@ -5977,7 +5989,7 @@ export class DatabaseStorage implements IStorage {
       dailyInvestigations, diabeticChart, playOfDay, cuffPressure, ettTracheostomy,
       duration, fluidBalanceTarget, intakeChart, outputChart, medicationOrders,
       nursingRemarks, nursingDuty, fluidOrders, nutritionChart, bodyMarkings,
-      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions
+      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions, doctorNurseNotes
     ] = await Promise.all([
       this.getIcuVitalChartsByChartId(icuChartId),
       this.getIcuHemodynamicByChartId(icuChartId),
@@ -6003,7 +6015,8 @@ export class DatabaseStorage implements IStorage {
       this.getIcuNurseDiaryByChartId(icuChartId),
       this.getIcuOnceOnlyDrugsByChartId(icuChartId),
       this.getIcuPreviousDayNotesByChartId(icuChartId),
-      this.getIcuAllergyPrecautionsByChartId(icuChartId)
+      this.getIcuAllergyPrecautionsByChartId(icuChartId),
+      this.getIcuDoctorNurseNotesByChartId(icuChartId)
     ]);
 
     return {
@@ -6012,7 +6025,7 @@ export class DatabaseStorage implements IStorage {
       dailyInvestigations, diabeticChart, playOfDay, cuffPressure, ettTracheostomy,
       duration, fluidBalanceTarget, intakeChart, outputChart, medicationOrders,
       nursingRemarks, nursingDuty, fluidOrders, nutritionChart, bodyMarkings,
-      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions
+      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions, doctorNurseNotes
     };
   }
 }

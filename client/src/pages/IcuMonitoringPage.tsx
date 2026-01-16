@@ -687,12 +687,78 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
     },
   });
 
+  const getVitalStatus = (type: string, value: string | number | null): "normal" | "warning" | "critical" => {
+    if (!value) return "normal";
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(num)) return "normal";
+    
+    switch (type) {
+      case "temperature":
+        if (num >= 102 || num < 95) return "critical";
+        if (num >= 100.4 || num < 96.8) return "warning";
+        return "normal";
+      case "pulse":
+        if (num > 130 || num < 45) return "critical";
+        if (num > 100 || num < 55) return "warning";
+        return "normal";
+      case "spo2":
+        if (num < 88) return "critical";
+        if (num < 92) return "warning";
+        return "normal";
+      case "respiratoryRate":
+        if (num > 30 || num < 8) return "critical";
+        if (num > 24 || num < 10) return "warning";
+        return "normal";
+      case "cvp":
+        if (num > 18 || num < 0) return "critical";
+        if (num > 12 || num < 3) return "warning";
+        return "normal";
+      default:
+        return "normal";
+    }
+  };
+
+  const getStatusColor = (status: "normal" | "warning" | "critical") => {
+    switch (status) {
+      case "critical": return "bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border-red-300";
+      case "warning": return "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border-amber-300";
+      default: return "";
+    }
+  };
+
+  const getTrendArrow = (values: number[]) => {
+    if (values.length < 2) return null;
+    const last = values[values.length - 1];
+    const prev = values[values.length - 2];
+    const diff = last - prev;
+    if (Math.abs(diff) < 0.5) return <span className="text-muted-foreground">—</span>;
+    if (diff > 0) return <span className="text-red-500">↑</span>;
+    return <span className="text-green-500">↓</span>;
+  };
+
+  const sortedData = [...data].sort((a, b) => {
+    const timeA = a.hour || "";
+    const timeB = b.hour || "";
+    return timeA.localeCompare(timeB);
+  });
+
+  const latestVitals = sortedData.length > 0 ? sortedData[sortedData.length - 1] : null;
+
+  const vitalTypes = [
+    { key: "temperature", label: "Temp", unit: "°F", icon: <Thermometer className="w-4 h-4" /> },
+    { key: "pulse", label: "Pulse", unit: "bpm", icon: <Heart className="w-4 h-4" /> },
+    { key: "bp", label: "BP", unit: "mmHg", icon: <Activity className="w-4 h-4" /> },
+    { key: "respiratoryRate", label: "RR", unit: "/min", icon: <Wind className="w-4 h-4" /> },
+    { key: "spo2", label: "SpO2", unit: "%", icon: <Droplets className="w-4 h-4" /> },
+    { key: "cvp", label: "CVP", unit: "cmH2O", icon: <BarChart3 className="w-4 h-4" /> },
+  ];
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="font-semibold flex items-center gap-2">
           <Heart className="w-4 h-4 text-red-500" />
-          Vital Signs (24-hour Chart)
+          Vital Signs - Bedside Chart
         </h3>
         {canEdit && (
           <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} data-testid="button-add-vitals">
@@ -703,7 +769,7 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
       </div>
 
       {showAddForm && (
-        <Card className="p-4">
+        <Card className="p-4 border-2 border-primary/20">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label>Time</Label>
@@ -772,62 +838,115 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
                 data-testid="input-vitals-cvp"
               />
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <Button onClick={() => addMutation.mutate()} disabled={!newEntry.hour || addMutation.isPending} data-testid="button-save-vitals">
                 Save
               </Button>
+              <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
             </div>
           </div>
         </Card>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm border">
-          <thead>
-            <tr className="bg-muted">
-              <th className="border p-2 text-left">Time</th>
-              <th className="border p-2">Temp</th>
-              <th className="border p-2">Pulse</th>
-              <th className="border p-2">BP</th>
-              <th className="border p-2">RR</th>
-              <th className="border p-2">SpO2</th>
-              <th className="border p-2">CVP</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="border p-4 text-center text-muted-foreground">
-                  No vital signs recorded. {canEdit && "Click 'Record Vitals' to add data."}
-                </td>
+      {latestVitals && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+          {vitalTypes.map((vital) => {
+            const value = latestVitals[vital.key];
+            const status = getVitalStatus(vital.key, value);
+            const allValues = sortedData
+              .map(d => parseFloat(d[vital.key]))
+              .filter(v => !isNaN(v));
+            return (
+              <Card key={vital.key} className={`p-3 ${getStatusColor(status)} border`}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    {vital.icon}
+                    {vital.label}
+                  </div>
+                  {getTrendArrow(allValues)}
+                </div>
+                <div className="text-xl font-bold">
+                  {value || "-"}
+                  <span className="text-xs font-normal ml-1 text-muted-foreground">{vital.unit}</span>
+                </div>
+                {status !== "normal" && (
+                  <Badge variant={status === "critical" ? "destructive" : "default"} className="text-xs mt-1">
+                    {status.toUpperCase()}
+                  </Badge>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      <Card className="overflow-hidden">
+        <div className="p-2 bg-muted/50 border-b flex items-center justify-between">
+          <span className="text-sm font-medium">24-Hour Vitals Chart</span>
+          <span className="text-xs text-muted-foreground">{sortedData.length} readings</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-slate-100 dark:bg-slate-800">
+                <th className="sticky left-0 bg-slate-100 dark:bg-slate-800 border-r p-2 text-left font-semibold min-w-[100px]">Parameter</th>
+                {sortedData.map((entry, idx) => (
+                  <th key={entry.id || idx} className="border-r p-2 text-center font-medium min-w-[60px]">
+                    <div className="text-xs">{entry.hour}</div>
+                  </th>
+                ))}
+                {sortedData.length === 0 && (
+                  <th className="p-2 text-center text-muted-foreground" colSpan={24}>
+                    No data recorded
+                  </th>
+                )}
               </tr>
-            ) : (
-              data.map((entry: any) => (
-                <tr key={entry.id}>
-                  <td className="border p-2 font-medium">{entry.hour}</td>
-                  <td className="border p-2 text-center">
-                    <EditableCell value={entry.temperature} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "temperature", value: v })} />
+            </thead>
+            <tbody>
+              {vitalTypes.map((vital) => (
+                <tr key={vital.key} className="border-b hover:bg-muted/30">
+                  <td className="sticky left-0 bg-white dark:bg-slate-900 border-r p-2 font-medium">
+                    <div className="flex items-center gap-2">
+                      {vital.icon}
+                      <span>{vital.label}</span>
+                      <span className="text-muted-foreground text-xs">({vital.unit})</span>
+                    </div>
                   </td>
-                  <td className="border p-2 text-center">
-                    <EditableCell value={entry.pulse} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "pulse", value: v })} />
-                  </td>
-                  <td className="border p-2 text-center">
-                    <EditableCell value={entry.bp} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "bp", value: v })} />
-                  </td>
-                  <td className="border p-2 text-center">
-                    <EditableCell value={entry.respiratoryRate} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "respiratoryRate", value: v })} />
-                  </td>
-                  <td className="border p-2 text-center">
-                    <EditableCell value={entry.spo2} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "spo2", value: v })} />
-                  </td>
-                  <td className="border p-2 text-center">
-                    <EditableCell value={entry.cvp} canEdit={canEdit} onSave={(v) => updateMutation.mutate({ id: entry.id, field: "cvp", value: v })} />
-                  </td>
+                  {sortedData.map((entry, idx) => {
+                    const value = entry[vital.key];
+                    const status = getVitalStatus(vital.key, value);
+                    return (
+                      <td key={entry.id || idx} className={`border-r p-2 text-center ${getStatusColor(status)}`}>
+                        <EditableCell 
+                          value={value} 
+                          canEdit={canEdit} 
+                          onSave={(v) => updateMutation.mutate({ id: entry.id, field: vital.key, value: v })} 
+                        />
+                      </td>
+                    );
+                  })}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <div className="flex items-center gap-4 text-xs flex-wrap">
+        <span className="font-medium">Legend:</span>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
+          <span>Critical</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-amber-100 border border-amber-300 rounded"></div>
+          <span>Warning</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-white border border-slate-300 rounded"></div>
+          <span>Normal</span>
+        </div>
+        <span className="text-muted-foreground ml-4">↑ Increasing ↓ Decreasing — Stable</span>
       </div>
     </div>
   );
