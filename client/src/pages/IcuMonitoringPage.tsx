@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plus, Search, Calendar, User, Thermometer, BarChart3, FileText, AlertTriangle, Stethoscope, Syringe, Beaker, FlaskConical, Scale, Timer, BedDouble, ArrowLeft } from "lucide-react";
+import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plus, Search, Calendar, User, Thermometer, BarChart3, FileText, AlertTriangle, Stethoscope, Syringe, Beaker, FlaskConical, Scale, Timer, BedDouble, ArrowLeft, Download } from "lucide-react";
 import { format } from "date-fns";
 import { Pencil, Check, X } from "lucide-react";
 import type { IcuCharts, ServicePatient } from "@shared/schema";
@@ -217,19 +217,98 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
   const canEdit = userRole === "DOCTOR" || userRole === "NURSE" || userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   if (selectedChart) {
+    const handlePrintIcuChart = async () => {
+      toast({ title: "Generating Report", description: "Preparing ICU chart for print..." });
+      try {
+        const printContent = `
+          <html>
+          <head>
+            <title>ICU Chart - ${selectedChart.patientName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; font-size: 11px; }
+              h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 18px; }
+              h2 { color: #2d3748; margin-top: 25px; font-size: 14px; background: #f7fafc; padding: 8px; border-left: 3px solid #3182ce; }
+              .header { margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+              .info-row { display: flex; gap: 8px; }
+              .label { font-weight: bold; color: #4a5568; min-width: 120px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 15px; }
+              th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
+              th { background: #edf2f7; font-weight: 600; }
+              tr:nth-child(even) { background: #f7fafc; }
+              .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 10px; }
+              @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+              @page { margin: 15mm; }
+            </style>
+          </head>
+          <body>
+            <h1>ICU Monitoring Chart - Gravity Hospital</h1>
+            <div class="header">
+              <div class="info-row"><span class="label">Patient Name:</span> ${selectedChart.patientName || '-'}</div>
+              <div class="info-row"><span class="label">Bed No:</span> ${selectedChart.bedNo || '-'}</div>
+              <div class="info-row"><span class="label">Age/Sex:</span> ${selectedChart.age || '-'} / ${selectedChart.sex || '-'}</div>
+              <div class="info-row"><span class="label">Blood Group:</span> ${selectedChart.bloodGroup || '-'}</div>
+              <div class="info-row"><span class="label">Chart Date:</span> ${selectedChart.chartDate || '-'}</div>
+              <div class="info-row"><span class="label">Admission Date:</span> ${selectedChart.dateOfAdmission || '-'}</div>
+              <div class="info-row"><span class="label">Admitting Consultant:</span> ${selectedChart.admittingConsultant || '-'}</div>
+              <div class="info-row"><span class="label">ICU Consultant:</span> ${selectedChart.icuConsultant || '-'}</div>
+              <div class="info-row"><span class="label">Diagnosis:</span> ${selectedChart.diagnosis || '-'}</div>
+              <div class="info-row"><span class="label">Ventilator:</span> ${selectedChart.isVentilated ? 'Yes' : 'No'}</div>
+            </div>
+            
+            <h2>Patient Information</h2>
+            <table>
+              <tr><th>Field</th><th>Value</th></tr>
+              <tr><td>Patient Name</td><td>${selectedChart.patientName || '-'}</td></tr>
+              <tr><td>Bed Number</td><td>${selectedChart.bedNo || '-'}</td></tr>
+              <tr><td>Age</td><td>${selectedChart.age || '-'}</td></tr>
+              <tr><td>Sex</td><td>${selectedChart.sex || '-'}</td></tr>
+              <tr><td>Blood Group</td><td>${selectedChart.bloodGroup || '-'}</td></tr>
+              <tr><td>Diagnosis</td><td>${selectedChart.diagnosis || '-'}</td></tr>
+              <tr><td>Admitting Consultant</td><td>${selectedChart.admittingConsultant || '-'}</td></tr>
+              <tr><td>ICU Consultant</td><td>${selectedChart.icuConsultant || '-'}</td></tr>
+              <tr><td>Date of Admission</td><td>${selectedChart.dateOfAdmission || '-'}</td></tr>
+              <tr><td>Chart Date</td><td>${selectedChart.chartDate || '-'}</td></tr>
+              <tr><td>On Ventilator</td><td>${selectedChart.isVentilated ? 'Yes' : 'No'}</td></tr>
+            </table>
+
+            <div class="footer">
+              <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital ICU Monitoring System</p>
+            </div>
+          </body>
+          </html>
+        `;
+        
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(printContent);
+          printWindow.document.close();
+          printWindow.focus();
+          setTimeout(() => { printWindow.print(); }, 500);
+        }
+        toast({ title: "Report Ready", description: "Print dialog opened" });
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to generate report", variant: "destructive" });
+      }
+    };
+
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" onClick={() => setSelectedChart(null)} data-testid="button-back-to-list">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to List
-          </Button>
-          <div>
-            <h2 className="text-xl font-bold">{selectedChart.patientName}</h2>
-            <p className="text-sm text-muted-foreground">
-              Bed: {selectedChart.bedNo} | Chart Date: {selectedChart.chartDate}
-            </p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={() => setSelectedChart(null)} data-testid="button-back-to-list">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to List
+            </Button>
+            <div>
+              <h2 className="text-xl font-bold">{selectedChart.patientName}</h2>
+              <p className="text-sm text-muted-foreground">
+                Bed: {selectedChart.bedNo} | Chart Date: {selectedChart.chartDate}
+              </p>
+            </div>
           </div>
+          <Button variant="outline" className="gap-2" onClick={handlePrintIcuChart} data-testid="button-print-icu">
+            <Download className="h-4 w-4" /> Print
+          </Button>
         </div>
 
         <IcuChartDetail 
