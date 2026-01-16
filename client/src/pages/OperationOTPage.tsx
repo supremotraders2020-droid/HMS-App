@@ -94,32 +94,34 @@ export default function OperationOTPage({ userRole, userId }: OperationOTPagePro
   const [activePhase, setActivePhase] = useState("preop");
 
   const { data: otCases = [], isLoading } = useQuery<OtCase[]>({
-    queryKey: ["/api/ot-cases", statusFilter !== "all" ? { status: statusFilter } : {}],
+    queryKey: ["/api/ot-cases", statusFilter],
+    queryFn: async () => {
+      const url = statusFilter !== "all" 
+        ? `/api/ot-cases?status=${statusFilter}` 
+        : "/api/ot-cases";
+      const response = await fetch(url, { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch OT cases");
+      return response.json();
+    },
   });
 
-  const { data: admissions = [] } = useQuery<any[]>({
-    queryKey: ["/api/admissions/active"],
+  // Fetch patients from Patient Tracking (admitted patients)
+  const { data: trackingPatients = [] } = useQuery<any[]>({
+    queryKey: ["/api/tracking/patients"],
   });
 
-  const { data: allPatients = [] } = useQuery<any[]>({
-    queryKey: ["/api/patients/service"],
-  });
-
-  const admittedPatients = admissions.map((adm: any) => {
-    const patient = allPatients.find((p: any) => p.id === adm.patientId);
-    return {
-      id: adm.patientId,
-      firstName: patient?.firstName || "Patient",
-      lastName: patient?.lastName || adm.patientId?.substring(0, 8) || "",
-      uhid: patient?.uhid || "",
-      age: patient?.age,
-      gender: patient?.gender,
-      admissionId: adm.id,
-      bedNumber: adm.roomNumber,
-      department: adm.department,
-      diagnosis: adm.primaryDiagnosis,
-    };
-  });
+  // Map tracking patients to the format needed for OT case creation
+  const admittedPatients = trackingPatients.map((tp: any) => ({
+    id: tp.patientId || tp.id,
+    firstName: tp.patientName?.split(" ")[0] || "Patient",
+    lastName: tp.patientName?.split(" ").slice(1).join(" ") || "",
+    uhid: tp.uhid || "",
+    age: tp.age,
+    gender: tp.gender,
+    bedNumber: tp.bedNumber,
+    department: tp.department,
+    diagnosis: tp.diagnosis,
+  }));
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],

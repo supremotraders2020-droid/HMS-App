@@ -15574,7 +15574,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   const logOtAction = async (caseId: string, action: string, userId: string, tableName: string, recordId: string, changes?: any) => {
     try {
       await storage.createOtAuditLog({
-        id: randomUUID(),
+        id: crypto.randomUUID(),
         caseId,
         action,
         userId,
