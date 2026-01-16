@@ -333,22 +333,56 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
               `<tr><td>${formatTime(r.createdAt)}</td><td>${r.noteType || '-'}</td><td>${r.notes || '-'}</td><td>${r.recordedBy || '-'}</td></tr>`
             )}
 
-            ${generateTable('Body Chart Markings', ['Location', 'Type', 'Description', 'Recorded By', 'Date'], bodyMarkings, (r: any) => 
-              `<tr><td>${r.location || '-'}</td><td>${r.markingType || '-'}</td><td>${r.description || '-'}</td><td>${r.recordedBy || '-'}</td><td>${formatDate(r.createdAt)}</td></tr>`
-            )}
+            <h2>Body Marking / Pressure Sore Chart</h2>
+            <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 15px;">
+              <div style="border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; background: #f8fafc;">
+                <svg viewBox="0 0 200 400" width="150" height="300" style="display: block;">
+                  <!-- Head -->
+                  <circle cx="100" cy="30" r="25" fill="none" stroke="#64748b" stroke-width="1.5"/>
+                  <!-- Neck -->
+                  <line x1="100" y1="55" x2="100" y2="70" stroke="#64748b" stroke-width="1.5"/>
+                  <!-- Body -->
+                  <path d="M60 70 L60 180 L100 200 L140 180 L140 70 Z" fill="none" stroke="#64748b" stroke-width="1.5"/>
+                  <!-- Left Arm -->
+                  <path d="M60 75 L30 130 L25 180" fill="none" stroke="#64748b" stroke-width="1.5"/>
+                  <!-- Right Arm -->
+                  <path d="M140 75 L170 130 L175 180" fill="none" stroke="#64748b" stroke-width="1.5"/>
+                  <!-- Left Leg -->
+                  <path d="M80 200 L70 280 L65 380" fill="none" stroke="#64748b" stroke-width="1.5"/>
+                  <!-- Right Leg -->
+                  <path d="M120 200 L130 280 L135 380" fill="none" stroke="#64748b" stroke-width="1.5"/>
+                  <!-- Markings -->
+                  ${bodyMarkings.map((m: any) => m.positionX !== undefined && m.positionY !== undefined ? 
+                    `<circle cx="${m.positionX * 2}" cy="${m.positionY * 4}" r="6" fill="#3b82f6" stroke="white" stroke-width="1.5"/>` : ''
+                  ).join('')}
+                </svg>
+              </div>
+              <div style="flex: 1;">
+                <h3 style="font-size: 11px; margin-bottom: 8px; color: #374151;">Recorded Markings</h3>
+                ${bodyMarkings.length === 0 ? '<p class="no-data">No body markings recorded</p>' : `
+                  <table>
+                    <thead><tr><th>Area</th><th>Type</th><th>Grade</th><th>Date</th></tr></thead>
+                    <tbody>
+                      ${bodyMarkings.map((r: any) => `<tr><td>${r.markedArea || '-'}</td><td>${r.typeOfInjury || '-'}</td><td>${r.grade || '-'}</td><td>${r.date || formatDate(r.createdAt)}</td></tr>`).join('')}
+                    </tbody>
+                  </table>
+                `}
+              </div>
+            </div>
 
-            <h2>Allergy & Precautions</h2>
+            <h2>Allergy & Special Precautions</h2>
             ${allergyData ? `
               <table>
                 <tr><th>Field</th><th>Value</th></tr>
-                <tr><td>Known Allergies</td><td>${allergyData.knownAllergies || 'None recorded'}</td></tr>
-                <tr><td>Drug Allergies</td><td>${allergyData.drugAllergies || 'None recorded'}</td></tr>
-                <tr><td>Food Allergies</td><td>${allergyData.foodAllergies || 'None recorded'}</td></tr>
+                <tr><td>Drug Allergy</td><td>${allergyData.drugAllergy || 'None'}</td></tr>
+                <tr><td>Food Allergy</td><td>${allergyData.foodAllergy || 'None'}</td></tr>
+                <tr><td>Other Allergy</td><td>${allergyData.otherAllergy || 'None'}</td></tr>
                 <tr><td>Fall Risk</td><td>${allergyData.fallRisk ? 'Yes' : 'No'}</td></tr>
-                <tr><td>Pressure Ulcer Risk</td><td>${allergyData.pressureUlcerRisk ? 'Yes' : 'No'}</td></tr>
-                <tr><td>Isolation Required</td><td>${allergyData.isolationRequired ? 'Yes' : 'No'}</td></tr>
-                <tr><td>Isolation Type</td><td>${allergyData.isolationType || '-'}</td></tr>
-                <tr><td>Precautions</td><td>${allergyData.precautions || '-'}</td></tr>
+                <tr><td>Aspiration Risk</td><td>${allergyData.aspirationRisk ? 'Yes' : 'No'}</td></tr>
+                <tr><td>Pressure Sore Risk</td><td>${allergyData.pressureSoreRisk ? 'Yes' : 'No'}</td></tr>
+                <tr><td>DVT Risk</td><td>${allergyData.dvtRisk ? 'Yes' : 'No'}</td></tr>
+                <tr><td>Isolation</td><td>${allergyData.isolation || 'None'}</td></tr>
+                <tr><td>Special Precautions</td><td>${allergyData.specialPrecautions || '-'}</td></tr>
               </table>
             ` : '<p class="no-data">No allergy/precaution data recorded</p>'}
 
