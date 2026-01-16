@@ -57,6 +57,7 @@ export default function PatientMonitoringPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [showNewSession, setShowNewSession] = useState(false);
   const [selectedPatientFilter, setSelectedPatientFilter] = useState<string>("all");
+  const [patientTypeFilter, setPatientTypeFilter] = useState<"current" | "old">("current");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showCalendar, setShowCalendar] = useState(true);
   const [newSessionData, setNewSessionData] = useState({
@@ -134,17 +135,30 @@ export default function PatientMonitoringPage() {
 
   const selectedSession = sessions.find(s => s.id === selectedSessionId);
 
+  // Filter sessions by patient type (current = last 7 days, old = older than 7 days)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  
+  const sessionsFilteredByType = sessions.filter(session => {
+    const sessionDate = parseISO(session.sessionDate);
+    if (patientTypeFilter === "current") {
+      return sessionDate >= sevenDaysAgo;
+    } else {
+      return sessionDate < sevenDaysAgo;
+    }
+  });
+
   const uniquePatients = Array.from(
-    new Map(sessions.map(s => [s.patientId, { id: s.patientId, name: s.patientName, uhid: s.uhid }])).values()
+    new Map(sessionsFilteredByType.map(s => [s.patientId, { id: s.patientId, name: s.patientName, uhid: s.uhid }])).values()
   );
 
-  const filteredSessions = sessions.filter(session => {
+  const filteredSessions = sessionsFilteredByType.filter(session => {
     const matchesPatient = selectedPatientFilter === "all" || session.patientId === selectedPatientFilter;
     const matchesDate = selectedDate ? isSameDay(parseISO(session.sessionDate), selectedDate) : false;
     return matchesPatient && matchesDate;
   });
 
-  const sessionDates = sessions
+  const sessionDates = sessionsFilteredByType
     .filter(s => selectedPatientFilter === "all" || s.patientId === selectedPatientFilter)
     .map(s => parseISO(s.sessionDate));
 
@@ -230,12 +244,39 @@ export default function PatientMonitoringPage() {
               <p className="text-xs sm:text-sm text-muted-foreground truncate">ICU Chart & Nursing Workflow (NABH-Compliant)</p>
             </div>
           </div>
-          <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 w-full sm:w-auto" data-testid="button-new-session">
-                <PlusCircle className="h-4 w-4" /> <span>New Session</span>
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+              <button
+                onClick={() => setPatientTypeFilter("current")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                  patientTypeFilter === "current" 
+                    ? "bg-background text-foreground shadow-sm" 
+                    : "hover:bg-background/50"
+                }`}
+                data-testid="tab-current-patient"
+              >
+                <Users className="h-4 w-4 mr-1.5" />
+                Current Patient
+              </button>
+              <button
+                onClick={() => setPatientTypeFilter("old")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                  patientTypeFilter === "old" 
+                    ? "bg-background text-foreground shadow-sm" 
+                    : "hover:bg-background/50"
+                }`}
+                data-testid="tab-old-patient"
+              >
+                <Clock className="h-4 w-4 mr-1.5" />
+                Old Patient
+              </button>
+            </div>
+            <Dialog open={showNewSession} onOpenChange={setShowNewSession}>
+              <DialogTrigger asChild>
+                <Button className="gap-2" data-testid="button-new-session">
+                  <PlusCircle className="h-4 w-4" /> <span>New Session</span>
+                </Button>
+              </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Start New Monitoring Session</DialogTitle>
@@ -374,6 +415,7 @@ export default function PatientMonitoringPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+          </div>
         </div>
         
         <div className="flex items-center gap-4 flex-wrap">
