@@ -765,50 +765,140 @@ export default function PatientMonitoringPage() {
                 <Button 
                 variant="outline" 
                 className="gap-2 shrink-0"
-                onClick={() => {
-                  const printContent = document.createElement('div');
-                  printContent.innerHTML = `
-                    <html>
-                    <head>
-                      <title>IPD Monitoring Report - ${selectedSession.patientName}</title>
-                      <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; }
-                        h2 { color: #2d3748; margin-top: 20px; }
-                        .header { margin-bottom: 20px; }
-                        .info-row { display: flex; gap: 20px; margin: 5px 0; }
-                        .label { font-weight: bold; color: #4a5568; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
-                        th { background: #edf2f7; }
-                        @media print { body { print-color-adjust: exact; } }
-                      </style>
-                    </head>
-                    <body>
-                      <h1>IPD Monitoring Report</h1>
-                      <div class="header">
-                        <div class="info-row"><span class="label">Patient:</span> ${selectedSession.patientName}</div>
-                        <div class="info-row"><span class="label">UHID:</span> ${selectedSession.uhid}</div>
-                        <div class="info-row"><span class="label">Ward:</span> ${selectedSession.ward} - Bed ${selectedSession.bedNumber}</div>
-                        <div class="info-row"><span class="label">Date:</span> ${format(new Date(selectedSession.sessionDate), "dd MMMM yyyy")}</div>
-                        <div class="info-row"><span class="label">Diagnosis:</span> ${selectedSession.primaryDiagnosis || "Not recorded"}</div>
-                        <div class="info-row"><span class="label">Consultant:</span> ${selectedSession.admittingConsultant || "Not assigned"}</div>
-                        <div class="info-row"><span class="label">Ventilator:</span> ${selectedSession.isVentilated ? "Yes" : "No"}</div>
-                      </div>
-                      <p style="margin-top: 30px; color: #718096; font-size: 12px;">Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")}</p>
-                    </body>
-                    </html>
-                  `;
-                  const printWindow = window.open('', '_blank');
-                  if (printWindow) {
-                    printWindow.document.write(printContent.innerHTML);
-                    printWindow.document.close();
-                    printWindow.focus();
-                    setTimeout(() => {
-                      printWindow.print();
-                    }, 250);
+                onClick={async () => {
+                  toast({ title: "Generating Report", description: "Fetching all patient data..." });
+                  try {
+                    const sessionId = selectedSession.id;
+                    const [vitals, injections, mar, ventilator, abgLab, intake, output, diabetic, onceOnly, shiftNotes, airway, dutyStaff, allergies] = await Promise.all([
+                      fetch(`/api/patient-monitoring/vitals/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/inotropes/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/mar/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/ventilator/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/abg-lab/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/intake/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/output/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/diabetic/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/once-only/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/shift-notes/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/airway/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/duty-staff/${sessionId}`).then(r => r.json()).catch(() => []),
+                      fetch(`/api/patient-monitoring/allergies/${sessionId}`).then(r => r.json()).catch(() => [])
+                    ]);
+                    
+                    const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN') : '-';
+                    const formatTime = (d: string) => d ? new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-';
+                    
+                    const generateTable = (title: string, headers: string[], rows: any[], renderRow: (r: any) => string) => {
+                      if (!rows || rows.length === 0) return `<h2>${title}</h2><p class="no-data">No data recorded</p>`;
+                      return `<h2>${title}</h2><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(renderRow).join('')}</tbody></table>`;
+                    };
+
+                    const printContent = `
+                      <html>
+                      <head>
+                        <title>IPD Monitoring Report - ${selectedSession.patientName}</title>
+                        <style>
+                          body { font-family: Arial, sans-serif; padding: 20px; font-size: 11px; }
+                          h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 18px; }
+                          h2 { color: #2d3748; margin-top: 25px; font-size: 14px; background: #f7fafc; padding: 8px; border-left: 3px solid #3182ce; }
+                          .header { margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+                          .info-row { display: flex; gap: 8px; }
+                          .label { font-weight: bold; color: #4a5568; min-width: 100px; }
+                          table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 15px; }
+                          th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
+                          th { background: #edf2f7; font-weight: 600; }
+                          tr:nth-child(even) { background: #f7fafc; }
+                          .no-data { color: #a0aec0; font-style: italic; margin: 10px 0; }
+                          .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 10px; }
+                          @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+                          @page { margin: 15mm; }
+                        </style>
+                      </head>
+                      <body>
+                        <h1>IPD Monitoring Report - Gravity Hospital</h1>
+                        <div class="header">
+                          <div class="info-row"><span class="label">Patient Name:</span> ${selectedSession.patientName}</div>
+                          <div class="info-row"><span class="label">UHID:</span> ${selectedSession.uhid}</div>
+                          <div class="info-row"><span class="label">Ward/Bed:</span> ${selectedSession.ward} - Bed ${selectedSession.bedNumber}</div>
+                          <div class="info-row"><span class="label">Session Date:</span> ${format(new Date(selectedSession.sessionDate), "dd MMMM yyyy")}</div>
+                          <div class="info-row"><span class="label">Diagnosis:</span> ${selectedSession.primaryDiagnosis || "Not recorded"}</div>
+                          <div class="info-row"><span class="label">Consultant:</span> ${selectedSession.admittingConsultant || "Not assigned"}</div>
+                          <div class="info-row"><span class="label">Ventilator:</span> ${selectedSession.isVentilated ? "Yes" : "No"}</div>
+                          <div class="info-row"><span class="label">Admission Date:</span> ${formatDate(selectedSession.admissionDate)}</div>
+                        </div>
+
+                        ${generateTable('Vitals', ['Time', 'HR', 'BP', 'Temp', 'RR', 'SpO2', 'Staff'], vitals, (r: any) => 
+                          `<tr><td>${r.hourSlot || formatTime(r.createdAt)}</td><td>${r.heartRate || '-'}</td><td>${r.systolicBp || '-'}/${r.diastolicBp || '-'}</td><td>${r.temperature ? r.temperature + '°C' : '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('Injections', ['Injection Name', 'Date', 'Staff Name'], injections, (r: any) => 
+                          `<tr><td>${r.drugName || '-'}</td><td>${formatDate(r.startTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('Medicines', ['Medicine Name', 'Date', 'Staff Name'], mar, (r: any) => 
+                          `<tr><td>${r.drugName || r.medicineName || '-'}</td><td>${formatDate(r.scheduledTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('Ventilator Settings', ['Time', 'Mode', 'FiO2', 'PEEP', 'Tidal Vol', 'RR Set'], ventilator, (r: any) => 
+                          `<tr><td>${formatTime(r.createdAt)}</td><td>${r.mode || '-'}</td><td>${r.fio2 || '-'}%</td><td>${r.peep || '-'}</td><td>${r.tidalVolume || '-'}</td><td>${r.respiratoryRateSet || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('ABG / Lab Values', ['Time', 'pH', 'pCO2', 'pO2', 'HCO3', 'Lactate', 'Na', 'K'], abgLab, (r: any) => 
+                          `<tr><td>${formatTime(r.createdAt)}</td><td>${r.ph || '-'}</td><td>${r.pco2 || '-'}</td><td>${r.po2 || '-'}</td><td>${r.hco3 || '-'}</td><td>${r.lactate || '-'}</td><td>${r.sodium || '-'}</td><td>${r.potassium || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('Intake', ['Time', 'Type', 'Volume (ml)', 'Route', 'Staff'], intake, (r: any) => 
+                          `<tr><td>${r.hourSlot || formatTime(r.createdAt)}</td><td>${r.intakeType || '-'}</td><td>${r.volume || '-'}</td><td>${r.route || '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('Output', ['Time', 'Type', 'Volume (ml)', 'Color', 'Staff'], output, (r: any) => 
+                          `<tr><td>${r.hourSlot || formatTime(r.createdAt)}</td><td>${r.outputType || '-'}</td><td>${r.volume || '-'}</td><td>${r.color || '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('Diabetic Monitoring', ['Time', 'Blood Sugar', 'Insulin Type', 'Insulin Dose', 'Alert'], diabetic, (r: any) => 
+                          `<tr><td>${r.checkTime || formatTime(r.createdAt)}</td><td>${r.bloodSugarLevel || '-'} mg/dL</td><td>${r.insulinType || '-'}</td><td>${r.insulinDose || '-'}</td><td>${r.alertType || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('Once-Only Medications', ['Drug Name', 'Dose', 'Route', 'Indication', 'Given At', 'Given By'], onceOnly, (r: any) => 
+                          `<tr><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.indication || '-'}</td><td>${formatTime(r.givenAt || r.createdAt)}</td><td>${r.givenBy || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('Shift Notes', ['Shift', 'Notes', 'Staff', 'Time'], shiftNotes, (r: any) => 
+                          `<tr><td>${r.shift || '-'}</td><td>${r.notes || '-'}</td><td>${r.nurseName || '-'}</td><td>${formatTime(r.createdAt)}</td></tr>`
+                        )}
+
+                        ${generateTable('Lines & Tubes / Airway', ['Type', 'Site', 'Size', 'Inserted Date', 'Due Date', 'Status'], airway, (r: any) => 
+                          `<tr><td>${r.lineType || '-'}</td><td>${r.site || '-'}</td><td>${r.size || '-'}</td><td>${formatDate(r.insertedDate)}</td><td>${formatDate(r.dueDate)}</td><td>${r.status || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('Duty Staff', ['Shift', 'Staff Name', 'Role', 'Date'], dutyStaff, (r: any) => 
+                          `<tr><td>${r.shift || '-'}</td><td>${r.staffName || '-'}</td><td>${r.role || '-'}</td><td>${formatDate(r.createdAt)}</td></tr>`
+                        )}
+
+                        ${generateTable('Allergies', ['Allergen', 'Type', 'Severity', 'Reaction', 'Reported By'], allergies, (r: any) => 
+                          `<tr><td>${r.allergen || '-'}</td><td>${r.allergenType || '-'}</td><td>${r.severity || '-'}</td><td>${r.reaction || '-'}</td><td>${r.reportedBy || '-'}</td></tr>`
+                        )}
+
+                        <div class="footer">
+                          <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital IPD Monitoring System</p>
+                        </div>
+                      </body>
+                      </html>
+                    `;
+                    
+                    const printWindow = window.open('', '_blank');
+                    if (printWindow) {
+                      printWindow.document.write(printContent);
+                      printWindow.document.close();
+                      printWindow.focus();
+                      setTimeout(() => {
+                        printWindow.print();
+                      }, 500);
+                    }
+                    toast({ title: "Report Ready", description: "Print dialog opened" });
+                  } catch (error) {
+                    toast({ title: "Error", description: "Failed to generate report", variant: "destructive" });
                   }
-                  toast({ title: "Export Ready", description: "Print dialog opened for PDF export" });
                 }}
                 data-testid="button-export-pdf"
               >
