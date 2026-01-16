@@ -2111,10 +2111,14 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
 function MARTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ medicineName: "", dose: "", route: "", frequency: "", scheduledTime: "" });
+  const [form, setForm] = useState({ medicineName: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/mar/${sessionId}`]
+  });
+
+  const { data: nurses = [] } = useQuery<any[]>({
+    queryKey: ["/api/users/nurses"]
   });
 
   const saveMutation = useMutation({
@@ -2122,7 +2126,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
     onSuccess: () => { 
       refetch(); 
       toast({ title: "Medicine Entry Added", description: "Medication recorded successfully" });
-      setForm({ medicineName: "", dose: "", route: "", frequency: "", scheduledTime: "" });
+      setForm({ medicineName: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
       setDialogOpen(false);
     },
     onError: () => {
@@ -2134,14 +2138,16 @@ function MARTab({ sessionId }: { sessionId: string }) {
     saveMutation.mutate({ 
       sessionId, 
       drugName: form.medicineName,
-      dose: form.dose,
-      route: form.route,
-      frequency: form.frequency || "1x",
-      scheduledTime: new Date().toISOString(),
-      status: "GIVEN",
-      nurseId: "system-nurse",
-      nurseName: "ICU Nurse"
+      scheduledTime: new Date(form.date).toISOString(),
+      nurseId: form.nurseId,
+      nurseName: form.nurseName,
+      status: "GIVEN"
     });
+  };
+
+  const handleNurseChange = (nurseId: string) => {
+    const selectedNurse = nurses.find((n: any) => n.id === nurseId);
+    setForm({ ...form, nurseId, nurseName: selectedNurse?.fullName || "" });
   };
 
   return (
@@ -2158,33 +2164,27 @@ function MARTab({ sessionId }: { sessionId: string }) {
               <DialogDescription>Record medication administration</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
-              <div><Label>Medicine Name</Label><Input value={form.medicineName} onChange={(e) => setForm({...form, medicineName: e.target.value})} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Dose</Label><Input value={form.dose} onChange={(e) => setForm({...form, dose: e.target.value})} placeholder="e.g., 500mg" /></div>
-                <div><Label>Route</Label>
-                  <Select value={form.route} onValueChange={(v) => setForm({...form, route: v})}>
-                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                    <SelectContent>
-                      {["Oral", "IV", "IM", "SC", "Topical", "Inhaled", "Rectal", "Sublingual"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Frequency</Label><Input value={form.frequency} onChange={(e) => setForm({...form, frequency: e.target.value})} placeholder="e.g., TDS, BD" /></div>
-                <div><Label>Scheduled Time</Label>
-                  <Select value={form.scheduledTime} onValueChange={(v) => setForm({...form, scheduledTime: v})}>
-                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                    <SelectContent>{HOUR_SLOTS.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+              <div><Label>Medicine Name</Label><Input value={form.medicineName} onChange={(e) => setForm({...form, medicineName: e.target.value})} placeholder="e.g., Paracetamol 500mg" /></div>
+              <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
+              <div>
+                <Label>Staff Name</Label>
+                <Select value={form.nurseId} onValueChange={handleNurseChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select nurse" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {nurses.map((nurse: any) => (
+                      <SelectItem key={nurse.id} value={nurse.id}>{nurse.fullName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter className="gap-2">
               <DialogClose asChild>
                 <Button variant="outline" type="button">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleSave} disabled={!form.medicineName || !form.dose || !form.route || saveMutation.isPending}>
+              <Button onClick={handleSave} disabled={!form.medicineName || !form.nurseId || saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Add"}
               </Button>
             </DialogFooter>
@@ -2193,28 +2193,22 @@ function MARTab({ sessionId }: { sessionId: string }) {
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No medications scheduled</p>
+          <p className="text-muted-foreground text-center py-8">No medicines recorded</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Medicine</TableHead>
-                <TableHead>Dose</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead>Frequency</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Medicine Name</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Staff Name</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {records.map((r: any) => (
                 <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.medicineName}</TableCell>
-                  <TableCell>{r.dose}</TableCell>
-                  <TableCell>{r.route}</TableCell>
-                  <TableCell>{r.frequency}</TableCell>
-                  <TableCell>{r.scheduledTime}</TableCell>
-                  <TableCell><Badge variant={r.status === "GIVEN" ? "default" : "secondary"}>{r.status}</Badge></TableCell>
+                  <TableCell className="font-medium">{r.drugName || r.medicineName}</TableCell>
+                  <TableCell>{r.scheduledTime ? format(new Date(r.scheduledTime), "dd/MM/yyyy") : format(new Date(r.createdAt), "dd/MM/yyyy")}</TableCell>
+                  <TableCell>{r.nurseName || "-"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
