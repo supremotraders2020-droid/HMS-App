@@ -877,7 +877,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     { id: "medical-records", title: "Medical Records", icon: ClipboardList },
     { id: "diagnostic-reports", title: "Diagnostic Reports", icon: Activity },
     { id: "templates", title: "Rx Templates", icon: ClipboardList },
-    { id: "patient-monitoring", title: "Patient Monitoring", icon: MonitorCheck },
+    { id: "patient-monitoring", title: "IPD Monitoring", icon: MonitorCheck },
     { id: "icu-monitoring", title: "ICU Monitoring", icon: Heart },
     { id: "hospital-services", title: "Services & Surgeries", icon: Scissors },
     { id: "staff-management", title: "Staff Management", icon: UserCheck },

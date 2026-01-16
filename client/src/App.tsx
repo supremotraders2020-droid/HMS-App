@@ -508,14 +508,14 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
         )}
       </Route>
 
-      {/* Patient Monitoring Route - for Admin, Doctor, Nurse */}
+      {/* IPD Monitoring Route - for Admin, Doctor, Nurse */}
       <Route path="/patient-monitoring">
         {["ADMIN", "DOCTOR", "NURSE"].includes(currentUser.role) ? (
           <PatientMonitoringPage />
         ) : (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
-            <p className="text-muted-foreground">Only medical staff can access Patient Monitoring.</p>
+            <p className="text-muted-foreground">Only medical staff can access IPD Monitoring.</p>
           </div>
         )}
       </Route>

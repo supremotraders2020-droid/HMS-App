@@ -1031,7 +1031,7 @@ export default function PatientTrackingService() {
                               <DialogHeader className="border-b pb-3">
                                 <DialogTitle className="flex items-center gap-3">
                                   <ClipboardList className="h-5 w-5 text-primary" />
-                                  Patient Monitoring: {patient.name}
+                                  IPD Monitoring: {patient.name}
                                 </DialogTitle>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                   <Badge variant="outline">{patient.age} yrs, {patient.gender}</Badge>
@@ -1051,7 +1051,7 @@ export default function PatientTrackingService() {
                                   <div className="py-8 text-center text-muted-foreground">
                                     <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-50" />
                                     <p>No monitoring session found for this patient.</p>
-                                    <p className="text-sm mt-1">Please create a monitoring session in Patient Monitoring first.</p>
+                                    <p className="text-sm mt-1">Please create a monitoring session in IPD Monitoring first.</p>
                                   </div>
                                 ) : (
                                   <Accordion type="multiple" defaultValue={["vitals", "overview"]} className="space-y-2">

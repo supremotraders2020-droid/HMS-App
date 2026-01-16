@@ -226,7 +226,7 @@ export default function PatientMonitoringPage() {
               <Hospital className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-semibold tracking-tight truncate">Patient Monitoring</h1>
+              <h1 className="text-lg sm:text-xl font-semibold tracking-tight truncate">IPD Monitoring</h1>
               <p className="text-xs sm:text-sm text-muted-foreground truncate">ICU Chart & Nursing Workflow (NABH-Compliant)</p>
             </div>
           </div>
@@ -570,7 +570,7 @@ export default function PatientMonitoringPage() {
                   printContent.innerHTML = `
                     <html>
                     <head>
-                      <title>Patient Monitoring Report - ${selectedSession.patientName}</title>
+                      <title>IPD Monitoring Report - ${selectedSession.patientName}</title>
                       <style>
                         body { font-family: Arial, sans-serif; padding: 20px; }
                         h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; }
@@ -585,7 +585,7 @@ export default function PatientMonitoringPage() {
                       </style>
                     </head>
                     <body>
-                      <h1>Patient Monitoring Report</h1>
+                      <h1>IPD Monitoring Report</h1>
                       <div class="header">
                         <div class="info-row"><span class="label">Patient:</span> ${selectedSession.patientName}</div>
                         <div class="info-row"><span class="label">UHID:</span> ${selectedSession.uhid}</div>

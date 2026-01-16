@@ -102,7 +102,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
       { title: "Biowaste Management", url: "/biowaste-management", icon: Trash2, roles: ["ADMIN"] },
       { title: "Swab Monitoring", url: "/swab-monitoring", icon: FlaskConical, roles: ["ADMIN"] },
       { title: "Disease Knowledge", url: "/disease-knowledge", icon: BookOpen, roles: ["ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"] },
-      { title: "Patient Monitoring", url: "/patient-monitoring", icon: Stethoscope, roles: ["ADMIN", "DOCTOR", "NURSE"] },
+      { title: "IPD Monitoring", url: "/patient-monitoring", icon: Stethoscope, roles: ["ADMIN", "DOCTOR", "NURSE"] },
       { title: "ICU Monitoring", url: "/icu-monitoring", icon: Heart, roles: ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE"] },
       { title: "Patient Barcode", url: "/patient-barcode", icon: QrCode, roles: ["ADMIN", "DOCTOR", "NURSE"] },
       { title: "Staff Management", url: "/staff-management", icon: UserCheck, roles: ["ADMIN", "OPD_MANAGER", "DOCTOR", "NURSE"] },
@@ -308,7 +308,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {getMenuItems(currentRole).filter(item => 
-                ['OPD Service', 'Patient Service', 'Patient Tracking', 'Patient Monitoring', 'ICU Monitoring', 'Biometric Service', 'Prescriptions', 'Staff Management', 'Services & Surgeries'].includes(item.title)
+                ['OPD Service', 'Patient Service', 'Patient Tracking', 'IPD Monitoring', 'ICU Monitoring', 'Biometric Service', 'Prescriptions', 'Staff Management', 'Services & Surgeries'].includes(item.title)
               ).map((item, index) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
@@ -397,7 +397,7 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
                 {getMenuItems(currentRole).filter(item => 
-                  !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'Patient Monitoring', 'Prescriptions', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service', 'Staff Management', 'Services & Surgeries'].includes(item.title)
+                  !['Dashboard', 'OPD Service', 'Patient Service', 'Inventory Service', 'Patient Tracking', 'Biometric Service', 'IPD Monitoring', 'Prescriptions', 'Equipment Servicing', 'Oxygen Tracker', 'Chatbot Service', 'Notification Service', 'Staff Management', 'Services & Surgeries'].includes(item.title)
                 ).map((item, index) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
