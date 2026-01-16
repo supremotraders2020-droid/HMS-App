@@ -15563,6 +15563,842 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ========== OPERATION & OT MODULE ==========
+
+  // Helper to check OT access (SUPER_ADMIN, ADMIN, DOCTOR allowed)
+  const checkOtAccess = (role: string) => {
+    return ["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE"].includes(role);
+  };
+
+  // Create OT audit log helper
+  const logOtAction = async (caseId: string, action: string, userId: string, tableName: string, recordId: string, changes?: any) => {
+    try {
+      await storage.createOtAuditLog({
+        id: randomUUID(),
+        caseId,
+        action,
+        userId,
+        tableName,
+        recordId,
+        changes: changes ? JSON.stringify(changes) : null
+      });
+    } catch (e) {
+      console.error("OT Audit log error:", e);
+    }
+  };
+
+  // OT Cases
+  app.get("/api/ot-cases", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!checkOtAccess(user.role)) {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      const { status, date, surgeonId, patientId } = req.query;
+      let cases;
+      
+      if (status) {
+        cases = await storage.getOtCasesByStatus(status as string);
+      } else if (date) {
+        cases = await storage.getOtCasesByDate(date as string);
+      } else if (surgeonId) {
+        cases = await storage.getOtCasesBySurgeon(surgeonId as string);
+      } else if (patientId) {
+        cases = await storage.getOtCasesByPatient(patientId as string);
+      } else {
+        cases = await storage.getOtCases();
+      }
+      
+      res.json(cases);
+    } catch (error) {
+      console.error("Error fetching OT cases:", error);
+      res.status(500).json({ error: "Failed to fetch OT cases" });
+    }
+  });
+
+  app.get("/api/ot-cases/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!checkOtAccess(user.role)) {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      const otCase = await storage.getOtCaseById(req.params.id);
+      if (!otCase) {
+        return res.status(404).json({ error: "OT case not found" });
+      }
+      res.json(otCase);
+    } catch (error) {
+      console.error("Error fetching OT case:", error);
+      res.status(500).json({ error: "Failed to fetch OT case" });
+    }
+  });
+
+  app.post("/api/ot-cases", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!["SUPER_ADMIN", "ADMIN", "DOCTOR"].includes(user.role)) {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      const caseId = randomUUID();
+      const otCase = await storage.createOtCase({
+        id: caseId,
+        ...req.body,
+        createdBy: user.id
+      });
+      
+      await logOtAction(caseId, "CREATE", user.id, "ot_cases", caseId, req.body);
+      res.status(201).json(otCase);
+    } catch (error) {
+      console.error("Error creating OT case:", error);
+      res.status(500).json({ error: "Failed to create OT case" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!["SUPER_ADMIN", "ADMIN", "DOCTOR"].includes(user.role)) {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      const otCase = await storage.updateOtCase(req.params.id, req.body);
+      if (!otCase) {
+        return res.status(404).json({ error: "OT case not found" });
+      }
+      
+      await logOtAction(req.params.id, "UPDATE", user.id, "ot_cases", req.params.id, req.body);
+      res.json(otCase);
+    } catch (error) {
+      console.error("Error updating OT case:", error);
+      res.status(500).json({ error: "Failed to update OT case" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:id/status", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!["SUPER_ADMIN", "ADMIN", "DOCTOR"].includes(user.role)) {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      const { status } = req.body;
+      const otCase = await storage.updateOtCaseStatus(req.params.id, status);
+      if (!otCase) {
+        return res.status(404).json({ error: "OT case not found" });
+      }
+      
+      await logOtAction(req.params.id, "STATUS_CHANGE", user.id, "ot_cases", req.params.id, { status });
+      res.json(otCase);
+    } catch (error) {
+      console.error("Error updating OT case status:", error);
+      res.status(500).json({ error: "Failed to update status" });
+    }
+  });
+
+  // OT Case Team
+  app.get("/api/ot-cases/:caseId/team", requireAuth, async (req, res) => {
+    try {
+      const team = await storage.getOtCaseTeam(req.params.caseId);
+      res.json(team);
+    } catch (error) {
+      console.error("Error fetching OT team:", error);
+      res.status(500).json({ error: "Failed to fetch team" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/team", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!["SUPER_ADMIN", "ADMIN", "DOCTOR"].includes(user.role)) {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      const teamMemberId = randomUUID();
+      const member = await storage.addOtCaseTeamMember({
+        id: teamMemberId,
+        caseId: req.params.caseId,
+        ...req.body
+      });
+      
+      await logOtAction(req.params.caseId, "ADD_TEAM_MEMBER", user.id, "ot_case_team", teamMemberId, req.body);
+      res.status(201).json(member);
+    } catch (error) {
+      console.error("Error adding team member:", error);
+      res.status(500).json({ error: "Failed to add team member" });
+    }
+  });
+
+  app.delete("/api/ot-cases/:caseId/team/:memberId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!["SUPER_ADMIN", "ADMIN", "DOCTOR"].includes(user.role)) {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      const success = await storage.removeOtCaseTeamMember(req.params.memberId);
+      if (success) {
+        await logOtAction(req.params.caseId, "REMOVE_TEAM_MEMBER", user.id, "ot_case_team", req.params.memberId);
+      }
+      res.json({ success });
+    } catch (error) {
+      console.error("Error removing team member:", error);
+      res.status(500).json({ error: "Failed to remove team member" });
+    }
+  });
+
+  // Pre-Op Counselling
+  app.get("/api/ot-cases/:caseId/preop-counselling", requireAuth, async (req, res) => {
+    try {
+      const counselling = await storage.getOtPreopCounselling(req.params.caseId);
+      res.json(counselling || null);
+    } catch (error) {
+      console.error("Error fetching counselling:", error);
+      res.status(500).json({ error: "Failed to fetch counselling" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/preop-counselling", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const counselling = await storage.createOtPreopCounselling({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        counselledBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_preop_counselling", recordId, req.body);
+      res.status(201).json(counselling);
+    } catch (error) {
+      console.error("Error creating counselling:", error);
+      res.status(500).json({ error: "Failed to create counselling" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/preop-counselling/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const counselling = await storage.updateOtPreopCounselling(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_preop_counselling", req.params.id, req.body);
+      res.json(counselling);
+    } catch (error) {
+      console.error("Error updating counselling:", error);
+      res.status(500).json({ error: "Failed to update counselling" });
+    }
+  });
+
+  // Pre-Op Checklist
+  app.get("/api/ot-cases/:caseId/preop-checklist", requireAuth, async (req, res) => {
+    try {
+      const checklist = await storage.getOtPreopChecklist(req.params.caseId);
+      res.json(checklist || null);
+    } catch (error) {
+      console.error("Error fetching checklist:", error);
+      res.status(500).json({ error: "Failed to fetch checklist" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/preop-checklist", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const checklist = await storage.createOtPreopChecklist({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        completedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_preop_checklist", recordId, req.body);
+      res.status(201).json(checklist);
+    } catch (error) {
+      console.error("Error creating checklist:", error);
+      res.status(500).json({ error: "Failed to create checklist" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/preop-checklist/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const checklist = await storage.updateOtPreopChecklist(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_preop_checklist", req.params.id, req.body);
+      res.json(checklist);
+    } catch (error) {
+      console.error("Error updating checklist:", error);
+      res.status(500).json({ error: "Failed to update checklist" });
+    }
+  });
+
+  // Pre-Anaesthetic Evaluation
+  app.get("/api/ot-cases/:caseId/preanaesthetic-eval", requireAuth, async (req, res) => {
+    try {
+      const evalData = await storage.getOtPreanaestheticEval(req.params.caseId);
+      res.json(evalData || null);
+    } catch (error) {
+      console.error("Error fetching PAE:", error);
+      res.status(500).json({ error: "Failed to fetch PAE" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/preanaesthetic-eval", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const evalData = await storage.createOtPreanaestheticEval({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        evaluatedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_preanaesthetic_eval", recordId, req.body);
+      res.status(201).json(evalData);
+    } catch (error) {
+      console.error("Error creating PAE:", error);
+      res.status(500).json({ error: "Failed to create PAE" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/preanaesthetic-eval/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const evalData = await storage.updateOtPreanaestheticEval(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_preanaesthetic_eval", req.params.id, req.body);
+      res.json(evalData);
+    } catch (error) {
+      console.error("Error updating PAE:", error);
+      res.status(500).json({ error: "Failed to update PAE" });
+    }
+  });
+
+  // Safety Checklist (WHO Surgical Safety Checklist)
+  app.get("/api/ot-cases/:caseId/safety-checklist", requireAuth, async (req, res) => {
+    try {
+      const checklist = await storage.getOtSafetyChecklist(req.params.caseId);
+      res.json(checklist || null);
+    } catch (error) {
+      console.error("Error fetching safety checklist:", error);
+      res.status(500).json({ error: "Failed to fetch safety checklist" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/safety-checklist", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const checklist = await storage.createOtSafetyChecklist({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_safety_checklist", recordId, req.body);
+      res.status(201).json(checklist);
+    } catch (error) {
+      console.error("Error creating safety checklist:", error);
+      res.status(500).json({ error: "Failed to create safety checklist" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/safety-checklist/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const checklist = await storage.updateOtSafetyChecklist(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_safety_checklist", req.params.id, req.body);
+      res.json(checklist);
+    } catch (error) {
+      console.error("Error updating safety checklist:", error);
+      res.status(500).json({ error: "Failed to update safety checklist" });
+    }
+  });
+
+  // Pre-Op Assessment
+  app.get("/api/ot-cases/:caseId/preop-assessment", requireAuth, async (req, res) => {
+    try {
+      const assessment = await storage.getOtPreopAssessment(req.params.caseId);
+      res.json(assessment || null);
+    } catch (error) {
+      console.error("Error fetching assessment:", error);
+      res.status(500).json({ error: "Failed to fetch assessment" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/preop-assessment", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const assessment = await storage.createOtPreopAssessment({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        assessedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_preop_assessment", recordId, req.body);
+      res.status(201).json(assessment);
+    } catch (error) {
+      console.error("Error creating assessment:", error);
+      res.status(500).json({ error: "Failed to create assessment" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/preop-assessment/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const assessment = await storage.updateOtPreopAssessment(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_preop_assessment", req.params.id, req.body);
+      res.json(assessment);
+    } catch (error) {
+      console.error("Error updating assessment:", error);
+      res.status(500).json({ error: "Failed to update assessment" });
+    }
+  });
+
+  // Re-Evaluation
+  app.get("/api/ot-cases/:caseId/re-evaluation", requireAuth, async (req, res) => {
+    try {
+      const evaluations = await storage.getOtReEvaluation(req.params.caseId);
+      res.json(evaluations);
+    } catch (error) {
+      console.error("Error fetching re-evaluations:", error);
+      res.status(500).json({ error: "Failed to fetch re-evaluations" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/re-evaluation", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const evaluation = await storage.createOtReEvaluation({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        evaluatedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_re_evaluation", recordId, req.body);
+      res.status(201).json(evaluation);
+    } catch (error) {
+      console.error("Error creating re-evaluation:", error);
+      res.status(500).json({ error: "Failed to create re-evaluation" });
+    }
+  });
+
+  // Consent Surgery
+  app.get("/api/ot-cases/:caseId/consent-surgery", requireAuth, async (req, res) => {
+    try {
+      const consent = await storage.getOtConsentSurgery(req.params.caseId);
+      res.json(consent || null);
+    } catch (error) {
+      console.error("Error fetching consent:", error);
+      res.status(500).json({ error: "Failed to fetch consent" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/consent-surgery", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const consent = await storage.createOtConsentSurgery({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        witnessedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_consent_surgery", recordId, req.body);
+      res.status(201).json(consent);
+    } catch (error) {
+      console.error("Error creating consent:", error);
+      res.status(500).json({ error: "Failed to create consent" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/consent-surgery/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const consent = await storage.updateOtConsentSurgery(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_consent_surgery", req.params.id, req.body);
+      res.json(consent);
+    } catch (error) {
+      console.error("Error updating consent:", error);
+      res.status(500).json({ error: "Failed to update consent" });
+    }
+  });
+
+  // Consent Anaesthesia
+  app.get("/api/ot-cases/:caseId/consent-anaesthesia", requireAuth, async (req, res) => {
+    try {
+      const consent = await storage.getOtConsentAnaesthesia(req.params.caseId);
+      res.json(consent || null);
+    } catch (error) {
+      console.error("Error fetching anaesthesia consent:", error);
+      res.status(500).json({ error: "Failed to fetch consent" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/consent-anaesthesia", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const consent = await storage.createOtConsentAnaesthesia({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        witnessedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_consent_anaesthesia", recordId, req.body);
+      res.status(201).json(consent);
+    } catch (error) {
+      console.error("Error creating consent:", error);
+      res.status(500).json({ error: "Failed to create consent" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/consent-anaesthesia/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const consent = await storage.updateOtConsentAnaesthesia(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_consent_anaesthesia", req.params.id, req.body);
+      res.json(consent);
+    } catch (error) {
+      console.error("Error updating consent:", error);
+      res.status(500).json({ error: "Failed to update consent" });
+    }
+  });
+
+  // Anaesthesia Record
+  app.get("/api/ot-cases/:caseId/anaesthesia-record", requireAuth, async (req, res) => {
+    try {
+      const record = await storage.getOtAnaesthesiaRecord(req.params.caseId);
+      res.json(record || null);
+    } catch (error) {
+      console.error("Error fetching anaesthesia record:", error);
+      res.status(500).json({ error: "Failed to fetch record" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/anaesthesia-record", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const record = await storage.createOtAnaesthesiaRecord({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        anaesthetistId: req.body.anaesthetistId || user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_anaesthesia_record", recordId, req.body);
+      res.status(201).json(record);
+    } catch (error) {
+      console.error("Error creating anaesthesia record:", error);
+      res.status(500).json({ error: "Failed to create record" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/anaesthesia-record/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const record = await storage.updateOtAnaesthesiaRecord(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_anaesthesia_record", req.params.id, req.body);
+      res.json(record);
+    } catch (error) {
+      console.error("Error updating anaesthesia record:", error);
+      res.status(500).json({ error: "Failed to update record" });
+    }
+  });
+
+  // Time Log
+  app.get("/api/ot-cases/:caseId/time-log", requireAuth, async (req, res) => {
+    try {
+      const logs = await storage.getOtTimeLog(req.params.caseId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching time logs:", error);
+      res.status(500).json({ error: "Failed to fetch time logs" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/time-log", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const log = await storage.createOtTimeLogEntry({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        recordedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_time_log", recordId, req.body);
+      res.status(201).json(log);
+    } catch (error) {
+      console.error("Error creating time log:", error);
+      res.status(500).json({ error: "Failed to create time log" });
+    }
+  });
+
+  // Surgeon Notes
+  app.get("/api/ot-cases/:caseId/surgeon-notes", requireAuth, async (req, res) => {
+    try {
+      const notes = await storage.getOtSurgeonNotes(req.params.caseId);
+      res.json(notes || null);
+    } catch (error) {
+      console.error("Error fetching surgeon notes:", error);
+      res.status(500).json({ error: "Failed to fetch notes" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/surgeon-notes", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!["SUPER_ADMIN", "ADMIN", "DOCTOR"].includes(user.role)) {
+        return res.status(403).json({ error: "Only surgeons can create notes" });
+      }
+      
+      const recordId = randomUUID();
+      const notes = await storage.createOtSurgeonNotes({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        surgeonId: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_surgeon_notes", recordId, req.body);
+      res.status(201).json(notes);
+    } catch (error) {
+      console.error("Error creating surgeon notes:", error);
+      res.status(500).json({ error: "Failed to create notes" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/surgeon-notes/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const notes = await storage.updateOtSurgeonNotes(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_surgeon_notes", req.params.id, req.body);
+      res.json(notes);
+    } catch (error) {
+      console.error("Error updating surgeon notes:", error);
+      res.status(500).json({ error: "Failed to update notes" });
+    }
+  });
+
+  // Post-Op Assessment
+  app.get("/api/ot-cases/:caseId/postop-assessment", requireAuth, async (req, res) => {
+    try {
+      const assessments = await storage.getOtPostopAssessment(req.params.caseId);
+      res.json(assessments);
+    } catch (error) {
+      console.error("Error fetching post-op assessments:", error);
+      res.status(500).json({ error: "Failed to fetch assessments" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/postop-assessment", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const assessment = await storage.createOtPostopAssessment({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        assessedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_postop_assessment", recordId, req.body);
+      res.status(201).json(assessment);
+    } catch (error) {
+      console.error("Error creating post-op assessment:", error);
+      res.status(500).json({ error: "Failed to create assessment" });
+    }
+  });
+
+  // Monitoring Chart
+  app.get("/api/ot-cases/:caseId/monitoring-chart", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getOtMonitoringChart(req.params.caseId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching monitoring chart:", error);
+      res.status(500).json({ error: "Failed to fetch chart" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/monitoring-chart", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const entry = await storage.createOtMonitoringChartEntry({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        recordedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_monitoring_chart", recordId, req.body);
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating monitoring entry:", error);
+      res.status(500).json({ error: "Failed to create entry" });
+    }
+  });
+
+  // Labour Chart
+  app.get("/api/ot-cases/:caseId/labour-chart", requireAuth, async (req, res) => {
+    try {
+      const entries = await storage.getOtLabourChart(req.params.caseId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching labour chart:", error);
+      res.status(500).json({ error: "Failed to fetch chart" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/labour-chart", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const entry = await storage.createOtLabourChartEntry({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        recordedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_labour_chart", recordId, req.body);
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating labour chart entry:", error);
+      res.status(500).json({ error: "Failed to create entry" });
+    }
+  });
+
+  // Neonate Sheet
+  app.get("/api/ot-cases/:caseId/neonate-sheet", requireAuth, async (req, res) => {
+    try {
+      const sheet = await storage.getOtNeonateSheet(req.params.caseId);
+      res.json(sheet || null);
+    } catch (error) {
+      console.error("Error fetching neonate sheet:", error);
+      res.status(500).json({ error: "Failed to fetch sheet" });
+    }
+  });
+
+  app.post("/api/ot-cases/:caseId/neonate-sheet", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const recordId = randomUUID();
+      const sheet = await storage.createOtNeonateSheet({
+        id: recordId,
+        caseId: req.params.caseId,
+        ...req.body,
+        attendedBy: user.id
+      });
+      
+      await logOtAction(req.params.caseId, "CREATE", user.id, "ot_neonate_sheet", recordId, req.body);
+      res.status(201).json(sheet);
+    } catch (error) {
+      console.error("Error creating neonate sheet:", error);
+      res.status(500).json({ error: "Failed to create sheet" });
+    }
+  });
+
+  app.patch("/api/ot-cases/:caseId/neonate-sheet/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const sheet = await storage.updateOtNeonateSheet(req.params.id, req.body);
+      
+      await logOtAction(req.params.caseId, "UPDATE", user.id, "ot_neonate_sheet", req.params.id, req.body);
+      res.json(sheet);
+    } catch (error) {
+      console.error("Error updating neonate sheet:", error);
+      res.status(500).json({ error: "Failed to update sheet" });
+    }
+  });
+
+  // OT Audit Logs
+  app.get("/api/ot-cases/:caseId/audit-logs", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!["SUPER_ADMIN", "ADMIN"].includes(user.role)) {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      const logs = await storage.getOtAuditLogs(req.params.caseId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+
+  // Get full OT case with all related data
+  app.get("/api/ot-cases/:caseId/full", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!checkOtAccess(user.role)) {
+        return res.status(403).json({ error: "Insufficient permissions" });
+      }
+      
+      const [
+        otCase, team, counselling, checklist, pae, safetyChecklist,
+        assessment, reEvals, consentSurgery, consentAnaesthesia,
+        anaesthesiaRecord, timeLog, surgeonNotes, postopAssessments,
+        monitoringChart, labourChart, neonateSheet
+      ] = await Promise.all([
+        storage.getOtCaseById(req.params.caseId),
+        storage.getOtCaseTeam(req.params.caseId),
+        storage.getOtPreopCounselling(req.params.caseId),
+        storage.getOtPreopChecklist(req.params.caseId),
+        storage.getOtPreanaestheticEval(req.params.caseId),
+        storage.getOtSafetyChecklist(req.params.caseId),
+        storage.getOtPreopAssessment(req.params.caseId),
+        storage.getOtReEvaluation(req.params.caseId),
+        storage.getOtConsentSurgery(req.params.caseId),
+        storage.getOtConsentAnaesthesia(req.params.caseId),
+        storage.getOtAnaesthesiaRecord(req.params.caseId),
+        storage.getOtTimeLog(req.params.caseId),
+        storage.getOtSurgeonNotes(req.params.caseId),
+        storage.getOtPostopAssessment(req.params.caseId),
+        storage.getOtMonitoringChart(req.params.caseId),
+        storage.getOtLabourChart(req.params.caseId),
+        storage.getOtNeonateSheet(req.params.caseId)
+      ]);
+      
+      if (!otCase) {
+        return res.status(404).json({ error: "OT case not found" });
+      }
+      
+      res.json({
+        ...otCase,
+        team,
+        preOp: { counselling, checklist, pae, safetyChecklist, assessment, reEvals },
+        consents: { surgery: consentSurgery, anaesthesia: consentAnaesthesia },
+        intraOp: { anaesthesiaRecord, timeLog, surgeonNotes },
+        postOp: { assessments: postopAssessments, monitoringChart, labourChart, neonateSheet }
+      });
+    } catch (error) {
+      console.error("Error fetching full OT case:", error);
+      res.status(500).json({ error: "Failed to fetch OT case" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Initialize WebSocket notification service
