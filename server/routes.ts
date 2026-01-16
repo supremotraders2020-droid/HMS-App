@@ -479,7 +479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .map(({ password, ...user }) => ({
           id: user.id,
           username: user.username,
-          fullName: user.fullName,
+          fullName: user.name || user.username,
           role: user.role
         }));
       res.json(nurses);
