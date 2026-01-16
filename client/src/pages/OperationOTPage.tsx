@@ -113,8 +113,7 @@ export default function OperationOTPage({ userRole, userId }: OperationOTPagePro
   // Map tracking patients to the format needed for OT case creation
   const admittedPatients = trackingPatients.map((tp: any) => ({
     id: tp.patientId || tp.id,
-    firstName: tp.patientName?.split(" ")[0] || "Patient",
-    lastName: tp.patientName?.split(" ").slice(1).join(" ") || "",
+    patientName: tp.patientName || "Unknown Patient",
     uhid: tp.uhid || "",
     age: tp.age,
     gender: tp.gender,
@@ -172,7 +171,7 @@ export default function OperationOTPage({ userRole, userId }: OperationOTPagePro
 
     createCaseMutation.mutate({
       patientId,
-      patientName: patient ? `${patient.firstName} ${patient.lastName}` : "",
+      patientName: patient?.patientName || "",
       uhid: patient?.uhid,
       age: patient?.age,
       gender: patient?.gender,
@@ -438,8 +437,8 @@ function NewCaseForm({
                   No admitted patients found. Please admit a patient first.
                 </div>
               ) : patients.map((p: any) => (
-                <SelectItem key={p.admissionId || p.id} value={p.id}>
-                  {p.firstName} {p.lastName} {p.uhid ? `(${p.uhid})` : ""} - {p.bedNumber || "No Bed"} [{p.department}] {p.diagnosis ? `- ${p.diagnosis}` : ""}
+                <SelectItem key={p.id} value={p.id}>
+                  {p.patientName}
                 </SelectItem>
               ))}
             </SelectContent>
