@@ -15642,7 +15642,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Insufficient permissions" });
       }
       
-      const caseId = randomUUID();
+      const caseId = crypto.randomUUID();
       const otCase = await storage.createOtCase({
         id: caseId,
         ...req.body,
@@ -15716,7 +15716,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Insufficient permissions" });
       }
       
-      const teamMemberId = randomUUID();
+      const teamMemberId = crypto.randomUUID();
       const member = await storage.addOtCaseTeamMember({
         id: teamMemberId,
         caseId: req.params.caseId,
@@ -15763,7 +15763,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/preop-counselling", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const counselling = await storage.createOtPreopCounselling({
         id: recordId,
         caseId: req.params.caseId,
@@ -15806,7 +15806,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/preop-checklist", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const checklist = await storage.createOtPreopChecklist({
         id: recordId,
         caseId: req.params.caseId,
@@ -15849,7 +15849,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/preanaesthetic-eval", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const evalData = await storage.createOtPreanaestheticEval({
         id: recordId,
         caseId: req.params.caseId,
@@ -15892,7 +15892,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/safety-checklist", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const checklist = await storage.createOtSafetyChecklist({
         id: recordId,
         caseId: req.params.caseId,
@@ -15934,7 +15934,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/preop-assessment", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const assessment = await storage.createOtPreopAssessment({
         id: recordId,
         caseId: req.params.caseId,
@@ -15977,7 +15977,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/re-evaluation", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const evaluation = await storage.createOtReEvaluation({
         id: recordId,
         caseId: req.params.caseId,
@@ -16007,7 +16007,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/consent-surgery", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const consent = await storage.createOtConsentSurgery({
         id: recordId,
         caseId: req.params.caseId,
@@ -16050,7 +16050,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/consent-anaesthesia", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const consent = await storage.createOtConsentAnaesthesia({
         id: recordId,
         caseId: req.params.caseId,
@@ -16093,7 +16093,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/anaesthesia-record", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const record = await storage.createOtAnaesthesiaRecord({
         id: recordId,
         caseId: req.params.caseId,
@@ -16136,7 +16136,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/time-log", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const log = await storage.createOtTimeLogEntry({
         id: recordId,
         caseId: req.params.caseId,
@@ -16170,7 +16170,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Only surgeons can create notes" });
       }
       
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const notes = await storage.createOtSurgeonNotes({
         id: recordId,
         caseId: req.params.caseId,
@@ -16213,7 +16213,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/postop-assessment", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const assessment = await storage.createOtPostopAssessment({
         id: recordId,
         caseId: req.params.caseId,
@@ -16243,7 +16243,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/monitoring-chart", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const entry = await storage.createOtMonitoringChartEntry({
         id: recordId,
         caseId: req.params.caseId,
@@ -16273,7 +16273,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/labour-chart", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const entry = await storage.createOtLabourChartEntry({
         id: recordId,
         caseId: req.params.caseId,
@@ -16303,7 +16303,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.post("/api/ot-cases/:caseId/neonate-sheet", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
-      const recordId = randomUUID();
+      const recordId = crypto.randomUUID();
       const sheet = await storage.createOtNeonateSheet({
         id: recordId,
         caseId: req.params.caseId,
