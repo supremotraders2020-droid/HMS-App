@@ -335,27 +335,11 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
 
             <h2>Body Marking / Pressure Sore Chart</h2>
             <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 15px;">
-              <div style="border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; background: #f8fafc;">
-                <svg viewBox="0 0 200 400" width="150" height="300" style="display: block;">
-                  <!-- Head -->
-                  <circle cx="100" cy="30" r="25" fill="none" stroke="#64748b" stroke-width="1.5"/>
-                  <!-- Neck -->
-                  <line x1="100" y1="55" x2="100" y2="70" stroke="#64748b" stroke-width="1.5"/>
-                  <!-- Body -->
-                  <path d="M60 70 L60 180 L100 200 L140 180 L140 70 Z" fill="none" stroke="#64748b" stroke-width="1.5"/>
-                  <!-- Left Arm -->
-                  <path d="M60 75 L30 130 L25 180" fill="none" stroke="#64748b" stroke-width="1.5"/>
-                  <!-- Right Arm -->
-                  <path d="M140 75 L170 130 L175 180" fill="none" stroke="#64748b" stroke-width="1.5"/>
-                  <!-- Left Leg -->
-                  <path d="M80 200 L70 280 L65 380" fill="none" stroke="#64748b" stroke-width="1.5"/>
-                  <!-- Right Leg -->
-                  <path d="M120 200 L130 280 L135 380" fill="none" stroke="#64748b" stroke-width="1.5"/>
-                  <!-- Markings -->
-                  ${bodyMarkings.map((m: any) => m.positionX !== undefined && m.positionY !== undefined ? 
-                    `<circle cx="${m.positionX * 2}" cy="${m.positionY * 4}" r="6" fill="#3b82f6" stroke="white" stroke-width="1.5"/>` : ''
-                  ).join('')}
-                </svg>
+              <div style="position: relative; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; background: #f8fafc;">
+                <img src="/body-diagram.png" alt="Body Diagram" style="height: 280px; display: block;" />
+                ${bodyMarkings.map((m: any) => m.positionX !== undefined && m.positionY !== undefined ? 
+                  `<div style="position: absolute; left: calc(${m.positionX}% + 10px); top: calc(${m.positionY}% + 10px); width: 12px; height: 12px; background: #3b82f6; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>` : ''
+                ).join('')}
               </div>
               <div style="flex: 1;">
                 <h3 style="font-size: 11px; margin-bottom: 8px; color: #374151;">Recorded Markings</h3>
