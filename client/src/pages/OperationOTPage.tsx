@@ -712,7 +712,13 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
   });
 
   const saveCounsellingMutation = useMutation({
-    mutationFn: (formData: any) => apiRequest("POST", `/api/ot-cases/${caseId}/preop-counselling`, formData),
+    mutationFn: (formData: any) => {
+      const existingId = data?.counselling?.id;
+      if (existingId) {
+        return apiRequest("PATCH", `/api/ot-cases/${caseId}/preop-counselling/${existingId}`, formData);
+      }
+      return apiRequest("POST", `/api/ot-cases/${caseId}/preop-counselling`, formData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Pre-op counselling recorded" });
@@ -721,7 +727,13 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
   });
 
   const saveChecklistMutation = useMutation({
-    mutationFn: (formData: any) => apiRequest("POST", `/api/ot-cases/${caseId}/preop-checklist`, formData),
+    mutationFn: (formData: any) => {
+      const existingId = data?.checklist?.id;
+      if (existingId) {
+        return apiRequest("PATCH", `/api/ot-cases/${caseId}/preop-checklist/${existingId}`, formData);
+      }
+      return apiRequest("POST", `/api/ot-cases/${caseId}/preop-checklist`, formData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Pre-op checklist completed" });
@@ -730,7 +742,13 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
   });
 
   const savePaeMutation = useMutation({
-    mutationFn: (formData: any) => apiRequest("POST", `/api/ot-cases/${caseId}/preanaesthetic-eval`, formData),
+    mutationFn: (formData: any) => {
+      const existingId = data?.pae?.id;
+      if (existingId) {
+        return apiRequest("PATCH", `/api/ot-cases/${caseId}/preanaesthetic-eval/${existingId}`, formData);
+      }
+      return apiRequest("POST", `/api/ot-cases/${caseId}/preanaesthetic-eval`, formData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Pre-anaesthetic evaluation recorded" });
@@ -739,7 +757,13 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
   });
 
   const saveSafetyMutation = useMutation({
-    mutationFn: (formData: any) => apiRequest("POST", `/api/ot-cases/${caseId}/safety-checklist`, formData),
+    mutationFn: (formData: any) => {
+      const existingId = data?.safetyChecklist?.id;
+      if (existingId) {
+        return apiRequest("PATCH", `/api/ot-cases/${caseId}/safety-checklist/${existingId}`, formData);
+      }
+      return apiRequest("POST", `/api/ot-cases/${caseId}/safety-checklist`, formData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Safety checklist completed" });
@@ -1363,7 +1387,13 @@ function IntraOpPhase({ caseId, data }: { caseId: string; data: any }) {
   const [activeForm, setActiveForm] = useState<string | null>(null);
 
   const saveAnaesthesiaMutation = useMutation({
-    mutationFn: (formData: any) => apiRequest("POST", `/api/ot-cases/${caseId}/anaesthesia-record`, formData),
+    mutationFn: (formData: any) => {
+      const existingId = data?.anaesthesiaRecord?.id;
+      if (existingId) {
+        return apiRequest("PATCH", `/api/ot-cases/${caseId}/anaesthesia-record/${existingId}`, formData);
+      }
+      return apiRequest("POST", `/api/ot-cases/${caseId}/anaesthesia-record`, formData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Anaesthesia record updated" });
@@ -1380,7 +1410,13 @@ function IntraOpPhase({ caseId, data }: { caseId: string; data: any }) {
   });
 
   const saveSurgeonNotesMutation = useMutation({
-    mutationFn: (formData: any) => apiRequest("POST", `/api/ot-cases/${caseId}/surgeon-notes`, formData),
+    mutationFn: (formData: any) => {
+      const existingId = data?.surgeonNotes?.id;
+      if (existingId) {
+        return apiRequest("PATCH", `/api/ot-cases/${caseId}/surgeon-notes/${existingId}`, formData);
+      }
+      return apiRequest("POST", `/api/ot-cases/${caseId}/surgeon-notes`, formData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Surgeon notes saved" });
@@ -1834,7 +1870,13 @@ function PostOpPhase({ caseId, data }: { caseId: string; data: any }) {
   });
 
   const saveNeonateMutation = useMutation({
-    mutationFn: (formData: any) => apiRequest("POST", `/api/ot-cases/${caseId}/neonate-sheet`, formData),
+    mutationFn: (formData: any) => {
+      const existingId = data?.neonateSheet?.id;
+      if (existingId) {
+        return apiRequest("PATCH", `/api/ot-cases/${caseId}/neonate-sheet/${existingId}`, formData);
+      }
+      return apiRequest("POST", `/api/ot-cases/${caseId}/neonate-sheet`, formData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Neonate sheet saved" });
