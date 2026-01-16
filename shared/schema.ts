@@ -2341,6 +2341,68 @@ export const insertPatientAllergiesPrecautionsSchema = createInsertSchema(patien
 export type InsertPatientAllergiesPrecautions = z.infer<typeof insertPatientAllergiesPrecautionsSchema>;
 export type PatientAllergiesPrecautions = typeof patientAllergiesPrecautions.$inferSelect;
 
+// Module 15: IPD Investigation Chart
+export const ipdInvestigationChart = pgTable("ipd_investigation_chart", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  investigationDate: timestamp("investigation_date").notNull(),
+  bloodGroup: text("blood_group"),
+  hiv: text("hiv"),
+  hbsag: text("hbsag"),
+  hcv: text("hcv"),
+  hbPcv: text("hb_pcv"),
+  tlc: text("tlc"),
+  dlcPlemb: text("dlc_plemb"),
+  esr: text("esr"),
+  platelets: text("platelets"),
+  parasites: text("parasites"),
+  btCt: text("bt_ct"),
+  ptAptt: text("pt_aptt"),
+  bloodSugarFasting: text("blood_sugar_fasting"),
+  ppRandom: text("pp_random"),
+  bun: text("bun"),
+  srCreatinine: text("sr_creatinine"),
+  srNaKCl: text("sr_na_k_cl"),
+  srCalPhosMag: text("sr_cal_phos_mag"),
+  acidPhosUricAcid: text("acid_phos_uric_acid"),
+  srBilirubinTotal: text("sr_bilirubin_total"),
+  bilirubinDirectIndirect: text("bilirubin_direct_indirect"),
+  sgotSgpt: text("sgot_sgpt"),
+  srAlkphos: text("sr_alkphos"),
+  srProteinsTotal: text("sr_proteins_total"),
+  albumin: text("albumin"),
+  viralMarkers: text("viral_markers"),
+  srAmylaseLipase: text("sr_amylase_lipase"),
+  cpkMb: text("cpk_mb"),
+  srLdh: text("sr_ldh"),
+  tropi: text("tropi"),
+  totalCholesterol: text("total_cholesterol"),
+  triglycerides: text("triglycerides"),
+  hdlLdlVldl: text("hdl_ldl_vldl"),
+  urineRoutine: text("urine_routine"),
+  stoolRoutine: text("stool_routine"),
+  sputumExamination: text("sputum_examination"),
+  ecg: text("ecg"),
+  echo2d: text("echo_2d"),
+  usg: text("usg"),
+  doppler: text("doppler"),
+  xrays: text("xrays"),
+  ctScanMri: text("ct_scan_mri"),
+  histopathology: text("histopathology"),
+  fluidAnalysis: text("fluid_analysis"),
+  otherInvestigations: text("other_investigations"),
+  nurseId: varchar("nurse_id"),
+  nurseName: text("nurse_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIpdInvestigationChartSchema = createInsertSchema(ipdInvestigationChart).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertIpdInvestigationChart = z.infer<typeof insertIpdInvestigationChartSchema>;
+export type IpdInvestigationChart = typeof ipdInvestigationChart.$inferSelect;
+
 // Audit Log for Patient Monitoring (NABH Compliance)
 export const patientMonitoringAuditLog = pgTable("patient_monitoring_audit_log", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -28,6 +28,7 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   airwayLinesTubes, insertAirwayLinesTubesSchema,
   dutyStaffAssignments, insertDutyStaffAssignmentSchema,
   patientAllergiesPrecautions, insertPatientAllergiesPrecautionsSchema,
+  ipdInvestigationChart, insertIpdInvestigationChartSchema,
   patientMonitoringAuditLog, insertPatientMonitoringAuditLogSchema,
   // Bed Management
   bedCategories, insertBedCategorySchema,
@@ -7332,6 +7333,53 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       res.json(result[0]);
     } catch (error) {
       res.status(500).json({ error: "Failed to update allergies" });
+    }
+  });
+
+  // ========== IPD INVESTIGATION CHART ==========
+  app.get("/api/patient-monitoring/sessions/:sessionId/investigation-chart", async (req, res) => {
+    try {
+      const data = await db.select().from(ipdInvestigationChart)
+        .where(eq(ipdInvestigationChart.sessionId, req.params.sessionId))
+        .orderBy(desc(ipdInvestigationChart.investigationDate));
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching investigation chart:", error);
+      res.status(500).json({ error: "Failed to fetch investigation chart" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/sessions/:sessionId/investigation-chart", requireAuth, async (req, res) => {
+    try {
+      const userId = (req as any).session?.user?.id;
+      const userName = (req as any).session?.user?.fullName || (req as any).session?.user?.name;
+      const parsed = insertIpdInvestigationChartSchema.safeParse({
+        ...req.body,
+        sessionId: req.params.sessionId,
+        nurseId: userId,
+        nurseName: userName,
+      });
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(ipdInvestigationChart).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Error creating investigation chart entry:", error);
+      res.status(500).json({ error: "Failed to create investigation chart entry" });
+    }
+  });
+
+  app.patch("/api/patient-monitoring/investigation-chart/:id", requireAuth, async (req, res) => {
+    try {
+      const result = await db.update(ipdInvestigationChart)
+        .set(req.body)
+        .where(eq(ipdInvestigationChart.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating investigation chart:", error);
+      res.status(500).json({ error: "Failed to update investigation chart" });
     }
   });
 

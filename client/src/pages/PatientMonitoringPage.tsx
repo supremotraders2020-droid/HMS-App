@@ -947,6 +947,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="airway" className="text-xs gap-1.5 data-[state=active]:bg-background"><BedDouble className="h-3.5 w-3.5" />Lines/Tubes</TabsTrigger>
                   <TabsTrigger value="staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Duty Staff</TabsTrigger>
                   <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
+                  <TabsTrigger value="investigation" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Investigation</TabsTrigger>
                   <TabsTrigger value="tests" className="text-xs gap-1.5 data-[state=active]:bg-background"><Beaker className="h-3.5 w-3.5" />Tests</TabsTrigger>
                 </TabsList>
 
@@ -991,6 +992,9 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="allergies">
                   <AllergiesTab sessionId={selectedSession.id} />
+                </TabsContent>
+                <TabsContent value="investigation">
+                  <InvestigationChartTab sessionId={selectedSession.id} />
                 </TabsContent>
                 <TabsContent value="tests">
                   <TestsTab sessionId={selectedSession.id} patientId={selectedSession.patientId} patientName={selectedSession.patientName} admittingConsultant={selectedSession.admittingConsultant} />
@@ -2899,6 +2903,191 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
               {record.fallRisk && <Badge variant="destructive">Fall Risk</Badge>}
               {record.pressureUlcerRisk && <Badge variant="destructive">Pressure Ulcer Risk</Badge>}
             </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function InvestigationChartTab({ sessionId }: { sessionId: string }) {
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newEntry, setNewEntry] = useState({
+    investigationDate: new Date().toISOString().split("T")[0],
+    bloodGroup: "", hiv: "", hbsag: "", hcv: "",
+    hbPcv: "", tlc: "", dlcPlemb: "", esr: "", platelets: "", parasites: "", btCt: "", ptAptt: "",
+    bloodSugarFasting: "", ppRandom: "",
+    bun: "", srCreatinine: "", srNaKCl: "", srCalPhosMag: "", acidPhosUricAcid: "",
+    srBilirubinTotal: "", bilirubinDirectIndirect: "", sgotSgpt: "", srAlkphos: "", srProteinsTotal: "", albumin: "", viralMarkers: "", srAmylaseLipase: "",
+    cpkMb: "", srLdh: "", tropi: "",
+    totalCholesterol: "", triglycerides: "", hdlLdlVldl: "",
+    urineRoutine: "", stoolRoutine: "", sputumExamination: "",
+    ecg: "", echo2d: "", usg: "", doppler: "", xrays: "", ctScanMri: "", histopathology: "", fluidAnalysis: "", otherInvestigations: ""
+  });
+
+  const { data: investigations = [], refetch } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/sessions", sessionId, "investigation-chart"]
+  });
+
+  const addMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", `/api/patient-monitoring/sessions/${sessionId}/investigation-chart`, data),
+    onSuccess: () => {
+      refetch();
+      setShowAddForm(false);
+      setNewEntry({ investigationDate: new Date().toISOString().split("T")[0], bloodGroup: "", hiv: "", hbsag: "", hcv: "", hbPcv: "", tlc: "", dlcPlemb: "", esr: "", platelets: "", parasites: "", btCt: "", ptAptt: "", bloodSugarFasting: "", ppRandom: "", bun: "", srCreatinine: "", srNaKCl: "", srCalPhosMag: "", acidPhosUricAcid: "", srBilirubinTotal: "", bilirubinDirectIndirect: "", sgotSgpt: "", srAlkphos: "", srProteinsTotal: "", albumin: "", viralMarkers: "", srAmylaseLipase: "", cpkMb: "", srLdh: "", tropi: "", totalCholesterol: "", triglycerides: "", hdlLdlVldl: "", urineRoutine: "", stoolRoutine: "", sputumExamination: "", ecg: "", echo2d: "", usg: "", doppler: "", xrays: "", ctScanMri: "", histopathology: "", fluidAnalysis: "", otherInvestigations: "" });
+      toast({ title: "Investigation Entry Added" });
+    },
+  });
+
+  const LAB_SECTIONS = [
+    { title: "Screening", fields: [
+      { key: "bloodGroup", label: "Blood Group" }, { key: "hiv", label: "HIV" }, { key: "hbsag", label: "HBSAg" }, { key: "hcv", label: "HCV" }
+    ]},
+    { title: "HAEMATOLOGY", fields: [
+      { key: "hbPcv", label: "HB / PCV" }, { key: "tlc", label: "TLC" }, { key: "dlcPlemb", label: "DLC - P/L/E/M/B" }, { key: "esr", label: "ESR" },
+      { key: "platelets", label: "PLATELETS" }, { key: "parasites", label: "PARASITES" }, { key: "btCt", label: "BT / CT" }, { key: "ptAptt", label: "PT / APTT" },
+      { key: "bloodSugarFasting", label: "BLOOD SUGAR FASTING" }, { key: "ppRandom", label: "PP / RANDOM" }
+    ]},
+    { title: "RENAL FUNCTION TESTS", fields: [
+      { key: "bun", label: "BUN" }, { key: "srCreatinine", label: "SR. CREATININE" }, { key: "srNaKCl", label: "SR. NA / K / CL" },
+      { key: "srCalPhosMag", label: "SR. CAL. / PHOS. / MAG." }, { key: "acidPhosUricAcid", label: "ACID PHOS. / URIC ACID" }
+    ]},
+    { title: "LIVER FUNCTION TESTS", fields: [
+      { key: "srBilirubinTotal", label: "SR. BILIRUBIN - TOTAL" }, { key: "bilirubinDirectIndirect", label: "DIRECT / INDIRECT" },
+      { key: "sgotSgpt", label: "S.G.O.T. / S.G.P.T." }, { key: "srAlkphos", label: "SR. ALKPHOS." },
+      { key: "srProteinsTotal", label: "SR. PROTEINS - TOTAL" }, { key: "albumin", label: "ALBUMIN" },
+      { key: "viralMarkers", label: "VIRAL MARKERS" }, { key: "srAmylaseLipase", label: "SR. AMYLASE / LIPASE" }
+    ]},
+    { title: "CARDIAC ENZYMES", fields: [
+      { key: "cpkMb", label: "CPK MB" }, { key: "srLdh", label: "SR. LDH" }, { key: "tropi", label: "TROPI" }
+    ]},
+    { title: "LIPID PROFILE", fields: [
+      { key: "totalCholesterol", label: "TOTAL CHOLESTEROL" }, { key: "triglycerides", label: "TRIGLYCERIDES" }, { key: "hdlLdlVldl", label: "HDL / LDL / VLDL" }
+    ]},
+    { title: "OTHER TESTS", fields: [
+      { key: "urineRoutine", label: "URINE ROUTINE" }, { key: "stoolRoutine", label: "STOOL ROUTINE" }, { key: "sputumExamination", label: "SPUTUM EXAMINATION" }
+    ]}
+  ];
+
+  const IMAGING_SECTIONS = [
+    { title: "IMAGING & DIAGNOSTICS", fields: [
+      { key: "ecg", label: "ECG" }, { key: "echo2d", label: "2D ECHO" }, { key: "usg", label: "USG" }, { key: "doppler", label: "DOPPLER" },
+      { key: "xrays", label: "X-RAYS" }, { key: "ctScanMri", label: "CT SCAN / MRI" }, { key: "histopathology", label: "HISTOPATHOLOGY" },
+      { key: "fluidAnalysis", label: "FLUID ANALYSIS" }, { key: "otherInvestigations", label: "OTHER INVESTIGATIONS" }
+    ]}
+  ];
+
+  return (
+    <Card className="mt-4">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <ClipboardList className="h-5 w-5" /> Investigation Chart
+        </CardTitle>
+        <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} data-testid="button-add-investigation">
+          <PlusCircle className="h-4 w-4 mr-1" /> Add Entry
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {showAddForm && (
+          <Card className="p-4 mb-4 border-dashed">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Label className="w-32">Date</Label>
+                <Input type="date" value={newEntry.investigationDate} onChange={e => setNewEntry(prev => ({ ...prev, investigationDate: e.target.value }))} className="w-auto" data-testid="input-investigation-date" />
+              </div>
+              
+              {LAB_SECTIONS.map(section => (
+                <div key={section.title}>
+                  <h4 className="font-medium text-sm bg-muted p-2 rounded mb-2">{section.title}</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {section.fields.map(f => (
+                      <div key={f.key} className="space-y-1">
+                        <Label className="text-xs">{f.label}</Label>
+                        <Input value={(newEntry as any)[f.key]} onChange={e => setNewEntry(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.label} className="h-8 text-sm" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {IMAGING_SECTIONS.map(section => (
+                <div key={section.title}>
+                  <h4 className="font-medium text-sm bg-muted p-2 rounded mb-2">{section.title}</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {section.fields.map(f => (
+                      <div key={f.key} className="space-y-1">
+                        <Label className="text-xs">{f.label}</Label>
+                        <Textarea value={(newEntry as any)[f.key]} onChange={e => setNewEntry(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={`${f.label} findings/report`} className="h-16 text-sm" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
+                <Button onClick={() => addMutation.mutate({ ...newEntry, investigationDate: new Date(newEntry.investigationDate) })} disabled={addMutation.isPending} data-testid="button-save-investigation">
+                  Save Entry
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {investigations.length === 0 && !showAddForm ? (
+          <p className="text-muted-foreground text-center py-8">No investigation records. Click "Add Entry" to create one.</p>
+        ) : (
+          <div className="space-y-4">
+            {investigations.map((inv: any) => (
+              <Card key={inv.id} className="p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <Badge variant="outline" className="text-sm">{format(new Date(inv.investigationDate), "dd MMM yyyy")}</Badge>
+                  <span className="text-xs text-muted-foreground">By: {inv.nurseName || "Staff"}</span>
+                </div>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-3">
+                    {inv.bloodGroup && <div className="flex gap-2"><Badge>Blood Group: {inv.bloodGroup}</Badge>{inv.hiv && <Badge variant="outline">HIV: {inv.hiv}</Badge>}{inv.hbsag && <Badge variant="outline">HBSAg: {inv.hbsag}</Badge>}{inv.hcv && <Badge variant="outline">HCV: {inv.hcv}</Badge>}</div>}
+                    
+                    {LAB_SECTIONS.map(section => {
+                      const hasData = section.fields.some(f => inv[f.key]);
+                      if (!hasData) return null;
+                      return (
+                        <div key={section.title}>
+                          <h5 className="text-xs font-semibold text-muted-foreground mb-1">{section.title}</h5>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                            {section.fields.filter(f => inv[f.key]).map(f => (
+                              <div key={f.key} className="flex justify-between border-b pb-1">
+                                <span className="text-muted-foreground text-xs">{f.label}:</span>
+                                <span className="font-medium">{inv[f.key]}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {IMAGING_SECTIONS.map(section => {
+                      const hasData = section.fields.some(f => inv[f.key]);
+                      if (!hasData) return null;
+                      return (
+                        <div key={section.title}>
+                          <h5 className="text-xs font-semibold text-muted-foreground mb-1">{section.title}</h5>
+                          <div className="space-y-2">
+                            {section.fields.filter(f => inv[f.key]).map(f => (
+                              <div key={f.key} className="text-sm">
+                                <span className="font-medium">{f.label}:</span>
+                                <p className="text-muted-foreground ml-2">{inv[f.key]}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </Card>
+            ))}
           </div>
         )}
       </CardContent>
