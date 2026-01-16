@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate, type ResolvedAlert, type InsertResolvedAlert, type DoctorTimeSlot, type InsertDoctorTimeSlot, type PatientBill, type InsertPatientBill, type BillPayment, type InsertBillPayment, type HealthTip, type InsertHealthTip, type SwabAreaMaster, type InsertSwabAreaMaster, type SwabSamplingSiteMaster, type InsertSwabSamplingSiteMaster, type SwabOrganismMaster, type InsertSwabOrganismMaster, type SwabCollection, type InsertSwabCollection, type SwabLabResult, type InsertSwabLabResult, type SwabCapaAction, type InsertSwabCapaAction, type SwabAuditLog, type InsertSwabAuditLog, type DiseaseCatalog, type InsertDiseaseCatalog, type DietTemplate, type InsertDietTemplate, type MedicationScheduleTemplate, type InsertMedicationScheduleTemplate, type PatientDiseaseAssignment, type InsertPatientDiseaseAssignment, type PersonalizedCarePlan, type InsertPersonalizedCarePlan } from "@shared/schema";
+import { type User, type InsertUser, type Doctor, type InsertDoctor, type Schedule, type InsertSchedule, type Appointment, type InsertAppointment, type InventoryItem, type InsertInventoryItem, type StaffMember, type InsertStaffMember, type InventoryPatient, type InsertInventoryPatient, type InventoryTransaction, type InsertInventoryTransaction, type TrackingPatient, type InsertTrackingPatient, type Medication, type InsertMedication, type Meal, type InsertMeal, type Vitals, type InsertVitals, type DoctorVisit, type InsertDoctorVisit, type ConversationLog, type InsertConversationLog, type ServicePatient, type InsertServicePatient, type Admission, type InsertAdmission, type MedicalRecord, type InsertMedicalRecord, type BiometricTemplate, type InsertBiometricTemplate, type BiometricVerification, type InsertBiometricVerification, type Notification, type InsertNotification, type HospitalTeamMember, type InsertHospitalTeamMember, type ActivityLog, type InsertActivityLog, type Equipment, type InsertEquipment, type ServiceHistory, type InsertServiceHistory, type EmergencyContact, type InsertEmergencyContact, type HospitalSettings, type InsertHospitalSettings, type Prescription, type InsertPrescription, type DoctorSchedule, type InsertDoctorSchedule, type DoctorPatient, type InsertDoctorPatient, type DoctorProfile, type InsertDoctorProfile, type PatientProfile, type InsertPatientProfile, type UserNotification, type InsertUserNotification, type ConsentForm, type InsertConsentForm, type Medicine, type InsertMedicine, type DoctorOathConfirmation, type InsertDoctorOathConfirmation, type ConsentTemplate, type InsertConsentTemplate, type ResolvedAlert, type InsertResolvedAlert, type DoctorTimeSlot, type InsertDoctorTimeSlot, type PatientBill, type InsertPatientBill, type BillPayment, type InsertBillPayment, type HealthTip, type InsertHealthTip, type SwabAreaMaster, type InsertSwabAreaMaster, type SwabSamplingSiteMaster, type InsertSwabSamplingSiteMaster, type SwabOrganismMaster, type InsertSwabOrganismMaster, type SwabCollection, type InsertSwabCollection, type SwabLabResult, type InsertSwabLabResult, type SwabCapaAction, type InsertSwabCapaAction, type SwabAuditLog, type InsertSwabAuditLog, type DiseaseCatalog, type InsertDiseaseCatalog, type DietTemplate, type InsertDietTemplate, type MedicationScheduleTemplate, type InsertMedicationScheduleTemplate, type PatientDiseaseAssignment, type InsertPatientDiseaseAssignment, type PersonalizedCarePlan, type InsertPersonalizedCarePlan, type OtCase, type InsertOtCase, type OtCaseTeam, type InsertOtCaseTeam, type OtPreopCounselling, type InsertOtPreopCounselling, type OtPreopChecklist, type InsertOtPreopChecklist, type OtPreanaestheticEval, type InsertOtPreanaestheticEval, type OtSafetyChecklist, type InsertOtSafetyChecklist, type OtPreopAssessment, type InsertOtPreopAssessment, type OtReEvaluation, type InsertOtReEvaluation, type OtConsentSurgery, type InsertOtConsentSurgery, type OtConsentAnaesthesia, type InsertOtConsentAnaesthesia, type OtAnaesthesiaRecord, type InsertOtAnaesthesiaRecord, type OtTimeLog, type InsertOtTimeLog, type OtSurgeonNotes, type InsertOtSurgeonNotes, type OtPostopAssessment, type InsertOtPostopAssessment, type OtMonitoringChart, type InsertOtMonitoringChart, type OtLabourChart, type InsertOtLabourChart, type OtNeonateSheet, type InsertOtNeonateSheet, type OtAuditLog, type InsertOtAuditLog } from "@shared/schema";
 import { randomUUID, randomBytes, createCipheriv, createDecipheriv } from "crypto";
 
 export interface IStorage {
@@ -678,6 +678,85 @@ export interface IStorage {
   getTechnicianReportByTestOrder(testOrderId: string): Promise<any | undefined>;
   updateTechnicianReport(id: string, updates: any): Promise<any | undefined>;
   deleteTechnicianReport(id: string): Promise<boolean>;
+  
+  // Operation & OT Module
+  getOtCases(): Promise<OtCase[]>;
+  getOtCaseById(id: string): Promise<OtCase | undefined>;
+  getOtCasesByPatient(patientId: string): Promise<OtCase[]>;
+  getOtCasesBySurgeon(surgeonId: string): Promise<OtCase[]>;
+  getOtCasesByDate(date: string): Promise<OtCase[]>;
+  getOtCasesByStatus(status: string): Promise<OtCase[]>;
+  createOtCase(data: InsertOtCase): Promise<OtCase>;
+  updateOtCase(id: string, data: Partial<InsertOtCase>): Promise<OtCase | undefined>;
+  updateOtCaseStatus(id: string, status: string): Promise<OtCase | undefined>;
+  
+  // OT Case Team
+  getOtCaseTeam(caseId: string): Promise<OtCaseTeam[]>;
+  addOtCaseTeamMember(data: InsertOtCaseTeam): Promise<OtCaseTeam>;
+  removeOtCaseTeamMember(id: string): Promise<boolean>;
+  
+  // Pre-Op Forms
+  getOtPreopCounselling(caseId: string): Promise<OtPreopCounselling | undefined>;
+  createOtPreopCounselling(data: InsertOtPreopCounselling): Promise<OtPreopCounselling>;
+  updateOtPreopCounselling(id: string, data: Partial<InsertOtPreopCounselling>): Promise<OtPreopCounselling | undefined>;
+  
+  getOtPreopChecklist(caseId: string): Promise<OtPreopChecklist | undefined>;
+  createOtPreopChecklist(data: InsertOtPreopChecklist): Promise<OtPreopChecklist>;
+  updateOtPreopChecklist(id: string, data: Partial<InsertOtPreopChecklist>): Promise<OtPreopChecklist | undefined>;
+  
+  getOtPreanaestheticEval(caseId: string): Promise<OtPreanaestheticEval | undefined>;
+  createOtPreanaestheticEval(data: InsertOtPreanaestheticEval): Promise<OtPreanaestheticEval>;
+  updateOtPreanaestheticEval(id: string, data: Partial<InsertOtPreanaestheticEval>): Promise<OtPreanaestheticEval | undefined>;
+  
+  getOtSafetyChecklist(caseId: string): Promise<OtSafetyChecklist | undefined>;
+  createOtSafetyChecklist(data: InsertOtSafetyChecklist): Promise<OtSafetyChecklist>;
+  updateOtSafetyChecklist(id: string, data: Partial<InsertOtSafetyChecklist>): Promise<OtSafetyChecklist | undefined>;
+  
+  getOtPreopAssessment(caseId: string): Promise<OtPreopAssessment | undefined>;
+  createOtPreopAssessment(data: InsertOtPreopAssessment): Promise<OtPreopAssessment>;
+  updateOtPreopAssessment(id: string, data: Partial<InsertOtPreopAssessment>): Promise<OtPreopAssessment | undefined>;
+  
+  getOtReEvaluation(caseId: string): Promise<OtReEvaluation[]>;
+  createOtReEvaluation(data: InsertOtReEvaluation): Promise<OtReEvaluation>;
+  
+  // Consent Forms
+  getOtConsentSurgery(caseId: string): Promise<OtConsentSurgery | undefined>;
+  createOtConsentSurgery(data: InsertOtConsentSurgery): Promise<OtConsentSurgery>;
+  updateOtConsentSurgery(id: string, data: Partial<InsertOtConsentSurgery>): Promise<OtConsentSurgery | undefined>;
+  
+  getOtConsentAnaesthesia(caseId: string): Promise<OtConsentAnaesthesia | undefined>;
+  createOtConsentAnaesthesia(data: InsertOtConsentAnaesthesia): Promise<OtConsentAnaesthesia>;
+  updateOtConsentAnaesthesia(id: string, data: Partial<InsertOtConsentAnaesthesia>): Promise<OtConsentAnaesthesia | undefined>;
+  
+  // Intra-Op Records
+  getOtAnaesthesiaRecord(caseId: string): Promise<OtAnaesthesiaRecord | undefined>;
+  createOtAnaesthesiaRecord(data: InsertOtAnaesthesiaRecord): Promise<OtAnaesthesiaRecord>;
+  updateOtAnaesthesiaRecord(id: string, data: Partial<InsertOtAnaesthesiaRecord>): Promise<OtAnaesthesiaRecord | undefined>;
+  
+  getOtTimeLog(caseId: string): Promise<OtTimeLog[]>;
+  createOtTimeLogEntry(data: InsertOtTimeLog): Promise<OtTimeLog>;
+  
+  getOtSurgeonNotes(caseId: string): Promise<OtSurgeonNotes | undefined>;
+  createOtSurgeonNotes(data: InsertOtSurgeonNotes): Promise<OtSurgeonNotes>;
+  updateOtSurgeonNotes(id: string, data: Partial<InsertOtSurgeonNotes>): Promise<OtSurgeonNotes | undefined>;
+  
+  // Post-Op Records
+  getOtPostopAssessment(caseId: string): Promise<OtPostopAssessment[]>;
+  createOtPostopAssessment(data: InsertOtPostopAssessment): Promise<OtPostopAssessment>;
+  
+  getOtMonitoringChart(caseId: string): Promise<OtMonitoringChart[]>;
+  createOtMonitoringChartEntry(data: InsertOtMonitoringChart): Promise<OtMonitoringChart>;
+  
+  getOtLabourChart(caseId: string): Promise<OtLabourChart[]>;
+  createOtLabourChartEntry(data: InsertOtLabourChart): Promise<OtLabourChart>;
+  
+  getOtNeonateSheet(caseId: string): Promise<OtNeonateSheet | undefined>;
+  createOtNeonateSheet(data: InsertOtNeonateSheet): Promise<OtNeonateSheet>;
+  updateOtNeonateSheet(id: string, data: Partial<InsertOtNeonateSheet>): Promise<OtNeonateSheet | undefined>;
+  
+  // OT Audit Log
+  createOtAuditLog(data: InsertOtAuditLog): Promise<OtAuditLog>;
+  getOtAuditLogs(caseId: string): Promise<OtAuditLog[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -3177,6 +3256,86 @@ export class MemStorage implements IStorage {
     this.rolePermissions.set(key, updated);
     return updated;
   }
+
+  // ========== OPERATION & OT MODULE STUBS ==========
+  // OT Cases
+  async getOtCases(): Promise<OtCase[]> { return []; }
+  async getOtCaseById(id: string): Promise<OtCase | undefined> { return undefined; }
+  async getOtCasesByPatient(patientId: string): Promise<OtCase[]> { return []; }
+  async getOtCasesBySurgeon(surgeonId: string): Promise<OtCase[]> { return []; }
+  async getOtCasesByDate(date: string): Promise<OtCase[]> { return []; }
+  async getOtCasesByStatus(status: string): Promise<OtCase[]> { return []; }
+  async createOtCase(data: InsertOtCase): Promise<OtCase> { throw new Error("Not implemented in MemStorage"); }
+  async updateOtCase(id: string, data: Partial<InsertOtCase>): Promise<OtCase | undefined> { return undefined; }
+  async updateOtCaseStatus(id: string, status: string): Promise<OtCase | undefined> { return undefined; }
+  
+  // OT Case Team
+  async getOtCaseTeam(caseId: string): Promise<OtCaseTeam[]> { return []; }
+  async addOtCaseTeamMember(data: InsertOtCaseTeam): Promise<OtCaseTeam> { throw new Error("Not implemented"); }
+  async removeOtCaseTeamMember(id: string): Promise<boolean> { return false; }
+  
+  // Pre-Op Forms
+  async getOtPreopCounselling(caseId: string): Promise<OtPreopCounselling | undefined> { return undefined; }
+  async createOtPreopCounselling(data: InsertOtPreopCounselling): Promise<OtPreopCounselling> { throw new Error("Not implemented"); }
+  async updateOtPreopCounselling(id: string, data: Partial<InsertOtPreopCounselling>): Promise<OtPreopCounselling | undefined> { return undefined; }
+  
+  async getOtPreopChecklist(caseId: string): Promise<OtPreopChecklist | undefined> { return undefined; }
+  async createOtPreopChecklist(data: InsertOtPreopChecklist): Promise<OtPreopChecklist> { throw new Error("Not implemented"); }
+  async updateOtPreopChecklist(id: string, data: Partial<InsertOtPreopChecklist>): Promise<OtPreopChecklist | undefined> { return undefined; }
+  
+  async getOtPreanaestheticEval(caseId: string): Promise<OtPreanaestheticEval | undefined> { return undefined; }
+  async createOtPreanaestheticEval(data: InsertOtPreanaestheticEval): Promise<OtPreanaestheticEval> { throw new Error("Not implemented"); }
+  async updateOtPreanaestheticEval(id: string, data: Partial<InsertOtPreanaestheticEval>): Promise<OtPreanaestheticEval | undefined> { return undefined; }
+  
+  async getOtSafetyChecklist(caseId: string): Promise<OtSafetyChecklist | undefined> { return undefined; }
+  async createOtSafetyChecklist(data: InsertOtSafetyChecklist): Promise<OtSafetyChecklist> { throw new Error("Not implemented"); }
+  async updateOtSafetyChecklist(id: string, data: Partial<InsertOtSafetyChecklist>): Promise<OtSafetyChecklist | undefined> { return undefined; }
+  
+  async getOtPreopAssessment(caseId: string): Promise<OtPreopAssessment | undefined> { return undefined; }
+  async createOtPreopAssessment(data: InsertOtPreopAssessment): Promise<OtPreopAssessment> { throw new Error("Not implemented"); }
+  async updateOtPreopAssessment(id: string, data: Partial<InsertOtPreopAssessment>): Promise<OtPreopAssessment | undefined> { return undefined; }
+  
+  async getOtReEvaluation(caseId: string): Promise<OtReEvaluation[]> { return []; }
+  async createOtReEvaluation(data: InsertOtReEvaluation): Promise<OtReEvaluation> { throw new Error("Not implemented"); }
+  
+  // Consent Forms
+  async getOtConsentSurgery(caseId: string): Promise<OtConsentSurgery | undefined> { return undefined; }
+  async createOtConsentSurgery(data: InsertOtConsentSurgery): Promise<OtConsentSurgery> { throw new Error("Not implemented"); }
+  async updateOtConsentSurgery(id: string, data: Partial<InsertOtConsentSurgery>): Promise<OtConsentSurgery | undefined> { return undefined; }
+  
+  async getOtConsentAnaesthesia(caseId: string): Promise<OtConsentAnaesthesia | undefined> { return undefined; }
+  async createOtConsentAnaesthesia(data: InsertOtConsentAnaesthesia): Promise<OtConsentAnaesthesia> { throw new Error("Not implemented"); }
+  async updateOtConsentAnaesthesia(id: string, data: Partial<InsertOtConsentAnaesthesia>): Promise<OtConsentAnaesthesia | undefined> { return undefined; }
+  
+  // Intra-Op Records
+  async getOtAnaesthesiaRecord(caseId: string): Promise<OtAnaesthesiaRecord | undefined> { return undefined; }
+  async createOtAnaesthesiaRecord(data: InsertOtAnaesthesiaRecord): Promise<OtAnaesthesiaRecord> { throw new Error("Not implemented"); }
+  async updateOtAnaesthesiaRecord(id: string, data: Partial<InsertOtAnaesthesiaRecord>): Promise<OtAnaesthesiaRecord | undefined> { return undefined; }
+  
+  async getOtTimeLog(caseId: string): Promise<OtTimeLog[]> { return []; }
+  async createOtTimeLogEntry(data: InsertOtTimeLog): Promise<OtTimeLog> { throw new Error("Not implemented"); }
+  
+  async getOtSurgeonNotes(caseId: string): Promise<OtSurgeonNotes | undefined> { return undefined; }
+  async createOtSurgeonNotes(data: InsertOtSurgeonNotes): Promise<OtSurgeonNotes> { throw new Error("Not implemented"); }
+  async updateOtSurgeonNotes(id: string, data: Partial<InsertOtSurgeonNotes>): Promise<OtSurgeonNotes | undefined> { return undefined; }
+  
+  // Post-Op Records
+  async getOtPostopAssessment(caseId: string): Promise<OtPostopAssessment[]> { return []; }
+  async createOtPostopAssessment(data: InsertOtPostopAssessment): Promise<OtPostopAssessment> { throw new Error("Not implemented"); }
+  
+  async getOtMonitoringChart(caseId: string): Promise<OtMonitoringChart[]> { return []; }
+  async createOtMonitoringChartEntry(data: InsertOtMonitoringChart): Promise<OtMonitoringChart> { throw new Error("Not implemented"); }
+  
+  async getOtLabourChart(caseId: string): Promise<OtLabourChart[]> { return []; }
+  async createOtLabourChartEntry(data: InsertOtLabourChart): Promise<OtLabourChart> { throw new Error("Not implemented"); }
+  
+  async getOtNeonateSheet(caseId: string): Promise<OtNeonateSheet | undefined> { return undefined; }
+  async createOtNeonateSheet(data: InsertOtNeonateSheet): Promise<OtNeonateSheet> { throw new Error("Not implemented"); }
+  async updateOtNeonateSheet(id: string, data: Partial<InsertOtNeonateSheet>): Promise<OtNeonateSheet | undefined> { return undefined; }
+  
+  // OT Audit Log
+  async createOtAuditLog(data: InsertOtAuditLog): Promise<OtAuditLog> { throw new Error("Not implemented"); }
+  async getOtAuditLogs(caseId: string): Promise<OtAuditLog[]> { return []; }
 }
 
 import { databaseStorage } from "./database-storage";

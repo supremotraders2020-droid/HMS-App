@@ -25,6 +25,19 @@ import {
   insuranceProviders, patientInsurance, insuranceClaims, insuranceClaimDocuments, insuranceClaimLogs, insuranceProviderChecklists,
   opdPrescriptionTemplates, opdTemplateVersions, nurseDepartmentPreferences, departmentNurseAssignments,
   diagnosticTestOrders, technicianReports,
+  otCases, otCaseTeam, otPreopCounselling, otPreopChecklist, otPreanaestheticEval,
+  otSafetyChecklist, otPreopAssessment, otReEvaluation, otConsentSurgery, otConsentAnaesthesia,
+  otAnaesthesiaRecord, otTimeLog, otSurgeonNotes, otPostopAssessment, otMonitoringChart,
+  otLabourChart, otNeonateSheet, otAuditLog,
+  type OtCase, type InsertOtCase, type OtCaseTeam, type InsertOtCaseTeam,
+  type OtPreopCounselling, type InsertOtPreopCounselling, type OtPreopChecklist, type InsertOtPreopChecklist,
+  type OtPreanaestheticEval, type InsertOtPreanaestheticEval, type OtSafetyChecklist, type InsertOtSafetyChecklist,
+  type OtPreopAssessment, type InsertOtPreopAssessment, type OtReEvaluation, type InsertOtReEvaluation,
+  type OtConsentSurgery, type InsertOtConsentSurgery, type OtConsentAnaesthesia, type InsertOtConsentAnaesthesia,
+  type OtAnaesthesiaRecord, type InsertOtAnaesthesiaRecord, type OtTimeLog, type InsertOtTimeLog,
+  type OtSurgeonNotes, type InsertOtSurgeonNotes, type OtPostopAssessment, type InsertOtPostopAssessment,
+  type OtMonitoringChart, type InsertOtMonitoringChart, type OtLabourChart, type InsertOtLabourChart,
+  type OtNeonateSheet, type InsertOtNeonateSheet, type OtAuditLog, type InsertOtAuditLog,
   type OpdPrescriptionTemplate, type InsertOpdPrescriptionTemplate,
   type NurseDepartmentPreferences, type InsertNurseDepartmentPreferences,
   type OpdTemplateVersion, type InsertOpdTemplateVersion,
@@ -6027,6 +6040,284 @@ export class DatabaseStorage implements IStorage {
       nursingRemarks, nursingDuty, fluidOrders, nutritionChart, bodyMarkings,
       nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions, doctorNurseNotes
     };
+  }
+
+  // ========== OPERATION & OT MODULE ==========
+  
+  // OT Cases
+  async getOtCases(): Promise<OtCase[]> {
+    return await db.select().from(otCases).orderBy(desc(otCases.scheduledDate));
+  }
+
+  async getOtCaseById(id: string): Promise<OtCase | undefined> {
+    const result = await db.select().from(otCases).where(eq(otCases.id, id));
+    return result[0];
+  }
+
+  async getOtCasesByPatient(patientId: string): Promise<OtCase[]> {
+    return await db.select().from(otCases).where(eq(otCases.patientId, patientId)).orderBy(desc(otCases.scheduledDate));
+  }
+
+  async getOtCasesBySurgeon(surgeonId: string): Promise<OtCase[]> {
+    return await db.select().from(otCases).where(eq(otCases.surgeonId, surgeonId)).orderBy(desc(otCases.scheduledDate));
+  }
+
+  async getOtCasesByDate(date: string): Promise<OtCase[]> {
+    return await db.select().from(otCases).where(eq(otCases.scheduledDate, date)).orderBy(otCases.scheduledTime);
+  }
+
+  async getOtCasesByStatus(status: string): Promise<OtCase[]> {
+    return await db.select().from(otCases).where(eq(otCases.status, status)).orderBy(desc(otCases.scheduledDate));
+  }
+
+  async createOtCase(data: InsertOtCase): Promise<OtCase> {
+    const result = await db.insert(otCases).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtCase(id: string, data: Partial<InsertOtCase>): Promise<OtCase | undefined> {
+    const result = await db.update(otCases).set({ ...data, updatedAt: new Date() }).where(eq(otCases.id, id)).returning();
+    return result[0];
+  }
+
+  async updateOtCaseStatus(id: string, status: string): Promise<OtCase | undefined> {
+    const result = await db.update(otCases).set({ status, updatedAt: new Date() }).where(eq(otCases.id, id)).returning();
+    return result[0];
+  }
+
+  // OT Case Team
+  async getOtCaseTeam(caseId: string): Promise<OtCaseTeam[]> {
+    return await db.select().from(otCaseTeam).where(eq(otCaseTeam.caseId, caseId));
+  }
+
+  async addOtCaseTeamMember(data: InsertOtCaseTeam): Promise<OtCaseTeam> {
+    const result = await db.insert(otCaseTeam).values(data).returning();
+    return result[0];
+  }
+
+  async removeOtCaseTeamMember(id: string): Promise<boolean> {
+    const result = await db.delete(otCaseTeam).where(eq(otCaseTeam.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Pre-Op Counselling
+  async getOtPreopCounselling(caseId: string): Promise<OtPreopCounselling | undefined> {
+    const result = await db.select().from(otPreopCounselling).where(eq(otPreopCounselling.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtPreopCounselling(data: InsertOtPreopCounselling): Promise<OtPreopCounselling> {
+    const result = await db.insert(otPreopCounselling).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtPreopCounselling(id: string, data: Partial<InsertOtPreopCounselling>): Promise<OtPreopCounselling | undefined> {
+    const result = await db.update(otPreopCounselling).set(data).where(eq(otPreopCounselling.id, id)).returning();
+    return result[0];
+  }
+
+  // Pre-Op Checklist
+  async getOtPreopChecklist(caseId: string): Promise<OtPreopChecklist | undefined> {
+    const result = await db.select().from(otPreopChecklist).where(eq(otPreopChecklist.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtPreopChecklist(data: InsertOtPreopChecklist): Promise<OtPreopChecklist> {
+    const result = await db.insert(otPreopChecklist).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtPreopChecklist(id: string, data: Partial<InsertOtPreopChecklist>): Promise<OtPreopChecklist | undefined> {
+    const result = await db.update(otPreopChecklist).set(data).where(eq(otPreopChecklist.id, id)).returning();
+    return result[0];
+  }
+
+  // Pre-Anaesthetic Eval
+  async getOtPreanaestheticEval(caseId: string): Promise<OtPreanaestheticEval | undefined> {
+    const result = await db.select().from(otPreanaestheticEval).where(eq(otPreanaestheticEval.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtPreanaestheticEval(data: InsertOtPreanaestheticEval): Promise<OtPreanaestheticEval> {
+    const result = await db.insert(otPreanaestheticEval).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtPreanaestheticEval(id: string, data: Partial<InsertOtPreanaestheticEval>): Promise<OtPreanaestheticEval | undefined> {
+    const result = await db.update(otPreanaestheticEval).set(data).where(eq(otPreanaestheticEval.id, id)).returning();
+    return result[0];
+  }
+
+  // Safety Checklist
+  async getOtSafetyChecklist(caseId: string): Promise<OtSafetyChecklist | undefined> {
+    const result = await db.select().from(otSafetyChecklist).where(eq(otSafetyChecklist.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtSafetyChecklist(data: InsertOtSafetyChecklist): Promise<OtSafetyChecklist> {
+    const result = await db.insert(otSafetyChecklist).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtSafetyChecklist(id: string, data: Partial<InsertOtSafetyChecklist>): Promise<OtSafetyChecklist | undefined> {
+    const result = await db.update(otSafetyChecklist).set(data).where(eq(otSafetyChecklist.id, id)).returning();
+    return result[0];
+  }
+
+  // Pre-Op Assessment
+  async getOtPreopAssessment(caseId: string): Promise<OtPreopAssessment | undefined> {
+    const result = await db.select().from(otPreopAssessment).where(eq(otPreopAssessment.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtPreopAssessment(data: InsertOtPreopAssessment): Promise<OtPreopAssessment> {
+    const result = await db.insert(otPreopAssessment).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtPreopAssessment(id: string, data: Partial<InsertOtPreopAssessment>): Promise<OtPreopAssessment | undefined> {
+    const result = await db.update(otPreopAssessment).set(data).where(eq(otPreopAssessment.id, id)).returning();
+    return result[0];
+  }
+
+  // Re-Evaluation
+  async getOtReEvaluation(caseId: string): Promise<OtReEvaluation[]> {
+    return await db.select().from(otReEvaluation).where(eq(otReEvaluation.caseId, caseId)).orderBy(desc(otReEvaluation.createdAt));
+  }
+
+  async createOtReEvaluation(data: InsertOtReEvaluation): Promise<OtReEvaluation> {
+    const result = await db.insert(otReEvaluation).values(data).returning();
+    return result[0];
+  }
+
+  // Consent Surgery
+  async getOtConsentSurgery(caseId: string): Promise<OtConsentSurgery | undefined> {
+    const result = await db.select().from(otConsentSurgery).where(eq(otConsentSurgery.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtConsentSurgery(data: InsertOtConsentSurgery): Promise<OtConsentSurgery> {
+    const result = await db.insert(otConsentSurgery).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtConsentSurgery(id: string, data: Partial<InsertOtConsentSurgery>): Promise<OtConsentSurgery | undefined> {
+    const result = await db.update(otConsentSurgery).set(data).where(eq(otConsentSurgery.id, id)).returning();
+    return result[0];
+  }
+
+  // Consent Anaesthesia
+  async getOtConsentAnaesthesia(caseId: string): Promise<OtConsentAnaesthesia | undefined> {
+    const result = await db.select().from(otConsentAnaesthesia).where(eq(otConsentAnaesthesia.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtConsentAnaesthesia(data: InsertOtConsentAnaesthesia): Promise<OtConsentAnaesthesia> {
+    const result = await db.insert(otConsentAnaesthesia).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtConsentAnaesthesia(id: string, data: Partial<InsertOtConsentAnaesthesia>): Promise<OtConsentAnaesthesia | undefined> {
+    const result = await db.update(otConsentAnaesthesia).set(data).where(eq(otConsentAnaesthesia.id, id)).returning();
+    return result[0];
+  }
+
+  // Anaesthesia Record
+  async getOtAnaesthesiaRecord(caseId: string): Promise<OtAnaesthesiaRecord | undefined> {
+    const result = await db.select().from(otAnaesthesiaRecord).where(eq(otAnaesthesiaRecord.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtAnaesthesiaRecord(data: InsertOtAnaesthesiaRecord): Promise<OtAnaesthesiaRecord> {
+    const result = await db.insert(otAnaesthesiaRecord).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtAnaesthesiaRecord(id: string, data: Partial<InsertOtAnaesthesiaRecord>): Promise<OtAnaesthesiaRecord | undefined> {
+    const result = await db.update(otAnaesthesiaRecord).set(data).where(eq(otAnaesthesiaRecord.id, id)).returning();
+    return result[0];
+  }
+
+  // Time Log
+  async getOtTimeLog(caseId: string): Promise<OtTimeLog[]> {
+    return await db.select().from(otTimeLog).where(eq(otTimeLog.caseId, caseId)).orderBy(otTimeLog.eventTime);
+  }
+
+  async createOtTimeLogEntry(data: InsertOtTimeLog): Promise<OtTimeLog> {
+    const result = await db.insert(otTimeLog).values(data).returning();
+    return result[0];
+  }
+
+  // Surgeon Notes
+  async getOtSurgeonNotes(caseId: string): Promise<OtSurgeonNotes | undefined> {
+    const result = await db.select().from(otSurgeonNotes).where(eq(otSurgeonNotes.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtSurgeonNotes(data: InsertOtSurgeonNotes): Promise<OtSurgeonNotes> {
+    const result = await db.insert(otSurgeonNotes).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtSurgeonNotes(id: string, data: Partial<InsertOtSurgeonNotes>): Promise<OtSurgeonNotes | undefined> {
+    const result = await db.update(otSurgeonNotes).set(data).where(eq(otSurgeonNotes.id, id)).returning();
+    return result[0];
+  }
+
+  // Post-Op Assessment
+  async getOtPostopAssessment(caseId: string): Promise<OtPostopAssessment[]> {
+    return await db.select().from(otPostopAssessment).where(eq(otPostopAssessment.caseId, caseId)).orderBy(desc(otPostopAssessment.assessmentTime));
+  }
+
+  async createOtPostopAssessment(data: InsertOtPostopAssessment): Promise<OtPostopAssessment> {
+    const result = await db.insert(otPostopAssessment).values(data).returning();
+    return result[0];
+  }
+
+  // Monitoring Chart
+  async getOtMonitoringChart(caseId: string): Promise<OtMonitoringChart[]> {
+    return await db.select().from(otMonitoringChart).where(eq(otMonitoringChart.caseId, caseId)).orderBy(otMonitoringChart.recordTime);
+  }
+
+  async createOtMonitoringChartEntry(data: InsertOtMonitoringChart): Promise<OtMonitoringChart> {
+    const result = await db.insert(otMonitoringChart).values(data).returning();
+    return result[0];
+  }
+
+  // Labour Chart
+  async getOtLabourChart(caseId: string): Promise<OtLabourChart[]> {
+    return await db.select().from(otLabourChart).where(eq(otLabourChart.caseId, caseId)).orderBy(otLabourChart.recordTime);
+  }
+
+  async createOtLabourChartEntry(data: InsertOtLabourChart): Promise<OtLabourChart> {
+    const result = await db.insert(otLabourChart).values(data).returning();
+    return result[0];
+  }
+
+  // Neonate Sheet
+  async getOtNeonateSheet(caseId: string): Promise<OtNeonateSheet | undefined> {
+    const result = await db.select().from(otNeonateSheet).where(eq(otNeonateSheet.caseId, caseId));
+    return result[0];
+  }
+
+  async createOtNeonateSheet(data: InsertOtNeonateSheet): Promise<OtNeonateSheet> {
+    const result = await db.insert(otNeonateSheet).values(data).returning();
+    return result[0];
+  }
+
+  async updateOtNeonateSheet(id: string, data: Partial<InsertOtNeonateSheet>): Promise<OtNeonateSheet | undefined> {
+    const result = await db.update(otNeonateSheet).set(data).where(eq(otNeonateSheet.id, id)).returning();
+    return result[0];
+  }
+
+  // OT Audit Log
+  async createOtAuditLog(data: InsertOtAuditLog): Promise<OtAuditLog> {
+    const result = await db.insert(otAuditLog).values(data).returning();
+    return result[0];
+  }
+
+  async getOtAuditLogs(caseId: string): Promise<OtAuditLog[]> {
+    return await db.select().from(otAuditLog).where(eq(otAuditLog.caseId, caseId)).orderBy(desc(otAuditLog.timestamp));
   }
 }
 
