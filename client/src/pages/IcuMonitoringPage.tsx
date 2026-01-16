@@ -2104,6 +2104,28 @@ function NursingSection({ chartId, remarksData, dutyData, diaryData, canEdit, us
   const { toast } = useToast();
   const [showAddRemark, setShowAddRemark] = useState(false);
   const [newRemark, setNewRemark] = useState({ time: "", remarks: "" });
+  const [selectedShift, setSelectedShift] = useState<string | null>(null);
+  const [selectedNurse, setSelectedNurse] = useState<{ id: string; name: string } | null>(null);
+
+  const { data: nursesData = [] } = useQuery<any[]>({
+    queryKey: ["/api/users/nurses"],
+  });
+
+  const assignDutyMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/icu-charts/${chartId}/nursing-duty`, { 
+        shift: selectedShift, 
+        name: selectedNurse?.name,
+        empNo: selectedNurse?.id 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      setSelectedShift(null);
+      setSelectedNurse(null);
+      toast({ title: "Nurse assigned to shift" });
+    },
+  });
 
   const addRemarkMutation = useMutation({
     mutationFn: async () => {
@@ -2208,11 +2230,17 @@ function NursingSection({ chartId, remarksData, dutyData, diaryData, canEdit, us
           <Users className="w-4 h-4" />
           Sisters on Duty
         </h4>
+        <p className="text-xs text-muted-foreground">Morning (6 AM - 2 PM), Evening (2 PM - 10 PM), Night (10 PM - 6 AM)</p>
         <div className="grid grid-cols-3 gap-4">
           {["Morning", "Evening", "Night"].map(shift => {
             const duty = dutyData.find((d: any) => d.shift === shift);
             return (
-              <Card key={shift} className="p-3">
+              <Card 
+                key={shift} 
+                className={`p-3 ${canEdit ? 'cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors' : ''}`}
+                onClick={() => canEdit && setSelectedShift(shift)}
+                data-testid={`card-shift-${shift.toLowerCase()}`}
+              >
                 <div className="text-sm text-muted-foreground">{shift} Shift</div>
                 <div className="font-medium">{duty?.name || "Not assigned"}</div>
                 {duty?.empNo && <div className="text-xs text-muted-foreground">ID: {duty.empNo}</div>}
@@ -2220,6 +2248,45 @@ function NursingSection({ chartId, remarksData, dutyData, diaryData, canEdit, us
             );
           })}
         </div>
+
+        <Dialog open={!!selectedShift} onOpenChange={(open) => !open && setSelectedShift(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Assign Nurse to {selectedShift} Shift</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Select Nurse</Label>
+                <Select 
+                  value={selectedNurse?.id || ""} 
+                  onValueChange={(v) => {
+                    const nurse = nursesData.find((n: any) => n.id === v);
+                    setSelectedNurse(nurse ? { id: nurse.id, name: nurse.fullName } : null);
+                  }}
+                >
+                  <SelectTrigger data-testid="select-nurse-duty">
+                    <SelectValue placeholder="Select nurse" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {nursesData.map((nurse: any) => (
+                      <SelectItem key={nurse.id} value={nurse.id}>{nurse.fullName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setSelectedShift(null)}>Cancel</Button>
+                <Button 
+                  onClick={() => assignDutyMutation.mutate()} 
+                  disabled={!selectedNurse || assignDutyMutation.isPending}
+                  data-testid="button-assign-duty"
+                >
+                  Assign
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="space-y-4">
