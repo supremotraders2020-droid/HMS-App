@@ -2289,28 +2289,6 @@ function NursingSection({ chartId, remarksData, dutyData, diaryData, canEdit, us
         </Dialog>
       </div>
 
-      <div className="space-y-4">
-        <h4 className="font-medium flex items-center gap-2">
-          <FileText className="w-4 h-4" />
-          Nurse Diary (Important Events)
-        </h4>
-        <div className="space-y-2">
-          {diaryData.length === 0 ? (
-            <p className="text-muted-foreground">No diary entries recorded.</p>
-          ) : (
-            diaryData.map((entry: any) => (
-              <Card key={entry.id} className="p-3">
-                <div className="flex items-start gap-2">
-                  <Badge variant="secondary">{entry.time}</Badge>
-                  <div className="flex-1 text-sm">
-                    <EditableCell value={entry.eventDescription} canEdit={canEdit} onSave={(v) => updateDiaryMutation.mutate({ id: entry.id, field: "eventDescription", value: v })} />
-                  </div>
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
-      </div>
     </div>
   );
 }
