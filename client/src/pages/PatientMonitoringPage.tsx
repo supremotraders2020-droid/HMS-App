@@ -898,92 +898,409 @@ function OverviewTab({ session }: { session: Session }) {
     enabled: !!session.id
   });
 
+  const { data: vitals = [] } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/vitals/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const { data: diabeticData = [] } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/diabetic/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const { data: intakeData = [] } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/intake/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const { data: outputData = [] } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/output/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const { data: shiftNotes = [] } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/shift-notes/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const { data: marData = [] } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/mar/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const latestVitals = vitals.length > 0 ? vitals[vitals.length - 1] : null;
+  const latestBSL = diabeticData.length > 0 ? diabeticData[diabeticData.length - 1] : null;
+
+  const ivFluids = intakeData.filter((i: any) => i.intakeType === "IV Fluid" || i.intakeType === "IV_FLUID");
+  const oralFluids = intakeData.filter((i: any) => i.intakeType === "Oral" || i.intakeType === "ORAL");
+  const totalIV = ivFluids.reduce((sum: number, i: any) => sum + (i.volume || 0), 0);
+  const totalOral = oralFluids.reduce((sum: number, i: any) => sum + (i.volume || 0), 0);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-3 bg-blue-500/5">
-          <CardTitle className="text-sm flex items-center gap-2 text-blue-600 dark:text-blue-400">
-            <div className="p-1.5 rounded-md bg-blue-500/10">
-              <Info className="h-4 w-4" />
+    <div className="space-y-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-3 bg-blue-500/5">
+            <CardTitle className="text-sm flex items-center gap-2 text-blue-600 dark:text-blue-400">
+              <div className="p-1.5 rounded-md bg-blue-500/10">
+                <Info className="h-4 w-4" />
+              </div>
+              Session Info
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Ward</span>
+              <span className="font-medium">{session.ward}</span>
             </div>
-            Session Info
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4 space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Ward</span>
-            <span className="font-medium">{session.ward}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Bed</span>
-            <span className="font-medium">{session.bedNumber}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Consultant</span>
-            <span className="font-medium">{session.admittingConsultant}</span>
-          </div>
-          <div className="flex justify-between text-sm items-center">
-            <span className="text-muted-foreground">Status</span>
-            <Badge variant={session.isLocked ? "secondary" : "default"}>
-              {session.isLocked ? "Locked" : "Active"}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Bed</span>
+              <span className="font-medium">{session.bedNumber}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Consultant</span>
+              <span className="font-medium text-xs">{session.admittingConsultant}</span>
+            </div>
+            <div className="flex justify-between text-sm items-center">
+              <span className="text-muted-foreground">Status</span>
+              <Badge variant={session.isLocked ? "secondary" : "default"}>
+                {session.isLocked ? "Locked" : "Active"}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-3 bg-cyan-500/5">
+            <CardTitle className="text-sm flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+              <div className="p-1.5 rounded-md bg-cyan-500/10">
+                <Droplets className="h-4 w-4" />
+              </div>
+              Fluid Balance (I/O)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Total Intake</span>
+              <span className="font-medium text-green-600">{fluidBalance?.totalIntake || 0} ml</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Total Output</span>
+              <span className="font-medium text-orange-600">{fluidBalance?.totalOutput || 0} ml</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between text-sm items-center">
+              <span className="text-muted-foreground font-medium">Net Balance</span>
+              <span className={`font-bold text-lg ${(fluidBalance?.netBalance || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {(fluidBalance?.netBalance || 0) >= 0 ? '+' : ''}{fluidBalance?.netBalance || 0} ml
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-3 bg-rose-500/5">
+            <CardTitle className="text-sm flex items-center gap-2 text-rose-600 dark:text-rose-400">
+              <div className="p-1.5 rounded-md bg-rose-500/10">
+                <Heart className="h-4 w-4" />
+              </div>
+              Latest Vitals
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-2">
+            {latestVitals ? (
+              <>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Thermometer className="h-3 w-3 text-orange-500" />
+                    <span className="text-muted-foreground">Temp:</span>
+                    <span className="font-medium">{latestVitals.temperature || "-"}°C</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Heart className="h-3 w-3 text-red-500" />
+                    <span className="text-muted-foreground">Pulse:</span>
+                    <span className="font-medium">{latestVitals.heartRate || "-"}/min</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Activity className="h-3 w-3 text-blue-500" />
+                    <span className="text-muted-foreground">BP:</span>
+                    <span className="font-medium">{latestVitals.systolicBp || "-"}/{latestVitals.diastolicBp || "-"}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Wind className="h-3 w-3 text-teal-500" />
+                    <span className="text-muted-foreground">Resp:</span>
+                    <span className="font-medium">{latestVitals.respiratoryRate || "-"}/min</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-muted-foreground">SpO2:</span>
+                  <span className={`font-bold ${(latestVitals.spo2 || 0) >= 95 ? 'text-green-600' : (latestVitals.spo2 || 0) >= 90 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {latestVitals.spo2 || "-"}%
+                  </span>
+                  <span className="text-muted-foreground ml-2">@ {latestVitals.hourSlot}</span>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">No vitals recorded yet</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-3 bg-amber-500/5">
+            <CardTitle className="text-sm flex items-center gap-2 text-amber-600 dark:text-amber-400">
+              <div className="p-1.5 rounded-md bg-amber-500/10">
+                <FileCheck className="h-4 w-4" />
+              </div>
+              Diagnosis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <p className="text-sm font-medium">{session.primaryDiagnosis || "No diagnosis recorded"}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 bg-purple-500/5">
+            <CardTitle className="text-sm flex items-center gap-2 text-purple-600 dark:text-purple-400">
+              <div className="p-1.5 rounded-md bg-purple-500/10">
+                <Activity className="h-4 w-4" />
+              </div>
+              BSL (Blood Sugar Level)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3">
+            {diabeticData.length > 0 ? (
+              <div className="space-y-2">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs py-1">Time</TableHead>
+                      <TableHead className="text-xs py-1">Value</TableHead>
+                      <TableHead className="text-xs py-1">Insulin</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {diabeticData.slice(-4).map((d: any, i: number) => (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs py-1">{d.hourSlot || d.timeSlot}</TableCell>
+                        <TableCell className={`text-xs py-1 font-medium ${(d.bloodSugar || 0) > 180 ? 'text-red-600' : (d.bloodSugar || 0) < 70 ? 'text-orange-600' : 'text-green-600'}`}>
+                          {d.bloodSugar || "-"} mg/dL
+                        </TableCell>
+                        <TableCell className="text-xs py-1">{d.insulinDose ? `${d.insulinDose}U` : "-"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No BSL readings recorded</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 bg-indigo-500/5">
+            <CardTitle className="text-sm flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+              <div className="p-1.5 rounded-md bg-indigo-500/10">
+                <Syringe className="h-4 w-4" />
+              </div>
+              IV / Oral Fluids
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Syringe className="h-3 w-3" /> IV Fluids
+              </span>
+              <span className="font-medium text-blue-600">{totalIV} ml</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Droplets className="h-3 w-3" /> Oral Fluids
+              </span>
+              <span className="font-medium text-green-600">{totalOral} ml</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between text-sm font-medium">
+              <span>Total Fluids</span>
+              <span className="text-cyan-600">{totalIV + totalOral} ml</span>
+            </div>
+            {ivFluids.length > 0 && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                <span className="font-medium">Recent IV:</span> {ivFluids.slice(-2).map((f: any) => f.description || f.fluidType).join(", ")}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 bg-teal-500/5">
+            <CardTitle className="text-sm flex items-center gap-2 text-teal-600 dark:text-teal-400">
+              <div className="p-1.5 rounded-md bg-teal-500/10">
+                <Pill className="h-4 w-4" />
+              </div>
+              Drugs / MAR Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3">
+            {marData.length > 0 ? (
+              <div className="space-y-1">
+                {marData.slice(0, 4).map((m: any, i: number) => (
+                  <div key={i} className="flex justify-between items-center text-xs border-b pb-1 last:border-0">
+                    <span className="font-medium truncate max-w-[120px]">{m.drugName}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">{m.dose} {m.route}</span>
+                      {m.administeredAt ? (
+                        <CheckCircle className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <Clock className="h-3 w-3 text-orange-500" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {marData.length > 4 && (
+                  <p className="text-xs text-muted-foreground text-center">+{marData.length - 4} more medications</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No medications scheduled</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 bg-emerald-500/5">
+            <CardTitle className="text-sm flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <div className="p-1.5 rounded-md bg-emerald-500/10">
+                <Heart className="h-4 w-4" />
+              </div>
+              Vitals Trend (Temp/Pulse/BP/Resp)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3">
+            {vitals.length > 0 ? (
+              <ScrollArea className="h-[140px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs py-1 w-16">Time</TableHead>
+                      <TableHead className="text-xs py-1">Temp</TableHead>
+                      <TableHead className="text-xs py-1">Pulse</TableHead>
+                      <TableHead className="text-xs py-1">BP</TableHead>
+                      <TableHead className="text-xs py-1">Resp</TableHead>
+                      <TableHead className="text-xs py-1">SpO2</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vitals.slice(-6).reverse().map((v: any, i: number) => (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs py-1 font-medium">{v.hourSlot}</TableCell>
+                        <TableCell className="text-xs py-1">{v.temperature || "-"}°C</TableCell>
+                        <TableCell className="text-xs py-1">{v.heartRate || "-"}</TableCell>
+                        <TableCell className="text-xs py-1">{v.systolicBp || "-"}/{v.diastolicBp || "-"}</TableCell>
+                        <TableCell className="text-xs py-1">{v.respiratoryRate || "-"}</TableCell>
+                        <TableCell className={`text-xs py-1 font-medium ${(v.spo2 || 0) >= 95 ? 'text-green-600' : 'text-orange-600'}`}>{v.spo2 || "-"}%</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            ) : (
+              <p className="text-sm text-muted-foreground">No vitals recorded for today</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 bg-orange-500/5">
+            <CardTitle className="text-sm flex items-center gap-2 text-orange-600 dark:text-orange-400">
+              <div className="p-1.5 rounded-md bg-orange-500/10">
+                <FileText className="h-4 w-4" />
+              </div>
+              Nurse Notes (Shift-wise)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-3">
+            {shiftNotes.length > 0 ? (
+              <ScrollArea className="h-[140px]">
+                <div className="space-y-2">
+                  {shiftNotes.slice(-3).reverse().map((n: any, i: number) => (
+                    <div key={i} className="border-l-2 border-orange-400 pl-2 py-1">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Badge variant="outline" className="text-[10px] px-1 py-0">{n.shift}</Badge>
+                        <span>{n.nurseName || "Nurse"}</span>
+                      </div>
+                      <p className="text-xs mt-1 line-clamp-2">{n.generalNotes || n.notes || "No notes"}</p>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : (
+              <p className="text-sm text-muted-foreground">No shift notes recorded</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="overflow-hidden">
-        <CardHeader className="pb-3 bg-cyan-500/5">
-          <CardTitle className="text-sm flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
-            <div className="p-1.5 rounded-md bg-cyan-500/10">
+        <CardHeader className="pb-2 bg-slate-500/5">
+          <CardTitle className="text-sm flex items-center gap-2 text-slate-600 dark:text-slate-400">
+            <div className="p-1.5 rounded-md bg-slate-500/10">
               <Droplets className="h-4 w-4" />
             </div>
-            Fluid Balance
+            Intake-Output Chart (24-Hour Summary)
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4 space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total Intake</span>
-            <span className="font-medium">{fluidBalance?.totalIntake || 0} ml</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total Output</span>
-            <span className="font-medium">{fluidBalance?.totalOutput || 0} ml</span>
-          </div>
-          <Separator />
-          <div className="flex justify-between text-sm items-center">
-            <span className="text-muted-foreground">Net Balance</span>
-            <span className={`font-bold ${(fluidBalance?.netBalance || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              {(fluidBalance?.netBalance || 0) >= 0 ? '+' : ''}{fluidBalance?.netBalance || 0} ml
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-3 bg-rose-500/5">
-          <CardTitle className="text-sm flex items-center gap-2 text-rose-600 dark:text-rose-400">
-            <div className="p-1.5 rounded-md bg-rose-500/10">
-              <Heart className="h-4 w-4" />
+        <CardContent className="pt-3">
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-sm font-medium text-green-600 mb-2 flex items-center gap-1">
+                <Plus className="h-3 w-3" /> INTAKE
+              </h4>
+              {intakeData.length > 0 ? (
+                <div className="space-y-1">
+                  {intakeData.slice(-5).map((i: any, idx: number) => (
+                    <div key={idx} className="flex justify-between text-xs border-b pb-1">
+                      <span className="text-muted-foreground">{i.hourSlot} - {i.intakeType || i.fluidType}</span>
+                      <span className="font-medium text-green-600">+{i.volume || i.amount} ml</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-sm font-bold pt-1 border-t-2">
+                    <span>Total Intake</span>
+                    <span className="text-green-600">{fluidBalance?.totalIntake || 0} ml</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">No intake recorded</p>
+              )}
             </div>
-            Latest Vitals
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <p className="text-sm text-muted-foreground">Record vitals in the Vitals tab</p>
-        </CardContent>
-      </Card>
-
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-3 bg-amber-500/5">
-          <CardTitle className="text-sm flex items-center gap-2 text-amber-600 dark:text-amber-400">
-            <div className="p-1.5 rounded-md bg-amber-500/10">
-              <FileCheck className="h-4 w-4" />
+            <div>
+              <h4 className="text-sm font-medium text-orange-600 mb-2 flex items-center gap-1">
+                <XCircle className="h-3 w-3" /> OUTPUT
+              </h4>
+              {outputData.length > 0 ? (
+                <div className="space-y-1">
+                  {outputData.slice(-5).map((o: any, idx: number) => (
+                    <div key={idx} className="flex justify-between text-xs border-b pb-1">
+                      <span className="text-muted-foreground">{o.hourSlot} - {o.outputType || o.type}</span>
+                      <span className="font-medium text-orange-600">-{o.volume || o.amount} ml</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-sm font-bold pt-1 border-t-2">
+                    <span>Total Output</span>
+                    <span className="text-orange-600">{fluidBalance?.totalOutput || 0} ml</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">No output recorded</p>
+              )}
             </div>
-            Diagnosis
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <p className="text-sm font-medium">{session.primaryDiagnosis || "No diagnosis recorded"}</p>
+          </div>
         </CardContent>
       </Card>
     </div>
