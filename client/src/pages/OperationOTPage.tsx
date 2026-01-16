@@ -97,9 +97,21 @@ export default function OperationOTPage({ userRole, userId }: OperationOTPagePro
     queryKey: ["/api/ot-cases", statusFilter !== "all" ? { status: statusFilter } : {}],
   });
 
-  const { data: patients = [] } = useQuery<TrackingPatient[]>({
-    queryKey: ["/api/tracking-patients"],
+  const { data: admissions = [] } = useQuery<any[]>({
+    queryKey: ["/api/admissions/active"],
   });
+
+  const patients = admissions.map((adm: any) => ({
+    id: adm.patient?.id || adm.patientId || adm.id,
+    firstName: adm.patient?.firstName || adm.patientName?.split(" ")[0] || "",
+    lastName: adm.patient?.lastName || adm.patientName?.split(" ").slice(1).join(" ") || "",
+    uhid: adm.patient?.uhid || adm.uhid || "",
+    age: adm.patient?.age || adm.age,
+    gender: adm.patient?.gender || adm.gender,
+    admissionId: adm.id,
+    bedNumber: adm.bedNumber,
+    department: adm.department,
+  }));
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
@@ -411,9 +423,13 @@ function NewCaseForm({
               <SelectValue placeholder="Select patient" />
             </SelectTrigger>
             <SelectContent>
-              {patients.map((p) => (
+              {patients.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground text-sm">
+                  No admitted patients found. Please admit a patient first.
+                </div>
+              ) : patients.map((p: any) => (
                 <SelectItem key={p.id} value={p.id}>
-                  {p.firstName} {p.lastName} {p.uhid ? `(${p.uhid})` : ""}
+                  {p.firstName} {p.lastName} {p.uhid ? `(${p.uhid})` : ""} {p.bedNumber ? `- Bed ${p.bedNumber}` : ""} {p.department ? `[${p.department}]` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
