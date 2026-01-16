@@ -60,6 +60,7 @@ export default function PatientMonitoringPage() {
   const [patientTypeFilter, setPatientTypeFilter] = useState<"current" | "old">("current");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "date">("list"); // "list" shows patient list, "date" shows sessions for selected date
   const [newSessionData, setNewSessionData] = useState({
     patientId: "",
     patientName: "",
@@ -475,7 +476,12 @@ export default function PatientMonitoringPage() {
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
+                onSelect={(date) => {
+                  setSelectedDate(date);
+                  if (date) {
+                    setViewMode("date");
+                  }
+                }}
                 modifiers={{ hasSession: sessionDates }}
                 modifiersStyles={{ 
                   hasSession: { 
@@ -503,7 +509,8 @@ export default function PatientMonitoringPage() {
       </div>
 
       <div className="flex-1 overflow-auto bg-background p-6">
-        {!selectedDate && patientTypeFilter === "old" && sessionsFilteredByType.length > 0 ? (
+        {/* LIST MODE - Show patient list based on Current/Old tab */}
+        {viewMode === "list" && patientTypeFilter === "old" && sessionsFilteredByType.length > 0 ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-4">
               <h3 className="text-lg font-medium flex items-center gap-2">
@@ -526,6 +533,7 @@ export default function PatientMonitoringPage() {
                       if (latestSession) {
                         setSelectedPatientFilter(patient.id);
                         setSelectedDate(parseISO(latestSession.sessionDate));
+                        setViewMode("date");
                       }
                     }}
                   >
@@ -552,7 +560,7 @@ export default function PatientMonitoringPage() {
               Click a patient card to view their session details, or use the calendar to select a specific date.
             </p>
           </div>
-        ) : !selectedDate && patientTypeFilter === "old" && sessionsFilteredByType.length === 0 ? (
+        ) : viewMode === "list" && patientTypeFilter === "old" && sessionsFilteredByType.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mb-6">
               <Clock className="h-12 w-12 opacity-40" />
@@ -562,7 +570,7 @@ export default function PatientMonitoringPage() {
               No monitoring sessions older than 7 days found. Old patient records will appear here after 7 days from their session date.
             </p>
           </div>
-        ) : !selectedDate && patientTypeFilter === "current" && sessionsFilteredByType.length > 0 ? (
+        ) : viewMode === "list" && patientTypeFilter === "current" && sessionsFilteredByType.length > 0 ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-4">
               <h3 className="text-lg font-medium flex items-center gap-2">
@@ -585,6 +593,7 @@ export default function PatientMonitoringPage() {
                       if (latestSession) {
                         setSelectedPatientFilter(patient.id);
                         setSelectedDate(parseISO(latestSession.sessionDate));
+                        setViewMode("date");
                       }
                     }}
                   >
@@ -611,7 +620,7 @@ export default function PatientMonitoringPage() {
               Click a patient card to view their session details, or use the calendar to select a specific date.
             </p>
           </div>
-        ) : !selectedDate && patientTypeFilter === "current" && sessionsFilteredByType.length === 0 ? (
+        ) : viewMode === "list" && patientTypeFilter === "current" && sessionsFilteredByType.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mb-6">
               <Users className="h-12 w-12 opacity-40" />
@@ -624,19 +633,20 @@ export default function PatientMonitoringPage() {
               <PlusCircle className="h-4 w-4" /> Create New Session
             </Button>
           </div>
-        ) : !selectedDate ? (
+        ) : viewMode === "date" && selectedDate && filteredSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-              <CalendarDays className="h-12 w-12 text-primary opacity-60" />
-            </div>
-            <h2 className="text-xl font-medium mb-2">Select a Date</h2>
-            <p className="text-sm text-center max-w-md">
-              Use the calendar above to select a date and view monitoring sessions for that day.
-              <br />Highlighted dates have recorded sessions.
-            </p>
-          </div>
-        ) : filteredSessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2 mb-4" 
+              onClick={() => {
+                setViewMode("list");
+                setSelectedDate(undefined);
+                setSelectedSessionId(null);
+              }}
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to Patient List
+            </Button>
             <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mb-6">
               <FileText className="h-12 w-12 opacity-40" />
             </div>
@@ -650,9 +660,21 @@ export default function PatientMonitoringPage() {
               <PlusCircle className="h-4 w-4" /> Create New Session
             </Button>
           </div>
-        ) : !selectedSession ? (
+        ) : viewMode === "date" && selectedDate && !selectedSession ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2" 
+                onClick={() => {
+                  setViewMode("list");
+                  setSelectedDate(undefined);
+                  setSelectedSessionId(null);
+                }}
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to Patient List
+              </Button>
               <h3 className="text-lg font-medium">
                 Sessions for {format(selectedDate, "EEEE, dd MMMM yyyy")}
               </h3>
@@ -697,15 +719,30 @@ export default function PatientMonitoringPage() {
           </div>
         ) : (
           <div className="space-y-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-2" 
-                onClick={() => setSelectedSessionId(null)}
-                data-testid="button-back-to-sessions"
-              >
-                <ArrowLeft className="h-4 w-4" /> Back to {format(selectedDate, "dd MMM")} Sessions
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="gap-2" 
+                  onClick={() => {
+                    setViewMode("list");
+                    setSelectedDate(undefined);
+                    setSelectedSessionId(null);
+                  }}
+                >
+                  <ArrowLeft className="h-4 w-4" /> Back to Patient List
+                </Button>
+                <span className="text-muted-foreground">/</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="gap-2" 
+                  onClick={() => setSelectedSessionId(null)}
+                  data-testid="button-back-to-sessions"
+                >
+                  Back to {format(selectedDate!, "dd MMM")} Sessions
+                </Button>
+              </div>
               <div className="flex items-start justify-between gap-4 p-5 rounded-xl bg-gradient-to-r from-card to-card/50 border">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
