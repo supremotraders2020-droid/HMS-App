@@ -101,17 +101,24 @@ export default function OperationOTPage({ userRole, userId }: OperationOTPagePro
     queryKey: ["/api/admissions/active"],
   });
 
-  const patients = admissions.map((adm: any) => ({
-    id: adm.patient?.id || adm.patientId || adm.id,
-    firstName: adm.patient?.firstName || adm.patientName?.split(" ")[0] || "",
-    lastName: adm.patient?.lastName || adm.patientName?.split(" ").slice(1).join(" ") || "",
-    uhid: adm.patient?.uhid || adm.uhid || "",
-    age: adm.patient?.age || adm.age,
-    gender: adm.patient?.gender || adm.gender,
-    admissionId: adm.id,
-    bedNumber: adm.bedNumber,
-    department: adm.department,
-  }));
+  const { data: allPatients = [] } = useQuery<any[]>({
+    queryKey: ["/api/patients"],
+  });
+
+  const admittedPatients = admissions.map((adm: any) => {
+    const patient = allPatients.find((p: any) => p.id === adm.patientId);
+    return {
+      id: adm.patientId,
+      firstName: patient?.firstName || "",
+      lastName: patient?.lastName || "",
+      uhid: patient?.uhid || "",
+      age: patient?.age,
+      gender: patient?.gender,
+      admissionId: adm.id,
+      bedNumber: adm.roomNumber,
+      department: adm.department,
+    };
+  }).filter((p: any) => p.firstName || p.lastName);
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
@@ -156,7 +163,7 @@ export default function OperationOTPage({ userRole, userId }: OperationOTPagePro
 
   const handleCreateCase = (formData: FormData) => {
     const patientId = formData.get("patientId") as string;
-    const patient = patients.find((p) => p.id === patientId);
+    const patient = admittedPatients.find((p: any) => p.id === patientId);
     const surgeonId = formData.get("surgeonId") as string;
     const surgeon = doctors.find((d) => d.id === surgeonId);
 
@@ -217,7 +224,7 @@ export default function OperationOTPage({ userRole, userId }: OperationOTPagePro
                 <DialogTitle>Schedule New Operation</DialogTitle>
               </DialogHeader>
               <NewCaseForm 
-                patients={patients}
+                patients={admittedPatients}
                 doctors={doctors}
                 onSubmit={handleCreateCase}
                 isLoading={createCaseMutation.isPending}
@@ -408,7 +415,7 @@ function NewCaseForm({
   onSubmit, 
   isLoading 
 }: { 
-  patients: TrackingPatient[]; 
+  patients: any[]; 
   doctors: Doctor[]; 
   onSubmit: (data: FormData) => void;
   isLoading: boolean;
