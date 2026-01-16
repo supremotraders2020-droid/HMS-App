@@ -1,5 +1,60 @@
 # Gravity AI Manager - Recent Updates & Changelog
 
+## Version 2.5.1 - January 2026
+
+### IPD Investigation Chart Module
+
+**Date:** January 16, 2026  
+**Impacted Roles:** NURSE, DOCTOR, ADMIN
+
+#### Features:
+1. **Comprehensive Investigation Chart Tab**
+   - New tab in Patient Monitoring module after Allergies
+   - 50+ investigation fields covering all major diagnostic categories
+   - Date-based entries with nurse attribution
+
+2. **Lab Test Sections:**
+   - **Screening**: Blood Group, HIV, HBSAg, HCV
+   - **Haematology**: HB/PCV, TLC, DLC, ESR, Platelets, Parasites, BT/CT, PT/APTT, Blood Sugar
+   - **Renal Function Tests**: BUN, Sr. Creatinine, Electrolytes (Na/K/Cl, Ca/Phos/Mag)
+   - **Liver Function Tests**: Bilirubin, SGOT/SGPT, Alk Phos, Proteins, Viral Markers, Amylase/Lipase
+   - **Cardiac Enzymes**: CPK-MB, Sr. LDH, Troponin
+   - **Lipid Profile**: Cholesterol, Triglycerides, HDL/LDL/VLDL
+   - **Other Tests**: Urine Routine, Stool Routine, Sputum Examination
+
+3. **Imaging & Diagnostics Section:**
+   - ECG, 2D Echo, USG, Doppler
+   - X-Rays, CT Scan / MRI
+   - Histopathology, Fluid Analysis
+   - Other Investigations (free text)
+
+#### Technical Details:
+- New database table: `ipd_investigation_chart` with 50+ columns
+- API endpoints: GET/POST `/api/patient-monitoring/sessions/:sessionId/investigation-chart`
+- PATCH endpoint: `/api/patient-monitoring/investigation-chart/:id`
+- Organized UI with collapsible sections and date-based entries
+
+---
+
+### ICU Allergy & Precautions Add Form
+
+**Date:** January 16, 2026  
+**Impacted Roles:** NURSE, DOCTOR
+
+#### Features:
+1. **Add Allergy Button**
+   - Appears when no allergy data exists for patient session
+   - Form includes Drug Allergies, Food Allergies, Isolation Precautions
+   - Fall Risk and Pressure Ulcer Risk checkboxes
+
+2. **Field Details:**
+   - Drug Allergies (textarea)
+   - Food Allergies (text input)
+   - Isolation Precautions dropdown (None, Contact, Droplet, Airborne, Reverse)
+   - Special precautions toggles
+
+---
+
 ## Version 2.5.0 - January 2026
 
 ### OPD Scheduling Enhancements
