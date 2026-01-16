@@ -250,6 +250,8 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
         const diabeticData = chartData.diabeticChart || [];
         const nursingRemarks = chartData.nursingRemarks || [];
         const notes = chartData.doctorNurseNotes || [];
+        const bodyMarkings = chartData.bodyMarkings || [];
+        const allergyData = chartData.allergyPrecautions || null;
 
         const printContent = `
           <html>
@@ -330,6 +332,25 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
             ${generateTable('Doctor & Nurse Notes', ['Time', 'Note Type', 'Notes', 'Recorded By'], notes, (r: any) => 
               `<tr><td>${formatTime(r.createdAt)}</td><td>${r.noteType || '-'}</td><td>${r.notes || '-'}</td><td>${r.recordedBy || '-'}</td></tr>`
             )}
+
+            ${generateTable('Body Chart Markings', ['Location', 'Type', 'Description', 'Recorded By', 'Date'], bodyMarkings, (r: any) => 
+              `<tr><td>${r.location || '-'}</td><td>${r.markingType || '-'}</td><td>${r.description || '-'}</td><td>${r.recordedBy || '-'}</td><td>${formatDate(r.createdAt)}</td></tr>`
+            )}
+
+            <h2>Allergy & Precautions</h2>
+            ${allergyData ? `
+              <table>
+                <tr><th>Field</th><th>Value</th></tr>
+                <tr><td>Known Allergies</td><td>${allergyData.knownAllergies || 'None recorded'}</td></tr>
+                <tr><td>Drug Allergies</td><td>${allergyData.drugAllergies || 'None recorded'}</td></tr>
+                <tr><td>Food Allergies</td><td>${allergyData.foodAllergies || 'None recorded'}</td></tr>
+                <tr><td>Fall Risk</td><td>${allergyData.fallRisk ? 'Yes' : 'No'}</td></tr>
+                <tr><td>Pressure Ulcer Risk</td><td>${allergyData.pressureUlcerRisk ? 'Yes' : 'No'}</td></tr>
+                <tr><td>Isolation Required</td><td>${allergyData.isolationRequired ? 'Yes' : 'No'}</td></tr>
+                <tr><td>Isolation Type</td><td>${allergyData.isolationType || '-'}</td></tr>
+                <tr><td>Precautions</td><td>${allergyData.precautions || '-'}</td></tr>
+              </table>
+            ` : '<p class="no-data">No allergy/precaution data recorded</p>'}
 
             <div class="footer">
               <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital ICU Monitoring System</p>
