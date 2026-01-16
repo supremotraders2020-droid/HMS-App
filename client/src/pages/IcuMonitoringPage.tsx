@@ -1818,7 +1818,35 @@ function LabsSection({ chartId, abgData, investigationsData, diabeticData, canEd
   userId?: string 
 }) {
   const { toast } = useToast();
-  
+  const [showAddAbg, setShowAddAbg] = useState(false);
+  const [showAddDiabetic, setShowAddDiabetic] = useState(false);
+  const [newAbg, setNewAbg] = useState({ time: "", ph: "", pco2: "", po2: "", be: "", sao2: "", lactate: "" });
+  const [newDiabetic, setNewDiabetic] = useState({ time: "", bsl: "", insulin: "", na: "", k: "", cl: "" });
+
+  const addAbgMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/icu-charts/${chartId}/abg`, { ...newAbg, recordedBy: userId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      setShowAddAbg(false);
+      setNewAbg({ time: "", ph: "", pco2: "", po2: "", be: "", sao2: "", lactate: "" });
+      toast({ title: "ABG report added" });
+    },
+  });
+
+  const addDiabeticMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/icu-charts/${chartId}/diabetic`, { ...newDiabetic, recordedBy: userId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      setShowAddDiabetic(false);
+      setNewDiabetic({ time: "", bsl: "", insulin: "", na: "", k: "", cl: "" });
+      toast({ title: "Diabetic entry added" });
+    },
+  });
+
   const updateAbgMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
       return apiRequest("PATCH", `/api/icu-abg/${id}`, { [field]: value });
@@ -1842,10 +1870,59 @@ function LabsSection({ chartId, abgData, investigationsData, diabeticData, canEd
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <h3 className="font-semibold flex items-center gap-2">
-          <FlaskConical className="w-4 h-4 text-emerald-500" />
-          ABG Reports
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold flex items-center gap-2">
+            <FlaskConical className="w-4 h-4 text-emerald-500" />
+            ABG Reports
+          </h3>
+          {canEdit && (
+            <Button size="sm" onClick={() => setShowAddAbg(!showAddAbg)} data-testid="button-add-abg">
+              <Plus className="w-4 h-4 mr-1" />
+              Add ABG
+            </Button>
+          )}
+        </div>
+
+        {showAddAbg && (
+          <Card className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Input type="time" value={newAbg.time} onChange={e => setNewAbg(prev => ({ ...prev, time: e.target.value }))} data-testid="input-abg-time" />
+              </div>
+              <div className="space-y-2">
+                <Label>pH</Label>
+                <Input value={newAbg.ph} onChange={e => setNewAbg(prev => ({ ...prev, ph: e.target.value }))} placeholder="7.35-7.45" data-testid="input-abg-ph" />
+              </div>
+              <div className="space-y-2">
+                <Label>pCO2</Label>
+                <Input value={newAbg.pco2} onChange={e => setNewAbg(prev => ({ ...prev, pco2: e.target.value }))} placeholder="mmHg" data-testid="input-abg-pco2" />
+              </div>
+              <div className="space-y-2">
+                <Label>pO2</Label>
+                <Input value={newAbg.po2} onChange={e => setNewAbg(prev => ({ ...prev, po2: e.target.value }))} placeholder="mmHg" data-testid="input-abg-po2" />
+              </div>
+              <div className="space-y-2">
+                <Label>BE</Label>
+                <Input value={newAbg.be} onChange={e => setNewAbg(prev => ({ ...prev, be: e.target.value }))} placeholder="mEq/L" data-testid="input-abg-be" />
+              </div>
+              <div className="space-y-2">
+                <Label>SaO2</Label>
+                <Input value={newAbg.sao2} onChange={e => setNewAbg(prev => ({ ...prev, sao2: e.target.value }))} placeholder="%" data-testid="input-abg-sao2" />
+              </div>
+              <div className="space-y-2">
+                <Label>Lactate</Label>
+                <Input value={newAbg.lactate} onChange={e => setNewAbg(prev => ({ ...prev, lactate: e.target.value }))} placeholder="mmol/L" data-testid="input-abg-lactate" />
+              </div>
+              <div className="flex items-end">
+                <Button onClick={() => addAbgMutation.mutate()} disabled={!newAbg.time || addAbgMutation.isPending} data-testid="button-save-abg">
+                  Save
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm border">
             <thead>
@@ -1918,10 +1995,55 @@ function LabsSection({ chartId, abgData, investigationsData, diabeticData, canEd
       </div>
 
       <div className="space-y-4">
-        <h4 className="font-medium flex items-center gap-2">
-          <Scale className="w-4 h-4" />
-          Diabetic Flow Chart
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="font-medium flex items-center gap-2">
+            <Scale className="w-4 h-4" />
+            Diabetic Flow Chart
+          </h4>
+          {canEdit && (
+            <Button size="sm" onClick={() => setShowAddDiabetic(!showAddDiabetic)} data-testid="button-add-diabetic">
+              <Plus className="w-4 h-4 mr-1" />
+              Add Entry
+            </Button>
+          )}
+        </div>
+
+        {showAddDiabetic && (
+          <Card className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Input type="time" value={newDiabetic.time} onChange={e => setNewDiabetic(prev => ({ ...prev, time: e.target.value }))} data-testid="input-diabetic-time" />
+              </div>
+              <div className="space-y-2">
+                <Label>BSL</Label>
+                <Input value={newDiabetic.bsl} onChange={e => setNewDiabetic(prev => ({ ...prev, bsl: e.target.value }))} placeholder="mg/dL" data-testid="input-diabetic-bsl" />
+              </div>
+              <div className="space-y-2">
+                <Label>Insulin</Label>
+                <Input value={newDiabetic.insulin} onChange={e => setNewDiabetic(prev => ({ ...prev, insulin: e.target.value }))} placeholder="Units" data-testid="input-diabetic-insulin" />
+              </div>
+              <div className="space-y-2">
+                <Label>Na</Label>
+                <Input value={newDiabetic.na} onChange={e => setNewDiabetic(prev => ({ ...prev, na: e.target.value }))} placeholder="mEq/L" data-testid="input-diabetic-na" />
+              </div>
+              <div className="space-y-2">
+                <Label>K</Label>
+                <Input value={newDiabetic.k} onChange={e => setNewDiabetic(prev => ({ ...prev, k: e.target.value }))} placeholder="mEq/L" data-testid="input-diabetic-k" />
+              </div>
+              <div className="space-y-2">
+                <Label>Cl</Label>
+                <Input value={newDiabetic.cl} onChange={e => setNewDiabetic(prev => ({ ...prev, cl: e.target.value }))} placeholder="mEq/L" data-testid="input-diabetic-cl" />
+              </div>
+              <div className="flex items-end col-span-2">
+                <Button onClick={() => addDiabeticMutation.mutate()} disabled={!newDiabetic.time || addDiabeticMutation.isPending} data-testid="button-save-diabetic">
+                  Save
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm border">
             <thead>
