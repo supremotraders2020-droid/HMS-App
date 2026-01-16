@@ -102,23 +102,24 @@ export default function OperationOTPage({ userRole, userId }: OperationOTPagePro
   });
 
   const { data: allPatients = [] } = useQuery<any[]>({
-    queryKey: ["/api/patients"],
+    queryKey: ["/api/patients/service"],
   });
 
   const admittedPatients = admissions.map((adm: any) => {
     const patient = allPatients.find((p: any) => p.id === adm.patientId);
     return {
       id: adm.patientId,
-      firstName: patient?.firstName || "",
-      lastName: patient?.lastName || "",
+      firstName: patient?.firstName || "Patient",
+      lastName: patient?.lastName || adm.patientId?.substring(0, 8) || "",
       uhid: patient?.uhid || "",
       age: patient?.age,
       gender: patient?.gender,
       admissionId: adm.id,
       bedNumber: adm.roomNumber,
       department: adm.department,
+      diagnosis: adm.primaryDiagnosis,
     };
-  }).filter((p: any) => p.firstName || p.lastName);
+  });
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
@@ -435,8 +436,8 @@ function NewCaseForm({
                   No admitted patients found. Please admit a patient first.
                 </div>
               ) : patients.map((p: any) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.firstName} {p.lastName} {p.uhid ? `(${p.uhid})` : ""} {p.bedNumber ? `- Bed ${p.bedNumber}` : ""} {p.department ? `[${p.department}]` : ""}
+                <SelectItem key={p.admissionId || p.id} value={p.id}>
+                  {p.firstName} {p.lastName} {p.uhid ? `(${p.uhid})` : ""} - {p.bedNumber || "No Bed"} [{p.department}] {p.diagnosis ? `- ${p.diagnosis}` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
