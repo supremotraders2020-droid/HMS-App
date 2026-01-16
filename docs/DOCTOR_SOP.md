@@ -592,6 +592,8 @@ The Patient Monitoring module provides NABH-compliant ICU charts and nursing wor
 | Devices | Airway, lines, tubes tracking |
 | Skin Care | Pressure care and wound assessment |
 | Fall Risk | Morse Fall Scale |
+| Allergies | Drug/food allergies, isolation precautions, risk flags |
+| Investigation Chart | Comprehensive lab tests and imaging results |
 
 ### 9.4 Reviewing Critical Data
 
@@ -624,7 +626,51 @@ The Patient Monitoring module provides NABH-compliant ICU charts and nursing wor
 - Digital signature required
 - Nurse receives notification
 
-### 9.6 Importance for Real Data
+### 9.6 Investigation Chart
+
+**Purpose**: Review comprehensive lab test and imaging results for IPD patients
+
+**Viewing Investigation Data**
+1. Click "Investigation" tab in Patient Monitoring
+2. View all investigation entries by date
+
+**Available Investigation Categories**
+
+| Category | Tests Included |
+|----------|----------------|
+| Screening | Blood Group, HIV, HBSAg, HCV |
+| Haematology | HB/PCV, TLC, DLC, ESR, Platelets, BT/CT, PT/APTT, Blood Sugar |
+| Renal Function | BUN, Creatinine, Electrolytes (Na/K/Cl, Ca/Phos/Mag) |
+| Liver Function | Bilirubin, SGOT/SGPT, Alkaline Phosphatase, Proteins, Viral Markers |
+| Cardiac Enzymes | CPK-MB, LDH, Troponin |
+| Lipid Profile | Cholesterol, Triglycerides, HDL/LDL/VLDL |
+| Other Tests | Urine Routine, Stool Routine, Sputum Examination |
+| Imaging | ECG, 2D Echo, USG, Doppler, X-Rays, CT/MRI, Histopathology, Fluid Analysis |
+
+**Reviewing Investigation History**
+- All entries displayed with date and nurse attribution
+- Expandable sections for each category
+- Track trends over multiple entries
+
+### 9.7 Allergies & Precautions
+
+**Purpose**: View patient allergies and special precautions for safe treatment
+
+**Viewing Allergy Information**
+1. Click "Allergies" tab in Patient Monitoring
+2. View recorded allergies and precautions
+
+**Available Fields**
+
+| Field | Description |
+|-------|-------------|
+| Drug Allergies | Specific drug reactions |
+| Food Allergies | Food-related allergies |
+| Isolation Precautions | None, Contact, Droplet, Airborne, Reverse |
+| Fall Risk | Fall risk assessment flag |
+| Pressure Ulcer Risk | Pressure ulcer risk flag |
+
+### 9.8 Importance for Real Data
 
 | Why Accurate Monitoring Data Matters |
 |-------------------------------------|
