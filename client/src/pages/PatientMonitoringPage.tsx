@@ -1432,61 +1432,79 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
 function InotropesTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ drugName: "", concentration: "", doseRate: "", pumpChannel: "" });
+  const [form, setForm] = useState({ injectionName: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/inotropes/${sessionId}`]
+  });
+
+  const { data: nurses = [] } = useQuery<any[]>({
+    queryKey: ["/api/users/nurses"]
   });
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/inotropes", data),
     onSuccess: () => { 
       refetch(); 
-      toast({ title: "Inotrope Added", description: "Record saved successfully" }); 
-      setForm({ drugName: "", concentration: "", doseRate: "", pumpChannel: "" });
+      toast({ title: "Injection Added", description: "Record saved successfully" }); 
+      setForm({ injectionName: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
       setDialogOpen(false);
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to save inotrope", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to save injection", variant: "destructive" });
     }
   });
 
   const handleSave = () => {
     saveMutation.mutate({ 
       sessionId, 
-      drugName: form.drugName,
-      concentration: form.concentration,
-      rate: form.doseRate,
-      startTime: new Date().toISOString(),
-      nurseId: "system-nurse",
-      nurseName: "ICU Nurse"
+      drugName: form.injectionName,
+      startTime: new Date(form.date).toISOString(),
+      nurseId: form.nurseId,
+      nurseName: form.nurseName
     });
+  };
+
+  const handleNurseChange = (nurseId: string) => {
+    const selectedNurse = nurses.find((n: any) => n.id === nurseId);
+    setForm({ ...form, nurseId, nurseName: selectedNurse?.fullName || "" });
   };
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Inotropes & Sedation</CardTitle>
+        <CardTitle className="text-lg">Injections & Medication</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" data-testid="button-add-inotrope"><PlusCircle className="h-4 w-4 mr-1" /> Add Drug</Button>
+            <Button size="sm" data-testid="button-add-inotrope"><PlusCircle className="h-4 w-4 mr-1" /> Add Injection</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Inotrope/Sedation</DialogTitle>
-              <DialogDescription>Add drug infusion details</DialogDescription>
+              <DialogTitle>Add Injection</DialogTitle>
+              <DialogDescription>Add injection/medication details</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
-              <div><Label>Drug Name</Label><Input value={form.drugName} onChange={(e) => setForm({...form, drugName: e.target.value})} placeholder="e.g., Noradrenaline" /></div>
-              <div><Label>Concentration</Label><Input value={form.concentration} onChange={(e) => setForm({...form, concentration: e.target.value})} placeholder="e.g., 8mg/50ml" /></div>
-              <div><Label>Dose Rate</Label><Input value={form.doseRate} onChange={(e) => setForm({...form, doseRate: e.target.value})} placeholder="e.g., 0.1 mcg/kg/min" /></div>
-              <div><Label>Pump Channel</Label><Input value={form.pumpChannel} onChange={(e) => setForm({...form, pumpChannel: e.target.value})} placeholder="e.g., Channel 1" /></div>
+              <div><Label>Injection Name</Label><Input value={form.injectionName} onChange={(e) => setForm({...form, injectionName: e.target.value})} placeholder="e.g., Noradrenaline" /></div>
+              <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
+              <div>
+                <Label>Staff Name</Label>
+                <Select value={form.nurseId} onValueChange={handleNurseChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select nurse" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {nurses.map((nurse: any) => (
+                      <SelectItem key={nurse.id} value={nurse.id}>{nurse.fullName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter className="gap-2">
               <DialogClose asChild>
                 <Button variant="outline" type="button">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleSave} disabled={!form.drugName || saveMutation.isPending}>
+              <Button onClick={handleSave} disabled={!form.injectionName || !form.nurseId || saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save"}
               </Button>
             </DialogFooter>
@@ -1495,26 +1513,22 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No inotropes/sedation recorded</p>
+          <p className="text-muted-foreground text-center py-8">No injections/medications recorded</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Drug</TableHead>
-                <TableHead>Concentration</TableHead>
-                <TableHead>Dose Rate</TableHead>
-                <TableHead>Pump</TableHead>
-                <TableHead>Time</TableHead>
+                <TableHead>Injection Name</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Staff Name</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {records.map((r: any) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.drugName}</TableCell>
-                  <TableCell>{r.concentration}</TableCell>
-                  <TableCell>{r.doseRate}</TableCell>
-                  <TableCell>{r.pumpChannel}</TableCell>
-                  <TableCell className="text-xs">{format(new Date(r.createdAt), "HH:mm")}</TableCell>
+                  <TableCell>{r.startTime ? format(new Date(r.startTime), "dd/MM/yyyy") : format(new Date(r.createdAt), "dd/MM/yyyy")}</TableCell>
+                  <TableCell>{r.nurseName || "-"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
