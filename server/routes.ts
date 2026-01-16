@@ -15535,21 +15535,27 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
           recordedByName = user.fullName || user.username || "";
         }
       }
-      const entry = await storage.createIcuDoctorNurseNote({ 
-        ...req.body, 
+      const noteData = {
         icuChartId: req.params.chartId,
-        recordedByName 
-      });
+        noteType: req.body.noteType || "nurse",
+        content: req.body.content,
+        priority: req.body.priority || "normal",
+        shiftTime: req.body.shiftTime || null,
+        recordedBy: req.body.recordedBy || null,
+        recordedByName: recordedByName || null
+      };
+      console.log("Creating ICU note with data:", noteData);
+      const entry = await (storage as any).createIcuDoctorNurseNote(noteData);
       res.status(201).json(entry);
-    } catch (error) {
-      console.error("Error creating doctor/nurse note:", error);
-      res.status(500).json({ error: "Failed to create note" });
+    } catch (error: any) {
+      console.error("Error creating doctor/nurse note:", error?.message || error);
+      res.status(500).json({ error: "Failed to create note", details: error?.message });
     }
   });
 
   app.get("/api/icu-charts/:chartId/notes", requireAuth, async (req, res) => {
     try {
-      const notes = await storage.getIcuDoctorNurseNotesByChartId(req.params.chartId);
+      const notes = await (storage as any).getIcuDoctorNurseNotesByChartId(req.params.chartId);
       res.json(notes);
     } catch (error) {
       console.error("Error fetching doctor/nurse notes:", error);
