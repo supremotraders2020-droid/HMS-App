@@ -237,6 +237,7 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
           completeData={completeChart}
           canEdit={canEdit}
           userId={userId}
+          userRole={userRole}
         />
       </div>
     );
@@ -490,11 +491,12 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
   );
 }
 
-function IcuChartDetail({ chart, completeData, canEdit, userId }: {
+function IcuChartDetail({ chart, completeData, canEdit, userId, userRole }: {
   chart: IcuCharts;
   completeData: any;
   canEdit: boolean;
   userId?: string;
+  userRole: string;
 }) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("vitals");
@@ -550,6 +552,9 @@ function IcuChartDetail({ chart, completeData, canEdit, userId }: {
               </TabsTrigger>
               <TabsTrigger value="body" className="gap-1" data-testid="tab-body">
                 <User className="w-3 h-3" /> Body Chart
+              </TabsTrigger>
+              <TabsTrigger value="notes" className="gap-1" data-testid="tab-notes">
+                <FileText className="w-3 h-3" /> Doctor & Nurse Notes
               </TabsTrigger>
               <TabsTrigger value="tests" className="gap-1" data-testid="tab-tests">
                 <Beaker className="w-3 h-3" /> Tests
@@ -619,6 +624,16 @@ function IcuChartDetail({ chart, completeData, canEdit, userId }: {
               allergyData={completeData?.allergyPrecautions}
               canEdit={canEdit} 
               userId={userId} 
+            />
+          </TabsContent>
+
+          <TabsContent value="notes" className="mt-4">
+            <DoctorNurseNotesSection 
+              chartId={chart.id}
+              notesData={completeData?.doctorNurseNotes || []}
+              canEdit={canEdit}
+              userId={userId}
+              userRole={userRole}
             />
           </TabsContent>
 
@@ -2590,6 +2605,238 @@ function TestsSection({ chartId, patientId, patientName, canEdit, userId }: {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+function DoctorNurseNotesSection({ chartId, notesData, canEdit, userId, userRole }: { 
+  chartId: string; 
+  notesData: any[]; 
+  canEdit: boolean; 
+  userId?: string;
+  userRole: string;
+}) {
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [noteType, setNoteType] = useState<"doctor" | "nurse">(userRole === "DOCTOR" ? "doctor" : "nurse");
+  const [newNote, setNewNote] = useState({
+    noteType: userRole === "DOCTOR" ? "doctor" : "nurse",
+    content: "",
+    priority: "normal",
+    shiftTime: "",
+  });
+
+  const addNoteMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/icu-charts/${chartId}/notes`, { 
+        ...newNote, 
+        recordedBy: userId,
+        noteType: noteType 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      setShowAddForm(false);
+      setNewNote({ noteType: userRole === "DOCTOR" ? "doctor" : "nurse", content: "", priority: "normal", shiftTime: "" });
+      toast({ title: "Note added successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add note", variant: "destructive" });
+    },
+  });
+
+  const doctorNotes = notesData.filter(n => n.noteType === "doctor");
+  const nurseNotes = notesData.filter(n => n.noteType === "nurse");
+
+  const formatTime = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), "dd MMM yyyy HH:mm");
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "critical": return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200";
+      case "important": return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200";
+      default: return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200";
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h3 className="font-semibold flex items-center gap-2">
+          <FileText className="w-4 h-4 text-indigo-500" />
+          Doctor & Nurse Notes
+        </h3>
+        {canEdit && (
+          <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} data-testid="button-add-note">
+            <Plus className="w-4 h-4 mr-1" />
+            Add Note
+          </Button>
+        )}
+      </div>
+
+      {showAddForm && (
+        <Card className="p-4 border-2 border-primary/20">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="space-y-2 min-w-[150px]">
+                <Label>Note Type</Label>
+                <Select value={noteType} onValueChange={(v: "doctor" | "nurse") => setNoteType(v)}>
+                  <SelectTrigger data-testid="select-note-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="doctor">
+                      <span className="flex items-center gap-2">
+                        <Stethoscope className="w-4 h-4" /> Doctor Note
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="nurse">
+                      <span className="flex items-center gap-2">
+                        <Users className="w-4 h-4" /> Nurse Note
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 min-w-[150px]">
+                <Label>Priority</Label>
+                <Select value={newNote.priority} onValueChange={v => setNewNote(prev => ({ ...prev, priority: v }))}>
+                  <SelectTrigger data-testid="select-note-priority">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="important">Important</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 min-w-[150px]">
+                <Label>Shift</Label>
+                <Select value={newNote.shiftTime} onValueChange={v => setNewNote(prev => ({ ...prev, shiftTime: v }))}>
+                  <SelectTrigger data-testid="select-note-shift">
+                    <SelectValue placeholder="Select shift" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="morning">Morning (6 AM - 2 PM)</SelectItem>
+                    <SelectItem value="evening">Evening (2 PM - 10 PM)</SelectItem>
+                    <SelectItem value="night">Night (10 PM - 6 AM)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Note Content</Label>
+              <Textarea
+                value={newNote.content}
+                onChange={e => setNewNote(prev => ({ ...prev, content: e.target.value }))}
+                placeholder="Enter clinical observations, orders, or important notes..."
+                rows={4}
+                data-testid="textarea-note-content"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => addNoteMutation.mutate()} 
+                disabled={!newNote.content.trim() || addNoteMutation.isPending}
+                data-testid="button-save-note"
+              >
+                {addNoteMutation.isPending ? "Saving..." : "Save Note"}
+              </Button>
+              <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card className="border-blue-200 dark:border-blue-800">
+          <CardHeader className="pb-2 bg-blue-50 dark:bg-blue-900/20">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Stethoscope className="w-4 h-4 text-blue-600" />
+              Doctor Notes ({doctorNotes.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {doctorNotes.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">No doctor notes recorded.</p>
+            ) : (
+              <ScrollArea className="h-[300px] pr-2">
+                <div className="space-y-3">
+                  {doctorNotes.map((note: any, idx: number) => (
+                    <div key={note.id || idx} className={`p-3 rounded-lg border ${getPriorityColor(note.priority)}`}>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <Clock className="w-3 h-3" />
+                          {formatTime(note.createdAt)}
+                          {note.shiftTime && (
+                            <Badge variant="outline" className="text-xs capitalize">{note.shiftTime}</Badge>
+                          )}
+                        </div>
+                        {note.priority !== "normal" && (
+                          <Badge variant={note.priority === "critical" ? "destructive" : "default"} className="text-xs">
+                            {note.priority}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                      {note.recordedByName && (
+                        <p className="text-xs mt-2 text-muted-foreground">— Dr. {note.recordedByName}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-emerald-200 dark:border-emerald-800">
+          <CardHeader className="pb-2 bg-emerald-50 dark:bg-emerald-900/20">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Users className="w-4 h-4 text-emerald-600" />
+              Nurse Notes ({nurseNotes.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {nurseNotes.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">No nurse notes recorded.</p>
+            ) : (
+              <ScrollArea className="h-[300px] pr-2">
+                <div className="space-y-3">
+                  {nurseNotes.map((note: any, idx: number) => (
+                    <div key={note.id || idx} className={`p-3 rounded-lg border ${getPriorityColor(note.priority)}`}>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <Clock className="w-3 h-3" />
+                          {formatTime(note.createdAt)}
+                          {note.shiftTime && (
+                            <Badge variant="outline" className="text-xs capitalize">{note.shiftTime}</Badge>
+                          )}
+                        </div>
+                        {note.priority !== "normal" && (
+                          <Badge variant={note.priority === "critical" ? "destructive" : "default"} className="text-xs">
+                            {note.priority}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                      {note.recordedByName && (
+                        <p className="text-xs mt-2 text-muted-foreground">— Nurse {note.recordedByName}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
