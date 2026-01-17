@@ -2666,6 +2666,7 @@ function PostOpPhase({ caseId, data }: { caseId: string; data: any }) {
                     existing={data?.neonateSheet}
                     onSubmit={(d) => saveNeonateMutation.mutate(d)}
                     isLoading={saveNeonateMutation.isPending}
+                    caseData={data}
                   />
                 )}
               </DialogContent>
@@ -3139,168 +3140,444 @@ function LabourChartForm({ existing, onSubmit, isLoading }: { existing: any[]; o
   );
 }
 
-function NeonateSheetForm({ existing, onSubmit, isLoading }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean }) {
+function NeonateSheetForm({ existing, onSubmit, isLoading, caseData }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean; caseData?: any }) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     onSubmit({
-      recordedBy: formData.get("recordedBy"),
+      mothersName: formData.get("mothersName"),
+      sex: formData.get("sex"),
+      gestationalAge: formData.get("gestationalAge"),
+      mothersBloodGroup: formData.get("mothersBloodGroup"),
       birthTime: formData.get("birthTime"),
-      gender: formData.get("gender"),
-      birthWeight: parseFloat(formData.get("birthWeight") as string) || null,
-      birthLength: parseFloat(formData.get("birthLength") as string) || null,
-      headCircumference: parseFloat(formData.get("headCircumference") as string) || null,
-      apgar1min: parseInt(formData.get("apgar1min") as string) || null,
-      apgar5min: parseInt(formData.get("apgar5min") as string) || null,
-      apgar10min: parseInt(formData.get("apgar10min") as string) || null,
-      resuscitationRequired: formData.get("resuscitationRequired") === "on",
-      resuscitationDetails: formData.get("resuscitationDetails"),
-      cordBloodCollected: formData.get("cordBloodCollected") === "on",
-      vitaminKGiven: formData.get("vitaminKGiven") === "on",
-      bcgGiven: formData.get("bcgGiven") === "on",
-      opvGiven: formData.get("opvGiven") === "on",
-      hepatitisB0Given: formData.get("hepatitisB0Given") === "on",
-      skinToSkinContact: formData.get("skinToSkinContact") === "on",
-      initiatedBreastfeeding: formData.get("initiatedBreastfeeding") === "on",
-      breastfeedingTime: formData.get("breastfeedingTime"),
-      congenitalAnomalies: formData.get("congenitalAnomalies"),
-      nicu_required: formData.get("nicuRequired") === "on",
-      nicuReason: formData.get("nicuReason"),
-      notes: formData.get("notes"),
+      birthWeight: formData.get("birthWeight"),
+      riskFactorsInMother: formData.get("riskFactorsInMother"),
+      modeOfDelivery: formData.get("modeOfDelivery"),
+      durationOfLeaking: formData.get("durationOfLeaking"),
+      reasonForIntervention: formData.get("reasonForIntervention"),
+      anaesthesiaUsed: formData.get("anaesthesiaUsed"),
+      invBloodGroup: formData.get("invBloodGroup"),
+      invG6pd: formData.get("invG6pd"),
+      invTsh: formData.get("invTsh"),
+      resuscO2: formData.get("resuscO2"),
+      resuscBagMaskVentilation: formData.get("resuscBagMaskVentilation"),
+      resuscOthers: formData.get("resuscOthers"),
+      apgarAt1Min: formData.get("apgarAt1Min"),
+      apgarAt5Min: formData.get("apgarAt5Min"),
+      examHr: formData.get("examHr"),
+      examRr: formData.get("examRr"),
+      examUmbilicalCord: formData.get("examUmbilicalCord"),
+      examFemoralPulses: formData.get("examFemoralPulses"),
+      examSkullAndSpine: formData.get("examSkullAndSpine"),
+      examLipsAndOralCavity: formData.get("examLipsAndOralCavity"),
+      examAnalOpening: formData.get("examAnalOpening"),
+      examLimbsAndHips: formData.get("examLimbsAndHips"),
+      examRs: formData.get("examRs"),
+      examCvs: formData.get("examCvs"),
+      examPa: formData.get("examPa"),
+      examCns: formData.get("examCns"),
+      examCry: formData.get("examCry"),
+      examSuck: formData.get("examSuck"),
+      examTone: formData.get("examTone"),
+      examGrasp: formData.get("examGrasp"),
+      examActivity: formData.get("examActivity"),
+      treatmentToBeGiven: formData.get("treatmentToBeGiven"),
+      deliveryAttendedByDr: formData.get("deliveryAttendedByDr"),
+      signatureDate: formData.get("signatureDate"),
     });
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    const content = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Assessment Sheet for Neonate</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+          .hospital-info { flex: 1; }
+          .hospital-name { font-size: 16px; font-weight: bold; }
+          .patient-info { flex: 1; text-align: right; font-size: 11px; }
+          .patient-info div { margin: 2px 0; }
+          .title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 15px 0; }
+          .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+          .field { display: flex; align-items: flex-end; gap: 5px; }
+          .field-label { font-weight: bold; white-space: nowrap; }
+          .field-value { border-bottom: 1px solid #000; min-width: 100px; padding: 2px; flex: 1; }
+          .section-title { font-weight: bold; text-decoration: underline; margin: 15px 0 8px 0; }
+          .exam-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+          .full-width { grid-column: span 2; }
+          .signature-section { display: flex; justify-content: space-between; margin-top: 30px; padding-top: 20px; }
+          .signature-block { text-align: center; }
+          .signature-line { border-top: 1px solid #000; width: 150px; margin-top: 40px; padding-top: 5px; }
+          @media print { body { margin: 10px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="hospital-info">
+            <div class="hospital-name">GRAVITY HOSPITAL</div>
+            <div>Tower Line Corner, Talawade Road,</div>
+            <div>Triveni Nagar, Pune 411 062.</div>
+            <div>Tel. No.: 8149200044, 8149300044</div>
+          </div>
+          <div class="patient-info">
+            <div><strong>Patient Name:</strong> ${caseData?.patientName || ''}</div>
+            <div><strong>UHID No:</strong> ${caseData?.uhid || ''}</div>
+            <div><strong>Age:</strong> ${caseData?.patientAge || ''} &nbsp;&nbsp; <strong>IPD No:</strong> ${caseData?.ipdNo || ''}</div>
+            <div><strong>Room:</strong> ${caseData?.room || ''} &nbsp;&nbsp; <strong>DOA:</strong> ${caseData?.admissionDate ? new Date(caseData.admissionDate).toLocaleDateString() : ''}</div>
+            <div><strong>Doctor:</strong> ${caseData?.primarySurgeonName || ''} &nbsp;&nbsp; <strong>Bed No:</strong> ${caseData?.bedNo || ''}</div>
+          </div>
+        </div>
+        
+        <div class="title">ASSESSMENT SHEET FOR NEONATE</div>
+        
+        <div class="form-grid">
+          <div class="field"><span class="field-label">Mother's Name:</span><span class="field-value">${existing?.mothersName || ''}</span></div>
+          <div class="field"><span class="field-label">Sex:</span><span class="field-value">${existing?.sex || ''}</span></div>
+          <div class="field"><span class="field-label">Gestational Age:</span><span class="field-value">${existing?.gestationalAge || ''}</span></div>
+          <div class="field"><span class="field-label">Mother's Blood Group:</span><span class="field-value">${existing?.mothersBloodGroup || ''}</span></div>
+          <div class="field"><span class="field-label">Birth Time:</span><span class="field-value">${existing?.birthTime || ''}</span></div>
+          <div class="field"><span class="field-label">Birth Weight:</span><span class="field-value">${existing?.birthWeight || ''}</span></div>
+          <div class="field full-width"><span class="field-label">Risk factors in Mother:</span><span class="field-value">${existing?.riskFactorsInMother || ''}</span></div>
+          <div class="field"><span class="field-label">Mode of delivery:</span><span class="field-value">${existing?.modeOfDelivery || ''}</span></div>
+          <div class="field"><span class="field-label">Planned / Emergency</span></div>
+          <div class="field full-width"><span class="field-label">Duration of leaking, if any:</span><span class="field-value">${existing?.durationOfLeaking || ''}</span></div>
+          <div class="field full-width"><span class="field-label">Reason for intervention:</span><span class="field-value">${existing?.reasonForIntervention || ''}</span></div>
+          <div class="field full-width"><span class="field-label">Anaesthesia Used:</span><span class="field-value">${existing?.anaesthesiaUsed || ''}</span> (Spinal / General / Epidural)</div>
+        </div>
+        
+        <div class="section-title">Investigation Sent:</div>
+        <div class="form-grid">
+          <div class="field"><span class="field-label">Blood Group:</span><span class="field-value">${existing?.invBloodGroup || ''}</span> (Yes/No/Sample Problem)</div>
+          <div class="field"><span class="field-label">G6PD:</span><span class="field-value">${existing?.invG6pd || ''}</span> (Yes/No/Sample Problem)</div>
+          <div class="field"><span class="field-label">TSH:</span><span class="field-value">${existing?.invTsh || ''}</span> (Yes/No/Sample Problem)</div>
+        </div>
+        
+        <div class="section-title">RESUSCITATION NOTES:</div>
+        <div class="form-grid">
+          <div class="field"><span class="field-label">O2:</span><span class="field-value">${existing?.resuscO2 || ''}</span> (Given / Not Given)</div>
+          <div class="field"><span class="field-label">Bag and Mask Ventilation:</span><span class="field-value">${existing?.resuscBagMaskVentilation || ''}</span></div>
+          <div class="field full-width"><span class="field-label">Others:</span><span class="field-value">${existing?.resuscOthers || ''}</span></div>
+        </div>
+        
+        <div class="field" style="margin: 10px 0;"><span class="field-label">Apgar Score at 1 min and 5 min:</span><span class="field-value">${existing?.apgarAt1Min || ''} / ${existing?.apgarAt5Min || ''}</span></div>
+        
+        <div class="section-title">ON EXAMINATION:</div>
+        <div class="exam-grid">
+          <div class="field"><span class="field-label">HR</span><span class="field-value">${existing?.examHr || ''}</span></div>
+          <div class="field"><span class="field-label">RR</span><span class="field-value">${existing?.examRr || ''}</span></div>
+          <div class="field"><span class="field-label">Umbilical Cord</span><span class="field-value">${existing?.examUmbilicalCord || ''}</span></div>
+          <div class="field"><span class="field-label">Femoral Pulses</span><span class="field-value">${existing?.examFemoralPulses || ''}</span></div>
+          <div class="field"><span class="field-label">Skull and Spine</span><span class="field-value">${existing?.examSkullAndSpine || ''}</span></div>
+          <div class="field"><span class="field-label">Lips and Oral Cavity</span><span class="field-value">${existing?.examLipsAndOralCavity || ''}</span></div>
+          <div class="field"><span class="field-label">Anal Opening</span><span class="field-value">${existing?.examAnalOpening || ''}</span></div>
+          <div class="field"><span class="field-label">Limbs and Hips</span><span class="field-value">${existing?.examLimbsAndHips || ''}</span></div>
+          <div class="field"><span class="field-label">RS</span><span class="field-value">${existing?.examRs || ''}</span></div>
+          <div class="field"><span class="field-label">CVS</span><span class="field-value">${existing?.examCvs || ''}</span></div>
+          <div class="field"><span class="field-label">PA</span><span class="field-value">${existing?.examPa || ''}</span></div>
+          <div class="field"><span class="field-label">CNS</span><span class="field-value">${existing?.examCns || ''}</span></div>
+          <div class="field"><span class="field-label">Cry</span><span class="field-value">${existing?.examCry || ''}</span></div>
+          <div class="field"><span class="field-label">Suck</span><span class="field-value">${existing?.examSuck || ''}</span></div>
+          <div class="field"><span class="field-label">Tone</span><span class="field-value">${existing?.examTone || ''}</span></div>
+          <div class="field"><span class="field-label">Grasp</span><span class="field-value">${existing?.examGrasp || ''}</span></div>
+          <div class="field full-width"><span class="field-label">Activity</span><span class="field-value">${existing?.examActivity || ''}</span></div>
+        </div>
+        
+        <div class="field" style="margin: 15px 0;"><span class="field-label">Treatment to be given:</span><span class="field-value" style="min-width: 400px;">${existing?.treatmentToBeGiven || ''}</span></div>
+        
+        <div class="field" style="margin: 15px 0;"><span class="field-label">Delivery attended by Dr.:</span><span class="field-value" style="min-width: 200px;">${existing?.deliveryAttendedByDr || ''}</span></div>
+        
+        <div class="signature-section">
+          <div class="signature-block">
+            <div class="signature-line">Signature</div>
+          </div>
+          <div class="signature-block">
+            <div class="signature-line">Date: ${existing?.signatureDate || ''}</div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
+      {/* Hospital Header */}
+      <div className="border-b-2 border-primary pb-4 mb-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-lg font-bold">GRAVITY HOSPITAL</h2>
+            <p className="text-sm text-muted-foreground">Tower Line Corner, Talawade Road,</p>
+            <p className="text-sm text-muted-foreground">Triveni Nagar, Pune 411 062.</p>
+            <p className="text-sm text-muted-foreground">Tel. No.: 8149200044, 8149300044</p>
+          </div>
+          <div className="text-right text-sm">
+            <div><span className="font-medium">Patient Name:</span> {caseData?.patientName || '-'}</div>
+            <div><span className="font-medium">UHID No:</span> {caseData?.uhid || '-'}</div>
+            <div><span className="font-medium">Age:</span> {caseData?.patientAge || '-'} | <span className="font-medium">IPD No:</span> {caseData?.ipdNo || '-'}</div>
+            <div><span className="font-medium">Room:</span> {caseData?.room || '-'} | <span className="font-medium">DOA:</span> {caseData?.admissionDate ? new Date(caseData.admissionDate).toLocaleDateString() : '-'}</div>
+            <div><span className="font-medium">Doctor:</span> {caseData?.primarySurgeonName || '-'} | <span className="font-medium">Bed No:</span> {caseData?.bedNo || '-'}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="text-center font-bold text-lg underline mb-4">ASSESSMENT SHEET FOR NEONATE</div>
+
+      {/* Mother & Baby Details */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Recorded By</Label>
-          <Input name="recordedBy" defaultValue={existing?.recordedBy} placeholder="Paediatrician/Nurse" required />
+          <Label>Mother's Name</Label>
+          <Input name="mothersName" defaultValue={existing?.mothersName} />
         </div>
         <div className="space-y-2">
-          <Label>Birth Time</Label>
-          <Input name="birthTime" type="time" defaultValue={existing?.birthTime} required />
-        </div>
-        <div className="space-y-2">
-          <Label>Gender</Label>
-          <Select name="gender" defaultValue={existing?.gender || ""}>
-            <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+          <Label>Sex</Label>
+          <Select name="sex" defaultValue={existing?.sex || ""}>
+            <SelectTrigger><SelectValue placeholder="M / F" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
-              <SelectItem value="ambiguous">Ambiguous</SelectItem>
+              <SelectItem value="M">M</SelectItem>
+              <SelectItem value="F">F</SelectItem>
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>Birth Weight (kg)</Label>
-          <Input name="birthWeight" type="number" step="0.01" defaultValue={existing?.birthWeight} placeholder="3.2" />
+          <Label>Gestational Age</Label>
+          <Input name="gestationalAge" defaultValue={existing?.gestationalAge} placeholder="e.g., 38 weeks" />
         </div>
         <div className="space-y-2">
-          <Label>Length (cm)</Label>
-          <Input name="birthLength" type="number" step="0.1" defaultValue={existing?.birthLength} placeholder="50" />
+          <Label>Mother's Blood Group</Label>
+          <Input name="mothersBloodGroup" defaultValue={existing?.mothersBloodGroup} placeholder="e.g., A+ve" />
         </div>
         <div className="space-y-2">
-          <Label>Head Circumference (cm)</Label>
-          <Input name="headCircumference" type="number" step="0.1" defaultValue={existing?.headCircumference} placeholder="35" />
-        </div>
-      </div>
-
-      <div className="border rounded-lg p-4">
-        <h4 className="font-medium mb-3">APGAR Scores</h4>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label>1 Minute</Label>
-            <Input name="apgar1min" type="number" min="0" max="10" defaultValue={existing?.apgar1min} placeholder="8" />
-          </div>
-          <div className="space-y-2">
-            <Label>5 Minutes</Label>
-            <Input name="apgar5min" type="number" min="0" max="10" defaultValue={existing?.apgar5min} placeholder="9" />
-          </div>
-          <div className="space-y-2">
-            <Label>10 Minutes (if needed)</Label>
-            <Input name="apgar10min" type="number" min="0" max="10" defaultValue={existing?.apgar10min} placeholder="" />
-          </div>
-        </div>
-      </div>
-
-      <div className="border rounded-lg p-4">
-        <h4 className="font-medium mb-3">Resuscitation</h4>
-        <label className="flex items-center gap-2 text-sm mb-2">
-          <input type="checkbox" name="resuscitationRequired" defaultChecked={existing?.resuscitationRequired} className="h-4 w-4" />
-          Resuscitation Required
-        </label>
-        <div className="space-y-2">
-          <Label>Details (if required)</Label>
-          <Input name="resuscitationDetails" defaultValue={existing?.resuscitationDetails} placeholder="e.g., Suction, O2, PPV" />
-        </div>
-      </div>
-
-      <div className="border rounded-lg p-4">
-        <h4 className="font-medium mb-3">Immediate Care & Vaccinations</h4>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="vitaminKGiven" defaultChecked={existing?.vitaminKGiven} className="h-4 w-4" />
-            Vitamin K Given
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="bcgGiven" defaultChecked={existing?.bcgGiven} className="h-4 w-4" />
-            BCG Given
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="opvGiven" defaultChecked={existing?.opvGiven} className="h-4 w-4" />
-            OPV 0 Given
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="hepatitisB0Given" defaultChecked={existing?.hepatitisB0Given} className="h-4 w-4" />
-            Hepatitis B 0 Given
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="cordBloodCollected" defaultChecked={existing?.cordBloodCollected} className="h-4 w-4" />
-            Cord Blood Collected
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="skinToSkinContact" defaultChecked={existing?.skinToSkinContact} className="h-4 w-4" />
-            Skin-to-Skin Contact Done
-          </label>
-        </div>
-      </div>
-
-      <div className="border rounded-lg p-4">
-        <h4 className="font-medium mb-3">Breastfeeding Initiation</h4>
-        <label className="flex items-center gap-2 text-sm mb-2">
-          <input type="checkbox" name="initiatedBreastfeeding" defaultChecked={existing?.initiatedBreastfeeding} className="h-4 w-4" />
-          Breastfeeding Initiated within 1 hour
-        </label>
-        <div className="space-y-2">
-          <Label>Time of First Breastfeed</Label>
-          <Input name="breastfeedingTime" type="time" defaultValue={existing?.breastfeedingTime} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Congenital Anomalies</Label>
-          <Input name="congenitalAnomalies" defaultValue={existing?.congenitalAnomalies} placeholder="None, or describe" />
+          <Label>Birth Time</Label>
+          <Input name="birthTime" defaultValue={existing?.birthTime} placeholder="e.g., 10:30 AM" />
         </div>
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="nicuRequired" defaultChecked={existing?.nicu_required} className="h-4 w-4" />
-            NICU Admission Required
-          </label>
-          <Input name="nicuReason" defaultValue={existing?.nicuReason} placeholder="Reason for NICU" />
+          <Label>Birth Weight</Label>
+          <Input name="birthWeight" defaultValue={existing?.birthWeight} placeholder="e.g., 3.2 kg" />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Additional Notes</Label>
-        <Textarea name="notes" defaultValue={existing?.notes} placeholder="Any additional observations..." />
+        <Label>Risk factors in Mother</Label>
+        <Input name="riskFactorsInMother" defaultValue={existing?.riskFactorsInMother} />
       </div>
 
-      <div className="flex justify-end">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Mode of delivery</Label>
+          <Select name="modeOfDelivery" defaultValue={existing?.modeOfDelivery || ""}>
+            <SelectTrigger><SelectValue placeholder="Planned / Emergency" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Planned">Planned</SelectItem>
+              <SelectItem value="Emergency">Emergency</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Duration of leaking, if any</Label>
+          <Input name="durationOfLeaking" defaultValue={existing?.durationOfLeaking} />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Reason for intervention</Label>
+        <Input name="reasonForIntervention" defaultValue={existing?.reasonForIntervention} />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Anaesthesia Used (Spinal / General / Epidural)</Label>
+        <Select name="anaesthesiaUsed" defaultValue={existing?.anaesthesiaUsed || ""}>
+          <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Spinal">Spinal</SelectItem>
+            <SelectItem value="General">General</SelectItem>
+            <SelectItem value="Epidural">Epidural</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Investigation Sent */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-medium mb-3 underline">Investigation Sent:</h4>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Blood Group</Label>
+            <Select name="invBloodGroup" defaultValue={existing?.invBloodGroup || ""}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Yes">Yes</SelectItem>
+                <SelectItem value="No">No</SelectItem>
+                <SelectItem value="Sample Problem">Sample Problem</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>G6PD</Label>
+            <Select name="invG6pd" defaultValue={existing?.invG6pd || ""}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Yes">Yes</SelectItem>
+                <SelectItem value="No">No</SelectItem>
+                <SelectItem value="Sample Problem">Sample Problem</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>TSH</Label>
+            <Select name="invTsh" defaultValue={existing?.invTsh || ""}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Yes">Yes</SelectItem>
+                <SelectItem value="No">No</SelectItem>
+                <SelectItem value="Sample Problem">Sample Problem</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Resuscitation Notes */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-medium mb-3 underline">RESUSCITATION NOTES:</h4>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>O2 (Given / Not Given)</Label>
+            <Select name="resuscO2" defaultValue={existing?.resuscO2 || ""}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Given">Given</SelectItem>
+                <SelectItem value="Not Given">Not Given</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Bag and Mask Ventilation</Label>
+            <Input name="resuscBagMaskVentilation" defaultValue={existing?.resuscBagMaskVentilation} />
+          </div>
+        </div>
+        <div className="space-y-2 mt-3">
+          <Label>Others</Label>
+          <Input name="resuscOthers" defaultValue={existing?.resuscOthers} />
+        </div>
+      </div>
+
+      {/* APGAR Score */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Apgar Score at 1 min</Label>
+          <Input name="apgarAt1Min" defaultValue={existing?.apgarAt1Min} />
+        </div>
+        <div className="space-y-2">
+          <Label>Apgar Score at 5 min</Label>
+          <Input name="apgarAt5Min" defaultValue={existing?.apgarAt5Min} />
+        </div>
+      </div>
+
+      {/* On Examination */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-medium mb-3 underline">ON EXAMINATION:</h4>
+        <div className="grid grid-cols-4 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">HR</Label>
+            <Input name="examHr" defaultValue={existing?.examHr} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">RR</Label>
+            <Input name="examRr" defaultValue={existing?.examRr} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Umbilical Cord</Label>
+            <Input name="examUmbilicalCord" defaultValue={existing?.examUmbilicalCord} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Femoral Pulses</Label>
+            <Input name="examFemoralPulses" defaultValue={existing?.examFemoralPulses} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Skull and Spine</Label>
+            <Input name="examSkullAndSpine" defaultValue={existing?.examSkullAndSpine} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Lips and Oral Cavity</Label>
+            <Input name="examLipsAndOralCavity" defaultValue={existing?.examLipsAndOralCavity} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Anal Opening</Label>
+            <Input name="examAnalOpening" defaultValue={existing?.examAnalOpening} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Limbs and Hips</Label>
+            <Input name="examLimbsAndHips" defaultValue={existing?.examLimbsAndHips} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">RS</Label>
+            <Input name="examRs" defaultValue={existing?.examRs} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">CVS</Label>
+            <Input name="examCvs" defaultValue={existing?.examCvs} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">PA</Label>
+            <Input name="examPa" defaultValue={existing?.examPa} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">CNS</Label>
+            <Input name="examCns" defaultValue={existing?.examCns} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Cry</Label>
+            <Input name="examCry" defaultValue={existing?.examCry} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Suck</Label>
+            <Input name="examSuck" defaultValue={existing?.examSuck} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Tone</Label>
+            <Input name="examTone" defaultValue={existing?.examTone} className="h-8" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Grasp</Label>
+            <Input name="examGrasp" defaultValue={existing?.examGrasp} className="h-8" />
+          </div>
+        </div>
+        <div className="space-y-2 mt-3">
+          <Label>Activity</Label>
+          <Input name="examActivity" defaultValue={existing?.examActivity} />
+        </div>
+      </div>
+
+      {/* Treatment and Delivery */}
+      <div className="space-y-2">
+        <Label>Treatment to be given</Label>
+        <Textarea name="treatmentToBeGiven" defaultValue={existing?.treatmentToBeGiven} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Delivery attended by Dr.</Label>
+          <Input name="deliveryAttendedByDr" defaultValue={existing?.deliveryAttendedByDr} />
+        </div>
+        <div className="space-y-2">
+          <Label>Date</Label>
+          <Input name="signatureDate" type="date" defaultValue={existing?.signatureDate} />
+        </div>
+      </div>
+
+      <div className="flex justify-between">
+        <Button type="button" variant="outline" onClick={handlePrint}>
+          <Printer className="h-4 w-4 mr-2" /> Print
+        </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? "Saving..." : "Save Neonate Sheet"}
         </Button>

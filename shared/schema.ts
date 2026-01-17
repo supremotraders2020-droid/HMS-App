@@ -6065,47 +6065,56 @@ export type InsertOtLabourChart = z.infer<typeof insertOtLabourChartSchema>;
 export type OtLabourChart = typeof otLabourChart.$inferSelect;
 
 // Neonate Sheet (for deliveries)
+// Assessment Sheet for Neonate - Matches hospital template
 export const otNeonateSheet = pgTable("ot_neonate_sheet", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   caseId: varchar("case_id").notNull(),
-  birthTime: timestamp("birth_time"),
-  gender: text("gender"),
+  // Mother & Baby Details
+  mothersName: text("mothers_name"),
+  sex: text("sex"), // M or F
+  gestationalAge: text("gestational_age"),
+  mothersBloodGroup: text("mothers_blood_group"),
+  birthTime: text("birth_time"),
   birthWeight: text("birth_weight"),
-  birthLength: text("birth_length"),
-  headCircumference: text("head_circumference"),
+  riskFactorsInMother: text("risk_factors_in_mother"),
+  modeOfDelivery: text("mode_of_delivery"), // Planned / Emergency
+  durationOfLeaking: text("duration_of_leaking"),
+  reasonForIntervention: text("reason_for_intervention"),
+  anaesthesiaUsed: text("anaesthesia_used"), // Spinal / General / Epidural
+  // Investigation Sent
+  invBloodGroup: text("inv_blood_group"), // Yes / No / Sample Problem
+  invG6pd: text("inv_g6pd"), // Yes / No / Sample Problem
+  invTsh: text("inv_tsh"), // Yes / No / Sample Problem
+  // Resuscitation Notes
+  resuscO2: text("resusc_o2"), // Given / Not Given
+  resuscBagMaskVentilation: text("resusc_bag_mask_ventilation"),
+  resuscOthers: text("resusc_others"),
   // APGAR Scores
-  apgar1min: integer("apgar_1min"),
-  apgar5min: integer("apgar_5min"),
-  apgar10min: integer("apgar_10min"),
-  // Resuscitation
-  resuscitationRequired: boolean("resuscitation_required").default(false),
-  resuscitationDetails: text("resuscitation_details"),
-  oxygenGiven: boolean("oxygen_given").default(false),
-  intubated: boolean("intubated").default(false),
-  // Initial Assessment
-  skinColor: text("skin_color"),
-  respiratoryEffort: text("respiratory_effort"),
-  heartRate: text("heart_rate"),
-  muscleTone: text("muscle_tone"),
-  reflexes: text("reflexes"),
-  // Congenital Anomalies
-  anomaliesDetected: boolean("anomalies_detected").default(false),
-  anomalyDetails: text("anomaly_details"),
-  // Cord
-  cordClamped: boolean("cord_clamped").default(true),
-  cordBloodCollected: boolean("cord_blood_collected").default(false),
-  // Feeding
-  breastfeedingInitiated: boolean("breastfeeding_initiated").default(false),
-  firstFeedTime: timestamp("first_feed_time"),
-  // Vitamin K
-  vitaminKGiven: boolean("vitamin_k_given").default(false),
-  eyeProphylaxis: boolean("eye_prophylaxis").default(false),
-  // Identification
-  footprintTaken: boolean("footprint_taken").default(false),
-  wristbandApplied: boolean("wristband_applied").default(false),
-  neonateId: text("neonate_id"),
-  // Notes
-  notes: text("notes"),
+  apgarAt1Min: text("apgar_at_1_min"),
+  apgarAt5Min: text("apgar_at_5_min"),
+  // On Examination
+  examHr: text("exam_hr"),
+  examRr: text("exam_rr"),
+  examUmbilicalCord: text("exam_umbilical_cord"),
+  examFemoralPulses: text("exam_femoral_pulses"),
+  examSkullAndSpine: text("exam_skull_and_spine"),
+  examLipsAndOralCavity: text("exam_lips_and_oral_cavity"),
+  examAnalOpening: text("exam_anal_opening"),
+  examLimbsAndHips: text("exam_limbs_and_hips"),
+  examRs: text("exam_rs"),
+  examCvs: text("exam_cvs"),
+  examPa: text("exam_pa"),
+  examCns: text("exam_cns"),
+  examCry: text("exam_cry"),
+  examSuck: text("exam_suck"),
+  examTone: text("exam_tone"),
+  examGrasp: text("exam_grasp"),
+  examActivity: text("exam_activity"),
+  // Treatment and Delivery
+  treatmentToBeGiven: text("treatment_to_be_given"),
+  deliveryAttendedByDr: text("delivery_attended_by_dr"),
+  signatureDate: text("signature_date"),
+  // Recording Info
   recordedBy: varchar("recorded_by"),
   recordedByName: text("recorded_by_name"),
   createdAt: timestamp("created_at").defaultNow(),
