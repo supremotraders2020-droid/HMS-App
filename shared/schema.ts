@@ -5662,46 +5662,40 @@ export type InsertOtPreanaestheticEval = z.infer<typeof insertOtPreanaestheticEv
 export type OtPreanaestheticEval = typeof otPreanaestheticEval.$inferSelect;
 
 // Surgical Safety Checklist (WHO Based)
+// Surgical Safety Checklist - Matches hospital template
 export const otSafetyChecklist = pgTable("ot_safety_checklist", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   caseId: varchar("case_id").notNull(),
-  // Sign In (Before Anaesthesia)
-  signInTime: timestamp("sign_in_time"),
-  patientConfirmedIdentity: boolean("patient_confirmed_identity").default(false),
-  siteMarkedConfirmed: boolean("site_marked_confirmed").default(false),
-  anaesthesiaSafetyCheckComplete: boolean("anaesthesia_safety_check_complete").default(false),
-  pulseOximeterFunctioning: boolean("pulse_oximeter_functioning").default(false),
-  knownAllergyConfirmed: boolean("known_allergy_confirmed").default(false),
-  difficultAirwayRisk: boolean("difficult_airway_risk").default(false),
-  aspirationRisk: boolean("aspiration_risk").default(false),
-  bloodLossRisk: boolean("blood_loss_risk").default(false),
-  signInBy: varchar("sign_in_by"),
-  signInByName: text("sign_in_by_name"),
-  // Time Out (Before Incision)
-  timeOutTime: timestamp("time_out_time"),
-  allTeamMembersIntroduced: boolean("all_team_members_introduced").default(false),
-  patientNameProcedureSiteConfirmed: boolean("patient_name_procedure_site_confirmed").default(false),
-  antibioticProphylaxisGiven: boolean("antibiotic_prophylaxis_given").default(false),
-  antibioticTime: timestamp("antibiotic_time"),
-  criticalEventsReviewed: boolean("critical_events_reviewed").default(false),
-  surgeonConcerns: text("surgeon_concerns"),
-  anaesthetistConcerns: text("anaesthetist_concerns"),
-  nursingConcerns: text("nursing_concerns"),
-  steriiltyConfirmed: boolean("sterility_confirmed").default(false),
-  equipmentIssues: text("equipment_issues"),
-  imagingDisplayed: boolean("imaging_displayed").default(false),
-  timeOutBy: varchar("time_out_by"),
-  timeOutByName: text("time_out_by_name"),
-  // Sign Out (Before Patient Leaves OT)
-  signOutTime: timestamp("sign_out_time"),
-  procedureRecorded: boolean("procedure_recorded").default(false),
-  instrumentSwabNeedleCountCorrect: boolean("instrument_swab_needle_count_correct").default(false),
-  specimenLabelled: boolean("specimen_labelled").default(false),
-  specimenDetails: text("specimen_details"),
-  equipmentProblemsAddressed: boolean("equipment_problems_addressed").default(false),
-  recoveryPlanCommunicated: boolean("recovery_plan_communicated").default(false),
-  signOutBy: varchar("sign_out_by"),
-  signOutByName: text("sign_out_by_name"),
+  // BEFORE INDUCTION OF ANAESTHESIA
+  patientConfirmed: text("patient_confirmed"), // Yes/No/N.A.
+  siteMarked: text("site_marked"), // Yes/No/N.A.
+  anaesthesiaSafetyCheck: text("anaesthesia_safety_check"), // Yes/No/N.A.
+  pulseOxymeter: text("pulse_oxymeter"), // Yes/No/N.A.
+  knownAllergy: text("known_allergy"), // Yes/No/N.A.
+  difficultAirwayRisk: text("difficult_airway_risk"), // No / Yes and Equipment/Assistance Available
+  bloodLossRisk: text("blood_loss_risk"), // No / Yes and adequate intravenous access and Fluids planned
+  // BEFORE SKIN INCISION
+  teamIntroduced: text("team_introduced"), // Yes/No/N.A.
+  verballyConfirmed: text("verbally_confirmed"), // Yes/No/N.A.
+  // ANTICIPATED CRITICAL EVENTS
+  surgeonReviews: text("surgeon_reviews"), // Yes/No/N.A.
+  anaesthesiaTeamReviews: text("anaesthesia_team_reviews"), // Yes/No/N.A.
+  nursingTeamReviews: text("nursing_team_reviews"), // Yes/No/N.A.
+  antibioticProphylaxis: text("antibiotic_prophylaxis"), // Yes/No/N.A.
+  essentialImaging: text("essential_imaging"), // Yes/No/N.A.
+  // BEFORE PATIENT LEAVES OPERATING ROOM
+  procedureRecorded: text("procedure_recorded"), // Yes/No/N.A.
+  instrumentCountCorrect: text("instrument_count_correct"), // Yes/No/N.A.
+  specimenLabelled: text("specimen_labelled"), // Yes/No/N.A.
+  equipmentProblems: text("equipment_problems"), // Yes/No/N.A.
+  recoveryConcernsReviewed: text("recovery_concerns_reviewed"), // Yes/No/N.A.
+  // Signatures
+  surgeonName: text("surgeon_name"),
+  surgeonSignature: text("surgeon_signature"),
+  anaesthetistName: text("anaesthetist_name"),
+  anaesthetistSignature: text("anaesthetist_signature"),
+  otNurseName: text("ot_nurse_name"),
+  otNurseSignature: text("ot_nurse_signature"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

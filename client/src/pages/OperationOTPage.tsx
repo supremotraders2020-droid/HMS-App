@@ -901,6 +901,7 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
                     existing={safety}
                     onSubmit={(d) => saveSafetyMutation.mutate(d)}
                     isLoading={saveSafetyMutation.isPending}
+                    caseData={data}
                   />
                 )}
                 {(section.key === "consent_surgery" || section.key === "consent_anaesthesia") && (
@@ -1891,204 +1892,271 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
   );
 }
 
-function SafetyChecklistForm({ existing, onSubmit, isLoading }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean }) {
+function SafetyChecklistForm({ existing, onSubmit, isLoading, caseData }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean; caseData?: any }) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     onSubmit({
-      signInCompletedBy: formData.get("signInCompletedBy"),
-      signInCompletedAt: new Date().toISOString(),
-      patientConfirmedIdentity: formData.get("patientConfirmedIdentity") === "on",
-      siteMarkedConfirmed: formData.get("siteMarkedConfirmed") === "on",
-      anaesthesiaSafetyChecked: formData.get("anaesthesiaSafetyChecked") === "on",
-      pulseOximeterFunctioning: formData.get("pulseOximeterFunctioning") === "on",
-      allergyConfirmed: formData.get("allergyConfirmed") === "on",
+      patientConfirmed: formData.get("patientConfirmed"),
+      siteMarked: formData.get("siteMarked"),
+      anaesthesiaSafetyCheck: formData.get("anaesthesiaSafetyCheck"),
+      pulseOxymeter: formData.get("pulseOxymeter"),
+      knownAllergy: formData.get("knownAllergy"),
       difficultAirwayRisk: formData.get("difficultAirwayRisk"),
-      aspirationRisk: formData.get("aspirationRisk"),
       bloodLossRisk: formData.get("bloodLossRisk"),
-      timeOutDone: formData.get("timeOutDone") === "on",
-      teamIntroduced: formData.get("teamIntroduced") === "on",
-      procedureConfirmed: formData.get("procedureConfirmed") === "on",
-      antibioticGiven: formData.get("antibioticGiven") === "on",
-      imagingDisplayed: formData.get("imagingDisplayed") === "on",
-      signOutDone: formData.get("signOutDone") === "on",
-      specimenLabeled: formData.get("specimenLabeled") === "on",
-      instrumentCountCorrect: formData.get("instrumentCountCorrect") === "on",
-      equipmentIssues: formData.get("equipmentIssues"),
-      recoveryPlan: formData.get("recoveryPlan"),
+      teamIntroduced: formData.get("teamIntroduced"),
+      verballyConfirmed: formData.get("verballyConfirmed"),
+      surgeonReviews: formData.get("surgeonReviews"),
+      anaesthesiaTeamReviews: formData.get("anaesthesiaTeamReviews"),
+      nursingTeamReviews: formData.get("nursingTeamReviews"),
+      antibioticProphylaxis: formData.get("antibioticProphylaxis"),
+      essentialImaging: formData.get("essentialImaging"),
+      procedureRecorded: formData.get("procedureRecorded"),
+      instrumentCountCorrect: formData.get("instrumentCountCorrect"),
+      specimenLabelled: formData.get("specimenLabelled"),
+      equipmentProblems: formData.get("equipmentProblems"),
+      recoveryConcernsReviewed: formData.get("recoveryConcernsReviewed"),
+      surgeonName: formData.get("surgeonName"),
+      surgeonSignature: formData.get("surgeonSignature"),
+      anaesthetistName: formData.get("anaesthetistName"),
+      anaesthetistSignature: formData.get("anaesthetistSignature"),
+      otNurseName: formData.get("otNurseName"),
+      otNurseSignature: formData.get("otNurseSignature"),
     });
+  };
+
+  const YesNoNaSelect = ({ name, defaultValue, label }: { name: string; defaultValue?: string; label: string }) => (
+    <div className="flex items-center justify-between py-2 border-b">
+      <span className="text-sm flex-1">{label}</span>
+      <Select name={name} defaultValue={defaultValue || ""}>
+        <SelectTrigger className="w-32"><SelectValue placeholder="Select" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="Yes">Yes</SelectItem>
+          <SelectItem value="No">No</SelectItem>
+          <SelectItem value="N.A.">N.A.</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    const content = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Surgical Safety Checklist</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; font-size: 11px; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+          .hospital-info { flex: 1; }
+          .hospital-name { font-size: 16px; font-weight: bold; }
+          .patient-info { flex: 1; text-align: right; font-size: 10px; }
+          .patient-info div { margin: 2px 0; }
+          .title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 15px 0; }
+          .section-title { font-weight: bold; text-decoration: underline; margin: 12px 0 6px 0; }
+          .checklist-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #ccc; }
+          .checklist-label { flex: 1; }
+          .checklist-value { width: 100px; text-align: center; font-weight: bold; }
+          .signature-section { margin-top: 30px; }
+          .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+          .signature-block { display: flex; gap: 20px; }
+          .signature-line { border-bottom: 1px solid #000; min-width: 150px; }
+          @media print { body { margin: 10px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="hospital-info">
+            <div class="hospital-name">GRAVITY HOSPITAL</div>
+            <div>Tower Line Corner, Talawade Road,</div>
+            <div>Triveni Nagar, Pune 411 062.</div>
+            <div>Tel. No.: 8149200044, 8149300044</div>
+          </div>
+          <div class="patient-info">
+            <div><strong>Patient Name:</strong> ${caseData?.patientName || ''}</div>
+            <div><strong>UHID No:</strong> ${caseData?.uhid || ''}</div>
+            <div><strong>Age:</strong> ${caseData?.patientAge || ''} | <strong>IPD No:</strong> ${caseData?.ipdNo || ''}</div>
+            <div><strong>Room:</strong> ${caseData?.room || ''} | <strong>DOA:</strong> ${caseData?.admissionDate ? new Date(caseData.admissionDate).toLocaleDateString() : ''}</div>
+            <div><strong>Doctor:</strong> ${caseData?.primarySurgeonName || ''} | <strong>Bed No:</strong> ${caseData?.bedNo || ''}</div>
+          </div>
+        </div>
+        
+        <div class="title">SURGICAL SAFETY CHECKLIST</div>
+        
+        <div class="section-title">BEFORE INDUCTION OF ANAESTHESIA:</div>
+        <div class="checklist-row"><span class="checklist-label">PATIENT HAS CONFIRMED: (Identity, Site, Procedure, Consent)</span><span class="checklist-value">${existing?.patientConfirmed || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">SITE MARKED / NOT APPLICABLE:</span><span class="checklist-value">${existing?.siteMarked || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">ANAESTHESIA SAFETY CHECK COMPLETED:</span><span class="checklist-value">${existing?.anaesthesiaSafetyCheck || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">PULSE OXYMETER ON PATIENT & FUNCTIONING:</span><span class="checklist-value">${existing?.pulseOxymeter || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">DOES PATIENT HAVE A KNOWN ALLERGY:</span><span class="checklist-value">${existing?.knownAllergy || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">DIFFICULT AIRWAY / ASPIRATION RISK:</span><span class="checklist-value">${existing?.difficultAirwayRisk || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">RISK OF >500 ML BLOOD LOSS:</span><span class="checklist-value">${existing?.bloodLossRisk || ''}</span></div>
+        
+        <div class="section-title">BEFORE SKIN INCISION:</div>
+        <div class="checklist-row"><span class="checklist-label">CONFIRMED ALL TEAM MEMBERS HAVE INTRODUCED THEMSELVES BY NAME & ROLE:</span><span class="checklist-value">${existing?.teamIntroduced || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">SURGEON, ANAESTHESIA PROFESSIONAL AND NURSE VERBALLY CONFIRMED? (Patient, Site, Procedure)</span><span class="checklist-value">${existing?.verballyConfirmed || ''}</span></div>
+        
+        <div class="section-title">ANTICIPATED CRITICAL EVENTS:</div>
+        <div class="checklist-row"><span class="checklist-label">SURGEON REVIEWS: WHAT ARE THE CRITICAL OR EXPECTED STEPS, OPERATIVE DURATION, ANTICIPATED BLOOD LOSS?</span><span class="checklist-value">${existing?.surgeonReviews || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">ANAESTHESIA TEAM REVIEWS: ARE THERE ANY PATIENT-SPECIFIC CONCERNS?</span><span class="checklist-value">${existing?.anaesthesiaTeamReviews || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">NURSING TEAM REVIEWS: HAS STERILITY (INCLUDING INDICATOR RESULTS) BEEN CONFIRMED? ARE THERE EQUIPMENT ISSUES OR ANY CONCERNS?</span><span class="checklist-value">${existing?.nursingTeamReviews || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">HAS ANTIBIOTIC PROPHYLAXIS BEEN GIVEN WITHIN THE LAST 60 MINUTES?</span><span class="checklist-value">${existing?.antibioticProphylaxis || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">IS ESSENTIAL IMAGING DISPLAYED?</span><span class="checklist-value">${existing?.essentialImaging || ''}</span></div>
+        
+        <div class="section-title">BEFORE PATIENT LEAVES OPERATING ROOM:</div>
+        <div style="margin-left: 10px; font-weight: bold;">NURSE VERBALLY CONFIRMED WITH THE TEAM:</div>
+        <div class="checklist-row" style="margin-left: 20px;"><span class="checklist-label">THE NAME OF THE PROCEDURE RECORDED</span><span class="checklist-value">${existing?.procedureRecorded || ''}</span></div>
+        <div class="checklist-row" style="margin-left: 20px;"><span class="checklist-label">THAT INSTRUMENT, SPONGE AND NEEDLE COUNTS ARE CORRECT OR NOT APPLICABLE</span><span class="checklist-value">${existing?.instrumentCountCorrect || ''}</span></div>
+        <div class="checklist-row" style="margin-left: 20px;"><span class="checklist-label">HOW THE SPECIMEN IS LABELLED (INCLUDING PATIENT NAME)</span><span class="checklist-value">${existing?.specimenLabelled || ''}</span></div>
+        <div class="checklist-row" style="margin-left: 20px;"><span class="checklist-label">WHETHER THERE ARE ANY EQUIPMENT PROBLEMS TO BE ADDRESSED</span><span class="checklist-value">${existing?.equipmentProblems || ''}</span></div>
+        <div class="checklist-row"><span class="checklist-label">SURGEON, ANAESTHESIA PROFESSIONAL AND NURSE REVIEW THE KEY CONCERNS FOR RECOVERY AND MANAGEMENT OF THIS PATIENT</span><span class="checklist-value">${existing?.recoveryConcernsReviewed || ''}</span></div>
+        
+        <div class="signature-section">
+          <div class="signature-row">
+            <div class="signature-block"><span>Name of Surgeon:</span><span class="signature-line">${existing?.surgeonName || ''}</span></div>
+            <div class="signature-block"><span>Signature:</span><span class="signature-line">${existing?.surgeonSignature || ''}</span></div>
+          </div>
+          <div class="signature-row">
+            <div class="signature-block"><span>Name of Anaesthetist:</span><span class="signature-line">${existing?.anaesthetistName || ''}</span></div>
+            <div class="signature-block"><span>Signature:</span><span class="signature-line">${existing?.anaesthetistSignature || ''}</span></div>
+          </div>
+          <div class="signature-row">
+            <div class="signature-block"><span>Name of OT Nurse:</span><span class="signature-line">${existing?.otNurseName || ''}</span></div>
+            <div class="signature-block"><span>Signature:</span><span class="signature-line">${existing?.otNurseSignature || ''}</span></div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label>Completed By</Label>
-        <Input name="signInCompletedBy" defaultValue={existing?.signInCompletedBy} placeholder="Circulating Nurse name" required />
+      {/* Hospital Header */}
+      <div className="border-b-2 border-primary pb-4 mb-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-lg font-bold">GRAVITY HOSPITAL</h2>
+            <p className="text-sm text-muted-foreground">Tower Line Corner, Talawade Road,</p>
+            <p className="text-sm text-muted-foreground">Triveni Nagar, Pune 411 062.</p>
+            <p className="text-sm text-muted-foreground">Tel. No.: 8149200044, 8149300044</p>
+          </div>
+          <div className="text-right text-sm">
+            <div><span className="font-medium">Patient Name:</span> {caseData?.patientName || '-'}</div>
+            <div><span className="font-medium">UHID No:</span> {caseData?.uhid || '-'}</div>
+            <div><span className="font-medium">Age:</span> {caseData?.patientAge || '-'} | <span className="font-medium">IPD No:</span> {caseData?.ipdNo || '-'}</div>
+            <div><span className="font-medium">Room:</span> {caseData?.room || '-'} | <span className="font-medium">DOA:</span> {caseData?.admissionDate ? new Date(caseData.admissionDate).toLocaleDateString() : '-'}</div>
+            <div><span className="font-medium">Doctor:</span> {caseData?.primarySurgeonName || '-'} | <span className="font-medium">Bed No:</span> {caseData?.bedNo || '-'}</div>
+          </div>
+        </div>
       </div>
 
-      <Tabs defaultValue="signin" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="signin">Sign In (Before Induction)</TabsTrigger>
-          <TabsTrigger value="timeout">Time Out (Before Incision)</TabsTrigger>
-          <TabsTrigger value="signout">Sign Out (Before Exit)</TabsTrigger>
-        </TabsList>
+      <div className="text-center font-bold text-lg underline mb-4">SURGICAL SAFETY CHECKLIST</div>
 
-        <TabsContent value="signin" className="space-y-3 pt-4">
-          <h4 className="font-medium">Before Induction of Anaesthesia</h4>
-          <div className="space-y-2 border rounded-lg p-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="patientConfirmedIdentity" defaultChecked={existing?.patientConfirmedIdentity} className="h-4 w-4" />
-              Patient has confirmed identity, site, procedure, and consent
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="siteMarkedConfirmed" defaultChecked={existing?.siteMarkedConfirmed} className="h-4 w-4" />
-              Site marked / Not applicable
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="anaesthesiaSafetyChecked" defaultChecked={existing?.anaesthesiaSafetyChecked} className="h-4 w-4" />
-              Anaesthesia safety check completed
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="pulseOximeterFunctioning" defaultChecked={existing?.pulseOximeterFunctioning} className="h-4 w-4" />
-              Pulse oximeter on patient and functioning
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="allergyConfirmed" defaultChecked={existing?.allergyConfirmed} className="h-4 w-4" />
-              Known allergy status confirmed
-            </label>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Difficult Airway / Aspiration Risk?</Label>
-              <Select name="difficultAirwayRisk" defaultValue={existing?.difficultAirwayRisk || "no"}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no">No</SelectItem>
-                  <SelectItem value="yes_prepared">Yes, and equipment/assistance available</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Aspiration Risk?</Label>
-              <Select name="aspirationRisk" defaultValue={existing?.aspirationRisk || "no"}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no">No</SelectItem>
-                  <SelectItem value="yes_prepared">Yes, RSI planned</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Risk of Blood Loss more than 500ml?</Label>
-              <Select name="bloodLossRisk" defaultValue={existing?.bloodLossRisk || "no"}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no">No</SelectItem>
-                  <SelectItem value="yes_prepared">Yes, blood products available</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </TabsContent>
+      {/* BEFORE INDUCTION OF ANAESTHESIA */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-bold underline mb-3">BEFORE INDUCTION OF ANAESTHESIA:</h4>
+        <YesNoNaSelect name="patientConfirmed" defaultValue={existing?.patientConfirmed} label="PATIENT HAS CONFIRMED: (Identity, Site, Procedure, Consent)" />
+        <YesNoNaSelect name="siteMarked" defaultValue={existing?.siteMarked} label="SITE MARKED / NOT APPLICABLE:" />
+        <YesNoNaSelect name="anaesthesiaSafetyCheck" defaultValue={existing?.anaesthesiaSafetyCheck} label="ANAESTHESIA SAFETY CHECK COMPLETED:" />
+        <YesNoNaSelect name="pulseOxymeter" defaultValue={existing?.pulseOxymeter} label="PULSE OXYMETER ON PATIENT & FUNCTIONING:" />
+        <YesNoNaSelect name="knownAllergy" defaultValue={existing?.knownAllergy} label="DOES PATIENT HAVE A KNOWN ALLERGY:" />
+        
+        <div className="flex items-center justify-between py-2 border-b">
+          <span className="text-sm flex-1">DIFFICULT AIRWAY / ASPIRATION RISK:</span>
+          <Select name="difficultAirwayRisk" defaultValue={existing?.difficultAirwayRisk || ""}>
+            <SelectTrigger className="w-64"><SelectValue placeholder="Select" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="No">No</SelectItem>
+              <SelectItem value="Yes and Equipment/Assistance Available">Yes and Equipment/Assistance Available</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center justify-between py-2">
+          <span className="text-sm flex-1">RISK OF {'>'}500 ML BLOOD LOSS:</span>
+          <Select name="bloodLossRisk" defaultValue={existing?.bloodLossRisk || ""}>
+            <SelectTrigger className="w-64"><SelectValue placeholder="Select" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="No">No</SelectItem>
+              <SelectItem value="Yes and adequate IV access and Fluids planned">Yes and adequate IV access and Fluids planned</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-        <TabsContent value="timeout" className="space-y-3 pt-4">
-          <h4 className="font-medium">Before Skin Incision (Time Out)</h4>
-          <div className="space-y-2 border rounded-lg p-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="timeOutDone" defaultChecked={existing?.timeOutDone} className="h-4 w-4" />
-              Time Out performed
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="teamIntroduced" defaultChecked={existing?.teamIntroduced} className="h-4 w-4" />
-              All team members introduced by name and role
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="procedureConfirmed" defaultChecked={existing?.procedureConfirmed} className="h-4 w-4" />
-              Surgeon, anaesthetist, nurse verbally confirm patient, site, procedure
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="antibioticGiven" defaultChecked={existing?.antibioticGiven} className="h-4 w-4" />
-              Antibiotic prophylaxis given within last 60 minutes (or N/A)
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="imagingDisplayed" defaultChecked={existing?.imagingDisplayed} className="h-4 w-4" />
-              Essential imaging displayed (or N/A)
-            </label>
-          </div>
-        </TabsContent>
+      {/* BEFORE SKIN INCISION */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-bold underline mb-3">BEFORE SKIN INCISION:</h4>
+        <YesNoNaSelect name="teamIntroduced" defaultValue={existing?.teamIntroduced} label="CONFIRMED ALL TEAM MEMBERS HAVE INTRODUCED THEMSELVES BY NAME & ROLE:" />
+        <YesNoNaSelect name="verballyConfirmed" defaultValue={existing?.verballyConfirmed} label="SURGEON, ANAESTHESIA PROFESSIONAL AND NURSE VERBALLY CONFIRMED? (Patient, Site, Procedure)" />
+      </div>
 
-        <TabsContent value="signout" className="space-y-3 pt-4">
-          <h4 className="font-medium">Before Patient Leaves Operating Room</h4>
-          <div className="space-y-2 border rounded-lg p-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="signOutDone" defaultChecked={existing?.signOutDone} className="h-4 w-4" />
-              Sign Out performed
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="specimenLabeled" defaultChecked={existing?.specimenLabeled} className="h-4 w-4" />
-              Specimen labelled correctly (or N/A)
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="instrumentCountCorrect" defaultChecked={existing?.instrumentCountCorrect} className="h-4 w-4" />
-              Instrument, sponge, and needle counts complete
-            </label>
+      {/* ANTICIPATED CRITICAL EVENTS */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-bold underline mb-3">ANTICIPATED CRITICAL EVENTS:</h4>
+        <YesNoNaSelect name="surgeonReviews" defaultValue={existing?.surgeonReviews} label="SURGEON REVIEWS: WHAT ARE THE CRITICAL OR EXPECTED STEPS, OPERATIVE DURATION, ANTICIPATED BLOOD LOSS?" />
+        <YesNoNaSelect name="anaesthesiaTeamReviews" defaultValue={existing?.anaesthesiaTeamReviews} label="ANAESTHESIA TEAM REVIEWS: ARE THERE ANY PATIENT-SPECIFIC CONCERNS?" />
+        <YesNoNaSelect name="nursingTeamReviews" defaultValue={existing?.nursingTeamReviews} label="NURSING TEAM REVIEWS: HAS STERILITY (INCLUDING INDICATOR RESULTS) BEEN CONFIRMED? ARE THERE EQUIPMENT ISSUES OR ANY CONCERNS?" />
+        <YesNoNaSelect name="antibioticProphylaxis" defaultValue={existing?.antibioticProphylaxis} label="HAS ANTIBIOTIC PROPHYLAXIS BEEN GIVEN WITHIN THE LAST 60 MINUTES?" />
+        <YesNoNaSelect name="essentialImaging" defaultValue={existing?.essentialImaging} label="IS ESSENTIAL IMAGING DISPLAYED?" />
+      </div>
+
+      {/* BEFORE PATIENT LEAVES OPERATING ROOM */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-bold underline mb-3">BEFORE PATIENT LEAVES OPERATING ROOM:</h4>
+        <p className="text-sm font-medium mb-2 ml-2">NURSE VERBALLY CONFIRMED WITH THE TEAM:</p>
+        <div className="ml-4">
+          <YesNoNaSelect name="procedureRecorded" defaultValue={existing?.procedureRecorded} label="THE NAME OF THE PROCEDURE RECORDED" />
+          <YesNoNaSelect name="instrumentCountCorrect" defaultValue={existing?.instrumentCountCorrect} label="THAT INSTRUMENT, SPONGE AND NEEDLE COUNTS ARE CORRECT OR NOT APPLICABLE" />
+          <YesNoNaSelect name="specimenLabelled" defaultValue={existing?.specimenLabelled} label="HOW THE SPECIMEN IS LABELLED (INCLUDING PATIENT NAME)" />
+          <YesNoNaSelect name="equipmentProblems" defaultValue={existing?.equipmentProblems} label="WHETHER THERE ARE ANY EQUIPMENT PROBLEMS TO BE ADDRESSED" />
+        </div>
+        <YesNoNaSelect name="recoveryConcernsReviewed" defaultValue={existing?.recoveryConcernsReviewed} label="SURGEON, ANAESTHESIA PROFESSIONAL AND NURSE REVIEW THE KEY CONCERNS FOR RECOVERY AND MANAGEMENT OF THIS PATIENT" />
+      </div>
+
+      {/* Signatures */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-bold mb-3">SIGNATURES:</h4>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Name of Surgeon</Label>
+            <Input name="surgeonName" defaultValue={existing?.surgeonName} />
           </div>
           <div className="space-y-2">
-            <Label>Equipment Issues (if any)</Label>
-            <Input name="equipmentIssues" defaultValue={existing?.equipmentIssues} placeholder="None, or describe issues" />
+            <Label>Signature</Label>
+            <Input name="surgeonSignature" defaultValue={existing?.surgeonSignature} placeholder="Digital signature" />
           </div>
           <div className="space-y-2">
-            <Label>Key Recovery Concerns</Label>
-            <Textarea name="recoveryPlan" defaultValue={existing?.recoveryPlan} placeholder="Post-op care instructions, monitoring requirements..." />
+            <Label>Name of Anaesthetist</Label>
+            <Input name="anaesthetistName" defaultValue={existing?.anaesthetistName} />
           </div>
-        </TabsContent>
-      </Tabs>
+          <div className="space-y-2">
+            <Label>Signature</Label>
+            <Input name="anaesthetistSignature" defaultValue={existing?.anaesthetistSignature} placeholder="Digital signature" />
+          </div>
+          <div className="space-y-2">
+            <Label>Name of OT Nurse</Label>
+            <Input name="otNurseName" defaultValue={existing?.otNurseName} />
+          </div>
+          <div className="space-y-2">
+            <Label>Signature</Label>
+            <Input name="otNurseSignature" defaultValue={existing?.otNurseSignature} placeholder="Digital signature" />
+          </div>
+        </div>
+      </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
-        {existing && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              const content = `
-                <div class="section">
-                  <div class="field"><span class="field-label">Completed By:</span><span class="field-value">${existing.signInCompletedBy || "N/A"}</span></div>
-                  <div class="field"><span class="field-label">Completed At:</span><span class="field-value">${existing.signInCompletedAt ? format(new Date(existing.signInCompletedAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
-                </div>
-                <h2>Sign In (Before Induction)</h2>
-                <div class="section">
-                  <div class="checklist-item"><span class="${existing.patientConfirmedIdentity ? 'checked' : 'unchecked'}">[${existing.patientConfirmedIdentity ? 'Yes' : 'No'}]</span> Patient has confirmed identity, site, procedure, consent</div>
-                  <div class="checklist-item"><span class="${existing.siteMarkedConfirmed ? 'checked' : 'unchecked'}">[${existing.siteMarkedConfirmed ? 'Yes' : 'No'}]</span> Site marked/not applicable</div>
-                  <div class="checklist-item"><span class="${existing.anaesthesiaSafetyChecked ? 'checked' : 'unchecked'}">[${existing.anaesthesiaSafetyChecked ? 'Yes' : 'No'}]</span> Anaesthesia safety check completed</div>
-                  <div class="checklist-item"><span class="${existing.pulseOximeterFunctioning ? 'checked' : 'unchecked'}">[${existing.pulseOximeterFunctioning ? 'Yes' : 'No'}]</span> Pulse oximeter on patient and functioning</div>
-                  <div class="checklist-item"><span class="${existing.allergyConfirmed ? 'checked' : 'unchecked'}">[${existing.allergyConfirmed ? 'Yes' : 'No'}]</span> Known allergy confirmed</div>
-                  <div class="field"><span class="field-label">Difficult Airway Risk:</span><span class="field-value">${existing.difficultAirwayRisk || "N/A"}</span></div>
-                  <div class="field"><span class="field-label">Aspiration Risk:</span><span class="field-value">${existing.aspirationRisk || "N/A"}</span></div>
-                  <div class="field"><span class="field-label">Blood Loss Risk:</span><span class="field-value">${existing.bloodLossRisk || "N/A"}</span></div>
-                </div>
-                <h2>Time Out (Before Skin Incision)</h2>
-                <div class="section">
-                  <div class="checklist-item"><span class="${existing.timeOutDone ? 'checked' : 'unchecked'}">[${existing.timeOutDone ? 'Yes' : 'No'}]</span> Time Out performed</div>
-                  <div class="checklist-item"><span class="${existing.teamIntroduced ? 'checked' : 'unchecked'}">[${existing.teamIntroduced ? 'Yes' : 'No'}]</span> All team members introduced</div>
-                  <div class="checklist-item"><span class="${existing.procedureConfirmed ? 'checked' : 'unchecked'}">[${existing.procedureConfirmed ? 'Yes' : 'No'}]</span> Surgeon, anaesthetist, nurse confirm procedure</div>
-                  <div class="checklist-item"><span class="${existing.antibioticGiven ? 'checked' : 'unchecked'}">[${existing.antibioticGiven ? 'Yes' : 'No'}]</span> Antibiotic prophylaxis given within last 60 minutes</div>
-                  <div class="checklist-item"><span class="${existing.imagingDisplayed ? 'checked' : 'unchecked'}">[${existing.imagingDisplayed ? 'Yes' : 'No'}]</span> Essential imaging displayed (or N/A)</div>
-                </div>
-                <h2>Sign Out (Before Patient Leaves)</h2>
-                <div class="section">
-                  <div class="checklist-item"><span class="${existing.signOutDone ? 'checked' : 'unchecked'}">[${existing.signOutDone ? 'Yes' : 'No'}]</span> Sign Out performed</div>
-                  <div class="checklist-item"><span class="${existing.specimenLabeled ? 'checked' : 'unchecked'}">[${existing.specimenLabeled ? 'Yes' : 'No'}]</span> Specimen labelled correctly (or N/A)</div>
-                  <div class="checklist-item"><span class="${existing.instrumentCountCorrect ? 'checked' : 'unchecked'}">[${existing.instrumentCountCorrect ? 'Yes' : 'No'}]</span> Instrument, sponge, and needle counts complete</div>
-                  <div class="field"><span class="field-label">Equipment Issues:</span><span class="field-value">${existing.equipmentIssues || "None"}</span></div>
-                  <div class="field"><span class="field-label">Recovery Plan:</span><span class="field-value">${existing.recoveryPlan || "N/A"}</span></div>
-                </div>
-              `;
-              printForm("WHO Surgical Safety Checklist", content);
-            }}
-          >
-            <Printer className="h-4 w-4 mr-1" /> Print
-          </Button>
-        )}
+      <div className="flex justify-between border-t pt-4">
+        <Button type="button" variant="outline" onClick={handlePrint}>
+          <Printer className="h-4 w-4 mr-2" /> Print
+        </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? "Saving..." : "Save Safety Checklist"}
         </Button>
