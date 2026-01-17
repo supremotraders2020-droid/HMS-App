@@ -3488,67 +3488,67 @@ function NeonateSheetForm({ existing, onSubmit, isLoading, caseData }: { existin
         <div className="grid grid-cols-4 gap-3">
           <div className="space-y-1">
             <Label className="text-xs">HR</Label>
-            <Input name="examHr" defaultValue={existing?.examHr} className="h-8" />
+            <Input name="examHr" defaultValue={existing?.examHr}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">RR</Label>
-            <Input name="examRr" defaultValue={existing?.examRr} className="h-8" />
+            <Input name="examRr" defaultValue={existing?.examRr}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Umbilical Cord</Label>
-            <Input name="examUmbilicalCord" defaultValue={existing?.examUmbilicalCord} className="h-8" />
+            <Input name="examUmbilicalCord" defaultValue={existing?.examUmbilicalCord}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Femoral Pulses</Label>
-            <Input name="examFemoralPulses" defaultValue={existing?.examFemoralPulses} className="h-8" />
+            <Input name="examFemoralPulses" defaultValue={existing?.examFemoralPulses}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Skull and Spine</Label>
-            <Input name="examSkullAndSpine" defaultValue={existing?.examSkullAndSpine} className="h-8" />
+            <Input name="examSkullAndSpine" defaultValue={existing?.examSkullAndSpine}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Lips and Oral Cavity</Label>
-            <Input name="examLipsAndOralCavity" defaultValue={existing?.examLipsAndOralCavity} className="h-8" />
+            <Input name="examLipsAndOralCavity" defaultValue={existing?.examLipsAndOralCavity}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Anal Opening</Label>
-            <Input name="examAnalOpening" defaultValue={existing?.examAnalOpening} className="h-8" />
+            <Input name="examAnalOpening" defaultValue={existing?.examAnalOpening}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Limbs and Hips</Label>
-            <Input name="examLimbsAndHips" defaultValue={existing?.examLimbsAndHips} className="h-8" />
+            <Input name="examLimbsAndHips" defaultValue={existing?.examLimbsAndHips}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">RS</Label>
-            <Input name="examRs" defaultValue={existing?.examRs} className="h-8" />
+            <Input name="examRs" defaultValue={existing?.examRs}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">CVS</Label>
-            <Input name="examCvs" defaultValue={existing?.examCvs} className="h-8" />
+            <Input name="examCvs" defaultValue={existing?.examCvs}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">PA</Label>
-            <Input name="examPa" defaultValue={existing?.examPa} className="h-8" />
+            <Input name="examPa" defaultValue={existing?.examPa}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">CNS</Label>
-            <Input name="examCns" defaultValue={existing?.examCns} className="h-8" />
+            <Input name="examCns" defaultValue={existing?.examCns}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Cry</Label>
-            <Input name="examCry" defaultValue={existing?.examCry} className="h-8" />
+            <Input name="examCry" defaultValue={existing?.examCry}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Suck</Label>
-            <Input name="examSuck" defaultValue={existing?.examSuck} className="h-8" />
+            <Input name="examSuck" defaultValue={existing?.examSuck}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Tone</Label>
-            <Input name="examTone" defaultValue={existing?.examTone} className="h-8" />
+            <Input name="examTone" defaultValue={existing?.examTone}  />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Grasp</Label>
-            <Input name="examGrasp" defaultValue={existing?.examGrasp} className="h-8" />
+            <Input name="examGrasp" defaultValue={existing?.examGrasp}  />
           </div>
         </div>
         <div className="space-y-2 mt-3">
