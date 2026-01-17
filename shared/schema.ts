@@ -5941,36 +5941,35 @@ export type InsertOtSurgeonNotes = z.infer<typeof insertOtSurgeonNotesSchema>;
 export type OtSurgeonNotes = typeof otSurgeonNotes.$inferSelect;
 
 // Post-Op Assessment
+// Post-Operative Assessment - Matches hospital template
 export const otPostopAssessment = pgTable("ot_postop_assessment", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   caseId: varchar("case_id").notNull(),
-  assessmentTime: timestamp("assessment_time").defaultNow(),
-  // Vitals
-  temperature: text("temperature"),
-  pulse: text("pulse"),
-  bloodPressureSystolic: text("blood_pressure_systolic"),
-  bloodPressureDiastolic: text("blood_pressure_diastolic"),
-  respiratoryRate: text("respiratory_rate"),
-  spo2: text("spo2"),
-  // Recovery Status
-  consciousnessLevel: text("consciousness_level"), // alert, drowsy, unresponsive
-  aldreteScore: integer("aldrete_score"), // 0-10
-  painScore: integer("pain_score"), // 0-10
-  nauseaVomiting: text("nausea_vomiting"),
-  // Wound
-  woundCondition: text("wound_condition"),
-  drainOutput: text("drain_output"),
-  bleeding: text("bleeding"),
-  // Complications
-  complications: text("complications"),
-  complicationDetails: text("complication_details"),
-  // Discharge Readiness
-  dischargeReadiness: text("discharge_readiness"), // ready, needs observation, needs ICU
-  destinationUnit: text("destination_unit"),
-  // Notes
-  assessmentNotes: text("assessment_notes"),
-  assessedBy: varchar("assessed_by"),
-  assessedByName: text("assessed_by_name"),
+  // Operation Details
+  operativeProcedure: text("operative_procedure"),
+  operationCompletionTime: text("operation_completion_time"),
+  // Post Anaesthesia Evaluation (JSON array of entries)
+  postAnaesthesiaEval: text("post_anaesthesia_eval"), // JSON: [{time, bp, pulse, rr, spo2, airwayPatency}]
+  // Aldrete Scorecard (JSON array of entries)
+  aldreteScorecard: text("aldrete_scorecard"), // JSON: [{time, activity, respiration, consciousness, o2Saturation, circulation, totalScore}]
+  // Progress Notes
+  progressNotes: text("progress_notes"),
+  // Discharge Details
+  timePatientDischarged: text("time_patient_discharged"),
+  timePostOpInstructionGiven: text("time_post_op_instruction_given"),
+  // Vital signs at discharge
+  dischargeTemp: text("discharge_temp"),
+  dischargePulse: text("discharge_pulse"),
+  dischargeRr: text("discharge_rr"),
+  dischargeBp: text("discharge_bp"),
+  // Surgeon/Anesthetist Approval
+  surgeonAnaesthetistSign: text("surgeon_anaesthetist_sign"),
+  surgeonAnaesthetistDate: text("surgeon_anaesthetist_date"),
+  surgeonAnaesthetistTime: text("surgeon_anaesthetist_time"),
+  // Recovery Nurse
+  recoveryNurseSign: text("recovery_nurse_sign"),
+  recoveryNurseDate: text("recovery_nurse_date"),
+  recoveryNurseTime: text("recovery_nurse_time"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

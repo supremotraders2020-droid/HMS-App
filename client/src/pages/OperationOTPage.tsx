@@ -717,7 +717,7 @@ function CaseDetailView({ otCase, onBack, userRole, activePhase, setActivePhase,
             <IntraOpPhase caseId={otCase.id} data={fullCase?.intraOp} />
           )}
           {activePhase === "postop" && (
-            <PostOpPhase caseId={otCase.id} data={fullCase?.postOp} />
+            <PostOpPhase caseId={otCase.id} data={fullCase?.postOp} caseData={fullCase} />
           )}
         </CardContent>
       </Card>
@@ -2624,7 +2624,7 @@ function SurgeonNotesForm({ existing, onSubmit, isLoading }: { existing: any; on
   );
 }
 
-function PostOpPhase({ caseId, data }: { caseId: string; data: any }) {
+function PostOpPhase({ caseId, data, caseData }: { caseId: string; data: any; caseData?: any }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeForm, setActiveForm] = useState<string | null>(null);
@@ -2710,9 +2710,10 @@ function PostOpPhase({ caseId, data }: { caseId: string; data: any }) {
                 </DialogHeader>
                 {section.key === "assessment" && (
                   <PostOpAssessmentForm 
-                    existing={data?.assessments}
+                    existing={data?.assessments?.[0]}
                     onSubmit={(d) => saveAssessmentMutation.mutate(d)}
                     isLoading={saveAssessmentMutation.isPending}
+                    caseData={caseData}
                   />
                 )}
                 {section.key === "monitoring" && (
@@ -2746,173 +2747,424 @@ function PostOpPhase({ caseId, data }: { caseId: string; data: any }) {
   );
 }
 
-function PostOpAssessmentForm({ existing, onSubmit, isLoading }: { existing: any[]; onSubmit: (d: any) => void; isLoading: boolean }) {
+function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean; caseData?: any }) {
+  const [postAnaesthesiaRows, setPostAnaesthesiaRows] = useState<any[]>(() => {
+    try { return existing?.postAnaesthesiaEval ? JSON.parse(existing.postAnaesthesiaEval) : [{ time: '', bp: '', pulse: '', rr: '', spo2: '', airwayPatency: '' }]; }
+    catch { return [{ time: '', bp: '', pulse: '', rr: '', spo2: '', airwayPatency: '' }]; }
+  });
+  const [aldreteRows, setAldreteRows] = useState<any[]>(() => {
+    try { return existing?.aldreteScorecard ? JSON.parse(existing.aldreteScorecard) : [{ time: '', activity: '', respiration: '', consciousness: '', o2Saturation: '', circulation: '', totalScore: '' }]; }
+    catch { return [{ time: '', activity: '', respiration: '', consciousness: '', o2Saturation: '', circulation: '', totalScore: '' }]; }
+  });
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     onSubmit({
-      assessedBy: formData.get("assessedBy"),
-      assessedAt: new Date().toISOString(),
-      consciousnessLevel: formData.get("consciousnessLevel"),
-      painScore: parseInt(formData.get("painScore") as string) || null,
-      heartRate: parseInt(formData.get("heartRate") as string) || null,
-      bloodPressure: formData.get("bloodPressure"),
-      respiratoryRate: parseInt(formData.get("respiratoryRate") as string) || null,
-      spo2: parseInt(formData.get("spo2") as string) || null,
-      temperature: parseFloat(formData.get("temperature") as string) || null,
-      nauseaVomiting: formData.get("nauseaVomiting"),
-      urineOutput: formData.get("urineOutput"),
-      drainOutput: formData.get("drainOutput"),
-      woundStatus: formData.get("woundStatus"),
-      mobilization: formData.get("mobilization"),
-      oralIntake: formData.get("oralIntake"),
-      complications: formData.get("complications"),
-      notes: formData.get("notes"),
+      operativeProcedure: formData.get("operativeProcedure"),
+      operationCompletionTime: formData.get("operationCompletionTime"),
+      postAnaesthesiaEval: JSON.stringify(postAnaesthesiaRows),
+      aldreteScorecard: JSON.stringify(aldreteRows),
+      progressNotes: formData.get("progressNotes"),
+      timePatientDischarged: formData.get("timePatientDischarged"),
+      timePostOpInstructionGiven: formData.get("timePostOpInstructionGiven"),
+      dischargeTemp: formData.get("dischargeTemp"),
+      dischargePulse: formData.get("dischargePulse"),
+      dischargeRr: formData.get("dischargeRr"),
+      dischargeBp: formData.get("dischargeBp"),
+      surgeonAnaesthetistSign: formData.get("surgeonAnaesthetistSign"),
+      surgeonAnaesthetistDate: formData.get("surgeonAnaesthetistDate"),
+      surgeonAnaesthetistTime: formData.get("surgeonAnaesthetistTime"),
+      recoveryNurseSign: formData.get("recoveryNurseSign"),
+      recoveryNurseDate: formData.get("recoveryNurseDate"),
+      recoveryNurseTime: formData.get("recoveryNurseTime"),
     });
-    (e.target as HTMLFormElement).reset();
+  };
+
+  const updatePostAnaesthesiaRow = (idx: number, field: string, value: string) => {
+    const updated = [...postAnaesthesiaRows];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setPostAnaesthesiaRows(updated);
+  };
+
+  const addPostAnaesthesiaRow = () => {
+    setPostAnaesthesiaRows([...postAnaesthesiaRows, { time: '', bp: '', pulse: '', rr: '', spo2: '', airwayPatency: '' }]);
+  };
+
+  const updateAldreteRow = (idx: number, field: string, value: string) => {
+    const updated = [...aldreteRows];
+    updated[idx] = { ...updated[idx], [field]: value };
+    // Auto-calculate total score
+    const row = updated[idx];
+    const total = (parseInt(row.activity) || 0) + (parseInt(row.respiration) || 0) + 
+                  (parseInt(row.consciousness) || 0) + (parseInt(row.o2Saturation) || 0) + 
+                  (parseInt(row.circulation) || 0);
+    updated[idx].totalScore = total.toString();
+    setAldreteRows(updated);
+  };
+
+  const addAldreteRow = () => {
+    setAldreteRows([...aldreteRows, { time: '', activity: '', respiration: '', consciousness: '', o2Saturation: '', circulation: '', totalScore: '' }]);
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    const postAnaesthesiaHtml = postAnaesthesiaRows.map(r => `
+      <tr><td>${r.time || ''}</td><td>${r.bp || ''}</td><td>${r.pulse || ''}</td><td>${r.rr || ''}</td><td>${r.spo2 || ''}</td><td>${r.airwayPatency || ''}</td></tr>
+    `).join('');
+    
+    const aldreteHtml = aldreteRows.map(r => `
+      <tr><td>${r.time || ''}</td><td>${r.activity || ''}</td><td>${r.respiration || ''}</td><td>${r.consciousness || ''}</td><td>${r.o2Saturation || ''}</td><td>${r.circulation || ''}</td><td>${r.totalScore || ''}</td></tr>
+    `).join('');
+    
+    const content = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Post-Operative Assessment</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; font-size: 11px; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+          .hospital-info { flex: 1; }
+          .hospital-name { font-size: 16px; font-weight: bold; }
+          .patient-info { flex: 1; text-align: right; font-size: 10px; }
+          .title { background: #333; color: white; text-align: center; padding: 5px; font-size: 12px; font-weight: bold; margin: 15px 0; }
+          .field-row { display: flex; margin: 5px 0; }
+          .field-row label { min-width: 150px; font-weight: bold; }
+          table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+          th, td { border: 1px solid #000; padding: 5px; text-align: center; }
+          th { background: #f0f0f0; }
+          .section-title { font-weight: bold; margin: 15px 0 5px 0; }
+          .signature-row { display: flex; justify-content: space-between; margin: 10px 0; }
+          .signature-block { display: flex; gap: 10px; }
+          .signature-line { border-bottom: 1px solid #000; min-width: 100px; }
+          .score-ref { font-size: 9px; margin: 10px 0; border: 1px solid #000; padding: 5px; }
+          @media print { body { margin: 10px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="hospital-info">
+            <div class="hospital-name">GRAVITY HOSPITAL</div>
+            <div>Tower Line Corner, Talawade Road,</div>
+            <div>Triveni Nagar, Pune 411 062.</div>
+            <div>Tel. No.: 8149200044, 8149300044</div>
+          </div>
+          <div class="patient-info">
+            <div><strong>Patient Name:</strong> ${caseData?.patientName || ''}</div>
+            <div><strong>PRN No:</strong> ${caseData?.uhid || ''}</div>
+            <div><strong>Age:</strong> ${caseData?.patientAge || ''} | <strong>Sex:</strong> ${caseData?.patientGender || ''}</div>
+            <div><strong>IPD No:</strong> ${caseData?.ipdNo || ''}</div>
+            <div><strong>Ward:</strong> ${caseData?.room || ''} | <strong>Bed No:</strong> ${caseData?.bedNo || ''}</div>
+          </div>
+        </div>
+        
+        <div class="title">Post-Operative Assessment</div>
+        
+        <div class="field-row"><label>Patient Name:</label><span>${caseData?.patientName || ''}</span><label style="margin-left:50px;">UHID/Case No:</label><span>${caseData?.uhid || ''}</span></div>
+        <div class="field-row"><label>Age/Sex:</label><span>${caseData?.patientAge || ''} / ${caseData?.patientGender || ''}</span><label style="margin-left:50px;">Date:</label><span>${new Date().toLocaleDateString()}</span><label style="margin-left:50px;">Operative procedure done:</label><span>${existing?.operativeProcedure || ''}</span></div>
+        <div class="field-row"><label>Operation Completion Time:</label><span>${existing?.operationCompletionTime || ''}</span></div>
+        
+        <div class="section-title">Post Anaesthesia Evaluation:</div>
+        <table>
+          <thead><tr><th>Time</th><th>BP</th><th>Pulse</th><th>RR</th><th>SPO2</th><th>Airway Patency</th></tr></thead>
+          <tbody>${postAnaesthesiaHtml}</tbody>
+        </table>
+        
+        <div class="section-title">Aldret Scorecard (10 = Total score, Score >= 9 required for discharge from recovery)</div>
+        <table>
+          <thead><tr><th>Time</th><th>Activity</th><th>Respiration</th><th>Consciousness</th><th>Oxygen Saturation</th><th>Circulation</th><th>Total Score</th></tr></thead>
+          <tbody>${aldreteHtml}</tbody>
+        </table>
+        
+        <div class="score-ref">
+          <strong>Score Measures:</strong><br/>
+          <strong>Activity:</strong> 2=Able to move 4 extremities, 1=Able to move 2 extremities, 0=Unable to move<br/>
+          <strong>Respiration:</strong> 2=Able to breathe deeply and cough freely, 1=Dyspnoea/limited breathing, 0=Apnoeic or on mechanical ventilation<br/>
+          <strong>Consciousness:</strong> 2=Fully awake, 1=Arousable on calling, 0=Not responding<br/>
+          <strong>O2 Saturation:</strong> 2=Able to maintain O2 saturation > 92% on room air, 1=Needs O2 inhalation to maintain > 90%, 0=O2 saturation < 90% even with O2 supplement<br/>
+          <strong>Circulation:</strong> 2=BP ± 20 mm of pre anaesthetic level, 1=BP ± 20-50 mm, 0=BP ± 50 mm of pre anaesthetic level
+        </div>
+        
+        <div class="section-title">Progress notes:</div>
+        <div style="border: 1px solid #000; min-height: 50px; padding: 5px;">${existing?.progressNotes || ''}</div>
+        
+        <div class="field-row" style="margin-top: 15px;"><label>Time patient discharged:</label><span>${existing?.timePatientDischarged || ''}</span><label style="margin-left:100px;">Time given post OP instruction sheet:</label><span>${existing?.timePostOpInstructionGiven || ''}</span></div>
+        
+        <div class="field-row"><label>Vital signs at time of discharge:</label><span>T: ${existing?.dischargeTemp || ''} P: ${existing?.dischargePulse || ''} RR: ${existing?.dischargeRr || ''} BP: ${existing?.dischargeBp || ''}</span></div>
+        
+        <div class="signature-row" style="margin-top: 20px;">
+          <span>Surgeon/Anesthetist approval for discharge:</span>
+          <div class="signature-block"><span>Sign:</span><span class="signature-line">${existing?.surgeonAnaesthetistSign || ''}</span></div>
+          <div class="signature-block"><span>Date:</span><span class="signature-line">${existing?.surgeonAnaesthetistDate || ''}</span></div>
+          <div class="signature-block"><span>Time:</span><span class="signature-line">${existing?.surgeonAnaesthetistTime || ''}</span></div>
+        </div>
+        
+        <div class="signature-row">
+          <span>Recovery Nurse:</span>
+          <div class="signature-block"><span>Sign:</span><span class="signature-line">${existing?.recoveryNurseSign || ''}</span></div>
+          <div class="signature-block"><span>Date:</span><span class="signature-line">${existing?.recoveryNurseDate || ''}</span></div>
+          <div class="signature-block"><span>Time:</span><span class="signature-line">${existing?.recoveryNurseTime || ''}</span></div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   return (
-    <div className="space-y-4">
-      {existing && existing.length > 0 && (
-        <div className="border rounded-lg p-4 max-h-[200px] overflow-y-auto">
-          <h4 className="font-medium mb-2">Previous Assessments</h4>
-          <div className="space-y-2 text-sm">
-            {existing.map((a: any, idx: number) => (
-              <div key={idx} className="p-2 bg-muted/50 rounded flex justify-between">
-                <span>{format(new Date(a.assessedAt), "MMM dd, HH:mm")} - {a.assessedBy}</span>
-                <span>Pain: {a.painScore}/10, SpO2: {a.spo2}%</span>
-              </div>
-            ))}
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto">
+      {/* Hospital Header */}
+      <div className="border-b-2 border-primary pb-4 mb-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-lg font-bold">GRAVITY HOSPITAL</h2>
+            <p className="text-sm text-muted-foreground">Tower Line Corner, Talawade Road,</p>
+            <p className="text-sm text-muted-foreground">Triveni Nagar, Pune 411 062.</p>
+            <p className="text-sm text-muted-foreground">Tel. No.: 8149200044, 8149300044</p>
+          </div>
+          <div className="text-right text-sm">
+            <div><span className="font-medium">Patient Name:</span> {caseData?.patientName || '-'}</div>
+            <div><span className="font-medium">PRN No:</span> {caseData?.uhid || '-'}</div>
+            <div><span className="font-medium">Age:</span> {caseData?.patientAge || '-'} | <span className="font-medium">Sex:</span> {caseData?.patientGender || '-'}</div>
+            <div><span className="font-medium">IPD No:</span> {caseData?.ipdNo || '-'} | <span className="font-medium">Ward:</span> {caseData?.room || '-'}</div>
+            <div><span className="font-medium">Bed No:</span> {caseData?.bedNo || '-'}</div>
           </div>
         </div>
-      )}
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 border-t pt-4">
-        <h4 className="font-medium">New Post-Op Assessment</h4>
+      <div className="text-center font-bold text-lg bg-primary text-primary-foreground py-2 rounded">Post-Operative Assessment</div>
+
+      {/* Operation Details */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Operative procedure done</Label>
+          <Input name="operativeProcedure" defaultValue={existing?.operativeProcedure} />
+        </div>
+        <div className="space-y-2">
+          <Label>Operation Completion Time</Label>
+          <Input name="operationCompletionTime" type="time" defaultValue={existing?.operationCompletionTime} />
+        </div>
+      </div>
+
+      {/* Post Anaesthesia Evaluation Table */}
+      <div className="border rounded-lg p-4">
+        <div className="flex justify-between items-center mb-2">
+          <h4 className="font-bold">Post Anaesthesia Evaluation:</h4>
+          <Button type="button" variant="outline" size="sm" onClick={addPostAnaesthesiaRow}>+ Add Row</Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="p-2 text-left">Time</th>
+                <th className="p-2 text-left">BP</th>
+                <th className="p-2 text-left">Pulse</th>
+                <th className="p-2 text-left">RR</th>
+                <th className="p-2 text-left">SPO₂</th>
+                <th className="p-2 text-left">Airway Patency</th>
+              </tr>
+            </thead>
+            <tbody>
+              {postAnaesthesiaRows.map((row, idx) => (
+                <tr key={idx} className="border-b">
+                  <td className="p-1"><Input value={row.time} onChange={e => updatePostAnaesthesiaRow(idx, 'time', e.target.value)} type="time" className="w-24" /></td>
+                  <td className="p-1"><Input value={row.bp} onChange={e => updatePostAnaesthesiaRow(idx, 'bp', e.target.value)} placeholder="120/80" className="w-24" /></td>
+                  <td className="p-1"><Input value={row.pulse} onChange={e => updatePostAnaesthesiaRow(idx, 'pulse', e.target.value)} placeholder="72" className="w-20" /></td>
+                  <td className="p-1"><Input value={row.rr} onChange={e => updatePostAnaesthesiaRow(idx, 'rr', e.target.value)} placeholder="16" className="w-16" /></td>
+                  <td className="p-1"><Input value={row.spo2} onChange={e => updatePostAnaesthesiaRow(idx, 'spo2', e.target.value)} placeholder="98" className="w-16" /></td>
+                  <td className="p-1"><Input value={row.airwayPatency} onChange={e => updatePostAnaesthesiaRow(idx, 'airwayPatency', e.target.value)} placeholder="Patent" className="w-24" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Aldrete Scorecard */}
+      <div className="border rounded-lg p-4">
+        <div className="flex justify-between items-center mb-2">
+          <h4 className="font-bold">Aldret Scorecard <span className="font-normal text-sm">(10 = Total score, Score {'>='} 9 required for discharge from recovery)</span></h4>
+          <Button type="button" variant="outline" size="sm" onClick={addAldreteRow}>+ Add Row</Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="p-2 text-left">Time</th>
+                <th className="p-2 text-left">Activity (0-2)</th>
+                <th className="p-2 text-left">Respiration (0-2)</th>
+                <th className="p-2 text-left">Consciousness (0-2)</th>
+                <th className="p-2 text-left">O₂ Saturation (0-2)</th>
+                <th className="p-2 text-left">Circulation (0-2)</th>
+                <th className="p-2 text-left">Total Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aldreteRows.map((row, idx) => (
+                <tr key={idx} className="border-b">
+                  <td className="p-1"><Input value={row.time} onChange={e => updateAldreteRow(idx, 'time', e.target.value)} type="time" className="w-24" /></td>
+                  <td className="p-1">
+                    <Select value={row.activity} onValueChange={v => updateAldreteRow(idx, 'activity', v)}>
+                      <SelectTrigger className="w-20"><SelectValue placeholder="-" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2">2</SelectItem>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="0">0</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="p-1">
+                    <Select value={row.respiration} onValueChange={v => updateAldreteRow(idx, 'respiration', v)}>
+                      <SelectTrigger className="w-20"><SelectValue placeholder="-" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2">2</SelectItem>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="0">0</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="p-1">
+                    <Select value={row.consciousness} onValueChange={v => updateAldreteRow(idx, 'consciousness', v)}>
+                      <SelectTrigger className="w-20"><SelectValue placeholder="-" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2">2</SelectItem>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="0">0</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="p-1">
+                    <Select value={row.o2Saturation} onValueChange={v => updateAldreteRow(idx, 'o2Saturation', v)}>
+                      <SelectTrigger className="w-20"><SelectValue placeholder="-" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2">2</SelectItem>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="0">0</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="p-1">
+                    <Select value={row.circulation} onValueChange={v => updateAldreteRow(idx, 'circulation', v)}>
+                      <SelectTrigger className="w-20"><SelectValue placeholder="-" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2">2</SelectItem>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="0">0</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="p-1 text-center font-bold">{row.totalScore || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         
-        <div className="grid grid-cols-2 gap-4">
+        {/* Score Reference */}
+        <div className="mt-3 p-2 bg-muted/50 rounded text-xs">
+          <strong>Score Measures:</strong><br/>
+          <strong>Activity:</strong> 2=Able to move 4 extremities voluntarily, 1=Able to move 2 extremities, 0=Unable to move<br/>
+          <strong>Respiration:</strong> 2=Able to breathe deeply and cough freely, 1=Dyspnoea/limited breathing, 0=Apnoeic or on mechanical ventilation<br/>
+          <strong>Consciousness:</strong> 2=Fully awake, 1=Arousable on calling, 0=Not responding<br/>
+          <strong>O₂ Saturation:</strong> 2=Able to maintain O₂ {'>'} 92% on room air, 1=Needs O₂ inhalation to maintain {'>'} 90%, 0=O₂ {'<'} 90% even with O₂ supplement<br/>
+          <strong>Circulation:</strong> 2=BP ± 20mm of pre anaesthetic level, 1=BP ± 20-50mm, 0=BP ± 50mm of pre anaesthetic level
+        </div>
+      </div>
+
+      {/* Progress Notes */}
+      <div className="space-y-2">
+        <Label className="font-bold">Progress notes:</Label>
+        <Textarea name="progressNotes" defaultValue={existing?.progressNotes} placeholder="Enter progress notes..." />
+      </div>
+
+      {/* Discharge Details */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Time patient discharged</Label>
+          <Input name="timePatientDischarged" type="time" defaultValue={existing?.timePatientDischarged} />
+        </div>
+        <div className="space-y-2">
+          <Label>Time given post OP instruction sheet</Label>
+          <Input name="timePostOpInstructionGiven" type="time" defaultValue={existing?.timePostOpInstructionGiven} />
+        </div>
+      </div>
+
+      {/* Vital Signs at Discharge */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-bold mb-3">Vital signs at time of discharge:</h4>
+        <div className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
-            <Label>Assessed By</Label>
-            <Input name="assessedBy" placeholder="Dr./Nurse name" required />
+            <Label>T (°C)</Label>
+            <Input name="dischargeTemp" defaultValue={existing?.dischargeTemp} placeholder="36.5" />
           </div>
           <div className="space-y-2">
-            <Label>Consciousness Level</Label>
-            <Select name="consciousnessLevel" defaultValue="alert">
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="alert">Alert & Oriented</SelectItem>
-                <SelectItem value="drowsy">Drowsy but Rousable</SelectItem>
-                <SelectItem value="confused">Confused</SelectItem>
-                <SelectItem value="unresponsive">Unresponsive</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>P (Pulse)</Label>
+            <Input name="dischargePulse" defaultValue={existing?.dischargePulse} placeholder="72" />
+          </div>
+          <div className="space-y-2">
+            <Label>RR</Label>
+            <Input name="dischargeRr" defaultValue={existing?.dischargeRr} placeholder="16" />
+          </div>
+          <div className="space-y-2">
+            <Label>BP</Label>
+            <Input name="dischargeBp" defaultValue={existing?.dischargeBp} placeholder="120/80" />
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-5 gap-3">
-          <div className="space-y-2">
-            <Label>Pain Score (0-10)</Label>
-            <Input name="painScore" type="number" min="0" max="10" placeholder="0" />
-          </div>
-          <div className="space-y-2">
-            <Label>Heart Rate</Label>
-            <Input name="heartRate" type="number" placeholder="72" />
-          </div>
-          <div className="space-y-2">
-            <Label>BP (mmHg)</Label>
-            <Input name="bloodPressure" placeholder="120/80" />
-          </div>
-          <div className="space-y-2">
-            <Label>SpO2 (%)</Label>
-            <Input name="spo2" type="number" placeholder="98" />
-          </div>
-          <div className="space-y-2">
-            <Label>Temp (°C)</Label>
-            <Input name="temperature" type="number" step="0.1" placeholder="36.5" />
-          </div>
-        </div>
-
+      {/* Surgeon/Anesthetist Approval */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-bold mb-3">Surgeon/Anesthetist approval for discharge:</h4>
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label>Nausea/Vomiting</Label>
-            <Select name="nauseaVomiting" defaultValue="none">
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="mild">Mild Nausea</SelectItem>
-                <SelectItem value="moderate">Moderate</SelectItem>
-                <SelectItem value="severe">Severe Vomiting</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Sign</Label>
+            <Input name="surgeonAnaesthetistSign" defaultValue={existing?.surgeonAnaesthetistSign} />
           </div>
           <div className="space-y-2">
-            <Label>Urine Output</Label>
-            <Input name="urineOutput" placeholder="e.g., 200ml" />
+            <Label>Date</Label>
+            <Input name="surgeonAnaesthetistDate" type="date" defaultValue={existing?.surgeonAnaesthetistDate} />
           </div>
           <div className="space-y-2">
-            <Label>Drain Output</Label>
-            <Input name="drainOutput" placeholder="e.g., 50ml serosanguinous" />
+            <Label>Time</Label>
+            <Input name="surgeonAnaesthetistTime" type="time" defaultValue={existing?.surgeonAnaesthetistTime} />
           </div>
         </div>
+      </div>
 
+      {/* Recovery Nurse */}
+      <div className="border rounded-lg p-4">
+        <h4 className="font-bold mb-3">Recovery Nurse:</h4>
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label>Wound Status</Label>
-            <Select name="woundStatus" defaultValue="clean">
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="clean">Clean & Dry</SelectItem>
-                <SelectItem value="minimal_ooze">Minimal Ooze</SelectItem>
-                <SelectItem value="soaked">Dressing Soaked</SelectItem>
-                <SelectItem value="infection">Signs of Infection</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Sign</Label>
+            <Input name="recoveryNurseSign" defaultValue={existing?.recoveryNurseSign} />
           </div>
           <div className="space-y-2">
-            <Label>Mobilization</Label>
-            <Select name="mobilization" defaultValue="bedrest">
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bedrest">Bed Rest</SelectItem>
-                <SelectItem value="sitting">Sitting Up</SelectItem>
-                <SelectItem value="standing">Standing with Support</SelectItem>
-                <SelectItem value="walking">Walking</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Date</Label>
+            <Input name="recoveryNurseDate" type="date" defaultValue={existing?.recoveryNurseDate} />
           </div>
           <div className="space-y-2">
-            <Label>Oral Intake</Label>
-            <Select name="oralIntake" defaultValue="nil">
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nil">Nil by Mouth</SelectItem>
-                <SelectItem value="sips">Sips of Water</SelectItem>
-                <SelectItem value="liquids">Clear Liquids</SelectItem>
-                <SelectItem value="soft">Soft Diet</SelectItem>
-                <SelectItem value="regular">Regular Diet</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Time</Label>
+            <Input name="recoveryNurseTime" type="time" defaultValue={existing?.recoveryNurseTime} />
           </div>
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label>Complications (if any)</Label>
-          <Input name="complications" placeholder="None, or describe" />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Notes</Label>
-          <Textarea name="notes" placeholder="Additional observations..." />
-        </div>
-
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : "Add Assessment"}
-          </Button>
-        </div>
-      </form>
-    </div>
+      <div className="flex justify-between border-t pt-4">
+        <Button type="button" variant="outline" onClick={handlePrint}>
+          <Printer className="h-4 w-4 mr-2" /> Print
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save Assessment"}
+        </Button>
+      </div>
+    </form>
   );
 }
 
