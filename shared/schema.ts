@@ -5596,52 +5596,64 @@ export const insertOtPreopChecklistSchema = createInsertSchema(otPreopChecklist)
 export type InsertOtPreopChecklist = z.infer<typeof insertOtPreopChecklistSchema>;
 export type OtPreopChecklist = typeof otPreopChecklist.$inferSelect;
 
-// Pre-Anaesthetic Evaluation (PAE)
+// Pre-Anaesthetic Evaluation (PAE) - Matches hospital template
 export const otPreanaestheticEval = pgTable("ot_preanaesthetic_eval", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   caseId: varchar("case_id").notNull(),
-  // ASA Classification
-  asaGrade: text("asa_grade"), // I, II, III, IV, V, VI
-  // Medical History
-  previousAnaesthesia: text("previous_anaesthesia"), // none, general, spinal, complications
-  previousAnaesthesiaComplications: text("previous_anaesthesia_complications"),
-  familyAnaesthesiaHistory: text("family_anaesthesia_history"),
-  // Airway Assessment
-  mallampatiScore: text("mallampati_score"), // I, II, III, IV
-  thyroMentalDistance: text("thyro_mental_distance"),
-  mouthOpening: text("mouth_opening"),
-  neckMobility: text("neck_mobility"),
-  dentition: text("dentition"),
-  difficultAirwayAnticipated: boolean("difficult_airway_anticipated").default(false),
-  // Systemic Examination
-  cardiovascular: text("cardiovascular"),
-  respiratory: text("respiratory"),
-  neurological: text("neurological"),
-  hepatoRenal: text("hepato_renal"),
-  endocrine: text("endocrine"),
-  // Current Medications
-  currentMedications: text("current_medications"),
-  anticoagulants: text("anticoagulants"),
-  // Labs Reviewed
-  hemoglobin: text("hemoglobin"),
-  bloodSugar: text("blood_sugar"),
-  creatinine: text("creatinine"),
-  coagulationProfile: text("coagulation_profile"),
-  // Fasting Status
-  lastSolidFood: timestamp("last_solid_food"),
-  lastLiquidIntake: timestamp("last_liquid_intake"),
-  fastingAdequate: boolean("fasting_adequate").default(false),
-  // Anaesthesia Plan
-  proposedAnaesthesia: text("proposed_anaesthesia"), // general, spinal, epidural, local, combined
-  specialPrecautions: text("special_precautions"),
-  // Risk Assessment
-  riskScore: text("risk_score"),
-  riskNotes: text("risk_notes"),
-  // Signatures
-  anaesthetistId: varchar("anaesthetist_id"),
+  evaluatedBy: varchar("evaluated_by"),
+  evaluatedAt: timestamp("evaluated_at"),
+  // HISTORY Section (Yes/No fields)
+  historyCough: text("history_cough"),
+  historyFever: text("history_fever"),
+  historyUri: text("history_uri"),
+  historyBrAsthma: text("history_br_asthma"),
+  historyTuberculosis: text("history_tuberculosis"),
+  historyChestPain: text("history_chest_pain"),
+  historyPalpitations: text("history_palpitations"),
+  historySyncope: text("history_syncope"),
+  historyExternalDysponea: text("history_external_dysponea"),
+  historyIhdOldAmi: text("history_ihd_old_ami"),
+  historyHypertension: text("history_hypertension"),
+  historySmoking: text("history_smoking"),
+  historyAlcohol: text("history_alcohol"),
+  historyTobacco: text("history_tobacco"),
+  historyJaundice: text("history_jaundice"),
+  historyBleedingTendencies: text("history_bleeding_tendencies"),
+  historyDrugAllergy: text("history_drug_allergy"),
+  historyPreviousSurgery: text("history_previous_surgery"),
+  historyAnyOther: text("history_any_other"),
+  // GENERAL EXAMINATION Section 1
+  geBuilt: text("ge_built"),
+  geFebrile: text("ge_febrile"),
+  gePr: text("ge_pr"),
+  geBp: text("ge_bp"),
+  geRr: text("ge_rr"),
+  gePallor: text("ge_pallor"),
+  geJvp: text("ge_jvp"),
+  geEdema: text("ge_edema"),
+  geOralCavityJawOpening: text("ge_oral_cavity_jaw_opening"),
+  geTeeth: text("ge_teeth"),
+  geNeck: text("ge_neck"),
+  geExtension: text("ge_extension"),
+  // GENERAL EXAMINATION Section 2
+  geCvs: text("ge_cvs"),
+  geRs: text("ge_rs"),
+  geAbd: text("ge_abd"),
+  // INVESTIGATIONS Section
+  invHb: text("inv_hb"),
+  invBslF: text("inv_bsl_f"),
+  invBslPp: text("inv_bsl_pp"),
+  invBloodUrea: text("inv_blood_urea"),
+  invSrCreatinine: text("inv_sr_creatinine"),
+  invEcg: text("inv_ecg"),
+  inv2dEcho: text("inv_2d_echo"),
+  invCxr: text("inv_cxr"),
+  // Anaesthetist Details
   anaesthetistName: text("anaesthetist_name"),
   anaesthetistSignature: text("anaesthetist_signature"),
-  evaluationAt: timestamp("evaluation_at"),
+  paeDate: text("pae_date"),
+  paeTime: text("pae_time"),
+  fitForSurgery: boolean("fit_for_surgery").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

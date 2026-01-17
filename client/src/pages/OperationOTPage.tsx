@@ -893,6 +893,7 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
                     existing={pae}
                     onSubmit={(d) => savePaeMutation.mutate(d)}
                     isLoading={savePaeMutation.isPending}
+                    caseData={data}
                   />
                 )}
                 {section.key === "safety" && (
@@ -1351,182 +1352,524 @@ function ChecklistForm({ existing, onSubmit, isLoading }: { existing: any; onSub
   );
 }
 
-function PAEForm({ existing, onSubmit, isLoading }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean }) {
+function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean; caseData?: any }) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     onSubmit({
       evaluatedBy: formData.get("evaluatedBy"),
       evaluatedAt: new Date().toISOString(),
-      asaGrade: formData.get("asaGrade"),
-      mallampatiScore: formData.get("mallampatiScore"),
-      airwayAssessment: formData.get("airwayAssessment"),
-      heartRate: parseInt(formData.get("heartRate") as string) || null,
-      bloodPressureSystolic: parseInt(formData.get("bpSystolic") as string) || null,
-      bloodPressureDiastolic: parseInt(formData.get("bpDiastolic") as string) || null,
-      spo2: parseInt(formData.get("spo2") as string) || null,
-      temperature: parseFloat(formData.get("temperature") as string) || null,
-      weight: parseFloat(formData.get("weight") as string) || null,
-      height: parseFloat(formData.get("height") as string) || null,
-      comorbidities: formData.get("comorbidities"),
-      currentMedications: formData.get("currentMedications"),
-      allergies: formData.get("allergies"),
-      previousAnaesthesia: formData.get("previousAnaesthesia"),
-      anaesthesiaPlan: formData.get("anaesthesiaPlan"),
-      riskCategory: formData.get("riskCategory"),
-      specialConsiderations: formData.get("specialConsiderations"),
+      historyCough: formData.get("historyCough"),
+      historyFever: formData.get("historyFever"),
+      historyUri: formData.get("historyUri"),
+      historyBrAsthma: formData.get("historyBrAsthma"),
+      historyTuberculosis: formData.get("historyTuberculosis"),
+      historyChestPain: formData.get("historyChestPain"),
+      historyPalpitations: formData.get("historyPalpitations"),
+      historySyncope: formData.get("historySyncope"),
+      historyExternalDysponea: formData.get("historyExternalDysponea"),
+      historyIhdOldAmi: formData.get("historyIhdOldAmi"),
+      historyHypertension: formData.get("historyHypertension"),
+      historySmoking: formData.get("historySmoking"),
+      historyAlcohol: formData.get("historyAlcohol"),
+      historyTobacco: formData.get("historyTobacco"),
+      historyJaundice: formData.get("historyJaundice"),
+      historyBleedingTendencies: formData.get("historyBleedingTendencies"),
+      historyDrugAllergy: formData.get("historyDrugAllergy"),
+      historyPreviousSurgery: formData.get("historyPreviousSurgery"),
+      historyAnyOther: formData.get("historyAnyOther"),
+      geBuilt: formData.get("geBuilt"),
+      geFebrile: formData.get("geFebrile"),
+      gePr: formData.get("gePr"),
+      geBp: formData.get("geBp"),
+      geRr: formData.get("geRr"),
+      gePallor: formData.get("gePallor"),
+      geJvp: formData.get("geJvp"),
+      geEdema: formData.get("geEdema"),
+      geOralCavityJawOpening: formData.get("geOralCavityJawOpening"),
+      geTeeth: formData.get("geTeeth"),
+      geNeck: formData.get("geNeck"),
+      geExtension: formData.get("geExtension"),
+      geCvs: formData.get("geCvs"),
+      geRs: formData.get("geRs"),
+      geAbd: formData.get("geAbd"),
+      invHb: formData.get("invHb"),
+      invBslF: formData.get("invBslF"),
+      invBslPp: formData.get("invBslPp"),
+      invBloodUrea: formData.get("invBloodUrea"),
+      invSrCreatinine: formData.get("invSrCreatinine"),
+      invEcg: formData.get("invEcg"),
+      inv2dEcho: formData.get("inv2dEcho"),
+      invCxr: formData.get("invCxr"),
+      anaesthetistName: formData.get("anaesthetistName"),
+      anaesthetistSignature: formData.get("anaesthetistSignature"),
+      paeDate: formData.get("paeDate"),
+      paeTime: formData.get("paeTime"),
       fitForSurgery: formData.get("fitForSurgery") === "on",
     });
   };
 
+  const printPAEForm = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const content = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Pre Operative Anaesthetic Evaluation</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; font-size: 11px; padding: 15px; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+          .hospital-info { text-align: left; }
+          .hospital-name { font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+          .hospital-icon { width: 30px; height: 30px; }
+          .hospital-address { font-size: 10px; margin-top: 5px; }
+          .patient-info { text-align: right; font-size: 10px; }
+          .patient-info div { margin: 2px 0; }
+          .form-title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 15px 0; }
+          .section-title { font-weight: bold; text-decoration: underline; margin: 12px 0 8px 0; }
+          .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid #000; }
+          .history-item { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc; }
+          .history-item:nth-child(3n) { border-right: none; }
+          .ge-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #000; }
+          .ge-item { display: flex; padding: 4px 8px; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc; }
+          .ge-item:nth-child(2n) { border-right: none; }
+          .ge-label { font-weight: bold; min-width: 120px; }
+          .ge-value { flex: 1; border-bottom: 1px dotted #000; min-height: 16px; }
+          .ge2-grid { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid #000; margin-top: 10px; }
+          .ge2-item { display: flex; padding: 4px 8px; border-right: 1px solid #ccc; }
+          .ge2-item:last-child { border-right: none; }
+          .inv-row { display: grid; grid-template-columns: repeat(5, 1fr); border: 1px solid #000; border-bottom: none; }
+          .inv-item { display: flex; padding: 4px 8px; border-right: 1px solid #ccc; }
+          .inv-item:last-child { border-right: none; }
+          .inv-full { border: 1px solid #000; border-top: none; padding: 4px 8px; display: flex; }
+          .footer-row { display: flex; justify-content: space-between; margin-top: 30px; padding-top: 10px; }
+          .footer-item { display: flex; gap: 10px; }
+          .footer-label { font-weight: bold; }
+          .footer-value { border-bottom: 1px solid #000; min-width: 150px; }
+          @media print { body { -webkit-print-color-adjust: exact; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="hospital-info">
+            <div class="hospital-name">
+              <svg class="hospital-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+              </svg>
+              GRAVITY HOSPITAL
+            </div>
+            <div class="hospital-address">
+              Tower Line Corner, Talawade Road,<br/>
+              Triveni Nagar, Pune 411 062.<br/>
+              Tel. No: 8149200044, 8149300044
+            </div>
+          </div>
+          <div class="patient-info">
+            <div><strong>Patient Name:</strong> ${caseData?.patientName || existing?.patientName || "N/A"}</div>
+            <div><strong>UHID No:</strong> ${caseData?.patientId || existing?.patientId || "N/A"}</div>
+            <div><strong>Age:</strong> ${caseData?.age || "N/A"}/${caseData?.gender || "N/A"}</div>
+            <div><strong>Room:</strong> ${caseData?.room || "N/A"}</div>
+            <div><strong>Doctor:</strong> ${caseData?.surgeonName || "N/A"}</div>
+            <div><strong>IPD No:</strong> ${caseData?.ipdNumber || "N/A"}</div>
+            <div><strong>DOA:</strong> ${caseData?.admissionDate || "N/A"}</div>
+            <div><strong>Bed No:</strong> ${caseData?.bedNumber || "N/A"}</div>
+          </div>
+        </div>
+
+        <div class="form-title">PRE OPERATIVE ANAESTHETIC EVALUATION</div>
+
+        <div class="section-title">HISTORY:</div>
+        <div class="history-grid">
+          <div class="history-item"><span>Cough:</span><span>${existing?.historyCough || "___"}</span></div>
+          <div class="history-item"><span>Palpitations:</span><span>${existing?.historyPalpitations || "___"}</span></div>
+          <div class="history-item"><span>Alcohol:</span><span>${existing?.historyAlcohol || "___"}</span></div>
+          <div class="history-item"><span>Fever:</span><span>${existing?.historyFever || "___"}</span></div>
+          <div class="history-item"><span>Syncope:</span><span>${existing?.historySyncope || "___"}</span></div>
+          <div class="history-item"><span>Tobacco:</span><span>${existing?.historyTobacco || "___"}</span></div>
+          <div class="history-item"><span>URI:</span><span>${existing?.historyUri || "___"}</span></div>
+          <div class="history-item"><span>External Dysponea:</span><span>${existing?.historyExternalDysponea || "___"}</span></div>
+          <div class="history-item"><span>Jaundice:</span><span>${existing?.historyJaundice || "___"}</span></div>
+          <div class="history-item"><span>Br.Asthma:</span><span>${existing?.historyBrAsthma || "___"}</span></div>
+          <div class="history-item"><span>IHD/Old AMI:</span><span>${existing?.historyIhdOldAmi || "___"}</span></div>
+          <div class="history-item"><span>Bleeding Tendencies:</span><span>${existing?.historyBleedingTendencies || "___"}</span></div>
+          <div class="history-item"><span>Tuberculosis:</span><span>${existing?.historyTuberculosis || "___"}</span></div>
+          <div class="history-item"><span>Hypertension:</span><span>${existing?.historyHypertension || "___"}</span></div>
+          <div class="history-item"><span>Drug Allergy:</span><span>${existing?.historyDrugAllergy || "___"}</span></div>
+          <div class="history-item"><span>Chest Pain:</span><span>${existing?.historyChestPain || "___"}</span></div>
+          <div class="history-item"><span>Smoking:</span><span>${existing?.historySmoking || "___"}</span></div>
+          <div class="history-item"><span>Previous Surgery:</span><span>${existing?.historyPreviousSurgery || "___"}</span></div>
+          <div class="history-item" style="grid-column: span 3;"><span>Any Other History:</span><span>${existing?.historyAnyOther || "___"}</span></div>
+        </div>
+
+        <div class="section-title">GENERAL EXAMINATION:</div>
+        <div class="ge-grid">
+          <div class="ge-item"><span class="ge-label">Built:</span><span class="ge-value">${existing?.geBuilt || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">JVP:</span><span class="ge-value">${existing?.geJvp || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">Febrile:</span><span class="ge-value">${existing?.geFebrile || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">Edema:</span><span class="ge-value">${existing?.geEdema || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">P.R.:</span><span class="ge-value">${existing?.gePr || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">Oral Cavity/Jaw Opening:</span><span class="ge-value">${existing?.geOralCavityJawOpening || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">B.P.:</span><span class="ge-value">${existing?.geBp || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">Teeth:</span><span class="ge-value">${existing?.geTeeth || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">R.R.:</span><span class="ge-value">${existing?.geRr || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">Neck:</span><span class="ge-value">${existing?.geNeck || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">Pallor:</span><span class="ge-value">${existing?.gePallor || ""}</span></div>
+          <div class="ge-item"><span class="ge-label">Extension:</span><span class="ge-value">${existing?.geExtension || ""}</span></div>
+        </div>
+
+        <div class="section-title">GENERAL EXAMINATION:</div>
+        <div class="ge2-grid">
+          <div class="ge2-item"><span class="ge-label">CVS:</span><span class="ge-value">${existing?.geCvs || ""}</span></div>
+          <div class="ge2-item"><span class="ge-label">RS:</span><span class="ge-value">${existing?.geRs || ""}</span></div>
+          <div class="ge2-item"><span class="ge-label">Abd:</span><span class="ge-value">${existing?.geAbd || ""}</span></div>
+        </div>
+
+        <div class="section-title">INVESTIGATIONS:</div>
+        <div class="inv-row">
+          <div class="inv-item"><span class="ge-label">Hb:</span><span class="ge-value">${existing?.invHb || ""}</span></div>
+          <div class="inv-item"><span class="ge-label">BSL F:</span><span class="ge-value">${existing?.invBslF || ""}</span></div>
+          <div class="inv-item"><span class="ge-label">BSL PP:</span><span class="ge-value">${existing?.invBslPp || ""}</span></div>
+          <div class="inv-item"><span class="ge-label">Blood Urea:</span><span class="ge-value">${existing?.invBloodUrea || ""}</span></div>
+          <div class="inv-item"><span class="ge-label">Sr.Creatinine:</span><span class="ge-value">${existing?.invSrCreatinine || ""}</span></div>
+        </div>
+        <div class="inv-full"><span class="ge-label">ECG:</span><span class="ge-value" style="flex:1;">${existing?.invEcg || ""}</span></div>
+        <div class="inv-full"><span class="ge-label">2d Echo:</span><span class="ge-value" style="flex:1;">${existing?.inv2dEcho || ""}</span></div>
+        <div class="inv-full"><span class="ge-label">CXR:</span><span class="ge-value" style="flex:1;">${existing?.invCxr || ""}</span></div>
+
+        <div class="footer-row">
+          <div class="footer-item"><span class="footer-label">Name of the Anaesthetist:</span><span class="footer-value">${existing?.anaesthetistName || ""}</span></div>
+          <div class="footer-item"><span class="footer-label">Signature:</span><span class="footer-value">${existing?.anaesthetistSignature || ""}</span></div>
+        </div>
+        <div class="footer-row">
+          <div class="footer-item"><span class="footer-label">Date:</span><span class="footer-value">${existing?.paeDate || ""}</span></div>
+          <div class="footer-item"><span class="footer-label">Time:</span><span class="footer-value">${existing?.paeTime || ""}</span></div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Evaluated By (Anaesthetist)</Label>
-          <Input name="evaluatedBy" defaultValue={existing?.evaluatedBy} placeholder="Dr. Name" required />
-        </div>
-        <div className="space-y-2">
-          <Label>ASA Grade *</Label>
-          <Select name="asaGrade" defaultValue={existing?.asaGrade || ""} required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select ASA Grade" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="I">ASA I - Healthy patient</SelectItem>
-              <SelectItem value="II">ASA II - Mild systemic disease</SelectItem>
-              <SelectItem value="III">ASA III - Severe systemic disease</SelectItem>
-              <SelectItem value="IV">ASA IV - Life-threatening disease</SelectItem>
-              <SelectItem value="V">ASA V - Moribund patient</SelectItem>
-              <SelectItem value="VI">ASA VI - Brain-dead organ donor</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label>Mallampati Score</Label>
-          <Select name="mallampatiScore" defaultValue={existing?.mallampatiScore || ""}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="I">Class I - Soft palate, fauces, uvula visible</SelectItem>
-              <SelectItem value="II">Class II - Soft palate, fauces, partial uvula</SelectItem>
-              <SelectItem value="III">Class III - Soft palate, base of uvula</SelectItem>
-              <SelectItem value="IV">Class IV - Hard palate only</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Airway Assessment</Label>
-          <Select name="airwayAssessment" defaultValue={existing?.airwayAssessment || "normal"}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="normal">Normal</SelectItem>
-              <SelectItem value="difficult">Anticipated Difficult</SelectItem>
-              <SelectItem value="critical">Critical</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Risk Category</Label>
-          <Select name="riskCategory" defaultValue={existing?.riskCategory || "low"}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">Low Risk</SelectItem>
-              <SelectItem value="moderate">Moderate Risk</SelectItem>
-              <SelectItem value="high">High Risk</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="border rounded-lg p-4 bg-muted/30 mb-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-2 font-bold text-lg">
+              <Heart className="h-6 w-6 text-primary" />
+              GRAVITY HOSPITAL
+            </div>
+            <div className="text-sm text-muted-foreground mt-1">
+              Tower Line Corner, Talawade Road,<br/>
+              Triveni Nagar, Pune 411 062.<br/>
+              Tel. No: 8149200044, 8149300044
+            </div>
+          </div>
+          <div className="text-right text-sm">
+            <div><strong>Patient Name:</strong> {caseData?.patientName || "N/A"}</div>
+            <div><strong>UHID No:</strong> {caseData?.patientId || "N/A"}</div>
+            <div><strong>Age:</strong> {caseData?.age || "N/A"}/{caseData?.gender || "N/A"}</div>
+            <div><strong>Room:</strong> {caseData?.room || "N/A"}</div>
+            <div><strong>Doctor:</strong> {caseData?.surgeonName || "N/A"}</div>
+            <div><strong>IPD No:</strong> {caseData?.ipdNumber || "N/A"}</div>
+            <div><strong>DOA:</strong> {caseData?.admissionDate || "N/A"}</div>
+            <div><strong>Bed No:</strong> {caseData?.bedNumber || "N/A"}</div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
-        <div className="space-y-2">
-          <Label>Heart Rate (bpm)</Label>
-          <Input name="heartRate" type="number" defaultValue={existing?.heartRate} placeholder="72" />
+      <div className="text-center font-bold text-lg underline mb-4">PRE OPERATIVE ANAESTHETIC EVALUATION</div>
+
+      <div className="border rounded-lg p-4">
+        <h3 className="font-bold underline mb-3">HISTORY:</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Cough:</Label>
+              <Select name="historyCough" defaultValue={existing?.historyCough || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Fever:</Label>
+              <Select name="historyFever" defaultValue={existing?.historyFever || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">URI:</Label>
+              <Select name="historyUri" defaultValue={existing?.historyUri || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Br.Asthma:</Label>
+              <Select name="historyBrAsthma" defaultValue={existing?.historyBrAsthma || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Tuberculosis:</Label>
+              <Select name="historyTuberculosis" defaultValue={existing?.historyTuberculosis || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Chest Pain:</Label>
+              <Select name="historyChestPain" defaultValue={existing?.historyChestPain || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Palpitations:</Label>
+              <Select name="historyPalpitations" defaultValue={existing?.historyPalpitations || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Syncope:</Label>
+              <Select name="historySyncope" defaultValue={existing?.historySyncope || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">External Dysponea:</Label>
+              <Select name="historyExternalDysponea" defaultValue={existing?.historyExternalDysponea || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">IHD/Old AMI:</Label>
+              <Select name="historyIhdOldAmi" defaultValue={existing?.historyIhdOldAmi || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Hypertension:</Label>
+              <Select name="historyHypertension" defaultValue={existing?.historyHypertension || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Smoking:</Label>
+              <Select name="historySmoking" defaultValue={existing?.historySmoking || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Alcohol:</Label>
+              <Select name="historyAlcohol" defaultValue={existing?.historyAlcohol || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Tobacco:</Label>
+              <Select name="historyTobacco" defaultValue={existing?.historyTobacco || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Jaundice:</Label>
+              <Select name="historyJaundice" defaultValue={existing?.historyJaundice || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Bleeding Tendencies:</Label>
+              <Select name="historyBleedingTendencies" defaultValue={existing?.historyBleedingTendencies || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Drug Allergy:</Label>
+              <Select name="historyDrugAllergy" defaultValue={existing?.historyDrugAllergy || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between items-center border-b pb-1">
+              <Label className="text-sm">Previous Surgery:</Label>
+              <Select name="historyPreviousSurgery" defaultValue={existing?.historyPreviousSurgery || ""}>
+                <SelectTrigger className="w-24 h-8"><SelectValue placeholder="___" /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label>BP Systolic</Label>
-          <Input name="bpSystolic" type="number" defaultValue={existing?.bloodPressureSystolic} placeholder="120" />
-        </div>
-        <div className="space-y-2">
-          <Label>BP Diastolic</Label>
-          <Input name="bpDiastolic" type="number" defaultValue={existing?.bloodPressureDiastolic} placeholder="80" />
-        </div>
-        <div className="space-y-2">
-          <Label>SpO2 (%)</Label>
-          <Input name="spo2" type="number" defaultValue={existing?.spo2} placeholder="98" />
+        <div className="mt-3">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Any Other History:</Label>
+            <Input name="historyAnyOther" defaultValue={existing?.historyAnyOther || ""} className="flex-1 h-8" />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label>Weight (kg)</Label>
-          <Input name="weight" type="number" step="0.1" defaultValue={existing?.weight} placeholder="70" />
-        </div>
-        <div className="space-y-2">
-          <Label>Height (cm)</Label>
-          <Input name="height" type="number" defaultValue={existing?.height} placeholder="170" />
-        </div>
-        <div className="space-y-2">
-          <Label>Temperature (°C)</Label>
-          <Input name="temperature" type="number" step="0.1" defaultValue={existing?.temperature} placeholder="36.5" />
+      <div className="border rounded-lg p-4">
+        <h3 className="font-bold underline mb-3">GENERAL EXAMINATION:</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-24">Built:</Label>
+              <Input name="geBuilt" defaultValue={existing?.geBuilt || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-24">Febrile:</Label>
+              <Input name="geFebrile" defaultValue={existing?.geFebrile || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-24">P.R.:</Label>
+              <Input name="gePr" defaultValue={existing?.gePr || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-24">B.P.:</Label>
+              <Input name="geBp" defaultValue={existing?.geBp || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-24">R.R.:</Label>
+              <Input name="geRr" defaultValue={existing?.geRr || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-24">Pallor:</Label>
+              <Input name="gePallor" defaultValue={existing?.gePallor || ""} className="flex-1 h-8" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-40">JVP:</Label>
+              <Input name="geJvp" defaultValue={existing?.geJvp || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-40">Edema:</Label>
+              <Input name="geEdema" defaultValue={existing?.geEdema || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-40">Oral Cavity/Jaw Opening:</Label>
+              <Input name="geOralCavityJawOpening" defaultValue={existing?.geOralCavityJawOpening || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-40">Teeth:</Label>
+              <Input name="geTeeth" defaultValue={existing?.geTeeth || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-40">Neck:</Label>
+              <Input name="geNeck" defaultValue={existing?.geNeck || ""} className="flex-1 h-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm w-40">Extension:</Label>
+              <Input name="geExtension" defaultValue={existing?.geExtension || ""} className="flex-1 h-8" />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Comorbidities</Label>
-          <Textarea name="comorbidities" defaultValue={existing?.comorbidities} placeholder="DM, HTN, CAD, etc." />
-        </div>
-        <div className="space-y-2">
-          <Label>Current Medications</Label>
-          <Textarea name="currentMedications" defaultValue={existing?.currentMedications} placeholder="List current medications" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Known Allergies</Label>
-          <Input name="allergies" defaultValue={existing?.allergies} placeholder="NKDA or list allergies" />
-        </div>
-        <div className="space-y-2">
-          <Label>Previous Anaesthesia History</Label>
-          <Input name="previousAnaesthesia" defaultValue={existing?.previousAnaesthesia} placeholder="Uneventful / Complications" />
+      <div className="border rounded-lg p-4">
+        <h3 className="font-bold underline mb-3">GENERAL EXAMINATION:</h3>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm w-12">CVS:</Label>
+            <Input name="geCvs" defaultValue={existing?.geCvs || ""} className="flex-1 h-8" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm w-12">RS:</Label>
+            <Input name="geRs" defaultValue={existing?.geRs || ""} className="flex-1 h-8" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm w-12">Abd:</Label>
+            <Input name="geAbd" defaultValue={existing?.geAbd || ""} className="flex-1 h-8" />
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Anaesthesia Plan</Label>
-        <Select name="anaesthesiaPlan" defaultValue={existing?.anaesthesiaPlan || ""}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select anaesthesia type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="GA_ETT">General Anaesthesia (ETT)</SelectItem>
-            <SelectItem value="GA_LMA">General Anaesthesia (LMA)</SelectItem>
-            <SelectItem value="GA_MASK">General Anaesthesia (Mask)</SelectItem>
-            <SelectItem value="SPINAL">Spinal Anaesthesia</SelectItem>
-            <SelectItem value="EPIDURAL">Epidural Anaesthesia</SelectItem>
-            <SelectItem value="CSE">Combined Spinal-Epidural</SelectItem>
-            <SelectItem value="REGIONAL">Regional Block</SelectItem>
-            <SelectItem value="LOCAL">Local Anaesthesia</SelectItem>
-            <SelectItem value="MAC">Monitored Anaesthesia Care</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="border rounded-lg p-4">
+        <h3 className="font-bold underline mb-3">INVESTIGATIONS:</h3>
+        <div className="grid grid-cols-5 gap-3 mb-3">
+          <div className="flex items-center gap-1">
+            <Label className="text-sm">Hb:</Label>
+            <Input name="invHb" defaultValue={existing?.invHb || ""} className="flex-1 h-8" />
+          </div>
+          <div className="flex items-center gap-1">
+            <Label className="text-sm">BSL F:</Label>
+            <Input name="invBslF" defaultValue={existing?.invBslF || ""} className="flex-1 h-8" />
+          </div>
+          <div className="flex items-center gap-1">
+            <Label className="text-sm">BSL PP:</Label>
+            <Input name="invBslPp" defaultValue={existing?.invBslPp || ""} className="flex-1 h-8" />
+          </div>
+          <div className="flex items-center gap-1">
+            <Label className="text-sm">Blood Urea:</Label>
+            <Input name="invBloodUrea" defaultValue={existing?.invBloodUrea || ""} className="flex-1 h-8" />
+          </div>
+          <div className="flex items-center gap-1">
+            <Label className="text-sm">Sr.Creatinine:</Label>
+            <Input name="invSrCreatinine" defaultValue={existing?.invSrCreatinine || ""} className="flex-1 h-8" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm w-20">ECG:</Label>
+            <Input name="invEcg" defaultValue={existing?.invEcg || ""} className="flex-1 h-8" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm w-20">2d Echo:</Label>
+            <Input name="inv2dEcho" defaultValue={existing?.inv2dEcho || ""} className="flex-1 h-8" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm w-20">CXR:</Label>
+            <Input name="invCxr" defaultValue={existing?.invCxr || ""} className="flex-1 h-8" />
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Special Considerations</Label>
-        <Textarea name="specialConsiderations" defaultValue={existing?.specialConsiderations} placeholder="Difficult airway, aspiration risk, cardiac precautions, etc." />
+      <div className="border rounded-lg p-4">
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Name of the Anaesthetist:</Label>
+            <Input name="anaesthetistName" defaultValue={existing?.anaesthetistName || ""} className="flex-1 h-8" required />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Signature:</Label>
+            <Input name="anaesthetistSignature" defaultValue={existing?.anaesthetistSignature || ""} className="flex-1 h-8" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Date:</Label>
+            <Input name="paeDate" type="date" defaultValue={existing?.paeDate || format(new Date(), "yyyy-MM-dd")} className="flex-1 h-8" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Time:</Label>
+            <Input name="paeTime" type="time" defaultValue={existing?.paeTime || format(new Date(), "HH:mm")} className="flex-1 h-8" />
+          </div>
+        </div>
       </div>
+
+      <input type="hidden" name="evaluatedBy" value={existing?.anaesthetistName || ""} />
 
       <div className="flex items-center justify-between border-t pt-4">
         <label className="flex items-center gap-2">
@@ -1535,47 +1878,7 @@ function PAEForm({ existing, onSubmit, isLoading }: { existing: any; onSubmit: (
         </label>
         <div className="flex gap-2">
           {existing && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                const content = `
-                  <div class="section">
-                    <div class="field"><span class="field-label">Evaluated By:</span><span class="field-value">${existing.evaluatedBy || "N/A"}</span></div>
-                    <div class="field"><span class="field-label">Evaluated At:</span><span class="field-value">${existing.evaluatedAt ? format(new Date(existing.evaluatedAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
-                  </div>
-                  <h2>Clinical Assessment</h2>
-                  <div class="section">
-                    <div class="field"><span class="field-label">ASA Grade:</span><span class="field-value">${existing.asaGrade || "N/A"}</span></div>
-                    <div class="field"><span class="field-label">Mallampati Score:</span><span class="field-value">${existing.mallampatiScore || "N/A"}</span></div>
-                    <div class="field"><span class="field-label">Airway Assessment:</span><span class="field-value">${existing.airwayAssessment || "N/A"}</span></div>
-                  </div>
-                  <h2>Vital Signs</h2>
-                  <div class="section">
-                    <div class="field"><span class="field-label">Heart Rate:</span><span class="field-value">${existing.heartRate || "N/A"} bpm</span></div>
-                    <div class="field"><span class="field-label">Blood Pressure:</span><span class="field-value">${existing.bloodPressureSystolic || "N/A"}/${existing.bloodPressureDiastolic || "N/A"} mmHg</span></div>
-                    <div class="field"><span class="field-label">SpO2:</span><span class="field-value">${existing.spo2 || "N/A"}%</span></div>
-                    <div class="field"><span class="field-label">Temperature:</span><span class="field-value">${existing.temperature || "N/A"}°C</span></div>
-                    <div class="field"><span class="field-label">Weight:</span><span class="field-value">${existing.weight || "N/A"} kg</span></div>
-                    <div class="field"><span class="field-label">Height:</span><span class="field-value">${existing.height || "N/A"} cm</span></div>
-                  </div>
-                  <h2>Medical History</h2>
-                  <div class="section">
-                    <div class="field"><span class="field-label">Comorbidities:</span><span class="field-value">${existing.comorbidities || "N/A"}</span></div>
-                    <div class="field"><span class="field-label">Current Medications:</span><span class="field-value">${existing.currentMedications || "N/A"}</span></div>
-                    <div class="field"><span class="field-label">Known Allergies:</span><span class="field-value">${existing.allergies || "N/A"}</span></div>
-                    <div class="field"><span class="field-label">Previous Anaesthesia:</span><span class="field-value">${existing.previousAnaesthesia || "N/A"}</span></div>
-                  </div>
-                  <h2>Plan</h2>
-                  <div class="section">
-                    <div class="field"><span class="field-label">Anaesthesia Plan:</span><span class="field-value">${existing.anaesthesiaPlan || "N/A"}</span></div>
-                    <div class="field"><span class="field-label">Special Considerations:</span><span class="field-value">${existing.specialConsiderations || "N/A"}</span></div>
-                    <div class="field"><span class="field-label">Fit for Surgery:</span><span class="field-value">${existing.fitForSurgery !== false ? "Yes" : "No"}</span></div>
-                  </div>
-                `;
-                printForm("Pre-Anaesthetic Evaluation", content);
-              }}
-            >
+            <Button type="button" variant="outline" onClick={printPAEForm}>
               <Printer className="h-4 w-4 mr-1" /> Print
             </Button>
           )}
