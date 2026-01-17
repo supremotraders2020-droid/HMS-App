@@ -6266,7 +6266,7 @@ export class DatabaseStorage implements IStorage {
 
   // Post-Op Assessment
   async getOtPostopAssessment(caseId: string): Promise<OtPostopAssessment[]> {
-    return await db.select().from(otPostopAssessment).where(eq(otPostopAssessment.caseId, caseId)).orderBy(desc(otPostopAssessment.assessmentTime));
+    return await db.select().from(otPostopAssessment).where(eq(otPostopAssessment.caseId, caseId)).orderBy(desc(otPostopAssessment.createdAt));
   }
 
   async createOtPostopAssessment(data: InsertOtPostopAssessment): Promise<OtPostopAssessment> {

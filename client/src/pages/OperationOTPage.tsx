@@ -2748,6 +2748,7 @@ function PostOpPhase({ caseId, data, caseData }: { caseId: string; data: any; ca
 }
 
 function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean; caseData?: any }) {
+  const formRef = React.useRef<HTMLFormElement>(null);
   const [postAnaesthesiaRows, setPostAnaesthesiaRows] = useState<any[]>(() => {
     try { return existing?.postAnaesthesiaEval ? JSON.parse(existing.postAnaesthesiaEval) : [{ time: '', bp: '', pulse: '', rr: '', spo2: '', airwayPatency: '' }]; }
     catch { return [{ time: '', bp: '', pulse: '', rr: '', spo2: '', airwayPatency: '' }]; }
@@ -2811,6 +2812,24 @@ function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { exi
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     
+    // Get current form values
+    const formData = formRef.current ? new FormData(formRef.current) : new FormData();
+    const operativeProcedure = (formData.get("operativeProcedure") as string) || '';
+    const operationCompletionTime = (formData.get("operationCompletionTime") as string) || '';
+    const progressNotes = (formData.get("progressNotes") as string) || '';
+    const timePatientDischarged = (formData.get("timePatientDischarged") as string) || '';
+    const timePostOpInstructionGiven = (formData.get("timePostOpInstructionGiven") as string) || '';
+    const dischargeTemp = (formData.get("dischargeTemp") as string) || '';
+    const dischargePulse = (formData.get("dischargePulse") as string) || '';
+    const dischargeRr = (formData.get("dischargeRr") as string) || '';
+    const dischargeBp = (formData.get("dischargeBp") as string) || '';
+    const surgeonAnaesthetistSign = (formData.get("surgeonAnaesthetistSign") as string) || '';
+    const surgeonAnaesthetistDate = (formData.get("surgeonAnaesthetistDate") as string) || '';
+    const surgeonAnaesthetistTime = (formData.get("surgeonAnaesthetistTime") as string) || '';
+    const recoveryNurseSign = (formData.get("recoveryNurseSign") as string) || '';
+    const recoveryNurseDate = (formData.get("recoveryNurseDate") as string) || '';
+    const recoveryNurseTime = (formData.get("recoveryNurseTime") as string) || '';
+    
     const postAnaesthesiaHtml = postAnaesthesiaRows.map(r => `
       <tr><td>${r.time || ''}</td><td>${r.bp || ''}</td><td>${r.pulse || ''}</td><td>${r.rr || ''}</td><td>${r.spo2 || ''}</td><td>${r.airwayPatency || ''}</td></tr>
     `).join('');
@@ -2864,8 +2883,8 @@ function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { exi
         <div class="title">Post-Operative Assessment</div>
         
         <div class="field-row"><label>Patient Name:</label><span>${caseData?.patientName || ''}</span><label style="margin-left:50px;">UHID/Case No:</label><span>${caseData?.uhid || ''}</span></div>
-        <div class="field-row"><label>Age/Sex:</label><span>${caseData?.patientAge || ''} / ${caseData?.patientGender || ''}</span><label style="margin-left:50px;">Date:</label><span>${new Date().toLocaleDateString()}</span><label style="margin-left:50px;">Operative procedure done:</label><span>${existing?.operativeProcedure || ''}</span></div>
-        <div class="field-row"><label>Operation Completion Time:</label><span>${existing?.operationCompletionTime || ''}</span></div>
+        <div class="field-row"><label>Age/Sex:</label><span>${caseData?.patientAge || ''} / ${caseData?.patientGender || ''}</span><label style="margin-left:50px;">Date:</label><span>${new Date().toLocaleDateString()}</span><label style="margin-left:50px;">Operative procedure done:</label><span>${operativeProcedure}</span></div>
+        <div class="field-row"><label>Operation Completion Time:</label><span>${operationCompletionTime}</span></div>
         
         <div class="section-title">Post Anaesthesia Evaluation:</div>
         <table>
@@ -2889,24 +2908,24 @@ function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { exi
         </div>
         
         <div class="section-title">Progress notes:</div>
-        <div style="border: 1px solid #000; min-height: 50px; padding: 5px;">${existing?.progressNotes || ''}</div>
+        <div style="border: 1px solid #000; min-height: 50px; padding: 5px;">${progressNotes}</div>
         
-        <div class="field-row" style="margin-top: 15px;"><label>Time patient discharged:</label><span>${existing?.timePatientDischarged || ''}</span><label style="margin-left:100px;">Time given post OP instruction sheet:</label><span>${existing?.timePostOpInstructionGiven || ''}</span></div>
+        <div class="field-row" style="margin-top: 15px;"><label>Time patient discharged:</label><span>${timePatientDischarged}</span><label style="margin-left:100px;">Time given post OP instruction sheet:</label><span>${timePostOpInstructionGiven}</span></div>
         
-        <div class="field-row"><label>Vital signs at time of discharge:</label><span>T: ${existing?.dischargeTemp || ''} P: ${existing?.dischargePulse || ''} RR: ${existing?.dischargeRr || ''} BP: ${existing?.dischargeBp || ''}</span></div>
+        <div class="field-row"><label>Vital signs at time of discharge:</label><span>T: ${dischargeTemp} P: ${dischargePulse} RR: ${dischargeRr} BP: ${dischargeBp}</span></div>
         
         <div class="signature-row" style="margin-top: 20px;">
           <span>Surgeon/Anesthetist approval for discharge:</span>
-          <div class="signature-block"><span>Sign:</span><span class="signature-line">${existing?.surgeonAnaesthetistSign || ''}</span></div>
-          <div class="signature-block"><span>Date:</span><span class="signature-line">${existing?.surgeonAnaesthetistDate || ''}</span></div>
-          <div class="signature-block"><span>Time:</span><span class="signature-line">${existing?.surgeonAnaesthetistTime || ''}</span></div>
+          <div class="signature-block"><span>Sign:</span><span class="signature-line">${surgeonAnaesthetistSign}</span></div>
+          <div class="signature-block"><span>Date:</span><span class="signature-line">${surgeonAnaesthetistDate}</span></div>
+          <div class="signature-block"><span>Time:</span><span class="signature-line">${surgeonAnaesthetistTime}</span></div>
         </div>
         
         <div class="signature-row">
           <span>Recovery Nurse:</span>
-          <div class="signature-block"><span>Sign:</span><span class="signature-line">${existing?.recoveryNurseSign || ''}</span></div>
-          <div class="signature-block"><span>Date:</span><span class="signature-line">${existing?.recoveryNurseDate || ''}</span></div>
-          <div class="signature-block"><span>Time:</span><span class="signature-line">${existing?.recoveryNurseTime || ''}</span></div>
+          <div class="signature-block"><span>Sign:</span><span class="signature-line">${recoveryNurseSign}</span></div>
+          <div class="signature-block"><span>Date:</span><span class="signature-line">${recoveryNurseDate}</span></div>
+          <div class="signature-block"><span>Time:</span><span class="signature-line">${recoveryNurseTime}</span></div>
         </div>
       </body>
       </html>
@@ -2918,7 +2937,7 @@ function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { exi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto">
       {/* Hospital Header */}
       <div className="border-b-2 border-primary pb-4 mb-4">
         <div className="flex justify-between items-start">
