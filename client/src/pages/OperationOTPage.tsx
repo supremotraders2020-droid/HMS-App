@@ -18,7 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   Scissors, Plus, Search, Calendar as CalendarIcon, Clock, User, 
   FileText, ClipboardList, CheckCircle, AlertCircle, Activity,
-  Users, ChevronRight, ArrowLeft, Stethoscope, Printer
+  Users, ChevronRight, ArrowLeft, Stethoscope, Printer, Heart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -784,7 +784,7 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
-      toast({ title: "Saved", description: "Pre-op counselling recorded" });
+      toast({ title: "Saved", description: "Pre-operative assessment recorded" });
       setActiveForm(null);
     },
   });
@@ -835,7 +835,7 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
   });
 
   const sections = [
-    { key: "counselling", title: "Pre-Op Counselling", icon: <Users className="h-4 w-4" />, done: !!data?.counselling },
+    { key: "counselling", title: "Pre-Operative Assessment", icon: <Users className="h-4 w-4" />, done: !!data?.counselling },
     { key: "checklist", title: "Pre-Op Checklist", icon: <ClipboardList className="h-4 w-4" />, done: !!data?.checklist },
     { key: "pae", title: "Pre-Anaesthetic Evaluation", icon: <Stethoscope className="h-4 w-4" />, done: !!data?.pae },
     { key: "safety", title: "Safety Checklist (WHO)", icon: <CheckCircle className="h-4 w-4" />, done: !!data?.safetyChecklist },
@@ -878,6 +878,7 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
                     existing={counselling}
                     onSubmit={(d) => saveCounsellingMutation.mutate(d)}
                     isLoading={saveCounsellingMutation.isPending}
+                    caseData={data}
                   />
                 )}
                 {section.key === "checklist" && (
@@ -918,127 +919,318 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
   );
 }
 
-function CounsellingForm({ existing, onSubmit, isLoading }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean }) {
+function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean; caseData?: any }) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     onSubmit({
-      counselledBy: formData.get("counselledBy"),
-      counselledAt: new Date().toISOString(),
-      attendees: formData.get("attendees"),
-      procedureExplained: formData.get("procedureExplained") === "on",
-      risksExplained: formData.get("risksExplained") === "on",
-      alternativesDiscussed: formData.get("alternativesDiscussed") === "on",
-      expectedOutcome: formData.get("expectedOutcome"),
-      questionsAnswered: formData.get("questionsAnswered") === "on",
-      patientUnderstanding: formData.get("patientUnderstanding"),
-      notes: formData.get("notes"),
+      dateOfOperation: formData.get("dateOfOperation"),
+      timeOfOperation: formData.get("timeOfOperation"),
+      operationTitle: formData.get("operationTitle"),
+      surgeon: formData.get("surgeon"),
+      siteOrganAssociated: formData.get("siteOrganAssociated"),
+      timeOfLastMeal: formData.get("timeOfLastMeal"),
+      bloodArranged: formData.get("bloodArranged"),
+      hoDrugInteraction: formData.get("hoDrugInteraction"),
+      preOpMedication: formData.get("preOpMedication"),
+      preExposureProphylaxis: formData.get("preExposureProphylaxis"),
+      otherMedicines: formData.get("otherMedicines"),
+      preOpDiagnosis: formData.get("preOpDiagnosis"),
+      ecg: formData.get("ecg"),
+      bloodGroup: formData.get("bloodGroup"),
+      hiv: formData.get("hiv"),
+      echo: formData.get("echo"),
+      urea: formData.get("urea"),
+      hbsag: formData.get("hbsag"),
+      tmt: formData.get("tmt"),
+      creat: formData.get("creat"),
+      t3: formData.get("t3"),
+      physiologicalConditions: formData.get("physiologicalConditions"),
+      bp: formData.get("bp"),
+      rs: formData.get("rs"),
+      surgeonRemarks: formData.get("surgeonRemarks"),
+      nameOfSurgeon: formData.get("nameOfSurgeon"),
+      surgeonSignature: formData.get("surgeonSignature"),
+      assessmentDate: formData.get("assessmentDate"),
+      assessmentTime: formData.get("assessmentTime"),
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Counselled By</Label>
-          <Input name="counselledBy" defaultValue={existing?.counselledBy} placeholder="Doctor/Staff name" required />
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+      <div className="border rounded-lg p-4 bg-card">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Heart className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">GRAVITY HOSPITAL</h3>
+              <p className="text-xs text-muted-foreground">Tower Line Corner, Talawade Road</p>
+              <p className="text-xs text-muted-foreground">Triveni Nagar, Pune 411 062</p>
+              <p className="text-xs text-muted-foreground">Tel: 8149200044, 8149300044</p>
+            </div>
+          </div>
+          <div className="text-right text-sm space-y-1">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <span className="text-muted-foreground">Patient Name:</span>
+              <span className="font-medium">{caseData?.patientName || "N/A"}</span>
+              <span className="text-muted-foreground">UHID No:</span>
+              <span className="font-medium">{caseData?.patientId?.slice(0, 8) || "N/A"}</span>
+              <span className="text-muted-foreground">Age:</span>
+              <span className="font-medium">{caseData?.patientAge || "N/A"}/{caseData?.patientGender || "N/A"}</span>
+              <span className="text-muted-foreground">Room:</span>
+              <span className="font-medium">{caseData?.room || "N/A"}</span>
+              <span className="text-muted-foreground">Doctor:</span>
+              <span className="font-medium">{caseData?.surgeonName || "N/A"}</span>
+              <span className="text-muted-foreground">IPD No:</span>
+              <span className="font-medium">{caseData?.ipdNumber || "N/A"}</span>
+              <span className="text-muted-foreground">DOA:</span>
+              <span className="font-medium">{caseData?.admissionDate ? format(new Date(caseData.admissionDate), "dd.MM.yyyy") : "N/A"}</span>
+              <span className="text-muted-foreground">Bed No:</span>
+              <span className="font-medium">{caseData?.bedNumber || "N/A"}</span>
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label>Attendees (Patient/Family)</Label>
-          <Input name="attendees" defaultValue={existing?.attendees} placeholder="e.g., Patient, Spouse" />
+        <div className="text-center border-t pt-3">
+          <h2 className="font-bold text-lg">PRE OPERATIVE ASSESSMENT</h2>
         </div>
       </div>
 
       <div className="space-y-3 border rounded-lg p-4">
-        <h4 className="font-medium">Counselling Checklist</h4>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="procedureExplained" defaultChecked={existing?.procedureExplained} className="h-4 w-4" />
-            Procedure explained in detail
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="risksExplained" defaultChecked={existing?.risksExplained} className="h-4 w-4" />
-            Risks and complications explained
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="alternativesDiscussed" defaultChecked={existing?.alternativesDiscussed} className="h-4 w-4" />
-            Alternative treatments discussed
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="questionsAnswered" defaultChecked={existing?.questionsAnswered} className="h-4 w-4" />
-            Patient questions answered
-          </label>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Date of Operation</Label>
+            <Input name="dateOfOperation" type="date" defaultValue={existing?.dateOfOperation || ""} />
+          </div>
+          <div className="space-y-2 col-span-2">
+            <Label>Time of Operation</Label>
+            <Input name="timeOfOperation" type="time" defaultValue={existing?.timeOfOperation || ""} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Operation Title</Label>
+          <Input name="operationTitle" defaultValue={existing?.operationTitle || caseData?.procedureName || ""} placeholder="Operation title" />
+        </div>
+        <div className="space-y-2">
+          <Label>Surgeon</Label>
+          <Input name="surgeon" defaultValue={existing?.surgeon || caseData?.surgeonName || ""} placeholder="Surgeon name" />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Expected Outcome</Label>
-        <Select name="expectedOutcome" defaultValue={existing?.expectedOutcome || "good"}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="excellent">Excellent - Full recovery expected</SelectItem>
-            <SelectItem value="good">Good - Significant improvement expected</SelectItem>
-            <SelectItem value="fair">Fair - Partial improvement possible</SelectItem>
-            <SelectItem value="guarded">Guarded - Uncertain outcome</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="space-y-3 border rounded-lg p-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Site/Organ Associated</Label>
+            <Input name="siteOrganAssociated" defaultValue={existing?.siteOrganAssociated || ""} placeholder="Site/Organ" />
+          </div>
+          <div className="space-y-2">
+            <Label>Blood Arranged</Label>
+            <Input name="bloodArranged" defaultValue={existing?.bloodArranged || ""} placeholder="Blood units arranged" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Time of Last Meal</Label>
+          <Input name="timeOfLastMeal" defaultValue={existing?.timeOfLastMeal || ""} placeholder="Time of last meal" />
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Patient Understanding Level</Label>
-        <Select name="patientUnderstanding" defaultValue={existing?.patientUnderstanding || "adequate"}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="excellent">Excellent - Full understanding</SelectItem>
-            <SelectItem value="adequate">Adequate - Understands key points</SelectItem>
-            <SelectItem value="limited">Limited - Requires family support</SelectItem>
-            <SelectItem value="minimal">Minimal - Interpreter/advocate needed</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="space-y-3 border rounded-lg p-4">
+        <div className="space-y-2">
+          <Label>H/o Drug Interaction</Label>
+          <Input name="hoDrugInteraction" defaultValue={existing?.hoDrugInteraction || ""} placeholder="History of drug interaction" />
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Additional Notes</Label>
-        <Textarea name="notes" defaultValue={existing?.notes} placeholder="Any additional counselling notes..." />
+      <div className="space-y-3 border rounded-lg p-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Pre-Op Medication</Label>
+            <Input name="preOpMedication" defaultValue={existing?.preOpMedication || ""} placeholder="Pre-Op medication" />
+          </div>
+          <div className="space-y-2">
+            <Label>Other Medicines</Label>
+            <Input name="otherMedicines" defaultValue={existing?.otherMedicines || ""} placeholder="Other medicines" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Pre Exposure Prophylaxis</Label>
+          <Input name="preExposureProphylaxis" defaultValue={existing?.preExposureProphylaxis || ""} placeholder="Pre-exposure prophylaxis" />
+        </div>
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="space-y-3 border rounded-lg p-4">
+        <div className="space-y-2">
+          <Label>Pre-op Diagnosis</Label>
+          <Input name="preOpDiagnosis" defaultValue={existing?.preOpDiagnosis || caseData?.diagnosis || ""} placeholder="Pre-op diagnosis" />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>ECG</Label>
+            <Input name="ecg" defaultValue={existing?.ecg || ""} placeholder="ECG findings" />
+          </div>
+          <div className="space-y-2">
+            <Label>Blood Group</Label>
+            <Input name="bloodGroup" defaultValue={existing?.bloodGroup || ""} placeholder="Blood group" />
+          </div>
+          <div className="space-y-2">
+            <Label>HIV</Label>
+            <Input name="hiv" defaultValue={existing?.hiv || ""} placeholder="HIV status" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Echo</Label>
+            <Input name="echo" defaultValue={existing?.echo || ""} placeholder="Echo findings" />
+          </div>
+          <div className="space-y-2">
+            <Label>Urea</Label>
+            <Input name="urea" defaultValue={existing?.urea || ""} placeholder="Urea value" />
+          </div>
+          <div className="space-y-2">
+            <Label>HBsAg</Label>
+            <Input name="hbsag" defaultValue={existing?.hbsag || ""} placeholder="HBsAg status" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>TMT</Label>
+            <Input name="tmt" defaultValue={existing?.tmt || ""} placeholder="TMT findings" />
+          </div>
+          <div className="space-y-2">
+            <Label>Creat</Label>
+            <Input name="creat" defaultValue={existing?.creat || ""} placeholder="Creatinine value" />
+          </div>
+          <div className="space-y-2">
+            <Label>T3</Label>
+            <Input name="t3" defaultValue={existing?.t3 || ""} placeholder="T3 value" />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 border rounded-lg p-4">
+        <div className="space-y-2">
+          <Label>Physiological Conditions</Label>
+          <Input name="physiologicalConditions" defaultValue={existing?.physiologicalConditions || ""} placeholder="Physiological conditions" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>BP</Label>
+            <Input name="bp" defaultValue={existing?.bp || ""} placeholder="Blood pressure" />
+          </div>
+          <div className="space-y-2">
+            <Label>RS</Label>
+            <Input name="rs" defaultValue={existing?.rs || ""} placeholder="Respiratory system" />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 border rounded-lg p-4">
+        <div className="space-y-2">
+          <Label>Remarks of the Surgeon on Patient Assessment Findings</Label>
+          <Textarea name="surgeonRemarks" defaultValue={existing?.surgeonRemarks || ""} placeholder="Surgeon's remarks on patient assessment findings..." rows={4} />
+        </div>
+      </div>
+
+      <div className="space-y-3 border rounded-lg p-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Name of Surgeon</Label>
+            <Input name="nameOfSurgeon" defaultValue={existing?.nameOfSurgeon || caseData?.surgeonName || ""} placeholder="Surgeon name" />
+          </div>
+          <div className="space-y-2">
+            <Label>Signature</Label>
+            <Input name="surgeonSignature" defaultValue={existing?.surgeonSignature || ""} placeholder="Digital signature" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Date</Label>
+            <Input name="assessmentDate" type="date" defaultValue={existing?.assessmentDate || format(new Date(), "yyyy-MM-dd")} />
+          </div>
+          <div className="space-y-2">
+            <Label>Time</Label>
+            <Input name="assessmentTime" type="time" defaultValue={existing?.assessmentTime || format(new Date(), "HH:mm")} />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 sticky bottom-0 bg-background pt-2 pb-1">
         {existing && (
           <Button
             type="button"
             variant="outline"
             onClick={() => {
               const content = `
-                <div class="section">
-                  <div class="field"><span class="field-label">Counselled By:</span><span class="field-value">${existing.counselledBy || "N/A"}</span></div>
-                  <div class="field"><span class="field-label">Counselled At:</span><span class="field-value">${existing.counselledAt ? format(new Date(existing.counselledAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
-                  <div class="field"><span class="field-label">Attendees:</span><span class="field-value">${existing.attendees || "N/A"}</span></div>
+                <div class="header-section" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                  <div>
+                    <h2 style="margin: 0;">GRAVITY HOSPITAL</h2>
+                    <p style="margin: 2px 0; font-size: 12px;">Tower Line Corner, Talawade Road</p>
+                    <p style="margin: 2px 0; font-size: 12px;">Triveni Nagar, Pune 411 062</p>
+                    <p style="margin: 2px 0; font-size: 12px;">Tel: 8149200044, 8149300044</p>
+                  </div>
+                  <div style="text-align: right; font-size: 12px;">
+                    <p><strong>Patient Name:</strong> ${caseData?.patientName || "N/A"}</p>
+                    <p><strong>UHID No:</strong> ${caseData?.patientId?.slice(0, 8) || "N/A"}</p>
+                    <p><strong>Age:</strong> ${caseData?.patientAge || "N/A"}/${caseData?.patientGender || "N/A"}</p>
+                    <p><strong>Room:</strong> ${caseData?.room || "N/A"}</p>
+                    <p><strong>Doctor:</strong> ${caseData?.surgeonName || "N/A"}</p>
+                  </div>
                 </div>
-                <h2>Counselling Checklist</h2>
+                <h2 style="text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 10px 0;">PRE OPERATIVE ASSESSMENT</h2>
                 <div class="section">
-                  <div class="checklist-item"><span class="${existing.procedureExplained ? 'checked' : 'unchecked'}">[${existing.procedureExplained ? 'Yes' : 'No'}]</span> Procedure explained in detail</div>
-                  <div class="checklist-item"><span class="${existing.risksExplained ? 'checked' : 'unchecked'}">[${existing.risksExplained ? 'Yes' : 'No'}]</span> Risks and complications explained</div>
-                  <div class="checklist-item"><span class="${existing.alternativesDiscussed ? 'checked' : 'unchecked'}">[${existing.alternativesDiscussed ? 'Yes' : 'No'}]</span> Alternative treatments discussed</div>
-                  <div class="checklist-item"><span class="${existing.questionsAnswered ? 'checked' : 'unchecked'}">[${existing.questionsAnswered ? 'Yes' : 'No'}]</span> Patient questions answered</div>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="border: 1px solid #000; padding: 5px;"><strong>Date of Operation:</strong> ${existing.dateOfOperation || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>Time of Operation:</strong> ${existing.timeOfOperation || ""}</td></tr>
+                    <tr><td colspan="2" style="border: 1px solid #000; padding: 5px;"><strong>Operation Title:</strong> ${existing.operationTitle || ""}</td></tr>
+                    <tr><td colspan="2" style="border: 1px solid #000; padding: 5px;"><strong>Surgeon:</strong> ${existing.surgeon || ""}</td></tr>
+                  </table>
                 </div>
-                <div class="section">
-                  <div class="field"><span class="field-label">Expected Outcome:</span><span class="field-value">${existing.expectedOutcome || "N/A"}</span></div>
-                  <div class="field"><span class="field-label">Patient Understanding:</span><span class="field-value">${existing.patientUnderstanding || "N/A"}</span></div>
-                  <div class="field"><span class="field-label">Notes:</span><span class="field-value">${existing.notes || "N/A"}</span></div>
+                <div class="section" style="margin-top: 10px;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="border: 1px solid #000; padding: 5px;"><strong>Site/Organ Associated:</strong> ${existing.siteOrganAssociated || ""}</td></tr>
+                    <tr><td style="border: 1px solid #000; padding: 5px;"><strong>Time of Last Meal:</strong> ${existing.timeOfLastMeal || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>Blood Arranged:</strong> ${existing.bloodArranged || ""}</td></tr>
+                    <tr><td colspan="2" style="border: 1px solid #000; padding: 5px;"><strong>H/o Drug Interaction:</strong> ${existing.hoDrugInteraction || ""}</td></tr>
+                  </table>
+                </div>
+                <div class="section" style="margin-top: 10px;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="border: 1px solid #000; padding: 5px;"><strong>Pre-Op Medication:</strong> ${existing.preOpMedication || ""}</td></tr>
+                    <tr><td style="border: 1px solid #000; padding: 5px;"><strong>Pre Exposure Prophylaxis:</strong> ${existing.preExposureProphylaxis || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>Other Medicines:</strong> ${existing.otherMedicines || ""}</td></tr>
+                  </table>
+                </div>
+                <div class="section" style="margin-top: 10px;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td colspan="3" style="border: 1px solid #000; padding: 5px;"><strong>Pre-op Diagnosis:</strong> ${existing.preOpDiagnosis || ""}</td></tr>
+                    <tr><td style="border: 1px solid #000; padding: 5px;"><strong>ECG:</strong> ${existing.ecg || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>Blood Group:</strong> ${existing.bloodGroup || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>HIV:</strong> ${existing.hiv || ""}</td></tr>
+                    <tr><td style="border: 1px solid #000; padding: 5px;"><strong>Echo:</strong> ${existing.echo || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>Urea:</strong> ${existing.urea || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>HBsAg:</strong> ${existing.hbsag || ""}</td></tr>
+                    <tr><td style="border: 1px solid #000; padding: 5px;"><strong>TMT:</strong> ${existing.tmt || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>Creat:</strong> ${existing.creat || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>T3:</strong> ${existing.t3 || ""}</td></tr>
+                  </table>
+                </div>
+                <div class="section" style="margin-top: 10px;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td colspan="2" style="border: 1px solid #000; padding: 5px;"><strong>Physiological Conditions:</strong> ${existing.physiologicalConditions || ""}</td></tr>
+                    <tr><td style="border: 1px solid #000; padding: 5px;"><strong>BP:</strong> ${existing.bp || ""}</td><td style="border: 1px solid #000; padding: 5px;"><strong>RS:</strong> ${existing.rs || ""}</td></tr>
+                  </table>
+                </div>
+                <div class="section" style="margin-top: 10px;">
+                  <p><strong>Remarks of the Surgeon on Patient Assessment Findings:</strong></p>
+                  <div style="border: 1px solid #000; min-height: 80px; padding: 10px;">${existing.surgeonRemarks || ""}</div>
+                </div>
+                <div class="section" style="margin-top: 20px;">
+                  <table style="width: 100%;">
+                    <tr><td><strong>Name of Surgeon:</strong> ${existing.nameOfSurgeon || ""}</td><td style="text-align: right;"><strong>Signature:</strong> ${existing.surgeonSignature || ""}</td></tr>
+                    <tr><td><strong>Date:</strong> ${existing.assessmentDate || ""}</td><td style="text-align: right;"><strong>Time:</strong> ${existing.assessmentTime || ""}</td></tr>
+                  </table>
                 </div>
               `;
-              printForm("Pre-Op Counselling Record", content);
+              printForm("Pre Operative Assessment", content);
             }}
           >
             <Printer className="h-4 w-4 mr-1" /> Print
           </Button>
         )}
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Counselling Record"}
+          {isLoading ? "Saving..." : "Save Assessment"}
         </Button>
       </div>
     </form>

@@ -5487,13 +5487,49 @@ export const insertOtCaseTeamSchema = createInsertSchema(otCaseTeam).omit({ id: 
 export type InsertOtCaseTeam = z.infer<typeof insertOtCaseTeamSchema>;
 export type OtCaseTeam = typeof otCaseTeam.$inferSelect;
 
-// Pre-Op Counselling Form
+// Pre-Operative Assessment Form (replaces Pre-Op Counselling)
 export const otPreopCounselling = pgTable("ot_preop_counselling", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   caseId: varchar("case_id").notNull(),
   counsellingDateTime: timestamp("counselling_datetime").defaultNow(),
+  // Operation Details
+  dateOfOperation: text("date_of_operation"),
+  timeOfOperation: text("time_of_operation"),
+  operationTitle: text("operation_title"),
+  surgeon: text("surgeon"),
+  // Site & Preparation
+  siteOrganAssociated: text("site_organ_associated"),
+  timeOfLastMeal: text("time_of_last_meal"),
+  bloodArranged: text("blood_arranged"),
+  hoDrugInteraction: text("ho_drug_interaction"),
+  // Medications
+  preOpMedication: text("preop_medication"),
+  preExposureProphylaxis: text("pre_exposure_prophylaxis"),
+  otherMedicines: text("other_medicines"),
+  // Diagnosis & Tests
+  preOpDiagnosis: text("preop_diagnosis"),
+  ecg: text("ecg"),
+  bloodGroup: text("blood_group"),
+  hiv: text("hiv"),
+  echo: text("echo"),
+  urea: text("urea"),
+  hbsag: text("hbsag"),
+  tmt: text("tmt"),
+  creat: text("creat"),
+  t3: text("t3"),
+  // Physiological Conditions
+  physiologicalConditions: text("physiological_conditions"),
+  bp: text("bp"),
+  rs: text("rs"),
+  // Surgeon Remarks
+  surgeonRemarks: text("surgeon_remarks"),
+  nameOfSurgeon: text("name_of_surgeon"),
+  surgeonSignature: text("surgeon_signature"),
+  assessmentDate: text("assessment_date"),
+  assessmentTime: text("assessment_time"),
+  // Legacy fields (kept for backward compatibility)
   procedureExplained: boolean("procedure_explained").default(false),
-  risksExplained: text("risks_explained"), // JSON array of risks discussed
+  risksExplained: text("risks_explained"),
   alternativesDiscussed: text("alternatives_discussed"),
   expectedOutcome: text("expected_outcome"),
   recoveryTimeline: text("recovery_timeline"),
