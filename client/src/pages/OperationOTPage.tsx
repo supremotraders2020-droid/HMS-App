@@ -2744,6 +2744,7 @@ function PostOpPhase({ caseId, data, caseData }: { caseId: string; data: any; ca
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Post-op assessment recorded" });
+      setActiveForm(null);
     },
   });
 
@@ -2752,6 +2753,7 @@ function PostOpPhase({ caseId, data, caseData }: { caseId: string; data: any; ca
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Monitoring entry added" });
+      setActiveForm(null);
     },
   });
 
@@ -2760,6 +2762,7 @@ function PostOpPhase({ caseId, data, caseData }: { caseId: string; data: any; ca
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseId] });
       toast({ title: "Saved", description: "Labour chart entry added" });
+      setActiveForm(null);
     },
   });
 
