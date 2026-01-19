@@ -3464,19 +3464,18 @@ function LabourChartForm({ existing, onSubmit, isLoading }: { existing: any[]; o
     const formData = new FormData(e.currentTarget);
     onSubmit({
       recordedBy: formData.get("recordedBy"),
-      recordedAt: new Date().toISOString(),
-      cervicalDilation: parseInt(formData.get("cervicalDilation") as string) || null,
-      effacement: formData.get("effacement"),
-      station: formData.get("station"),
-      fetalHeartRate: parseInt(formData.get("fetalHeartRate") as string) || null,
-      contractionFrequency: formData.get("contractionFrequency"),
-      contractionDuration: formData.get("contractionDuration"),
-      membranes: formData.get("membranes"),
-      liquorColor: formData.get("liquorColor"),
-      maternalPulse: parseInt(formData.get("maternalPulse") as string) || null,
-      maternalBP: formData.get("maternalBP"),
-      urineOutput: formData.get("urineOutput"),
-      notes: formData.get("notes"),
+      recordTime: new Date().toISOString(),
+      cervicalDilation: formData.get("cervicalDilation") || null,
+      cervicalEffacement: formData.get("effacement") || null,
+      fetalStation: formData.get("station") || null,
+      fetalHeartRate: formData.get("fetalHeartRate") || null,
+      contractionFrequency: formData.get("contractionFrequency") || null,
+      contractionDuration: formData.get("contractionDuration") || null,
+      membraneStatus: formData.get("membranes") || null,
+      amnioticFluidColor: formData.get("liquorColor") || null,
+      maternalPulse: formData.get("maternalPulse") || null,
+      maternalBP: formData.get("maternalBP") || null,
+      notes: formData.get("notes") || null,
     });
     (e.target as HTMLFormElement).reset();
   };
@@ -3489,7 +3488,7 @@ function LabourChartForm({ existing, onSubmit, isLoading }: { existing: any[]; o
           <div className="space-y-2 text-sm max-h-[150px] overflow-y-auto">
             {existing.map((l: any, idx: number) => (
               <div key={idx} className="p-2 bg-muted/50 rounded flex justify-between">
-                <span>{format(new Date(l.recordedAt), "HH:mm")}</span>
+                <span>{format(new Date(l.recordTime), "HH:mm")}</span>
                 <span>Dilation: {l.cervicalDilation}cm, FHR: {l.fetalHeartRate}bpm</span>
               </div>
             ))}
