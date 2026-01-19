@@ -2462,8 +2462,8 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { ex
             <td class="hospital-info" style="width: 50%;">
               <div class="hospital-name">GRAVITY HOSPITAL</div>
               <div class="hospital-address">
-                Multi-Specialty Hospital & Research Center<br/>
-                123 Medical Complex, Healthcare District, Pune - 411001<br/>
+                Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi<br/>
+                Pimpri-Chinchwad, Maharashtra 411062<br/>
                 Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680<br/>
                 Email: info@gravityhospital.in
               </div>
@@ -2553,7 +2553,7 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { ex
           <div>
             <h3 className="font-bold text-lg">GRAVITY HOSPITAL</h3>
             <p className="text-xs text-muted-foreground">Multi-Specialty Hospital & Research Center</p>
-            <p className="text-xs text-muted-foreground">123 Medical Complex, Healthcare District, Pune - 411001</p>
+            <p className="text-xs text-muted-foreground">Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi, Pimpri-Chinchwad 411062</p>
             <p className="text-xs text-muted-foreground">Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</p>
             <p className="text-xs text-muted-foreground">Email: info@gravityhospital.in</p>
           </div>
