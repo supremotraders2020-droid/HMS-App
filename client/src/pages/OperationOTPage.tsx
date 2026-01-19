@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -971,6 +971,7 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
               <p className="text-xs text-muted-foreground">Tower Line Corner, Talawade Road</p>
               <p className="text-xs text-muted-foreground">Triveni Nagar, Pune 411 062</p>
               <p className="text-xs text-muted-foreground">Tel: 8149200044, 8149300044</p>
+              <p className="text-xs text-muted-foreground">Email: info@gravityhospital.in</p>
             </div>
           </div>
           <div className="text-right text-sm space-y-1">
@@ -1170,6 +1171,7 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
                     <p style="margin: 2px 0; font-size: 12px;">Tower Line Corner, Talawade Road</p>
                     <p style="margin: 2px 0; font-size: 12px;">Triveni Nagar, Pune 411 062</p>
                     <p style="margin: 2px 0; font-size: 12px;">Tel: 8149200044, 8149300044</p>
+                    <p style="margin: 2px 0; font-size: 12px;">Email: info@gravityhospital.in</p>
                   </div>
                   <div style="text-align: right; font-size: 12px;">
                     <p><strong>Patient Name:</strong> ${caseData?.patientName || "N/A"}</p>
@@ -1465,7 +1467,8 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
             <div class="hospital-address">
               Tower Line Corner, Talawade Road,<br/>
               Triveni Nagar, Pune 411 062.<br/>
-              Tel. No: 8149200044, 8149300044
+              Tel. No: 8149200044, 8149300044<br/>
+              Email: info@gravityhospital.in
             </div>
           </div>
           <div class="patient-info">
@@ -1569,7 +1572,8 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
             <div className="text-sm text-muted-foreground mt-1">
               Tower Line Corner, Talawade Road,<br/>
               Triveni Nagar, Pune 411 062.<br/>
-              Tel. No: 8149200044, 8149300044
+              Tel. No: 8149200044, 8149300044<br/>
+              Email: info@gravityhospital.in
             </div>
           </div>
           <div className="text-right text-sm">
@@ -1974,6 +1978,7 @@ function SafetyChecklistForm({ existing, onSubmit, isLoading, caseData }: { exis
             <div>Tower Line Corner, Talawade Road,</div>
             <div>Triveni Nagar, Pune 411 062.</div>
             <div>Tel. No.: 8149200044, 8149300044</div>
+            <div>Email: info@gravityhospital.in</div>
           </div>
           <div class="patient-info">
             <div><strong>Patient Name:</strong> ${caseData?.patientName || ''}</div>
@@ -2047,6 +2052,7 @@ function SafetyChecklistForm({ existing, onSubmit, isLoading, caseData }: { exis
             <p className="text-sm text-muted-foreground">Tower Line Corner, Talawade Road,</p>
             <p className="text-sm text-muted-foreground">Triveni Nagar, Pune 411 062.</p>
             <p className="text-sm text-muted-foreground">Tel. No.: 8149200044, 8149300044</p>
+            <p className="text-sm text-muted-foreground">Email: info@gravityhospital.in</p>
           </div>
           <div className="text-right text-sm">
             <div><span className="font-medium">Patient Name:</span> {caseData?.patientName || '-'}</div>
@@ -2748,7 +2754,7 @@ function PostOpPhase({ caseId, data, caseData }: { caseId: string; data: any; ca
 }
 
 function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean; caseData?: any }) {
-  const formRef = React.useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [postAnaesthesiaRows, setPostAnaesthesiaRows] = useState<any[]>(() => {
     try { return existing?.postAnaesthesiaEval ? JSON.parse(existing.postAnaesthesiaEval) : [{ time: '', bp: '', pulse: '', rr: '', spo2: '', airwayPatency: '' }]; }
     catch { return [{ time: '', bp: '', pulse: '', rr: '', spo2: '', airwayPatency: '' }]; }
@@ -2870,6 +2876,7 @@ function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { exi
             <div>Tower Line Corner, Talawade Road,</div>
             <div>Triveni Nagar, Pune 411 062.</div>
             <div>Tel. No.: 8149200044, 8149300044</div>
+            <div>Email: info@gravityhospital.in</div>
           </div>
           <div class="patient-info">
             <div><strong>Patient Name:</strong> ${caseData?.patientName || ''}</div>
@@ -2946,6 +2953,7 @@ function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { exi
             <p className="text-sm text-muted-foreground">Tower Line Corner, Talawade Road,</p>
             <p className="text-sm text-muted-foreground">Triveni Nagar, Pune 411 062.</p>
             <p className="text-sm text-muted-foreground">Tel. No.: 8149200044, 8149300044</p>
+            <p className="text-sm text-muted-foreground">Email: info@gravityhospital.in</p>
           </div>
           <div className="text-right text-sm">
             <div><span className="font-medium">Patient Name:</span> {caseData?.patientName || '-'}</div>
@@ -3563,6 +3571,7 @@ function NeonateSheetForm({ existing, onSubmit, isLoading, caseData }: { existin
             <div>Tower Line Corner, Talawade Road,</div>
             <div>Triveni Nagar, Pune 411 062.</div>
             <div>Tel. No.: 8149200044, 8149300044</div>
+            <div>Email: info@gravityhospital.in</div>
           </div>
           <div class="patient-info">
             <div><strong>Patient Name:</strong> ${caseData?.patientName || ''}</div>
@@ -3658,6 +3667,7 @@ function NeonateSheetForm({ existing, onSubmit, isLoading, caseData }: { existin
             <p className="text-sm text-muted-foreground">Tower Line Corner, Talawade Road,</p>
             <p className="text-sm text-muted-foreground">Triveni Nagar, Pune 411 062.</p>
             <p className="text-sm text-muted-foreground">Tel. No.: 8149200044, 8149300044</p>
+            <p className="text-sm text-muted-foreground">Email: info@gravityhospital.in</p>
           </div>
           <div className="text-right text-sm">
             <div><span className="font-medium">Patient Name:</span> {caseData?.patientName || '-'}</div>
