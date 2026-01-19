@@ -1331,47 +1331,77 @@ function ChecklistForm({ existing, onSubmit, isLoading, caseData }: { existing: 
                 `<div class="checklist-item"><span class="${existing[item.key] ? 'checked' : 'unchecked'}">[${existing[item.key] ? 'Yes' : 'No'}]</span> [${idx + 1}] ${item.label}</div>`
               ).join('');
               const patientName = caseData?.patientName || "N/A";
-              const patientId = caseData?.patientId || "N/A";
-              const procedureName = caseData?.procedureName || "N/A";
-              const surgeonName = caseData?.surgeonName || "N/A";
-              const scheduledDate = caseData?.scheduledDate || "N/A";
-              const scheduledTime = caseData?.scheduledTime || "N/A";
-              const content = `
-                <div class="hospital-header" style="border-bottom: 2px solid #1a365d; padding-bottom: 15px; margin-bottom: 20px;">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                      <h2 style="margin: 0; color: #1a365d; font-size: 20px;">GRAVITY HOSPITAL</h2>
-                      <p style="margin: 5px 0 0 0; font-size: 11px; color: #4a5568;">Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</p>
-                      <p style="margin: 2px 0; font-size: 11px; color: #4a5568;">Pimpri-Chinchwad, Maharashtra 411062</p>
-                      <p style="margin: 2px 0; font-size: 11px; color: #4a5568;">Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</p>
+              const uhidNo = caseData?.patientId || "N/A";
+              const age = caseData?.patientAge || "N/A";
+              const room = caseData?.otRoom || "N/A";
+              const doctor = caseData?.surgeonName || "N/A";
+              const printWindow = window.open('', '_blank');
+              if (printWindow) {
+                printWindow.document.write(`
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                    <title>Pre-Operative Checklist - Gravity Hospital</title>
+                    <style>
+                      * { margin: 0; padding: 0; box-sizing: border-box; }
+                      body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px; }
+                      .main-title { color: #2563eb; font-size: 18px; font-style: italic; border-bottom: 3px solid #2563eb; padding-bottom: 8px; margin-bottom: 15px; }
+                      .header-section { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                      .hospital-info { flex: 1; }
+                      .hospital-name { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+                      .hospital-address { font-size: 11px; color: #333; line-height: 1.4; }
+                      .patient-info { text-align: right; font-size: 11px; }
+                      .patient-info p { margin: 3px 0; }
+                      .section { margin: 15px 0; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
+                      .field { margin: 6px 0; display: flex; }
+                      .field-label { font-weight: bold; width: 180px; }
+                      .field-value { flex: 1; }
+                      .checklist-item { padding: 4px 0; display: flex; align-items: center; gap: 8px; }
+                      .checked { color: #16a34a; font-weight: bold; }
+                      .unchecked { color: #dc2626; }
+                      h2 { font-size: 14px; margin: 15px 0 10px 0; color: #1e3a5f; }
+                      .footer { margin-top: 30px; font-size: 10px; color: #666; text-align: center; border-top: 1px solid #ccc; padding-top: 10px; }
+                      @media print { body { padding: 10px; } }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="main-title">Gravity Hospital - Pre Operative Checklist</div>
+                    <div class="header-section">
+                      <div class="hospital-info">
+                        <div class="hospital-name">GRAVITY HOSPITAL</div>
+                        <div class="hospital-address">
+                          Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi<br>
+                          Pimpri-Chinchwad, Maharashtra 411062<br>
+                          Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680<br>
+                          Email: info@gravityhospital.in
+                        </div>
+                      </div>
+                      <div class="patient-info">
+                        <p><strong>Patient Name:</strong> ${patientName}</p>
+                        <p><strong>UHID No:</strong> ${uhidNo}</p>
+                        <p><strong>Age:</strong> ${age}</p>
+                        <p><strong>Room:</strong> ${room}</p>
+                        <p><strong>Doctor:</strong> ${doctor}</p>
+                      </div>
                     </div>
-                    <div style="text-align: right; font-size: 11px;">
-                      <p style="margin: 0;"><strong>Date:</strong> ${scheduledDate}</p>
-                      <p style="margin: 2px 0;"><strong>Time:</strong> ${scheduledTime}</p>
+                    <div class="section">
+                      <div class="field"><span class="field-label">Name of Staff:</span><span class="field-value">${existing.completedBy || "N/A"}</span></div>
+                      <div class="field"><span class="field-label">Completed At:</span><span class="field-value">${existing.completedAt ? format(new Date(existing.completedAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
                     </div>
-                  </div>
-                </div>
-                <div class="patient-info section" style="background: #f7fafc; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                  <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #2d3748;">Patient Information</h3>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
-                    <div><strong>Patient Name:</strong> ${patientName}</div>
-                    <div><strong>Patient ID:</strong> ${patientId}</div>
-                    <div><strong>Procedure:</strong> ${procedureName}</div>
-                    <div><strong>Surgeon:</strong> ${surgeonName}</div>
-                  </div>
-                </div>
-                <div class="section">
-                  <div class="field"><span class="field-label">Name of Staff:</span><span class="field-value">${existing.completedBy || "N/A"}</span></div>
-                  <div class="field"><span class="field-label">Completed At:</span><span class="field-value">${existing.completedAt ? format(new Date(existing.completedAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
-                </div>
-                <h2>Pre-Operative Checklist Items</h2>
-                <div class="section">${checklistHtml}</div>
-                <div class="section">
-                  <div class="field"><span class="field-label">Received by OT Staff:</span><span class="field-value">${existing.receivedByOTStaff || "N/A"}</span></div>
-                  <div class="field"><span class="field-label">Remarks:</span><span class="field-value">${existing.remarks || "N/A"}</span></div>
-                </div>
-              `;
-              printForm("Pre-Operative Checklist", content);
+                    <h2>Pre-Operative Checklist Items</h2>
+                    <div class="section">${checklistHtml}</div>
+                    <div class="section">
+                      <div class="field"><span class="field-label">Received by OT Staff:</span><span class="field-value">${existing.receivedByOTStaff || "N/A"}</span></div>
+                      <div class="field"><span class="field-label">Remarks:</span><span class="field-value">${existing.remarks || "N/A"}</span></div>
+                    </div>
+                    <div class="footer">Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity AI Manager</div>
+                  </body>
+                  </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 250);
+              }
             }}
           >
             <Printer className="h-4 w-4 mr-1" /> Print
