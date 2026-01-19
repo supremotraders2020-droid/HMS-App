@@ -2437,13 +2437,13 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { ex
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; font-size: 11px; padding: 15px; }
-          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
-          .hospital-info { text-align: left; }
+          .header { width: 100%; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; overflow: hidden; }
+          .hospital-info { float: left; text-align: left; width: 50%; }
           .hospital-name { font-size: 16px; font-weight: bold; }
           .hospital-address { font-size: 10px; margin-top: 5px; }
-          .patient-info { text-align: right; font-size: 10px; }
+          .patient-info { float: right; text-align: right; font-size: 10px; width: 45%; }
           .patient-info div { margin: 2px 0; }
-          .form-title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 15px 0; }
+          .form-title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 15px 0; clear: both; }
           .section { margin-bottom: 15px; }
           .section-title { font-weight: bold; background: #f0f0f0; padding: 5px; margin-bottom: 8px; }
           .row { display: flex; margin-bottom: 6px; }
@@ -2469,7 +2469,7 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { ex
           <div class="patient-info">
             <div><strong>Patient Name:</strong> ${printPatientName}</div>
             <div><strong>UHID No:</strong> ${printUhid}</div>
-            <div><strong>Age:</strong> ${printAge}/${printGender}</div>
+            <div><strong>Age/Gender:</strong> ${printAge} / ${printGender}</div>
             <div><strong>Room:</strong> ${printRoom}</div>
             <div><strong>Doctor:</strong> ${printDoctor}</div>
             <div><strong>IPD No:</strong> ${printIpdNo}</div>
