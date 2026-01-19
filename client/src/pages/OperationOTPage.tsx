@@ -150,12 +150,12 @@ export default function OperationOTPage({ userRole, userId }: OperationOTPagePro
 
   // Map tracking patients to the format needed for OT case creation
   const admittedPatients = trackingPatients.map((tp: any) => ({
-    id: tp.patientId || tp.id,
-    patientName: tp.patientName || "Unknown Patient",
+    id: tp.id,
+    patientName: tp.name || tp.patientName || "Unknown Patient",
     uhid: tp.uhid || "",
     age: tp.age,
     gender: tp.gender,
-    bedNumber: tp.bedNumber,
+    bedNumber: tp.room || tp.bedNumber || "",
     department: tp.department,
     diagnosis: tp.diagnosis,
   }));
