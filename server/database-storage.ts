@@ -6044,6 +6044,17 @@ export class DatabaseStorage implements IStorage {
 
   // ========== OPERATION & OT MODULE ==========
   
+  // Helper function to convert timestamp strings to Date objects for OT forms
+  private convertTimestampFields(data: any, fields: string[]): any {
+    const processed = { ...data };
+    for (const field of fields) {
+      if (processed[field] && typeof processed[field] === 'string') {
+        processed[field] = new Date(processed[field]);
+      }
+    }
+    return processed;
+  }
+
   // OT Cases
   async getOtCases(): Promise<OtCase[]> {
     return await db.select().from(otCases).orderBy(desc(otCases.scheduledDate));
@@ -6107,12 +6118,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtPreopCounselling(data: InsertOtPreopCounselling): Promise<OtPreopCounselling> {
-    const result = await db.insert(otPreopCounselling).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['counsellingDateTime', 'patientSignedAt', 'completedAt']);
+    const result = await db.insert(otPreopCounselling).values(processedData).returning();
     return result[0];
   }
 
   async updateOtPreopCounselling(id: string, data: Partial<InsertOtPreopCounselling>): Promise<OtPreopCounselling | undefined> {
-    const result = await db.update(otPreopCounselling).set(data).where(eq(otPreopCounselling.id, id)).returning();
+    const processedData = this.convertTimestampFields(data, ['counsellingDateTime', 'patientSignedAt', 'completedAt']);
+    const result = await db.update(otPreopCounselling).set(processedData).where(eq(otPreopCounselling.id, id)).returning();
     return result[0];
   }
 
@@ -6123,27 +6136,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtPreopChecklist(data: InsertOtPreopChecklist): Promise<OtPreopChecklist> {
-    // Convert timestamp strings to Date objects
-    const processedData: any = { ...data };
-    if (processedData.completedAt && typeof processedData.completedAt === 'string') {
-      processedData.completedAt = new Date(processedData.completedAt);
-    }
-    if (processedData.verifiedAt && typeof processedData.verifiedAt === 'string') {
-      processedData.verifiedAt = new Date(processedData.verifiedAt);
-    }
+    const processedData = this.convertTimestampFields(data, ['completedAt', 'verifiedAt']);
     const result = await db.insert(otPreopChecklist).values(processedData).returning();
     return result[0];
   }
 
   async updateOtPreopChecklist(id: string, data: Partial<InsertOtPreopChecklist>): Promise<OtPreopChecklist | undefined> {
-    // Convert timestamp strings to Date objects
-    const processedData: any = { ...data };
-    if (processedData.completedAt && typeof processedData.completedAt === 'string') {
-      processedData.completedAt = new Date(processedData.completedAt);
-    }
-    if (processedData.verifiedAt && typeof processedData.verifiedAt === 'string') {
-      processedData.verifiedAt = new Date(processedData.verifiedAt);
-    }
+    const processedData = this.convertTimestampFields(data, ['completedAt', 'verifiedAt']);
     const result = await db.update(otPreopChecklist).set(processedData).where(eq(otPreopChecklist.id, id)).returning();
     return result[0];
   }
@@ -6155,12 +6154,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtPreanaestheticEval(data: InsertOtPreanaestheticEval): Promise<OtPreanaestheticEval> {
-    const result = await db.insert(otPreanaestheticEval).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['evaluatedAt']);
+    const result = await db.insert(otPreanaestheticEval).values(processedData).returning();
     return result[0];
   }
 
   async updateOtPreanaestheticEval(id: string, data: Partial<InsertOtPreanaestheticEval>): Promise<OtPreanaestheticEval | undefined> {
-    const result = await db.update(otPreanaestheticEval).set(data).where(eq(otPreanaestheticEval.id, id)).returning();
+    const processedData = this.convertTimestampFields(data, ['evaluatedAt']);
+    const result = await db.update(otPreanaestheticEval).set(processedData).where(eq(otPreanaestheticEval.id, id)).returning();
     return result[0];
   }
 
@@ -6187,12 +6188,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtPreopAssessment(data: InsertOtPreopAssessment): Promise<OtPreopAssessment> {
-    const result = await db.insert(otPreopAssessment).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['assessmentAt']);
+    const result = await db.insert(otPreopAssessment).values(processedData).returning();
     return result[0];
   }
 
   async updateOtPreopAssessment(id: string, data: Partial<InsertOtPreopAssessment>): Promise<OtPreopAssessment | undefined> {
-    const result = await db.update(otPreopAssessment).set(data).where(eq(otPreopAssessment.id, id)).returning();
+    const processedData = this.convertTimestampFields(data, ['assessmentAt']);
+    const result = await db.update(otPreopAssessment).set(processedData).where(eq(otPreopAssessment.id, id)).returning();
     return result[0];
   }
 
@@ -6202,7 +6205,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtReEvaluation(data: InsertOtReEvaluation): Promise<OtReEvaluation> {
-    const result = await db.insert(otReEvaluation).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['reevalAt']);
+    const result = await db.insert(otReEvaluation).values(processedData).returning();
     return result[0];
   }
 
@@ -6213,12 +6217,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtConsentSurgery(data: InsertOtConsentSurgery): Promise<OtConsentSurgery> {
-    const result = await db.insert(otConsentSurgery).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['patientSignedAt', 'doctorSignedAt']);
+    const result = await db.insert(otConsentSurgery).values(processedData).returning();
     return result[0];
   }
 
   async updateOtConsentSurgery(id: string, data: Partial<InsertOtConsentSurgery>): Promise<OtConsentSurgery | undefined> {
-    const result = await db.update(otConsentSurgery).set(data).where(eq(otConsentSurgery.id, id)).returning();
+    const processedData = this.convertTimestampFields(data, ['patientSignedAt', 'doctorSignedAt']);
+    const result = await db.update(otConsentSurgery).set(processedData).where(eq(otConsentSurgery.id, id)).returning();
     return result[0];
   }
 
@@ -6229,12 +6235,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtConsentAnaesthesia(data: InsertOtConsentAnaesthesia): Promise<OtConsentAnaesthesia> {
-    const result = await db.insert(otConsentAnaesthesia).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['patientSignedAt', 'anaesthetistSignedAt']);
+    const result = await db.insert(otConsentAnaesthesia).values(processedData).returning();
     return result[0];
   }
 
   async updateOtConsentAnaesthesia(id: string, data: Partial<InsertOtConsentAnaesthesia>): Promise<OtConsentAnaesthesia | undefined> {
-    const result = await db.update(otConsentAnaesthesia).set(data).where(eq(otConsentAnaesthesia.id, id)).returning();
+    const processedData = this.convertTimestampFields(data, ['patientSignedAt', 'anaesthetistSignedAt']);
+    const result = await db.update(otConsentAnaesthesia).set(processedData).where(eq(otConsentAnaesthesia.id, id)).returning();
     return result[0];
   }
 
@@ -6245,12 +6253,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtAnaesthesiaRecord(data: InsertOtAnaesthesiaRecord): Promise<OtAnaesthesiaRecord> {
-    const result = await db.insert(otAnaesthesiaRecord).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['inductionTime', 'intubationTime', 'extubationTime', 'anaesthesiaEndTime']);
+    const result = await db.insert(otAnaesthesiaRecord).values(processedData).returning();
     return result[0];
   }
 
   async updateOtAnaesthesiaRecord(id: string, data: Partial<InsertOtAnaesthesiaRecord>): Promise<OtAnaesthesiaRecord | undefined> {
-    const result = await db.update(otAnaesthesiaRecord).set(data).where(eq(otAnaesthesiaRecord.id, id)).returning();
+    const processedData = this.convertTimestampFields(data, ['inductionTime', 'intubationTime', 'extubationTime', 'anaesthesiaEndTime']);
+    const result = await db.update(otAnaesthesiaRecord).set(processedData).where(eq(otAnaesthesiaRecord.id, id)).returning();
     return result[0];
   }
 
@@ -6260,7 +6270,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtTimeLogEntry(data: InsertOtTimeLog): Promise<OtTimeLog> {
-    const result = await db.insert(otTimeLog).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['eventTime']);
+    const result = await db.insert(otTimeLog).values(processedData).returning();
     return result[0];
   }
 
@@ -6271,12 +6282,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtSurgeonNotes(data: InsertOtSurgeonNotes): Promise<OtSurgeonNotes> {
-    const result = await db.insert(otSurgeonNotes).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['dictatedAt']);
+    const result = await db.insert(otSurgeonNotes).values(processedData).returning();
     return result[0];
   }
 
   async updateOtSurgeonNotes(id: string, data: Partial<InsertOtSurgeonNotes>): Promise<OtSurgeonNotes | undefined> {
-    const result = await db.update(otSurgeonNotes).set(data).where(eq(otSurgeonNotes.id, id)).returning();
+    const processedData = this.convertTimestampFields(data, ['dictatedAt']);
+    const result = await db.update(otSurgeonNotes).set(processedData).where(eq(otSurgeonNotes.id, id)).returning();
     return result[0];
   }
 
@@ -6296,7 +6309,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtMonitoringChartEntry(data: InsertOtMonitoringChart): Promise<OtMonitoringChart> {
-    const result = await db.insert(otMonitoringChart).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['recordTime']);
+    const result = await db.insert(otMonitoringChart).values(processedData).returning();
     return result[0];
   }
 
@@ -6306,7 +6320,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtLabourChartEntry(data: InsertOtLabourChart): Promise<OtLabourChart> {
-    const result = await db.insert(otLabourChart).values(data).returning();
+    const processedData = this.convertTimestampFields(data, ['recordTime', 'ruptureTime']);
+    const result = await db.insert(otLabourChart).values(processedData).returning();
     return result[0];
   }
 
