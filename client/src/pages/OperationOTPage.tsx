@@ -3297,17 +3297,31 @@ function MonitoringChartForm({ existing, onSubmit, isLoading }: { existing: any[
                 </tr>
               </thead>
               <tbody>
-                {existing.slice(-10).map((m: any, idx: number) => (
-                  <tr key={idx} className="border-b">
-                    <td className="p-2">{format(new Date(m.recordedAt), "HH:mm")}</td>
-                    <td className="p-2 text-center">{m.heartRate}</td>
-                    <td className="p-2 text-center">{m.bloodPressureSystolic}/{m.bloodPressureDiastolic}</td>
-                    <td className="p-2 text-center">{m.respiratoryRate}</td>
-                    <td className="p-2 text-center">{m.spo2}%</td>
-                    <td className="p-2 text-center">{m.temperature}°C</td>
-                    <td className="p-2 text-center">{m.painScore}/10</td>
-                  </tr>
-                ))}
+                {existing.slice(-10).map((m: any, idx: number) => {
+                  const timeValue = m.recordTime || m.recordedAt || m.createdAt;
+                  let formattedTime = "--:--";
+                  try {
+                    if (timeValue) {
+                      const date = new Date(timeValue);
+                      if (!isNaN(date.getTime())) {
+                        formattedTime = format(date, "HH:mm");
+                      }
+                    }
+                  } catch (e) {
+                    formattedTime = "--:--";
+                  }
+                  return (
+                    <tr key={idx} className="border-b">
+                      <td className="p-2">{formattedTime}</td>
+                      <td className="p-2 text-center">{m.heartRate || '-'}</td>
+                      <td className="p-2 text-center">{m.bloodPressureSystolic || '-'}/{m.bloodPressureDiastolic || '-'}</td>
+                      <td className="p-2 text-center">{m.respiratoryRate || '-'}</td>
+                      <td className="p-2 text-center">{m.spo2 ? `${m.spo2}%` : '-'}</td>
+                      <td className="p-2 text-center">{m.temperature ? `${m.temperature}°C` : '-'}</td>
+                      <td className="p-2 text-center">{m.painScore !== null && m.painScore !== undefined ? `${m.painScore}/10` : '-'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
