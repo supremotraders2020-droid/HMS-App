@@ -1999,6 +1999,7 @@ export const inotropesSedation = pgTable("inotropes_sedation", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sessionId: varchar("session_id").notNull(),
   drugName: text("drug_name").notNull(),
+  diagnosis: text("diagnosis"),
   concentration: text("concentration"),
   dose: text("dose"),
   rate: text("rate"), // ml/hr or mcg/kg/min

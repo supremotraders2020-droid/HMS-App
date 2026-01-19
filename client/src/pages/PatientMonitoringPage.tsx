@@ -856,8 +856,8 @@ export default function PatientMonitoringPage() {
                           `<tr><td>${r.hourSlot || formatTime(r.createdAt)}</td><td>${r.heartRate || '-'}</td><td>${r.systolicBp || '-'}/${r.diastolicBp || '-'}</td><td>${r.temperature ? r.temperature + '°C' : '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Injections', ['Injection Name', 'Date', 'Staff Name'], injections, (r: any) => 
-                          `<tr><td>${r.drugName || '-'}</td><td>${formatDate(r.startTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
+                        ${generateTable('Injections', ['Injection Name', 'Diagnosis', 'Date', 'Staff Name'], injections, (r: any) => 
+                          `<tr><td>${r.drugName || '-'}</td><td>${r.diagnosis || '-'}</td><td>${formatDate(r.startTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
                         ${generateTable('Medicines', ['Medicine Name', 'Date', 'Staff Name'], mar, (r: any) => 
@@ -1551,7 +1551,7 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
 function InotropesTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ injectionName: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
+  const [form, setForm] = useState({ injectionName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/inotropes/${sessionId}`]
@@ -1566,7 +1566,7 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
     onSuccess: () => { 
       refetch(); 
       toast({ title: "Injection Added", description: "Record saved successfully" }); 
-      setForm({ injectionName: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
+      setForm({ injectionName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
       setDialogOpen(false);
     },
     onError: () => {
@@ -1578,6 +1578,7 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
     saveMutation.mutate({ 
       sessionId, 
       drugName: form.injectionName,
+      diagnosis: form.diagnosis,
       startTime: new Date(form.date).toISOString(),
       nurseId: form.nurseId,
       nurseName: form.nurseName
@@ -1604,6 +1605,7 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
             </DialogHeader>
             <div className="space-y-3">
               <div><Label>Injection Name</Label><Input value={form.injectionName} onChange={(e) => setForm({...form, injectionName: e.target.value})} placeholder="e.g., Noradrenaline" /></div>
+              <div><Label>Diagnosis</Label><Input value={form.diagnosis} onChange={(e) => setForm({...form, diagnosis: e.target.value})} placeholder="e.g., Septic Shock" /></div>
               <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
               <div>
                 <Label>Staff Name</Label>
@@ -1638,6 +1640,7 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Injection Name</TableHead>
+                <TableHead>Diagnosis</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Staff Name</TableHead>
               </TableRow>
@@ -1646,6 +1649,7 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
               {records.map((r: any) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.drugName}</TableCell>
+                  <TableCell>{r.diagnosis || "-"}</TableCell>
                   <TableCell>{r.startTime ? format(new Date(r.startTime), "dd/MM/yyyy") : format(new Date(r.createdAt), "dd/MM/yyyy")}</TableCell>
                   <TableCell>{r.nurseName || "-"}</TableCell>
                 </TableRow>
