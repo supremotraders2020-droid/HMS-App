@@ -886,6 +886,7 @@ function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; con
                     existing={checklist}
                     onSubmit={(d) => saveChecklistMutation.mutate(d)}
                     isLoading={saveChecklistMutation.isPending}
+                    caseData={data}
                   />
                 )}
                 {section.key === "pae" && (
@@ -1241,7 +1242,7 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
   );
 }
 
-function ChecklistForm({ existing, onSubmit, isLoading }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean }) {
+function ChecklistForm({ existing, onSubmit, isLoading, caseData }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean; caseData?: any }) {
   const checklistItems = [
     { key: "generalConsentObtained", label: "General Consent Obtained?" },
     { key: "surgeryConsentObtained", label: "Surgery/Procedural Consent Obtained?" },
@@ -1329,7 +1330,36 @@ function ChecklistForm({ existing, onSubmit, isLoading }: { existing: any; onSub
               const checklistHtml = checklistItems.map((item, idx) => 
                 `<div class="checklist-item"><span class="${existing[item.key] ? 'checked' : 'unchecked'}">[${existing[item.key] ? 'Yes' : 'No'}]</span> [${idx + 1}] ${item.label}</div>`
               ).join('');
+              const patientName = caseData?.patientName || "N/A";
+              const patientId = caseData?.patientId || "N/A";
+              const procedureName = caseData?.procedureName || "N/A";
+              const surgeonName = caseData?.surgeonName || "N/A";
+              const scheduledDate = caseData?.scheduledDate || "N/A";
+              const scheduledTime = caseData?.scheduledTime || "N/A";
               const content = `
+                <div class="hospital-header" style="border-bottom: 2px solid #1a365d; padding-bottom: 15px; margin-bottom: 20px;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                      <h2 style="margin: 0; color: #1a365d; font-size: 20px;">GRAVITY HOSPITAL</h2>
+                      <p style="margin: 5px 0 0 0; font-size: 11px; color: #4a5568;">Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</p>
+                      <p style="margin: 2px 0; font-size: 11px; color: #4a5568;">Pimpri-Chinchwad, Maharashtra 411062</p>
+                      <p style="margin: 2px 0; font-size: 11px; color: #4a5568;">Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</p>
+                    </div>
+                    <div style="text-align: right; font-size: 11px;">
+                      <p style="margin: 0;"><strong>Date:</strong> ${scheduledDate}</p>
+                      <p style="margin: 2px 0;"><strong>Time:</strong> ${scheduledTime}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="patient-info section" style="background: #f7fafc; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+                  <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #2d3748;">Patient Information</h3>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+                    <div><strong>Patient Name:</strong> ${patientName}</div>
+                    <div><strong>Patient ID:</strong> ${patientId}</div>
+                    <div><strong>Procedure:</strong> ${procedureName}</div>
+                    <div><strong>Surgeon:</strong> ${surgeonName}</div>
+                  </div>
+                </div>
                 <div class="section">
                   <div class="field"><span class="field-label">Name of Staff:</span><span class="field-value">${existing.completedBy || "N/A"}</span></div>
                   <div class="field"><span class="field-label">Completed At:</span><span class="field-value">${existing.completedAt ? format(new Date(existing.completedAt), "dd/MM/yyyy HH:mm") : "N/A"}</span></div>
