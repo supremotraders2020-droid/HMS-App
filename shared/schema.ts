@@ -2193,6 +2193,7 @@ export const medicationAdminRecords = pgTable("medication_admin_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sessionId: varchar("session_id").notNull(),
   drugName: text("drug_name").notNull(),
+  diagnosis: text("diagnosis"),
   route: text("route").notNull(),
   dose: text("dose").notNull(),
   frequency: text("frequency").notNull(), // 1x, 2x, 3x, 4x

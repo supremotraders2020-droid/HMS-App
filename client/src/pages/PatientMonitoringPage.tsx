@@ -860,8 +860,8 @@ export default function PatientMonitoringPage() {
                           `<tr><td>${r.drugName || '-'}</td><td>${r.diagnosis || '-'}</td><td>${formatDate(r.startTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Medicines', ['Medicine Name', 'Date', 'Staff Name'], mar, (r: any) => 
-                          `<tr><td>${r.drugName || r.medicineName || '-'}</td><td>${formatDate(r.scheduledTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
+                        ${generateTable('Medicines', ['Medicine Name', 'Diagnosis', 'Date', 'Staff Name'], mar, (r: any) => 
+                          `<tr><td>${r.drugName || r.medicineName || '-'}</td><td>${r.diagnosis || '-'}</td><td>${formatDate(r.scheduledTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
                         ${generateTable('Ventilator Settings', ['Time', 'Mode', 'FiO2', 'PEEP', 'Tidal Vol', 'RR Set'], ventilator, (r: any) => 
@@ -2234,7 +2234,7 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
 function MARTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ medicineName: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
+  const [form, setForm] = useState({ medicineName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/mar/${sessionId}`]
@@ -2249,7 +2249,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
     onSuccess: () => { 
       refetch(); 
       toast({ title: "Medicine Entry Added", description: "Medication recorded successfully" });
-      setForm({ medicineName: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
+      setForm({ medicineName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
       setDialogOpen(false);
     },
     onError: () => {
@@ -2261,6 +2261,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
     saveMutation.mutate({ 
       sessionId, 
       drugName: form.medicineName,
+      diagnosis: form.diagnosis,
       scheduledTime: new Date(form.date).toISOString(),
       nurseId: form.nurseId,
       nurseName: form.nurseName,
@@ -2288,6 +2289,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
             </DialogHeader>
             <div className="space-y-3">
               <div><Label>Medicine Name</Label><Input value={form.medicineName} onChange={(e) => setForm({...form, medicineName: e.target.value})} placeholder="e.g., Paracetamol 500mg" /></div>
+              <div><Label>Diagnosis</Label><Input value={form.diagnosis} onChange={(e) => setForm({...form, diagnosis: e.target.value})} placeholder="e.g., Fever, Infection" /></div>
               <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
               <div>
                 <Label>Staff Name</Label>
@@ -2322,6 +2324,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Medicine Name</TableHead>
+                <TableHead>Diagnosis</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Staff Name</TableHead>
               </TableRow>
@@ -2330,6 +2333,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
               {records.map((r: any) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.drugName || r.medicineName}</TableCell>
+                  <TableCell>{r.diagnosis || "-"}</TableCell>
                   <TableCell>{r.scheduledTime ? format(new Date(r.scheduledTime), "dd/MM/yyyy") : format(new Date(r.createdAt), "dd/MM/yyyy")}</TableCell>
                   <TableCell>{r.nurseName || "-"}</TableCell>
                 </TableRow>
