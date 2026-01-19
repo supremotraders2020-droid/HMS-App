@@ -2437,13 +2437,14 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { ex
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; font-size: 11px; padding: 15px; }
-          .header { width: 100%; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; overflow: hidden; }
-          .hospital-info { float: left; text-align: left; width: 50%; }
+          .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+          .header-table td { vertical-align: top; }
+          .hospital-info { text-align: left; }
           .hospital-name { font-size: 16px; font-weight: bold; }
           .hospital-address { font-size: 10px; margin-top: 5px; }
-          .patient-info { float: right; text-align: right; font-size: 10px; width: 45%; }
+          .patient-info { text-align: right; font-size: 10px; }
           .patient-info div { margin: 2px 0; }
-          .form-title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 15px 0; clear: both; }
+          .form-title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 15px 0; }
           .section { margin-bottom: 15px; }
           .section-title { font-weight: bold; background: #f0f0f0; padding: 5px; margin-bottom: 8px; }
           .row { display: flex; margin-bottom: 6px; }
@@ -2456,27 +2457,29 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { ex
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="hospital-info">
-            <div class="hospital-name">GRAVITY HOSPITAL</div>
-            <div class="hospital-address">
-              Multi-Specialty Hospital & Research Center<br/>
-              123 Medical Complex, Healthcare District, Pune - 411001<br/>
-              Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680<br/>
-              Email: info@gravityhospital.in
-            </div>
-          </div>
-          <div class="patient-info">
-            <div><strong>Patient Name:</strong> ${printPatientName}</div>
-            <div><strong>UHID No:</strong> ${printUhid}</div>
-            <div><strong>Age/Gender:</strong> ${printAge} / ${printGender}</div>
-            <div><strong>Room:</strong> ${printRoom}</div>
-            <div><strong>Doctor:</strong> ${printDoctor}</div>
-            <div><strong>IPD No:</strong> ${printIpdNo}</div>
-            <div><strong>DOA:</strong> ${printDoa}</div>
-            <div><strong>Bed No:</strong> ${printBed}</div>
-          </div>
-        </div>
+        <table class="header-table">
+          <tr>
+            <td class="hospital-info" style="width: 50%;">
+              <div class="hospital-name">GRAVITY HOSPITAL</div>
+              <div class="hospital-address">
+                Multi-Specialty Hospital & Research Center<br/>
+                123 Medical Complex, Healthcare District, Pune - 411001<br/>
+                Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680<br/>
+                Email: info@gravityhospital.in
+              </div>
+            </td>
+            <td class="patient-info" style="width: 50%;">
+              <div><strong>Patient Name:</strong> ${printPatientName}</div>
+              <div><strong>UHID No:</strong> ${printUhid}</div>
+              <div><strong>Age/Gender:</strong> ${printAge} / ${printGender}</div>
+              <div><strong>Room:</strong> ${printRoom}</div>
+              <div><strong>Doctor:</strong> ${printDoctor}</div>
+              <div><strong>IPD No:</strong> ${printIpdNo}</div>
+              <div><strong>DOA:</strong> ${printDoa}</div>
+              <div><strong>Bed No:</strong> ${printBed}</div>
+            </td>
+          </tr>
+        </table>
 
         <div class="form-title">ANAESTHESIA RECORD</div>
 
