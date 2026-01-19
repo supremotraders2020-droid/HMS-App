@@ -16434,7 +16434,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(404).json({ error: "OT case not found" });
       }
       
-      // Fetch patient details from tracking_patients if available
+      // Fetch patient details from tracking_patients (IPD patients) if available
       let patientDetails: any = {};
       try {
         const trackingPatient = await storage.getTrackingPatientById(otCase.patientId);
@@ -16442,18 +16442,19 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
           patientDetails = {
             patientAge: trackingPatient.age,
             patientGender: trackingPatient.gender,
-            room: trackingPatient.room || trackingPatient.bedId,
-            bedNumber: trackingPatient.bedId,
-            bedNo: trackingPatient.bedId,
-            ipdNumber: trackingPatient.ipdNumber || trackingPatient.admissionNumber,
-            ipdNo: trackingPatient.ipdNumber || trackingPatient.admissionNumber,
+            room: trackingPatient.room,
+            bedNumber: trackingPatient.room,
+            bedNo: trackingPatient.room,
+            ipdNumber: trackingPatient.id?.slice(0, 8).toUpperCase(),
+            ipdNo: trackingPatient.id?.slice(0, 8).toUpperCase(),
             admissionDate: trackingPatient.admissionDate,
-            doctorName: trackingPatient.doctorName || otCase.surgeonName,
+            doctorName: trackingPatient.doctor || trackingPatient.attendingDoctor || otCase.surgeonName,
             bloodGroup: trackingPatient.bloodGroup,
+            diagnosis: trackingPatient.diagnosis,
           };
         }
       } catch (e) {
-        // Patient details not found, continue with basic info
+        // Patient details not found in IPD, continue with OT case basic info
       }
       
       res.json({

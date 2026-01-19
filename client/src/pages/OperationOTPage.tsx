@@ -878,7 +878,7 @@ function PreOpPhase({ caseId, data, consents, caseData }: { caseId: string; data
                     existing={counselling}
                     onSubmit={(d) => saveCounsellingMutation.mutate(d)}
                     isLoading={saveCounsellingMutation.isPending}
-                    caseData={data}
+                    caseData={caseData}
                   />
                 )}
                 {section.key === "checklist" && (
@@ -886,7 +886,7 @@ function PreOpPhase({ caseId, data, consents, caseData }: { caseId: string; data
                     existing={checklist}
                     onSubmit={(d) => saveChecklistMutation.mutate(d)}
                     isLoading={saveChecklistMutation.isPending}
-                    caseData={data}
+                    caseData={caseData}
                   />
                 )}
                 {section.key === "pae" && (
@@ -894,7 +894,7 @@ function PreOpPhase({ caseId, data, consents, caseData }: { caseId: string; data
                     existing={pae}
                     onSubmit={(d) => savePaeMutation.mutate(d)}
                     isLoading={savePaeMutation.isPending}
-                    caseData={data}
+                    caseData={caseData}
                   />
                 )}
                 {section.key === "safety" && (
@@ -902,7 +902,7 @@ function PreOpPhase({ caseId, data, consents, caseData }: { caseId: string; data
                     existing={safety}
                     onSubmit={(d) => saveSafetyMutation.mutate(d)}
                     isLoading={saveSafetyMutation.isPending}
-                    caseData={data}
+                    caseData={caseData}
                   />
                 )}
                 {(section.key === "consent_surgery" || section.key === "consent_anaesthesia") && (
@@ -2801,7 +2801,7 @@ function PostOpPhase({ caseId, data, caseData }: { caseId: string; data: any; ca
                     existing={data?.neonateSheet}
                     onSubmit={(d) => saveNeonateMutation.mutate(d)}
                     isLoading={saveNeonateMutation.isPending}
-                    caseData={data}
+                    caseData={caseData}
                   />
                 )}
               </DialogContent>
