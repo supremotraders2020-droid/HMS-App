@@ -5550,47 +5550,42 @@ export const insertOtPreopCounsellingSchema = createInsertSchema(otPreopCounsell
 export type InsertOtPreopCounselling = z.infer<typeof insertOtPreopCounsellingSchema>;
 export type OtPreopCounselling = typeof otPreopCounselling.$inferSelect;
 
-// Pre-Op Checklist (NABH Compliant)
+// Pre-Op Checklist (NABH Compliant - Hospital Template)
 export const otPreopChecklist = pgTable("ot_preop_checklist", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   caseId: varchar("case_id").notNull(),
-  // Patient Identification
-  patientIdentityVerified: boolean("patient_identity_verified").default(false),
-  wristbandVerified: boolean("wristband_verified").default(false),
-  allergiesDocumented: boolean("allergies_documented").default(false),
-  allergyDetails: text("allergy_details"),
-  // Consent
-  consentSigned: boolean("consent_signed").default(false),
-  siteMarked: boolean("site_marked").default(false),
-  siteMarkingVerified: boolean("site_marking_verified").default(false),
-  // Pre-Op Preparation
-  npoStatus: boolean("npo_status").default(false),
-  npoHours: integer("npo_hours"),
-  preOpMedsGiven: boolean("preop_meds_given").default(false),
-  preOpMedsDetails: text("preop_meds_details"),
-  bloodTypeCrossmatched: boolean("blood_type_crossmatched").default(false),
-  bloodUnits: integer("blood_units"),
-  // Investigations
-  labsReviewed: boolean("labs_reviewed").default(false),
-  ecgReviewed: boolean("ecg_reviewed").default(false),
-  xrayReviewed: boolean("xray_reviewed").default(false),
-  imagingReviewed: boolean("imaging_reviewed").default(false),
-  investigationNotes: text("investigation_notes"),
-  // Personal Effects
+  // NABH-Style Checklist Items (25 items)
+  generalConsentObtained: boolean("general_consent_obtained").default(false),
+  surgeryConsentObtained: boolean("surgery_consent_obtained").default(false),
+  anaesthesiaConsentObtained: boolean("anaesthesia_consent_obtained").default(false),
+  specificConsent: boolean("specific_consent").default(false),
+  areaPrepared: boolean("area_prepared").default(false),
+  spinalEpiduralPrep: boolean("spinal_epidural_prep").default(false),
   jewelleryRemoved: boolean("jewellery_removed").default(false),
   denturesRemoved: boolean("dentures_removed").default(false),
-  contactLensesRemoved: boolean("contact_lenses_removed").default(false),
-  valuablesSecured: boolean("valuables_secured").default(false),
-  // IV Access
-  ivAccessEstablished: boolean("iv_access_established").default(false),
-  ivSite: text("iv_site"),
+  spectaclesRemoved: boolean("spectacles_removed").default(false),
+  nailPolishRemoved: boolean("nail_polish_removed").default(false),
+  hairPinsRemoved: boolean("hair_pins_removed").default(false),
+  reportsCollected: boolean("reports_collected").default(false),
+  preMedicationsGiven: boolean("pre_medications_given").default(false),
+  preOpAntibioticsGiven: boolean("pre_op_antibiotics_given").default(false),
+  hsMedicationsGiven: boolean("hs_medications_given").default(false),
+  vitalSignsChecked: boolean("vital_signs_checked").default(false),
+  ivLinesSecured: boolean("iv_lines_secured").default(false),
+  bladderEmptied: boolean("bladder_emptied").default(false),
+  mouthWashGiven: boolean("mouth_wash_given").default(false),
+  bathGiven: boolean("bath_given").default(false),
+  enemaGiven: boolean("enema_given").default(false),
+  theatreDressGiven: boolean("theatre_dress_given").default(false),
+  bloodArranged: boolean("blood_arranged").default(false),
+  materialsSent: boolean("materials_sent").default(false),
+  patientShiftedToOT: boolean("patient_shifted_to_ot").default(false),
   // Completion
   completedBy: varchar("completed_by"),
   completedByName: text("completed_by_name"),
   completedAt: timestamp("completed_at"),
-  verifiedBy: varchar("verified_by"),
-  verifiedByName: text("verified_by_name"),
-  verifiedAt: timestamp("verified_at"),
+  receivedByOTStaff: text("received_by_ot_staff"),
+  remarks: text("remarks"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -6045,11 +6045,29 @@ export class DatabaseStorage implements IStorage {
   // ========== OPERATION & OT MODULE ==========
   
   // Helper function to convert timestamp strings to Date objects for OT forms
+  // Handles both full ISO date strings and time-only strings (HH:MM or HH:MM:SS)
   private convertTimestampFields(data: any, fields: string[]): any {
     const processed = { ...data };
+    const today = new Date();
+    const datePrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
     for (const field of fields) {
       if (processed[field] && typeof processed[field] === 'string') {
-        processed[field] = new Date(processed[field]);
+        const value = processed[field].trim();
+        // Check if it's a time-only value (HH:MM or HH:MM:SS)
+        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(value)) {
+          // Convert time-only to full timestamp using today's date
+          processed[field] = new Date(`${datePrefix}T${value}:00`);
+        } else {
+          // Try parsing as a full date string
+          const parsed = new Date(value);
+          if (!isNaN(parsed.getTime())) {
+            processed[field] = parsed;
+          } else {
+            // If parsing fails, set to null to avoid database errors
+            processed[field] = null;
+          }
+        }
       }
     }
     return processed;
