@@ -15620,16 +15620,16 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   };
 
   // Create OT audit log helper
-  const logOtAction = async (caseId: string, action: string, userId: string, tableName: string, recordId: string, changes?: any) => {
+  const logOtAction = async (caseId: string, action: string, userId: string, entityType: string, entityId: string, changes?: any) => {
     try {
       await storage.createOtAuditLog({
         id: crypto.randomUUID(),
         caseId,
+        entityType,
+        entityId,
         action,
         userId,
-        tableName,
-        recordId,
-        changes: changes ? JSON.stringify(changes) : null
+        metadata: changes ? JSON.stringify(changes) : null
       });
     } catch (e) {
       console.error("OT Audit log error:", e);
