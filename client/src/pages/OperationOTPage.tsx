@@ -976,23 +976,27 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
             </div>
           </div>
           <div className="text-right text-sm space-y-1">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
               <span className="text-muted-foreground">Patient Name:</span>
-              <span className="font-medium">{caseData?.patientName || "N/A"}</span>
+              <Input name="preopPatientName" defaultValue={caseData?.patientName || ""} placeholder="Patient Name" className="text-xs" />
               <span className="text-muted-foreground">UHID No:</span>
-              <span className="font-medium">{caseData?.uhid || "N/A"}</span>
-              <span className="text-muted-foreground">Age:</span>
-              <span className="font-medium">{caseData?.patientAge || "N/A"}/{caseData?.patientGender || "N/A"}</span>
-              <span className="text-muted-foreground">Room:</span>
-              <span className="font-medium">{caseData?.room || "N/A"}</span>
+              <Input name="preopUhid" defaultValue={caseData?.uhid || ""} placeholder="UHID" className="text-xs" />
+              <span className="text-muted-foreground">Age/Gender:</span>
+              <div className="flex gap-1">
+                <Input name="preopAge" defaultValue={caseData?.patientAge || ""} placeholder="Age" className="text-xs w-14" />
+                <Input name="preopGender" defaultValue={caseData?.patientGender || ""} placeholder="M/F" className="text-xs w-12" />
+              </div>
+              <span className="text-muted-foreground">Room/Bed:</span>
+              <div className="flex gap-1">
+                <Input name="preopRoom" defaultValue={caseData?.room || ""} placeholder="Room" className="text-xs" />
+                <Input name="preopBed" defaultValue={caseData?.bedNumber || ""} placeholder="Bed" className="text-xs w-12" />
+              </div>
               <span className="text-muted-foreground">Doctor:</span>
-              <span className="font-medium">{caseData?.surgeonName || "N/A"}</span>
+              <Input name="preopDoctor" defaultValue={caseData?.surgeonName || ""} placeholder="Doctor" className="text-xs" />
               <span className="text-muted-foreground">IPD No:</span>
-              <span className="font-medium">{caseData?.ipdNumber || "N/A"}</span>
+              <Input name="preopIpdNo" defaultValue={caseData?.ipdNumber || ""} placeholder="IPD No" className="text-xs" />
               <span className="text-muted-foreground">DOA:</span>
-              <span className="font-medium">{caseData?.admissionDate ? format(new Date(caseData.admissionDate), "dd.MM.yyyy") : "N/A"}</span>
-              <span className="text-muted-foreground">Bed No:</span>
-              <span className="font-medium">{caseData?.bedNumber || "N/A"}</span>
+              <Input name="preopDoa" type="date" defaultValue={caseData?.admissionDate ? format(new Date(caseData.admissionDate), "yyyy-MM-dd") : ""} className="text-xs" />
             </div>
           </div>
         </div>
@@ -1164,7 +1168,18 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
           <Button
             type="button"
             variant="outline"
-            onClick={() => {
+            onClick={(e) => {
+              const form = (e.target as HTMLElement).closest('form');
+              const getFormValue = (name: string) => {
+                const input = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
+                return input?.value || "";
+              };
+              const printPatientName = getFormValue('preopPatientName') || caseData?.patientName || "N/A";
+              const printUhid = getFormValue('preopUhid') || caseData?.uhid || "N/A";
+              const printAge = getFormValue('preopAge') || caseData?.patientAge || "N/A";
+              const printGender = getFormValue('preopGender') || caseData?.patientGender || "N/A";
+              const printRoom = getFormValue('preopRoom') || caseData?.room || "N/A";
+              const printDoctor = getFormValue('preopDoctor') || caseData?.surgeonName || "N/A";
               const content = `
                 <div class="header-section" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
                   <div>
@@ -1175,11 +1190,11 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
                     <p style="margin: 2px 0; font-size: 12px;">Email: info@gravityhospital.in</p>
                   </div>
                   <div style="text-align: right; font-size: 12px;">
-                    <p><strong>Patient Name:</strong> ${caseData?.patientName || "N/A"}</p>
-                    <p><strong>UHID No:</strong> ${caseData?.uhid || "N/A"}</p>
-                    <p><strong>Age:</strong> ${caseData?.patientAge || "N/A"}/${caseData?.patientGender || "N/A"}</p>
-                    <p><strong>Room:</strong> ${caseData?.room || "N/A"}</p>
-                    <p><strong>Doctor:</strong> ${caseData?.surgeonName || "N/A"}</p>
+                    <p><strong>Patient Name:</strong> ${printPatientName}</p>
+                    <p><strong>UHID No:</strong> ${printUhid}</p>
+                    <p><strong>Age:</strong> ${printAge}/${printGender}</p>
+                    <p><strong>Room:</strong> ${printRoom}</p>
+                    <p><strong>Doctor:</strong> ${printDoctor}</p>
                   </div>
                 </div>
                 <h2 style="text-align: center; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 10px 0;">PRE OPERATIVE ASSESSMENT</h2>
@@ -1475,6 +1490,21 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
   const printPAEForm = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+    
+    // Read editable form values - using PAE-specific input names
+    const getInputValue = (name: string) => {
+      const input = document.querySelector(`[name="${name}"]`) as HTMLInputElement;
+      return input?.value || "";
+    };
+    const printPatientName = getInputValue('paePatientName') || caseData?.patientName || "N/A";
+    const printUhid = getInputValue('paeUhid') || caseData?.uhid || "N/A";
+    const printAge = getInputValue('paeAge') || caseData?.patientAge || caseData?.age || "N/A";
+    const printGender = getInputValue('paeGender') || caseData?.patientGender || caseData?.gender || "N/A";
+    const printRoom = getInputValue('paeRoom') || caseData?.room || "N/A";
+    const printDoctor = getInputValue('paeDoctor') || caseData?.surgeonName || "N/A";
+    const printIpdNo = getInputValue('paeIpdNo') || caseData?.ipdNumber || "N/A";
+    const printDoa = getInputValue('paeDoa') || caseData?.admissionDate || "N/A";
+    const printBed = getInputValue('paeBed') || caseData?.bedNumber || "N/A";
 
     const content = `
       <!DOCTYPE html>
@@ -1532,14 +1562,14 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
             </div>
           </div>
           <div class="patient-info">
-            <div><strong>Patient Name:</strong> ${caseData?.patientName || existing?.patientName || "N/A"}</div>
-            <div><strong>UHID No:</strong> ${caseData?.uhid || existing?.uhid || "N/A"}</div>
-            <div><strong>Age:</strong> ${caseData?.age || "N/A"}/${caseData?.gender || "N/A"}</div>
-            <div><strong>Room:</strong> ${caseData?.room || "N/A"}</div>
-            <div><strong>Doctor:</strong> ${caseData?.surgeonName || "N/A"}</div>
-            <div><strong>IPD No:</strong> ${caseData?.ipdNumber || "N/A"}</div>
-            <div><strong>DOA:</strong> ${caseData?.admissionDate || "N/A"}</div>
-            <div><strong>Bed No:</strong> ${caseData?.bedNumber || "N/A"}</div>
+            <div><strong>Patient Name:</strong> ${printPatientName}</div>
+            <div><strong>UHID No:</strong> ${printUhid}</div>
+            <div><strong>Age:</strong> ${printAge}/${printGender}</div>
+            <div><strong>Room:</strong> ${printRoom}</div>
+            <div><strong>Doctor:</strong> ${printDoctor}</div>
+            <div><strong>IPD No:</strong> ${printIpdNo}</div>
+            <div><strong>DOA:</strong> ${printDoa}</div>
+            <div><strong>Bed No:</strong> ${printBed}</div>
           </div>
         </div>
 
@@ -1636,15 +1666,29 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
               Email: info@gravityhospital.in
             </div>
           </div>
-          <div className="text-right text-sm">
-            <div><strong>Patient Name:</strong> {caseData?.patientName || "N/A"}</div>
-            <div><strong>UHID No:</strong> {caseData?.uhid || "N/A"}</div>
-            <div><strong>Age:</strong> {caseData?.age || "N/A"}/{caseData?.gender || "N/A"}</div>
-            <div><strong>Room:</strong> {caseData?.room || "N/A"}</div>
-            <div><strong>Doctor:</strong> {caseData?.surgeonName || "N/A"}</div>
-            <div><strong>IPD No:</strong> {caseData?.ipdNumber || "N/A"}</div>
-            <div><strong>DOA:</strong> {caseData?.admissionDate || "N/A"}</div>
-            <div><strong>Bed No:</strong> {caseData?.bedNumber || "N/A"}</div>
+          <div className="text-right text-sm space-y-1">
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
+              <span className="text-muted-foreground">Patient Name:</span>
+              <Input name="paePatientName" defaultValue={caseData?.patientName || ""} placeholder="Patient Name" className="text-xs" />
+              <span className="text-muted-foreground">UHID No:</span>
+              <Input name="paeUhid" defaultValue={caseData?.uhid || ""} placeholder="UHID" className="text-xs" />
+              <span className="text-muted-foreground">Age/Gender:</span>
+              <div className="flex gap-1">
+                <Input name="paeAge" defaultValue={caseData?.patientAge || caseData?.age || ""} placeholder="Age" className="text-xs w-14" />
+                <Input name="paeGender" defaultValue={caseData?.patientGender || caseData?.gender || ""} placeholder="M/F" className="text-xs w-12" />
+              </div>
+              <span className="text-muted-foreground">Room/Bed:</span>
+              <div className="flex gap-1">
+                <Input name="paeRoom" defaultValue={caseData?.room || ""} placeholder="Room" className="text-xs" />
+                <Input name="paeBed" defaultValue={caseData?.bedNumber || ""} placeholder="Bed" className="text-xs w-12" />
+              </div>
+              <span className="text-muted-foreground">Doctor:</span>
+              <Input name="paeDoctor" defaultValue={caseData?.surgeonName || ""} placeholder="Doctor" className="text-xs" />
+              <span className="text-muted-foreground">IPD No:</span>
+              <Input name="paeIpdNo" defaultValue={caseData?.ipdNumber || ""} placeholder="IPD No" className="text-xs" />
+              <span className="text-muted-foreground">DOA:</span>
+              <Input name="paeDoa" type="date" defaultValue={caseData?.admissionDate ? format(new Date(caseData.admissionDate), "yyyy-MM-dd") : ""} className="text-xs" />
+            </div>
           </div>
         </div>
       </div>
