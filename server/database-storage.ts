@@ -6328,6 +6328,10 @@ export class DatabaseStorage implements IStorage {
 
   async createOtMonitoringChartEntry(data: InsertOtMonitoringChart): Promise<OtMonitoringChart> {
     const processedData = this.convertTimestampFields(data, ['recordTime']);
+    // Auto-generate recordTime if not provided
+    if (!processedData.recordTime) {
+      processedData.recordTime = new Date();
+    }
     const result = await db.insert(otMonitoringChart).values(processedData).returning();
     return result[0];
   }
