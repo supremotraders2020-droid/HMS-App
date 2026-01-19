@@ -2359,6 +2359,7 @@ function IntraOpPhase({ caseId, data, caseData }: { caseId: string; data: any; c
                     existing={data?.anaesthesiaRecord}
                     onSubmit={(d) => saveAnaesthesiaMutation.mutate(d)}
                     isLoading={saveAnaesthesiaMutation.isPending}
+                    caseData={caseData}
                   />
                 )}
                 {section.key === "timelog" && (
@@ -2384,7 +2385,7 @@ function IntraOpPhase({ caseId, data, caseData }: { caseId: string; data: any; c
   );
 }
 
-function AnaesthesiaRecordForm({ existing, onSubmit, isLoading }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean }) {
+function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { existing: any; onSubmit: (d: any) => void; isLoading: boolean; caseData?: any }) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -2410,8 +2411,176 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading }: { existing: an
     });
   };
 
+  const printAnaesthesiaRecord = () => {
+    const getInputValue = (name: string) => {
+      const input = document.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLSelectElement;
+      return input?.value || "";
+    };
+    const printPatientName = getInputValue('anaPatientName') || caseData?.patientName || "N/A";
+    const printUhid = getInputValue('anaUhid') || caseData?.uhid || "N/A";
+    const printAge = getInputValue('anaAge') || caseData?.patientAge || caseData?.age || "N/A";
+    const printGender = getInputValue('anaGender') || caseData?.patientGender || caseData?.gender || "N/A";
+    const printRoom = getInputValue('anaRoom') || caseData?.room || "N/A";
+    const printDoctor = getInputValue('anaDoctor') || caseData?.surgeonName || "N/A";
+    const printIpdNo = getInputValue('anaIpdNo') || caseData?.ipdNumber || "N/A";
+    const printDoa = getInputValue('anaDoa') || caseData?.admissionDate || "N/A";
+    const printBed = getInputValue('anaBed') || caseData?.bedNumber || "N/A";
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const content = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Anaesthesia Record</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; font-size: 11px; padding: 15px; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+          .hospital-info { text-align: left; }
+          .hospital-name { font-size: 16px; font-weight: bold; }
+          .hospital-address { font-size: 10px; margin-top: 5px; }
+          .patient-info { text-align: right; font-size: 10px; }
+          .patient-info div { margin: 2px 0; }
+          .form-title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 15px 0; }
+          .section { margin-bottom: 15px; }
+          .section-title { font-weight: bold; background: #f0f0f0; padding: 5px; margin-bottom: 8px; }
+          .row { display: flex; margin-bottom: 6px; }
+          .field { flex: 1; display: flex; }
+          .label { font-weight: bold; min-width: 120px; }
+          .value { flex: 1; border-bottom: 1px dotted #000; min-height: 16px; padding-left: 5px; }
+          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+          .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+          @media print { body { padding: 10px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="hospital-info">
+            <div class="hospital-name">GRAVITY HOSPITAL</div>
+            <div class="hospital-address">
+              Multi-Specialty Hospital & Research Center<br/>
+              123 Medical Complex, Healthcare District, Pune - 411001<br/>
+              Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680<br/>
+              Email: info@gravityhospital.in
+            </div>
+          </div>
+          <div class="patient-info">
+            <div><strong>Patient Name:</strong> ${printPatientName}</div>
+            <div><strong>UHID No:</strong> ${printUhid}</div>
+            <div><strong>Age:</strong> ${printAge}/${printGender}</div>
+            <div><strong>Room:</strong> ${printRoom}</div>
+            <div><strong>Doctor:</strong> ${printDoctor}</div>
+            <div><strong>IPD No:</strong> ${printIpdNo}</div>
+            <div><strong>DOA:</strong> ${printDoa}</div>
+            <div><strong>Bed No:</strong> ${printBed}</div>
+          </div>
+        </div>
+
+        <div class="form-title">ANAESTHESIA RECORD</div>
+
+        <div class="section">
+          <div class="section-title">ANAESTHESIA DETAILS</div>
+          <div class="grid-2">
+            <div class="field"><span class="label">Anaesthetist:</span><span class="value">${existing?.anaesthetistId || "___"}</span></div>
+            <div class="field"><span class="label">Anaesthesia Type:</span><span class="value">${existing?.anaesthesiaType || "___"}</span></div>
+          </div>
+          <div class="grid-3" style="margin-top: 8px;">
+            <div class="field"><span class="label">Induction Time:</span><span class="value">${existing?.inductionTime || "___"}</span></div>
+            <div class="field"><span class="label">Airway:</span><span class="value">${existing?.airwayManagement || "___"}</span></div>
+            <div class="field"><span class="label">ETT/LMA Size:</span><span class="value">${existing?.ettSize || "___"}</span></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">MEDICATIONS</div>
+          <div class="grid-2">
+            <div class="field"><span class="label">Induction Agents:</span><span class="value">${existing?.inductionAgents || "___"}</span></div>
+            <div class="field"><span class="label">Maintenance:</span><span class="value">${existing?.maintenanceAgents || "___"}</span></div>
+          </div>
+          <div class="grid-2" style="margin-top: 8px;">
+            <div class="field"><span class="label">Muscle Relaxants:</span><span class="value">${existing?.muscleRelaxants || "___"}</span></div>
+            <div class="field"><span class="label">Analgesics:</span><span class="value">${existing?.analgesics || "___"}</span></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">FLUID BALANCE</div>
+          <div class="grid-3">
+            <div class="field"><span class="label">IV Fluids:</span><span class="value">${existing?.ivFluids || "___"}</span></div>
+            <div class="field"><span class="label">Blood Products:</span><span class="value">${existing?.bloodProducts || "___"}</span></div>
+            <div class="field"><span class="label">Est. Blood Loss:</span><span class="value">${existing?.estimatedBloodLoss || "___"} ml</span></div>
+          </div>
+          <div class="grid-2" style="margin-top: 8px;">
+            <div class="field"><span class="label">Urine Output:</span><span class="value">${existing?.urineOutput || "___"}</span></div>
+            <div class="field"><span class="label">Complications:</span><span class="value">${existing?.complications || "None"}</span></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">RECOVERY</div>
+          <div class="grid-3">
+            <div class="field"><span class="label">Reversal Agents:</span><span class="value">${existing?.reversalAgents || "___"}</span></div>
+            <div class="field"><span class="label">Extubation Time:</span><span class="value">${existing?.extubationTime || "___"}</span></div>
+            <div class="field"><span class="label">Post-Op Disposition:</span><span class="value">${existing?.postOpDisposition || "___"}</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top: 40px; display: flex; justify-content: space-between;">
+          <div style="text-align: center; width: 200px;">
+            <div style="border-top: 1px solid #000; padding-top: 5px;">Anaesthetist Signature</div>
+          </div>
+          <div style="text-align: center; width: 200px;">
+            <div style="border-top: 1px solid #000; padding-top: 5px;">Date & Time</div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="border rounded-lg p-4 mb-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-bold text-lg">GRAVITY HOSPITAL</h3>
+            <p className="text-xs text-muted-foreground">Multi-Specialty Hospital & Research Center</p>
+            <p className="text-xs text-muted-foreground">123 Medical Complex, Healthcare District, Pune - 411001</p>
+            <p className="text-xs text-muted-foreground">Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</p>
+            <p className="text-xs text-muted-foreground">Email: info@gravityhospital.in</p>
+          </div>
+          <div className="text-right text-sm space-y-1">
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
+              <span className="text-muted-foreground">Patient Name:</span>
+              <Input name="anaPatientName" defaultValue={caseData?.patientName || ""} placeholder="Patient Name" className="text-xs" />
+              <span className="text-muted-foreground">UHID No:</span>
+              <Input name="anaUhid" defaultValue={caseData?.uhid || ""} placeholder="UHID" className="text-xs" />
+              <span className="text-muted-foreground">Age/Gender:</span>
+              <div className="flex gap-1">
+                <Input name="anaAge" defaultValue={caseData?.patientAge || caseData?.age || ""} placeholder="Age" className="text-xs w-14" />
+                <Input name="anaGender" defaultValue={caseData?.patientGender || caseData?.gender || ""} placeholder="M/F" className="text-xs w-12" />
+              </div>
+              <span className="text-muted-foreground">Room/Bed:</span>
+              <div className="flex gap-1">
+                <Input name="anaRoom" defaultValue={caseData?.room || ""} placeholder="Room" className="text-xs" />
+                <Input name="anaBed" defaultValue={caseData?.bedNumber || ""} placeholder="Bed" className="text-xs w-12" />
+              </div>
+              <span className="text-muted-foreground">Doctor:</span>
+              <Input name="anaDoctor" defaultValue={caseData?.surgeonName || ""} placeholder="Doctor" className="text-xs" />
+              <span className="text-muted-foreground">IPD No:</span>
+              <Input name="anaIpdNo" defaultValue={caseData?.ipdNumber || ""} placeholder="IPD No" className="text-xs" />
+              <span className="text-muted-foreground">DOA:</span>
+              <Input name="anaDoa" type="date" defaultValue={caseData?.admissionDate ? format(new Date(caseData.admissionDate), "yyyy-MM-dd") : ""} className="text-xs" />
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Anaesthetist</Label>
@@ -2529,7 +2698,14 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading }: { existing: an
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        {existing && (
+          <Button type="button" variant="outline" onClick={printAnaesthesiaRecord}>
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </Button>
+        )}
+        <div className="flex-1" />
         <Button type="submit" disabled={isLoading}>
           {isLoading ? "Saving..." : "Save Anaesthesia Record"}
         </Button>
