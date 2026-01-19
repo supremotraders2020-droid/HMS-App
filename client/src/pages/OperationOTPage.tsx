@@ -980,7 +980,7 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
               <span className="text-muted-foreground">Patient Name:</span>
               <span className="font-medium">{caseData?.patientName || "N/A"}</span>
               <span className="text-muted-foreground">UHID No:</span>
-              <span className="font-medium">{caseData?.patientId?.slice(0, 8) || "N/A"}</span>
+              <span className="font-medium">{caseData?.uhid || "N/A"}</span>
               <span className="text-muted-foreground">Age:</span>
               <span className="font-medium">{caseData?.patientAge || "N/A"}/{caseData?.patientGender || "N/A"}</span>
               <span className="text-muted-foreground">Room:</span>
@@ -1176,7 +1176,7 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
                   </div>
                   <div style="text-align: right; font-size: 12px;">
                     <p><strong>Patient Name:</strong> ${caseData?.patientName || "N/A"}</p>
-                    <p><strong>UHID No:</strong> ${caseData?.patientId?.slice(0, 8) || "N/A"}</p>
+                    <p><strong>UHID No:</strong> ${caseData?.uhid || "N/A"}</p>
                     <p><strong>Age:</strong> ${caseData?.patientAge || "N/A"}/${caseData?.patientGender || "N/A"}</p>
                     <p><strong>Room:</strong> ${caseData?.room || "N/A"}</p>
                     <p><strong>Doctor:</strong> ${caseData?.surgeonName || "N/A"}</p>
@@ -1331,7 +1331,7 @@ function ChecklistForm({ existing, onSubmit, isLoading, caseData }: { existing: 
                 `<div class="checklist-item"><span class="${existing[item.key] ? 'checked' : 'unchecked'}">[${existing[item.key] ? 'Yes' : 'No'}]</span> [${idx + 1}] ${item.label}</div>`
               ).join('');
               const patientName = caseData?.patientName || "N/A";
-              const uhidNo = caseData?.patientId || "N/A";
+              const uhidNo = caseData?.uhid || "N/A";
               const age = caseData?.patientAge || "N/A";
               const room = caseData?.otRoom || "N/A";
               const doctor = caseData?.surgeonName || "N/A";
@@ -1533,7 +1533,7 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
           </div>
           <div class="patient-info">
             <div><strong>Patient Name:</strong> ${caseData?.patientName || existing?.patientName || "N/A"}</div>
-            <div><strong>UHID No:</strong> ${caseData?.patientId || existing?.patientId || "N/A"}</div>
+            <div><strong>UHID No:</strong> ${caseData?.uhid || existing?.uhid || "N/A"}</div>
             <div><strong>Age:</strong> ${caseData?.age || "N/A"}/${caseData?.gender || "N/A"}</div>
             <div><strong>Room:</strong> ${caseData?.room || "N/A"}</div>
             <div><strong>Doctor:</strong> ${caseData?.surgeonName || "N/A"}</div>
@@ -1638,7 +1638,7 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
           </div>
           <div className="text-right text-sm">
             <div><strong>Patient Name:</strong> {caseData?.patientName || "N/A"}</div>
-            <div><strong>UHID No:</strong> {caseData?.patientId || "N/A"}</div>
+            <div><strong>UHID No:</strong> {caseData?.uhid || "N/A"}</div>
             <div><strong>Age:</strong> {caseData?.age || "N/A"}/{caseData?.gender || "N/A"}</div>
             <div><strong>Room:</strong> {caseData?.room || "N/A"}</div>
             <div><strong>Doctor:</strong> {caseData?.surgeonName || "N/A"}</div>
