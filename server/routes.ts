@@ -16434,8 +16434,31 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(404).json({ error: "OT case not found" });
       }
       
+      // Fetch patient details from tracking_patients if available
+      let patientDetails: any = {};
+      try {
+        const trackingPatient = await storage.getTrackingPatientById(otCase.patientId);
+        if (trackingPatient) {
+          patientDetails = {
+            patientAge: trackingPatient.age,
+            patientGender: trackingPatient.gender,
+            room: trackingPatient.room || trackingPatient.bedId,
+            bedNumber: trackingPatient.bedId,
+            bedNo: trackingPatient.bedId,
+            ipdNumber: trackingPatient.ipdNumber || trackingPatient.admissionNumber,
+            ipdNo: trackingPatient.ipdNumber || trackingPatient.admissionNumber,
+            admissionDate: trackingPatient.admissionDate,
+            doctorName: trackingPatient.doctorName || otCase.surgeonName,
+            bloodGroup: trackingPatient.bloodGroup,
+          };
+        }
+      } catch (e) {
+        // Patient details not found, continue with basic info
+      }
+      
       res.json({
         ...otCase,
+        ...patientDetails,
         team,
         preOp: { counselling, checklist, pae, safetyChecklist, assessment, reEvals },
         consents: { surgery: consentSurgery, anaesthesia: consentAnaesthesia },

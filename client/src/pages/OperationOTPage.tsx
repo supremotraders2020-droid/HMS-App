@@ -711,10 +711,10 @@ function CaseDetailView({ otCase, onBack, userRole, activePhase, setActivePhase,
       <Card>
         <CardContent className="pt-6">
           {activePhase === "preop" && (
-            <PreOpPhase caseId={otCase.id} data={fullCase?.preOp} consents={fullCase?.consents} />
+            <PreOpPhase caseId={otCase.id} data={fullCase?.preOp} consents={fullCase?.consents} caseData={fullCase} />
           )}
           {activePhase === "intraop" && (
-            <IntraOpPhase caseId={otCase.id} data={fullCase?.intraOp} />
+            <IntraOpPhase caseId={otCase.id} data={fullCase?.intraOp} caseData={fullCase} />
           )}
           {activePhase === "postop" && (
             <PostOpPhase caseId={otCase.id} data={fullCase?.postOp} caseData={fullCase} />
@@ -749,7 +749,7 @@ function PhaseIndicator({ label, status, active, onClick }: { label: string; sta
   );
 }
 
-function PreOpPhase({ caseId, data, consents }: { caseId: string; data: any; consents: any }) {
+function PreOpPhase({ caseId, data, consents, caseData }: { caseId: string; data: any; consents: any; caseData: any }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeForm, setActiveForm] = useState<string | null>(null);
@@ -2231,7 +2231,7 @@ function SafetyChecklistForm({ existing, onSubmit, isLoading, caseData }: { exis
   );
 }
 
-function IntraOpPhase({ caseId, data }: { caseId: string; data: any }) {
+function IntraOpPhase({ caseId, data, caseData }: { caseId: string; data: any; caseData: any }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeForm, setActiveForm] = useState<string | null>(null);
