@@ -6123,7 +6123,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOtPreopChecklist(data: InsertOtPreopChecklist): Promise<OtPreopChecklist> {
-    const result = await db.insert(otPreopChecklist).values(data).returning();
+    // Convert timestamp strings to Date objects
+    const processedData: any = { ...data };
+    if (processedData.completedAt && typeof processedData.completedAt === 'string') {
+      processedData.completedAt = new Date(processedData.completedAt);
+    }
+    if (processedData.verifiedAt && typeof processedData.verifiedAt === 'string') {
+      processedData.verifiedAt = new Date(processedData.verifiedAt);
+    }
+    const result = await db.insert(otPreopChecklist).values(processedData).returning();
     return result[0];
   }
 
