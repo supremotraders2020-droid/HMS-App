@@ -968,9 +968,9 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
             </div>
             <div>
               <h3 className="font-bold text-lg">GRAVITY HOSPITAL</h3>
-              <p className="text-xs text-muted-foreground">Tower Line Corner, Talawade Road</p>
-              <p className="text-xs text-muted-foreground">Triveni Nagar, Pune 411 062</p>
-              <p className="text-xs text-muted-foreground">Tel: 8149200044, 8149300044</p>
+              <p className="text-xs text-muted-foreground">Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</p>
+              <p className="text-xs text-muted-foreground">Pimpri-Chinchwad, Maharashtra 411062</p>
+              <p className="text-xs text-muted-foreground">Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</p>
               <p className="text-xs text-muted-foreground">Email: info@gravityhospital.in</p>
             </div>
           </div>
@@ -1168,9 +1168,9 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
                 <div class="header-section" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
                   <div>
                     <h2 style="margin: 0;">GRAVITY HOSPITAL</h2>
-                    <p style="margin: 2px 0; font-size: 12px;">Tower Line Corner, Talawade Road</p>
-                    <p style="margin: 2px 0; font-size: 12px;">Triveni Nagar, Pune 411 062</p>
-                    <p style="margin: 2px 0; font-size: 12px;">Tel: 8149200044, 8149300044</p>
+                    <p style="margin: 2px 0; font-size: 12px;">Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</p>
+                    <p style="margin: 2px 0; font-size: 12px;">Pimpri-Chinchwad, Maharashtra 411062</p>
+                    <p style="margin: 2px 0; font-size: 12px;">Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</p>
                     <p style="margin: 2px 0; font-size: 12px;">Email: info@gravityhospital.in</p>
                   </div>
                   <div style="text-align: right; font-size: 12px;">
@@ -1465,9 +1465,9 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
               GRAVITY HOSPITAL
             </div>
             <div class="hospital-address">
-              Tower Line Corner, Talawade Road,<br/>
-              Triveni Nagar, Pune 411 062.<br/>
-              Tel. No: 8149200044, 8149300044<br/>
+              Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi<br/>
+              Pimpri-Chinchwad, Maharashtra 411062<br/>
+              Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680<br/>
               Email: info@gravityhospital.in
             </div>
           </div>
@@ -1570,9 +1570,9 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
               GRAVITY HOSPITAL
             </div>
             <div className="text-sm text-muted-foreground mt-1">
-              Tower Line Corner, Talawade Road,<br/>
-              Triveni Nagar, Pune 411 062.<br/>
-              Tel. No: 8149200044, 8149300044<br/>
+              Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi<br/>
+              Pimpri-Chinchwad, Maharashtra 411062<br/>
+              Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680<br/>
               Email: info@gravityhospital.in
             </div>
           </div>
@@ -1975,9 +1975,9 @@ function SafetyChecklistForm({ existing, onSubmit, isLoading, caseData }: { exis
         <div class="header">
           <div class="hospital-info">
             <div class="hospital-name">GRAVITY HOSPITAL</div>
-            <div>Tower Line Corner, Talawade Road,</div>
-            <div>Triveni Nagar, Pune 411 062.</div>
-            <div>Tel. No.: 8149200044, 8149300044</div>
+            <div>Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</div>
+            <div>Pimpri-Chinchwad, Maharashtra 411062</div>
+            <div>Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</div>
             <div>Email: info@gravityhospital.in</div>
           </div>
           <div class="patient-info">
@@ -2049,9 +2049,9 @@ function SafetyChecklistForm({ existing, onSubmit, isLoading, caseData }: { exis
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-bold">GRAVITY HOSPITAL</h2>
-            <p className="text-sm text-muted-foreground">Tower Line Corner, Talawade Road,</p>
-            <p className="text-sm text-muted-foreground">Triveni Nagar, Pune 411 062.</p>
-            <p className="text-sm text-muted-foreground">Tel. No.: 8149200044, 8149300044</p>
+            <p className="text-sm text-muted-foreground">Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</p>
+            <p className="text-sm text-muted-foreground">Pimpri-Chinchwad, Maharashtra 411062</p>
+            <p className="text-sm text-muted-foreground">Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</p>
             <p className="text-sm text-muted-foreground">Email: info@gravityhospital.in</p>
           </div>
           <div className="text-right text-sm">
@@ -2873,9 +2873,9 @@ function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { exi
         <div class="header">
           <div class="hospital-info">
             <div class="hospital-name">GRAVITY HOSPITAL</div>
-            <div>Tower Line Corner, Talawade Road,</div>
-            <div>Triveni Nagar, Pune 411 062.</div>
-            <div>Tel. No.: 8149200044, 8149300044</div>
+            <div>Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</div>
+            <div>Pimpri-Chinchwad, Maharashtra 411062</div>
+            <div>Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</div>
             <div>Email: info@gravityhospital.in</div>
           </div>
           <div class="patient-info">
@@ -2950,9 +2950,9 @@ function PostOpAssessmentForm({ existing, onSubmit, isLoading, caseData }: { exi
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-bold">GRAVITY HOSPITAL</h2>
-            <p className="text-sm text-muted-foreground">Tower Line Corner, Talawade Road,</p>
-            <p className="text-sm text-muted-foreground">Triveni Nagar, Pune 411 062.</p>
-            <p className="text-sm text-muted-foreground">Tel. No.: 8149200044, 8149300044</p>
+            <p className="text-sm text-muted-foreground">Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</p>
+            <p className="text-sm text-muted-foreground">Pimpri-Chinchwad, Maharashtra 411062</p>
+            <p className="text-sm text-muted-foreground">Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</p>
             <p className="text-sm text-muted-foreground">Email: info@gravityhospital.in</p>
           </div>
           <div className="text-right text-sm">
@@ -3568,9 +3568,9 @@ function NeonateSheetForm({ existing, onSubmit, isLoading, caseData }: { existin
         <div class="header">
           <div class="hospital-info">
             <div class="hospital-name">GRAVITY HOSPITAL</div>
-            <div>Tower Line Corner, Talawade Road,</div>
-            <div>Triveni Nagar, Pune 411 062.</div>
-            <div>Tel. No.: 8149200044, 8149300044</div>
+            <div>Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</div>
+            <div>Pimpri-Chinchwad, Maharashtra 411062</div>
+            <div>Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</div>
             <div>Email: info@gravityhospital.in</div>
           </div>
           <div class="patient-info">
@@ -3664,9 +3664,9 @@ function NeonateSheetForm({ existing, onSubmit, isLoading, caseData }: { existin
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-bold">GRAVITY HOSPITAL</h2>
-            <p className="text-sm text-muted-foreground">Tower Line Corner, Talawade Road,</p>
-            <p className="text-sm text-muted-foreground">Triveni Nagar, Pune 411 062.</p>
-            <p className="text-sm text-muted-foreground">Tel. No.: 8149200044, 8149300044</p>
+            <p className="text-sm text-muted-foreground">Gat No. 167, Sahyog Nagar, Triveni Nagar, Nigdi</p>
+            <p className="text-sm text-muted-foreground">Pimpri-Chinchwad, Maharashtra 411062</p>
+            <p className="text-sm text-muted-foreground">Tel: +91 20 1234 5678 | Emergency: +91 20 1234 5680</p>
             <p className="text-sm text-muted-foreground">Email: info@gravityhospital.in</p>
           </div>
           <div className="text-right text-sm">
