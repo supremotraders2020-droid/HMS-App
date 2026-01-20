@@ -14711,6 +14711,76 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // Session-aware endpoint for patient lab reports (pathology)
+  app.get("/api/patient/my-lab-reports", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      // Get user identifiers for matching
+      const userId = user.id;
+      const userEmail = user.email?.toLowerCase()?.trim() || "";
+      const userName = user.username?.toLowerCase()?.trim() || "";
+      const userFullName = user.fullName?.toLowerCase()?.trim() || "";
+      
+      // Security guard: require at least one valid identifier
+      if (!userId && !userEmail && !userName && !userFullName) {
+        return res.json([]);
+      }
+
+      // Fetch all lab reports
+      const allLabReports = await storage.getAllLabReports();
+      
+      // Filter reports that belong to this patient
+      // Match by: patient_id = user.id, or by email/name matching
+      const patientReports = allLabReports.filter(report => {
+        // Primary match: patient_id matches user.id
+        if (report.patientId === userId) {
+          return true;
+        }
+        
+        // Secondary match: check if patient name or email matches
+        const reportPatientName = report.patientName?.toLowerCase()?.trim() || "";
+        const reportPatientEmail = report.patientEmail?.toLowerCase()?.trim() || "";
+        
+        // Email match (most reliable)
+        if (userEmail.length > 0 && reportPatientEmail.length > 0 && reportPatientEmail === userEmail) {
+          return true;
+        }
+        
+        // Name match (with guards against false positives)
+        if (userFullName.length > 2 && reportPatientName.length > 2) {
+          if (reportPatientName.includes(userFullName) || userFullName.includes(reportPatientName)) {
+            return true;
+          }
+        }
+        
+        // Username match (for cases where username is the name)
+        if (userName.length > 2 && reportPatientName.length > 2) {
+          if (reportPatientName.includes(userName)) {
+            return true;
+          }
+        }
+        
+        return false;
+      });
+      
+      // Sort by most recent first
+      patientReports.sort((a, b) => {
+        const dateA = a.reportDate ? new Date(a.reportDate).getTime() : 0;
+        const dateB = b.reportDate ? new Date(b.reportDate).getTime() : 0;
+        return dateB - dateA;
+      });
+      
+      res.json(patientReports);
+    } catch (error) {
+      console.error("Error fetching patient lab reports:", error);
+      res.status(500).json({ error: "Failed to fetch lab reports" });
+    }
+  });
+
   // Get technician reports by doctor (for doctor portal)
   app.get("/api/doctors/:doctorId/diagnostic-reports", requireAuth, async (req, res) => {
     try {
