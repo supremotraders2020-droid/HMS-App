@@ -3245,6 +3245,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Backfill lab orders for existing finalized prescriptions (admin utility)
+  app.post("/api/prescriptions/backfill-lab-orders", async (req, res) => {
+    try {
+      // Get all finalized prescriptions with suggested tests
+      const allPrescriptions = await storage.getPrescriptions();
+      const finalizedWithTests = allPrescriptions.filter(
+        (p: any) => p.prescriptionStatus === 'finalized' && p.suggestedTest
+      );
+      
+      let createdCount = 0;
+      const existingOrders = await databaseStorage.getAllLabTestOrders();
+      let orderCount = existingOrders.length;
+      
+      for (const prescription of finalizedWithTests) {
+        // Check if orders already exist for this prescription
+        const existingForPrescription = existingOrders.filter(
+          (o: any) => o.testId === `PRESC-${prescription.id}`
+        );
+        if (existingForPrescription.length > 0) continue;
+        
+        // Parse tests
+        let testsToOrder: string[] = [];
+        const testValue = prescription.suggestedTest.trim();
+        
+        if (testValue.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(testValue);
+            testsToOrder = Array.isArray(parsed) 
+              ? parsed.map((t: any) => typeof t === 'string' ? t : t.testName || t.name || '') 
+              : [];
+          } catch { testsToOrder = [testValue]; }
+        } else if (testValue.includes(',')) {
+          testsToOrder = testValue.split(',').map((t: string) => t.trim()).filter(Boolean);
+        } else {
+          testsToOrder = [testValue];
+        }
+        
+        for (const testName of testsToOrder) {
+          if (!testName) continue;
+          orderCount++;
+          const orderNumber = `LAB-${new Date().getFullYear()}-${String(orderCount).padStart(4, '0')}`;
+          
+          await databaseStorage.createLabTestOrder({
+            orderNumber,
+            patientId: prescription.patientId,
+            patientName: prescription.patientName,
+            patientAge: prescription.patientAge || undefined,
+            patientGender: prescription.patientGender || undefined,
+            doctorId: prescription.doctorId,
+            doctorName: prescription.doctorName,
+            testId: `PRESC-${prescription.id}`,
+            testName: testName,
+            testCode: undefined,
+            priority: 'NORMAL',
+            clinicalNotes: prescription.diagnosis || undefined,
+            suggestedTest: testName,
+            orderStatus: 'PENDING',
+          });
+          createdCount++;
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Created ${createdCount} lab orders from ${finalizedWithTests.length} finalized prescriptions` 
+      });
+    } catch (error) {
+      console.error("Backfill error:", error);
+      res.status(500).json({ error: "Failed to backfill lab orders" });
+    }
+  });
+
   // ========== PRESCRIPTION ITEMS ROUTES ==========
 
   // Get prescription items
