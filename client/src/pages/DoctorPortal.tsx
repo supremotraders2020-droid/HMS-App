@@ -2138,7 +2138,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                           <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
                           <div class="hospital-name"><span class="gravity">GRAVITY</span> <span class="hospital">HOSPITAL</span></div>
                         </div>
-                        <h2>GRAVITY HOSPITAL</h2>
                         <p>Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062</p>
                         <p>Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com</p>
                         <div class="subtitle">Medical Prescription</div>
@@ -2513,7 +2512,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                                   <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
                                   <div class="hospital-name"><span class="gravity">GRAVITY</span> <span class="hospital">HOSPITAL</span></div>
                                 </div>
-                                <h2>GRAVITY HOSPITAL</h2>
                                 <p>Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062</p>
                                 <p>Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com</p>
                                 <div style="margin-top: 8px; font-size: 14px; color: #6B3FA0; font-weight: 600;">Diagnostic Report</div>
