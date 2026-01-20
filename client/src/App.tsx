@@ -103,6 +103,8 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <MedicalStorePortal currentUserId={currentUser.id} />
         ) : currentUser.role === "TECHNICIAN" ? (
           <TechnicianPortal currentUserId={currentUser.id} currentUserName={currentUser.name} currentUserRole={currentUser.role} />
+        ) : currentUser.role === "PATHOLOGY_LAB" ? (
+          <PathologyLabPortal currentUserId={currentUser.id} currentUserName={currentUser.name} />
         ) : (
           <HMSDashboard 
             currentRole={currentUser.role}
@@ -117,6 +119,8 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <MedicalStorePortal currentUserId={currentUser.id} />
         ) : currentUser.role === "TECHNICIAN" ? (
           <TechnicianPortal currentUserId={currentUser.id} currentUserName={currentUser.name} currentUserRole={currentUser.role} />
+        ) : currentUser.role === "PATHOLOGY_LAB" ? (
+          <PathologyLabPortal currentUserId={currentUser.id} currentUserName={currentUser.name} />
         ) : (
           <HMSDashboard 
             currentRole={currentUser.role}
