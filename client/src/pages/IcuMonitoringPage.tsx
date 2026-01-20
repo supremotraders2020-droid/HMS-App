@@ -259,13 +259,9 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
             <title>ICU Chart - ${selectedChart.patientName}</title>
             <style>
               body { font-family: Arial, sans-serif; padding: 20px; font-size: 10px; }
-              .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
-              .hospital-logo { display: flex; align-items: center; gap: 10px; }
-              .logo-icon { width: 50px; height: 50px; }
-              .logo-icon svg { width: 100%; height: 100%; }
-              .hospital-name { font-size: 24px; font-weight: bold; }
-              .hospital-name .gravity { color: #E67E22; }
-              .hospital-name .hospital { color: #6B3FA0; }
+              .hospital-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
+              .hospital-logo { display: flex; align-items: center; }
+              .logo-img { height: 60px; }
               .hospital-details { text-align: right; flex: 1; }
               .hospital-title { color: #6B3FA0; font-size: 16px; font-weight: bold; margin-bottom: 4px; }
               .hospital-address { font-size: 11px; color: #4a5568; line-height: 1.4; }
@@ -288,16 +284,7 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
           <body>
             <div class="hospital-header">
               <div class="hospital-logo">
-                <div class="logo-icon">
-                  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="50" cy="50" rx="45" ry="45" fill="none" stroke="#E67E22" stroke-width="6"/>
-                    <line x1="50" y1="15" x2="50" y2="85" stroke="#E67E22" stroke-width="6"/>
-                  </svg>
-                </div>
-                <div class="hospital-name">
-                  <span class="gravity">GRAVITY</span><br/>
-                  <span class="hospital">HOSPITAL</span>
-                </div>
+                <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
               </div>
               <div class="hospital-details">
                 <div class="hospital-title">Gravity Hospital & Research Centre</div>

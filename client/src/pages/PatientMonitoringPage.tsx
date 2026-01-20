@@ -824,7 +824,14 @@ export default function PatientMonitoringPage() {
                         <title>IPD Monitoring Report - ${selectedSession.patientName}</title>
                         <style>
                           body { font-family: Arial, sans-serif; padding: 20px; font-size: 11px; }
-                          h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 18px; }
+                          .hospital-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
+                          .hospital-logo { display: flex; align-items: center; }
+                          .logo-img { height: 60px; }
+                          .hospital-details { text-align: right; }
+                          .hospital-title { color: #6B3FA0; font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+                          .hospital-address { font-size: 11px; color: #4a5568; line-height: 1.4; }
+                          .hospital-contact { font-size: 11px; color: #4a5568; font-weight: 600; }
+                          h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 18px; margin-top: 10px; }
                           h2 { color: #2d3748; margin-top: 25px; font-size: 14px; background: #f7fafc; padding: 8px; border-left: 3px solid #3182ce; }
                           .header { margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
                           .info-row { display: flex; gap: 8px; }
@@ -840,7 +847,20 @@ export default function PatientMonitoringPage() {
                         </style>
                       </head>
                       <body>
-                        <h1>IPD Monitoring Report - Gravity Hospital</h1>
+                        <div class="hospital-header">
+                          <div class="hospital-logo">
+                            <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
+                          </div>
+                          <div class="hospital-details">
+                            <div class="hospital-title">Gravity Hospital & Research Centre</div>
+                            <div class="hospital-address">
+                              Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br/>
+                              Pimpri-Chinchwad, Maharashtra - 411062
+                            </div>
+                            <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+                          </div>
+                        </div>
+                        <h1>IPD Monitoring Report</h1>
                         <div class="header">
                           <div class="info-row"><span class="label">Patient Name:</span> ${selectedSession.patientName}</div>
                           <div class="info-row"><span class="label">UHID:</span> ${selectedSession.uhid}</div>
@@ -905,7 +925,7 @@ export default function PatientMonitoringPage() {
                         )}
 
                         <div class="footer">
-                          <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital IPD Monitoring System</p>
+                          <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital & Research Centre - IPD Monitoring System</p>
                         </div>
                       </body>
                       </html>
