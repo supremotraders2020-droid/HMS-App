@@ -966,7 +966,7 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+    <form key={caseData?.id || 'new'} onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
       <div className="border rounded-lg p-4 bg-card">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
@@ -984,25 +984,25 @@ function CounsellingForm({ existing, onSubmit, isLoading, caseData }: { existing
           <div className="text-right text-sm space-y-1">
             <div className="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
               <span className="text-muted-foreground">Patient Name:</span>
-              <Input name="preopPatientName" defaultValue={caseData?.patientName || ""} placeholder="Patient Name" className="text-xs" />
+              <Input name="preopPatientName" key={`pn-${caseData?.id}`} defaultValue={caseData?.patientName || ""} placeholder="Patient Name" className="text-xs" />
               <span className="text-muted-foreground">UHID No:</span>
-              <Input name="preopUhid" defaultValue={caseData?.uhid || ""} placeholder="UHID" className="text-xs" />
+              <Input name="preopUhid" key={`uhid-${caseData?.id}`} defaultValue={caseData?.uhid || ""} placeholder="UHID" className="text-xs" />
               <span className="text-muted-foreground">Age/Gender:</span>
               <div className="flex gap-1">
-                <Input name="preopAge" defaultValue={caseData?.patientAge || ""} placeholder="Age" className="text-xs w-14" />
-                <Input name="preopGender" defaultValue={caseData?.patientGender || ""} placeholder="M/F" className="text-xs w-12" />
+                <Input name="preopAge" key={`age-${caseData?.id}`} defaultValue={caseData?.patientAge || ""} placeholder="Age" className="text-xs w-14" />
+                <Input name="preopGender" key={`gen-${caseData?.id}`} defaultValue={caseData?.patientGender || ""} placeholder="M/F" className="text-xs w-12" />
               </div>
               <span className="text-muted-foreground">Room/Bed:</span>
               <div className="flex gap-1">
-                <Input name="preopRoom" defaultValue={caseData?.room || ""} placeholder="Room" className="text-xs" />
-                <Input name="preopBed" defaultValue={caseData?.bedNumber || ""} placeholder="Bed" className="text-xs w-12" />
+                <Input name="preopRoom" key={`room-${caseData?.id}`} defaultValue={caseData?.room || ""} placeholder="Room" className="text-xs" />
+                <Input name="preopBed" key={`bed-${caseData?.id}`} defaultValue={caseData?.bedNumber || ""} placeholder="Bed" className="text-xs w-12" />
               </div>
               <span className="text-muted-foreground">Doctor:</span>
-              <Input name="preopDoctor" defaultValue={caseData?.surgeonName || ""} placeholder="Doctor" className="text-xs" />
+              <Input name="preopDoctor" key={`doc-${caseData?.id}`} defaultValue={caseData?.surgeonName || ""} placeholder="Doctor" className="text-xs" />
               <span className="text-muted-foreground">IPD No:</span>
-              <Input name="preopIpdNo" defaultValue={caseData?.ipdNumber || ""} placeholder="IPD No" className="text-xs" />
+              <Input name="preopIpdNo" key={`ipd-${caseData?.id}`} defaultValue={caseData?.ipdNumber || ""} placeholder="IPD No" className="text-xs" />
               <span className="text-muted-foreground">DOA:</span>
-              <Input name="preopDoa" type="date" defaultValue={caseData?.admissionDate ? format(new Date(caseData.admissionDate), "yyyy-MM-dd") : ""} className="text-xs" />
+              <Input name="preopDoa" key={`doa-${caseData?.id}`} type="date" defaultValue={caseData?.admissionDate ? format(new Date(caseData.admissionDate), "yyyy-MM-dd") : ""} className="text-xs" />
             </div>
           </div>
         </div>
@@ -1657,7 +1657,7 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form key={caseData?.id || 'new-pae'} onSubmit={handleSubmit} className="space-y-4">
       <div className="border rounded-lg p-4 bg-muted/30 mb-4">
         <div className="flex justify-between items-start">
           <div>
@@ -1675,25 +1675,25 @@ function PAEForm({ existing, onSubmit, isLoading, caseData }: { existing: any; o
           <div className="text-right text-sm space-y-1">
             <div className="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
               <span className="text-muted-foreground">Patient Name:</span>
-              <Input name="paePatientName" defaultValue={caseData?.patientName || ""} placeholder="Patient Name" className="text-xs" />
+              <Input name="paePatientName" key={`pae-pn-${caseData?.id}`} defaultValue={caseData?.patientName || ""} placeholder="Patient Name" className="text-xs" />
               <span className="text-muted-foreground">UHID No:</span>
-              <Input name="paeUhid" defaultValue={caseData?.uhid || ""} placeholder="UHID" className="text-xs" />
+              <Input name="paeUhid" key={`pae-uhid-${caseData?.id}`} defaultValue={caseData?.uhid || ""} placeholder="UHID" className="text-xs" />
               <span className="text-muted-foreground">Age/Gender:</span>
               <div className="flex gap-1">
-                <Input name="paeAge" defaultValue={caseData?.patientAge || caseData?.age || ""} placeholder="Age" className="text-xs w-14" />
-                <Input name="paeGender" defaultValue={caseData?.patientGender || caseData?.gender || ""} placeholder="M/F" className="text-xs w-12" />
+                <Input name="paeAge" key={`pae-age-${caseData?.id}`} defaultValue={caseData?.patientAge || caseData?.age || ""} placeholder="Age" className="text-xs w-14" />
+                <Input name="paeGender" key={`pae-gen-${caseData?.id}`} defaultValue={caseData?.patientGender || caseData?.gender || ""} placeholder="M/F" className="text-xs w-12" />
               </div>
               <span className="text-muted-foreground">Room/Bed:</span>
               <div className="flex gap-1">
-                <Input name="paeRoom" defaultValue={caseData?.room || ""} placeholder="Room" className="text-xs" />
-                <Input name="paeBed" defaultValue={caseData?.bedNumber || ""} placeholder="Bed" className="text-xs w-12" />
+                <Input name="paeRoom" key={`pae-room-${caseData?.id}`} defaultValue={caseData?.room || ""} placeholder="Room" className="text-xs" />
+                <Input name="paeBed" key={`pae-bed-${caseData?.id}`} defaultValue={caseData?.bedNumber || ""} placeholder="Bed" className="text-xs w-12" />
               </div>
               <span className="text-muted-foreground">Doctor:</span>
-              <Input name="paeDoctor" defaultValue={caseData?.surgeonName || ""} placeholder="Doctor" className="text-xs" />
+              <Input name="paeDoctor" key={`pae-doc-${caseData?.id}`} defaultValue={caseData?.surgeonName || ""} placeholder="Doctor" className="text-xs" />
               <span className="text-muted-foreground">IPD No:</span>
-              <Input name="paeIpdNo" defaultValue={caseData?.ipdNumber || ""} placeholder="IPD No" className="text-xs" />
+              <Input name="paeIpdNo" key={`pae-ipd-${caseData?.id}`} defaultValue={caseData?.ipdNumber || ""} placeholder="IPD No" className="text-xs" />
               <span className="text-muted-foreground">DOA:</span>
-              <Input name="paeDoa" type="date" defaultValue={caseData?.admissionDate ? format(new Date(caseData.admissionDate), "yyyy-MM-dd") : ""} className="text-xs" />
+              <Input name="paeDoa" key={`pae-doa-${caseData?.id}`} type="date" defaultValue={caseData?.admissionDate ? format(new Date(caseData.admissionDate), "yyyy-MM-dd") : ""} className="text-xs" />
             </div>
           </div>
         </div>
@@ -2553,7 +2553,7 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { ex
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form key={caseData?.id || 'new-ana'} onSubmit={handleSubmit} className="space-y-4">
       <div className="border rounded-lg p-4 mb-4">
         <div className="flex justify-between items-start">
           <div>
@@ -2566,25 +2566,25 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { ex
           <div className="text-right text-sm space-y-1">
             <div className="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
               <span className="text-muted-foreground">Patient Name:</span>
-              <Input name="anaPatientName" defaultValue={caseData?.patientName || ""} placeholder="Patient Name" className="text-xs" />
+              <Input name="anaPatientName" key={`ana-pn-${caseData?.id}`} defaultValue={caseData?.patientName || ""} placeholder="Patient Name" className="text-xs" />
               <span className="text-muted-foreground">UHID No:</span>
-              <Input name="anaUhid" defaultValue={caseData?.uhid || ""} placeholder="UHID" className="text-xs" />
+              <Input name="anaUhid" key={`ana-uhid-${caseData?.id}`} defaultValue={caseData?.uhid || ""} placeholder="UHID" className="text-xs" />
               <span className="text-muted-foreground">Age/Gender:</span>
               <div className="flex gap-1">
-                <Input name="anaAge" defaultValue={caseData?.patientAge || caseData?.age || ""} placeholder="Age" className="text-xs w-14" />
-                <Input name="anaGender" defaultValue={caseData?.patientGender || caseData?.gender || ""} placeholder="M/F" className="text-xs w-12" />
+                <Input name="anaAge" key={`ana-age-${caseData?.id}`} defaultValue={caseData?.patientAge || caseData?.age || ""} placeholder="Age" className="text-xs w-14" />
+                <Input name="anaGender" key={`ana-gen-${caseData?.id}`} defaultValue={caseData?.patientGender || caseData?.gender || ""} placeholder="M/F" className="text-xs w-12" />
               </div>
               <span className="text-muted-foreground">Room/Bed:</span>
               <div className="flex gap-1">
-                <Input name="anaRoom" defaultValue={caseData?.room || ""} placeholder="Room" className="text-xs" />
-                <Input name="anaBed" defaultValue={caseData?.bedNumber || ""} placeholder="Bed" className="text-xs w-12" />
+                <Input name="anaRoom" key={`ana-room-${caseData?.id}`} defaultValue={caseData?.room || ""} placeholder="Room" className="text-xs" />
+                <Input name="anaBed" key={`ana-bed-${caseData?.id}`} defaultValue={caseData?.bedNumber || ""} placeholder="Bed" className="text-xs w-12" />
               </div>
               <span className="text-muted-foreground">Doctor:</span>
-              <Input name="anaDoctor" defaultValue={caseData?.surgeonName || ""} placeholder="Doctor" className="text-xs" />
+              <Input name="anaDoctor" key={`ana-doc-${caseData?.id}`} defaultValue={caseData?.surgeonName || ""} placeholder="Doctor" className="text-xs" />
               <span className="text-muted-foreground">IPD No:</span>
-              <Input name="anaIpdNo" defaultValue={caseData?.ipdNumber || ""} placeholder="IPD No" className="text-xs" />
+              <Input name="anaIpdNo" key={`ana-ipd-${caseData?.id}`} defaultValue={caseData?.ipdNumber || ""} placeholder="IPD No" className="text-xs" />
               <span className="text-muted-foreground">DOA:</span>
-              <Input name="anaDoa" type="date" defaultValue={caseData?.admissionDate ? format(new Date(caseData.admissionDate), "yyyy-MM-dd") : ""} className="text-xs" />
+              <Input name="anaDoa" key={`ana-doa-${caseData?.id}`} type="date" defaultValue={caseData?.admissionDate ? format(new Date(caseData.admissionDate), "yyyy-MM-dd") : ""} className="text-xs" />
             </div>
           </div>
         </div>
