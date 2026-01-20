@@ -877,69 +877,71 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
                     <p>No lab reports uploaded yet</p>
                   </div>
                 ) : (
-                  <ScrollArea className="h-[400px]">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Report #</TableHead>
-                          <TableHead>Patient</TableHead>
-                          <TableHead>Test</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Interpretation</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredReports.map((report: any) => (
-                          <TableRow key={report.id} data-testid={`row-report-${report.id}`}>
-                            <TableCell className="font-mono text-sm">{report.reportNumber}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                                {report.patientName}
-                              </div>
-                            </TableCell>
-                            <TableCell>{report.testName}</TableCell>
-                            <TableCell>{getStatusBadge(report.reportStatus)}</TableCell>
-                            <TableCell>{getInterpretationBadge(report.interpretation)}</TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                              {report.createdAt ? format(new Date(report.createdAt), "dd MMM yyyy") : "-"}
-                            </TableCell>
-                            <TableCell>
-                              {report.pdfUrl && (
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => window.open(report.pdfUrl, '_blank')}
-                                    title="View Report"
-                                    data-testid={`button-view-report-${report.id}`}
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => {
-                                      const link = document.createElement('a');
-                                      link.href = report.pdfUrl;
-                                      link.download = `${report.reportNumber}.pdf`;
-                                      link.click();
-                                    }}
-                                    title="Download Report"
-                                    data-testid={`button-download-report-${report.id}`}
-                                  >
-                                    <Download className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
-                            </TableCell>
+                  <div className="overflow-x-auto">
+                    <ScrollArea className="h-[400px]">
+                      <Table className="min-w-[700px]">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="whitespace-nowrap">Report #</TableHead>
+                            <TableHead className="whitespace-nowrap">Patient</TableHead>
+                            <TableHead className="whitespace-nowrap">Test</TableHead>
+                            <TableHead className="whitespace-nowrap">Status</TableHead>
+                            <TableHead className="whitespace-nowrap">Interpretation</TableHead>
+                            <TableHead className="whitespace-nowrap">Date</TableHead>
+                            <TableHead className="whitespace-nowrap sticky right-0 bg-card">Actions</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </ScrollArea>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredReports.map((report: any) => (
+                            <TableRow key={report.id} data-testid={`row-report-${report.id}`}>
+                              <TableCell className="font-mono text-sm whitespace-nowrap">{report.reportNumber}</TableCell>
+                              <TableCell className="whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                  <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                                  {report.patientName}
+                                </div>
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate" title={report.testName}>{report.testName}</TableCell>
+                              <TableCell className="whitespace-nowrap">{getStatusBadge(report.reportStatus)}</TableCell>
+                              <TableCell className="whitespace-nowrap">{getInterpretationBadge(report.interpretation)}</TableCell>
+                              <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                                {report.createdAt ? format(new Date(report.createdAt), "dd MMM yyyy") : "-"}
+                              </TableCell>
+                              <TableCell className="sticky right-0 bg-card">
+                                {report.pdfUrl && (
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => window.open(report.pdfUrl, '_blank')}
+                                      title="View Report"
+                                      data-testid={`button-view-report-${report.id}`}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const link = document.createElement('a');
+                                        link.href = report.pdfUrl;
+                                        link.download = `${report.reportNumber}.pdf`;
+                                        link.click();
+                                      }}
+                                      title="Download Report"
+                                      data-testid={`button-download-report-${report.id}`}
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  </div>
                 )}
               </CardContent>
             </Card>
