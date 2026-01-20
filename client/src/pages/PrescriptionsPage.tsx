@@ -124,15 +124,20 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
         <title>Prescription - ${prescription.prescriptionNumber}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-          .header { text-align: center; border-bottom: 2px solid #0ea5e9; padding-bottom: 20px; margin-bottom: 20px; }
-          .header h1 { color: #0ea5e9; margin: 0; }
-          .header p { margin: 5px 0; color: #666; }
+          .hospital-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
+          .logo-img { height: 50px; }
+          .hospital-name { font-size: 28px; font-weight: bold; }
+          .hospital-name .gravity { color: #E67E22; }
+          .hospital-name .hospital { color: #6B3FA0; }
+          .header { text-align: center; border-bottom: 2px solid #6B3FA0; padding-bottom: 15px; margin-bottom: 20px; }
+          .header h2 { color: #333; margin: 10px 0 5px; font-size: 18px; }
+          .header p { margin: 3px 0; color: #666; font-size: 12px; }
           .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
           .info-box { background: #f8fafc; padding: 15px; border-radius: 8px; }
           .info-box h3 { margin: 0 0 10px; color: #334155; font-size: 14px; }
           .info-box p { margin: 5px 0; }
           table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          th { background: #0ea5e9; color: white; padding: 10px; text-align: left; }
+          th { background: #6B3FA0; color: white; padding: 10px; text-align: left; }
           .diagnosis { background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
           .footer { margin-top: 40px; text-align: right; }
           .signature { border-top: 1px solid #333; width: 200px; margin-left: auto; padding-top: 10px; }
@@ -141,9 +146,13 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
       </head>
       <body>
         <div class="header">
-          <h1>Gravity Hospital</h1>
+          <div class="hospital-header">
+            <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
+            <div class="hospital-name"><span class="gravity">GRAVITY</span> <span class="hospital">HOSPITAL</span></div>
+          </div>
+          <h2>GRAVITY HOSPITAL</h2>
           <p>Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062</p>
-          <p>Phone: +91 20 1234 5678</p>
+          <p>Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com</p>
         </div>
         
         <h2 style="text-align: center; margin-bottom: 20px;">PRESCRIPTION</h2>

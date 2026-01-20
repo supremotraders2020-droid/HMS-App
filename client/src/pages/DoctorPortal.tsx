@@ -2104,18 +2104,24 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       <title>Prescription - ${rx.patientName}</title>
                       <style>
                         body { font-family: Arial, sans-serif; padding: 40px; font-size: 14px; line-height: 1.5; }
-                        .header { text-align: center; border-bottom: 2px solid #1a56db; padding-bottom: 15px; margin-bottom: 25px; }
-                        .hospital { font-size: 26px; font-weight: bold; color: #1a56db; }
-                        .subtitle { font-size: 14px; color: #666; margin-top: 5px; }
+                        .hospital-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
+                        .logo-img { height: 50px; }
+                        .hospital-name { font-size: 28px; font-weight: bold; }
+                        .hospital-name .gravity { color: #E67E22; }
+                        .hospital-name .hospital { color: #6B3FA0; }
+                        .header { text-align: center; border-bottom: 2px solid #6B3FA0; padding-bottom: 15px; margin-bottom: 25px; }
+                        .header h2 { color: #333; margin: 10px 0 5px; font-size: 18px; }
+                        .header p { margin: 3px 0; color: #666; font-size: 12px; }
+                        .subtitle { font-size: 14px; color: #6B3FA0; margin-top: 5px; font-weight: 600; }
                         .section { margin: 18px 0; }
-                        .section-title { font-weight: bold; color: #1a56db; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
+                        .section-title { font-weight: bold; color: #6B3FA0; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
                         .label { font-weight: 600; color: #374151; }
                         .value { color: #111; margin-top: 3px; }
                         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
                         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
                         .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
                         .medicines-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        .medicines-table th { background: #1a56db; color: white; padding: 10px 8px; text-align: left; font-size: 12px; font-weight: 600; }
+                        .medicines-table th { background: #6B3FA0; color: white; padding: 10px 8px; text-align: left; font-size: 12px; font-weight: 600; }
                         .medicines-table td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
                         .medicines-table tr:nth-child(even) { background: #f9fafb; }
                         .medicines-table tr:hover { background: #f3f4f6; }
@@ -2128,7 +2134,13 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                     </head>
                     <body>
                       <div class="header">
-                        <div class="hospital">Gravity Hospital</div>
+                        <div class="hospital-header">
+                          <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
+                          <div class="hospital-name"><span class="gravity">GRAVITY</span> <span class="hospital">HOSPITAL</span></div>
+                        </div>
+                        <h2>GRAVITY HOSPITAL</h2>
+                        <p>Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062</p>
+                        <p>Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com</p>
                         <div class="subtitle">Medical Prescription</div>
                       </div>
                       
@@ -2257,7 +2269,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                           <div style="font-size: 12px; color: #666;">${rx.doctorRegistrationNo ? `Reg. No: ${rx.doctorRegistrationNo}` : ''}</div>
                         </div>
                         <div style="margin-top: 20px; font-size: 12px; color: #666;">
-                          <div>Gravity Hospital - Pimpri-Chinchwad</div>
+                          <div>Gravity Hospital & Research Centre - Pimpri-Chinchwad</div>
                           <div>Prescription #: ${rx.prescriptionNumber || rx.id}</div>
                         </div>
                       </div>
@@ -2481,18 +2493,30 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                               <title>Diagnostic Report - ${report.testName}</title>
                               <style>
                                 body { font-family: Arial, sans-serif; padding: 40px; }
-                                .header { text-align: center; border-bottom: 2px solid #1a56db; padding-bottom: 15px; margin-bottom: 25px; }
-                                .hospital { font-size: 26px; font-weight: bold; color: #1a56db; }
+                                .hospital-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
+                                .logo-img { height: 50px; }
+                                .hospital-name { font-size: 28px; font-weight: bold; }
+                                .hospital-name .gravity { color: #E67E22; }
+                                .hospital-name .hospital { color: #6B3FA0; }
+                                .header { text-align: center; border-bottom: 2px solid #6B3FA0; padding-bottom: 15px; margin-bottom: 25px; }
+                                .header h2 { color: #333; margin: 10px 0 5px; font-size: 18px; }
+                                .header p { margin: 3px 0; color: #666; font-size: 12px; }
                                 .section { margin: 18px 0; }
-                                .section-title { font-weight: bold; color: #1a56db; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
+                                .section-title { font-weight: bold; color: #6B3FA0; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
                                 .label { font-weight: 600; color: #374151; }
                                 .value { color: #111; margin-top: 3px; }
                               </style>
                             </head>
                             <body>
                               <div class="header">
-                                <div class="hospital">Gravity Hospital</div>
-                                <div>Diagnostic Report</div>
+                                <div class="hospital-header">
+                                  <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
+                                  <div class="hospital-name"><span class="gravity">GRAVITY</span> <span class="hospital">HOSPITAL</span></div>
+                                </div>
+                                <h2>GRAVITY HOSPITAL</h2>
+                                <p>Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062</p>
+                                <p>Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com</p>
+                                <div style="margin-top: 8px; font-size: 14px; color: #6B3FA0; font-weight: 600;">Diagnostic Report</div>
                               </div>
                               <div class="section">
                                 <div class="section-title">Test Details</div>
