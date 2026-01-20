@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plus, Search, Calendar, User, Thermometer, BarChart3, FileText, AlertTriangle, Stethoscope, Syringe, Beaker, FlaskConical, Scale, Timer, BedDouble, ArrowLeft, Download } from "lucide-react";
+import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plus, Search, Calendar, User, Thermometer, BarChart3, FileText, AlertTriangle, Stethoscope, Syringe, Beaker, FlaskConical, Scale, Timer, BedDouble, ArrowLeft, Download, ArrowUp, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
 import { Pencil, Check, X } from "lucide-react";
 import type { IcuCharts, ServicePatient } from "@shared/schema";
@@ -1509,16 +1509,257 @@ function FluidBalanceSection({ chartId, intakeData, outputData, targetData, canE
   canEdit: boolean; 
   userId?: string 
 }) {
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [recordType, setRecordType] = useState<"intake" | "output">("intake");
+  const [newIntake, setNewIntake] = useState({
+    timeSlot: "",
+    line1: "",
+    line2: "",
+    line3: "",
+    line4: "",
+    line5: "",
+    line6: "",
+    totalIntake: ""
+  });
+  const [newOutput, setNewOutput] = useState({
+    timeSlot: "",
+    urineHourly: "",
+    otherLosses: "",
+    totalOutput: ""
+  });
+
   const totalIntake = intakeData.reduce((sum, e) => sum + (parseFloat(e.totalIntake) || 0), 0);
   const totalOutput = outputData.reduce((sum, e) => sum + (parseFloat(e.totalOutput) || 0), 0);
   const balance = totalIntake - totalOutput;
 
+  const addIntakeMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/icu-charts/${chartId}/intake`, { ...newIntake, recordedBy: userId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      setShowAddForm(false);
+      setNewIntake({ timeSlot: "", line1: "", line2: "", line3: "", line4: "", line5: "", line6: "", totalIntake: "" });
+      toast({ title: "Intake record added successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add intake record", variant: "destructive" });
+    }
+  });
+
+  const addOutputMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/icu-charts/${chartId}/output`, { ...newOutput, recordedBy: userId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      setShowAddForm(false);
+      setNewOutput({ timeSlot: "", urineHourly: "", otherLosses: "", totalOutput: "" });
+      toast({ title: "Output record added successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add output record", variant: "destructive" });
+    }
+  });
+
+  const calculateTotalIntake = () => {
+    const total = (parseFloat(newIntake.line1) || 0) + 
+                  (parseFloat(newIntake.line2) || 0) + 
+                  (parseFloat(newIntake.line3) || 0) + 
+                  (parseFloat(newIntake.line4) || 0) +
+                  (parseFloat(newIntake.line5) || 0) +
+                  (parseFloat(newIntake.line6) || 0);
+    setNewIntake({ ...newIntake, totalIntake: total.toString() });
+  };
+
+  const calculateTotalOutput = () => {
+    const total = (parseFloat(newOutput.urineHourly) || 0) + 
+                  (parseFloat(newOutput.otherLosses) || 0);
+    setNewOutput({ ...newOutput, totalOutput: total.toString() });
+  };
+
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold flex items-center gap-2">
-        <Droplets className="w-4 h-4 text-cyan-500" />
-        24-Hour Fluid Balance
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold flex items-center gap-2">
+          <Droplets className="w-4 h-4 text-cyan-500" />
+          24-Hour Fluid Balance
+        </h3>
+        {canEdit && (
+          <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} data-testid="button-add-io">
+            <Plus className="w-4 h-4 mr-1" />
+            Add
+          </Button>
+        )}
+      </div>
+
+      {showAddForm && (
+        <Card className="p-4 space-y-4">
+          <div className="flex gap-2 mb-4">
+            <Button 
+              size="sm" 
+              variant={recordType === "intake" ? "default" : "outline"}
+              onClick={() => setRecordType("intake")}
+            >
+              <ArrowDown className="w-3 h-3 mr-1" /> Intake
+            </Button>
+            <Button 
+              size="sm" 
+              variant={recordType === "output" ? "default" : "outline"}
+              onClick={() => setRecordType("output")}
+            >
+              <ArrowUp className="w-3 h-3 mr-1" /> Output
+            </Button>
+          </div>
+
+          {recordType === "intake" ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Time Slot</Label>
+                  <Select value={newIntake.timeSlot} onValueChange={(v) => setNewIntake({ ...newIntake, timeSlot: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select hour" /></SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <SelectItem key={i} value={`${i.toString().padStart(2, '0')}:00`}>
+                          {i.toString().padStart(2, '0')}:00 - {((i + 1) % 24).toString().padStart(2, '0')}:00
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>IV Line 1 (mL)</Label>
+                  <Input 
+                    type="number" 
+                    value={newIntake.line1} 
+                    onChange={(e) => setNewIntake({ ...newIntake, line1: e.target.value })}
+                    onBlur={calculateTotalIntake}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>IV Line 2 (mL)</Label>
+                  <Input 
+                    type="number" 
+                    value={newIntake.line2} 
+                    onChange={(e) => setNewIntake({ ...newIntake, line2: e.target.value })}
+                    onBlur={calculateTotalIntake}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>IV Line 3 (mL)</Label>
+                  <Input 
+                    type="number" 
+                    value={newIntake.line3} 
+                    onChange={(e) => setNewIntake({ ...newIntake, line3: e.target.value })}
+                    onBlur={calculateTotalIntake}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Blood/Colloid (mL)</Label>
+                  <Input 
+                    type="number" 
+                    value={newIntake.line4} 
+                    onChange={(e) => setNewIntake({ ...newIntake, line4: e.target.value })}
+                    onBlur={calculateTotalIntake}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Oral/RT Feed (mL)</Label>
+                  <Input 
+                    type="number" 
+                    value={newIntake.line5} 
+                    onChange={(e) => setNewIntake({ ...newIntake, line5: e.target.value })}
+                    onBlur={calculateTotalIntake}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Total Intake (mL)</Label>
+                  <Input 
+                    type="number" 
+                    value={newIntake.totalIntake} 
+                    onChange={(e) => setNewIntake({ ...newIntake, totalIntake: e.target.value })}
+                    className="font-bold bg-green-50 dark:bg-green-900/20"
+                    placeholder="Auto-calculated"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button 
+                    onClick={() => addIntakeMutation.mutate()} 
+                    disabled={!newIntake.timeSlot || addIntakeMutation.isPending}
+                  >
+                    {addIntakeMutation.isPending ? "Adding..." : "Add Intake"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Time Slot</Label>
+                  <Select value={newOutput.timeSlot} onValueChange={(v) => setNewOutput({ ...newOutput, timeSlot: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select hour" /></SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <SelectItem key={i} value={`${i.toString().padStart(2, '0')}:00`}>
+                          {i.toString().padStart(2, '0')}:00 - {((i + 1) % 24).toString().padStart(2, '0')}:00
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Urine Output (mL)</Label>
+                  <Input 
+                    type="number" 
+                    value={newOutput.urineHourly} 
+                    onChange={(e) => setNewOutput({ ...newOutput, urineHourly: e.target.value })}
+                    onBlur={calculateTotalOutput}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Other Losses (mL)</Label>
+                  <Input 
+                    type="number" 
+                    value={newOutput.otherLosses} 
+                    onChange={(e) => setNewOutput({ ...newOutput, otherLosses: e.target.value })}
+                    onBlur={calculateTotalOutput}
+                    placeholder="Drain, NG, Stool"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Total Output (mL)</Label>
+                  <Input 
+                    type="number" 
+                    value={newOutput.totalOutput} 
+                    onChange={(e) => setNewOutput({ ...newOutput, totalOutput: e.target.value })}
+                    className="font-bold bg-red-50 dark:bg-red-900/20"
+                    placeholder="Auto-calculated"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button 
+                  onClick={() => addOutputMutation.mutate()} 
+                  disabled={!newOutput.timeSlot || addOutputMutation.isPending}
+                >
+                  {addOutputMutation.isPending ? "Adding..." : "Add Output"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
 
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-4 text-center">
@@ -1547,9 +1788,68 @@ function FluidBalanceSection({ chartId, intakeData, outputData, targetData, canE
         </Card>
       )}
 
-      <div className="text-sm text-muted-foreground">
-        Detailed hourly intake/output records can be added via the monitoring forms.
-      </div>
+      {(intakeData.length > 0 || outputData.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {intakeData.length > 0 && (
+            <Card className="p-4">
+              <h4 className="font-medium mb-2 flex items-center gap-2 text-green-600">
+                <ArrowDown className="w-4 h-4" /> Recent Intake Records
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Time</th>
+                      <th className="text-right p-2">Line 1</th>
+                      <th className="text-right p-2">Line 2</th>
+                      <th className="text-right p-2 font-bold">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {intakeData.slice(0, 5).map((entry: any, idx: number) => (
+                      <tr key={idx} className="border-b">
+                        <td className="p-2">{entry.timeSlot || "-"}</td>
+                        <td className="p-2 text-right">{entry.line1 || "-"}</td>
+                        <td className="p-2 text-right">{entry.line2 || "-"}</td>
+                        <td className="p-2 text-right font-medium text-green-600">{entry.totalIntake || 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+          {outputData.length > 0 && (
+            <Card className="p-4">
+              <h4 className="font-medium mb-2 flex items-center gap-2 text-red-600">
+                <ArrowUp className="w-4 h-4" /> Recent Output Records
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Time</th>
+                      <th className="text-right p-2">Urine</th>
+                      <th className="text-right p-2">Other</th>
+                      <th className="text-right p-2 font-bold">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {outputData.slice(0, 5).map((entry: any, idx: number) => (
+                      <tr key={idx} className="border-b">
+                        <td className="p-2">{entry.timeSlot || "-"}</td>
+                        <td className="p-2 text-right">{entry.urineHourly || "-"}</td>
+                        <td className="p-2 text-right">{entry.otherLosses || "-"}</td>
+                        <td className="p-2 text-right font-medium text-red-600">{entry.totalOutput || 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }
