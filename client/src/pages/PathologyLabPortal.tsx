@@ -499,11 +499,13 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
   // Orders with suggested tests (from doctor recommendations)
   const suggestedTestOrders = orders.filter(o => o.suggestedTest && o.suggestedTest.trim() !== "");
 
-  const filteredPendingOrders = pendingOrders.filter(o =>
-    o.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.testName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPendingOrders = pendingOrders
+    .filter(o =>
+      o.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.testName?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const filteredSuggestedTestOrders = suggestedTestOrders.filter(o =>
     o.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -685,8 +687,7 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
                       <TableHead>Doctor</TableHead>
                       <TableHead>Priority</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Action</TableHead>
+                      <TableHead>Date & Time</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -704,178 +705,7 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
                         <TableCell>{getPriorityBadge(order.priority)}</TableCell>
                         <TableCell>{getStatusBadge(order.orderStatus)}</TableCell>
                         <TableCell className="text-muted-foreground text-sm">
-                          {order.createdAt ? format(new Date(order.createdAt), "dd MMM yyyy") : "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Dialog open={isUploadDialogOpen && selectedOrder?.id === order.id} onOpenChange={(open) => {
-                            setIsUploadDialogOpen(open);
-                            if (open) {
-                              setSelectedOrder(order);
-                              setReportData(prev => ({
-                                ...prev,
-                                testName: order.testName,
-                              }));
-                            } else {
-                              setSelectedOrder(null);
-                            }
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" data-testid={`button-upload-${order.id}`}>
-                                <Upload className="h-4 w-4 mr-1" />
-                                Upload Report
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                  <FlaskConical className="h-5 w-5" />
-                                  Upload Lab Report
-                                </DialogTitle>
-                                <DialogDescription>
-                                  Enter lab test results for {order.patientName} - {order.testName}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4 mt-4">
-                                <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
-                                  <div>
-                                    <p className="text-sm text-muted-foreground">Patient</p>
-                                    <p className="font-medium">{order.patientName}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm text-muted-foreground">Order Number</p>
-                                    <p className="font-mono">{order.orderNumber}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm text-muted-foreground">Test</p>
-                                    <p className="font-medium">{order.testName}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm text-muted-foreground">Referring Doctor</p>
-                                    <p className="font-medium">{order.doctorName}</p>
-                                  </div>
-                                  {order.suggestedTest && (
-                                    <div className="col-span-2">
-                                      <p className="text-sm text-muted-foreground">Suggested Test</p>
-                                      <p className="font-medium text-primary">{order.suggestedTest}</p>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-4">
-                                  <div className="space-y-2">
-                                    <Label htmlFor="resultValue">Result Value</Label>
-                                    <Input
-                                      id="resultValue"
-                                      value={reportData.resultValue}
-                                      onChange={(e) => setReportData(prev => ({ ...prev, resultValue: e.target.value }))}
-                                      placeholder="e.g., 120"
-                                      data-testid="input-result-value"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label htmlFor="resultUnit">Unit</Label>
-                                    <Input
-                                      id="resultUnit"
-                                      value={reportData.resultUnit}
-                                      onChange={(e) => setReportData(prev => ({ ...prev, resultUnit: e.target.value }))}
-                                      placeholder="e.g., mg/dL"
-                                      data-testid="input-result-unit"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label htmlFor="normalRange">Normal Range</Label>
-                                    <Input
-                                      id="normalRange"
-                                      value={reportData.normalRange}
-                                      onChange={(e) => setReportData(prev => ({ ...prev, normalRange: e.target.value }))}
-                                      placeholder="e.g., 70-100"
-                                      data-testid="input-normal-range"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label htmlFor="interpretation">Interpretation</Label>
-                                  <Select
-                                    value={reportData.interpretation}
-                                    onValueChange={(value: "NORMAL" | "ABNORMAL" | "CRITICAL") => 
-                                      setReportData(prev => ({ ...prev, interpretation: value }))
-                                    }
-                                  >
-                                    <SelectTrigger data-testid="select-interpretation">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="NORMAL">Normal</SelectItem>
-                                      <SelectItem value="ABNORMAL">Abnormal</SelectItem>
-                                      <SelectItem value="CRITICAL">Critical (Urgent)</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label htmlFor="findings">Findings</Label>
-                                  <Textarea
-                                    id="findings"
-                                    value={reportData.findings}
-                                    onChange={(e) => setReportData(prev => ({ ...prev, findings: e.target.value }))}
-                                    placeholder="Enter detailed findings..."
-                                    rows={3}
-                                    data-testid="textarea-findings"
-                                  />
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label htmlFor="conclusion">Conclusion</Label>
-                                  <Textarea
-                                    id="conclusion"
-                                    value={reportData.conclusion}
-                                    onChange={(e) => setReportData(prev => ({ ...prev, conclusion: e.target.value }))}
-                                    placeholder="Enter conclusion and recommendations..."
-                                    rows={2}
-                                    data-testid="textarea-conclusion"
-                                  />
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label htmlFor="technicianName">Lab Technician</Label>
-                                  <Input
-                                    id="technicianName"
-                                    value={reportData.labTechnicianName}
-                                    onChange={(e) => setReportData(prev => ({ ...prev, labTechnicianName: e.target.value }))}
-                                    data-testid="input-technician-name"
-                                  />
-                                </div>
-
-                                <div className="flex justify-end gap-3 pt-4">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setIsUploadDialogOpen(false);
-                                      setSelectedOrder(null);
-                                    }}
-                                    data-testid="button-cancel"
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    onClick={handleUploadReport}
-                                    disabled={uploadReportMutation.isPending || !reportData.resultValue}
-                                    data-testid="button-submit-report"
-                                  >
-                                    {uploadReportMutation.isPending ? (
-                                      "Uploading..."
-                                    ) : (
-                                      <>
-                                        <Upload className="h-4 w-4 mr-2" />
-                                        Upload Report
-                                      </>
-                                    )}
-                                  </Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                          {order.createdAt ? format(new Date(order.createdAt), "dd MMM yyyy, HH:mm") : "-"}
                         </TableCell>
                       </TableRow>
                     ))}
