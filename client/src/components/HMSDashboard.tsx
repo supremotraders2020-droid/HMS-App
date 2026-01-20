@@ -212,6 +212,24 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
       return true;
     }
     
+    // PATHOLOGY_LAB only sees lab-related activities
+    if (currentRole === "PATHOLOGY_LAB") {
+      const actionLower = activity.action.toLowerCase();
+      const entityLower = activity.entityType?.toLowerCase() || "";
+      const isLabActivity = 
+        entityLower.includes("lab") ||
+        entityLower.includes("pathology") ||
+        entityLower.includes("test") ||
+        entityLower.includes("sample") ||
+        entityLower.includes("report") ||
+        actionLower.includes("lab") ||
+        actionLower.includes("pathology") ||
+        actionLower.includes("test order") ||
+        actionLower.includes("sample") ||
+        actionLower.includes("report upload");
+      return isLabActivity;
+    }
+    
     if (currentRole !== "ADMIN" && isConsentActivity) return false;
     return true;
   });
