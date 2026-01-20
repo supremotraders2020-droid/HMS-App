@@ -429,9 +429,9 @@ export default function PatientPortal({ patientId, patientName, username, onLogo
     queryKey: ['/api/medication-schedules'],
   });
 
-  // Fetch lab reports for this patient
+  // Fetch lab reports for this patient (session-aware endpoint)
   const { data: labReports = [], isLoading: labReportsLoading } = useQuery<any[]>({
-    queryKey: [`/api/lab-reports/patient/${username}`],
+    queryKey: ['/api/patient/my-lab-reports'],
   });
 
   // Fetch diagnostic reports for this patient (technician submitted reports) - secure session-aware endpoint
