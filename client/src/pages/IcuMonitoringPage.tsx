@@ -259,7 +259,18 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
             <title>ICU Chart - ${selectedChart.patientName}</title>
             <style>
               body { font-family: Arial, sans-serif; padding: 20px; font-size: 10px; }
-              h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 16px; }
+              .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
+              .hospital-logo { display: flex; align-items: center; gap: 10px; }
+              .logo-icon { width: 50px; height: 50px; }
+              .logo-icon svg { width: 100%; height: 100%; }
+              .hospital-name { font-size: 24px; font-weight: bold; }
+              .hospital-name .gravity { color: #E67E22; }
+              .hospital-name .hospital { color: #6B3FA0; }
+              .hospital-details { text-align: right; flex: 1; }
+              .hospital-title { color: #6B3FA0; font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+              .hospital-address { font-size: 11px; color: #4a5568; line-height: 1.4; }
+              .hospital-contact { font-size: 11px; color: #4a5568; font-weight: 600; }
+              h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 16px; margin-top: 10px; }
               h2 { color: #2d3748; margin-top: 20px; font-size: 12px; background: #f7fafc; padding: 6px; border-left: 3px solid #3182ce; }
               .header { margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
               .info-row { display: flex; gap: 6px; }
@@ -275,7 +286,29 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
             </style>
           </head>
           <body>
-            <h1>ICU Monitoring Chart - Gravity Hospital</h1>
+            <div class="hospital-header">
+              <div class="hospital-logo">
+                <div class="logo-icon">
+                  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="50" cy="50" rx="45" ry="45" fill="none" stroke="#E67E22" stroke-width="6"/>
+                    <line x1="50" y1="15" x2="50" y2="85" stroke="#E67E22" stroke-width="6"/>
+                  </svg>
+                </div>
+                <div class="hospital-name">
+                  <span class="gravity">GRAVITY</span><br/>
+                  <span class="hospital">HOSPITAL</span>
+                </div>
+              </div>
+              <div class="hospital-details">
+                <div class="hospital-title">Gravity Hospital & Research Centre</div>
+                <div class="hospital-address">
+                  Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br/>
+                  Pimpri-Chinchwad, Maharashtra - 411062
+                </div>
+                <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+              </div>
+            </div>
+            <h1>ICU Monitoring Chart</h1>
             <div class="header">
               <div class="info-row"><span class="label">Patient Name:</span> ${selectedChart.patientName || '-'}</div>
               <div class="info-row"><span class="label">Bed No:</span> ${selectedChart.bedNo || '-'}</div>
@@ -371,7 +404,7 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
             ` : '<p class="no-data">No allergy/precaution data recorded</p>'}
 
             <div class="footer">
-              <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital ICU Monitoring System</p>
+              <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital & Research Centre - ICU Monitoring System</p>
             </div>
           </body>
           </html>
