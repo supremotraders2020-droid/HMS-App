@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -909,13 +909,14 @@ function PreOpPhase({ caseId, data, consents, caseData }: { caseId: string; data
                 {(section.key === "consent_surgery" || section.key === "consent_anaesthesia") && (
                   <div className="text-center py-8 text-muted-foreground">
                     Consent forms are managed through the Consent Forms module.
-                    <Button 
-                      variant="outline" 
-                      className="mt-4 block mx-auto"
-                      onClick={() => window.location.href = "/consent-forms"}
-                    >
-                      Go to Consent Forms
-                    </Button>
+                    <Link href="/consent-forms">
+                      <Button 
+                        variant="outline" 
+                        className="mt-4 block mx-auto"
+                      >
+                        Go to Consent Forms
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </DialogContent>
