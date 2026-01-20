@@ -14719,14 +14719,11 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(401).json({ error: "Unauthorized" });
       }
 
-      // Get user identifiers for matching
+      // Get user ID for strict matching (PHI security)
       const userId = user.id;
-      const userEmail = user.email?.toLowerCase()?.trim() || "";
-      const userName = user.username?.toLowerCase()?.trim() || "";
-      const userFullName = user.fullName?.toLowerCase()?.trim() || "";
       
-      // Security guard: require at least one valid identifier
-      if (!userId && !userEmail && !userName && !userFullName) {
+      // Security guard: require valid user ID
+      if (!userId) {
         return res.json([]);
       }
 
@@ -14734,37 +14731,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const allLabReports = await storage.getAllLabReports();
       
       // Filter reports that belong to this patient
-      // Match by: patient_id = user.id, or by email/name matching
+      // STRICT matching: only return reports where patient_id equals user.id
+      // This prevents PHI leakage from fuzzy name matching
       const patientReports = allLabReports.filter(report => {
-        // Primary match: patient_id matches user.id
-        if (report.patientId === userId) {
-          return true;
-        }
-        
-        // Secondary match: check if patient name or email matches
-        const reportPatientName = report.patientName?.toLowerCase()?.trim() || "";
-        const reportPatientEmail = report.patientEmail?.toLowerCase()?.trim() || "";
-        
-        // Email match (most reliable)
-        if (userEmail.length > 0 && reportPatientEmail.length > 0 && reportPatientEmail === userEmail) {
-          return true;
-        }
-        
-        // Name match (with guards against false positives)
-        if (userFullName.length > 2 && reportPatientName.length > 2) {
-          if (reportPatientName.includes(userFullName) || userFullName.includes(reportPatientName)) {
-            return true;
-          }
-        }
-        
-        // Username match (for cases where username is the name)
-        if (userName.length > 2 && reportPatientName.length > 2) {
-          if (reportPatientName.includes(userName)) {
-            return true;
-          }
-        }
-        
-        return false;
+        return report.patientId === userId;
       });
       
       // Sort by most recent first
