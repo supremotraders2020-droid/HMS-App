@@ -537,80 +537,82 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
             </motion.div>
           )}
 
-          {/* Recent Activity - Clean Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-          >
-            <Card className="border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-              <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-lg shadow-cyan-500/25">
-                      <Activity className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
-                      <CardDescription className="text-xs">Latest system updates</CardDescription>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setShowAllActivities(true)}
-                    className="text-xs text-slate-500"
-                    data-testid="button-view-all-activity"
-                  >
-                    View All
-                    <ChevronRight className="h-3.5 w-3.5 ml-1" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {activitiesLoading ? (
-                  <div className="p-4 space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="flex items-center gap-3 animate-pulse">
-                        <div className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-slate-700" />
-                        <div className="flex-1 space-y-1.5">
-                          <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-                          <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
-                        </div>
+          {/* Recent Activity - Clean Card (Hidden for PATHOLOGY_LAB) */}
+          {currentRole !== "PATHOLOGY_LAB" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <Card className="border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+                <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-lg shadow-cyan-500/25">
+                        <Activity className="h-4 w-4" />
                       </div>
-                    ))}
-                  </div>
-                ) : recentActivities.length > 0 ? (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {recentActivities.map((activity, index) => (
-                      <div 
-                        key={activity.id} 
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
-                        onClick={() => setSelectedActivity(activity)}
-                        data-testid={`activity-${index}`}
-                      >
-                        <div className={`w-2.5 h-2.5 rounded-full ${getActivityIndicatorColor(activity.activityType)} shrink-0`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                            {activity.action}
-                          </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {activity.performedBy} <span className="text-slate-300 dark:text-slate-600 mx-1">|</span> {formatTimeAgo(activity.createdAt)}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                      <div>
+                        <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
+                        <CardDescription className="text-xs">Latest system updates</CardDescription>
                       </div>
-                    ))}
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setShowAllActivities(true)}
+                      className="text-xs text-slate-500"
+                      data-testid="button-view-all-activity"
+                    >
+                      View All
+                      <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
                   </div>
-                ) : (
-                  <div className="text-center py-10 text-slate-500">
-                    <Activity className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No recent activity</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {activitiesLoading ? (
+                    <div className="p-4 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-3 animate-pulse">
+                          <div className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-slate-700" />
+                          <div className="flex-1 space-y-1.5">
+                            <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+                            <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : recentActivities.length > 0 ? (
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {recentActivities.map((activity, index) => (
+                        <div 
+                          key={activity.id} 
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                          onClick={() => setSelectedActivity(activity)}
+                          data-testid={`activity-${index}`}
+                        >
+                          <div className={`w-2.5 h-2.5 rounded-full ${getActivityIndicatorColor(activity.activityType)} shrink-0`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                              {activity.action}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {activity.performedBy} <span className="text-slate-300 dark:text-slate-600 mx-1">|</span> {formatTimeAgo(activity.createdAt)}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 text-slate-500">
+                      <Activity className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No recent activity</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
           
           {/* Bottom spacer for scroll */}
           <div className="h-4" />
