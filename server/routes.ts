@@ -3182,6 +3182,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         signedByName: prescription.signedByName
       }).catch(err => console.error("Medical store notification error:", err));
 
+      // Create lab test orders for suggested tests - route to Pathology Lab Portal
+      if (prescription.suggestedTest) {
+        try {
+          // Parse suggested tests - could be comma-separated, JSON array, or single test
+          let testsToOrder: string[] = [];
+          const testValue = prescription.suggestedTest.trim();
+          
+          if (testValue.startsWith('[')) {
+            // JSON array format
+            try {
+              const parsed = JSON.parse(testValue);
+              testsToOrder = Array.isArray(parsed) 
+                ? parsed.map((t: any) => typeof t === 'string' ? t : t.testName || t.name || '') 
+                : [];
+            } catch { testsToOrder = [testValue]; }
+          } else if (testValue.includes(',')) {
+            // Comma-separated format
+            testsToOrder = testValue.split(',').map((t: string) => t.trim()).filter(Boolean);
+          } else {
+            // Single test
+            testsToOrder = [testValue];
+          }
+          
+          // Create lab test orders for each test
+          const allOrders = await databaseStorage.getAllLabTestOrders();
+          let orderCount = allOrders.length;
+          
+          for (const testName of testsToOrder) {
+            if (!testName) continue;
+            orderCount++;
+            const orderNumber = `LAB-${new Date().getFullYear()}-${String(orderCount).padStart(4, '0')}`;
+            
+            await databaseStorage.createLabTestOrder({
+              orderNumber,
+              patientId: prescription.patientId,
+              patientName: prescription.patientName,
+              patientAge: prescription.patientAge || undefined,
+              patientGender: prescription.patientGender || undefined,
+              doctorId: prescription.doctorId,
+              doctorName: prescription.doctorName,
+              testId: `PRESC-${prescription.id}`,
+              testName: testName,
+              testCode: undefined,
+              priority: 'NORMAL',
+              clinicalNotes: prescription.diagnosis || undefined,
+              suggestedTest: testName,
+              orderStatus: 'PENDING',
+            });
+          }
+          
+          console.log(`Created ${testsToOrder.length} lab test orders from prescription ${prescription.prescriptionNumber}`);
+        } catch (labOrderError) {
+          console.error("Error creating lab test orders:", labOrderError);
+          // Don't fail the finalization, just log the error
+        }
+      }
+
       res.json(prescription);
     } catch (error) {
       res.status(500).json({ error: "Failed to finalize prescription" });
