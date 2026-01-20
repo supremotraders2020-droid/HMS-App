@@ -124,13 +124,9 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
         <title>Prescription - ${prescription.prescriptionNumber}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-          .hospital-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
-          .logo-img { height: 50px; }
-          .hospital-name { font-size: 28px; font-weight: bold; }
-          .hospital-name .gravity { color: #E67E22; }
-          .hospital-name .hospital { color: #6B3FA0; }
+          .hospital-header { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+          .logo-img { height: 60px; }
           .header { text-align: center; border-bottom: 2px solid #6B3FA0; padding-bottom: 15px; margin-bottom: 20px; }
-          .header h2 { color: #333; margin: 10px 0 5px; font-size: 18px; }
           .header p { margin: 3px 0; color: #666; font-size: 12px; }
           .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
           .info-box { background: #f8fafc; padding: 15px; border-radius: 8px; }
@@ -148,7 +144,6 @@ export default function PrescriptionsPage({ currentUser }: PrescriptionsPageProp
         <div class="header">
           <div class="hospital-header">
             <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
-            <div class="hospital-name"><span class="gravity">GRAVITY</span> <span class="hospital">HOSPITAL</span></div>
           </div>
           <p>Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062</p>
           <p>Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com</p>

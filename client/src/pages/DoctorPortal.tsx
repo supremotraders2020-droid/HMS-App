@@ -2104,15 +2104,11 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       <title>Prescription - ${rx.patientName}</title>
                       <style>
                         body { font-family: Arial, sans-serif; padding: 40px; font-size: 14px; line-height: 1.5; }
-                        .hospital-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
-                        .logo-img { height: 50px; }
-                        .hospital-name { font-size: 28px; font-weight: bold; }
-                        .hospital-name .gravity { color: #E67E22; }
-                        .hospital-name .hospital { color: #6B3FA0; }
+                        .hospital-header { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+                        .logo-img { height: 60px; }
                         .header { text-align: center; border-bottom: 2px solid #6B3FA0; padding-bottom: 15px; margin-bottom: 25px; }
-                        .header h2 { color: #333; margin: 10px 0 5px; font-size: 18px; }
                         .header p { margin: 3px 0; color: #666; font-size: 12px; }
-                        .subtitle { font-size: 14px; color: #6B3FA0; margin-top: 5px; font-weight: 600; }
+                        .subtitle { font-size: 14px; color: #6B3FA0; margin-top: 8px; font-weight: 600; }
                         .section { margin: 18px 0; }
                         .section-title { font-weight: bold; color: #6B3FA0; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
                         .label { font-weight: 600; color: #374151; }
@@ -2136,7 +2132,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                       <div class="header">
                         <div class="hospital-header">
                           <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
-                          <div class="hospital-name"><span class="gravity">GRAVITY</span> <span class="hospital">HOSPITAL</span></div>
                         </div>
                         <p>Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062</p>
                         <p>Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com</p>
@@ -2492,13 +2487,9 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                               <title>Diagnostic Report - ${report.testName}</title>
                               <style>
                                 body { font-family: Arial, sans-serif; padding: 40px; }
-                                .hospital-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
-                                .logo-img { height: 50px; }
-                                .hospital-name { font-size: 28px; font-weight: bold; }
-                                .hospital-name .gravity { color: #E67E22; }
-                                .hospital-name .hospital { color: #6B3FA0; }
+                                .hospital-header { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+                                .logo-img { height: 60px; }
                                 .header { text-align: center; border-bottom: 2px solid #6B3FA0; padding-bottom: 15px; margin-bottom: 25px; }
-                                .header h2 { color: #333; margin: 10px 0 5px; font-size: 18px; }
                                 .header p { margin: 3px 0; color: #666; font-size: 12px; }
                                 .section { margin: 18px 0; }
                                 .section-title { font-weight: bold; color: #6B3FA0; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
@@ -2510,7 +2501,6 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
                               <div class="header">
                                 <div class="hospital-header">
                                   <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
-                                  <div class="hospital-name"><span class="gravity">GRAVITY</span> <span class="hospital">HOSPITAL</span></div>
                                 </div>
                                 <p>Gat No, 167, Sahyog Nager, Triveni Nagar, Nigdi, Pimpri-Chinchwad, Maharashtra 411062</p>
                                 <p>Phone: +91-20-27654321 | Email: info@gravityhospital.com | Website: www.gravityhospital.com</p>
