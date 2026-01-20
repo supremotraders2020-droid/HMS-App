@@ -84,7 +84,9 @@ import {
   UserCheck,
   Scissors,
   Download,
-  RefreshCw
+  RefreshCw,
+  TestTube,
+  Building2
 } from "lucide-react";
 import HospitalServices from "@/pages/HospitalServices";
 import hospitalLogo from "@assets/LOGO_1_1765346562770.png";
@@ -307,6 +309,12 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
   const { data: diagnosticReports = [], isLoading: diagnosticReportsLoading } = useQuery<any[]>({
     queryKey: ['/api/doctor/my-diagnostic-reports'],
     refetchInterval: 3000, // Real-time sync
+  });
+
+  // Fetch lab reports for this doctor (from pathology lab) - role-filtered endpoint
+  const { data: labReports = [], isLoading: labReportsLoading } = useQuery<any[]>({
+    queryKey: ['/api/lab-reports'],
+    refetchInterval: 5000, // Real-time sync
   });
 
   // Fetch service patients to display in Patient Records section
@@ -875,6 +883,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     { id: "patients", title: "Patients", icon: Users },
     { id: "prescriptions", title: "Prescriptions", icon: FileText },
     { id: "medical-records", title: "Medical Records", icon: ClipboardList },
+    { id: "lab-reports", title: "Lab Reports", icon: TestTube, badge: labReports.filter((r: any) => r.reportStatus === 'COMPLETED' || r.reportStatus === 'VERIFIED').length },
     { id: "diagnostic-reports", title: "Diagnostic Reports", icon: Activity },
     { id: "templates", title: "Rx Templates", icon: ClipboardList },
     { id: "patient-monitoring", title: "IPD Monitoring", icon: MonitorCheck },
@@ -2429,6 +2438,170 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
     );
   };
 
+  const renderLabReports = () => {
+    return (
+      <div className="space-y-6">
+        <div className="relative rounded-xl bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-6 border border-blue-500/10">
+          <div className="relative z-10">
+            <h1 className="text-2xl font-bold" data-testid="text-lab-reports-title">Lab Reports</h1>
+            <p className="text-muted-foreground">View pathology lab reports for your patients</p>
+          </div>
+          <TestTube className="absolute right-6 top-1/2 -translate-y-1/2 h-16 w-16 text-blue-500/20" />
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="text-center p-4">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{labReports.length}</div>
+            <p className="text-sm text-muted-foreground">Total Reports</p>
+          </Card>
+          <Card className="text-center p-4">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {labReports.filter((r: any) => r.reportStatus === 'VERIFIED').length}
+            </div>
+            <p className="text-sm text-muted-foreground">Verified</p>
+          </Card>
+          <Card className="text-center p-4">
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              {labReports.filter((r: any) => r.reportStatus === 'IN_PROGRESS' || r.reportStatus === 'PENDING').length}
+            </div>
+            <p className="text-sm text-muted-foreground">Pending</p>
+          </Card>
+        </div>
+
+        {labReportsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : labReports.length === 0 ? (
+          <Card className="p-8 text-center">
+            <TestTube className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="font-semibold mb-2">No Lab Reports</h3>
+            <p className="text-muted-foreground">Reports from pathology lab tests for your patients will appear here</p>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {labReports.map((report: any) => (
+              <Card key={report.id} className="hover-elevate" data-testid={`lab-report-${report.id}`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base font-mono flex items-center gap-2">
+                        <TestTube className="h-4 w-4 text-blue-500" />
+                        {report.reportNumber}
+                      </CardTitle>
+                      <CardDescription>
+                        {report.reportDate ? format(new Date(report.reportDate), "MMM dd, yyyy") : "-"}
+                      </CardDescription>
+                    </div>
+                    <Badge 
+                      className={
+                        report.reportStatus === "VERIFIED"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                          : report.reportStatus === "COMPLETED"
+                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                          : report.reportStatus === "IN_PROGRESS"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                          : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                      }
+                    >
+                      {report.reportStatus}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{report.patientName || 'Unknown Patient'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span>{report.testName || "Lab Test"}</span>
+                    </div>
+                    {report.labName && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Building2 className="h-4 w-4" />
+                        <span>{report.labName}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {report.interpretation && (
+                    <Badge 
+                      variant="outline" 
+                      className={
+                        report.interpretation === "CRITICAL" 
+                          ? "border-red-500 text-red-600" 
+                          : report.interpretation === "ABNORMAL"
+                          ? "border-yellow-500 text-yellow-600"
+                          : "border-green-500 text-green-600"
+                      }
+                    >
+                      {report.interpretation}
+                    </Badge>
+                  )}
+
+                  <Separator />
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => {
+                        if (report.pdfUrl) {
+                          window.open(report.pdfUrl, '_blank');
+                        } else {
+                          toast({
+                            title: "Report Details",
+                            description: report.remarks || "Full report details available upon request.",
+                          });
+                        }
+                      }}
+                      data-testid={`button-view-lab-report-${report.id}`}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      {report.pdfUrl ? "View PDF" : "View"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => {
+                        if (report.pdfUrl) {
+                          const link = document.createElement('a');
+                          link.href = report.pdfUrl;
+                          link.download = `${report.reportNumber || 'lab-report'}.pdf`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          toast({
+                            title: "Download Started",
+                            description: `Downloading ${report.reportNumber}`,
+                          });
+                        } else {
+                          toast({
+                            title: "No PDF Available",
+                            description: "This report doesn't have an attached PDF file.",
+                            variant: "destructive"
+                          });
+                        }
+                      }}
+                      disabled={!report.pdfUrl}
+                      data-testid={`button-download-lab-report-${report.id}`}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderDiagnosticReports = () => {
     return (
       <div className="space-y-6">
@@ -3404,6 +3577,7 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
       case "schedules": return renderSchedules();
       case "prescriptions": return renderPrescriptions();
       case "medical-records": return renderMedicalRecords();
+      case "lab-reports": return renderLabReports();
       case "diagnostic-reports": return renderDiagnosticReports();
       case "templates": return renderTemplates();
       case "patient-monitoring": return <PatientMonitoringPage />;
