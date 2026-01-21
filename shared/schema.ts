@@ -6358,3 +6358,38 @@ export const indoorConsultationSheet = pgTable("indoor_consultation_sheet", {
 export const insertIndoorConsultationSheetSchema = createInsertSchema(indoorConsultationSheet).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertIndoorConsultationSheet = z.infer<typeof insertIndoorConsultationSheetSchema>;
 export type IndoorConsultationSheet = typeof indoorConsultationSheet.$inferSelect;
+
+// Doctor's Progress Sheet
+export const doctorsProgressSheet = pgTable("doctors_progress_sheet", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name"),
+  prnNo: text("prn_no"),
+  age: text("age"),
+  sex: text("sex"),
+  ipdNo: text("ipd_no"),
+  ward: text("ward"),
+  bedNo: text("bed_no"),
+  primaryConsultantName: text("primary_consultant_name"),
+  
+  // Entry fields - each row in the progress table
+  entryDateTime: timestamp("entry_date_time").defaultNow(),
+  investigationsAdvised: text("investigations_advised"),
+  clinicalNotes: text("clinical_notes"),
+  treatmentAdvised: text("treatment_advised"),
+  treatmentConsultantName: text("treatment_consultant_name"),
+  
+  // Footer fields
+  daysKeynotes: text("days_keynotes"),
+  counsellingDoneByRmo: text("counselling_done_by_rmo"),
+  counsellingDoneByConsultant: text("counselling_done_by_consultant"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"),
+});
+
+export const insertDoctorsProgressSheetSchema = createInsertSchema(doctorsProgressSheet).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertDoctorsProgressSheet = z.infer<typeof insertDoctorsProgressSheetSchema>;
+export type DoctorsProgressSheet = typeof doctorsProgressSheet.$inferSelect;

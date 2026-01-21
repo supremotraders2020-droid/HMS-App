@@ -34,6 +34,7 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   ipdCarePlanNotes, insertIpdCarePlanNotesSchema,
   ipdInitialAssessment, insertIpdInitialAssessmentSchema,
   indoorConsultationSheet, insertIndoorConsultationSheetSchema,
+  doctorsProgressSheet, insertDoctorsProgressSheetSchema,
   // Bed Management
   bedCategories, insertBedCategorySchema,
   beds, insertBedSchema,
@@ -7828,6 +7829,62 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error deleting indoor consultation entry:", error);
       res.status(500).json({ error: "Failed to delete indoor consultation entry" });
+    }
+  });
+
+  // ========== DOCTOR'S PROGRESS SHEET ==========
+  // Get entries by session ID
+  app.get("/api/patient-monitoring/doctors-progress/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const entries = await db.select().from(doctorsProgressSheet)
+        .where(eq(doctorsProgressSheet.sessionId, req.params.sessionId))
+        .orderBy(desc(doctorsProgressSheet.entryDateTime));
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching doctor's progress entries:", error);
+      res.status(500).json({ error: "Failed to fetch doctor's progress entries" });
+    }
+  });
+
+  // Create new entry
+  app.post("/api/patient-monitoring/doctors-progress", requireAuth, async (req, res) => {
+    try {
+      const data = insertDoctorsProgressSheetSchema.parse(req.body);
+      const result = await db.insert(doctorsProgressSheet).values({
+        ...data,
+        entryDateTime: data.entryDateTime ? new Date(data.entryDateTime as any) : new Date(),
+        createdBy: (req as any).session?.user?.id
+      }).returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error creating doctor's progress entry:", error);
+      res.status(500).json({ error: "Failed to create doctor's progress entry" });
+    }
+  });
+
+  // Update entry
+  app.patch("/api/patient-monitoring/doctors-progress/:id", requireAuth, async (req, res) => {
+    try {
+      const { id, createdAt, updatedAt, ...updateData } = req.body;
+      const result = await db.update(doctorsProgressSheet)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(doctorsProgressSheet.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating doctor's progress entry:", error);
+      res.status(500).json({ error: "Failed to update doctor's progress entry" });
+    }
+  });
+
+  // Delete entry
+  app.delete("/api/patient-monitoring/doctors-progress/:id", requireAuth, async (req, res) => {
+    try {
+      await db.delete(doctorsProgressSheet).where(eq(doctorsProgressSheet.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting doctor's progress entry:", error);
+      res.status(500).json({ error: "Failed to delete doctor's progress entry" });
     }
   });
 

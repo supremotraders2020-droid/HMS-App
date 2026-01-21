@@ -1026,6 +1026,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="tests" className="text-xs gap-1.5 data-[state=active]:bg-background"><Beaker className="h-3.5 w-3.5" />Tests</TabsTrigger>
                   <TabsTrigger value="initial-assessment" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Initial Assessment</TabsTrigger>
                   <TabsTrigger value="indoor-consultation" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Indoor Continuation Sheet</TabsTrigger>
+                  <TabsTrigger value="doctors-progress" className="text-xs gap-1.5 data-[state=active]:bg-background"><Stethoscope className="h-3.5 w-3.5" />Doctor's Progress Sheet</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -1072,6 +1073,9 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="indoor-consultation">
                   <IndoorConsultationTab session={selectedSession} />
+                </TabsContent>
+                <TabsContent value="doctors-progress">
+                  <DoctorsProgressTab session={selectedSession} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -5417,6 +5421,332 @@ function IndoorConsultationTab({ session }: { session: Session }) {
               </Table>
             </div>
           )
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Doctor's Progress Sheet Tab
+function DoctorsProgressTab({ session }: { session: Session }) {
+  const { toast } = useToast();
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    primaryConsultantName: session.admittingConsultant || "",
+    entryDateTime: new Date().toISOString(),
+    investigationsAdvised: "",
+    clinicalNotes: "",
+    treatmentAdvised: "",
+    treatmentConsultantName: "",
+    daysKeynotes: "",
+    counsellingDoneByRmo: "",
+    counsellingDoneByConsultant: ""
+  });
+
+  const { data: entries = [], isLoading, refetch } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/doctors-progress/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/patient-monitoring/doctors-progress", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Entry saved successfully" });
+      refetch();
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "Failed to save entry", variant: "destructive" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await apiRequest("PATCH", `/api/patient-monitoring/doctors-progress/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Entry updated successfully" });
+      refetch();
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "Failed to update entry", variant: "destructive" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/patient-monitoring/doctors-progress/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Entry deleted" });
+      refetch();
+    },
+    onError: () => {
+      toast({ title: "Failed to delete entry", variant: "destructive" });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({
+      primaryConsultantName: session.admittingConsultant || "",
+      entryDateTime: new Date().toISOString(),
+      investigationsAdvised: "",
+      clinicalNotes: "",
+      treatmentAdvised: "",
+      treatmentConsultantName: "",
+      daysKeynotes: "",
+      counsellingDoneByRmo: "",
+      counsellingDoneByConsultant: ""
+    });
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const handleSubmit = () => {
+    const payload = {
+      sessionId: session.id,
+      patientId: session.patientId,
+      patientName: session.patientName,
+      prnNo: session.uhid,
+      age: session.age,
+      sex: session.sex,
+      ipdNo: session.ipdNumber,
+      ward: session.ward,
+      bedNo: session.bedNumber,
+      ...formData
+    };
+
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const handleEdit = (entry: any) => {
+    setFormData({
+      primaryConsultantName: entry.primaryConsultantName || "",
+      entryDateTime: entry.entryDateTime || new Date().toISOString(),
+      investigationsAdvised: entry.investigationsAdvised || "",
+      clinicalNotes: entry.clinicalNotes || "",
+      treatmentAdvised: entry.treatmentAdvised || "",
+      treatmentConsultantName: entry.treatmentConsultantName || "",
+      daysKeynotes: entry.daysKeynotes || "",
+      counsellingDoneByRmo: entry.counsellingDoneByRmo || "",
+      counsellingDoneByConsultant: entry.counsellingDoneByConsultant || ""
+    });
+    setEditingId(entry.id);
+    setShowForm(true);
+  };
+
+  const handlePrint = () => {
+    const rows = entries.map((e: any) => 
+      `<tr>
+        <td>${e.entryDateTime ? format(new Date(e.entryDateTime), 'dd/MM/yyyy HH:mm') : '-'}</td>
+        <td>${e.investigationsAdvised || '-'}</td>
+        <td style="white-space:pre-wrap">${e.clinicalNotes || '-'}</td>
+        <td>${e.treatmentAdvised || '-'}<br/><small>By: ${e.treatmentConsultantName || '-'}</small></td>
+      </tr>`
+    ).join('');
+
+    const latestEntry = entries[0];
+    const content = `
+      <h1>Doctor's Progress Sheet</h1>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <div><strong>Patient:</strong> ${session.patientName}</div>
+        <div><strong>PRN No:</strong> ${session.uhid}</div>
+        <div><strong>Age/Sex:</strong> ${session.age || '-'} / ${session.sex || '-'}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <div><strong>Ward:</strong> ${session.ward || '-'}</div>
+        <div><strong>Bed No:</strong> ${session.bedNumber || '-'}</div>
+        <div><strong>Primary Consultant:</strong> ${latestEntry?.primaryConsultantName || session.admittingConsultant || '-'}</div>
+      </div>
+      ${entries.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:120px">Date/Time</th>
+              <th>Investigations Advised</th>
+              <th>Clinical Notes</th>
+              <th>Treatment Advised</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        ${latestEntry?.daysKeynotes ? `<div style="margin-top:15px;border:1px solid #333;padding:10px;"><strong>Day's Keynotes:</strong><br/>${latestEntry.daysKeynotes}</div>` : ''}
+        <div style="margin-top:15px;display:flex;gap:30px;">
+          <div><strong>Counselling done by - RMO:</strong> ${latestEntry?.counsellingDoneByRmo || '____________'}</div>
+          <div><strong>Consultant:</strong> ${latestEntry?.counsellingDoneByConsultant || '____________'}</div>
+        </div>
+        <div style="margin-top:30px;"><strong>Relatives / Patient Sign:</strong> ________________________</div>
+      ` : '<p class="no-data">No progress entries recorded</p>'}
+    `;
+    openPrintWindow("Doctor's Progress Sheet", content);
+  };
+
+  if (isLoading) return <div className="p-4 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Stethoscope className="h-5 w-5" />
+            Doctor's Progress Sheet
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">Daily progress notes by treating consultant</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          {!showForm && (
+            <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-1">
+              <Plus className="h-4 w-4" /> Add Entry
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {showForm ? (
+          <div className="space-y-4 border rounded-lg p-4 bg-muted/30">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <Label>Primary Consultant's Name</Label>
+                <Input 
+                  value={formData.primaryConsultantName} 
+                  onChange={(e) => setFormData({ ...formData, primaryConsultantName: e.target.value })}
+                  placeholder="Enter consultant name"
+                />
+              </div>
+              <div>
+                <Label>Date & Time</Label>
+                <Input 
+                  type="datetime-local" 
+                  value={formData.entryDateTime ? format(new Date(formData.entryDateTime), "yyyy-MM-dd'T'HH:mm") : ""} 
+                  onChange={(e) => setFormData({ ...formData, entryDateTime: new Date(e.target.value).toISOString() })}
+                />
+              </div>
+              <div>
+                <Label>Treatment Consultant Name</Label>
+                <Input 
+                  value={formData.treatmentConsultantName} 
+                  onChange={(e) => setFormData({ ...formData, treatmentConsultantName: e.target.value })}
+                  placeholder="Consultant advising treatment"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label>Investigations Advised</Label>
+                <Textarea 
+                  value={formData.investigationsAdvised} 
+                  onChange={(e) => setFormData({ ...formData, investigationsAdvised: e.target.value })}
+                  placeholder="List investigations..."
+                  rows={4}
+                />
+              </div>
+              <div>
+                <Label>Clinical Notes</Label>
+                <Textarea 
+                  value={formData.clinicalNotes} 
+                  onChange={(e) => setFormData({ ...formData, clinicalNotes: e.target.value })}
+                  placeholder="Enter clinical notes..."
+                  rows={4}
+                />
+              </div>
+              <div>
+                <Label>Treatment Advised by Consultant</Label>
+                <Textarea 
+                  value={formData.treatmentAdvised} 
+                  onChange={(e) => setFormData({ ...formData, treatmentAdvised: e.target.value })}
+                  placeholder="Treatment plan..."
+                  rows={4}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Day's Keynotes</Label>
+              <Textarea 
+                value={formData.daysKeynotes} 
+                onChange={(e) => setFormData({ ...formData, daysKeynotes: e.target.value })}
+                placeholder="Important notes for the day..."
+                rows={2}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Counselling done by: RMO</Label>
+                <Input 
+                  value={formData.counsellingDoneByRmo} 
+                  onChange={(e) => setFormData({ ...formData, counsellingDoneByRmo: e.target.value })}
+                  placeholder="RMO name"
+                />
+              </div>
+              <div>
+                <Label>Consultant</Label>
+                <Input 
+                  value={formData.counsellingDoneByConsultant} 
+                  onChange={(e) => setFormData({ ...formData, counsellingDoneByConsultant: e.target.value })}
+                  placeholder="Consultant name"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={resetForm}>Cancel</Button>
+              <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+                {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                {editingId ? "Update" : "Save"} Entry
+              </Button>
+            </div>
+          </div>
+        ) : entries.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">No progress entries recorded yet</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-36 whitespace-nowrap">Date/Time</TableHead>
+                  <TableHead>Investigations</TableHead>
+                  <TableHead>Clinical Notes</TableHead>
+                  <TableHead>Treatment Advised</TableHead>
+                  <TableHead className="w-20 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entries.map((entry: any) => (
+                  <TableRow key={entry.id}>
+                    <TableCell className="whitespace-nowrap text-sm">
+                      {entry.entryDateTime ? format(new Date(entry.entryDateTime), "dd MMM yyyy") : "-"}<br/>
+                      <span className="text-muted-foreground">{entry.entryDateTime ? format(new Date(entry.entryDateTime), "HH:mm") : ""}</span>
+                    </TableCell>
+                    <TableCell className="text-sm whitespace-pre-wrap max-w-xs">{entry.investigationsAdvised || "-"}</TableCell>
+                    <TableCell className="text-sm whitespace-pre-wrap max-w-md">{entry.clinicalNotes || "-"}</TableCell>
+                    <TableCell className="text-sm whitespace-pre-wrap max-w-sm">
+                      {entry.treatmentAdvised || "-"}
+                      {entry.treatmentConsultantName && <div className="text-xs text-muted-foreground mt-1">By: {entry.treatmentConsultantName}</div>}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-1 justify-end">
+                        <Button size="icon" variant="ghost" onClick={() => handleEdit(entry)}><Edit className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>
