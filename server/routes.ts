@@ -7691,8 +7691,19 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Create IPD Initial Assessment
   app.post("/api/patient-monitoring/initial-assessment", requireAuth, async (req, res) => {
     try {
+      const data = { ...req.body };
+      // Convert date strings to Date objects
+      if (data.patientReceivedDate && typeof data.patientReceivedDate === 'string') {
+        data.patientReceivedDate = new Date(data.patientReceivedDate);
+      }
+      if (data.clinicalAssistantDate && typeof data.clinicalAssistantDate === 'string') {
+        data.clinicalAssistantDate = new Date(data.clinicalAssistantDate);
+      }
+      if (data.inchargeConsultantDate && typeof data.inchargeConsultantDate === 'string') {
+        data.inchargeConsultantDate = new Date(data.inchargeConsultantDate);
+      }
       const result = await db.insert(ipdInitialAssessment).values({
-        ...req.body,
+        ...data,
         createdBy: req.session?.user?.id
       }).returning();
       res.status(201).json(result[0]);
@@ -7705,8 +7716,19 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Update IPD Initial Assessment
   app.patch("/api/patient-monitoring/initial-assessment/:id", requireAuth, async (req, res) => {
     try {
+      const data = { ...req.body };
+      // Convert date strings to Date objects
+      if (data.patientReceivedDate && typeof data.patientReceivedDate === 'string') {
+        data.patientReceivedDate = new Date(data.patientReceivedDate);
+      }
+      if (data.clinicalAssistantDate && typeof data.clinicalAssistantDate === 'string') {
+        data.clinicalAssistantDate = new Date(data.clinicalAssistantDate);
+      }
+      if (data.inchargeConsultantDate && typeof data.inchargeConsultantDate === 'string') {
+        data.inchargeConsultantDate = new Date(data.inchargeConsultantDate);
+      }
       const result = await db.update(ipdInitialAssessment)
-        .set({ ...req.body, updatedAt: new Date() })
+        .set({ ...data, updatedAt: new Date() })
         .where(eq(ipdInitialAssessment.id, req.params.id))
         .returning();
       res.json(result[0]);
