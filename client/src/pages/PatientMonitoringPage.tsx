@@ -1027,6 +1027,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="initial-assessment" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Initial Assessment</TabsTrigger>
                   <TabsTrigger value="indoor-consultation" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Indoor Continuation Sheet</TabsTrigger>
                   <TabsTrigger value="doctors-progress" className="text-xs gap-1.5 data-[state=active]:bg-background"><Stethoscope className="h-3.5 w-3.5" />Doctor's Progress Sheet</TabsTrigger>
+                  <TabsTrigger value="doctors-visit" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Doctor's Visit Sheet</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -1076,6 +1077,9 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="doctors-progress">
                   <DoctorsProgressTab session={selectedSession} />
+                </TabsContent>
+                <TabsContent value="doctors-visit">
+                  <DoctorsVisitTab session={selectedSession} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -5748,6 +5752,311 @@ function DoctorsProgressTab({ session }: { session: Session }) {
                       {entry.treatmentAdvised || "-"}
                       {entry.treatmentConsultantName && <div className="text-xs text-muted-foreground mt-1">By: {entry.treatmentConsultantName}</div>}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-1 justify-end">
+                        <Button size="icon" variant="ghost" onClick={() => handleEdit(entry)}><Edit className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Doctor's Visit Sheet Tab
+function DoctorsVisitTab({ session }: { session: Session }) {
+  const { toast } = useToast();
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    visitDate: new Date().toISOString().split('T')[0],
+    visitTime: format(new Date(), 'HH:mm'),
+    nameOfDoctor: "",
+    visitType: "routine",
+    procedure: "",
+    doctorSign: ""
+  });
+
+  const { data: entries = [], isLoading, refetch } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/doctors-visit/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/patient-monitoring/doctors-visit", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Visit entry saved successfully" });
+      refetch();
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "Failed to save visit entry", variant: "destructive" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await apiRequest("PATCH", `/api/patient-monitoring/doctors-visit/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Visit entry updated successfully" });
+      refetch();
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "Failed to update visit entry", variant: "destructive" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/patient-monitoring/doctors-visit/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Visit entry deleted" });
+      refetch();
+    },
+    onError: () => {
+      toast({ title: "Failed to delete visit entry", variant: "destructive" });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({
+      visitDate: new Date().toISOString().split('T')[0],
+      visitTime: format(new Date(), 'HH:mm'),
+      nameOfDoctor: "",
+      visitType: "routine",
+      procedure: "",
+      doctorSign: ""
+    });
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const handleSubmit = () => {
+    const payload = {
+      sessionId: session.id,
+      patientId: session.patientId,
+      patientName: session.patientName,
+      prnNo: session.uhid,
+      age: session.age,
+      sex: session.sex,
+      ipdNo: session.ipdNumber,
+      ward: session.ward,
+      bedNo: session.bedNumber,
+      visitDate: formData.visitDate ? new Date(formData.visitDate).toISOString() : new Date().toISOString(),
+      ...formData
+    };
+
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const handleEdit = (entry: any) => {
+    setFormData({
+      visitDate: entry.visitDate ? format(new Date(entry.visitDate), 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
+      visitTime: entry.visitTime || format(new Date(), 'HH:mm'),
+      nameOfDoctor: entry.nameOfDoctor || "",
+      visitType: entry.visitType || "routine",
+      procedure: entry.procedure || "",
+      doctorSign: entry.doctorSign || ""
+    });
+    setEditingId(entry.id);
+    setShowForm(true);
+  };
+
+  const handlePrint = () => {
+    const rows = entries.map((e: any) => 
+      `<tr>
+        <td style="padding:6px;border:1px solid #333;text-align:center;">${e.visitDate ? format(new Date(e.visitDate), 'dd/MM/yyyy') : '-'}</td>
+        <td style="padding:6px;border:1px solid #333;text-align:center;">${e.visitTime || '-'}</td>
+        <td style="padding:6px;border:1px solid #333;">${e.nameOfDoctor || '-'}</td>
+        <td style="padding:6px;border:1px solid #333;text-align:center;">${e.visitType === 'routine' ? '✓' : ''}</td>
+        <td style="padding:6px;border:1px solid #333;text-align:center;">${e.visitType === 'emergency' ? '✓' : ''}</td>
+        <td style="padding:6px;border:1px solid #333;">${e.procedure || '-'}</td>
+        <td style="padding:6px;border:1px solid #333;">${e.doctorSign || '-'}</td>
+      </tr>`
+    ).join('');
+
+    const content = `
+      <h1 style="text-align:center;margin-bottom:10px;">DOCTOR'S VISIT SHEET</h1>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
+        <div><strong>Patient Name:</strong> ${session.patientName || '-'}</div>
+        <div><strong>PRN No.:</strong> ${session.uhid || '-'}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
+        <div><strong>Age:</strong> ${session.age || '-'}</div>
+        <div><strong>Sex:</strong> ${session.sex || '-'}</div>
+        <div><strong>IPD No.:</strong> ${session.ipdNumber || '-'}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:15px;border:1px solid #333;padding:5px;">
+        <div><strong>Ward:</strong> ${session.ward || '-'}</div>
+        <div><strong>Bed No.:</strong> ${session.bedNumber || '-'}</div>
+      </div>
+      ${entries.length ? `
+        <table style="width:100%;border-collapse:collapse;margin-top:10px;">
+          <thead>
+            <tr style="background:#f5f5f5;">
+              <th style="padding:8px;border:1px solid #333;width:80px;">Date</th>
+              <th style="padding:8px;border:1px solid #333;width:60px;">Time</th>
+              <th style="padding:8px;border:1px solid #333;">Name of Doctor</th>
+              <th style="padding:8px;border:1px solid #333;width:60px;" colspan="2">Visit</th>
+              <th style="padding:8px;border:1px solid #333;">Procedure</th>
+              <th style="padding:8px;border:1px solid #333;width:80px;">Sign</th>
+            </tr>
+            <tr style="background:#f5f5f5;">
+              <th style="padding:4px;border:1px solid #333;"></th>
+              <th style="padding:4px;border:1px solid #333;"></th>
+              <th style="padding:4px;border:1px solid #333;"></th>
+              <th style="padding:4px;border:1px solid #333;font-size:10px;">Routine</th>
+              <th style="padding:4px;border:1px solid #333;font-size:10px;">Emergency</th>
+              <th style="padding:4px;border:1px solid #333;"></th>
+              <th style="padding:4px;border:1px solid #333;"></th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      ` : '<p class="no-data">No visit entries recorded</p>'}
+    `;
+    openPrintWindow("Doctor's Visit Sheet", content);
+  };
+
+  if (isLoading) return <div className="p-4 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Users className="h-5 w-5" />
+            Doctor's Visit Sheet
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">Record of doctor visits to the patient</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          {!showForm && (
+            <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-1">
+              <Plus className="h-4 w-4" /> Add Visit
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {showForm ? (
+          <div className="space-y-4 border rounded-lg p-4 bg-muted/30">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <Label>Date</Label>
+                <Input 
+                  type="date" 
+                  value={formData.visitDate} 
+                  onChange={(e) => setFormData({ ...formData, visitDate: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Time</Label>
+                <Input 
+                  type="time" 
+                  value={formData.visitTime} 
+                  onChange={(e) => setFormData({ ...formData, visitTime: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Name of Doctor</Label>
+                <Input 
+                  value={formData.nameOfDoctor} 
+                  onChange={(e) => setFormData({ ...formData, nameOfDoctor: e.target.value })}
+                  placeholder="Doctor's name"
+                />
+              </div>
+              <div>
+                <Label>Visit Type</Label>
+                <Select value={formData.visitType} onValueChange={(v) => setFormData({ ...formData, visitType: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="routine">Routine</SelectItem>
+                    <SelectItem value="emergency">Emergency</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Procedure</Label>
+                <Textarea 
+                  value={formData.procedure} 
+                  onChange={(e) => setFormData({ ...formData, procedure: e.target.value })}
+                  placeholder="Procedure performed (if any)"
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label>Doctor's Signature/Name</Label>
+                <Input 
+                  value={formData.doctorSign} 
+                  onChange={(e) => setFormData({ ...formData, doctorSign: e.target.value })}
+                  placeholder="Signature"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={resetForm}>Cancel</Button>
+              <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+                {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                {editingId ? "Update" : "Save"} Visit
+              </Button>
+            </div>
+          </div>
+        ) : entries.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">No visit entries recorded yet</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-28 whitespace-nowrap">Date</TableHead>
+                  <TableHead className="w-20">Time</TableHead>
+                  <TableHead>Name of Doctor</TableHead>
+                  <TableHead className="w-24 text-center">Visit Type</TableHead>
+                  <TableHead>Procedure</TableHead>
+                  <TableHead className="w-24">Sign</TableHead>
+                  <TableHead className="w-20 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entries.map((entry: any) => (
+                  <TableRow key={entry.id}>
+                    <TableCell className="whitespace-nowrap text-sm">
+                      {entry.visitDate ? format(new Date(entry.visitDate), "dd MMM yyyy") : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">{entry.visitTime || "-"}</TableCell>
+                    <TableCell className="text-sm">{entry.nameOfDoctor || "-"}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant={entry.visitType === "emergency" ? "destructive" : "secondary"}>
+                        {entry.visitType === "emergency" ? "Emergency" : "Routine"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm max-w-xs truncate">{entry.procedure || "-"}</TableCell>
+                    <TableCell className="text-sm">{entry.doctorSign || "-"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-1 justify-end">
                         <Button size="icon" variant="ghost" onClick={() => handleEdit(entry)}><Edit className="h-4 w-4" /></Button>

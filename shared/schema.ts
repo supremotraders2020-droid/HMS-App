@@ -6394,3 +6394,33 @@ export const doctorsProgressSheet = pgTable("doctors_progress_sheet", {
 export const insertDoctorsProgressSheetSchema = createInsertSchema(doctorsProgressSheet).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertDoctorsProgressSheet = z.infer<typeof insertDoctorsProgressSheetSchema>;
 export type DoctorsProgressSheet = typeof doctorsProgressSheet.$inferSelect;
+
+// Doctor's Visit Sheet Table
+export const doctorsVisitSheet = pgTable("doctors_visit_sheet", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name"),
+  prnNo: text("prn_no"),
+  age: text("age"),
+  sex: text("sex"),
+  ipdNo: text("ipd_no"),
+  ward: text("ward"),
+  bedNo: text("bed_no"),
+  
+  // Visit entry fields
+  visitDate: timestamp("visit_date"),
+  visitTime: text("visit_time"),
+  nameOfDoctor: text("name_of_doctor"),
+  visitType: text("visit_type"), // "routine" or "emergency"
+  procedure: text("procedure"),
+  doctorSign: text("doctor_sign"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"),
+});
+
+export const insertDoctorsVisitSheetSchema = createInsertSchema(doctorsVisitSheet).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertDoctorsVisitSheet = z.infer<typeof insertDoctorsVisitSheetSchema>;
+export type DoctorsVisitSheet = typeof doctorsVisitSheet.$inferSelect;

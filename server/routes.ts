@@ -35,6 +35,7 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   ipdInitialAssessment, insertIpdInitialAssessmentSchema,
   indoorConsultationSheet, insertIndoorConsultationSheetSchema,
   doctorsProgressSheet, insertDoctorsProgressSheetSchema,
+  doctorsVisitSheet, insertDoctorsVisitSheetSchema,
   // Bed Management
   bedCategories, insertBedCategorySchema,
   beds, insertBedSchema,
@@ -7890,6 +7891,69 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error deleting doctor's progress entry:", error);
       res.status(500).json({ error: "Failed to delete doctor's progress entry" });
+    }
+  });
+
+  // ========== DOCTOR'S VISIT SHEET ==========
+  // Get all visit entries for a session
+  app.get("/api/patient-monitoring/doctors-visit/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const entries = await db.select().from(doctorsVisitSheet)
+        .where(eq(doctorsVisitSheet.sessionId, req.params.sessionId))
+        .orderBy(desc(doctorsVisitSheet.visitDate));
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching doctor's visit entries:", error);
+      res.status(500).json({ error: "Failed to fetch doctor's visit entries" });
+    }
+  });
+
+  // Create new visit entry
+  app.post("/api/patient-monitoring/doctors-visit", requireAuth, async (req, res) => {
+    try {
+      const body = req.body;
+      const transformedData = {
+        ...body,
+        age: body.age != null ? String(body.age) : undefined,
+        visitDate: body.visitDate ? new Date(body.visitDate) : new Date()
+      };
+      const result = await db.insert(doctorsVisitSheet).values({
+        ...transformedData,
+        createdBy: (req as any).session?.user?.id
+      }).returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error creating doctor's visit entry:", error);
+      res.status(500).json({ error: "Failed to create doctor's visit entry" });
+    }
+  });
+
+  // Update visit entry
+  app.patch("/api/patient-monitoring/doctors-visit/:id", requireAuth, async (req, res) => {
+    try {
+      const { id, createdAt, updatedAt, ...updateData } = req.body;
+      if (updateData.visitDate) {
+        updateData.visitDate = new Date(updateData.visitDate);
+      }
+      const result = await db.update(doctorsVisitSheet)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(doctorsVisitSheet.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating doctor's visit entry:", error);
+      res.status(500).json({ error: "Failed to update doctor's visit entry" });
+    }
+  });
+
+  // Delete visit entry
+  app.delete("/api/patient-monitoring/doctors-visit/:id", requireAuth, async (req, res) => {
+    try {
+      await db.delete(doctorsVisitSheet).where(eq(doctorsVisitSheet.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting doctor's visit entry:", error);
+      res.status(500).json({ error: "Failed to delete doctor's visit entry" });
     }
   });
 
