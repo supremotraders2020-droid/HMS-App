@@ -7717,16 +7717,32 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   app.patch("/api/patient-monitoring/initial-assessment/:id", requireAuth, async (req, res) => {
     try {
       const data = { ...req.body };
-      // Convert date strings to Date objects
-      if (data.patientReceivedDate && typeof data.patientReceivedDate === 'string') {
-        data.patientReceivedDate = new Date(data.patientReceivedDate);
+      // Remove fields that shouldn't be updated
+      delete data.id;
+      delete data.createdAt;
+      delete data.updatedAt;
+      
+      // Convert date strings to Date objects (handle various date formats)
+      const parseDate = (val: any) => {
+        if (!val) return null;
+        if (val instanceof Date) return val;
+        if (typeof val === 'string') {
+          const d = new Date(val);
+          return isNaN(d.getTime()) ? null : d;
+        }
+        return null;
+      };
+      
+      if (data.patientReceivedDate !== undefined) {
+        data.patientReceivedDate = parseDate(data.patientReceivedDate);
       }
-      if (data.clinicalAssistantDate && typeof data.clinicalAssistantDate === 'string') {
-        data.clinicalAssistantDate = new Date(data.clinicalAssistantDate);
+      if (data.clinicalAssistantDate !== undefined) {
+        data.clinicalAssistantDate = parseDate(data.clinicalAssistantDate);
       }
-      if (data.inchargeConsultantDate && typeof data.inchargeConsultantDate === 'string') {
-        data.inchargeConsultantDate = new Date(data.inchargeConsultantDate);
+      if (data.inchargeConsultantDate !== undefined) {
+        data.inchargeConsultantDate = parseDate(data.inchargeConsultantDate);
       }
+      
       const result = await db.update(ipdInitialAssessment)
         .set({ ...data, updatedAt: new Date() })
         .where(eq(ipdInitialAssessment.id, req.params.id))
