@@ -968,6 +968,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Duty Staff</TabsTrigger>
                   <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
                   <TabsTrigger value="investigation" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Investigation</TabsTrigger>
+                  <TabsTrigger value="care-plan" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileCheck className="h-3.5 w-3.5" />Care Plan</TabsTrigger>
                   <TabsTrigger value="tests" className="text-xs gap-1.5 data-[state=active]:bg-background"><Beaker className="h-3.5 w-3.5" />Tests</TabsTrigger>
                 </TabsList>
 
@@ -1015,6 +1016,9 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="investigation">
                   <InvestigationChartTab sessionId={selectedSession.id} />
+                </TabsContent>
+                <TabsContent value="care-plan">
+                  <CarePlanTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="tests">
                   <TestsTab sessionId={selectedSession.id} patientId={selectedSession.patientId} patientName={selectedSession.patientName} admittingConsultant={selectedSession.admittingConsultant} />
@@ -3713,5 +3717,474 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
         </Dialog>
       </CardContent>
     </Card>
+  );
+}
+
+// Care Plan Tab - Comprehensive patient care planning
+const REFERRAL_DEPARTMENTS = [
+  "Medicine", "Surgery", "Ortho", "Obs & Gynes", "Oncology", "ENT", 
+  "Opthalmic", "Neuro", "Pead", "Psychiatry", "Physiotherapy", "Diabetics"
+];
+
+function CarePlanTab({ session }: { session: Session }) {
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddNote, setShowAddNote] = useState<string | false>(false);
+  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [formData, setFormData] = useState({
+    provisionalDiagnosis: "",
+    carePlanDetails: "",
+    treatmentAdvised: "",
+    investigationsAdvised: "",
+    departmentSpecialty: "",
+    treatingConsultantName: session.admittingConsultant || "",
+    planTime: format(new Date(), "HH:mm"),
+  });
+  const [noteData, setNoteData] = useState({
+    consultantNotes: "",
+    noteTime: format(new Date(), "HH:mm"),
+  });
+
+  const { data: carePlans = [], isLoading, refetch } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/care-plan/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/patient-monitoring/care-plan", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Care Plan created successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/care-plan/${session.id}`] });
+      resetForm();
+      setShowAddForm(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to create care plan", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await apiRequest("PATCH", `/api/patient-monitoring/care-plan/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Care Plan updated successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/care-plan/${session.id}`] });
+      resetForm();
+      setEditingPlan(null);
+      setShowAddForm(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update care plan", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const addNoteMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/patient-monitoring/care-plan-notes", data);
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      toast({ title: "Consultant note added" });
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/care-plan/${session.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/care-plan/${variables.carePlanId}/notes`] });
+      setNoteData({ consultantNotes: "", noteTime: format(new Date(), "HH:mm") });
+      setShowAddNote(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to add note", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({
+      provisionalDiagnosis: "",
+      carePlanDetails: "",
+      treatmentAdvised: "",
+      investigationsAdvised: "",
+      departmentSpecialty: "",
+      treatingConsultantName: session.admittingConsultant || "",
+      planTime: format(new Date(), "HH:mm"),
+    });
+    setSelectedDepartments([]);
+  };
+
+  const handleSubmit = () => {
+    if (!formData.provisionalDiagnosis.trim()) {
+      toast({ title: "Validation Error", description: "Provisional Diagnosis is required", variant: "destructive" });
+      return;
+    }
+
+    const payload = {
+      sessionId: session.id,
+      patientId: session.patientId,
+      patientName: session.patientName,
+      uhid: session.uhid,
+      age: session.age,
+      sex: session.sex,
+      ward: session.ward,
+      bedNo: session.bedNumber,
+      provisionalDiagnosis: formData.provisionalDiagnosis.trim(),
+      carePlanDetails: formData.carePlanDetails.trim(),
+      treatmentAdvised: formData.treatmentAdvised.trim(),
+      investigationsAdvised: formData.investigationsAdvised.trim(),
+      referralDepartments: JSON.stringify(selectedDepartments),
+      departmentSpecialty: formData.departmentSpecialty.trim(),
+      treatingConsultantName: formData.treatingConsultantName.trim(),
+      planTime: formData.planTime,
+      planDate: new Date(),
+    };
+
+    if (editingPlan) {
+      updateMutation.mutate({ id: editingPlan.id, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const handleEdit = (plan: any) => {
+    setEditingPlan(plan);
+    setFormData({
+      provisionalDiagnosis: plan.provisionalDiagnosis || "",
+      carePlanDetails: plan.carePlanDetails || "",
+      treatmentAdvised: plan.treatmentAdvised || "",
+      investigationsAdvised: plan.investigationsAdvised || "",
+      departmentSpecialty: plan.departmentSpecialty || "",
+      treatingConsultantName: plan.treatingConsultantName || "",
+      planTime: plan.planTime || format(new Date(), "HH:mm"),
+    });
+    try {
+      setSelectedDepartments(JSON.parse(plan.referralDepartments || "[]"));
+    } catch {
+      setSelectedDepartments([]);
+    }
+    setShowAddForm(true);
+  };
+
+  const toggleDepartment = (dept: string) => {
+    setSelectedDepartments(prev => 
+      prev.includes(dept) ? prev.filter(d => d !== dept) : [...prev, dept]
+    );
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <FileCheck className="h-5 w-5" />
+            Care Plan
+          </CardTitle>
+          <CardDescription>
+            Comprehensive care plan with treatment, investigations, and referrals
+          </CardDescription>
+        </div>
+        {!showAddForm && (
+          <Button onClick={() => { resetForm(); setEditingPlan(null); setShowAddForm(true); }}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Care Plan
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent>
+        {showAddForm ? (
+          <div className="space-y-6">
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Hospital className="h-4 w-4" />
+                Patient Information
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div><span className="text-muted-foreground">Patient:</span> {session.patientName}</div>
+                <div><span className="text-muted-foreground">UHID:</span> {session.uhid}</div>
+                <div><span className="text-muted-foreground">Age/Sex:</span> {session.age} / {session.sex}</div>
+                <div><span className="text-muted-foreground">Ward/Bed:</span> {session.ward} / {session.bedNumber}</div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Provisional Diagnosis *</Label>
+              <Textarea
+                value={formData.provisionalDiagnosis}
+                onChange={(e) => setFormData(prev => ({ ...prev, provisionalDiagnosis: e.target.value }))}
+                placeholder="Patient is under my consultation & has been provisionally diagnosed as..."
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Care Plan Details</Label>
+              <CardDescription className="text-xs">With respect to Curative, Preventive, Promotive, Rehabilitative aspects</CardDescription>
+              <Textarea
+                value={formData.carePlanDetails}
+                onChange={(e) => setFormData(prev => ({ ...prev, carePlanDetails: e.target.value }))}
+                placeholder="The management will be as per the following plan of care..."
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Treatment Advised</Label>
+              <Textarea
+                value={formData.treatmentAdvised}
+                onChange={(e) => setFormData(prev => ({ ...prev, treatmentAdvised: e.target.value }))}
+                placeholder="Treatment details..."
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Investigations Advised</Label>
+              <Textarea
+                value={formData.investigationsAdvised}
+                onChange={(e) => setFormData(prev => ({ ...prev, investigationsAdvised: e.target.value }))}
+                placeholder="Investigations to be done..."
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Refer to Department(s)</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-3 bg-muted/30 rounded-lg">
+                {REFERRAL_DEPARTMENTS.map(dept => (
+                  <div key={dept} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`dept-${dept}`}
+                      checked={selectedDepartments.includes(dept)}
+                      onChange={() => toggleDepartment(dept)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <label htmlFor={`dept-${dept}`} className="text-sm cursor-pointer">{dept}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Department / Specialty</Label>
+                <Input
+                  value={formData.departmentSpecialty}
+                  onChange={(e) => setFormData(prev => ({ ...prev, departmentSpecialty: e.target.value }))}
+                  placeholder="Specialty details..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Treating Consultant</Label>
+                <Input
+                  value={formData.treatingConsultantName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, treatingConsultantName: e.target.value }))}
+                  placeholder="Dr. Name"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Date</Label>
+                <Input type="date" value={format(new Date(), "yyyy-MM-dd")} disabled />
+              </div>
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Input
+                  type="time"
+                  value={formData.planTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, planTime: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => { setShowAddForm(false); setEditingPlan(null); }}>
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+                {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {editingPlan ? "Update Care Plan" : "Save Care Plan"}
+              </Button>
+            </div>
+          </div>
+        ) : carePlans.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <FileCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No care plans created yet</p>
+            <p className="text-sm">Click "New Care Plan" to create one</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {carePlans.map((plan: any) => {
+              let referralDepts: string[] = [];
+              try { referralDepts = JSON.parse(plan.referralDepartments || "[]"); } catch {}
+              
+              return (
+                <Card key={plan.id} className="border">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">
+                        Care Plan - {plan.planDate ? format(new Date(plan.planDate), "dd MMM yyyy") : "N/A"}
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{plan.planTime || ""}</Badge>
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(plan)}>
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {plan.provisionalDiagnosis && (
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Provisional Diagnosis</Label>
+                        <p className="text-sm mt-1">{plan.provisionalDiagnosis}</p>
+                      </div>
+                    )}
+                    {plan.carePlanDetails && (
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Care Plan (Curative, Preventive, Promotive, Rehabilitative)</Label>
+                        <p className="text-sm mt-1 whitespace-pre-wrap">{plan.carePlanDetails}</p>
+                      </div>
+                    )}
+                    {plan.treatmentAdvised && (
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Treatment Advised</Label>
+                        <p className="text-sm mt-1 whitespace-pre-wrap">{plan.treatmentAdvised}</p>
+                      </div>
+                    )}
+                    {plan.investigationsAdvised && (
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Investigations Advised</Label>
+                        <p className="text-sm mt-1 whitespace-pre-wrap">{plan.investigationsAdvised}</p>
+                      </div>
+                    )}
+                    {referralDepts.length > 0 && (
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Referral Departments</Label>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {referralDepts.map(dept => (
+                            <Badge key={dept} variant="secondary" className="text-xs">{dept}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex gap-4 pt-2 border-t">
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Consultant:</span> {plan.treatingConsultantName || "N/A"}
+                      </div>
+                      {plan.departmentSpecialty && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Specialty:</span> {plan.departmentSpecialty}
+                        </div>
+                      )}
+                    </div>
+
+                    <Separator />
+
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-sm font-medium">Consultant Notes</Label>
+                        <Button size="sm" variant="outline" onClick={() => setShowAddNote(plan.id)}>
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add Note
+                        </Button>
+                      </div>
+
+                      {showAddNote === plan.id && (
+                        <div className="space-y-3 p-3 bg-muted/30 rounded-lg mb-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              type="date"
+                              value={format(new Date(), "yyyy-MM-dd")}
+                              disabled
+                            />
+                            <Input
+                              type="time"
+                              value={noteData.noteTime}
+                              onChange={(e) => setNoteData(prev => ({ ...prev, noteTime: e.target.value }))}
+                            />
+                          </div>
+                          <Textarea
+                            value={noteData.consultantNotes}
+                            onChange={(e) => setNoteData(prev => ({ ...prev, consultantNotes: e.target.value }))}
+                            placeholder="Enter consultant notes..."
+                            rows={3}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="ghost" onClick={() => setShowAddNote(false)}>Cancel</Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => addNoteMutation.mutate({
+                                carePlanId: plan.id,
+                                sessionId: session.id,
+                                noteTime: noteData.noteTime,
+                                consultantNotes: noteData.consultantNotes,
+                                consultantName: session.admittingConsultant,
+                              })}
+                              disabled={addNoteMutation.isPending}
+                            >
+                              {addNoteMutation.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                              Save Note
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      <ConsultantNotesDisplay carePlanId={plan.id} />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ConsultantNotesDisplay({ carePlanId }: { carePlanId: string }) {
+  const { data: notes = [] } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/care-plan/${carePlanId}/notes`],
+    enabled: !!carePlanId
+  });
+
+  if (notes.length === 0) {
+    return (
+      <div className="text-center py-4 text-muted-foreground text-sm">
+        No consultant notes yet
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[150px]">Date & Time</TableHead>
+            <TableHead>Consultant Notes</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {notes.map((note: any) => (
+            <TableRow key={note.id}>
+              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                {note.noteDate ? format(new Date(note.noteDate), "dd MMM yyyy") : ""} {note.noteTime || ""}
+              </TableCell>
+              <TableCell className="text-sm whitespace-pre-wrap">{note.consultantNotes}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
