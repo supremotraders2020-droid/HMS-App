@@ -3729,7 +3729,6 @@ const REFERRAL_DEPARTMENTS = [
 function CarePlanTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showAddNote, setShowAddNote] = useState<string | false>(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [newConsultantNote, setNewConsultantNote] = useState("");
@@ -3743,10 +3742,6 @@ function CarePlanTab({ session }: { session: Session }) {
     treatingConsultantName: session.admittingConsultant || "",
     planTime: format(new Date(), "HH:mm"),
     consultantNotesLog: [] as { dateTime: string; notes: string }[],
-  });
-  const [noteData, setNoteData] = useState({
-    consultantNotes: "",
-    noteTime: format(new Date(), "HH:mm"),
   });
 
   const { data: carePlans = [], isLoading, refetch } = useQuery<any[]>({
@@ -3784,23 +3779,6 @@ function CarePlanTab({ session }: { session: Session }) {
     },
     onError: (error: any) => {
       toast({ title: "Failed to update care plan", description: error.message, variant: "destructive" });
-    }
-  });
-
-  const addNoteMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/patient-monitoring/care-plan-notes", data);
-      return response.json();
-    },
-    onSuccess: (_, variables) => {
-      toast({ title: "Consultant note added" });
-      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/care-plan/${session.id}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/care-plan/${variables.carePlanId}/notes`] });
-      setNoteData({ consultantNotes: "", noteTime: format(new Date(), "HH:mm") });
-      setShowAddNote(false);
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to add note", description: error.message, variant: "destructive" });
     }
   });
 
@@ -4180,54 +4158,7 @@ function CarePlanTab({ session }: { session: Session }) {
                     <Separator />
 
                     <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <Label className="text-sm font-medium">Consultant Notes</Label>
-                        <Button size="sm" variant="outline" onClick={() => setShowAddNote(plan.id)}>
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Note
-                        </Button>
-                      </div>
-
-                      {showAddNote === plan.id && (
-                        <div className="space-y-3 p-3 bg-muted/30 rounded-lg mb-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <Input
-                              type="date"
-                              value={format(new Date(), "yyyy-MM-dd")}
-                              disabled
-                            />
-                            <Input
-                              type="time"
-                              value={noteData.noteTime}
-                              onChange={(e) => setNoteData(prev => ({ ...prev, noteTime: e.target.value }))}
-                            />
-                          </div>
-                          <Textarea
-                            value={noteData.consultantNotes}
-                            onChange={(e) => setNoteData(prev => ({ ...prev, consultantNotes: e.target.value }))}
-                            placeholder="Enter consultant notes..."
-                            rows={3}
-                          />
-                          <div className="flex justify-end gap-2">
-                            <Button size="sm" variant="ghost" onClick={() => setShowAddNote(false)}>Cancel</Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => addNoteMutation.mutate({
-                                carePlanId: plan.id,
-                                sessionId: session.id,
-                                noteTime: noteData.noteTime,
-                                consultantNotes: noteData.consultantNotes,
-                                consultantName: session.admittingConsultant,
-                              })}
-                              disabled={addNoteMutation.isPending}
-                            >
-                              {addNoteMutation.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                              Save Note
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
+                      <Label className="text-sm font-medium mb-3 block">Consultant Notes</Label>
                       <ConsultantNotesDisplay carePlanId={plan.id} />
                     </div>
                   </CardContent>
