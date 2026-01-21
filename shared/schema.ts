@@ -6475,3 +6475,28 @@ export const surgeryNotes = pgTable("surgery_notes", {
 export const insertSurgeryNotesSchema = createInsertSchema(surgeryNotes).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertSurgeryNotes = z.infer<typeof insertSurgeryNotesSchema>;
 export type SurgeryNotes = typeof surgeryNotes.$inferSelect;
+
+// Nursing Progress Sheet - IPD Monitoring
+export const nursingProgressSheet = pgTable("nursing_progress_sheet", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  patientId: varchar("patient_id"),
+  patientName: varchar("patient_name"),
+  prnNo: varchar("prn_no"),
+  age: varchar("age"),
+  sex: varchar("sex"),
+  ipdNo: varchar("ipd_no"),
+  ward: varchar("ward"),
+  bedNo: varchar("bed_no"),
+  allergicTo: text("allergic_to"),
+  entryDateTime: timestamp("entry_date_time").defaultNow(),
+  progressNotes: text("progress_notes"),
+  signatureName: varchar("signature_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"),
+});
+
+export const insertNursingProgressSheetSchema = createInsertSchema(nursingProgressSheet).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertNursingProgressSheet = z.infer<typeof insertNursingProgressSheetSchema>;
+export type NursingProgressSheet = typeof nursingProgressSheet.$inferSelect;

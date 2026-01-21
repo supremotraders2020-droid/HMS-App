@@ -37,6 +37,7 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   doctorsProgressSheet, insertDoctorsProgressSheetSchema,
   doctorsVisitSheet, insertDoctorsVisitSheetSchema,
   surgeryNotes, insertSurgeryNotesSchema,
+  nursingProgressSheet, insertNursingProgressSheetSchema,
   // Bed Management
   bedCategories, insertBedCategorySchema,
   beds, insertBedSchema,
@@ -8062,6 +8063,85 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error deleting surgery note:", error);
       res.status(500).json({ error: "Failed to delete surgery note" });
+    }
+  });
+
+  // ========== NURSING PROGRESS SHEET ==========
+  // Get all nursing progress entries for a session
+  app.get("/api/patient-monitoring/nursing-progress/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const entries = await db.select().from(nursingProgressSheet)
+        .where(eq(nursingProgressSheet.sessionId, req.params.sessionId))
+        .orderBy(desc(nursingProgressSheet.entryDateTime));
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching nursing progress entries:", error);
+      res.status(500).json({ error: "Failed to fetch nursing progress entries" });
+    }
+  });
+
+  // Create new nursing progress entry
+  app.post("/api/patient-monitoring/nursing-progress", requireAuth, async (req, res) => {
+    try {
+      const body = req.body;
+      const transformedData = {
+        sessionId: body.sessionId,
+        patientId: body.patientId,
+        patientName: body.patientName,
+        prnNo: body.prnNo,
+        age: body.age != null ? String(body.age) : undefined,
+        sex: body.sex,
+        ipdNo: body.ipdNo,
+        ward: body.ward,
+        bedNo: body.bedNo,
+        allergicTo: body.allergicTo,
+        entryDateTime: body.entryDateTime ? new Date(body.entryDateTime) : new Date(),
+        progressNotes: body.progressNotes,
+        signatureName: body.signatureName,
+        createdBy: (req as any).session?.user?.id
+      };
+      const result = await db.insert(nursingProgressSheet).values(transformedData).returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error creating nursing progress entry:", error);
+      res.status(500).json({ error: "Failed to create nursing progress entry" });
+    }
+  });
+
+  // Update nursing progress entry
+  app.patch("/api/patient-monitoring/nursing-progress/:id", requireAuth, async (req, res) => {
+    try {
+      const body = req.body;
+      const updateData: Record<string, any> = {};
+      const allowedFields = ['allergicTo', 'entryDateTime', 'progressNotes', 'signatureName'];
+      for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+          updateData[field] = body[field];
+        }
+      }
+      if (updateData.entryDateTime) {
+        updateData.entryDateTime = new Date(updateData.entryDateTime);
+      }
+      updateData.updatedAt = new Date();
+      const result = await db.update(nursingProgressSheet)
+        .set(updateData)
+        .where(eq(nursingProgressSheet.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating nursing progress entry:", error);
+      res.status(500).json({ error: "Failed to update nursing progress entry" });
+    }
+  });
+
+  // Delete nursing progress entry
+  app.delete("/api/patient-monitoring/nursing-progress/:id", requireAuth, async (req, res) => {
+    try {
+      await db.delete(nursingProgressSheet).where(eq(nursingProgressSheet.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting nursing progress entry:", error);
+      res.status(500).json({ error: "Failed to delete nursing progress entry" });
     }
   });
 
