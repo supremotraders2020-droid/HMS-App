@@ -2288,14 +2288,27 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
     });
   };
 
+  const handlePrint = () => {
+    const rows = records.map((r: any) => 
+      `<tr><td>${r.checkTime || format(new Date(r.createdAt), 'HH:mm')}</td><td>${r.bloodSugarLevel || '-'} mg/dL</td><td>${r.insulinType || '-'}</td><td>${r.insulinDose || '-'}</td><td>${r.alertType || '-'}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Diabetic Flow Chart</h1>
+      ${records.length ? `<table><thead><tr><th>Time</th><th>Blood Sugar</th><th>Insulin Type</th><th>Insulin Dose</th><th>Alert</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No diabetic records</p>'}
+    `;
+    openPrintWindow('Diabetic Chart', content);
+  };
+
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg">Diabetic Flow Chart</CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Record</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Record</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Blood Sugar & Insulin</DialogTitle>
@@ -2326,6 +2339,7 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
@@ -2406,13 +2420,26 @@ function MARTab({ sessionId }: { sessionId: string }) {
     setForm({ ...form, nurseId, nurseName: selectedNurse?.fullName || "" });
   };
 
+  const handlePrint = () => {
+    const rows = records.map((r: any) => 
+      `<tr><td>${r.drugName || r.medicineName || '-'}</td><td>${r.diagnosis || '-'}</td><td>${r.scheduledTime ? format(new Date(r.scheduledTime), 'dd/MM/yyyy') : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Medicines</h1>
+      ${records.length ? `<table><thead><tr><th>Medicine Name</th><th>Diagnosis</th><th>Date</th><th>Staff</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No medicines recorded</p>'}
+    `;
+    openPrintWindow('Medicines', content);
+  };
+
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg">Medicines</CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Medicine</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Medicine</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -2447,6 +2474,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
@@ -2617,14 +2645,27 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
     });
   };
 
+  const handlePrint = () => {
+    const rows = records.map((r: any) => 
+      `<tr><td>${r.shift || '-'}</td><td>${r.eventType || '-'}</td><td style="white-space:pre-wrap">${r.observation || '-'}</td><td>${r.nurseName || '-'}</td><td>${r.noteTime ? format(new Date(r.noteTime), 'HH:mm') : '-'}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Nursing Shift Notes</h1>
+      ${records.length ? `<table><thead><tr><th>Shift</th><th>Type</th><th>Notes</th><th>Staff</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No shift notes recorded</p>'}
+    `;
+    openPrintWindow('Shift Notes', content);
+  };
+
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg">Nursing Shift Notes</CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Note</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Note</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Shift Note</DialogTitle>
@@ -2659,6 +2700,7 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
@@ -2862,14 +2904,27 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
     });
   };
 
+  const handlePrint = () => {
+    const rows = records.map((r: any) => 
+      `<tr><td>${r.shift || '-'}</td><td>${r.nurseName || '-'}</td><td>${r.role || 'Nurse'}</td><td>${r.shiftStartTime ? format(new Date(r.shiftStartTime), 'dd/MM/yyyy HH:mm') : '-'}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Duty Staff Assignments</h1>
+      ${records.length ? `<table><thead><tr><th>Shift</th><th>Staff Name</th><th>Role</th><th>Start Time</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No staff assignments</p>'}
+    `;
+    openPrintWindow('Duty Staff', content);
+  };
+
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg">Duty Staff Assignments</CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Staff</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Staff</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Assign Duty Staff</DialogTitle>
@@ -2904,6 +2959,7 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
@@ -2954,15 +3010,32 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
     }
   });
 
+  const handlePrint = () => {
+    const content = record ? `
+      <h1>Allergies & Precautions</h1>
+      <table>
+        <tr><th>Known Allergies</th><td>${record.knownAllergies || '-'}</td></tr>
+        <tr><th>Drug Allergies</th><td>${record.drugAllergies || '-'}</td></tr>
+        <tr><th>Food Allergies</th><td>${record.foodAllergies || '-'}</td></tr>
+        <tr><th>Isolation Precautions</th><td>${record.isolationPrecautions || '-'}</td></tr>
+        <tr><th>Fall Risk</th><td>${record.fallRisk ? 'Yes' : 'No'}</td></tr>
+        <tr><th>Pressure Ulcer Risk</th><td>${record.pressureUlcerRisk ? 'Yes' : 'No'}</td></tr>
+      </table>
+    ` : '<h1>Allergies & Precautions</h1><p class="no-data">No allergy data recorded</p>';
+    openPrintWindow('Allergies', content);
+  };
+
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg">Allergies & Precautions</CardTitle>
-        {!record && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Details</Button>
-            </DialogTrigger>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          {!record && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Details</Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Patient Allergies & Precautions</DialogTitle>
@@ -3011,7 +3084,8 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        )}
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {!record ? (
@@ -3118,15 +3192,38 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
     ]}
   ];
 
+  const handlePrint = () => {
+    let rows = '';
+    investigations.forEach((inv: any) => {
+      const allSections = [...LAB_SECTIONS, ...IMAGING_SECTIONS];
+      allSections.forEach(section => {
+        section.fields.forEach(f => {
+          const val = inv[f.key];
+          if (val) {
+            rows += `<tr><td>${f.label}</td><td>${val}</td><td>${inv.investigationDate ? format(new Date(inv.investigationDate), 'dd/MM/yyyy') : '-'}</td></tr>`;
+          }
+        });
+      });
+    });
+    const content = `
+      <h1>Investigation Chart</h1>
+      ${rows ? `<table><thead><tr><th>Test</th><th>Value</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No investigation records</p>'}
+    `;
+    openPrintWindow('Investigation Chart', content);
+  };
+
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <ClipboardList className="h-5 w-5" /> Investigation Chart
         </CardTitle>
-        <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} data-testid="button-add-investigation">
-          <PlusCircle className="h-4 w-4 mr-1" /> Add Entry
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} data-testid="button-add-investigation">
+            <PlusCircle className="h-4 w-4 mr-1" /> Add Entry
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {showAddForm && (
@@ -3592,6 +3689,17 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
     }
   };
 
+  const handlePrint = () => {
+    const rows = tests.map((t: any) => 
+      `<tr><td>${t.testName || '-'}</td><td>${t.testType || '-'}</td><td>${t.status || '-'}</td><td>${t.doctorName || '-'}</td><td>${t.createdAt ? format(new Date(t.createdAt), 'dd/MM/yyyy') : '-'}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Diagnostic Tests</h1>
+      ${tests.length ? `<table><thead><tr><th>Test Name</th><th>Type</th><th>Status</th><th>Doctor</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No tests ordered</p>'}
+    `;
+    openPrintWindow('Diagnostic Tests', content);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
@@ -3599,13 +3707,15 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
           <Beaker className="w-5 h-5 text-purple-500" />
           Diagnostic Tests
         </CardTitle>
-        <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
-          <DialogTrigger asChild>
-            <Button size="sm" data-testid="button-order-test-pm">
-              <Plus className="w-4 h-4 mr-1" />
-              Order Tests
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
+            <DialogTrigger asChild>
+              <Button size="sm" data-testid="button-order-test-pm">
+                <Plus className="w-4 h-4 mr-1" />
+                Order Tests
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Order Diagnostic Tests - {patientName}</DialogTitle>
@@ -3721,6 +3831,7 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -3971,6 +4082,17 @@ function CarePlanTab({ session }: { session: Session }) {
     );
   };
 
+  const handlePrint = () => {
+    const rows = carePlans.map((p: any) => 
+      `<tr><td>${p.provisionalDiagnosis || '-'}</td><td>${p.treatmentAdvised || '-'}</td><td>${p.investigationsAdvised || '-'}</td><td>${p.treatingConsultantName || '-'}</td><td>${p.createdAt ? format(new Date(p.createdAt), 'dd/MM/yyyy') : '-'}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Care Plan</h1>
+      ${carePlans.length ? `<table><thead><tr><th>Diagnosis</th><th>Treatment</th><th>Investigations</th><th>Consultant</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No care plans created</p>'}
+    `;
+    openPrintWindow('Care Plan', content);
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -3987,12 +4109,15 @@ function CarePlanTab({ session }: { session: Session }) {
             Comprehensive care plan with treatment, investigations, and referrals
           </CardDescription>
         </div>
-        {!showAddForm && (
-          <Button onClick={() => { resetForm(); setEditingPlan(null); setShowAddForm(true); }}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Care Plan
-          </Button>
-        )}
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          {!showAddForm && (
+            <Button onClick={() => { resetForm(); setEditingPlan(null); setShowAddForm(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Care Plan
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {showAddForm ? (
@@ -4549,6 +4674,38 @@ function InitialAssessmentTab({ session }: { session: Session }) {
     updateField("investigationsAdvised", JSON.stringify(inv));
   };
 
+  const handlePrint = () => {
+    const assessment = assessments[0];
+    if (!assessment) {
+      openPrintWindow('Initial Assessment', '<h1>Initial Assessment Form</h1><p class="no-data">No assessment recorded</p>');
+      return;
+    }
+    const content = `
+      <h1>Initial Assessment Form</h1>
+      <table>
+        <tr><th colspan="2" style="background:#f0f0f0;">Patient Information</th></tr>
+        <tr><td><strong>Date/Time Received</strong></td><td>${assessment.patientReceivedDate ? format(new Date(assessment.patientReceivedDate), 'dd/MM/yyyy') : '-'} ${assessment.patientReceivedTime || ''}</td></tr>
+        <tr><td><strong>Accompanied By</strong></td><td>${assessment.patientAccompaniedBy || '-'}</td></tr>
+        <tr><td><strong>Contact No</strong></td><td>${assessment.contactNo || '-'}</td></tr>
+        <tr><td><strong>Allergies</strong></td><td>${assessment.allergies || '-'} ${assessment.allergiesDetails || ''}</td></tr>
+        <tr><td><strong>Vulnerable</strong></td><td>${assessment.vulnerable || '-'} ${assessment.vulnerableDetails || ''}</td></tr>
+        <tr><th colspan="2" style="background:#f0f0f0;">Medical History</th></tr>
+        <tr><td><strong>Hypertension</strong></td><td>${assessment.hypertension || '-'} ${assessment.hypertensionSince ? `(Since: ${assessment.hypertensionSince})` : ''}</td></tr>
+        <tr><td><strong>Diabetes</strong></td><td>${assessment.diabetes || '-'} ${assessment.diabetesSince ? `(Since: ${assessment.diabetesSince})` : ''}</td></tr>
+        <tr><td><strong>CAD</strong></td><td>${assessment.coronaryArteryDisease || '-'}</td></tr>
+        <tr><td><strong>CVD</strong></td><td>${assessment.cerebroVascularDisease || '-'}</td></tr>
+        <tr><th colspan="2" style="background:#f0f0f0;">Vitals & GCS</th></tr>
+        <tr><td><strong>GCS Score</strong></td><td>${(assessment.gcsEyeOpening || 0) + (assessment.gcsMotorResponse || 0) + (assessment.gcsVerbalResponse || 0)}/15</td></tr>
+        <tr><td><strong>Pulse Rate</strong></td><td>${assessment.pulseRate || '-'}</td></tr>
+        <tr><td><strong>Blood Pressure</strong></td><td>${assessment.bloodPressure || '-'}</td></tr>
+        <tr><td><strong>Respiratory Rate</strong></td><td>${assessment.respiratoryRate || '-'}</td></tr>
+        <tr><td><strong>Temperature</strong></td><td>${assessment.temperature || '-'}</td></tr>
+        <tr><td><strong>Weight/Height/BMI</strong></td><td>${assessment.weight || '-'} / ${assessment.height || '-'} / ${assessment.bmi || '-'}</td></tr>
+      </table>
+    `;
+    openPrintWindow('Initial Assessment', content);
+  };
+
   if (isLoading) return <div className="p-4 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
 
   return (
@@ -4561,11 +4718,14 @@ function InitialAssessmentTab({ session }: { session: Session }) {
           </CardTitle>
           <p className="text-sm text-muted-foreground">Comprehensive assessment on admission</p>
         </div>
-        {!showForm && (
-          <Button onClick={() => { setFormData(defaultFormData); setEditingId(null); setShowForm(true); }} className="gap-1">
-            <Plus className="h-4 w-4" /> New Assessment
-          </Button>
-        )}
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          {!showForm && (
+            <Button onClick={() => { setFormData(defaultFormData); setEditingId(null); setShowForm(true); }} className="gap-1">
+              <Plus className="h-4 w-4" /> New Assessment
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {showForm ? (
