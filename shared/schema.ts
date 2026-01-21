@@ -6135,3 +6135,53 @@ export const otAuditLog = pgTable("ot_audit_log", {
 export const insertOtAuditLogSchema = createInsertSchema(otAuditLog).omit({ id: true, timestamp: true });
 export type InsertOtAuditLog = z.infer<typeof insertOtAuditLogSchema>;
 export type OtAuditLog = typeof otAuditLog.$inferSelect;
+
+// IPD Care Plan - Comprehensive care plan for admitted patients
+export const ipdCarePlans = pgTable("ipd_care_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(), // Link to patient_monitoring_sessions
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  uhid: text("uhid"),
+  age: integer("age"),
+  sex: text("sex"),
+  ipdNo: text("ipd_no"),
+  ward: text("ward"),
+  bedNo: text("bed_no"),
+  provisionalDiagnosis: text("provisional_diagnosis"),
+  carePlanDetails: text("care_plan_details"), // Curative, Preventive, Promotive, Rehabilitative aspects
+  treatmentAdvised: text("treatment_advised"),
+  investigationsAdvised: text("investigations_advised"),
+  referralDepartments: text("referral_departments"), // JSON array of selected departments
+  departmentSpecialty: text("department_specialty"),
+  treatingConsultantId: varchar("treating_consultant_id"),
+  treatingConsultantName: text("treating_consultant_name"),
+  consultantSignature: text("consultant_signature"),
+  planDate: timestamp("plan_date").defaultNow(),
+  planTime: text("plan_time"),
+  createdBy: varchar("created_by"),
+  createdByName: text("created_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIpdCarePlanSchema = createInsertSchema(ipdCarePlans).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertIpdCarePlan = z.infer<typeof insertIpdCarePlanSchema>;
+export type IpdCarePlan = typeof ipdCarePlans.$inferSelect;
+
+// IPD Care Plan Consultant Notes - Log of consultant notes over time
+export const ipdCarePlanNotes = pgTable("ipd_care_plan_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  carePlanId: varchar("care_plan_id").notNull(), // Link to ipd_care_plans
+  sessionId: varchar("session_id").notNull(),
+  noteDate: timestamp("note_date").defaultNow(),
+  noteTime: text("note_time"),
+  consultantNotes: text("consultant_notes"),
+  consultantId: varchar("consultant_id"),
+  consultantName: text("consultant_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIpdCarePlanNotesSchema = createInsertSchema(ipdCarePlanNotes).omit({ id: true, createdAt: true });
+export type InsertIpdCarePlanNotes = z.infer<typeof insertIpdCarePlanNotesSchema>;
+export type IpdCarePlanNotes = typeof ipdCarePlanNotes.$inferSelect;
