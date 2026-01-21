@@ -1014,15 +1014,11 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Overview</TabsTrigger>
                   <TabsTrigger value="vitals" className="text-xs gap-1.5 data-[state=active]:bg-background"><Heart className="h-3.5 w-3.5" />Vitals</TabsTrigger>
                   <TabsTrigger value="inotropes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Injection</TabsTrigger>
-                  <TabsTrigger value="ventilator" className="text-xs gap-1.5 data-[state=active]:bg-background"><Wind className="h-3.5 w-3.5" />Ventilator</TabsTrigger>
-                  <TabsTrigger value="abg-lab" className="text-xs gap-1.5 data-[state=active]:bg-background"><FlaskConical className="h-3.5 w-3.5" />ABG/Lab</TabsTrigger>
                   <TabsTrigger value="intake" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Intake</TabsTrigger>
                   <TabsTrigger value="output" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Output</TabsTrigger>
                   <TabsTrigger value="diabetic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Diabetic</TabsTrigger>
                   <TabsTrigger value="mar" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />Medicines</TabsTrigger>
-                  <TabsTrigger value="once-only" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />Once-Only</TabsTrigger>
                   <TabsTrigger value="notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Shift Notes</TabsTrigger>
-                  <TabsTrigger value="airway" className="text-xs gap-1.5 data-[state=active]:bg-background"><BedDouble className="h-3.5 w-3.5" />Lines/Tubes</TabsTrigger>
                   <TabsTrigger value="staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Duty Staff</TabsTrigger>
                   <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
                   <TabsTrigger value="investigation" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Investigation</TabsTrigger>
@@ -1041,12 +1037,6 @@ export default function PatientMonitoringPage() {
                 <TabsContent value="inotropes">
                   <InotropesTab sessionId={selectedSession.id} />
                 </TabsContent>
-                <TabsContent value="ventilator">
-                  <VentilatorTab sessionId={selectedSession.id} isOnVentilator={selectedSession.isVentilated} />
-                </TabsContent>
-                <TabsContent value="abg-lab">
-                  <ABGLabTab sessionId={selectedSession.id} />
-                </TabsContent>
                 <TabsContent value="intake">
                   <IntakeTab sessionId={selectedSession.id} />
                 </TabsContent>
@@ -1059,14 +1049,8 @@ export default function PatientMonitoringPage() {
                 <TabsContent value="mar">
                   <MARTab sessionId={selectedSession.id} />
                 </TabsContent>
-                <TabsContent value="once-only">
-                  <OnceOnlyTab sessionId={selectedSession.id} />
-                </TabsContent>
                 <TabsContent value="notes">
                   <ShiftNotesTab sessionId={selectedSession.id} />
-                </TabsContent>
-                <TabsContent value="airway">
-                  <AirwayTab sessionId={selectedSession.id} />
                 </TabsContent>
                 <TabsContent value="staff">
                   <DutyStaffTab sessionId={selectedSession.id} />
