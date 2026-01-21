@@ -38,6 +38,7 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   doctorsVisitSheet, insertDoctorsVisitSheetSchema,
   surgeryNotes, insertSurgeryNotesSchema,
   nursingProgressSheet, insertNursingProgressSheetSchema,
+  nursingAssessmentCarePlan, insertNursingAssessmentCarePlanSchema,
   // Bed Management
   bedCategories, insertBedCategorySchema,
   beds, insertBedSchema,
@@ -8142,6 +8143,164 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error deleting nursing progress entry:", error);
       res.status(500).json({ error: "Failed to delete nursing progress entry" });
+    }
+  });
+
+  // ========== NURSING ASSESSMENT & CARE PLAN ==========
+  // Get nursing assessment & care plan for a session
+  app.get("/api/patient-monitoring/nursing-assessment/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const entries = await db.select().from(nursingAssessmentCarePlan)
+        .where(eq(nursingAssessmentCarePlan.sessionId, req.params.sessionId))
+        .orderBy(desc(nursingAssessmentCarePlan.createdAt));
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching nursing assessment:", error);
+      res.status(500).json({ error: "Failed to fetch nursing assessment" });
+    }
+  });
+
+  // Create nursing assessment & care plan
+  app.post("/api/patient-monitoring/nursing-assessment", requireAuth, async (req, res) => {
+    try {
+      const body = req.body;
+      const transformedData: Record<string, any> = {
+        sessionId: body.sessionId,
+        patientId: body.patientId,
+        patientReceivedDate: body.patientReceivedDate ? new Date(body.patientReceivedDate) : null,
+        patientReceivedTime: body.patientReceivedTime,
+        provisionalDiagnosis: body.provisionalDiagnosis,
+        generalConsentSigned: body.generalConsentSigned,
+        modeOfAccess: body.modeOfAccess,
+        patientAccompanied: body.patientAccompanied,
+        accompaniedName: body.accompaniedName,
+        vulnerable: body.vulnerable,
+        relation: body.relation,
+        contactNo: body.contactNo,
+        allergies: body.allergies,
+        temperature: body.temperature,
+        pulse: body.pulse,
+        breathsPerMin: body.breathsPerMin,
+        bp: body.bp,
+        respiratoryRate: body.respiratoryRate,
+        height: body.height,
+        weight: body.weight,
+        patientHistory: body.patientHistory,
+        functionalStatus: body.functionalStatus,
+        patientEnvironment: body.patientEnvironment,
+        currentMedications: body.currentMedications,
+        medicinesBroughtToHospital: body.medicinesBroughtToHospital,
+        medicinesDisposition: body.medicinesDisposition,
+        morseFallRiskScore: body.morseFallRiskScore,
+        historyOfFall: body.historyOfFall,
+        secondaryDiagnosis: body.secondaryDiagnosis,
+        ambulatoryAid: body.ambulatoryAid,
+        peripheryCentralLine: body.peripheryCentralLine,
+        gait: body.gait,
+        mentalStatus: body.mentalStatus,
+        bradenScaleTotal: body.bradenScaleTotal,
+        sensoryPerception: body.sensoryPerception,
+        degreeOfActivity: body.degreeOfActivity,
+        nutrition: body.nutrition,
+        moisture: body.moisture,
+        mobility: body.mobility,
+        shearFriction: body.shearFriction,
+        neurologicalReview: body.neurologicalReview,
+        cardiovascularReview: body.cardiovascularReview,
+        urinaryReview: body.urinaryReview,
+        respiratoryReview: body.respiratoryReview,
+        gastroIntestinalReview: body.gastroIntestinalReview,
+        skinReview: body.skinReview,
+        vision: body.vision,
+        hearing: body.hearing,
+        languages: body.languages,
+        speech: body.speech,
+        obey: body.obey,
+        woundsUlcerBedSore: body.woundsUlcerBedSore,
+        woundsLocation: body.woundsLocation,
+        woundsStage: body.woundsStage,
+        painScore: body.painScore,
+        patientDevices: body.patientDevices,
+        nutritionalAssessment: body.nutritionalAssessment,
+        nutritionalScore: body.nutritionalScore,
+        personalHygiene: body.personalHygiene,
+        dressingChange: body.dressingChange,
+        ivFluide: body.ivFluide,
+        injection: body.injection,
+        medicine: body.medicine,
+        investigation: body.investigation,
+        bloodGroup: body.bloodGroup,
+        previousBTReceived: body.previousBTReceived,
+        btStartTime: body.btStartTime,
+        btFinishTime: body.btFinishTime,
+        btName: body.btName,
+        btStaffNurse: body.btStaffNurse,
+        btRmoName: body.btRmoName,
+        nursingCareShifts: body.nursingCareShifts,
+        nursingObservations: body.nursingObservations,
+        nursingIntervention: body.nursingIntervention,
+        specificNeedsRemarks: body.specificNeedsRemarks,
+        admittingStaffNurse: body.admittingStaffNurse,
+        empId: body.empId,
+        assessmentCompletingDate: body.assessmentCompletingDate ? new Date(body.assessmentCompletingDate) : null,
+        assessmentCompletingTime: body.assessmentCompletingTime,
+        signature: body.signature,
+        createdBy: (req as any).user?.username || 'system',
+      };
+      const result = await db.insert(nursingAssessmentCarePlan).values(transformedData).returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error creating nursing assessment:", error);
+      res.status(500).json({ error: "Failed to create nursing assessment" });
+    }
+  });
+
+  // Update nursing assessment & care plan
+  app.patch("/api/patient-monitoring/nursing-assessment/:id", requireAuth, async (req, res) => {
+    try {
+      const body = req.body;
+      const updateData: Record<string, any> = {};
+      const allowedFields = [
+        'provisionalDiagnosis', 'generalConsentSigned', 'modeOfAccess', 'patientAccompanied',
+        'accompaniedName', 'vulnerable', 'relation', 'contactNo', 'allergies', 'temperature',
+        'pulse', 'breathsPerMin', 'bp', 'respiratoryRate', 'height', 'weight', 'patientHistory',
+        'functionalStatus', 'patientEnvironment', 'currentMedications', 'medicinesBroughtToHospital',
+        'medicinesDisposition', 'morseFallRiskScore', 'historyOfFall', 'secondaryDiagnosis',
+        'ambulatoryAid', 'peripheryCentralLine', 'gait', 'mentalStatus', 'bradenScaleTotal',
+        'sensoryPerception', 'degreeOfActivity', 'nutrition', 'moisture', 'mobility', 'shearFriction',
+        'neurologicalReview', 'cardiovascularReview', 'urinaryReview', 'respiratoryReview',
+        'gastroIntestinalReview', 'skinReview', 'vision', 'hearing', 'languages', 'speech', 'obey',
+        'woundsUlcerBedSore', 'woundsLocation', 'woundsStage', 'painScore', 'patientDevices',
+        'nutritionalAssessment', 'nutritionalScore', 'personalHygiene', 'dressingChange', 'ivFluide',
+        'injection', 'medicine', 'investigation', 'bloodGroup', 'previousBTReceived', 'btStartTime',
+        'btFinishTime', 'btName', 'btStaffNurse', 'btRmoName', 'nursingCareShifts', 'nursingObservations',
+        'nursingIntervention', 'specificNeedsRemarks', 'admittingStaffNurse', 'empId', 'signature'
+      ];
+      for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+          updateData[field] = body[field];
+        }
+      }
+      updateData.updatedAt = new Date();
+      const result = await db.update(nursingAssessmentCarePlan)
+        .set(updateData)
+        .where(eq(nursingAssessmentCarePlan.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating nursing assessment:", error);
+      res.status(500).json({ error: "Failed to update nursing assessment" });
+    }
+  });
+
+  // Delete nursing assessment & care plan
+  app.delete("/api/patient-monitoring/nursing-assessment/:id", requireAuth, async (req, res) => {
+    try {
+      await db.delete(nursingAssessmentCarePlan).where(eq(nursingAssessmentCarePlan.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting nursing assessment:", error);
+      res.status(500).json({ error: "Failed to delete nursing assessment" });
     }
   });
 

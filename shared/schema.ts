@@ -6503,3 +6503,136 @@ export const nursingProgressSheet = pgTable("nursing_progress_sheet", {
 export const insertNursingProgressSheetSchema = createInsertSchema(nursingProgressSheet).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertNursingProgressSheet = z.infer<typeof insertNursingProgressSheetSchema>;
 export type NursingProgressSheet = typeof nursingProgressSheet.$inferSelect;
+
+// Nursing Assessment & Care Plan - IPD Monitoring (Comprehensive Form)
+export const nursingAssessmentCarePlan = pgTable("nursing_assessment_care_plan", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  patientId: varchar("patient_id"),
+  
+  // General Information (Image 1)
+  patientReceivedDate: timestamp("patient_received_date"),
+  patientReceivedTime: text("patient_received_time"),
+  provisionalDiagnosis: text("provisional_diagnosis"),
+  generalConsentSigned: text("general_consent_signed"), // Yes/No
+  modeOfAccess: text("mode_of_access"), // Walking/Wheelchairs/Stretchers/Other
+  patientAccompanied: text("patient_accompanied"), // Yes/No
+  accompaniedName: text("accompanied_name"),
+  vulnerable: text("vulnerable"), // Yes/No
+  relation: text("relation"),
+  contactNo: text("contact_no"),
+  allergies: text("allergies"), // DRUG/FOOD/OTHER - JSON
+  
+  // Vital Signs
+  temperature: text("temperature"),
+  pulse: text("pulse"),
+  breathsPerMin: text("breaths_per_min"),
+  bp: text("bp"),
+  respiratoryRate: text("respiratory_rate"),
+  height: text("height"),
+  weight: text("weight"),
+  
+  // A. Patient History (Yes/No for each)
+  patientHistory: text("patient_history"), // JSON: {hypertension, diabetes, coronaryArteryDisease, cerebroVascularDisease, copdBronchialAsthma, tuberculosis, anyOther}
+  
+  // B. Functional Status (Independent/Assistance/Dependent)
+  functionalStatus: text("functional_status"), // JSON: {walking, eating, bathing, dressing, toiletNeeds}
+  
+  // C. Orientation to Patient Environment (checkboxes)
+  patientEnvironment: text("patient_environment"), // JSON array
+  
+  // D. Current Medication table
+  currentMedications: text("current_medications"), // JSON array of {srNo, name, dose, frequency, dateTimeLastDose}
+  medicinesBroughtToHospital: text("medicines_brought_to_hospital"), // Yes/No
+  medicinesDisposition: text("medicines_disposition"), // Sent Home/Other Placement
+  
+  // Image 2 - Morse Fall Risk Assessment
+  morseFallRiskScore: text("morse_fall_risk_score"),
+  historyOfFall: text("history_of_fall"), // Yes/No
+  secondaryDiagnosis: text("secondary_diagnosis"), // Yes/No
+  ambulatoryAid: text("ambulatory_aid"), // Furniture/Crutches/cane/walker/None/Bed Rest/Wheelchair
+  peripheryCentralLine: text("periphery_central_line"), // Yes/No
+  gait: text("gait"), // No/Impaired/Weak
+  mentalStatus: text("mental_status"), // Normal/Gesture Limitations/Oriented to own ability
+  
+  // Skin Assessment / Braden Scale
+  bradenScaleTotal: text("braden_scale_total"),
+  sensoryPerception: text("sensory_perception"), // 1-4
+  degreeOfActivity: text("degree_of_activity"), // 1-4
+  nutrition: text("nutrition"), // 1-4
+  moisture: text("moisture"), // 1-4
+  mobility: text("mobility"), // 1-4
+  shearFriction: text("shear_friction"), // 1-3
+  
+  // Systemic Review (Y/N for each)
+  neurologicalReview: text("neurological_review"), // JSON
+  cardiovascularReview: text("cardiovascular_review"), // JSON
+  urinaryReview: text("urinary_review"), // JSON
+  respiratoryReview: text("respiratory_review"), // JSON
+  gastroIntestinalReview: text("gastro_intestinal_review"), // JSON
+  skinReview: text("skin_review"), // JSON
+  
+  // Image 3 - Communication
+  vision: text("vision"), // OK/Impaired
+  hearing: text("hearing"), // OK/Impaired
+  languages: text("languages"),
+  speech: text("speech"), // OK/Impaired
+  obey: text("obey"), // OK/Impaired
+  
+  // Wounds
+  woundsUlcerBedSore: text("wounds_ulcer_bed_sore"),
+  woundsLocation: text("wounds_location"),
+  woundsStage: text("wounds_stage"), // 1-4
+  
+  // Pain Score
+  painScore: text("pain_score"), // 0-10
+  
+  // Patients Having Devices
+  patientDevices: text("patient_devices"), // JSON: {centralLine, urethralCatheter, peripheralLine, rt, ventilation, lanfusion}
+  
+  // Nursing Care Documentation - Nutritional
+  nutritionalAssessment: text("nutritional_assessment"), // JSON
+  nutritionalScore: text("nutritional_score"),
+  
+  // Personal Hygiene (M/E/N shifts)
+  personalHygiene: text("personal_hygiene"), // JSON: {bedBath, hairWash, eyeCare}
+  dressingChange: text("dressing_change"),
+  
+  // Medication
+  ivFluide: text("iv_fluide"),
+  injection: text("injection"),
+  medicine: text("medicine"),
+  investigation: text("investigation"),
+  
+  // Blood Transfusion
+  bloodGroup: text("blood_group"),
+  previousBTReceived: text("previous_bt_received"), // Yes/No
+  btStartTime: text("bt_start_time"),
+  btFinishTime: text("bt_finish_time"),
+  btName: text("bt_name"),
+  btStaffNurse: text("bt_staff_nurse"),
+  btRmoName: text("bt_rmo_name"),
+  
+  // Image 4 - Nursing Care Shifts
+  nursingCareShifts: text("nursing_care_shifts"), // JSON: {mouthCare, backCare, positionChange, chestLimbPhysio, foleysCathCare, suction} each with morning/evening/night times and signs
+  
+  // Nursing Observations, Intervention, Remarks
+  nursingObservations: text("nursing_observations"),
+  nursingIntervention: text("nursing_intervention"),
+  specificNeedsRemarks: text("specific_needs_remarks"),
+  
+  // Final Section
+  admittingStaffNurse: text("admitting_staff_nurse"),
+  empId: text("emp_id"),
+  assessmentCompletingDate: timestamp("assessment_completing_date"),
+  assessmentCompletingTime: text("assessment_completing_time"),
+  signature: text("signature"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"),
+});
+
+export const insertNursingAssessmentCarePlanSchema = createInsertSchema(nursingAssessmentCarePlan).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertNursingAssessmentCarePlan = z.infer<typeof insertNursingAssessmentCarePlanSchema>;
+export type NursingAssessmentCarePlan = typeof nursingAssessmentCarePlan.$inferSelect;
