@@ -2630,7 +2630,7 @@ function OnceOnlyTab({ sessionId }: { sessionId: string }) {
 function ShiftNotesTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ shift: "MORNING", noteType: "ASSESSMENT", noteContent: "" });
+  const [form, setForm] = useState({ shift: "MORNING", noteType: "ASSESSMENT", noteContent: "", staffName: "", staffRole: "NURSE" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/shift-notes/${sessionId}`]
@@ -2641,7 +2641,7 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
     onSuccess: () => { 
       refetch(); 
       toast({ title: "Shift Note Added", description: "Note saved successfully" }); 
-      setForm({...form, noteContent: ""});
+      setForm({...form, noteContent: "", staffName: ""});
       setDialogOpen(false);
     },
     onError: () => {
@@ -2657,17 +2657,18 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
       observation: form.noteContent,
       noteTime: new Date().toISOString(),
       nurseId: "system-nurse",
-      nurseName: "ICU Nurse"
+      nurseName: form.staffName || "Staff",
+      staffRole: form.staffRole
     });
   };
 
   const handlePrint = () => {
     const rows = records.map((r: any) => 
-      `<tr><td>${r.shift || '-'}</td><td>${r.eventType || '-'}</td><td style="white-space:pre-wrap">${r.observation || '-'}</td><td>${r.nurseName || '-'}</td><td>${r.noteTime ? format(new Date(r.noteTime), 'HH:mm') : '-'}</td></tr>`
+      `<tr><td>${r.shift || '-'}</td><td>${r.eventType || '-'}</td><td style="white-space:pre-wrap">${r.observation || '-'}</td><td>${r.nurseName || '-'}</td><td>${r.staffRole || 'NURSE'}</td><td>${r.noteTime ? format(new Date(r.noteTime), 'HH:mm') : '-'}</td></tr>`
     ).join('');
     const content = `
       <h1>Nursing Shift Notes</h1>
-      ${records.length ? `<table><thead><tr><th>Shift</th><th>Type</th><th>Notes</th><th>Staff</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No shift notes recorded</p>'}
+      ${records.length ? `<table><thead><tr><th>Shift</th><th>Type</th><th>Notes</th><th>Staff Name</th><th>Role</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No shift notes recorded</p>'}
     `;
     openPrintWindow('Shift Notes', content);
   };
@@ -2688,6 +2689,19 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
               <DialogDescription>Record nursing observation or note</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Staff Name</Label>
+                  <Input value={form.staffName} onChange={(e) => setForm({...form, staffName: e.target.value})} placeholder="Enter staff name" />
+                </div>
+                <div><Label>Role</Label>
+                  <Select value={form.staffRole} onValueChange={(v) => setForm({...form, staffRole: v})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {["NURSE", "DOCTOR", "RESIDENT", "INTERN", "TECHNICIAN"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Shift</Label>
                   <Select value={form.shift} onValueChange={(v) => setForm({...form, shift: v})}>
@@ -2730,7 +2744,7 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
                     <Badge>{r.shift}</Badge>
                     <Badge variant="outline">{r.noteType}</Badge>
                   </div>
-                  <span className="text-xs text-muted-foreground">{format(new Date(r.noteTime), "dd/MM HH:mm")} - {r.nurseName}</span>
+                  <span className="text-xs text-muted-foreground">{format(new Date(r.noteTime), "dd/MM HH:mm")} - {r.nurseName} ({r.staffRole || 'NURSE'})</span>
                 </div>
                 <p className="text-sm">{r.observation || r.noteContent || "No content"}</p>
               </Card>

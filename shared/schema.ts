@@ -2259,6 +2259,7 @@ export const nursingShiftNotes = pgTable("nursing_shift_notes", {
   nurseId: varchar("nurse_id").notNull(),
   nurseName: text("nurse_name"),
   nurseInitial: text("nurse_initial"),
+  staffRole: text("staff_role").default("NURSE"),
   createdAt: timestamp("created_at").defaultNow(),
   version: integer("version").default(1),
 });
