@@ -5065,7 +5065,7 @@ function IndoorConsultationTab({ session }: { session: Session }) {
 
         {showForm ? (
           <div className="space-y-4 border rounded-lg p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Date</Label>
                 <Input type="date" value={formData.entryDate} onChange={(e) => updateField("entryDate", e.target.value)} />
@@ -5073,10 +5073,6 @@ function IndoorConsultationTab({ session }: { session: Session }) {
               <div>
                 <Label>Time</Label>
                 <Input type="time" value={formData.entryTime} onChange={(e) => updateField("entryTime", e.target.value)} />
-              </div>
-              <div className="md:col-span-2">
-                <Label>Recorded By</Label>
-                <Input value={formData.recordedBy} onChange={(e) => updateField("recordedBy", e.target.value)} placeholder="Doctor/Nurse name" />
               </div>
             </div>
             <div>
@@ -5118,7 +5114,6 @@ function IndoorConsultationTab({ session }: { session: Session }) {
                     <TableHead className="w-36 whitespace-nowrap">Date & Time</TableHead>
                     <TableHead>Clinical Findings / Daily Progress Notes</TableHead>
                     <TableHead>Orders</TableHead>
-                    <TableHead className="w-32 whitespace-nowrap">Recorded By</TableHead>
                     <TableHead className="w-20 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -5131,7 +5126,6 @@ function IndoorConsultationTab({ session }: { session: Session }) {
                       </TableCell>
                       <TableCell className="text-sm whitespace-pre-wrap max-w-md">{entry.clinicalFindings || "-"}</TableCell>
                       <TableCell className="text-sm whitespace-pre-wrap max-w-sm">{entry.orders || "-"}</TableCell>
-                      <TableCell className="text-sm">{entry.recordedBy || "-"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-1 justify-end">
                           <Button size="icon" variant="ghost" onClick={() => handleEdit(entry)}><Edit className="h-4 w-4" /></Button>
