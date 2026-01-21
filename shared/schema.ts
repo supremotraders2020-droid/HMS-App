@@ -6186,3 +6186,149 @@ export const ipdCarePlanNotes = pgTable("ipd_care_plan_notes", {
 export const insertIpdCarePlanNotesSchema = createInsertSchema(ipdCarePlanNotes).omit({ id: true, createdAt: true });
 export type InsertIpdCarePlanNotes = z.infer<typeof insertIpdCarePlanNotesSchema>;
 export type IpdCarePlanNotes = typeof ipdCarePlanNotes.$inferSelect;
+
+// IPD Initial Assessment Form - Comprehensive admission assessment
+export const ipdInitialAssessment = pgTable("ipd_initial_assessment", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name"),
+  uhid: text("uhid"),
+  age: integer("age"),
+  sex: text("sex"),
+  ipdNo: text("ipd_no"),
+  ward: text("ward"),
+  bedNo: text("bed_no"),
+  
+  // Basic Info
+  patientReceivedDate: timestamp("patient_received_date"),
+  patientReceivedTime: text("patient_received_time"),
+  patientAccompaniedBy: text("patient_accompanied_by"), // Relatives/Self
+  contactNo: text("contact_no"),
+  allergies: text("allergies"), // Yes/No
+  allergiesDetails: text("allergies_details"),
+  vulnerable: text("vulnerable"), // Yes/No
+  vulnerableDetails: text("vulnerable_details"),
+  previousAdmission: text("previous_admission"), // Yes/No
+  previousAdmissionUnderWhom: text("previous_admission_under_whom"),
+  mlcDone: text("mlc_done"), // Yes/No
+  mlcNo: text("mlc_no"),
+  painScore: integer("pain_score"), // 0-10
+  
+  // Complaints & History (JSON: [{complaint, originDuration}])
+  complaintsHistory: text("complaints_history"),
+  
+  // Medical History (JSON with Yes/No and Since When)
+  hypertension: text("hypertension"),
+  hypertensionSince: text("hypertension_since"),
+  diabetes: text("diabetes"),
+  diabetesSince: text("diabetes_since"),
+  coronaryArteryDisease: text("coronary_artery_disease"),
+  coronaryArteryDiseaseSince: text("coronary_artery_disease_since"),
+  cerebroVascularDisease: text("cerebro_vascular_disease"),
+  cerebroVascularDiseaseSince: text("cerebro_vascular_disease_since"),
+  copdBronchialAsthma: text("copd_bronchial_asthma"),
+  copdBronchialAsthmaSince: text("copd_bronchial_asthma_since"),
+  tuberculosis: text("tuberculosis"),
+  tuberculosisSince: text("tuberculosis_since"),
+  otherMedicalIllness: text("other_medical_illness"),
+  otherMedicalIllnessSince: text("other_medical_illness_since"),
+  
+  // Surgical History (JSON: [{procedure, when, complications}])
+  surgicalHistory: text("surgical_history"),
+  surgicalHistoryNote: text("surgical_history_note"),
+  
+  // Personal History
+  smoking: text("smoking"),
+  alcohol: text("alcohol"),
+  tobaccoChewing: text("tobacco_chewing"),
+  dietType: text("diet_type"), // Veg/Non-veg
+  otherAddictions: text("other_addictions"),
+  
+  // Family History
+  familyHypertension: text("family_hypertension"),
+  familyDiabetes: text("family_diabetes"),
+  familyIhd: text("family_ihd"),
+  familyCva: text("family_cva"),
+  familyCopdAsthma: text("family_copd_asthma"),
+  familyTuberculosis: text("family_tuberculosis"),
+  familyOtherSpecify: text("family_other_specify"),
+  
+  // Menstrual & Obstetric History
+  menstrualCycle: text("menstrual_cycle"), // Regular/Irregular
+  gpla: text("gpla"),
+  lmp: text("lmp"),
+  tubectomy: text("tubectomy"), // Done/Not Done
+  edd: text("edd"),
+  menarcheAge: text("menarche_age"),
+  
+  // Glasgow Coma Scale
+  gcsEyeOpening: integer("gcs_eye_opening"), // 1-4
+  gcsMotorResponse: integer("gcs_motor_response"), // 1-6
+  gcsVerbalResponse: integer("gcs_verbal_response"), // 1-5
+  gcsTotal: integer("gcs_total"), // /15
+  
+  // General Examination
+  conscious: boolean("conscious"),
+  oriented: boolean("oriented"),
+  disoriented: boolean("disoriented"),
+  pulseRate: text("pulse_rate"),
+  bloodPressure: text("blood_pressure"),
+  respiratoryRate: text("respiratory_rate"),
+  rbs: text("rbs"),
+  temperature: text("temperature"),
+  weight: text("weight"),
+  height: text("height"),
+  bmi: text("bmi"),
+  pallor: text("pallor"),
+  icterus: text("icterus"),
+  cyanosis: text("cyanosis"),
+  clubbing: text("clubbing"),
+  lymphadinopathy: text("lymphadinopathy"),
+  oedema: text("oedema"),
+  jvp: text("jvp"),
+  heent: text("heent"), // Head/Eyes/Ears/Nose/Throat/Skin
+  
+  // Systemic Examination
+  cvs: text("cvs"),
+  rs: text("rs"),
+  pa: text("pa"),
+  cns: text("cns"),
+  localExamination: text("local_examination"),
+  
+  // Special Examinations (status: Done/Declined/Not Indicated)
+  rectalExamination: text("rectal_examination"),
+  rectalExaminationStatus: text("rectal_examination_status"),
+  breastExamination: text("breast_examination"),
+  breastExaminationStatus: text("breast_examination_status"),
+  pelvicExamination: text("pelvic_examination"),
+  pelvicExaminationStatus: text("pelvic_examination_status"),
+  woundExamination: text("wound_examination"),
+  woundExaminationStatus: text("wound_examination_status"),
+  
+  // Investigation Advised (JSON: {cbc, esr, urineRM, rft, lft, rbs, fbs, ppbs, electrolyte, lipidProfile, bloodCS, urineCS, hbsAg, hiv, tsh, t3t4, hba1c, sCreatinine, others})
+  investigationsAdvised: text("investigations_advised"),
+  investigationsOthers: text("investigations_others"),
+  
+  // Provisional Diagnosis & Treatment
+  provisionalDiagnosis: text("provisional_diagnosis"),
+  treatment: text("treatment"),
+  
+  // Assessment Finished
+  clinicalAssistantName: text("clinical_assistant_name"),
+  clinicalAssistantSignature: text("clinical_assistant_signature"),
+  clinicalAssistantDate: timestamp("clinical_assistant_date"),
+  clinicalAssistantTime: text("clinical_assistant_time"),
+  inchargeConsultantName: text("incharge_consultant_name"),
+  inchargeConsultantSignature: text("incharge_consultant_signature"),
+  inchargeConsultantDate: timestamp("incharge_consultant_date"),
+  inchargeConsultantTime: text("incharge_consultant_time"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"),
+});
+
+export const insertIpdInitialAssessmentSchema = createInsertSchema(ipdInitialAssessment).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertIpdInitialAssessment = z.infer<typeof insertIpdInitialAssessmentSchema>;
+export type IpdInitialAssessment = typeof ipdInitialAssessment.$inferSelect;

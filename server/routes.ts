@@ -32,6 +32,7 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   patientMonitoringAuditLog, insertPatientMonitoringAuditLogSchema,
   ipdCarePlans, insertIpdCarePlanSchema,
   ipdCarePlanNotes, insertIpdCarePlanNotesSchema,
+  ipdInitialAssessment, insertIpdInitialAssessmentSchema,
   // Bed Management
   bedCategories, insertBedCategorySchema,
   beds, insertBedSchema,
@@ -7670,6 +7671,59 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error deleting care plan note:", error);
       res.status(500).json({ error: "Failed to delete care plan note" });
+    }
+  });
+
+  // ========== IPD INITIAL ASSESSMENT FORM ==========
+  // Get IPD Initial Assessment by session
+  app.get("/api/patient-monitoring/initial-assessment/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(ipdInitialAssessment)
+        .where(eq(ipdInitialAssessment.sessionId, req.params.sessionId))
+        .orderBy(desc(ipdInitialAssessment.createdAt));
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching IPD initial assessment:", error);
+      res.status(500).json({ error: "Failed to fetch initial assessment" });
+    }
+  });
+
+  // Create IPD Initial Assessment
+  app.post("/api/patient-monitoring/initial-assessment", requireAuth, async (req, res) => {
+    try {
+      const result = await db.insert(ipdInitialAssessment).values({
+        ...req.body,
+        createdBy: req.session?.user?.id
+      }).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Error creating IPD initial assessment:", error);
+      res.status(500).json({ error: "Failed to create initial assessment" });
+    }
+  });
+
+  // Update IPD Initial Assessment
+  app.patch("/api/patient-monitoring/initial-assessment/:id", requireAuth, async (req, res) => {
+    try {
+      const result = await db.update(ipdInitialAssessment)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(ipdInitialAssessment.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating IPD initial assessment:", error);
+      res.status(500).json({ error: "Failed to update initial assessment" });
+    }
+  });
+
+  // Delete IPD Initial Assessment
+  app.delete("/api/patient-monitoring/initial-assessment/:id", requireAuth, async (req, res) => {
+    try {
+      await db.delete(ipdInitialAssessment).where(eq(ipdInitialAssessment.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting IPD initial assessment:", error);
+      res.status(500).json({ error: "Failed to delete initial assessment" });
     }
   });
 
