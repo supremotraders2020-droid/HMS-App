@@ -6424,3 +6424,54 @@ export const doctorsVisitSheet = pgTable("doctors_visit_sheet", {
 export const insertDoctorsVisitSheetSchema = createInsertSchema(doctorsVisitSheet).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertDoctorsVisitSheet = z.infer<typeof insertDoctorsVisitSheetSchema>;
 export type DoctorsVisitSheet = typeof doctorsVisitSheet.$inferSelect;
+
+// Surgery Notes Table
+export const surgeryNotes = pgTable("surgery_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name"),
+  prnNo: text("prn_no"),
+  age: text("age"),
+  sex: text("sex"),
+  ipdNo: text("ipd_no"),
+  ward: text("ward"),
+  bedNo: text("bed_no"),
+  
+  // Surgery details
+  doctorName: text("doctor_name"),
+  mrn: text("mrn"),
+  surgeryDate: timestamp("surgery_date"),
+  nameOfSurgeon: text("name_of_surgeon"),
+  preoperativeDiagnosis: text("preoperative_diagnosis"),
+  surgeryPlanned: text("surgery_planned"),
+  surgeryPerformed: text("surgery_performed"),
+  surgeonName: text("surgeon_name"),
+  assistant1: text("assistant_1"),
+  assistant2: text("assistant_2"),
+  typeOfAnaesthesia: text("type_of_anaesthesia"),
+  anaesthetist1: text("anaesthetist_1"),
+  anaesthetist2: text("anaesthetist_2"),
+  operationStartedAt: text("operation_started_at"),
+  operationCompletedAt: text("operation_completed_at"),
+  operationNotes: text("operation_notes"),
+  
+  // Page 2 fields
+  otherRelevantDetails: text("other_relevant_details"),
+  bloodLoss: text("blood_loss"),
+  postopVitalsPulse: text("postop_vitals_pulse"),
+  postopVitalsBp: text("postop_vitals_bp"),
+  postopVitalsSpo2: text("postop_vitals_spo2"),
+  shiftPatientTo: text("shift_patient_to"),
+  bloodTransfusion: text("blood_transfusion"), // "to_be_given" or "not_to_be_given"
+  tissueSubjectForHpe: boolean("tissue_subject_for_hpe").default(false),
+  surgeonSign: text("surgeon_sign"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"),
+});
+
+export const insertSurgeryNotesSchema = createInsertSchema(surgeryNotes).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertSurgeryNotes = z.infer<typeof insertSurgeryNotesSchema>;
+export type SurgeryNotes = typeof surgeryNotes.$inferSelect;

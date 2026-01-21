@@ -36,6 +36,7 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   indoorConsultationSheet, insertIndoorConsultationSheetSchema,
   doctorsProgressSheet, insertDoctorsProgressSheetSchema,
   doctorsVisitSheet, insertDoctorsVisitSheetSchema,
+  surgeryNotes, insertSurgeryNotesSchema,
   // Bed Management
   bedCategories, insertBedCategorySchema,
   beds, insertBedSchema,
@@ -7954,6 +7955,69 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error deleting doctor's visit entry:", error);
       res.status(500).json({ error: "Failed to delete doctor's visit entry" });
+    }
+  });
+
+  // ========== SURGERY NOTES ==========
+  // Get all surgery notes for a session
+  app.get("/api/patient-monitoring/surgery-notes/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const entries = await db.select().from(surgeryNotes)
+        .where(eq(surgeryNotes.sessionId, req.params.sessionId))
+        .orderBy(desc(surgeryNotes.surgeryDate));
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching surgery notes:", error);
+      res.status(500).json({ error: "Failed to fetch surgery notes" });
+    }
+  });
+
+  // Create new surgery note
+  app.post("/api/patient-monitoring/surgery-notes", requireAuth, async (req, res) => {
+    try {
+      const body = req.body;
+      const transformedData = {
+        ...body,
+        age: body.age != null ? String(body.age) : undefined,
+        surgeryDate: body.surgeryDate ? new Date(body.surgeryDate) : new Date()
+      };
+      const result = await db.insert(surgeryNotes).values({
+        ...transformedData,
+        createdBy: (req as any).session?.user?.id
+      }).returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error creating surgery note:", error);
+      res.status(500).json({ error: "Failed to create surgery note" });
+    }
+  });
+
+  // Update surgery note
+  app.patch("/api/patient-monitoring/surgery-notes/:id", requireAuth, async (req, res) => {
+    try {
+      const { id, createdAt, updatedAt, ...updateData } = req.body;
+      if (updateData.surgeryDate) {
+        updateData.surgeryDate = new Date(updateData.surgeryDate);
+      }
+      const result = await db.update(surgeryNotes)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(surgeryNotes.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating surgery note:", error);
+      res.status(500).json({ error: "Failed to update surgery note" });
+    }
+  });
+
+  // Delete surgery note
+  app.delete("/api/patient-monitoring/surgery-notes/:id", requireAuth, async (req, res) => {
+    try {
+      await db.delete(surgeryNotes).where(eq(surgeryNotes.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting surgery note:", error);
+      res.status(500).json({ error: "Failed to delete surgery note" });
     }
   });
 

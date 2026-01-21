@@ -1028,6 +1028,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="indoor-consultation" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Indoor Continuation Sheet</TabsTrigger>
                   <TabsTrigger value="doctors-progress" className="text-xs gap-1.5 data-[state=active]:bg-background"><Stethoscope className="h-3.5 w-3.5" />Doctor's Progress Sheet</TabsTrigger>
                   <TabsTrigger value="doctors-visit" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Doctor's Visit Sheet</TabsTrigger>
+                  <TabsTrigger value="surgery-notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Hospital className="h-3.5 w-3.5" />Surgery Notes</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -1080,6 +1081,9 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="doctors-visit">
                   <DoctorsVisitTab session={selectedSession} />
+                </TabsContent>
+                <TabsContent value="surgery-notes">
+                  <SurgeryNotesTab session={selectedSession} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -6057,6 +6061,498 @@ function DoctorsVisitTab({ session }: { session: Session }) {
                     </TableCell>
                     <TableCell className="text-sm max-w-xs truncate">{entry.procedure || "-"}</TableCell>
                     <TableCell className="text-sm">{entry.doctorSign || "-"}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-1 justify-end">
+                        <Button size="icon" variant="ghost" onClick={() => handleEdit(entry)}><Edit className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(entry.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Surgery Notes Tab
+function SurgeryNotesTab({ session }: { session: Session }) {
+  const { toast } = useToast();
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    doctorName: "",
+    mrn: session.uhid || "",
+    surgeryDate: new Date().toISOString().split('T')[0],
+    nameOfSurgeon: "",
+    preoperativeDiagnosis: "",
+    surgeryPlanned: "",
+    surgeryPerformed: "",
+    surgeonName: "",
+    assistant1: "",
+    assistant2: "",
+    typeOfAnaesthesia: "",
+    anaesthetist1: "",
+    anaesthetist2: "",
+    operationStartedAt: "",
+    operationCompletedAt: "",
+    operationNotes: "",
+    otherRelevantDetails: "",
+    bloodLoss: "",
+    postopVitalsPulse: "",
+    postopVitalsBp: "",
+    postopVitalsSpo2: "",
+    shiftPatientTo: "",
+    bloodTransfusion: "not_to_be_given",
+    tissueSubjectForHpe: false,
+    surgeonSign: ""
+  });
+
+  const { data: entries = [], isLoading, refetch } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/surgery-notes/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/patient-monitoring/surgery-notes", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Surgery note saved successfully" });
+      refetch();
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "Failed to save surgery note", variant: "destructive" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await apiRequest("PATCH", `/api/patient-monitoring/surgery-notes/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Surgery note updated successfully" });
+      refetch();
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "Failed to update surgery note", variant: "destructive" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/patient-monitoring/surgery-notes/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Surgery note deleted" });
+      refetch();
+    },
+    onError: () => {
+      toast({ title: "Failed to delete surgery note", variant: "destructive" });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData({
+      doctorName: "",
+      mrn: session.uhid || "",
+      surgeryDate: new Date().toISOString().split('T')[0],
+      nameOfSurgeon: "",
+      preoperativeDiagnosis: "",
+      surgeryPlanned: "",
+      surgeryPerformed: "",
+      surgeonName: "",
+      assistant1: "",
+      assistant2: "",
+      typeOfAnaesthesia: "",
+      anaesthetist1: "",
+      anaesthetist2: "",
+      operationStartedAt: "",
+      operationCompletedAt: "",
+      operationNotes: "",
+      otherRelevantDetails: "",
+      bloodLoss: "",
+      postopVitalsPulse: "",
+      postopVitalsBp: "",
+      postopVitalsSpo2: "",
+      shiftPatientTo: "",
+      bloodTransfusion: "not_to_be_given",
+      tissueSubjectForHpe: false,
+      surgeonSign: ""
+    });
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const handleSubmit = () => {
+    const payload = {
+      sessionId: session.id,
+      patientId: session.patientId,
+      patientName: session.patientName,
+      prnNo: session.uhid,
+      age: session.age,
+      sex: session.sex,
+      ipdNo: session.ipdNumber,
+      ward: session.ward,
+      bedNo: session.bedNumber,
+      surgeryDate: formData.surgeryDate ? new Date(formData.surgeryDate).toISOString() : new Date().toISOString(),
+      ...formData
+    };
+
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const handleEdit = (entry: any) => {
+    setFormData({
+      doctorName: entry.doctorName || "",
+      mrn: entry.mrn || session.uhid || "",
+      surgeryDate: entry.surgeryDate ? format(new Date(entry.surgeryDate), 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
+      nameOfSurgeon: entry.nameOfSurgeon || "",
+      preoperativeDiagnosis: entry.preoperativeDiagnosis || "",
+      surgeryPlanned: entry.surgeryPlanned || "",
+      surgeryPerformed: entry.surgeryPerformed || "",
+      surgeonName: entry.surgeonName || "",
+      assistant1: entry.assistant1 || "",
+      assistant2: entry.assistant2 || "",
+      typeOfAnaesthesia: entry.typeOfAnaesthesia || "",
+      anaesthetist1: entry.anaesthetist1 || "",
+      anaesthetist2: entry.anaesthetist2 || "",
+      operationStartedAt: entry.operationStartedAt || "",
+      operationCompletedAt: entry.operationCompletedAt || "",
+      operationNotes: entry.operationNotes || "",
+      otherRelevantDetails: entry.otherRelevantDetails || "",
+      bloodLoss: entry.bloodLoss || "",
+      postopVitalsPulse: entry.postopVitalsPulse || "",
+      postopVitalsBp: entry.postopVitalsBp || "",
+      postopVitalsSpo2: entry.postopVitalsSpo2 || "",
+      shiftPatientTo: entry.shiftPatientTo || "",
+      bloodTransfusion: entry.bloodTransfusion || "not_to_be_given",
+      tissueSubjectForHpe: entry.tissueSubjectForHpe || false,
+      surgeonSign: entry.surgeonSign || ""
+    });
+    setEditingId(entry.id);
+    setShowForm(true);
+  };
+
+  const handlePrint = () => {
+    const latestEntry = entries[0];
+    if (!latestEntry) {
+      toast({ title: "No surgery notes to print", variant: "destructive" });
+      return;
+    }
+
+    const content = `
+      <h1 style="text-align:center;margin-bottom:10px;">SURGERY NOTES</h1>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
+        <div><strong>Patient Name:</strong> ${session.patientName || '-'}</div>
+        <div><strong>PRN No.:</strong> ${session.uhid || '-'}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
+        <div><strong>Age:</strong> ${session.age || '-'}</div>
+        <div><strong>Sex:</strong> ${session.sex || '-'}</div>
+        <div><strong>IPD No.:</strong> ${session.ipdNumber || '-'}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:15px;border:1px solid #333;padding:5px;">
+        <div><strong>Ward:</strong> ${session.ward || '-'}</div>
+        <div><strong>Bed No.:</strong> ${session.bedNumber || '-'}</div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+        <tr>
+          <td style="border:1px solid #333;padding:5px;width:50%;"><strong>Name:</strong> ${session.patientName || '-'}</td>
+          <td style="border:1px solid #333;padding:5px;width:25%;"><strong>Age:</strong> ${session.age || '-'}</td>
+          <td style="border:1px solid #333;padding:5px;width:25%;"><strong>Sex:</strong> ${session.sex || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:5px;"><strong>Doctor Name:</strong> ${latestEntry.doctorName || '-'}</td>
+          <td style="border:1px solid #333;padding:5px;"><strong>MRN:</strong> ${latestEntry.mrn || session.uhid || '-'}</td>
+          <td style="border:1px solid #333;padding:5px;"><strong>Date:</strong> ${latestEntry.surgeryDate ? format(new Date(latestEntry.surgeryDate), 'dd/MM/yyyy') : '-'}</td>
+        </tr>
+      </table>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+        <tr>
+          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Name of Surgeon:</strong> ${latestEntry.nameOfSurgeon || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Preoperative Diagnosis:</strong> ${latestEntry.preoperativeDiagnosis || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;width:50%;"><strong>Surgery Planned:</strong> ${latestEntry.surgeryPlanned || '-'}</td>
+          <td style="border:1px solid #333;padding:8px;width:50%;"><strong>Surgery Performed:</strong> ${latestEntry.surgeryPerformed || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Surgeon Name:</strong> ${latestEntry.surgeonName || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;"><strong>Assistant 1:</strong> ${latestEntry.assistant1 || '-'}</td>
+          <td style="border:1px solid #333;padding:8px;"><strong>Assistant 2:</strong> ${latestEntry.assistant2 || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Type of Anaesthesia:</strong> ${latestEntry.typeOfAnaesthesia || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;"><strong>Anaesthetist 1:</strong> ${latestEntry.anaesthetist1 || '-'}</td>
+          <td style="border:1px solid #333;padding:8px;"><strong>Anaesthetist 2:</strong> ${latestEntry.anaesthetist2 || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;"><strong>Operation Started At:</strong> ${latestEntry.operationStartedAt || '-'}</td>
+          <td style="border:1px solid #333;padding:8px;"><strong>Operation Completed At:</strong> ${latestEntry.operationCompletedAt || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Operation Notes:</strong><br/>${latestEntry.operationNotes || '-'}</td>
+        </tr>
+      </table>
+
+      <div style="border:1px solid #333;padding:8px;margin-bottom:10px;">
+        <strong>Other Relevant Details:</strong><br/>
+        ${latestEntry.otherRelevantDetails || '-'}
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+        <tr>
+          <td style="border:1px solid #333;padding:8px;"><strong>Blood Loss:</strong> ${latestEntry.bloodLoss || '-'}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;">
+            <strong>Postop Vitals:</strong>
+            P- ${latestEntry.postopVitalsPulse || '___'} &nbsp;&nbsp;
+            BP- ${latestEntry.postopVitalsBp || '___'} &nbsp;&nbsp;
+            SpO2- ${latestEntry.postopVitalsSpo2 || '___'} &nbsp;&nbsp;
+            <strong>Shift Patient To:</strong> ${latestEntry.shiftPatientTo || '___'}
+          </td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;">
+            <strong>Blood Transfusion:</strong> ${latestEntry.bloodTransfusion === 'to_be_given' ? 'To Be Given' : 'Not To Be Given'}
+          </td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;">
+            <strong>Tissue Subject For HPE:</strong> ${latestEntry.tissueSubjectForHpe ? 'Yes' : 'No'}
+          </td>
+        </tr>
+      </table>
+
+      <div style="text-align:right;margin-top:30px;">
+        <strong>Name And Sign of the Surgeon:</strong> ${latestEntry.surgeonSign || '________________________'}
+      </div>
+    `;
+    openPrintWindow("Surgery Notes", content);
+  };
+
+  if (isLoading) return <div className="p-4 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Hospital className="h-5 w-5" />
+            Surgery Notes
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">Complete surgery documentation</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          {!showForm && (
+            <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-1">
+              <Plus className="h-4 w-4" /> Add Surgery Note
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {showForm ? (
+          <div className="space-y-4 border rounded-lg p-4 bg-muted/30">
+            <h3 className="font-semibold border-b pb-2">Surgery Information</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <Label>Doctor Name</Label>
+                <Input value={formData.doctorName} onChange={(e) => setFormData({ ...formData, doctorName: e.target.value })} placeholder="Doctor name" />
+              </div>
+              <div>
+                <Label>MRN</Label>
+                <Input value={formData.mrn} onChange={(e) => setFormData({ ...formData, mrn: e.target.value })} placeholder="MRN" />
+              </div>
+              <div>
+                <Label>Surgery Date</Label>
+                <Input type="date" value={formData.surgeryDate} onChange={(e) => setFormData({ ...formData, surgeryDate: e.target.value })} />
+              </div>
+              <div>
+                <Label>Name of Surgeon</Label>
+                <Input value={formData.nameOfSurgeon} onChange={(e) => setFormData({ ...formData, nameOfSurgeon: e.target.value })} placeholder="Surgeon name" />
+              </div>
+            </div>
+
+            <div>
+              <Label>Preoperative Diagnosis</Label>
+              <Textarea value={formData.preoperativeDiagnosis} onChange={(e) => setFormData({ ...formData, preoperativeDiagnosis: e.target.value })} rows={2} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Surgery Planned</Label>
+                <Textarea value={formData.surgeryPlanned} onChange={(e) => setFormData({ ...formData, surgeryPlanned: e.target.value })} rows={2} />
+              </div>
+              <div>
+                <Label>Surgery Performed</Label>
+                <Textarea value={formData.surgeryPerformed} onChange={(e) => setFormData({ ...formData, surgeryPerformed: e.target.value })} rows={2} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Surgeon Name</Label>
+                <Input value={formData.surgeonName} onChange={(e) => setFormData({ ...formData, surgeonName: e.target.value })} />
+              </div>
+              <div>
+                <Label>Assistant 1</Label>
+                <Input value={formData.assistant1} onChange={(e) => setFormData({ ...formData, assistant1: e.target.value })} />
+              </div>
+              <div>
+                <Label>Assistant 2</Label>
+                <Input value={formData.assistant2} onChange={(e) => setFormData({ ...formData, assistant2: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Type of Anaesthesia</Label>
+                <Input value={formData.typeOfAnaesthesia} onChange={(e) => setFormData({ ...formData, typeOfAnaesthesia: e.target.value })} />
+              </div>
+              <div>
+                <Label>Anaesthetist 1</Label>
+                <Input value={formData.anaesthetist1} onChange={(e) => setFormData({ ...formData, anaesthetist1: e.target.value })} />
+              </div>
+              <div>
+                <Label>Anaesthetist 2</Label>
+                <Input value={formData.anaesthetist2} onChange={(e) => setFormData({ ...formData, anaesthetist2: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Operation Started At</Label>
+                <Input type="time" value={formData.operationStartedAt} onChange={(e) => setFormData({ ...formData, operationStartedAt: e.target.value })} />
+              </div>
+              <div>
+                <Label>Operation Completed At</Label>
+                <Input type="time" value={formData.operationCompletedAt} onChange={(e) => setFormData({ ...formData, operationCompletedAt: e.target.value })} />
+              </div>
+            </div>
+
+            <div>
+              <Label>Operation Notes</Label>
+              <Textarea value={formData.operationNotes} onChange={(e) => setFormData({ ...formData, operationNotes: e.target.value })} rows={4} />
+            </div>
+
+            <h3 className="font-semibold border-b pb-2 pt-4">Post-Operation Details</h3>
+            <div>
+              <Label>Other Relevant Details</Label>
+              <Textarea value={formData.otherRelevantDetails} onChange={(e) => setFormData({ ...formData, otherRelevantDetails: e.target.value })} rows={3} />
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div>
+                <Label>Blood Loss</Label>
+                <Input value={formData.bloodLoss} onChange={(e) => setFormData({ ...formData, bloodLoss: e.target.value })} placeholder="ml" />
+              </div>
+              <div>
+                <Label>Postop Pulse</Label>
+                <Input value={formData.postopVitalsPulse} onChange={(e) => setFormData({ ...formData, postopVitalsPulse: e.target.value })} placeholder="P-" />
+              </div>
+              <div>
+                <Label>Postop BP</Label>
+                <Input value={formData.postopVitalsBp} onChange={(e) => setFormData({ ...formData, postopVitalsBp: e.target.value })} placeholder="BP-" />
+              </div>
+              <div>
+                <Label>Postop SpO2</Label>
+                <Input value={formData.postopVitalsSpo2} onChange={(e) => setFormData({ ...formData, postopVitalsSpo2: e.target.value })} placeholder="SpO2-" />
+              </div>
+              <div>
+                <Label>Shift Patient To</Label>
+                <Input value={formData.shiftPatientTo} onChange={(e) => setFormData({ ...formData, shiftPatientTo: e.target.value })} placeholder="Ward/ICU" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Blood Transfusion</Label>
+                <Select value={formData.bloodTransfusion} onValueChange={(v) => setFormData({ ...formData, bloodTransfusion: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="to_be_given">To Be Given</SelectItem>
+                    <SelectItem value="not_to_be_given">Not To Be Given</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2 pt-6">
+                <input 
+                  type="checkbox" 
+                  id="tissueHpe"
+                  checked={formData.tissueSubjectForHpe} 
+                  onChange={(e) => setFormData({ ...formData, tissueSubjectForHpe: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="tissueHpe">Tissue Subject For HPE</Label>
+              </div>
+              <div>
+                <Label>Surgeon Signature/Name</Label>
+                <Input value={formData.surgeonSign} onChange={(e) => setFormData({ ...formData, surgeonSign: e.target.value })} placeholder="Signature" />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={resetForm}>Cancel</Button>
+              <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+                {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                {editingId ? "Update" : "Save"} Surgery Note
+              </Button>
+            </div>
+          </div>
+        ) : entries.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">No surgery notes recorded yet</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-28 whitespace-nowrap">Date</TableHead>
+                  <TableHead>Surgeon</TableHead>
+                  <TableHead>Surgery Performed</TableHead>
+                  <TableHead>Anaesthesia</TableHead>
+                  <TableHead className="w-24">Duration</TableHead>
+                  <TableHead className="w-20 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entries.map((entry: any) => (
+                  <TableRow key={entry.id}>
+                    <TableCell className="whitespace-nowrap text-sm">
+                      {entry.surgeryDate ? format(new Date(entry.surgeryDate), "dd MMM yyyy") : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">{entry.surgeonName || entry.nameOfSurgeon || "-"}</TableCell>
+                    <TableCell className="text-sm max-w-xs truncate">{entry.surgeryPerformed || "-"}</TableCell>
+                    <TableCell className="text-sm">{entry.typeOfAnaesthesia || "-"}</TableCell>
+                    <TableCell className="text-sm">
+                      {entry.operationStartedAt && entry.operationCompletedAt 
+                        ? `${entry.operationStartedAt} - ${entry.operationCompletedAt}` 
+                        : "-"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-1 justify-end">
                         <Button size="icon" variant="ghost" onClick={() => handleEdit(entry)}><Edit className="h-4 w-4" /></Button>
