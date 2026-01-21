@@ -23,8 +23,65 @@ import {
   PlusCircle, RefreshCw, Download, Stethoscope,
   Wind, Syringe, FlaskConical, ClipboardList, Baby,
   BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays, ArrowLeft,
-  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye, Trash2, Edit
+  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye, Trash2, Edit, Printer
 } from "lucide-react";
+
+// Reusable hospital print header HTML
+const getHospitalPrintHeader = () => `
+  <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0;">
+    <div style="text-align: center;">
+      <img src="/hospital-logo.png" alt="Gravity Hospital" style="height: 70px; margin-bottom: 8px;" onerror="this.style.display='none'" />
+      <div style="color: #6B3FA0; font-size: 18px; font-weight: bold; margin-bottom: 4px;">Gravity Hospital & Research Centre</div>
+      <div style="font-size: 11px; color: #4a5568; line-height: 1.4;">
+        Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062
+      </div>
+      <div style="font-size: 11px; color: #4a5568; font-weight: 600;">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+`;
+
+// Reusable print styles
+const getPrintStyles = () => `
+  body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
+  h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 16px; margin-top: 15px; text-align: center; }
+  h2 { color: #2d3748; margin-top: 20px; font-size: 13px; background: #f7fafc; padding: 6px 10px; border-left: 3px solid #3182ce; }
+  .patient-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; padding: 10px; background: #f7fafc; border-radius: 4px; }
+  .info-item { font-size: 11px; }
+  .info-label { font-weight: bold; color: #4a5568; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 15px; }
+  th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; font-size: 11px; }
+  th { background: #edf2f7; font-weight: 600; }
+  tr:nth-child(even) { background: #f7fafc; }
+  .no-data { color: #a0aec0; font-style: italic; margin: 10px 0; text-align: center; }
+  .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 10px; text-align: center; }
+  @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  @page { margin: 15mm; }
+`;
+
+// Open print window helper
+const openPrintWindow = (title: string, content: string) => {
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(`
+      <html>
+      <head>
+        <title>${title}</title>
+        <style>${getPrintStyles()}</style>
+      </head>
+      <body>
+        ${getHospitalPrintHeader()}
+        ${content}
+        <div class="footer">
+          Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital & Research Centre
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 500);
+  }
+};
 import { Checkbox } from "@/components/ui/checkbox";
 
 const HOUR_SLOTS = [
@@ -1501,14 +1558,27 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
     });
   };
 
+  const handlePrint = () => {
+    const rows = vitals.map((r: any) => 
+      `<tr><td>${r.hourSlot || '-'}</td><td>${r.heartRate || '-'}</td><td>${r.systolicBp || '-'}/${r.diastolicBp || '-'}</td><td>${r.temperature ? r.temperature + '°C' : '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Vitals Chart</h1>
+      ${vitals.length ? `<table><thead><tr><th>Time</th><th>HR</th><th>BP</th><th>Temp</th><th>RR</th><th>SpO2</th><th>Staff</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No vitals recorded</p>'}
+    `;
+    openPrintWindow('Vitals Chart', content);
+  };
+
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg">Hourly Vitals Chart (24 Hours)</CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" data-testid="button-add-vitals"><PlusCircle className="h-4 w-4 mr-1" /> Add Vitals</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" data-testid="button-add-vitals"><PlusCircle className="h-4 w-4 mr-1" /> Add Vitals</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Record Vitals</DialogTitle>
@@ -1543,6 +1613,7 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px]">
@@ -1623,14 +1694,27 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
     setForm({ ...form, nurseId, nurseName: selectedNurse?.fullName || "" });
   };
 
+  const handlePrint = () => {
+    const rows = records.map((r: any) => 
+      `<tr><td>${r.drugName || '-'}</td><td>${r.diagnosis || '-'}</td><td>${r.startTime ? format(new Date(r.startTime), 'dd/MM/yyyy') : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Injections & Medication</h1>
+      ${records.length ? `<table><thead><tr><th>Injection Name</th><th>Diagnosis</th><th>Date</th><th>Staff</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No injections recorded</p>'}
+    `;
+    openPrintWindow('Injections', content);
+  };
+
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg">Injections & Medication</CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" data-testid="button-add-inotrope"><PlusCircle className="h-4 w-4 mr-1" /> Add Injection</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" data-testid="button-add-inotrope"><PlusCircle className="h-4 w-4 mr-1" /> Add Injection</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Injection</DialogTitle>
@@ -1664,6 +1748,7 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
@@ -1961,17 +2046,31 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
     });
   };
 
+  const handlePrint = () => {
+    const rows = records.map((r: any) => 
+      `<tr><td>${r.hourSlot || '-'}</td><td>${r.ivLine1 || 0}</td><td>${r.oral || 0}</td><td>${r.ngTube || 0}</td><td>${r.bloodProducts || 0}</td><td>${(r.ivLine1 || 0) + (r.oral || 0) + (r.ngTube || 0) + (r.bloodProducts || 0)}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Intake Chart</h1>
+      <p><strong>Total Intake:</strong> ${fluidBalance?.totalIntake || 0} ml</p>
+      ${records.length ? `<table><thead><tr><th>Time</th><th>IV Line (ml)</th><th>Oral (ml)</th><th>NG Tube (ml)</th><th>Blood (ml)</th><th>Total (ml)</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No intake recorded</p>'}
+    `;
+    openPrintWindow('Intake Chart', content);
+  };
+
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <div>
           <CardTitle className="text-lg">Intake Chart</CardTitle>
           <CardDescription>Total Intake: <span className="font-semibold text-primary">{fluidBalance?.totalIntake || 0} ml</span></CardDescription>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Intake</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Intake</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Record Intake</DialogTitle>
@@ -2001,6 +2100,7 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[350px]">
@@ -2079,17 +2179,31 @@ function OutputTab({ sessionId }: { sessionId: string }) {
     });
   };
 
+  const handlePrint = () => {
+    const rows = records.map((r: any) => 
+      `<tr><td>${r.hourSlot || '-'}</td><td>${r.urineOutput || 0}</td><td>${r.drainOutput || 0}</td><td>${r.vomitus || 0}</td><td>${r.stool || 0}</td><td>${(r.urineOutput || 0) + (r.drainOutput || 0) + (r.vomitus || 0) + (r.stool || 0)}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Output Chart</h1>
+      <p><strong>Total Output:</strong> ${fluidBalance?.totalOutput || 0} ml | <strong>Net Balance:</strong> ${fluidBalance?.netBalance || 0} ml</p>
+      ${records.length ? `<table><thead><tr><th>Time</th><th>Urine (ml)</th><th>Drain (ml)</th><th>Vomitus (ml)</th><th>Stool (ml)</th><th>Total (ml)</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No output recorded</p>'}
+    `;
+    openPrintWindow('Output Chart', content);
+  };
+
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
         <div>
           <CardTitle className="text-lg">Output Chart</CardTitle>
           <CardDescription>Total Output: <span className="font-semibold text-primary">{fluidBalance?.totalOutput || 0} ml</span> | Net Balance: <span className={`font-semibold ${(fluidBalance?.netBalance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{fluidBalance?.netBalance || 0} ml</span></CardDescription>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Output</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Output</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Record Output</DialogTitle>
@@ -2119,6 +2233,7 @@ function OutputTab({ sessionId }: { sessionId: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[350px]">
@@ -5036,6 +5151,23 @@ function IndoorConsultationTab({ session }: { session: Session }) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handlePrint = () => {
+    const rows = entries.map((e: any) => 
+      `<tr><td>${e.entryDate ? format(new Date(e.entryDate), 'dd/MM/yyyy') : '-'}<br/>${e.entryTime || '-'}</td><td style="white-space:pre-wrap">${e.clinicalFindings || '-'}</td><td style="white-space:pre-wrap">${e.orders || '-'}</td></tr>`
+    ).join('');
+    const content = `
+      <h1>Indoor Continuation Sheet</h1>
+      <div class="patient-info">
+        <div class="info-item"><span class="info-label">Patient:</span> ${session.patientName}</div>
+        <div class="info-item"><span class="info-label">UHID:</span> ${session.uhid}</div>
+        <div class="info-item"><span class="info-label">Ward:</span> ${session.ward || 'N/A'}</div>
+        <div class="info-item"><span class="info-label">Doctor:</span> ${session.admittingConsultant || 'N/A'}</div>
+      </div>
+      ${entries.length ? `<table><thead><tr><th style="width:100px">Date & Time</th><th>Clinical Findings / Daily Progress Notes</th><th>Orders</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No entries recorded</p>'}
+    `;
+    openPrintWindow('Indoor Continuation Sheet - ' + session.patientName, content);
+  };
+
   if (isLoading) return <div className="p-4 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
 
   return (
@@ -5048,11 +5180,14 @@ function IndoorConsultationTab({ session }: { session: Session }) {
           </CardTitle>
           <p className="text-sm text-muted-foreground">Daily Progress Notes & Clinical Findings</p>
         </div>
-        {!showForm && (
-          <Button onClick={() => { setFormData(defaultFormData); setEditingId(null); setShowForm(true); }} className="gap-1">
-            <Plus className="h-4 w-4" /> Add Entry
-          </Button>
-        )}
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          {!showForm && (
+            <Button onClick={() => { setFormData(defaultFormData); setEditingId(null); setShowForm(true); }} className="gap-1">
+              <Plus className="h-4 w-4" /> Add Entry
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {/* Patient Info Header */}
