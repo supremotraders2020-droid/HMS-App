@@ -6202,8 +6202,31 @@ function SurgeryNotesTab({ session }: { session: Session }) {
       ipdNo: session.ipdNumber,
       ward: session.ward,
       bedNo: session.bedNumber,
+      doctorName: formData.doctorName,
+      mrn: formData.mrn,
       surgeryDate: formData.surgeryDate ? new Date(formData.surgeryDate).toISOString() : new Date().toISOString(),
-      ...formData
+      nameOfSurgeon: formData.nameOfSurgeon,
+      preoperativeDiagnosis: formData.preoperativeDiagnosis,
+      surgeryPlanned: formData.surgeryPlanned,
+      surgeryPerformed: formData.surgeryPerformed,
+      surgeonName: formData.surgeonName,
+      assistant1: formData.assistant1,
+      assistant2: formData.assistant2,
+      typeOfAnaesthesia: formData.typeOfAnaesthesia,
+      anaesthetist1: formData.anaesthetist1,
+      anaesthetist2: formData.anaesthetist2,
+      operationStartedAt: formData.operationStartedAt,
+      operationCompletedAt: formData.operationCompletedAt,
+      operationNotes: formData.operationNotes,
+      otherRelevantDetails: formData.otherRelevantDetails,
+      bloodLoss: formData.bloodLoss,
+      postopVitalsPulse: formData.postopVitalsPulse,
+      postopVitalsBp: formData.postopVitalsBp,
+      postopVitalsSpo2: formData.postopVitalsSpo2,
+      shiftPatientTo: formData.shiftPatientTo,
+      bloodTransfusion: formData.bloodTransfusion,
+      tissueSubjectForHpe: formData.tissueSubjectForHpe,
+      surgeonSign: formData.surgeonSign
     };
 
     if (editingId) {

@@ -7977,14 +7977,43 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     try {
       const body = req.body;
       const transformedData = {
-        ...body,
+        sessionId: body.sessionId,
+        patientId: body.patientId,
+        patientName: body.patientName,
+        prnNo: body.prnNo,
         age: body.age != null ? String(body.age) : undefined,
-        surgeryDate: body.surgeryDate ? new Date(body.surgeryDate) : new Date()
-      };
-      const result = await db.insert(surgeryNotes).values({
-        ...transformedData,
+        sex: body.sex,
+        ipdNo: body.ipdNo,
+        ward: body.ward,
+        bedNo: body.bedNo,
+        doctorName: body.doctorName,
+        mrn: body.mrn,
+        surgeryDate: body.surgeryDate ? new Date(body.surgeryDate) : new Date(),
+        nameOfSurgeon: body.nameOfSurgeon,
+        preoperativeDiagnosis: body.preoperativeDiagnosis,
+        surgeryPlanned: body.surgeryPlanned,
+        surgeryPerformed: body.surgeryPerformed,
+        surgeonName: body.surgeonName,
+        assistant1: body.assistant1,
+        assistant2: body.assistant2,
+        typeOfAnaesthesia: body.typeOfAnaesthesia,
+        anaesthetist1: body.anaesthetist1,
+        anaesthetist2: body.anaesthetist2,
+        operationStartedAt: body.operationStartedAt,
+        operationCompletedAt: body.operationCompletedAt,
+        operationNotes: body.operationNotes,
+        otherRelevantDetails: body.otherRelevantDetails,
+        bloodLoss: body.bloodLoss,
+        postopVitalsPulse: body.postopVitalsPulse,
+        postopVitalsBp: body.postopVitalsBp,
+        postopVitalsSpo2: body.postopVitalsSpo2,
+        shiftPatientTo: body.shiftPatientTo,
+        bloodTransfusion: body.bloodTransfusion,
+        tissueSubjectForHpe: body.tissueSubjectForHpe,
+        surgeonSign: body.surgeonSign,
         createdBy: (req as any).session?.user?.id
-      }).returning();
+      };
+      const result = await db.insert(surgeryNotes).values(transformedData).returning();
       res.json(result[0]);
     } catch (error) {
       console.error("Error creating surgery note:", error);
@@ -7995,12 +8024,27 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Update surgery note
   app.patch("/api/patient-monitoring/surgery-notes/:id", requireAuth, async (req, res) => {
     try {
-      const { id, createdAt, updatedAt, ...updateData } = req.body;
+      const body = req.body;
+      const updateData: Record<string, any> = {};
+      const allowedFields = [
+        'doctorName', 'mrn', 'surgeryDate', 'nameOfSurgeon', 'preoperativeDiagnosis',
+        'surgeryPlanned', 'surgeryPerformed', 'surgeonName', 'assistant1', 'assistant2',
+        'typeOfAnaesthesia', 'anaesthetist1', 'anaesthetist2', 'operationStartedAt',
+        'operationCompletedAt', 'operationNotes', 'otherRelevantDetails', 'bloodLoss',
+        'postopVitalsPulse', 'postopVitalsBp', 'postopVitalsSpo2', 'shiftPatientTo',
+        'bloodTransfusion', 'tissueSubjectForHpe', 'surgeonSign'
+      ];
+      for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+          updateData[field] = body[field];
+        }
+      }
       if (updateData.surgeryDate) {
         updateData.surgeryDate = new Date(updateData.surgeryDate);
       }
+      updateData.updatedAt = new Date();
       const result = await db.update(surgeryNotes)
-        .set({ ...updateData, updatedAt: new Date() })
+        .set(updateData)
         .where(eq(surgeryNotes.id, req.params.id))
         .returning();
       res.json(result[0]);
