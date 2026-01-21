@@ -3844,7 +3844,6 @@ function CarePlanTab({ session }: { session: Session }) {
       treatingConsultantName: formData.treatingConsultantName.trim(),
       consultantNotesLog: JSON.stringify(formData.consultantNotesLog),
       planTime: formData.planTime,
-      planDate: new Date(),
     };
 
     if (editingPlan) {
