@@ -6153,6 +6153,7 @@ export const ipdCarePlans = pgTable("ipd_care_plans", {
   treatmentAdvised: text("treatment_advised"),
   investigationsAdvised: text("investigations_advised"),
   referralDepartments: text("referral_departments"), // JSON array of selected departments
+  consultantNotesLog: text("consultant_notes_log"), // JSON array of {dateTime, notes} for inline notes
   departmentSpecialty: text("department_specialty"),
   treatingConsultantId: varchar("treating_consultant_id"),
   treatingConsultantName: text("treating_consultant_name"),

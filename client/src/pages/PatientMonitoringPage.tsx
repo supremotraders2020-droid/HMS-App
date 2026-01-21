@@ -3732,6 +3732,8 @@ function CarePlanTab({ session }: { session: Session }) {
   const [showAddNote, setShowAddNote] = useState<string | false>(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [newConsultantNote, setNewConsultantNote] = useState("");
+  const [newNoteDateTime, setNewNoteDateTime] = useState({ date: format(new Date(), "yyyy-MM-dd"), time: format(new Date(), "HH:mm") });
   const [formData, setFormData] = useState({
     provisionalDiagnosis: "",
     carePlanDetails: "",
@@ -3740,6 +3742,7 @@ function CarePlanTab({ session }: { session: Session }) {
     departmentSpecialty: "",
     treatingConsultantName: session.admittingConsultant || "",
     planTime: format(new Date(), "HH:mm"),
+    consultantNotesLog: [] as { dateTime: string; notes: string }[],
   });
   const [noteData, setNoteData] = useState({
     consultantNotes: "",
@@ -3810,8 +3813,11 @@ function CarePlanTab({ session }: { session: Session }) {
       departmentSpecialty: "",
       treatingConsultantName: session.admittingConsultant || "",
       planTime: format(new Date(), "HH:mm"),
+      consultantNotesLog: [],
     });
     setSelectedDepartments([]);
+    setNewConsultantNote("");
+    setNewNoteDateTime({ date: format(new Date(), "yyyy-MM-dd"), time: format(new Date(), "HH:mm") });
   };
 
   const handleSubmit = () => {
@@ -3836,6 +3842,7 @@ function CarePlanTab({ session }: { session: Session }) {
       referralDepartments: JSON.stringify(selectedDepartments),
       departmentSpecialty: formData.departmentSpecialty.trim(),
       treatingConsultantName: formData.treatingConsultantName.trim(),
+      consultantNotesLog: JSON.stringify(formData.consultantNotesLog),
       planTime: formData.planTime,
       planDate: new Date(),
     };
@@ -3849,6 +3856,12 @@ function CarePlanTab({ session }: { session: Session }) {
 
   const handleEdit = (plan: any) => {
     setEditingPlan(plan);
+    let notesLog: { dateTime: string; notes: string }[] = [];
+    try {
+      notesLog = JSON.parse(plan.consultantNotesLog || "[]");
+    } catch {
+      notesLog = [];
+    }
     setFormData({
       provisionalDiagnosis: plan.provisionalDiagnosis || "",
       carePlanDetails: plan.carePlanDetails || "",
@@ -3857,6 +3870,7 @@ function CarePlanTab({ session }: { session: Session }) {
       departmentSpecialty: plan.departmentSpecialty || "",
       treatingConsultantName: plan.treatingConsultantName || "",
       planTime: plan.planTime || format(new Date(), "HH:mm"),
+      consultantNotesLog: notesLog,
     });
     try {
       setSelectedDepartments(JSON.parse(plan.referralDepartments || "[]"));
@@ -3967,6 +3981,83 @@ function CarePlanTab({ session }: { session: Session }) {
                     <label htmlFor={`dept-${dept}`} className="text-sm cursor-pointer">{dept}</label>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label className="font-medium">Consultant Notes</Label>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="w-[200px] border-r">Date & Time</TableHead>
+                      <TableHead>Consultant Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {formData.consultantNotesLog.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-center py-4 text-muted-foreground text-sm">
+                          No consultant notes added yet
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      formData.consultantNotesLog.map((note, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="border-r text-sm">{note.dateTime}</TableCell>
+                          <TableCell className="text-sm whitespace-pre-wrap">{note.notes}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                    <TableRow>
+                      <TableCell className="border-r p-2">
+                        <div className="flex gap-1">
+                          <Input
+                            type="date"
+                            value={newNoteDateTime.date}
+                            onChange={(e) => setNewNoteDateTime(prev => ({ ...prev, date: e.target.value }))}
+                            className="h-8 text-sm"
+                          />
+                          <Input
+                            type="time"
+                            value={newNoteDateTime.time}
+                            onChange={(e) => setNewNoteDateTime(prev => ({ ...prev, time: e.target.value }))}
+                            className="h-8 text-sm w-24"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-2">
+                        <div className="flex gap-2">
+                          <Input
+                            value={newConsultantNote}
+                            onChange={(e) => setNewConsultantNote(e.target.value)}
+                            placeholder="Enter consultant notes..."
+                            className="h-8 text-sm flex-1"
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              if (newConsultantNote.trim()) {
+                                const dateTime = `${newNoteDateTime.date} ${newNoteDateTime.time}`;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  consultantNotesLog: [...prev.consultantNotesLog, { dateTime, notes: newConsultantNote.trim() }]
+                                }));
+                                setNewConsultantNote("");
+                                setNewNoteDateTime({ date: format(new Date(), "yyyy-MM-dd"), time: format(new Date(), "HH:mm") });
+                              }
+                            }}
+                            className="h-8"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </div>
 
