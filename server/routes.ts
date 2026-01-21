@@ -7849,10 +7849,15 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Create new entry
   app.post("/api/patient-monitoring/doctors-progress", requireAuth, async (req, res) => {
     try {
-      const data = insertDoctorsProgressSheetSchema.parse(req.body);
+      const body = req.body;
+      // Convert types before validation
+      const transformedData = {
+        ...body,
+        age: body.age != null ? String(body.age) : undefined,
+        entryDateTime: body.entryDateTime ? new Date(body.entryDateTime) : new Date()
+      };
       const result = await db.insert(doctorsProgressSheet).values({
-        ...data,
-        entryDateTime: data.entryDateTime ? new Date(data.entryDateTime as any) : new Date(),
+        ...transformedData,
         createdBy: (req as any).session?.user?.id
       }).returning();
       res.json(result[0]);

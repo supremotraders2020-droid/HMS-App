@@ -5441,7 +5441,8 @@ function DoctorsProgressTab({ session }: { session: Session }) {
     treatmentConsultantName: "",
     daysKeynotes: "",
     counsellingDoneByRmo: "",
-    counsellingDoneByConsultant: ""
+    counsellingDoneByConsultant: "",
+    relativePatientSign: ""
   });
 
   const { data: entries = [], isLoading, refetch } = useQuery<any[]>({
@@ -5502,7 +5503,8 @@ function DoctorsProgressTab({ session }: { session: Session }) {
       treatmentConsultantName: "",
       daysKeynotes: "",
       counsellingDoneByRmo: "",
-      counsellingDoneByConsultant: ""
+      counsellingDoneByConsultant: "",
+      relativePatientSign: ""
     });
     setEditingId(null);
     setShowForm(false);
@@ -5539,7 +5541,8 @@ function DoctorsProgressTab({ session }: { session: Session }) {
       treatmentConsultantName: entry.treatmentConsultantName || "",
       daysKeynotes: entry.daysKeynotes || "",
       counsellingDoneByRmo: entry.counsellingDoneByRmo || "",
-      counsellingDoneByConsultant: entry.counsellingDoneByConsultant || ""
+      counsellingDoneByConsultant: entry.counsellingDoneByConsultant || "",
+      relativePatientSign: entry.relativePatientSign || ""
     });
     setEditingId(entry.id);
     setShowForm(true);
@@ -5585,7 +5588,7 @@ function DoctorsProgressTab({ session }: { session: Session }) {
           <div><strong>Counselling done by - RMO:</strong> ${latestEntry?.counsellingDoneByRmo || '____________'}</div>
           <div><strong>Consultant:</strong> ${latestEntry?.counsellingDoneByConsultant || '____________'}</div>
         </div>
-        <div style="margin-top:30px;"><strong>Relatives / Patient Sign:</strong> ________________________</div>
+        <div style="margin-top:30px;"><strong>Relatives / Patient Sign:</strong> ${latestEntry?.relativePatientSign || '________________________'}</div>
       ` : '<p class="no-data">No progress entries recorded</p>'}
     `;
     openPrintWindow("Doctor's Progress Sheet", content);
@@ -5699,6 +5702,15 @@ function DoctorsProgressTab({ session }: { session: Session }) {
                   placeholder="Consultant name"
                 />
               </div>
+            </div>
+
+            <div>
+              <Label>Relatives / Patient Sign</Label>
+              <Input 
+                value={formData.relativePatientSign} 
+                onChange={(e) => setFormData({ ...formData, relativePatientSign: e.target.value })}
+                placeholder="Name of relative/patient who signed"
+              />
             </div>
 
             <div className="flex gap-2 justify-end pt-2">

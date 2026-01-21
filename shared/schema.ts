@@ -6384,6 +6384,7 @@ export const doctorsProgressSheet = pgTable("doctors_progress_sheet", {
   daysKeynotes: text("days_keynotes"),
   counsellingDoneByRmo: text("counselling_done_by_rmo"),
   counsellingDoneByConsultant: text("counselling_done_by_consultant"),
+  relativePatientSign: text("relative_patient_sign"),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
