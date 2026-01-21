@@ -30,6 +30,8 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   patientAllergiesPrecautions, insertPatientAllergiesPrecautionsSchema,
   ipdInvestigationChart, insertIpdInvestigationChartSchema,
   patientMonitoringAuditLog, insertPatientMonitoringAuditLogSchema,
+  ipdCarePlans, insertIpdCarePlanSchema,
+  ipdCarePlanNotes, insertIpdCarePlanNotesSchema,
   // Bed Management
   bedCategories, insertBedCategorySchema,
   beds, insertBedSchema,
@@ -7581,6 +7583,93 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       res.status(201).json(result[0]);
     } catch (error) {
       res.status(500).json({ error: "Failed to save audit log" });
+    }
+  });
+
+  // ========== IPD CARE PLAN ==========
+  app.get("/api/patient-monitoring/care-plan/:sessionId", async (req, res) => {
+    try {
+      const data = await db.select().from(ipdCarePlans)
+        .where(eq(ipdCarePlans.sessionId, req.params.sessionId))
+        .orderBy(desc(ipdCarePlans.createdAt));
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching care plans:", error);
+      res.status(500).json({ error: "Failed to fetch care plans" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/care-plan", requireAuth, async (req, res) => {
+    try {
+      const parsed = insertIpdCarePlanSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(ipdCarePlans).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Error creating care plan:", error);
+      res.status(500).json({ error: "Failed to create care plan" });
+    }
+  });
+
+  app.patch("/api/patient-monitoring/care-plan/:id", requireAuth, async (req, res) => {
+    try {
+      const result = await db.update(ipdCarePlans)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(ipdCarePlans.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating care plan:", error);
+      res.status(500).json({ error: "Failed to update care plan" });
+    }
+  });
+
+  app.delete("/api/patient-monitoring/care-plan/:id", requireAuth, async (req, res) => {
+    try {
+      await db.delete(ipdCarePlans).where(eq(ipdCarePlans.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting care plan:", error);
+      res.status(500).json({ error: "Failed to delete care plan" });
+    }
+  });
+
+  // Care Plan Consultant Notes
+  app.get("/api/patient-monitoring/care-plan/:carePlanId/notes", async (req, res) => {
+    try {
+      const data = await db.select().from(ipdCarePlanNotes)
+        .where(eq(ipdCarePlanNotes.carePlanId, req.params.carePlanId))
+        .orderBy(desc(ipdCarePlanNotes.noteDate));
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching care plan notes:", error);
+      res.status(500).json({ error: "Failed to fetch care plan notes" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/care-plan-notes", requireAuth, async (req, res) => {
+    try {
+      const parsed = insertIpdCarePlanNotesSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid data", details: parsed.error });
+      }
+      const result = await db.insert(ipdCarePlanNotes).values(parsed.data).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Error creating care plan note:", error);
+      res.status(500).json({ error: "Failed to create care plan note" });
+    }
+  });
+
+  app.delete("/api/patient-monitoring/care-plan-notes/:id", requireAuth, async (req, res) => {
+    try {
+      await db.delete(ipdCarePlanNotes).where(eq(ipdCarePlanNotes.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting care plan note:", error);
+      res.status(500).json({ error: "Failed to delete care plan note" });
     }
   });
 
