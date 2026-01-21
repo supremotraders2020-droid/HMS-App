@@ -2312,6 +2312,8 @@ export const dutyStaffAssignments = pgTable("duty_staff_assignments", {
   employeeId: text("employee_id"),
   shiftStartTime: timestamp("shift_start_time").notNull(),
   shiftEndTime: timestamp("shift_end_time"),
+  nursesNotes: text("nurses_notes"),
+  staffSignEmpNo: text("staff_sign_emp_no"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

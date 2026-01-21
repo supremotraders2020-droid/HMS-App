@@ -1019,7 +1019,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="diabetic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Diabetic</TabsTrigger>
                   <TabsTrigger value="mar" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />Medicines</TabsTrigger>
                   <TabsTrigger value="notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Shift Notes</TabsTrigger>
-                  <TabsTrigger value="staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Duty Staff</TabsTrigger>
+                  <TabsTrigger value="staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Nurse Notes</TabsTrigger>
                   <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
                   <TabsTrigger value="investigation" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Investigation</TabsTrigger>
                   <TabsTrigger value="care-plan" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileCheck className="h-3.5 w-3.5" />Care Plan</TabsTrigger>
@@ -2905,7 +2905,11 @@ function AirwayTab({ sessionId }: { sessionId: string }) {
 function DutyStaffTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ staffName: "", staffRole: "NURSE", shift: "MORNING" });
+  const [form, setForm] = useState({ 
+    dateTime: new Date().toISOString().slice(0, 16), 
+    nursesNotes: "", 
+    staffSignEmpNo: "" 
+  });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/duty-staff/${sessionId}`]
@@ -2915,76 +2919,70 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/duty-staff", data),
     onSuccess: () => { 
       refetch(); 
-      toast({ title: "Staff Assignment Added", description: "Staff assigned successfully" });
-      setForm({ staffName: "", staffRole: "NURSE", shift: "MORNING" });
+      toast({ title: "Nurse Note Added", description: "Note saved successfully" });
+      setForm({ dateTime: new Date().toISOString().slice(0, 16), nursesNotes: "", staffSignEmpNo: "" });
       setDialogOpen(false);
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to assign staff", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to save note", variant: "destructive" });
     }
   });
 
   const handleSave = () => {
     saveMutation.mutate({ 
       sessionId, 
-      shift: form.shift,
-      nurseId: "staff-" + Date.now(),
-      nurseName: form.staffName,
-      shiftStartTime: new Date().toISOString()
+      shift: "GENERAL",
+      nurseId: "nurse-" + Date.now(),
+      nurseName: form.staffSignEmpNo,
+      nursesNotes: form.nursesNotes,
+      staffSignEmpNo: form.staffSignEmpNo,
+      shiftStartTime: new Date(form.dateTime).toISOString()
     });
   };
 
   const handlePrint = () => {
     const rows = records.map((r: any) => 
-      `<tr><td>${r.shift || '-'}</td><td>${r.nurseName || '-'}</td><td>${r.role || 'Nurse'}</td><td>${r.shiftStartTime ? format(new Date(r.shiftStartTime), 'dd/MM/yyyy HH:mm') : '-'}</td></tr>`
+      `<tr><td style="width:20%">${r.shiftStartTime ? format(new Date(r.shiftStartTime), 'dd/MM/yyyy HH:mm') : '-'}</td><td style="white-space:pre-wrap">${r.nursesNotes || r.observation || '-'}</td><td style="width:20%">${r.staffSignEmpNo || r.nurseName || '-'}</td></tr>`
     ).join('');
     const content = `
-      <h1>Duty Staff Assignments</h1>
-      ${records.length ? `<table><thead><tr><th>Shift</th><th>Staff Name</th><th>Role</th><th>Start Time</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No staff assignments</p>'}
+      <h1 style="text-align:center;border:2px solid #333;display:inline-block;padding:5px 20px;">NURSES NOTES</h1>
+      ${records.length ? `<table style="width:100%;margin-top:10px;"><thead><tr><th style="width:20%;border:1px solid #333;">Date & Time</th><th style="border:1px solid #333;">Nurses Notes</th><th style="width:20%;border:1px solid #333;">Staff Sign & Emp No.</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No nurse notes recorded</p>'}
     `;
-    openPrintWindow('Duty Staff', content);
+    openPrintWindow('Nurses Notes', content);
   };
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-lg">Duty Staff Assignments</CardTitle>
+        <CardTitle className="text-lg">Nurses Notes</CardTitle>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Staff</Button>
+              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Note</Button>
             </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Assign Duty Staff</DialogTitle>
-              <DialogDescription>Add staff member to this shift</DialogDescription>
+              <DialogTitle>Add Nurse Note</DialogTitle>
+              <DialogDescription>Record nursing observation</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
-              <div><Label>Staff Name</Label><Input value={form.staffName} onChange={(e) => setForm({...form, staffName: e.target.value})} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Role</Label>
-                  <Select value={form.staffRole} onValueChange={(v) => setForm({...form, staffRole: v})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {["NURSE", "DOCTOR", "RESIDENT", "INTERN", "TECHNICIAN"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div><Label>Shift</Label>
-                  <Select value={form.shift} onValueChange={(v) => setForm({...form, shift: v})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{SHIFTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+              <div><Label>Date & Time</Label>
+                <Input type="datetime-local" value={form.dateTime} onChange={(e) => setForm({...form, dateTime: e.target.value})} />
+              </div>
+              <div><Label>Nurses Notes</Label>
+                <Textarea value={form.nursesNotes} onChange={(e) => setForm({...form, nursesNotes: e.target.value})} rows={5} placeholder="Enter nursing observations, patient status, treatments..." />
+              </div>
+              <div><Label>Staff Sign & Emp No.</Label>
+                <Input value={form.staffSignEmpNo} onChange={(e) => setForm({...form, staffSignEmpNo: e.target.value})} placeholder="Nurse name & employee number" />
               </div>
             </div>
             <DialogFooter className="gap-2">
               <DialogClose asChild>
                 <Button variant="outline" type="button">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleSave} disabled={!form.staffName || saveMutation.isPending}>
-                {saveMutation.isPending ? "Saving..." : "Assign"}
+              <Button onClick={handleSave} disabled={!form.nursesNotes || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save Note"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2993,25 +2991,31 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No staff assigned</p>
+          <p className="text-muted-foreground text-center py-8">No nurse notes recorded</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {SHIFTS.map(shift => (
-              <Card key={shift} className="p-3">
-                <h4 className="font-medium mb-2">{shift} Shift</h4>
-                <div className="space-y-1">
-                  {records.filter((r: any) => r.shift === shift).map((r: any) => (
-                    <div key={r.id} className="flex items-center gap-2 text-sm">
-                      <Badge variant="outline" className="text-xs">{r.staffRole}</Badge>
-                      <span>{r.staffName}</span>
-                    </div>
-                  ))}
-                  {records.filter((r: any) => r.shift === shift).length === 0 && (
-                    <p className="text-xs text-muted-foreground">No staff assigned</p>
-                  )}
-                </div>
-              </Card>
-            ))}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-40">Date & Time</TableHead>
+                  <TableHead>Nurses Notes</TableHead>
+                  <TableHead className="w-40">Staff Sign & Emp No.</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {records.map((r: any) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-sm whitespace-nowrap">
+                      {r.shiftStartTime ? format(new Date(r.shiftStartTime), "dd MMM yyyy HH:mm") : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <div className="max-w-md">{r.nursesNotes || r.observation || "-"}</div>
+                    </TableCell>
+                    <TableCell className="text-sm">{r.staffSignEmpNo || r.nurseName || "-"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </CardContent>
