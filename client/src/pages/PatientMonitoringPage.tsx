@@ -4159,7 +4159,7 @@ function CarePlanTab({ session }: { session: Session }) {
 
                     <div>
                       <Label className="text-sm font-medium mb-3 block">Consultant Notes</Label>
-                      <ConsultantNotesDisplay carePlanId={plan.id} />
+                      <ConsultantNotesDisplay consultantNotesLog={plan.consultantNotesLog} />
                     </div>
                   </CardContent>
                 </Card>
@@ -4172,11 +4172,15 @@ function CarePlanTab({ session }: { session: Session }) {
   );
 }
 
-function ConsultantNotesDisplay({ carePlanId }: { carePlanId: string }) {
-  const { data: notes = [] } = useQuery<any[]>({
-    queryKey: [`/api/patient-monitoring/care-plan/${carePlanId}/notes`],
-    enabled: !!carePlanId
-  });
+function ConsultantNotesDisplay({ consultantNotesLog }: { consultantNotesLog?: string | null }) {
+  const notes: { dateTime: string; notes: string }[] = (() => {
+    if (!consultantNotesLog) return [];
+    try {
+      return JSON.parse(consultantNotesLog);
+    } catch {
+      return [];
+    }
+  })();
 
   if (notes.length === 0) {
     return (
@@ -4196,12 +4200,12 @@ function ConsultantNotesDisplay({ carePlanId }: { carePlanId: string }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {notes.map((note: any) => (
-            <TableRow key={note.id}>
+          {notes.map((note, index) => (
+            <TableRow key={index}>
               <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                {note.noteDate ? format(new Date(note.noteDate), "dd MMM yyyy") : ""} {note.noteTime || ""}
+                {note.dateTime}
               </TableCell>
-              <TableCell className="text-sm whitespace-pre-wrap">{note.consultantNotes}</TableCell>
+              <TableCell className="text-sm whitespace-pre-wrap">{note.notes}</TableCell>
             </TableRow>
           ))}
         </TableBody>
