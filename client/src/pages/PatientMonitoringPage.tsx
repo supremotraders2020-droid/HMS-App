@@ -23,7 +23,7 @@ import {
   PlusCircle, RefreshCw, Download, Stethoscope,
   Wind, Syringe, FlaskConical, ClipboardList, Baby,
   BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays, ArrowLeft,
-  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye, Trash2, Edit, Printer
+  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye, Trash2, Edit, Printer, ClipboardCheck
 } from "lucide-react";
 
 // Reusable hospital print header HTML
@@ -1030,6 +1030,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="doctors-visit" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Doctor's Visit Sheet</TabsTrigger>
                   <TabsTrigger value="surgery-notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Hospital className="h-3.5 w-3.5" />Surgery Notes</TabsTrigger>
                   <TabsTrigger value="nursing-progress" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Nursing Progress Sheet</TabsTrigger>
+                  <TabsTrigger value="nursing-assessment" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardCheck className="h-3.5 w-3.5" />Nursing Assessment & Care Plan</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -1088,6 +1089,9 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="nursing-progress">
                   <NursingProgressTab session={selectedSession} />
+                </TabsContent>
+                <TabsContent value="nursing-assessment">
+                  <NursingAssessmentCarePlanTab sessionId={selectedSession?.id || ""} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -6871,6 +6875,854 @@ function NursingProgressTab({ session }: { session: Session }) {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ========== NURSING ASSESSMENT & CARE PLAN TAB ==========
+function NursingAssessmentCarePlanTab({ sessionId }: { sessionId: string }) {
+  const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState(1);
+  
+  const defaultForm = {
+    patientReceivedDate: new Date().toISOString().split('T')[0],
+    patientReceivedTime: "",
+    provisionalDiagnosis: "",
+    generalConsentSigned: "Yes",
+    modeOfAccess: "Walking",
+    patientAccompanied: "No",
+    accompaniedName: "",
+    vulnerable: "No",
+    relation: "",
+    contactNo: "",
+    allergies: JSON.stringify({ drug: "", food: "", other: "" }),
+    temperature: "",
+    pulse: "",
+    breathsPerMin: "",
+    bp: "",
+    respiratoryRate: "",
+    height: "",
+    weight: "",
+    patientHistory: JSON.stringify({
+      hypertension: "No", diabetes: "No", coronaryArteryDisease: "No",
+      cerebroVascularDisease: "No", copdBronchialAsthma: "No", tuberculosis: "No", anyOther: ""
+    }),
+    functionalStatus: JSON.stringify({
+      walking: "Independent", eating: "Independent", bathing: "Independent",
+      dressing: "Independent", toiletNeeds: "Independent"
+    }),
+    patientEnvironment: JSON.stringify([]),
+    currentMedications: JSON.stringify([{ srNo: 1, name: "", dose: "", frequency: "", dateTimeLastDose: "" }]),
+    medicinesBroughtToHospital: "No",
+    medicinesDisposition: "",
+    morseFallRiskScore: "",
+    historyOfFall: "No",
+    secondaryDiagnosis: "No",
+    ambulatoryAid: "None",
+    peripheryCentralLine: "No",
+    gait: "No",
+    mentalStatus: "Oriented to own ability",
+    bradenScaleTotal: "",
+    sensoryPerception: "4",
+    degreeOfActivity: "4",
+    nutrition: "4",
+    moisture: "4",
+    mobility: "4",
+    shearFriction: "3",
+    neurologicalReview: JSON.stringify({
+      paralysis: "N", dizziness: "N", oriented: "Y", jointsStiffness: "N",
+      tremors: "N", headache: "N", responsive: "Y", contractures: "N"
+    }),
+    cardiovascularReview: JSON.stringify({
+      chestPain: "N", pulseRegular: "Y", pulseTone: "Y", painScore: "",
+      hypertensive: "N", hypotensive: "N"
+    }),
+    urinaryReview: JSON.stringify({
+      catheter: "N", incontinence: "N", frequency: "N", insertionDate: "",
+      retention: "N", hematuria: "N"
+    }),
+    respiratoryReview: JSON.stringify({
+      gasping: "N", tachypnoea: "N", dyspnea: "N", cough: "N",
+      wheeze: "N", bradypnoea: "N", heamoptysis: "N", sputum: ""
+    }),
+    gastroIntestinalReview: JSON.stringify({
+      constipation: "N", distention: "N", nausea: "N", laparotomy: "N", nbm: "N",
+      diarrhoea: "N", tenderness: "N", vomiting: "N", colostomy: "N"
+    }),
+    skinReview: JSON.stringify({
+      pale: "N", cyanotic: "N", dehydrated: "N", jaundice: "N", flushed: "N", normal: "Y"
+    }),
+    vision: "OK",
+    hearing: "OK",
+    languages: "",
+    speech: "OK",
+    obey: "OK",
+    woundsUlcerBedSore: "No",
+    woundsLocation: "",
+    woundsStage: "",
+    painScore: "0",
+    patientDevices: JSON.stringify({
+      centralLine: "N", urethralCatheter: "N", peripheralLine: "N",
+      rt: "N", ventilation: "N", lanfusion: "N"
+    }),
+    nutritionalAssessment: JSON.stringify({
+      decreasedFoodIntake: "3", weightLoss: "3", motility: "3", hospitalisation: "3"
+    }),
+    nutritionalScore: "",
+    personalHygiene: JSON.stringify({ bedBath: { m: "", e: "", n: "" }, hairWash: { m: "", e: "", n: "" }, eyeCare: { m: "", e: "", n: "" } }),
+    dressingChange: "",
+    ivFluide: "",
+    injection: "",
+    medicine: "",
+    investigation: "",
+    bloodGroup: "",
+    previousBTReceived: "No",
+    btStartTime: "",
+    btFinishTime: "",
+    btName: "",
+    btStaffNurse: "",
+    btRmoName: "",
+    nursingCareShifts: JSON.stringify({}),
+    nursingObservations: "",
+    nursingIntervention: "",
+    specificNeedsRemarks: "",
+    admittingStaffNurse: "",
+    empId: "",
+    assessmentCompletingDate: new Date().toISOString().split('T')[0],
+    assessmentCompletingTime: "",
+    signature: ""
+  };
+  
+  const [form, setForm] = useState<Record<string, any>>(defaultForm);
+
+  const { data: records = [], refetch, isLoading } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/nursing-assessment/${sessionId}`],
+    enabled: !!sessionId
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/nursing-assessment", data),
+    onSuccess: () => { 
+      refetch(); 
+      toast({ title: "Assessment Saved", description: "Nursing Assessment & Care Plan saved successfully" });
+      setForm(defaultForm);
+      setDialogOpen(false);
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message || "Failed to save assessment", variant: "destructive" });
+    }
+  });
+
+  const handleSave = () => {
+    saveMutation.mutate({ sessionId, ...form });
+  };
+
+  const updateJsonField = (fieldName: string, key: string, value: any) => {
+    try {
+      const current = JSON.parse(form[fieldName] || '{}');
+      current[key] = value;
+      setForm({ ...form, [fieldName]: JSON.stringify(current) });
+    } catch {
+      setForm({ ...form, [fieldName]: JSON.stringify({ [key]: value }) });
+    }
+  };
+
+  const getJsonValue = (fieldName: string, key: string) => {
+    try {
+      const parsed = JSON.parse(form[fieldName] || '{}');
+      return parsed[key] || "";
+    } catch {
+      return "";
+    }
+  };
+
+  const handlePrint = (record?: any) => {
+    const data = record || (records.length > 0 ? records[0] : null);
+    if (!data) return;
+    
+    const parseJson = (str: string) => {
+      try { return JSON.parse(str || '{}'); } catch { return {}; }
+    };
+    
+    const patientHistory = parseJson(data.patientHistory);
+    const functionalStatus = parseJson(data.functionalStatus);
+    const allergies = parseJson(data.allergies);
+    const currentMedications = parseJson(data.currentMedications) || [];
+    const neurologicalReview = parseJson(data.neurologicalReview);
+    const cardiovascularReview = parseJson(data.cardiovascularReview);
+    const urinaryReview = parseJson(data.urinaryReview);
+    const respiratoryReview = parseJson(data.respiratoryReview);
+    const gastroIntestinalReview = parseJson(data.gastroIntestinalReview);
+    const skinReview = parseJson(data.skinReview);
+    const patientDevices = parseJson(data.patientDevices);
+    const nutritionalAssessment = parseJson(data.nutritionalAssessment);
+    const personalHygiene = parseJson(data.personalHygiene);
+    const nursingCareShifts = parseJson(data.nursingCareShifts);
+
+    const content = `
+      <h1 style="text-align:center;background:#333;color:#fff;padding:8px;margin-bottom:15px;">IPD NURSING ASSESSMENT & CARE PLAN</h1>
+      
+      <h3 style="background:#e5e5e5;padding:5px 10px;margin:10px 0;">General Information</h3>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><td style="border:1px solid #333;padding:5px;width:25%"><strong>Patient Received Date:</strong></td><td style="border:1px solid #333;padding:5px;width:25%">${data.patientReceivedDate ? format(new Date(data.patientReceivedDate), 'dd/MM/yyyy') : '-'}</td>
+            <td style="border:1px solid #333;padding:5px;width:25%"><strong>Time:</strong></td><td style="border:1px solid #333;padding:5px;width:25%">${data.patientReceivedTime || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px"><strong>Provisional Diagnosis:</strong></td><td colspan="3" style="border:1px solid #333;padding:5px">${data.provisionalDiagnosis || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px"><strong>General Consent Signed:</strong></td><td style="border:1px solid #333;padding:5px">${data.generalConsentSigned || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>Mode of Access:</strong></td><td style="border:1px solid #333;padding:5px">${data.modeOfAccess || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px"><strong>Patient Accompanied:</strong></td><td style="border:1px solid #333;padding:5px">${data.patientAccompanied || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>If yes, Name:</strong></td><td style="border:1px solid #333;padding:5px">${data.accompaniedName || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px"><strong>Vulnerable:</strong></td><td style="border:1px solid #333;padding:5px">${data.vulnerable || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>Relation:</strong></td><td style="border:1px solid #333;padding:5px">${data.relation || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px"><strong>Contact No:</strong></td><td style="border:1px solid #333;padding:5px">${data.contactNo || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>Allergies:</strong></td><td style="border:1px solid #333;padding:5px">Drug: ${allergies.drug || '-'}, Food: ${allergies.food || '-'}, Other: ${allergies.other || '-'}</td></tr>
+      </table>
+      
+      <h4 style="margin:10px 0;">Vital Signs</h4>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><td style="border:1px solid #333;padding:5px"><strong>TEMP:</strong> ${data.temperature || '-'} °F</td>
+            <td style="border:1px solid #333;padding:5px"><strong>Pulse:</strong> ${data.pulse || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>Breaths/min:</strong> ${data.breathsPerMin || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>BP:</strong> ${data.bp || '-'} mmHg</td>
+            <td style="border:1px solid #333;padding:5px"><strong>HT:</strong> ${data.height || '-'} CM</td>
+            <td style="border:1px solid #333;padding:5px"><strong>WT:</strong> ${data.weight || '-'} Kg</td></tr>
+      </table>
+
+      <div style="display:flex;gap:20px;margin-bottom:15px;">
+        <div style="flex:1;">
+          <h4 style="margin:10px 0;">A. Patient History</h4>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><th style="border:1px solid #333;padding:5px;text-align:left;">Condition</th><th style="border:1px solid #333;padding:5px;width:50px;">YES</th><th style="border:1px solid #333;padding:5px;width:50px;">NO</th></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">1. Hypertension</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.hypertension === 'Yes' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.hypertension === 'No' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">2. Diabetes</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.diabetes === 'Yes' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.diabetes === 'No' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">3. Coronary Artery Disease</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.coronaryArteryDisease === 'Yes' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.coronaryArteryDisease === 'No' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">4. Cerebro Vascular Disease</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.cerebroVascularDisease === 'Yes' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.cerebroVascularDisease === 'No' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">5. COPD / Bronchial Asthma</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.copdBronchialAsthma === 'Yes' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.copdBronchialAsthma === 'No' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">6. Tuberculosis</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.tuberculosis === 'Yes' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${patientHistory.tuberculosis === 'No' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">7. Any Other</td><td colspan="2" style="border:1px solid #333;padding:5px;">${patientHistory.anyOther || '-'}</td></tr>
+          </table>
+        </div>
+        <div style="flex:1;">
+          <h4 style="margin:10px 0;">B. Functional</h4>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><th style="border:1px solid #333;padding:5px;text-align:left;">Activity</th><th style="border:1px solid #333;padding:5px;">Independent</th><th style="border:1px solid #333;padding:5px;">Assistance</th><th style="border:1px solid #333;padding:5px;">Dependent</th></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">Walking</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.walking === 'Independent' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.walking === 'Assistance' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.walking === 'Dependent' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">Eating</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.eating === 'Independent' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.eating === 'Assistance' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.eating === 'Dependent' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">Bathing</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.bathing === 'Independent' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.bathing === 'Assistance' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.bathing === 'Dependent' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">Dressing</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.dressing === 'Independent' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.dressing === 'Assistance' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.dressing === 'Dependent' ? '✓' : ''}</td></tr>
+            <tr><td style="border:1px solid #333;padding:5px;">Toilet Needs</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.toiletNeeds === 'Independent' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.toiletNeeds === 'Assistance' ? '✓' : ''}</td><td style="border:1px solid #333;padding:5px;text-align:center;">${functionalStatus.toiletNeeds === 'Dependent' ? '✓' : ''}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <p style="margin-bottom:15px;"><strong>Medicines brought to the hospital:</strong> ${data.medicinesBroughtToHospital || 'No'} | <strong>Disposition:</strong> ${data.medicinesDisposition || '-'}</p>
+
+      <div style="page-break-before:always;"></div>
+      <h3 style="background:#e5e5e5;padding:5px 10px;margin:10px 0;">MORSE FALL RISK ASSESSMENT : TOTAL SCORE: ${data.morseFallRiskScore || '-'}</h3>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><th style="border:1px solid #333;padding:5px;">Risk Factor</th><th style="border:1px solid #333;padding:5px;">Value</th><th style="border:1px solid #333;padding:5px;">Risk Factor</th><th style="border:1px solid #333;padding:5px;">Value</th></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">History of Fall</td><td style="border:1px solid #333;padding:5px;">${data.historyOfFall || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Periphery/Central Line</td><td style="border:1px solid #333;padding:5px;">${data.peripheryCentralLine || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">Secondary Diagnosis</td><td style="border:1px solid #333;padding:5px;">${data.secondaryDiagnosis || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Gait</td><td style="border:1px solid #333;padding:5px;">${data.gait || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">Ambulatory Aid</td><td style="border:1px solid #333;padding:5px;">${data.ambulatoryAid || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Mental Status</td><td style="border:1px solid #333;padding:5px;">${data.mentalStatus || '-'}</td></tr>
+      </table>
+
+      <h4 style="margin:10px 0;">SKIN ASSESSMENT / BRADEN SCALE: TOTAL SCORE: ${data.bradenScaleTotal || '-'}</h4>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><td style="border:1px solid #333;padding:5px;"><strong>Sensory Perception:</strong> ${data.sensoryPerception || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Activity:</strong> ${data.degreeOfActivity || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Nutrition:</strong> ${data.nutrition || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px;"><strong>Moisture:</strong> ${data.moisture || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Mobility:</strong> ${data.mobility || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Shear Friction:</strong> ${data.shearFriction || '-'}</td></tr>
+      </table>
+
+      <h4 style="margin:10px 0;">SYSTEMIC REVIEW</h4>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><th colspan="4" style="border:1px solid #333;padding:5px;background:#f0f0f0;">NEUROLOGICAL</th><th colspan="4" style="border:1px solid #333;padding:5px;background:#f0f0f0;">CARDIOVASCULAR</th></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">Paralysis</td><td style="border:1px solid #333;padding:5px;">${neurologicalReview.paralysis || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Tremors</td><td style="border:1px solid #333;padding:5px;">${neurologicalReview.tremors || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Chest Pain</td><td style="border:1px solid #333;padding:5px;">${cardiovascularReview.chestPain || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Hypertensive</td><td style="border:1px solid #333;padding:5px;">${cardiovascularReview.hypertensive || '-'}</td></tr>
+      </table>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><th colspan="4" style="border:1px solid #333;padding:5px;background:#f0f0f0;">URINARY</th><th colspan="4" style="border:1px solid #333;padding:5px;background:#f0f0f0;">RESPIRATORY</th></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">Catheter</td><td style="border:1px solid #333;padding:5px;">${urinaryReview.catheter || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Retention</td><td style="border:1px solid #333;padding:5px;">${urinaryReview.retention || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Gasping</td><td style="border:1px solid #333;padding:5px;">${respiratoryReview.gasping || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Wheeze</td><td style="border:1px solid #333;padding:5px;">${respiratoryReview.wheeze || '-'}</td></tr>
+      </table>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><th colspan="4" style="border:1px solid #333;padding:5px;background:#f0f0f0;">GASTRO-INTESTINAL</th><th colspan="4" style="border:1px solid #333;padding:5px;background:#f0f0f0;">SKIN</th></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">Constipation</td><td style="border:1px solid #333;padding:5px;">${gastroIntestinalReview.constipation || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Diarrhoea</td><td style="border:1px solid #333;padding:5px;">${gastroIntestinalReview.diarrhoea || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Pale</td><td style="border:1px solid #333;padding:5px;">${skinReview.pale || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Normal</td><td style="border:1px solid #333;padding:5px;">${skinReview.normal || '-'}</td></tr>
+      </table>
+
+      <div style="page-break-before:always;"></div>
+      <h3 style="background:#e5e5e5;padding:5px 10px;margin:10px 0;">COMMUNICATION & WOUNDS</h3>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><td style="border:1px solid #333;padding:5px;"><strong>Vision:</strong> ${data.vision || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Hearing:</strong> ${data.hearing || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Speech:</strong> ${data.speech || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Obey:</strong> ${data.obey || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Languages:</strong> ${data.languages || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px;"><strong>Ulcer/Bed Sore:</strong> ${data.woundsUlcerBedSore || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Location:</strong> ${data.woundsLocation || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;"><strong>Stage:</strong> ${data.woundsStage || '-'}</td>
+            <td colspan="2" style="border:1px solid #333;padding:5px;"><strong>Pain Score:</strong> ${data.painScore || '0'}</td></tr>
+      </table>
+
+      <h4 style="margin:10px 0;">PATIENTS HAVING DEVICES</h4>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><td style="border:1px solid #333;padding:5px;">Central Line: ${patientDevices.centralLine || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Urethral Catheter: ${patientDevices.urethralCatheter || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Peripheral Line: ${patientDevices.peripheralLine || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">RT: ${patientDevices.rt || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Ventilation: ${patientDevices.ventilation || '-'}</td>
+            <td style="border:1px solid #333;padding:5px;">Lanfusion: ${patientDevices.lanfusion || '-'}</td></tr>
+      </table>
+
+      <h4 style="margin:10px 0;">NUTRITIONAL ASSESSMENT</h4>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><th style="border:1px solid #333;padding:5px;">Criteria</th><th style="border:1px solid #333;padding:5px;">Score</th></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">Decreased food intake</td><td style="border:1px solid #333;padding:5px;">${nutritionalAssessment.decreasedFoodIntake || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">Weight Loss</td><td style="border:1px solid #333;padding:5px;">${nutritionalAssessment.weightLoss || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">Motility</td><td style="border:1px solid #333;padding:5px;">${nutritionalAssessment.motility || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px;">Hospitalisation</td><td style="border:1px solid #333;padding:5px;">${nutritionalAssessment.hospitalisation || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px;"><strong>Total Score</strong></td><td style="border:1px solid #333;padding:5px;"><strong>${data.nutritionalScore || '-'}</strong></td></tr>
+      </table>
+
+      <h4 style="margin:10px 0;">BLOOD TRANSFUSION</h4>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:15px;">
+        <tr><td style="border:1px solid #333;padding:5px"><strong>Blood Group:</strong> ${data.bloodGroup || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>Previous BT:</strong> ${data.previousBTReceived || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>BT Start:</strong> ${data.btStartTime || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>BT Finish:</strong> ${data.btFinishTime || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:5px"><strong>Name:</strong> ${data.btName || '-'}</td>
+            <td style="border:1px solid #333;padding:5px"><strong>Staff Nurse:</strong> ${data.btStaffNurse || '-'}</td>
+            <td colspan="2" style="border:1px solid #333;padding:5px"><strong>RMO Name:</strong> ${data.btRmoName || '-'}</td></tr>
+      </table>
+
+      <div style="page-break-before:always;"></div>
+      <h3 style="background:#e5e5e5;padding:5px 10px;margin:10px 0;">NURSING CARE & OBSERVATIONS</h3>
+      
+      <h4 style="margin:10px 0;">Nursing Observations:</h4>
+      <div style="border:1px solid #333;padding:10px;min-height:80px;margin-bottom:15px;">${data.nursingObservations || '-'}</div>
+      
+      <h4 style="margin:10px 0;">Nursing Intervention:</h4>
+      <div style="border:1px solid #333;padding:10px;min-height:80px;margin-bottom:15px;">${data.nursingIntervention || '-'}</div>
+      
+      <h4 style="margin:10px 0;">Any Specific Needs / Remarks:</h4>
+      <div style="border:1px solid #333;padding:10px;min-height:80px;margin-bottom:15px;">${data.specificNeedsRemarks || '-'}</div>
+
+      <table style="width:100%;border-collapse:collapse;margin-top:20px;">
+        <tr><td style="border:1px solid #333;padding:10px;width:50%"><strong>Name of Admitting Staff Nurse:</strong> ${data.admittingStaffNurse || '-'}</td>
+            <td style="border:1px solid #333;padding:10px"><strong>Emp ID:</strong> ${data.empId || '-'}</td></tr>
+        <tr><td style="border:1px solid #333;padding:10px"><strong>Assessment Date:</strong> ${data.assessmentCompletingDate ? format(new Date(data.assessmentCompletingDate), 'dd/MM/yyyy') : '-'}</td>
+            <td style="border:1px solid #333;padding:10px"><strong>Time:</strong> ${data.assessmentCompletingTime || '-'}</td></tr>
+        <tr><td colspan="2" style="border:1px solid #333;padding:10px;text-align:right;"><strong>Sign:</strong> ${data.signature || '_________________'}</td></tr>
+      </table>
+      <p style="text-align:right;font-size:10px;margin-top:10px;">IH/Nursing/F-01.00</p>
+    `;
+    openPrintWindow('Nursing Assessment & Care Plan', content);
+  };
+
+  const renderSection1 = () => (
+    <div className="space-y-4">
+      <h4 className="font-semibold text-lg border-b pb-2">General Information</h4>
+      <div className="grid grid-cols-3 gap-3">
+        <div><Label>Patient Received Date</Label><Input type="date" value={form.patientReceivedDate} onChange={e => setForm({...form, patientReceivedDate: e.target.value})} /></div>
+        <div><Label>Time</Label><Input type="time" value={form.patientReceivedTime} onChange={e => setForm({...form, patientReceivedTime: e.target.value})} /></div>
+        <div><Label>General Consent Signed</Label>
+          <Select value={form.generalConsentSigned} onValueChange={v => setForm({...form, generalConsentSigned: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div><Label>Provisional Diagnosis</Label><Input value={form.provisionalDiagnosis} onChange={e => setForm({...form, provisionalDiagnosis: e.target.value})} /></div>
+      <div className="grid grid-cols-3 gap-3">
+        <div><Label>Mode of Access</Label>
+          <Select value={form.modeOfAccess} onValueChange={v => setForm({...form, modeOfAccess: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Walking">Walking</SelectItem><SelectItem value="Wheelchairs">Wheelchairs</SelectItem><SelectItem value="Stretchers">Stretchers</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Patient Accompanied</Label>
+          <Select value={form.patientAccompanied} onValueChange={v => setForm({...form, patientAccompanied: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>If yes, Name</Label><Input value={form.accompaniedName} onChange={e => setForm({...form, accompaniedName: e.target.value})} /></div>
+      </div>
+      <div className="grid grid-cols-4 gap-3">
+        <div><Label>Vulnerable</Label>
+          <Select value={form.vulnerable} onValueChange={v => setForm({...form, vulnerable: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Relation</Label><Input value={form.relation} onChange={e => setForm({...form, relation: e.target.value})} /></div>
+        <div><Label>Contact No</Label><Input value={form.contactNo} onChange={e => setForm({...form, contactNo: e.target.value})} /></div>
+      </div>
+      
+      <h4 className="font-semibold mt-4">Allergies</h4>
+      <div className="grid grid-cols-3 gap-3">
+        <div><Label>Drug</Label><Input value={getJsonValue('allergies', 'drug')} onChange={e => updateJsonField('allergies', 'drug', e.target.value)} /></div>
+        <div><Label>Food</Label><Input value={getJsonValue('allergies', 'food')} onChange={e => updateJsonField('allergies', 'food', e.target.value)} /></div>
+        <div><Label>Other</Label><Input value={getJsonValue('allergies', 'other')} onChange={e => updateJsonField('allergies', 'other', e.target.value)} /></div>
+      </div>
+
+      <h4 className="font-semibold mt-4">Vital Signs</h4>
+      <div className="grid grid-cols-4 gap-3">
+        <div><Label>TEMP (°F)</Label><Input value={form.temperature} onChange={e => setForm({...form, temperature: e.target.value})} /></div>
+        <div><Label>Pulse</Label><Input value={form.pulse} onChange={e => setForm({...form, pulse: e.target.value})} /></div>
+        <div><Label>Breaths/min</Label><Input value={form.breathsPerMin} onChange={e => setForm({...form, breathsPerMin: e.target.value})} /></div>
+        <div><Label>BP (mmHg)</Label><Input value={form.bp} onChange={e => setForm({...form, bp: e.target.value})} /></div>
+        <div><Label>HT (CM)</Label><Input value={form.height} onChange={e => setForm({...form, height: e.target.value})} /></div>
+        <div><Label>WT (Kg)</Label><Input value={form.weight} onChange={e => setForm({...form, weight: e.target.value})} /></div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <h4 className="font-semibold mb-2">A. Patient History</h4>
+          {['hypertension', 'diabetes', 'coronaryArteryDisease', 'cerebroVascularDisease', 'copdBronchialAsthma', 'tuberculosis'].map((condition, idx) => (
+            <div key={condition} className="flex items-center gap-2 mb-1">
+              <span className="w-48 text-sm">{idx + 1}. {condition.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
+              <Select value={getJsonValue('patientHistory', condition)} onValueChange={v => updateJsonField('patientHistory', condition, v)}>
+                <SelectTrigger className="w-20 h-8"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+              </Select>
+            </div>
+          ))}
+          <div className="flex items-center gap-2 mt-1">
+            <span className="w-48 text-sm">7. Any Other:</span>
+            <Input className="h-8" value={getJsonValue('patientHistory', 'anyOther')} onChange={e => updateJsonField('patientHistory', 'anyOther', e.target.value)} />
+          </div>
+        </div>
+        <div>
+          <h4 className="font-semibold mb-2">B. Functional</h4>
+          {['walking', 'eating', 'bathing', 'dressing', 'toiletNeeds'].map(activity => (
+            <div key={activity} className="flex items-center gap-2 mb-1">
+              <span className="w-24 text-sm">{activity.charAt(0).toUpperCase() + activity.slice(1)}</span>
+              <Select value={getJsonValue('functionalStatus', activity)} onValueChange={v => updateJsonField('functionalStatus', activity, v)}>
+                <SelectTrigger className="w-28 h-8"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="Independent">Independent</SelectItem><SelectItem value="Assistance">Assistance</SelectItem><SelectItem value="Dependent">Dependent</SelectItem></SelectContent>
+              </Select>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mt-4">
+        <div><Label>Medicines brought to hospital</Label>
+          <Select value={form.medicinesBroughtToHospital} onValueChange={v => setForm({...form, medicinesBroughtToHospital: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Disposition</Label>
+          <Select value={form.medicinesDisposition} onValueChange={v => setForm({...form, medicinesDisposition: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Sent Home">Sent Home</SelectItem><SelectItem value="Other Placement">Other Placement</SelectItem></SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSection2 = () => (
+    <div className="space-y-4">
+      <h4 className="font-semibold text-lg border-b pb-2">MORSE FALL RISK ASSESSMENT</h4>
+      <p className="text-sm text-muted-foreground">High Risk - 45, Moderate Risk: 25-44, Low Risk: 0-24</p>
+      <div className="grid grid-cols-3 gap-3">
+        <div><Label>Total Score</Label><Input value={form.morseFallRiskScore} onChange={e => setForm({...form, morseFallRiskScore: e.target.value})} /></div>
+        <div><Label>History of Fall</Label>
+          <Select value={form.historyOfFall} onValueChange={v => setForm({...form, historyOfFall: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Yes">Yes (25)</SelectItem><SelectItem value="No">No (0)</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Secondary Diagnosis</Label>
+          <Select value={form.secondaryDiagnosis} onValueChange={v => setForm({...form, secondaryDiagnosis: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Yes">Yes (15)</SelectItem><SelectItem value="No">No (0)</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Ambulatory Aid</Label>
+          <Select value={form.ambulatoryAid} onValueChange={v => setForm({...form, ambulatoryAid: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Furniture">Furniture</SelectItem><SelectItem value="Crutches/cane/walker">Crutches/cane/walker</SelectItem><SelectItem value="None">None</SelectItem><SelectItem value="Bed Rest">Bed Rest</SelectItem><SelectItem value="Wheelchair">Wheelchair</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Periphery/Central Line</Label>
+          <Select value={form.peripheryCentralLine} onValueChange={v => setForm({...form, peripheryCentralLine: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Yes">Yes (20)</SelectItem><SelectItem value="No">No (0)</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Gait</Label>
+          <Select value={form.gait} onValueChange={v => setForm({...form, gait: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="No">No (0)</SelectItem><SelectItem value="Impaired">Impaired (20)</SelectItem><SelectItem value="Weak">Weak (10)</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Mental Status</Label>
+          <Select value={form.mentalStatus} onValueChange={v => setForm({...form, mentalStatus: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Normal/Bed rest/immobile">Normal/Bed rest/immobile</SelectItem><SelectItem value="Gesture Limitations">Gesture Limitations</SelectItem><SelectItem value="Oriented to own ability">Oriented to own ability</SelectItem></SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <h4 className="font-semibold text-lg border-b pb-2 mt-6">SKIN ASSESSMENT / BRADEN SCALE</h4>
+      <div className="grid grid-cols-4 gap-3">
+        <div><Label>Total Score</Label><Input value={form.bradenScaleTotal} onChange={e => setForm({...form, bradenScaleTotal: e.target.value})} /></div>
+        <div><Label>Sensory Perception (1-4)</Label>
+          <Select value={form.sensoryPerception} onValueChange={v => setForm({...form, sensoryPerception: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="4">4-No Impairment</SelectItem><SelectItem value="3">3-Slightly Limited</SelectItem><SelectItem value="2">2-Very Limited</SelectItem><SelectItem value="1">1-Completed Limited</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Degree of Activity (1-4)</Label>
+          <Select value={form.degreeOfActivity} onValueChange={v => setForm({...form, degreeOfActivity: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="4">4-Walks Frequently</SelectItem><SelectItem value="3">3-Walks Occasionally</SelectItem><SelectItem value="2">2-Chair Fast</SelectItem><SelectItem value="1">1-Bed Fast</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Nutrition (1-4)</Label>
+          <Select value={form.nutrition} onValueChange={v => setForm({...form, nutrition: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="4">4-Excellent</SelectItem><SelectItem value="3">3-Adequate</SelectItem><SelectItem value="2">2-In-Adequate</SelectItem><SelectItem value="1">1-Very Poor</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Moisture (1-4)</Label>
+          <Select value={form.moisture} onValueChange={v => setForm({...form, moisture: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="4">4-Rarely Moist</SelectItem><SelectItem value="3">3-Occasionally Moist</SelectItem><SelectItem value="2">2-Very Moist</SelectItem><SelectItem value="1">1-Constantly Moist</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Mobility (1-4)</Label>
+          <Select value={form.mobility} onValueChange={v => setForm({...form, mobility: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="4">4-No Limitation</SelectItem><SelectItem value="3">3-Slightly Limited</SelectItem><SelectItem value="2">2-Very Limited</SelectItem><SelectItem value="1">1-Completely Immobile</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Shear Friction (1-3)</Label>
+          <Select value={form.shearFriction} onValueChange={v => setForm({...form, shearFriction: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="3">3-No Problem Apparent</SelectItem><SelectItem value="2">2-Potential Problem</SelectItem><SelectItem value="1">1-Problem Present</SelectItem></SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <h4 className="font-semibold text-lg border-b pb-2 mt-6">SYSTEMIC REVIEW</h4>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <h5 className="font-medium mb-2">Neurological (Y/N)</h5>
+          <div className="grid grid-cols-2 gap-2">
+            {['paralysis', 'dizziness', 'oriented', 'jointsStiffness', 'tremors', 'headache', 'responsive', 'contractures'].map(item => (
+              <div key={item} className="flex items-center gap-1">
+                <span className="text-sm w-24">{item.charAt(0).toUpperCase() + item.slice(1)}</span>
+                <Select value={getJsonValue('neurologicalReview', item)} onValueChange={v => updateJsonField('neurologicalReview', item, v)}>
+                  <SelectTrigger className="w-16 h-7"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="Y">Y</SelectItem><SelectItem value="N">N</SelectItem></SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h5 className="font-medium mb-2">Cardiovascular (Y/N)</h5>
+          <div className="grid grid-cols-2 gap-2">
+            {['chestPain', 'pulseRegular', 'pulseTone', 'hypertensive', 'hypotensive'].map(item => (
+              <div key={item} className="flex items-center gap-1">
+                <span className="text-sm w-24">{item.replace(/([A-Z])/g, ' $1')}</span>
+                <Select value={getJsonValue('cardiovascularReview', item)} onValueChange={v => updateJsonField('cardiovascularReview', item, v)}>
+                  <SelectTrigger className="w-16 h-7"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="Y">Y</SelectItem><SelectItem value="N">N</SelectItem></SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <h5 className="font-medium mb-2">Urinary (Y/N)</h5>
+          <div className="grid grid-cols-2 gap-2">
+            {['catheter', 'incontinence', 'frequency', 'retention', 'hematuria'].map(item => (
+              <div key={item} className="flex items-center gap-1">
+                <span className="text-sm w-24">{item.charAt(0).toUpperCase() + item.slice(1)}</span>
+                <Select value={getJsonValue('urinaryReview', item)} onValueChange={v => updateJsonField('urinaryReview', item, v)}>
+                  <SelectTrigger className="w-16 h-7"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="Y">Y</SelectItem><SelectItem value="N">N</SelectItem></SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h5 className="font-medium mb-2">Respiratory (Y/N)</h5>
+          <div className="grid grid-cols-2 gap-2">
+            {['gasping', 'tachypnoea', 'dyspnea', 'cough', 'wheeze', 'bradypnoea', 'heamoptysis'].map(item => (
+              <div key={item} className="flex items-center gap-1">
+                <span className="text-sm w-24">{item.charAt(0).toUpperCase() + item.slice(1)}</span>
+                <Select value={getJsonValue('respiratoryReview', item)} onValueChange={v => updateJsonField('respiratoryReview', item, v)}>
+                  <SelectTrigger className="w-16 h-7"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="Y">Y</SelectItem><SelectItem value="N">N</SelectItem></SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <h5 className="font-medium mb-2">Gastro-Intestinal (Y/N)</h5>
+          <div className="grid grid-cols-2 gap-2">
+            {['constipation', 'distention', 'nausea', 'laparotomy', 'nbm', 'diarrhoea', 'tenderness', 'vomiting', 'colostomy'].map(item => (
+              <div key={item} className="flex items-center gap-1">
+                <span className="text-sm w-24">{item.charAt(0).toUpperCase() + item.slice(1)}</span>
+                <Select value={getJsonValue('gastroIntestinalReview', item)} onValueChange={v => updateJsonField('gastroIntestinalReview', item, v)}>
+                  <SelectTrigger className="w-16 h-7"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="Y">Y</SelectItem><SelectItem value="N">N</SelectItem></SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h5 className="font-medium mb-2">Skin (Y/N)</h5>
+          <div className="grid grid-cols-2 gap-2">
+            {['pale', 'cyanotic', 'dehydrated', 'jaundice', 'flushed', 'normal'].map(item => (
+              <div key={item} className="flex items-center gap-1">
+                <span className="text-sm w-24">{item.charAt(0).toUpperCase() + item.slice(1)}</span>
+                <Select value={getJsonValue('skinReview', item)} onValueChange={v => updateJsonField('skinReview', item, v)}>
+                  <SelectTrigger className="w-16 h-7"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="Y">Y</SelectItem><SelectItem value="N">N</SelectItem></SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSection3 = () => (
+    <div className="space-y-4">
+      <h4 className="font-semibold text-lg border-b pb-2">COMMUNICATION</h4>
+      <div className="grid grid-cols-5 gap-3">
+        <div><Label>Vision</Label>
+          <Select value={form.vision} onValueChange={v => setForm({...form, vision: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="OK">OK</SelectItem><SelectItem value="Impaired">Impaired</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Hearing</Label>
+          <Select value={form.hearing} onValueChange={v => setForm({...form, hearing: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="OK">OK</SelectItem><SelectItem value="Impaired">Impaired</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Languages</Label><Input value={form.languages} onChange={e => setForm({...form, languages: e.target.value})} /></div>
+        <div><Label>Speech</Label>
+          <Select value={form.speech} onValueChange={v => setForm({...form, speech: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="OK">OK</SelectItem><SelectItem value="Impaired">Impaired</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Obey</Label>
+          <Select value={form.obey} onValueChange={v => setForm({...form, obey: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="OK">OK</SelectItem><SelectItem value="Impaired">Impaired</SelectItem></SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <h4 className="font-semibold mt-4">WOUNDS</h4>
+      <div className="grid grid-cols-3 gap-3">
+        <div><Label>Ulcer/Bed Sore</Label>
+          <Select value={form.woundsUlcerBedSore} onValueChange={v => setForm({...form, woundsUlcerBedSore: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Location</Label><Input value={form.woundsLocation} onChange={e => setForm({...form, woundsLocation: e.target.value})} /></div>
+        <div><Label>Stage (1-4)</Label>
+          <Select value={form.woundsStage} onValueChange={v => setForm({...form, woundsStage: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="1">Stage 1: Red Coloration</SelectItem><SelectItem value="2">Stage 2: Skin Break Only</SelectItem><SelectItem value="3">Stage 3: Fat Exposed</SelectItem><SelectItem value="4">Stage 4: Muscle/Bone Exposed</SelectItem></SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <h4 className="font-semibold mt-4">PAIN SCORE (0-10)</h4>
+      <div className="w-48">
+        <Select value={form.painScore} onValueChange={v => setForm({...form, painScore: v})}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>{[0,1,2,3,4,5,6,7,8,9,10].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+
+      <h4 className="font-semibold mt-4">PATIENTS HAVING DEVICES (Y/N)</h4>
+      <div className="grid grid-cols-3 gap-3">
+        {['centralLine', 'urethralCatheter', 'peripheralLine', 'rt', 'ventilation', 'lanfusion'].map(device => (
+          <div key={device} className="flex items-center gap-2">
+            <span className="text-sm w-32">{device.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
+            <Select value={getJsonValue('patientDevices', device)} onValueChange={v => updateJsonField('patientDevices', device, v)}>
+              <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="Y">Y</SelectItem><SelectItem value="N">N</SelectItem></SelectContent>
+            </Select>
+          </div>
+        ))}
+      </div>
+
+      <h4 className="font-semibold text-lg border-b pb-2 mt-6">NUTRITIONAL ASSESSMENT</h4>
+      <div className="grid grid-cols-4 gap-3">
+        <div><Label>Decreased food intake</Label>
+          <Select value={getJsonValue('nutritionalAssessment', 'decreasedFoodIntake')} onValueChange={v => updateJsonField('nutritionalAssessment', 'decreasedFoodIntake', v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="0">0-Severe Loss</SelectItem><SelectItem value="1">1-Moderate Loss</SelectItem><SelectItem value="2">2-Mild Loss</SelectItem><SelectItem value="3">3-No Loss</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Weight Loss</Label>
+          <Select value={getJsonValue('nutritionalAssessment', 'weightLoss')} onValueChange={v => updateJsonField('nutritionalAssessment', 'weightLoss', v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="0">0-&gt;5 Kg</SelectItem><SelectItem value="1">1-1 to 3 Kg</SelectItem><SelectItem value="2">2-Don't Know</SelectItem><SelectItem value="3">3-No Loss</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Motility</Label>
+          <Select value={getJsonValue('nutritionalAssessment', 'motility')} onValueChange={v => updateJsonField('nutritionalAssessment', 'motility', v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="0">0-Bed ridden</SelectItem><SelectItem value="1">1-Mobile With Assist</SelectItem><SelectItem value="2">2-Ambulatory</SelectItem><SelectItem value="3">3-Fully Mobile</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>Hospitalisation</Label>
+          <Select value={getJsonValue('nutritionalAssessment', 'hospitalisation')} onValueChange={v => updateJsonField('nutritionalAssessment', 'hospitalisation', v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="0">0-Yes</SelectItem><SelectItem value="1">1-Taken OPD Rx</SelectItem><SelectItem value="3">3-No</SelectItem></SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="w-48 mt-2"><Label>Nutritional Score</Label><Input value={form.nutritionalScore} onChange={e => setForm({...form, nutritionalScore: e.target.value})} /></div>
+
+      <h4 className="font-semibold mt-4">BLOOD TRANSFUSION</h4>
+      <div className="grid grid-cols-4 gap-3">
+        <div><Label>Blood Group</Label><Input value={form.bloodGroup} onChange={e => setForm({...form, bloodGroup: e.target.value})} /></div>
+        <div><Label>Previous BT Received</Label>
+          <Select value={form.previousBTReceived} onValueChange={v => setForm({...form, previousBTReceived: v})}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label>BT Start Time</Label><Input type="time" value={form.btStartTime} onChange={e => setForm({...form, btStartTime: e.target.value})} /></div>
+        <div><Label>BT Finish Time</Label><Input type="time" value={form.btFinishTime} onChange={e => setForm({...form, btFinishTime: e.target.value})} /></div>
+        <div><Label>Name</Label><Input value={form.btName} onChange={e => setForm({...form, btName: e.target.value})} /></div>
+        <div><Label>Staff Nurse</Label><Input value={form.btStaffNurse} onChange={e => setForm({...form, btStaffNurse: e.target.value})} /></div>
+        <div><Label>RMO Name</Label><Input value={form.btRmoName} onChange={e => setForm({...form, btRmoName: e.target.value})} /></div>
+      </div>
+    </div>
+  );
+
+  const renderSection4 = () => (
+    <div className="space-y-4">
+      <h4 className="font-semibold text-lg border-b pb-2">NURSING CARE</h4>
+      
+      <h4 className="font-semibold mt-4">Nursing Observations</h4>
+      <Textarea rows={4} value={form.nursingObservations} onChange={e => setForm({...form, nursingObservations: e.target.value})} placeholder="Enter nursing observations..." />
+      
+      <h4 className="font-semibold mt-4">Nursing Intervention</h4>
+      <Textarea rows={4} value={form.nursingIntervention} onChange={e => setForm({...form, nursingIntervention: e.target.value})} placeholder="Enter nursing intervention..." />
+      
+      <h4 className="font-semibold mt-4">Any Specific Needs / Remarks</h4>
+      <Textarea rows={4} value={form.specificNeedsRemarks} onChange={e => setForm({...form, specificNeedsRemarks: e.target.value})} placeholder="Enter specific needs or remarks..." />
+
+      <h4 className="font-semibold text-lg border-b pb-2 mt-6">ASSESSMENT COMPLETION</h4>
+      <div className="grid grid-cols-4 gap-3">
+        <div><Label>Admitting Staff Nurse</Label><Input value={form.admittingStaffNurse} onChange={e => setForm({...form, admittingStaffNurse: e.target.value})} /></div>
+        <div><Label>Emp ID</Label><Input value={form.empId} onChange={e => setForm({...form, empId: e.target.value})} /></div>
+        <div><Label>Assessment Date</Label><Input type="date" value={form.assessmentCompletingDate} onChange={e => setForm({...form, assessmentCompletingDate: e.target.value})} /></div>
+        <div><Label>Time</Label><Input type="time" value={form.assessmentCompletingTime} onChange={e => setForm({...form, assessmentCompletingTime: e.target.value})} /></div>
+      </div>
+      <div className="w-64"><Label>Signature</Label><Input value={form.signature} onChange={e => setForm({...form, signature: e.target.value})} /></div>
+    </div>
+  );
+
+  return (
+    <Card className="mt-4">
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardTitle className="text-lg">Nursing Assessment & Care Plan</CardTitle>
+        <div className="flex gap-2">
+          {records.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => handlePrint()}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+          )}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Assessment</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>IPD Nursing Assessment & Care Plan</DialogTitle>
+                <DialogDescription>Complete the comprehensive nursing assessment form</DialogDescription>
+              </DialogHeader>
+              <div className="flex gap-2 mb-4 border-b pb-2">
+                <Button size="sm" variant={activeSection === 1 ? "default" : "outline"} onClick={() => setActiveSection(1)}>1. General Info</Button>
+                <Button size="sm" variant={activeSection === 2 ? "default" : "outline"} onClick={() => setActiveSection(2)}>2. Risk Assessment</Button>
+                <Button size="sm" variant={activeSection === 3 ? "default" : "outline"} onClick={() => setActiveSection(3)}>3. Care Documentation</Button>
+                <Button size="sm" variant={activeSection === 4 ? "default" : "outline"} onClick={() => setActiveSection(4)}>4. Nursing Care</Button>
+              </div>
+              <ScrollArea className="h-[60vh] pr-4">
+                {activeSection === 1 && renderSection1()}
+                {activeSection === 2 && renderSection2()}
+                {activeSection === 3 && renderSection3()}
+                {activeSection === 4 && renderSection4()}
+              </ScrollArea>
+              <DialogFooter className="gap-2 mt-4">
+                {activeSection > 1 && <Button variant="outline" onClick={() => setActiveSection(activeSection - 1)}>Previous</Button>}
+                {activeSection < 4 && <Button variant="outline" onClick={() => setActiveSection(activeSection + 1)}>Next</Button>}
+                <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                <Button onClick={handleSave} disabled={saveMutation.isPending}>{saveMutation.isPending ? "Saving..." : "Save Assessment"}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+        ) : records.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">No nursing assessments recorded</p>
+        ) : (
+          <div className="space-y-3">
+            {records.map((record: any) => (
+              <Card key={record.id} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium">Assessment Date: {record.assessmentCompletingDate ? format(new Date(record.assessmentCompletingDate), 'dd MMM yyyy') : format(new Date(record.createdAt), 'dd MMM yyyy')}</p>
+                    <p className="text-sm text-muted-foreground">Diagnosis: {record.provisionalDiagnosis || '-'}</p>
+                    <p className="text-sm text-muted-foreground">Staff Nurse: {record.admittingStaffNurse || '-'} | Emp ID: {record.empId || '-'}</p>
+                    <div className="flex gap-4 mt-2">
+                      <Badge variant="outline">Morse Fall Score: {record.morseFallRiskScore || '-'}</Badge>
+                      <Badge variant="outline">Braden Score: {record.bradenScaleTotal || '-'}</Badge>
+                      <Badge variant="outline">Pain Score: {record.painScore || '-'}</Badge>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => handlePrint(record)}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+                </div>
+              </Card>
+            ))}
           </div>
         )}
       </CardContent>
