@@ -6332,3 +6332,29 @@ export const ipdInitialAssessment = pgTable("ipd_initial_assessment", {
 export const insertIpdInitialAssessmentSchema = createInsertSchema(ipdInitialAssessment).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertIpdInitialAssessment = z.infer<typeof insertIpdInitialAssessmentSchema>;
 export type IpdInitialAssessment = typeof ipdInitialAssessment.$inferSelect;
+
+// Indoor Consultation Sheet (Daily Progress Notes)
+export const indoorConsultationSheet = pgTable("indoor_consultation_sheet", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name"),
+  ipdNo: text("ipd_no"),
+  ward: text("ward"),
+  inChargeDoctor: text("in_charge_doctor"),
+  
+  // Entry fields
+  entryDate: timestamp("entry_date").defaultNow(),
+  entryTime: text("entry_time"),
+  clinicalFindings: text("clinical_findings"), // Clinical Findings / Daily Progress Notes
+  orders: text("orders"),
+  
+  recordedBy: text("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"),
+});
+
+export const insertIndoorConsultationSheetSchema = createInsertSchema(indoorConsultationSheet).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertIndoorConsultationSheet = z.infer<typeof insertIndoorConsultationSheetSchema>;
+export type IndoorConsultationSheet = typeof indoorConsultationSheet.$inferSelect;

@@ -33,6 +33,7 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   ipdCarePlans, insertIpdCarePlanSchema,
   ipdCarePlanNotes, insertIpdCarePlanNotesSchema,
   ipdInitialAssessment, insertIpdInitialAssessmentSchema,
+  indoorConsultationSheet, insertIndoorConsultationSheetSchema,
   // Bed Management
   bedCategories, insertBedCategorySchema,
   beds, insertBedSchema,
@@ -7762,6 +7763,71 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     } catch (error) {
       console.error("Error deleting IPD initial assessment:", error);
       res.status(500).json({ error: "Failed to delete initial assessment" });
+    }
+  });
+
+  // ========== INDOOR CONSULTATION SHEET (Daily Progress Notes) ==========
+  
+  // Get all entries for a session
+  app.get("/api/patient-monitoring/indoor-consultation/:sessionId", async (req, res) => {
+    try {
+      const entries = await db.select().from(indoorConsultationSheet)
+        .where(eq(indoorConsultationSheet.sessionId, req.params.sessionId))
+        .orderBy(desc(indoorConsultationSheet.entryDate));
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching indoor consultation sheet:", error);
+      res.status(500).json({ error: "Failed to fetch indoor consultation entries" });
+    }
+  });
+
+  // Create new entry
+  app.post("/api/patient-monitoring/indoor-consultation", requireAuth, async (req, res) => {
+    try {
+      const data = { ...req.body };
+      if (data.entryDate && typeof data.entryDate === 'string') {
+        data.entryDate = new Date(data.entryDate);
+      }
+      const result = await db.insert(indoorConsultationSheet).values({
+        ...data,
+        createdBy: req.session?.user?.id
+      }).returning();
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Error creating indoor consultation entry:", error);
+      res.status(500).json({ error: "Failed to create indoor consultation entry" });
+    }
+  });
+
+  // Update entry
+  app.patch("/api/patient-monitoring/indoor-consultation/:id", requireAuth, async (req, res) => {
+    try {
+      const data = { ...req.body };
+      delete data.id;
+      delete data.createdAt;
+      delete data.updatedAt;
+      if (data.entryDate && typeof data.entryDate === 'string') {
+        data.entryDate = new Date(data.entryDate);
+      }
+      const result = await db.update(indoorConsultationSheet)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(indoorConsultationSheet.id, req.params.id))
+        .returning();
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating indoor consultation entry:", error);
+      res.status(500).json({ error: "Failed to update indoor consultation entry" });
+    }
+  });
+
+  // Delete entry
+  app.delete("/api/patient-monitoring/indoor-consultation/:id", requireAuth, async (req, res) => {
+    try {
+      await db.delete(indoorConsultationSheet).where(eq(indoorConsultationSheet.id, req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting indoor consultation entry:", error);
+      res.status(500).json({ error: "Failed to delete indoor consultation entry" });
     }
   });
 
