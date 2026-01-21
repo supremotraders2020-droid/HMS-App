@@ -972,7 +972,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="care-plan" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileCheck className="h-3.5 w-3.5" />Care Plan</TabsTrigger>
                   <TabsTrigger value="tests" className="text-xs gap-1.5 data-[state=active]:bg-background"><Beaker className="h-3.5 w-3.5" />Tests</TabsTrigger>
                   <TabsTrigger value="initial-assessment" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Initial Assessment</TabsTrigger>
-                  <TabsTrigger value="indoor-consultation" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Indoor Consultation</TabsTrigger>
+                  <TabsTrigger value="indoor-consultation" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Indoor Continuation Sheet</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -5044,7 +5044,7 @@ function IndoorConsultationTab({ session }: { session: Session }) {
         <div>
           <CardTitle className="flex items-center gap-2 text-lg">
             <FileText className="h-5 w-5" />
-            Indoor Consultation Sheet
+            Indoor Continuation Sheet
           </CardTitle>
           <p className="text-sm text-muted-foreground">Daily Progress Notes & Clinical Findings</p>
         </div>
