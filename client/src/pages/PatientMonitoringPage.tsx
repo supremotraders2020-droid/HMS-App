@@ -23,8 +23,9 @@ import {
   PlusCircle, RefreshCw, Download, Stethoscope,
   Wind, Syringe, FlaskConical, ClipboardList, Baby,
   BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays, ArrowLeft,
-  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye
+  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye, Trash2, Edit
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const HOUR_SLOTS = [
   "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00",
@@ -970,6 +971,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="investigation" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Investigation</TabsTrigger>
                   <TabsTrigger value="care-plan" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileCheck className="h-3.5 w-3.5" />Care Plan</TabsTrigger>
                   <TabsTrigger value="tests" className="text-xs gap-1.5 data-[state=active]:bg-background"><Beaker className="h-3.5 w-3.5" />Tests</TabsTrigger>
+                  <TabsTrigger value="initial-assessment" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Initial Assessment</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -1022,6 +1024,9 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="tests">
                   <TestsTab sessionId={selectedSession.id} patientId={selectedSession.patientId} patientName={selectedSession.patientName} admittingConsultant={selectedSession.admittingConsultant} />
+                </TabsContent>
+                <TabsContent value="initial-assessment">
+                  <InitialAssessmentTab session={selectedSession} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -4211,5 +4216,713 @@ function ConsultantNotesDisplay({ consultantNotesLog }: { consultantNotesLog?: s
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+// ========== IPD INITIAL ASSESSMENT FORM TAB ==========
+const PAIN_SCORES = [
+  { value: 0, label: "No Hurt" },
+  { value: 2, label: "Hurts Little Bit" },
+  { value: 4, label: "Hurts Little More" },
+  { value: 6, label: "Hurts Even More" },
+  { value: 8, label: "Hurts Whole Lot" },
+  { value: 10, label: "Hurts Worst" },
+];
+
+const GCS_EYE = [
+  { value: 4, label: "Spontaneous" },
+  { value: 3, label: "To Speech" },
+  { value: 2, label: "To Pain" },
+  { value: 1, label: "No Response" },
+];
+
+const GCS_MOTOR = [
+  { value: 6, label: "Spontaneous Movements" },
+  { value: 5, label: "Localizes to pain" },
+  { value: 4, label: "Withdraws to pain" },
+  { value: 3, label: "Flexion to pain" },
+  { value: 2, label: "Extension to pain" },
+  { value: 1, label: "No Motor Response" },
+];
+
+const GCS_VERBAL = [
+  { value: 5, label: "Normal Verbal Output" },
+  { value: 4, label: "Confused" },
+  { value: 3, label: "Inappropriate words" },
+  { value: 2, label: "Incomprehensible sounds" },
+  { value: 1, label: "No Verbal Response" },
+];
+
+const INVESTIGATIONS_LIST = [
+  { key: "cbc", label: "CBC" },
+  { key: "esr", label: "ESR" },
+  { key: "urineRM", label: "URINE R/M" },
+  { key: "rft", label: "RFT" },
+  { key: "lft", label: "LFT" },
+  { key: "rbsTest", label: "RBS" },
+  { key: "fbs", label: "FBS" },
+  { key: "ppbs", label: "PPBS" },
+  { key: "electrolyte", label: "S. ELECTROLYTE" },
+  { key: "lipidProfile", label: "LIPID PROFILE" },
+  { key: "bloodCS", label: "BLOOD C/S" },
+  { key: "urineCS", label: "URINE C/S" },
+  { key: "hbsAg", label: "Hbs AG" },
+  { key: "hiv", label: "HIV" },
+  { key: "tsh", label: "TSH" },
+  { key: "t3t4", label: "T3, T4" },
+  { key: "hba1c", label: "HBA 1c" },
+  { key: "sCreatinine", label: "S. CREATININE" },
+];
+
+function InitialAssessmentTab({ session }: { session: Session }) {
+  const { toast } = useToast();
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
+  const defaultFormData = {
+    patientReceivedDate: format(new Date(), "yyyy-MM-dd"),
+    patientReceivedTime: format(new Date(), "HH:mm"),
+    patientAccompaniedBy: "Relatives",
+    contactNo: "",
+    allergies: "No",
+    allergiesDetails: "",
+    vulnerable: "No",
+    vulnerableDetails: "",
+    previousAdmission: "No",
+    previousAdmissionUnderWhom: "",
+    mlcDone: "No",
+    mlcNo: "",
+    painScore: 0,
+    complaintsHistory: JSON.stringify([{ complaint: "", originDuration: "" }]),
+    hypertension: "No", hypertensionSince: "",
+    diabetes: "No", diabetesSince: "",
+    coronaryArteryDisease: "No", coronaryArteryDiseaseSince: "",
+    cerebroVascularDisease: "No", cerebroVascularDiseaseSince: "",
+    copdBronchialAsthma: "No", copdBronchialAsthmaSince: "",
+    tuberculosis: "No", tuberculosisSince: "",
+    otherMedicalIllness: "", otherMedicalIllnessSince: "",
+    surgicalHistory: JSON.stringify([{ procedure: "", when: "", complications: "" }]),
+    surgicalHistoryNote: "",
+    smoking: "No", alcohol: "No", tobaccoChewing: "No", dietType: "Veg", otherAddictions: "",
+    familyHypertension: "No", familyDiabetes: "No", familyIhd: "No", familyCva: "No",
+    familyCopdAsthma: "No", familyTuberculosis: "No", familyOtherSpecify: "",
+    menstrualCycle: "Regular", gpla: "", lmp: "", tubectomy: "Not Done", edd: "", menarcheAge: "",
+    gcsEyeOpening: 4, gcsMotorResponse: 6, gcsVerbalResponse: 5,
+    conscious: true, oriented: true, disoriented: false,
+    pulseRate: "", bloodPressure: "", respiratoryRate: "", rbs: "", temperature: "",
+    weight: "", height: "", bmi: "",
+    pallor: "No", icterus: "No", cyanosis: "No", clubbing: "No",
+    lymphadinopathy: "No", oedema: "No", jvp: "No", heent: "",
+    cvs: "", rs: "", pa: "", cns: "", localExamination: "",
+    rectalExamination: "", rectalExaminationStatus: "Not Indicated",
+    breastExamination: "", breastExaminationStatus: "Not Indicated",
+    pelvicExamination: "", pelvicExaminationStatus: "Not Indicated",
+    woundExamination: "", woundExaminationStatus: "Not Indicated",
+    investigationsAdvised: JSON.stringify({}),
+    investigationsOthers: "",
+    provisionalDiagnosis: "",
+    treatment: "",
+    clinicalAssistantName: "",
+    clinicalAssistantDate: format(new Date(), "yyyy-MM-dd"),
+    clinicalAssistantTime: format(new Date(), "HH:mm"),
+    inchargeConsultantName: session.admittingConsultant || "",
+    inchargeConsultantDate: format(new Date(), "yyyy-MM-dd"),
+    inchargeConsultantTime: format(new Date(), "HH:mm"),
+  };
+
+  const [formData, setFormData] = useState(defaultFormData);
+
+  const { data: assessments = [], isLoading } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/initial-assessment/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/patient-monitoring/initial-assessment", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Initial Assessment saved successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/initial-assessment/${session.id}`] });
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await apiRequest("PATCH", `/api/patient-monitoring/initial-assessment/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Initial Assessment updated successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/initial-assessment/${session.id}`] });
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const resetForm = () => {
+    setFormData(defaultFormData);
+    setShowForm(false);
+    setEditingId(null);
+  };
+
+  const handleEdit = (assessment: any) => {
+    setFormData({
+      ...defaultFormData,
+      ...assessment,
+      patientReceivedDate: assessment.patientReceivedDate ? format(new Date(assessment.patientReceivedDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+      clinicalAssistantDate: assessment.clinicalAssistantDate ? format(new Date(assessment.clinicalAssistantDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+      inchargeConsultantDate: assessment.inchargeConsultantDate ? format(new Date(assessment.inchargeConsultantDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+    });
+    setEditingId(assessment.id);
+    setShowForm(true);
+  };
+
+  const handleSubmit = () => {
+    const payload = {
+      ...formData,
+      sessionId: session.id,
+      patientId: session.patientId,
+      patientName: session.patientName,
+      uhid: session.uhid,
+      age: session.age,
+      sex: session.sex,
+      ipdNo: session.ipdNo,
+      ward: session.ward,
+      bedNo: session.bedNo,
+      gcsTotal: (formData.gcsEyeOpening || 0) + (formData.gcsMotorResponse || 0) + (formData.gcsVerbalResponse || 0),
+      patientReceivedDate: formData.patientReceivedDate ? new Date(formData.patientReceivedDate) : null,
+      clinicalAssistantDate: formData.clinicalAssistantDate ? new Date(formData.clinicalAssistantDate) : null,
+      inchargeConsultantDate: formData.inchargeConsultantDate ? new Date(formData.inchargeConsultantDate) : null,
+    };
+
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const updateField = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getComplaints = (): { complaint: string; originDuration: string }[] => {
+    try {
+      return JSON.parse(formData.complaintsHistory || "[]");
+    } catch { return [{ complaint: "", originDuration: "" }]; }
+  };
+
+  const setComplaints = (complaints: { complaint: string; originDuration: string }[]) => {
+    updateField("complaintsHistory", JSON.stringify(complaints));
+  };
+
+  const getSurgicalHistory = (): { procedure: string; when: string; complications: string }[] => {
+    try {
+      return JSON.parse(formData.surgicalHistory || "[]");
+    } catch { return [{ procedure: "", when: "", complications: "" }]; }
+  };
+
+  const setSurgicalHistory = (history: { procedure: string; when: string; complications: string }[]) => {
+    updateField("surgicalHistory", JSON.stringify(history));
+  };
+
+  const getInvestigations = (): Record<string, boolean> => {
+    try {
+      return JSON.parse(formData.investigationsAdvised || "{}");
+    } catch { return {}; }
+  };
+
+  const setInvestigation = (key: string, value: boolean) => {
+    const inv = getInvestigations();
+    inv[key] = value;
+    updateField("investigationsAdvised", JSON.stringify(inv));
+  };
+
+  if (isLoading) return <div className="p-4 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ClipboardList className="h-5 w-5" />
+            IPD Initial Assessment Form
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">Comprehensive assessment on admission</p>
+        </div>
+        {!showForm && (
+          <Button onClick={() => { setFormData(defaultFormData); setEditingId(null); setShowForm(true); }} className="gap-1">
+            <Plus className="h-4 w-4" /> New Assessment
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent>
+        {showForm ? (
+          <div className="space-y-6">
+            {/* Section 1: Basic Information */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Basic Information</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div><Label>Patient Received Date</Label><Input type="date" value={formData.patientReceivedDate} onChange={(e) => updateField("patientReceivedDate", e.target.value)} /></div>
+                  <div><Label>Time</Label><Input type="time" value={formData.patientReceivedTime} onChange={(e) => updateField("patientReceivedTime", e.target.value)} /></div>
+                  <div><Label>Accompanied By</Label>
+                    <Select value={formData.patientAccompaniedBy} onValueChange={(v) => updateField("patientAccompaniedBy", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Relatives">Relatives</SelectItem>
+                        <SelectItem value="Self">Self</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Contact No.</Label><Input value={formData.contactNo} onChange={(e) => updateField("contactNo", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="flex items-center gap-3">
+                    <Label>Allergies:</Label>
+                    <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={formData.allergies === v} onChange={() => updateField("allergies", v)} />{v}</label>))}</div>
+                  </div>
+                  {formData.allergies === "Yes" && <div><Label>Details</Label><Input value={formData.allergiesDetails} onChange={(e) => updateField("allergiesDetails", e.target.value)} /></div>}
+                  <div className="flex items-center gap-3">
+                    <Label>Vulnerable:</Label>
+                    <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={formData.vulnerable === v} onChange={() => updateField("vulnerable", v)} />{v}</label>))}</div>
+                  </div>
+                  {formData.vulnerable === "Yes" && <div><Label>Details</Label><Input value={formData.vulnerableDetails} onChange={(e) => updateField("vulnerableDetails", e.target.value)} /></div>}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="flex items-center gap-3">
+                    <Label>Previous Admission:</Label>
+                    <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={formData.previousAdmission === v} onChange={() => updateField("previousAdmission", v)} />{v}</label>))}</div>
+                  </div>
+                  {formData.previousAdmission === "Yes" && <div><Label>Under Whom</Label><Input value={formData.previousAdmissionUnderWhom} onChange={(e) => updateField("previousAdmissionUnderWhom", e.target.value)} /></div>}
+                  <div className="flex items-center gap-3">
+                    <Label>MLC Done:</Label>
+                    <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={formData.mlcDone === v} onChange={() => updateField("mlcDone", v)} />{v}</label>))}</div>
+                  </div>
+                  {formData.mlcDone === "Yes" && <div><Label>MLC No.</Label><Input value={formData.mlcNo} onChange={(e) => updateField("mlcNo", e.target.value)} /></div>}
+                </div>
+                <div>
+                  <Label className="mb-2 block">Pain Score (0-10)</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {PAIN_SCORES.map(ps => (
+                      <Button key={ps.value} size="sm" variant={formData.painScore === ps.value ? "default" : "outline"} onClick={() => updateField("painScore", ps.value)}>
+                        {ps.value} - {ps.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 2: Complaints & History */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Complaints & History of Present Illness</CardTitle></CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>Complaint</TableHead>
+                      <TableHead>Origin / Duration</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {getComplaints().map((c, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{i + 1}</TableCell>
+                        <TableCell><Input value={c.complaint} onChange={(e) => { const arr = [...getComplaints()]; arr[i].complaint = e.target.value; setComplaints(arr); }} /></TableCell>
+                        <TableCell><Input value={c.originDuration} onChange={(e) => { const arr = [...getComplaints()]; arr[i].originDuration = e.target.value; setComplaints(arr); }} /></TableCell>
+                        <TableCell><Button size="icon" variant="ghost" onClick={() => { const arr = getComplaints().filter((_, idx) => idx !== i); setComplaints(arr.length ? arr : [{ complaint: "", originDuration: "" }]); }}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <Button size="sm" variant="outline" onClick={() => setComplaints([...getComplaints(), { complaint: "", originDuration: "" }])} className="mt-2"><Plus className="h-4 w-4 mr-1" />Add Row</Button>
+              </CardContent>
+            </Card>
+
+            {/* Section 3: Medical History */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Medical History</CardTitle></CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Particulars</TableHead>
+                      <TableHead className="w-32">Status</TableHead>
+                      <TableHead>Since When</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[
+                      { label: "Hypertension", field: "hypertension", sinceField: "hypertensionSince" },
+                      { label: "Diabetes", field: "diabetes", sinceField: "diabetesSince" },
+                      { label: "Coronary Artery Disease", field: "coronaryArteryDisease", sinceField: "coronaryArteryDiseaseSince" },
+                      { label: "Cerebro Vascular Disease", field: "cerebroVascularDisease", sinceField: "cerebroVascularDiseaseSince" },
+                      { label: "COPD / Bronchial Asthma", field: "copdBronchialAsthma", sinceField: "copdBronchialAsthmaSince" },
+                      { label: "Tuberculosis", field: "tuberculosis", sinceField: "tuberculosisSince" },
+                    ].map(item => (
+                      <TableRow key={item.field}>
+                        <TableCell>{item.label}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={(formData as any)[item.field] === v} onChange={() => updateField(item.field, v)} />{v}</label>))}</div>
+                        </TableCell>
+                        <TableCell><Input value={(formData as any)[item.sinceField]} onChange={(e) => updateField(item.sinceField, e.target.value)} placeholder="e.g., 5 years" /></TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow>
+                      <TableCell><Input value={formData.otherMedicalIllness} onChange={(e) => updateField("otherMedicalIllness", e.target.value)} placeholder="Any Other (Significant Medical Illness)" /></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell><Input value={formData.otherMedicalIllnessSince} onChange={(e) => updateField("otherMedicalIllnessSince", e.target.value)} /></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Section 4: Surgical History */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Surgical History</CardTitle></CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>Name of Surgical Procedure</TableHead>
+                      <TableHead>Undergone When</TableHead>
+                      <TableHead>Any Complications</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {getSurgicalHistory().map((s, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{i + 1}</TableCell>
+                        <TableCell><Input value={s.procedure} onChange={(e) => { const arr = [...getSurgicalHistory()]; arr[i].procedure = e.target.value; setSurgicalHistory(arr); }} /></TableCell>
+                        <TableCell><Input value={s.when} onChange={(e) => { const arr = [...getSurgicalHistory()]; arr[i].when = e.target.value; setSurgicalHistory(arr); }} /></TableCell>
+                        <TableCell><Input value={s.complications} onChange={(e) => { const arr = [...getSurgicalHistory()]; arr[i].complications = e.target.value; setSurgicalHistory(arr); }} /></TableCell>
+                        <TableCell><Button size="icon" variant="ghost" onClick={() => { const arr = getSurgicalHistory().filter((_, idx) => idx !== i); setSurgicalHistory(arr.length ? arr : [{ procedure: "", when: "", complications: "" }]); }}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <Button size="sm" variant="outline" onClick={() => setSurgicalHistory([...getSurgicalHistory(), { procedure: "", when: "", complications: "" }])} className="mt-2"><Plus className="h-4 w-4 mr-1" />Add Row</Button>
+                <div className="mt-3">
+                  <Label>Note (In case of complication please mention the place of surgery)</Label>
+                  <Textarea value={formData.surgicalHistoryNote} onChange={(e) => updateField("surgicalHistoryNote", e.target.value)} rows={2} />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 5: Personal & Family History */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader><CardTitle className="text-base">Personal History</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  {[
+                    { label: "Smoking", field: "smoking" },
+                    { label: "Alcohol", field: "alcohol" },
+                    { label: "Tobacco Chewing", field: "tobaccoChewing" },
+                  ].map(item => (
+                    <div key={item.field} className="flex items-center justify-between">
+                      <Label>{item.label}</Label>
+                      <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={(formData as any)[item.field] === v} onChange={() => updateField(item.field, v)} />{v}</label>))}</div>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between">
+                    <Label>Diet</Label>
+                    <div className="flex gap-2">{["Veg", "Non-veg"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={formData.dietType === v} onChange={() => updateField("dietType", v)} />{v}</label>))}</div>
+                  </div>
+                  <div><Label>Other Addictions</Label><Input value={formData.otherAddictions} onChange={(e) => updateField("otherAddictions", e.target.value)} /></div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Family History</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  {[
+                    { label: "Hypertension", field: "familyHypertension" },
+                    { label: "Diabetes", field: "familyDiabetes" },
+                    { label: "IHD", field: "familyIhd" },
+                    { label: "CVA", field: "familyCva" },
+                    { label: "COPD/B Asthma", field: "familyCopdAsthma" },
+                    { label: "Tuberculosis", field: "familyTuberculosis" },
+                  ].map(item => (
+                    <div key={item.field} className="flex items-center justify-between">
+                      <Label>{item.label}</Label>
+                      <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={(formData as any)[item.field] === v} onChange={() => updateField(item.field, v)} />{v}</label>))}</div>
+                    </div>
+                  ))}
+                  <div><Label>Other Specify</Label><Input value={formData.familyOtherSpecify} onChange={(e) => updateField("familyOtherSpecify", e.target.value)} /></div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Section 6: Menstrual & Obstetric History */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Menstrual History & Obstetric History</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  <div><Label>Cycle</Label>
+                    <Select value={formData.menstrualCycle} onValueChange={(v) => updateField("menstrualCycle", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Regular">Regular</SelectItem>
+                        <SelectItem value="Irregular">Irregular</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>GPLA</Label><Input value={formData.gpla} onChange={(e) => updateField("gpla", e.target.value)} /></div>
+                  <div><Label>LMP</Label><Input value={formData.lmp} onChange={(e) => updateField("lmp", e.target.value)} /></div>
+                  <div><Label>Tubectomy</Label>
+                    <Select value={formData.tubectomy} onValueChange={(v) => updateField("tubectomy", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Done">Done</SelectItem>
+                        <SelectItem value="Not Done">Not Done</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>EDD</Label><Input value={formData.edd} onChange={(e) => updateField("edd", e.target.value)} /></div>
+                  <div><Label>Menarche Age (yr)</Label><Input value={formData.menarcheAge} onChange={(e) => updateField("menarcheAge", e.target.value)} /></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 7: Glasgow Coma Scale */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  Glasgow Coma Scale: Score <Badge variant="secondary">{(formData.gcsEyeOpening || 0) + (formData.gcsMotorResponse || 0) + (formData.gcsVerbalResponse || 0)}/15</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="mb-2 block">Eye Opening</Label>
+                    {GCS_EYE.map(g => (
+                      <label key={g.value} className="flex items-center gap-2 mb-1">
+                        <input type="radio" checked={formData.gcsEyeOpening === g.value} onChange={() => updateField("gcsEyeOpening", g.value)} />
+                        {g.label} ({g.value})
+                      </label>
+                    ))}
+                  </div>
+                  <div>
+                    <Label className="mb-2 block">Motor Response</Label>
+                    {GCS_MOTOR.map(g => (
+                      <label key={g.value} className="flex items-center gap-2 mb-1">
+                        <input type="radio" checked={formData.gcsMotorResponse === g.value} onChange={() => updateField("gcsMotorResponse", g.value)} />
+                        {g.label} ({g.value})
+                      </label>
+                    ))}
+                  </div>
+                  <div>
+                    <Label className="mb-2 block">Verbal Response</Label>
+                    {GCS_VERBAL.map(g => (
+                      <label key={g.value} className="flex items-center gap-2 mb-1">
+                        <input type="radio" checked={formData.gcsVerbalResponse === g.value} onChange={() => updateField("gcsVerbalResponse", g.value)} />
+                        {g.label} ({g.value})
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 8: General Examination */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">General Examination</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2"><Checkbox checked={formData.conscious} onCheckedChange={(c) => updateField("conscious", c)} />Conscious</label>
+                  <label className="flex items-center gap-2"><Checkbox checked={formData.oriented} onCheckedChange={(c) => updateField("oriented", c)} />Oriented</label>
+                  <label className="flex items-center gap-2"><Checkbox checked={formData.disoriented} onCheckedChange={(c) => updateField("disoriented", c)} />Disoriented</label>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <div><Label>PR (Beats/Min)</Label><Input value={formData.pulseRate} onChange={(e) => updateField("pulseRate", e.target.value)} /></div>
+                  <div><Label>BP (mm of Hg)</Label><Input value={formData.bloodPressure} onChange={(e) => updateField("bloodPressure", e.target.value)} /></div>
+                  <div><Label>RR (Breaths/min)</Label><Input value={formData.respiratoryRate} onChange={(e) => updateField("respiratoryRate", e.target.value)} /></div>
+                  <div><Label>RBS</Label><Input value={formData.rbs} onChange={(e) => updateField("rbs", e.target.value)} /></div>
+                  <div><Label>TEMP (F)</Label><Input value={formData.temperature} onChange={(e) => updateField("temperature", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div><Label>WT (Kgs)</Label><Input value={formData.weight} onChange={(e) => updateField("weight", e.target.value)} /></div>
+                  <div><Label>HEIGHT (cms)</Label><Input value={formData.height} onChange={(e) => updateField("height", e.target.value)} /></div>
+                  <div><Label>BMI</Label><Input value={formData.bmi} onChange={(e) => updateField("bmi", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: "PALLOR", field: "pallor" },
+                    { label: "ICTERUS", field: "icterus" },
+                    { label: "CYANOSIS", field: "cyanosis" },
+                    { label: "CLUBBING", field: "clubbing" },
+                    { label: "LYMPHADINOPATHY", field: "lymphadinopathy" },
+                    { label: "OEDEMA", field: "oedema" },
+                    { label: "JVP", field: "jvp" },
+                  ].map(item => (
+                    <div key={item.field} className="flex items-center justify-between">
+                      <Label className="text-xs">{item.label}</Label>
+                      <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1 text-xs"><input type="radio" checked={(formData as any)[item.field] === v} onChange={() => updateField(item.field, v)} />{v}</label>))}</div>
+                    </div>
+                  ))}
+                </div>
+                <div><Label>Head/EYES/EARS/NOSE/THROAT/SKIN</Label><Textarea value={formData.heent} onChange={(e) => updateField("heent", e.target.value)} rows={2} /></div>
+              </CardContent>
+            </Card>
+
+            {/* Section 9: Systemic Examination */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Systemic Examination</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <div><Label>CVS</Label><Textarea value={formData.cvs} onChange={(e) => updateField("cvs", e.target.value)} rows={2} /></div>
+                <div><Label>RS</Label><Textarea value={formData.rs} onChange={(e) => updateField("rs", e.target.value)} rows={2} /></div>
+                <div><Label>PA</Label><Textarea value={formData.pa} onChange={(e) => updateField("pa", e.target.value)} rows={2} /></div>
+                <div><Label>CNS</Label><Textarea value={formData.cns} onChange={(e) => updateField("cns", e.target.value)} rows={2} /></div>
+                <div><Label>Local Examination</Label><Textarea value={formData.localExamination} onChange={(e) => updateField("localExamination", e.target.value)} rows={2} /></div>
+              </CardContent>
+            </Card>
+
+            {/* Section 10: Special Examinations */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Special Examinations</CardTitle></CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Examination</TableHead>
+                      <TableHead>Findings</TableHead>
+                      <TableHead className="w-40">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[
+                      { label: "Rectal Examination", field: "rectalExamination", statusField: "rectalExaminationStatus" },
+                      { label: "Examination of Breasts", field: "breastExamination", statusField: "breastExaminationStatus" },
+                      { label: "Pelvic Examination / External Genitalia", field: "pelvicExamination", statusField: "pelvicExaminationStatus" },
+                      { label: "Local Examination of Wound", field: "woundExamination", statusField: "woundExaminationStatus" },
+                    ].map(item => (
+                      <TableRow key={item.field}>
+                        <TableCell>{item.label}</TableCell>
+                        <TableCell><Input value={(formData as any)[item.field]} onChange={(e) => updateField(item.field, e.target.value)} /></TableCell>
+                        <TableCell>
+                          <Select value={(formData as any)[item.statusField]} onValueChange={(v) => updateField(item.statusField, v)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Done">Done</SelectItem>
+                              <SelectItem value="Declined">Declined</SelectItem>
+                              <SelectItem value="Not Indicated">Not Indicated</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Section 11: Investigation Advised */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Investigation Advised</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  {INVESTIGATIONS_LIST.map(inv => (
+                    <label key={inv.key} className="flex items-center gap-2">
+                      <Checkbox checked={getInvestigations()[inv.key] || false} onCheckedChange={(c) => setInvestigation(inv.key, !!c)} />
+                      <span className="text-sm">{inv.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-3"><Label>Others</Label><Input value={formData.investigationsOthers} onChange={(e) => updateField("investigationsOthers", e.target.value)} /></div>
+              </CardContent>
+            </Card>
+
+            {/* Section 12: Provisional Diagnosis & Treatment */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Provisional Diagnosis & Treatment</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <div><Label>Provisional Diagnosis</Label><Textarea value={formData.provisionalDiagnosis} onChange={(e) => updateField("provisionalDiagnosis", e.target.value)} rows={3} /></div>
+                <div><Label>Treatment (E.g. Medication, IV Fluid, Monitoring, Diet, Position etc.)</Label><Textarea value={formData.treatment} onChange={(e) => updateField("treatment", e.target.value)} rows={3} /></div>
+              </CardContent>
+            </Card>
+
+            {/* Section 13: Assessment Finished */}
+            <Card>
+              <CardHeader><CardTitle className="text-base">Assessment Finished</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-4 gap-3">
+                  <div className="md:col-span-2"><Label>Name of Clinical Assistant: Dr.</Label><Input value={formData.clinicalAssistantName} onChange={(e) => updateField("clinicalAssistantName", e.target.value)} /></div>
+                  <div><Label>Date</Label><Input type="date" value={formData.clinicalAssistantDate} onChange={(e) => updateField("clinicalAssistantDate", e.target.value)} /></div>
+                  <div><Label>Time</Label><Input type="time" value={formData.clinicalAssistantTime} onChange={(e) => updateField("clinicalAssistantTime", e.target.value)} /></div>
+                </div>
+                <div className="grid md:grid-cols-4 gap-3">
+                  <div className="md:col-span-2"><Label>Incharge Consultant Name: Dr.</Label><Input value={formData.inchargeConsultantName} onChange={(e) => updateField("inchargeConsultantName", e.target.value)} /></div>
+                  <div><Label>Date</Label><Input type="date" value={formData.inchargeConsultantDate} onChange={(e) => updateField("inchargeConsultantDate", e.target.value)} /></div>
+                  <div><Label>Time</Label><Input type="time" value={formData.inchargeConsultantTime} onChange={(e) => updateField("inchargeConsultantTime", e.target.value)} /></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={resetForm}>Cancel</Button>
+              <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+                {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                {editingId ? "Update Assessment" : "Save Assessment"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          /* Display existing assessments */
+          assessments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No initial assessment recorded yet. Click "New Assessment" to create one.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {assessments.map((assessment: any) => (
+                <Card key={assessment.id}>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base">
+                        Assessment - {assessment.createdAt ? format(new Date(assessment.createdAt), "dd MMM yyyy HH:mm") : ""}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">Provisional Diagnosis: {assessment.provisionalDiagnosis || "Not specified"}</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(assessment)}>
+                      <Edit className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Pain Score</Label>
+                        <p>{assessment.painScore ?? "N/A"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground text-xs">GCS Score</Label>
+                        <p>{assessment.gcsTotal ?? "N/A"}/15</p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Incharge Consultant</Label>
+                        <p>{assessment.inchargeConsultantName || "N/A"}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )
+        )}
+      </CardContent>
+    </Card>
   );
 }
