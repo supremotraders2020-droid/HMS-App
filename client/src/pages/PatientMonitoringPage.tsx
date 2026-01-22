@@ -862,18 +862,14 @@ export default function PatientMonitoringPage() {
                       }
                     };
                     
-                    const [vitals, injections, mar, ventilator, abgLab, intake, output, diabetic, onceOnly, shiftNotes, airway, dutyStaff, allergies, investigationChart, initialAssessment, indoorConsultation, doctorsVisit, surgeryNotes, nursingProgress, carePlan] = await Promise.all([
+                    const [vitals, injections, mar, intake, output, diabetic, shiftNotes, dutyStaff, allergies, investigationChart, initialAssessment, indoorConsultation, doctorsVisit, surgeryNotes, nursingProgress, carePlan, tests] = await Promise.all([
                       fetchData(`/api/patient-monitoring/vitals/${sessionId}`),
                       fetchData(`/api/patient-monitoring/inotropes/${sessionId}`),
                       fetchData(`/api/patient-monitoring/mar/${sessionId}`),
-                      fetchData(`/api/patient-monitoring/ventilator/${sessionId}`),
-                      fetchData(`/api/patient-monitoring/abg-lab/${sessionId}`),
                       fetchData(`/api/patient-monitoring/intake/${sessionId}`),
                       fetchData(`/api/patient-monitoring/output/${sessionId}`),
                       fetchData(`/api/patient-monitoring/diabetic/${sessionId}`),
-                      fetchData(`/api/patient-monitoring/once-only/${sessionId}`),
                       fetchData(`/api/patient-monitoring/shift-notes/${sessionId}`),
-                      fetchData(`/api/patient-monitoring/airway/${sessionId}`),
                       fetchData(`/api/patient-monitoring/duty-staff/${sessionId}`),
                       fetchData(`/api/patient-monitoring/allergies/${sessionId}`),
                       fetchData(`/api/patient-monitoring/sessions/${sessionId}/investigation-chart`),
@@ -882,7 +878,8 @@ export default function PatientMonitoringPage() {
                       fetchData(`/api/patient-monitoring/doctors-visit/${sessionId}`),
                       fetchData(`/api/patient-monitoring/surgery-notes/${sessionId}`),
                       fetchData(`/api/patient-monitoring/nursing-progress/${sessionId}`),
-                      fetchSingleRecord(`/api/patient-monitoring/care-plan/${sessionId}`)
+                      fetchSingleRecord(`/api/patient-monitoring/care-plan/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/tests/${sessionId}`)
                     ]);
                     
                     const formatDate = (d: string | null | undefined) => {
@@ -1005,10 +1002,6 @@ export default function PatientMonitoringPage() {
                           `<tr><td>${r._index}</td><td>${r.checkTime || formatTime(r.createdAt)}</td><td>${r.bloodSugarLevel || '-'}</td><td>${r.insulinType || '-'}</td><td>${r.insulinDose || '-'}</td><td>${r.alertType || '-'}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('ONCE-ONLY MEDICATIONS', ['S.No', 'Drug Name', 'Dose', 'Route', 'Indication', 'Given At', 'Given By'], onceOnly, (r: any) => 
-                          `<tr><td>${r._index}</td><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.indication || '-'}</td><td>${formatTime(r.givenAt || r.createdAt)}</td><td>${r.givenBy || '-'}</td></tr>`
-                        )}
-
                         ${generateTable('SHIFT NOTES', ['S.No', 'Shift', 'Notes', 'Staff', 'Time'], shiftNotes, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.shift || '-'}</td><td>${r.notes || '-'}</td><td>${r.nurseName || '-'}</td><td>${formatTime(r.createdAt)}</td></tr>`
                         )}
@@ -1105,16 +1098,8 @@ export default function PatientMonitoringPage() {
                           </table>
                         ` : ''}
 
-                        ${generateTable('VENTILATOR SETTINGS', ['S.No', 'Time', 'Mode', 'FiO2 %', 'PEEP', 'Tidal Vol', 'RR Set'], ventilator, (r: any) => 
-                          `<tr><td>${r._index}</td><td>${formatTime(r.createdAt)}</td><td>${r.mode || '-'}</td><td>${r.fio2 || '-'}</td><td>${r.peep || '-'}</td><td>${r.tidalVolume || '-'}</td><td>${r.respiratoryRateSet || '-'}</td></tr>`
-                        )}
-
-                        ${generateTable('ABG / LAB VALUES', ['S.No', 'Time', 'pH', 'pCO2', 'pO2', 'HCO3', 'Lactate', 'Na', 'K'], abgLab, (r: any) => 
-                          `<tr><td>${r._index}</td><td>${formatTime(r.createdAt)}</td><td>${r.ph || '-'}</td><td>${r.pco2 || '-'}</td><td>${r.po2 || '-'}</td><td>${r.hco3 || '-'}</td><td>${r.lactate || '-'}</td><td>${r.sodium || '-'}</td><td>${r.potassium || '-'}</td></tr>`
-                        )}
-
-                        ${generateTable('LINES & TUBES / AIRWAY', ['S.No', 'Type', 'Site', 'Size', 'Inserted Date', 'Due Date', 'Status'], airway, (r: any) => 
-                          `<tr><td>${r._index}</td><td>${r.lineType || '-'}</td><td>${r.site || '-'}</td><td>${r.size || '-'}</td><td>${formatDate(r.insertedDate)}</td><td>${formatDate(r.dueDate)}</td><td>${r.status || '-'}</td></tr>`
+                        ${generateTable('TESTS / DIAGNOSTICS', ['S.No', 'Test Name', 'Status', 'Priority', 'Ordered By', 'Date'], tests, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.testName || '-'}</td><td>${r.status || '-'}</td><td>${r.priority || '-'}</td><td>${r.orderedBy || '-'}</td><td>${formatDate(r.createdAt)}</td></tr>`
                         )}
 
                         <div class="signature-section">
@@ -1295,8 +1280,8 @@ function OverviewTab({ session }: { session: Session }) {
     enabled: !!session.id
   });
 
-  const { data: investigation } = useQuery<any>({
-    queryKey: [`/api/patient-monitoring/investigation/${session.id}`],
+  const { data: investigation = [] } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/sessions/${session.id}/investigation-chart`],
     enabled: !!session.id
   });
 
@@ -1350,7 +1335,7 @@ function OverviewTab({ session }: { session: Session }) {
     { name: "Shift Notes", icon: FileText, count: shiftNotes.length, color: "blue", description: "Nursing shift notes" },
     { name: "Nurse Notes", icon: Users, count: dutyStaff.length, color: "indigo", description: "Duty staff assignments" },
     { name: "Allergies", icon: AlertTriangle, count: allergies ? 1 : 0, color: "red", description: "Allergies & Precautions" },
-    { name: "Investigation", icon: ClipboardList, count: investigation ? 1 : 0, color: "cyan", description: "Lab investigations" },
+    { name: "Investigation", icon: ClipboardList, count: investigation.length, color: "cyan", description: "Lab investigations" },
     { name: "Care Plan", icon: FileCheck, count: carePlan ? 1 : 0, color: "emerald", description: "Treatment plan" },
     { name: "Tests", icon: Beaker, count: tests.length, color: "violet", description: "Diagnostic tests" },
     { name: "Initial Assessment", icon: ClipboardList, count: initialAssessment ? 1 : 0, color: "sky", description: "Admission assessment" },
