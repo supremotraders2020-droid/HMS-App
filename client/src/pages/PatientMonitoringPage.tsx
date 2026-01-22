@@ -3711,18 +3711,30 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
 function InvestigationChartTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newEntry, setNewEntry] = useState({
+  const [activeSection, setActiveSection] = useState("hematology");
+  
+  const emptyEntry = {
     investigationDate: new Date().toISOString().split("T")[0],
-    bloodGroup: "", hiv: "", hbsag: "", hcv: "",
-    hbPcv: "", tlc: "", dlcPlemb: "", esr: "", platelets: "", parasites: "", btCt: "", ptAptt: "",
-    bloodSugarFasting: "", ppRandom: "",
-    bun: "", srCreatinine: "", srNaKCl: "", srCalPhosMag: "", acidPhosUricAcid: "",
-    srBilirubinTotal: "", bilirubinDirectIndirect: "", sgotSgpt: "", srAlkphos: "", srProteinsTotal: "", albumin: "", viralMarkers: "", srAmylaseLipase: "",
-    cpkMb: "", srLdh: "", tropi: "",
-    totalCholesterol: "", triglycerides: "", hdlLdlVldl: "",
-    urineRoutine: "", stoolRoutine: "", sputumExamination: "",
-    ecg: "", echo2d: "", usg: "", doppler: "", xrays: "", ctScanMri: "", histopathology: "", fluidAnalysis: "", otherInvestigations: ""
-  });
+    wbc: "", neutrophilsPercent: "", lymphocytesPercent: "", platelets: "", hb: "", esr: "", crp: "", il6: "", procalcitonin: "", ldh: "", ferritin: "", serumIron: "", tibc: "", bslRandom: "", urineRoutine: "", urineProteins: "", urinePusCells: "",
+    hiv: "", hbsag: "", hcv: "", malaria: "", dengueNs1: "", dengueIgG: "", dengueIgM: "", chikungunyaIgG: "", chikungunyaIgM: "", weilFelix: "", widal: "", hPylori: "", hba1c: "", meanGlucose: "",
+    bloodUrea: "", creatinine: "", sodiumNa: "", potassiumK: "", calcium: "", phosphorus: "", uricAcid: "",
+    troponin: "", cpkMb: "", ntProBnp: "",
+    totalCholesterol: "", triglycerides: "", hdl: "", ldlDirectLdl: "",
+    totalBilirubin: "", directBilirubin: "", indirectBilirubin: "", sgot: "", sgpt: "", alkPo4: "", totalProteins: "", albumin: "", cholinesterase: "", ggtp: "", ammonia: "", amylase: "", lipase: "",
+    bleedingTime: "", clottingTime: "", prothrombinTime: "", inr: "", aptt: "", dDimer: "",
+    bloodGroup: "", rhFactor: "",
+    tsh: "", t3: "", t4: "", ft3: "", ft4: "", lh: "", fsh: "",
+    abgDate: "", abgPh: "", abgPaco2: "", abgPao2: "", abgHco3: "", abgO2Saturation: "", abgLactate: "",
+    usgRk: "", usgLk: "", usgProstate: "", usgResUrine: "", usgFindings: "",
+    chestXrayFindings: "", otherXrayFindings: "",
+    ecgFindings: "",
+    echoLvef: "", echoIvs: "", echoLvpw: "", echoEe: "", echoFindings: "",
+    angioLtMain: "", angioLad: "", angioLcx: "", angioRca: "", angioFindings: "",
+    ctScanFindings: "", mriFindings: "", otherInvestigations: "",
+    bodyFluidType: "", bodyFluidOrganism: "", bodyFluidSensitivity: "", bodyFluidTlc: "", bodyFluidRbc: "", bodyFluidSugar: "", bodyFluidProteins: ""
+  };
+  
+  const [newEntry, setNewEntry] = useState(emptyEntry);
 
   const { data: investigations = [], refetch } = useQuery<any[]>({
     queryKey: ["/api/patient-monitoring/sessions", sessionId, "investigation-chart"]
@@ -3733,51 +3745,116 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
     onSuccess: () => {
       refetch();
       setShowAddForm(false);
-      setNewEntry({ investigationDate: new Date().toISOString().split("T")[0], bloodGroup: "", hiv: "", hbsag: "", hcv: "", hbPcv: "", tlc: "", dlcPlemb: "", esr: "", platelets: "", parasites: "", btCt: "", ptAptt: "", bloodSugarFasting: "", ppRandom: "", bun: "", srCreatinine: "", srNaKCl: "", srCalPhosMag: "", acidPhosUricAcid: "", srBilirubinTotal: "", bilirubinDirectIndirect: "", sgotSgpt: "", srAlkphos: "", srProteinsTotal: "", albumin: "", viralMarkers: "", srAmylaseLipase: "", cpkMb: "", srLdh: "", tropi: "", totalCholesterol: "", triglycerides: "", hdlLdlVldl: "", urineRoutine: "", stoolRoutine: "", sputumExamination: "", ecg: "", echo2d: "", usg: "", doppler: "", xrays: "", ctScanMri: "", histopathology: "", fluidAnalysis: "", otherInvestigations: "" });
+      setNewEntry(emptyEntry);
       toast({ title: "Investigation Entry Added" });
     },
   });
 
+  const HEMATOLOGY_FIELDS = [
+    { key: "wbc", label: "WBC" }, { key: "neutrophilsPercent", label: "NEUTROPHILS %" }, { key: "lymphocytesPercent", label: "LYMPHOCYTES %" },
+    { key: "platelets", label: "PLATELETS" }, { key: "hb", label: "HB" }, { key: "esr", label: "ESR" },
+    { key: "crp", label: "CRP" }, { key: "il6", label: "IL-6" }, { key: "procalcitonin", label: "PRO-CALCITONIN" },
+    { key: "ldh", label: "LDH" }, { key: "ferritin", label: "FERRITIN" }, { key: "serumIron", label: "SERUM IRON" },
+    { key: "tibc", label: "TIBC" }, { key: "bslRandom", label: "BSL-R" }, { key: "urineRoutine", label: "URINE ROUTINE" }
+  ];
+
+  const INFECTION_FIELDS = [
+    { key: "hiv", label: "HIV" }, { key: "hbsag", label: "HBsAg" }, { key: "hcv", label: "HCV" }, { key: "malaria", label: "Malaria" },
+    { key: "dengueNs1", label: "Dengue NS1" }, { key: "dengueIgG", label: "Dengue IgG" }, { key: "dengueIgM", label: "Dengue IgM" },
+    { key: "chikungunyaIgG", label: "Chikungunya IgG" }, { key: "chikungunyaIgM", label: "Chikungunya IgM" },
+    { key: "weilFelix", label: "Weil-Felix" }, { key: "widal", label: "Widal" }, { key: "hPylori", label: "H.Pylori" },
+    { key: "hba1c", label: "HbA1C" }, { key: "meanGlucose", label: "Mean Glucose" }, { key: "urineProteins", label: "PROTEINS" }, { key: "urinePusCells", label: "PUS CELLS" }
+  ];
+
+  const RENAL_FIELDS = [
+    { key: "bloodUrea", label: "BLOOD UREA" }, { key: "creatinine", label: "CREATININE" }, { key: "sodiumNa", label: "NA" },
+    { key: "potassiumK", label: "K" }, { key: "calcium", label: "CALCIUM" }, { key: "phosphorus", label: "PHOSPHORUS" }, { key: "uricAcid", label: "URIC ACID" }
+  ];
+
+  const CARDIAC_FIELDS = [
+    { key: "troponin", label: "TROPONIN" }, { key: "cpkMb", label: "CPK-MB" }, { key: "ntProBnp", label: "NT PRO BNP" }
+  ];
+
+  const LIPID_FIELDS = [
+    { key: "totalCholesterol", label: "TOTAL CHOLESTEROL" }, { key: "triglycerides", label: "TRIGLYCERIDES" },
+    { key: "hdl", label: "HDL" }, { key: "ldlDirectLdl", label: "LDL/DIRECT LDL" }
+  ];
+
+  const LIVER_FIELDS = [
+    { key: "totalBilirubin", label: "TOTAL BILIRUBIN" }, { key: "directBilirubin", label: "DIRECT BILIRUBIN" }, { key: "indirectBilirubin", label: "INDIRECT BILIRUBIN" },
+    { key: "sgot", label: "SGOT" }, { key: "sgpt", label: "SGPT" }, { key: "alkPo4", label: "ALK. PO4" },
+    { key: "totalProteins", label: "TOTAL PROTEINS" }, { key: "albumin", label: "ALBUMIN" }, { key: "cholinesterase", label: "CHOLINESTERASE" },
+    { key: "ggtp", label: "GGTP" }, { key: "ammonia", label: "AMMONIA" }, { key: "amylase", label: "AMYLASE" }, { key: "lipase", label: "LIPASE" }
+  ];
+
+  const COAGULATION_FIELDS = [
+    { key: "bleedingTime", label: "BLEEDING TIME" }, { key: "clottingTime", label: "CLOTTING TIME" }, { key: "prothrombinTime", label: "PROTHROMBIN TIME" },
+    { key: "inr", label: "INR" }, { key: "aptt", label: "aPTT" }, { key: "dDimer", label: "D-DIMER" }
+  ];
+
+  const BLOOD_GROUP_FIELDS = [
+    { key: "bloodGroup", label: "BLOOD GROUP" }, { key: "rhFactor", label: "RH FACTOR" }
+  ];
+
+  const HORMONE_FIELDS = [
+    { key: "tsh", label: "TSH" }, { key: "t3", label: "T3" }, { key: "t4", label: "T4" },
+    { key: "ft3", label: "FT3" }, { key: "ft4", label: "FT4" }, { key: "lh", label: "LH" }, { key: "fsh", label: "FSH" }
+  ];
+
+  const ABG_FIELDS = [
+    { key: "abgDate", label: "DATE" }, { key: "abgPh", label: "PH" }, { key: "abgPaco2", label: "PaCO2" },
+    { key: "abgPao2", label: "PaO2" }, { key: "abgHco3", label: "HCO3" }, { key: "abgO2Saturation", label: "O2 SATURATION" }, { key: "abgLactate", label: "LACTATE" }
+  ];
+
+  const USG_FIELDS = [
+    { key: "usgRk", label: "RK" }, { key: "usgLk", label: "LK" }, { key: "usgProstate", label: "PROSTATE" }, { key: "usgResUrine", label: "RES. URINE" }
+  ];
+
+  const ECHO_FIELDS = [
+    { key: "echoLvef", label: "LVEF" }, { key: "echoIvs", label: "IVS" }, { key: "echoLvpw", label: "LVPW" }, { key: "echoEe", label: "E/E" }
+  ];
+
+  const ANGIO_FIELDS = [
+    { key: "angioLtMain", label: "LT MAIN" }, { key: "angioLad", label: "LAD" }, { key: "angioLcx", label: "LCX" }, { key: "angioRca", label: "RCA" }
+  ];
+
+  const BODY_FLUID_FIELDS = [
+    { key: "bodyFluidType", label: "Fluid Type (CSF/Pleural/Sputum/BAL/etc.)" },
+    { key: "bodyFluidOrganism", label: "ORGANISM" }, { key: "bodyFluidSensitivity", label: "SENSITIVITY" },
+    { key: "bodyFluidTlc", label: "TLC" }, { key: "bodyFluidRbc", label: "RBC" }, { key: "bodyFluidSugar", label: "SUGAR" }, { key: "bodyFluidProteins", label: "PROTEINS" }
+  ];
+
+  const SECTION_TABS = [
+    { id: "hematology", label: "Hematology & Infection", icon: Droplets },
+    { id: "renal", label: "Renal & Cardiac", icon: Heart },
+    { id: "liver", label: "Liver & Lipid", icon: Activity },
+    { id: "coagulation", label: "Coagulation & Hormones", icon: Beaker },
+    { id: "abg", label: "ABG & Imaging", icon: Scan },
+    { id: "bodyfluid", label: "Body Fluids", icon: ClipboardList }
+  ];
+
   const LAB_SECTIONS = [
-    { title: "Screening", fields: [
-      { key: "bloodGroup", label: "Blood Group" }, { key: "hiv", label: "HIV" }, { key: "hbsag", label: "HBSAg" }, { key: "hcv", label: "HCV" }
-    ]},
-    { title: "HAEMATOLOGY", fields: [
-      { key: "hbPcv", label: "HB / PCV" }, { key: "tlc", label: "TLC" }, { key: "dlcPlemb", label: "DLC - P/L/E/M/B" }, { key: "esr", label: "ESR" },
-      { key: "platelets", label: "PLATELETS" }, { key: "parasites", label: "PARASITES" }, { key: "btCt", label: "BT / CT" }, { key: "ptAptt", label: "PT / APTT" },
-      { key: "bloodSugarFasting", label: "BLOOD SUGAR FASTING" }, { key: "ppRandom", label: "PP / RANDOM" }
-    ]},
-    { title: "RENAL FUNCTION TESTS", fields: [
-      { key: "bun", label: "BUN" }, { key: "srCreatinine", label: "SR. CREATININE" }, { key: "srNaKCl", label: "SR. NA / K / CL" },
-      { key: "srCalPhosMag", label: "SR. CAL. / PHOS. / MAG." }, { key: "acidPhosUricAcid", label: "ACID PHOS. / URIC ACID" }
-    ]},
-    { title: "LIVER FUNCTION TESTS", fields: [
-      { key: "srBilirubinTotal", label: "SR. BILIRUBIN - TOTAL" }, { key: "bilirubinDirectIndirect", label: "DIRECT / INDIRECT" },
-      { key: "sgotSgpt", label: "S.G.O.T. / S.G.P.T." }, { key: "srAlkphos", label: "SR. ALKPHOS." },
-      { key: "srProteinsTotal", label: "SR. PROTEINS - TOTAL" }, { key: "albumin", label: "ALBUMIN" },
-      { key: "viralMarkers", label: "VIRAL MARKERS" }, { key: "srAmylaseLipase", label: "SR. AMYLASE / LIPASE" }
-    ]},
-    { title: "CARDIAC ENZYMES", fields: [
-      { key: "cpkMb", label: "CPK MB" }, { key: "srLdh", label: "SR. LDH" }, { key: "tropi", label: "TROPI" }
-    ]},
-    { title: "LIPID PROFILE", fields: [
-      { key: "totalCholesterol", label: "TOTAL CHOLESTEROL" }, { key: "triglycerides", label: "TRIGLYCERIDES" }, { key: "hdlLdlVldl", label: "HDL / LDL / VLDL" }
-    ]},
-    { title: "OTHER TESTS", fields: [
-      { key: "urineRoutine", label: "URINE ROUTINE" }, { key: "stoolRoutine", label: "STOOL ROUTINE" }, { key: "sputumExamination", label: "SPUTUM EXAMINATION" }
-    ]}
+    { title: "HEMATOLOGY & ACUTE PHASE PROTEINS", fields: HEMATOLOGY_FIELDS },
+    { title: "INFECTION PANEL", fields: INFECTION_FIELDS },
+    { title: "RENAL FUNCTION", fields: RENAL_FIELDS },
+    { title: "CARDIAC FUNCTION VALUES", fields: CARDIAC_FIELDS },
+    { title: "LIPID PROFILE", fields: LIPID_FIELDS },
+    { title: "HEPATO-BILIARY-PANCREATIC VALUES", fields: LIVER_FIELDS },
+    { title: "COAGULATION PROFILE", fields: COAGULATION_FIELDS },
+    { title: "BLOOD GROUP & RH", fields: BLOOD_GROUP_FIELDS },
+    { title: "HORMONES", fields: HORMONE_FIELDS }
   ];
 
   const IMAGING_SECTIONS = [
-    { title: "IMAGING & DIAGNOSTICS", fields: [
-      { key: "ecg", label: "ECG" }, { key: "echo2d", label: "2D ECHO" }, { key: "usg", label: "USG" }, { key: "doppler", label: "DOPPLER" },
-      { key: "xrays", label: "X-RAYS" }, { key: "ctScanMri", label: "CT SCAN / MRI" }, { key: "histopathology", label: "HISTOPATHOLOGY" },
-      { key: "fluidAnalysis", label: "FLUID ANALYSIS" }, { key: "otherInvestigations", label: "OTHER INVESTIGATIONS" }
-    ]}
+    { title: "ARTERIAL BLOOD GASES", fields: ABG_FIELDS },
+    { title: "ULTRASONOGRAPHY", fields: USG_FIELDS },
+    { title: "ECHO CARDIOGRAPHY & COLOUR DOPPLER", fields: ECHO_FIELDS },
+    { title: "ANGIOGRAPHY", fields: ANGIO_FIELDS },
+    { title: "BODY FLUIDS ANALYSIS", fields: BODY_FLUID_FIELDS }
   ];
 
   const handlePrint = () => {
-    let content = `<h1>IPD INVESTIGATION CHART</h1>`;
+    let content = `<h1>INVESTIGATION SHEET</h1>`;
     
     if (investigations.length) {
       investigations.forEach((inv: any, invIdx: number) => {
@@ -3787,19 +3864,43 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
         allSections.forEach(section => {
           const sectionRows = section.fields.map(f => {
             const val = inv[f.key];
-            return val ? `<tr>
-              <td class="label-cell">${f.label}:</td>
-              <td class="value-cell">${val}</td>
-            </tr>` : null;
-          }).filter(Boolean).join('');
+            return `<tr>
+              <td class="label-cell">${f.label}</td>
+              <td class="value-cell">${val || ''}</td>
+            </tr>`;
+          }).join('');
           
-          if (sectionRows) {
-            content += `<h4>${section.title}</h4>
-              <table>
-                <tbody>${sectionRows}</tbody>
-              </table>`;
-          }
+          content += `<h4>${section.title}</h4>
+            <table>
+              <tbody>${sectionRows}</tbody>
+            </table>`;
         });
+
+        if (inv.chestXrayFindings || inv.otherXrayFindings) {
+          content += `<h4>X-RAY</h4>
+            <table>
+              <tr><td colspan="2" style="text-align:center;">
+                <svg width="120" height="100" viewBox="0 0 120 100" style="margin:10px auto;display:block;">
+                  <ellipse cx="60" cy="35" rx="25" ry="20" fill="none" stroke="#333" stroke-width="1"/>
+                  <path d="M35 55 Q30 75 40 90 L50 90 Q55 80 60 90 L70 90 Q65 80 70 90 L80 90 Q90 75 85 55" fill="none" stroke="#333" stroke-width="1"/>
+                  <path d="M42 40 Q38 50 42 60" fill="none" stroke="#333" stroke-width="0.5"/>
+                  <path d="M78 40 Q82 50 78 60" fill="none" stroke="#333" stroke-width="0.5"/>
+                  <line x1="60" y1="20" x2="60" y2="30" stroke="#333" stroke-width="1"/>
+                </svg>
+              </td></tr>
+              <tr><td class="label-cell">Chest X-ray</td><td class="value-cell">${inv.chestXrayFindings || ''}</td></tr>
+              <tr><td class="label-cell">Other X-ray</td><td class="value-cell">${inv.otherXrayFindings || ''}</td></tr>
+            </table>`;
+        }
+
+        if (inv.ctScanFindings || inv.mriFindings || inv.otherInvestigations) {
+          content += `<h4>CT SCAN / MRI / OTHER</h4>
+            <table>
+              <tr><td class="label-cell">CT SCAN</td><td class="value-cell">${inv.ctScanFindings || ''}</td></tr>
+              <tr><td class="label-cell">MRI SCAN</td><td class="value-cell">${inv.mriFindings || ''}</td></tr>
+              <tr><td class="label-cell">OTHER</td><td class="value-cell">${inv.otherInvestigations || ''}</td></tr>
+            </table>`;
+        }
       });
     } else {
       content += '<div class="no-data">No investigation records</div>';
@@ -3815,65 +3916,137 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
         </tr>
       </table>
     </div>`;
-    openPrintWindow('Investigation Chart', content);
+    openPrintWindow('Investigation Sheet', content);
   };
+
+  const ChestXrayDiagram = () => (
+    <div className="flex flex-col items-center p-4 border rounded-lg bg-muted/30">
+      <svg width="200" height="180" viewBox="0 0 200 180" className="mb-2">
+        <ellipse cx="100" cy="50" rx="35" ry="30" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"/>
+        <path d="M65 80 Q55 120 70 160 L85 160 Q90 140 100 160 L115 160 Q110 140 115 160 L130 160 Q145 120 135 80" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"/>
+        <path d="M72 55 Q65 75 72 95 M128 55 Q135 75 128 95" fill="none" stroke="currentColor" strokeWidth="1" className="text-muted-foreground/60"/>
+        <path d="M78 60 Q72 75 78 90 M122 60 Q128 75 122 90" fill="none" stroke="currentColor" strokeWidth="1" className="text-muted-foreground/60"/>
+        <line x1="100" y1="25" x2="100" y2="40" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"/>
+        <circle cx="100" cy="20" r="8" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"/>
+        <text x="100" y="175" textAnchor="middle" className="text-[10px] fill-muted-foreground">Chest X-ray Diagram</text>
+      </svg>
+    </div>
+  );
+
+  const renderSectionFields = (fields: {key: string, label: string}[], inv?: any) => (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+      {fields.map(f => (
+        <div key={f.key} className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{f.label}</Label>
+          {inv ? (
+            <div className="h-8 px-2 py-1 bg-muted/50 rounded text-sm flex items-center">{inv[f.key] || '-'}</div>
+          ) : (
+            <Input value={(newEntry as any)[f.key] || ""} onChange={e => setNewEntry(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.label} className="h-8 text-sm" />
+          )}
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg flex items-center gap-2">
-          <ClipboardList className="h-5 w-5" /> Investigation Chart
+          <ClipboardList className="h-5 w-5" /> Investigation Sheet
         </CardTitle>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
           <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} data-testid="button-add-investigation">
-            <PlusCircle className="h-4 w-4 mr-1" /> Add Entry
+            <PlusCircle className="h-4 w-4 mr-1" /> {showAddForm ? "Close Form" : "Add Entry"}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {showAddForm && (
-          <Card className="p-4 mb-4 border-dashed">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <Label className="w-32">Date</Label>
+          <Card className="p-4 mb-4 border-2 border-dashed border-primary/30">
+            <Tabs value={activeSection} onValueChange={setActiveSection}>
+              <TabsList className="flex flex-wrap h-auto gap-1 mb-4">
+                {SECTION_TABS.map(tab => (
+                  <TabsTrigger key={tab.id} value={tab.id} className="text-xs gap-1">
+                    <tab.icon className="h-3 w-3" /> {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              <div className="flex items-center gap-4 mb-4">
+                <Label className="font-medium">Date:</Label>
                 <Input type="date" value={newEntry.investigationDate} onChange={e => setNewEntry(prev => ({ ...prev, investigationDate: e.target.value }))} className="w-auto" data-testid="input-investigation-date" />
               </div>
-              
-              {LAB_SECTIONS.map(section => (
-                <div key={section.title}>
-                  <h4 className="font-medium text-sm bg-muted p-2 rounded mb-2">{section.title}</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {section.fields.map(f => (
-                      <div key={f.key} className="space-y-1">
-                        <Label className="text-xs">{f.label}</Label>
-                        <Input value={(newEntry as any)[f.key]} onChange={e => setNewEntry(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.label} className="h-8 text-sm" />
-                      </div>
-                    ))}
+
+              <TabsContent value="hematology" className="space-y-4">
+                <div><h4 className="font-medium text-sm bg-rose-500/10 text-rose-700 dark:text-rose-400 p-2 rounded mb-2">HEMATOLOGY & ACUTE PHASE PROTEINS</h4>{renderSectionFields(HEMATOLOGY_FIELDS)}</div>
+                <div><h4 className="font-medium text-sm bg-purple-500/10 text-purple-700 dark:text-purple-400 p-2 rounded mb-2">INFECTION PANEL</h4>{renderSectionFields(INFECTION_FIELDS)}</div>
+              </TabsContent>
+
+              <TabsContent value="renal" className="space-y-4">
+                <div><h4 className="font-medium text-sm bg-blue-500/10 text-blue-700 dark:text-blue-400 p-2 rounded mb-2">RENAL FUNCTION</h4>{renderSectionFields(RENAL_FIELDS)}</div>
+                <div><h4 className="font-medium text-sm bg-red-500/10 text-red-700 dark:text-red-400 p-2 rounded mb-2">CARDIAC FUNCTION VALUES</h4>{renderSectionFields(CARDIAC_FIELDS)}</div>
+              </TabsContent>
+
+              <TabsContent value="liver" className="space-y-4">
+                <div><h4 className="font-medium text-sm bg-amber-500/10 text-amber-700 dark:text-amber-400 p-2 rounded mb-2">LIPID PROFILE</h4>{renderSectionFields(LIPID_FIELDS)}</div>
+                <div><h4 className="font-medium text-sm bg-green-500/10 text-green-700 dark:text-green-400 p-2 rounded mb-2">HEPATO-BILIARY-PANCREATIC VALUES</h4>{renderSectionFields(LIVER_FIELDS)}</div>
+              </TabsContent>
+
+              <TabsContent value="coagulation" className="space-y-4">
+                <div><h4 className="font-medium text-sm bg-orange-500/10 text-orange-700 dark:text-orange-400 p-2 rounded mb-2">COAGULATION PROFILE</h4>{renderSectionFields(COAGULATION_FIELDS)}</div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><h4 className="font-medium text-sm bg-red-500/10 text-red-700 dark:text-red-400 p-2 rounded mb-2">BLOOD GROUP & RH</h4>{renderSectionFields(BLOOD_GROUP_FIELDS)}</div>
+                  <div><h4 className="font-medium text-sm bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 p-2 rounded mb-2">HORMONES</h4>{renderSectionFields(HORMONE_FIELDS)}</div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="abg" className="space-y-4">
+                <div><h4 className="font-medium text-sm bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 p-2 rounded mb-2">ARTERIAL BLOOD GASES</h4>{renderSectionFields(ABG_FIELDS)}</div>
+                <div><h4 className="font-medium text-sm bg-sky-500/10 text-sky-700 dark:text-sky-400 p-2 rounded mb-2">ULTRASONOGRAPHY</h4>
+                  {renderSectionFields(USG_FIELDS)}
+                  <div className="mt-2"><Label className="text-xs">USG Findings</Label><Textarea value={newEntry.usgFindings} onChange={e => setNewEntry(prev => ({ ...prev, usgFindings: e.target.value }))} placeholder="USG findings..." className="h-16" /></div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-sm bg-slate-500/10 text-slate-700 dark:text-slate-400 p-2 rounded mb-2">CHEST X-RAY</h4>
+                    <ChestXrayDiagram />
+                    <Textarea value={newEntry.chestXrayFindings} onChange={e => setNewEntry(prev => ({ ...prev, chestXrayFindings: e.target.value }))} placeholder="Chest X-ray findings..." className="h-16 mt-2" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm bg-slate-500/10 text-slate-700 dark:text-slate-400 p-2 rounded mb-2">OTHER X-RAY</h4>
+                    <Textarea value={newEntry.otherXrayFindings} onChange={e => setNewEntry(prev => ({ ...prev, otherXrayFindings: e.target.value }))} placeholder="Other X-ray findings..." className="h-32" />
                   </div>
                 </div>
-              ))}
-
-              {IMAGING_SECTIONS.map(section => (
-                <div key={section.title}>
-                  <h4 className="font-medium text-sm bg-muted p-2 rounded mb-2">{section.title}</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {section.fields.map(f => (
-                      <div key={f.key} className="space-y-1">
-                        <Label className="text-xs">{f.label}</Label>
-                        <Textarea value={(newEntry as any)[f.key]} onChange={e => setNewEntry(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={`${f.label} findings/report`} className="h-16 text-sm" />
-                      </div>
-                    ))}
-                  </div>
+                <div><h4 className="font-medium text-sm bg-pink-500/10 text-pink-700 dark:text-pink-400 p-2 rounded mb-2">ECG</h4><Textarea value={newEntry.ecgFindings} onChange={e => setNewEntry(prev => ({ ...prev, ecgFindings: e.target.value }))} placeholder="ECG findings..." className="h-16" /></div>
+                <div><h4 className="font-medium text-sm bg-rose-500/10 text-rose-700 dark:text-rose-400 p-2 rounded mb-2">ECHO CARDIOGRAPHY & COLOUR DOPPLER</h4>
+                  {renderSectionFields(ECHO_FIELDS)}
+                  <div className="mt-2"><Label className="text-xs">Echo Findings</Label><Textarea value={newEntry.echoFindings} onChange={e => setNewEntry(prev => ({ ...prev, echoFindings: e.target.value }))} placeholder="Echo findings..." className="h-16" /></div>
                 </div>
-              ))}
+                <div><h4 className="font-medium text-sm bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400 p-2 rounded mb-2">ANGIOGRAPHY</h4>
+                  {renderSectionFields(ANGIO_FIELDS)}
+                  <div className="mt-2"><Label className="text-xs">Angiography Findings</Label><Textarea value={newEntry.angioFindings} onChange={e => setNewEntry(prev => ({ ...prev, angioFindings: e.target.value }))} placeholder="Angiography findings..." className="h-16" /></div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><h4 className="font-medium text-sm bg-violet-500/10 text-violet-700 dark:text-violet-400 p-2 rounded mb-2">CT SCAN</h4><Textarea value={newEntry.ctScanFindings} onChange={e => setNewEntry(prev => ({ ...prev, ctScanFindings: e.target.value }))} placeholder="CT Scan findings..." className="h-20" /></div>
+                  <div><h4 className="font-medium text-sm bg-violet-500/10 text-violet-700 dark:text-violet-400 p-2 rounded mb-2">MRI SCAN</h4><Textarea value={newEntry.mriFindings} onChange={e => setNewEntry(prev => ({ ...prev, mriFindings: e.target.value }))} placeholder="MRI findings..." className="h-20" /></div>
+                </div>
+                <div><h4 className="font-medium text-sm bg-stone-500/10 text-stone-700 dark:text-stone-400 p-2 rounded mb-2">OTHER</h4><Textarea value={newEntry.otherInvestigations} onChange={e => setNewEntry(prev => ({ ...prev, otherInvestigations: e.target.value }))} placeholder="Other investigations..." className="h-16" /></div>
+              </TabsContent>
 
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
-                <Button onClick={() => addMutation.mutate({ ...newEntry, investigationDate: new Date(newEntry.investigationDate) })} disabled={addMutation.isPending} data-testid="button-save-investigation">
-                  Save Entry
-                </Button>
-              </div>
+              <TabsContent value="bodyfluid" className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-sm bg-teal-500/10 text-teal-700 dark:text-teal-400 p-2 rounded mb-2">BODY FLUIDS (CSF/Pleural/Sputum/BAL/Pericardial/Peritoneal/Synovial/Abscess)</h4>
+                  {renderSectionFields(BODY_FLUID_FIELDS)}
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+              <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
+              <Button onClick={() => addMutation.mutate({ ...newEntry, investigationDate: new Date(newEntry.investigationDate) })} disabled={addMutation.isPending} data-testid="button-save-investigation">
+                Save Investigation Entry
+              </Button>
             </div>
           </Card>
         )}
@@ -3885,24 +4058,32 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
             {investigations.map((inv: any) => (
               <Card key={inv.id} className="p-4">
                 <div className="flex justify-between items-center mb-3">
-                  <Badge variant="outline" className="text-sm">{format(new Date(inv.investigationDate), "dd MMM yyyy")}</Badge>
+                  <Badge variant="outline" className="text-sm font-medium">{format(new Date(inv.investigationDate), "dd MMM yyyy")}</Badge>
                   <span className="text-xs text-muted-foreground">By: {inv.nurseName || "Staff"}</span>
                 </div>
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
-                    {inv.bloodGroup && <div className="flex gap-2"><Badge>Blood Group: {inv.bloodGroup}</Badge>{inv.hiv && <Badge variant="outline">HIV: {inv.hiv}</Badge>}{inv.hbsag && <Badge variant="outline">HBSAg: {inv.hbsag}</Badge>}{inv.hcv && <Badge variant="outline">HCV: {inv.hcv}</Badge>}</div>}
+                <ScrollArea className="max-h-[500px]">
+                  <div className="space-y-4">
+                    {(inv.bloodGroup || inv.rhFactor) && (
+                      <div className="flex gap-2 flex-wrap">
+                        {inv.bloodGroup && <Badge className="bg-red-500">Blood Group: {inv.bloodGroup}</Badge>}
+                        {inv.rhFactor && <Badge variant="outline">Rh: {inv.rhFactor}</Badge>}
+                        {inv.hiv && <Badge variant="outline">HIV: {inv.hiv}</Badge>}
+                        {inv.hbsag && <Badge variant="outline">HBsAg: {inv.hbsag}</Badge>}
+                        {inv.hcv && <Badge variant="outline">HCV: {inv.hcv}</Badge>}
+                      </div>
+                    )}
                     
                     {LAB_SECTIONS.map(section => {
                       const hasData = section.fields.some(f => inv[f.key]);
                       if (!hasData) return null;
                       return (
                         <div key={section.title}>
-                          <h5 className="text-xs font-semibold text-muted-foreground mb-1">{section.title}</h5>
+                          <h5 className="text-xs font-semibold text-primary mb-2 bg-primary/5 p-1.5 rounded">{section.title}</h5>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                             {section.fields.filter(f => inv[f.key]).map(f => (
-                              <div key={f.key} className="flex justify-between border-b pb-1">
+                              <div key={f.key} className="flex justify-between items-center border-b pb-1 px-1">
                                 <span className="text-muted-foreground text-xs">{f.label}:</span>
-                                <span className="font-medium">{inv[f.key]}</span>
+                                <span className="font-medium text-sm">{inv[f.key]}</span>
                               </div>
                             ))}
                           </div>
@@ -3910,23 +4091,50 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
                       );
                     })}
 
+                    {(inv.chestXrayFindings || inv.otherXrayFindings) && (
+                      <div>
+                        <h5 className="text-xs font-semibold text-primary mb-2 bg-primary/5 p-1.5 rounded">X-RAY</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex flex-col items-center">
+                            <ChestXrayDiagram />
+                            {inv.chestXrayFindings && <p className="text-sm mt-2"><span className="font-medium">Chest X-ray:</span> {inv.chestXrayFindings}</p>}
+                          </div>
+                          {inv.otherXrayFindings && <div><span className="font-medium text-sm">Other X-ray:</span><p className="text-sm text-muted-foreground">{inv.otherXrayFindings}</p></div>}
+                        </div>
+                      </div>
+                    )}
+
                     {IMAGING_SECTIONS.map(section => {
                       const hasData = section.fields.some(f => inv[f.key]);
                       if (!hasData) return null;
                       return (
                         <div key={section.title}>
-                          <h5 className="text-xs font-semibold text-muted-foreground mb-1">{section.title}</h5>
-                          <div className="space-y-2">
+                          <h5 className="text-xs font-semibold text-primary mb-2 bg-primary/5 p-1.5 rounded">{section.title}</h5>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                             {section.fields.filter(f => inv[f.key]).map(f => (
-                              <div key={f.key} className="text-sm">
-                                <span className="font-medium">{f.label}:</span>
-                                <p className="text-muted-foreground ml-2">{inv[f.key]}</p>
+                              <div key={f.key} className="flex justify-between items-center border-b pb-1 px-1">
+                                <span className="text-muted-foreground text-xs">{f.label}:</span>
+                                <span className="font-medium text-sm">{inv[f.key]}</span>
                               </div>
                             ))}
                           </div>
                         </div>
                       );
                     })}
+
+                    {(inv.ecgFindings || inv.echoFindings || inv.angioFindings || inv.ctScanFindings || inv.mriFindings || inv.otherInvestigations) && (
+                      <div>
+                        <h5 className="text-xs font-semibold text-primary mb-2 bg-primary/5 p-1.5 rounded">IMAGING NOTES</h5>
+                        <div className="space-y-2 text-sm">
+                          {inv.ecgFindings && <div><span className="font-medium">ECG:</span> {inv.ecgFindings}</div>}
+                          {inv.echoFindings && <div><span className="font-medium">Echo:</span> {inv.echoFindings}</div>}
+                          {inv.angioFindings && <div><span className="font-medium">Angiography:</span> {inv.angioFindings}</div>}
+                          {inv.ctScanFindings && <div><span className="font-medium">CT Scan:</span> {inv.ctScanFindings}</div>}
+                          {inv.mriFindings && <div><span className="font-medium">MRI:</span> {inv.mriFindings}</div>}
+                          {inv.otherInvestigations && <div><span className="font-medium">Other:</span> {inv.otherInvestigations}</div>}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
               </Card>

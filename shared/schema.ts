@@ -2351,15 +2351,155 @@ export const ipdInvestigationChart = pgTable("ipd_investigation_chart", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sessionId: varchar("session_id").notNull(),
   investigationDate: timestamp("investigation_date").notNull(),
-  bloodGroup: text("blood_group"),
+  
+  // HEMATOLOGY & ACUTE PHASE PROTEINS
+  wbc: text("wbc"),
+  neutrophilsPercent: text("neutrophils_percent"),
+  lymphocytesPercent: text("lymphocytes_percent"),
+  platelets: text("platelets"),
+  hb: text("hb"),
+  esr: text("esr"),
+  crp: text("crp"),
+  il6: text("il6"),
+  procalcitonin: text("procalcitonin"),
+  ldh: text("ldh"),
+  ferritin: text("ferritin"),
+  serumIron: text("serum_iron"),
+  tibc: text("tibc"),
+  bslRandom: text("bsl_random"),
+  urineRoutine: text("urine_routine"),
+  urineProteins: text("urine_proteins"),
+  urinePusCells: text("urine_pus_cells"),
+  
+  // INFECTION PANEL
   hiv: text("hiv"),
   hbsag: text("hbsag"),
   hcv: text("hcv"),
+  malaria: text("malaria"),
+  dengueNs1: text("dengue_ns1"),
+  dengueIgG: text("dengue_igg"),
+  dengueIgM: text("dengue_igm"),
+  chikungunyaIgG: text("chikungunya_igg"),
+  chikungunyaIgM: text("chikungunya_igm"),
+  weilFelix: text("weil_felix"),
+  widal: text("widal"),
+  hPylori: text("h_pylori"),
+  hba1c: text("hba1c"),
+  meanGlucose: text("mean_glucose"),
+  
+  // RENAL FUNCTION
+  bloodUrea: text("blood_urea"),
+  creatinine: text("creatinine"),
+  sodiumNa: text("sodium_na"),
+  potassiumK: text("potassium_k"),
+  calcium: text("calcium"),
+  phosphorus: text("phosphorus"),
+  uricAcid: text("uric_acid"),
+  
+  // CARDIAC FUNCTION VALUES
+  troponin: text("troponin"),
+  cpkMb: text("cpk_mb"),
+  ntProBnp: text("nt_pro_bnp"),
+  
+  // LIPID PROFILE
+  totalCholesterol: text("total_cholesterol"),
+  triglycerides: text("triglycerides"),
+  hdl: text("hdl"),
+  ldlDirectLdl: text("ldl_direct_ldl"),
+  
+  // HEPATO-BILIARY-PANCREATIC VALUES
+  totalBilirubin: text("total_bilirubin"),
+  directBilirubin: text("direct_bilirubin"),
+  indirectBilirubin: text("indirect_bilirubin"),
+  sgot: text("sgot"),
+  sgpt: text("sgpt"),
+  alkPo4: text("alk_po4"),
+  totalProteins: text("total_proteins"),
+  albumin: text("albumin"),
+  cholinesterase: text("cholinesterase"),
+  ggtp: text("ggtp"),
+  ammonia: text("ammonia"),
+  amylase: text("amylase"),
+  lipase: text("lipase"),
+  
+  // COAGULATION PROFILE
+  bleedingTime: text("bleeding_time"),
+  clottingTime: text("clotting_time"),
+  prothrombinTime: text("prothrombin_time"),
+  inr: text("inr"),
+  aptt: text("aptt"),
+  dDimer: text("d_dimer"),
+  
+  // BLOOD GROUP & RH
+  bloodGroup: text("blood_group"),
+  rhFactor: text("rh_factor"),
+  
+  // HORMONES
+  tsh: text("tsh"),
+  t3: text("t3"),
+  t4: text("t4"),
+  ft3: text("ft3"),
+  ft4: text("ft4"),
+  lh: text("lh"),
+  fsh: text("fsh"),
+  
+  // ARTERIAL BLOOD GASES
+  abgDate: text("abg_date"),
+  abgPh: text("abg_ph"),
+  abgPaco2: text("abg_paco2"),
+  abgPao2: text("abg_pao2"),
+  abgHco3: text("abg_hco3"),
+  abgO2Saturation: text("abg_o2_saturation"),
+  abgLactate: text("abg_lactate"),
+  
+  // ULTRASONOGRAPHY
+  usgRk: text("usg_rk"),
+  usgLk: text("usg_lk"),
+  usgProstate: text("usg_prostate"),
+  usgResUrine: text("usg_res_urine"),
+  usgFindings: text("usg_findings"),
+  
+  // X-RAY
+  chestXrayFindings: text("chest_xray_findings"),
+  otherXrayFindings: text("other_xray_findings"),
+  
+  // ECG
+  ecgFindings: text("ecg_findings"),
+  
+  // ECHO CARDIOGRAPHY & COLOUR DOPPLER
+  echoLvef: text("echo_lvef"),
+  echoIvs: text("echo_ivs"),
+  echoLvpw: text("echo_lvpw"),
+  echoEe: text("echo_ee"),
+  echoFindings: text("echo_findings"),
+  
+  // ANGIOGRAPHY
+  angioLtMain: text("angio_lt_main"),
+  angioLad: text("angio_lad"),
+  angioLcx: text("angio_lcx"),
+  angioRca: text("angio_rca"),
+  angioFindings: text("angio_findings"),
+  
+  // CT & MRI
+  ctScanFindings: text("ct_scan_findings"),
+  mriFindings: text("mri_findings"),
+  
+  // OTHER
+  otherInvestigations: text("other_investigations"),
+  
+  // BODY FLUIDS (CSF/Pleural/Sputum/BAL/Pericardial/Peritoneal/Synovial/Abscess)
+  bodyFluidType: text("body_fluid_type"),
+  bodyFluidOrganism: text("body_fluid_organism"),
+  bodyFluidSensitivity: text("body_fluid_sensitivity"),
+  bodyFluidTlc: text("body_fluid_tlc"),
+  bodyFluidRbc: text("body_fluid_rbc"),
+  bodyFluidSugar: text("body_fluid_sugar"),
+  bodyFluidProteins: text("body_fluid_proteins"),
+  
+  // Legacy fields for backward compatibility
   hbPcv: text("hb_pcv"),
   tlc: text("tlc"),
   dlcPlemb: text("dlc_plemb"),
-  esr: text("esr"),
-  platelets: text("platelets"),
   parasites: text("parasites"),
   btCt: text("bt_ct"),
   ptAptt: text("pt_aptt"),
@@ -2375,16 +2515,11 @@ export const ipdInvestigationChart = pgTable("ipd_investigation_chart", {
   sgotSgpt: text("sgot_sgpt"),
   srAlkphos: text("sr_alkphos"),
   srProteinsTotal: text("sr_proteins_total"),
-  albumin: text("albumin"),
   viralMarkers: text("viral_markers"),
   srAmylaseLipase: text("sr_amylase_lipase"),
-  cpkMb: text("cpk_mb"),
   srLdh: text("sr_ldh"),
   tropi: text("tropi"),
-  totalCholesterol: text("total_cholesterol"),
-  triglycerides: text("triglycerides"),
   hdlLdlVldl: text("hdl_ldl_vldl"),
-  urineRoutine: text("urine_routine"),
   stoolRoutine: text("stool_routine"),
   sputumExamination: text("sputum_examination"),
   ecg: text("ecg"),
@@ -2395,7 +2530,7 @@ export const ipdInvestigationChart = pgTable("ipd_investigation_chart", {
   ctScanMri: text("ct_scan_mri"),
   histopathology: text("histopathology"),
   fluidAnalysis: text("fluid_analysis"),
-  otherInvestigations: text("other_investigations"),
+  
   nurseId: varchar("nurse_id"),
   nurseName: text("nurse_name"),
   createdAt: timestamp("created_at").defaultNow(),
