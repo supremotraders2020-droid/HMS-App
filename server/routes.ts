@@ -7493,6 +7493,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const userName = (req as any).session?.user?.fullName || (req as any).session?.user?.name;
       const parsed = insertIpdInvestigationChartSchema.safeParse({
         ...req.body,
+        investigationDate: req.body.investigationDate ? new Date(req.body.investigationDate) : new Date(),
         sessionId: req.params.sessionId,
         nurseId: userId,
         nurseName: userName,
