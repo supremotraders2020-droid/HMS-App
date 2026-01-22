@@ -3876,31 +3876,59 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
             </table>`;
         });
 
-        if (inv.chestXrayFindings || inv.otherXrayFindings) {
-          content += `<h4>X-RAY</h4>
-            <table>
-              <tr><td colspan="2" style="text-align:center;">
-                <svg width="120" height="100" viewBox="0 0 120 100" style="margin:10px auto;display:block;">
-                  <ellipse cx="60" cy="35" rx="25" ry="20" fill="none" stroke="#333" stroke-width="1"/>
-                  <path d="M35 55 Q30 75 40 90 L50 90 Q55 80 60 90 L70 90 Q65 80 70 90 L80 90 Q90 75 85 55" fill="none" stroke="#333" stroke-width="1"/>
-                  <path d="M42 40 Q38 50 42 60" fill="none" stroke="#333" stroke-width="0.5"/>
-                  <path d="M78 40 Q82 50 78 60" fill="none" stroke="#333" stroke-width="0.5"/>
-                  <line x1="60" y1="20" x2="60" y2="30" stroke="#333" stroke-width="1"/>
-                </svg>
-              </td></tr>
-              <tr><td class="label-cell">Chest X-ray</td><td class="value-cell">${inv.chestXrayFindings || ''}</td></tr>
-              <tr><td class="label-cell">Other X-ray</td><td class="value-cell">${inv.otherXrayFindings || ''}</td></tr>
-            </table>`;
-        }
+        content += `<h4>ULTRASONOGRAPHY</h4>
+          <table>
+            <tr><td class="label-cell">RK</td><td class="value-cell">${inv.usgRk || ''}</td></tr>
+            <tr><td class="label-cell">LK</td><td class="value-cell">${inv.usgLk || ''}</td></tr>
+            <tr><td class="label-cell">PROSTATE</td><td class="value-cell">${inv.usgProstate || ''}</td></tr>
+            <tr><td class="label-cell">RES. URINE</td><td class="value-cell">${inv.usgResUrine || ''}</td></tr>
+            <tr><td class="label-cell">USG Findings</td><td class="value-cell">${inv.usgFindings || ''}</td></tr>
+          </table>`;
 
-        if (inv.ctScanFindings || inv.mriFindings || inv.otherInvestigations) {
-          content += `<h4>CT SCAN / MRI / OTHER</h4>
-            <table>
-              <tr><td class="label-cell">CT SCAN</td><td class="value-cell">${inv.ctScanFindings || ''}</td></tr>
-              <tr><td class="label-cell">MRI SCAN</td><td class="value-cell">${inv.mriFindings || ''}</td></tr>
-              <tr><td class="label-cell">OTHER</td><td class="value-cell">${inv.otherInvestigations || ''}</td></tr>
-            </table>`;
-        }
+        content += `<h4>X-RAY</h4>
+          <table>
+            <tr><td colspan="2" style="text-align:center;">
+              <svg width="120" height="100" viewBox="0 0 120 100" style="margin:10px auto;display:block;">
+                <ellipse cx="60" cy="35" rx="25" ry="20" fill="none" stroke="#333" stroke-width="1"/>
+                <path d="M35 55 Q30 75 40 90 L50 90 Q55 80 60 90 L70 90 Q65 80 70 90 L80 90 Q90 75 85 55" fill="none" stroke="#333" stroke-width="1"/>
+                <path d="M42 40 Q38 50 42 60" fill="none" stroke="#333" stroke-width="0.5"/>
+                <path d="M78 40 Q82 50 78 60" fill="none" stroke="#333" stroke-width="0.5"/>
+                <line x1="60" y1="20" x2="60" y2="30" stroke="#333" stroke-width="1"/>
+              </svg>
+            </td></tr>
+            <tr><td class="label-cell">Chest X-ray</td><td class="value-cell">${inv.chestXrayFindings || ''}</td></tr>
+            <tr><td class="label-cell">Other X-ray</td><td class="value-cell">${inv.otherXrayFindings || ''}</td></tr>
+          </table>`;
+
+        content += `<h4>ECG</h4>
+          <table>
+            <tr><td class="label-cell">ECG Findings</td><td class="value-cell">${inv.ecgFindings || ''}</td></tr>
+          </table>`;
+
+        content += `<h4>ECHO CARDIOGRAPHY & COLOUR DOPPLER</h4>
+          <table>
+            <tr><td class="label-cell">LVEF</td><td class="value-cell">${inv.echoLvef || ''}</td></tr>
+            <tr><td class="label-cell">IVS</td><td class="value-cell">${inv.echoIvs || ''}</td></tr>
+            <tr><td class="label-cell">LVPW</td><td class="value-cell">${inv.echoLvpw || ''}</td></tr>
+            <tr><td class="label-cell">E/E</td><td class="value-cell">${inv.echoEe || ''}</td></tr>
+            <tr><td class="label-cell">Echo Findings</td><td class="value-cell">${inv.echoFindings || ''}</td></tr>
+          </table>`;
+
+        content += `<h4>ANGIOGRAPHY</h4>
+          <table>
+            <tr><td class="label-cell">LT MAIN</td><td class="value-cell">${inv.angioLtMain || ''}</td></tr>
+            <tr><td class="label-cell">LAD</td><td class="value-cell">${inv.angioLad || ''}</td></tr>
+            <tr><td class="label-cell">LCX</td><td class="value-cell">${inv.angioLcx || ''}</td></tr>
+            <tr><td class="label-cell">RCA</td><td class="value-cell">${inv.angioRca || ''}</td></tr>
+            <tr><td class="label-cell">Angiography Findings</td><td class="value-cell">${inv.angioFindings || ''}</td></tr>
+          </table>`;
+
+        content += `<h4>CT SCAN / MRI / OTHER</h4>
+          <table>
+            <tr><td class="label-cell">CT SCAN</td><td class="value-cell">${inv.ctScanFindings || ''}</td></tr>
+            <tr><td class="label-cell">MRI SCAN</td><td class="value-cell">${inv.mriFindings || ''}</td></tr>
+            <tr><td class="label-cell">OTHER</td><td class="value-cell">${inv.otherInvestigations || ''}</td></tr>
+          </table>`;
       });
     } else {
       content += '<div class="no-data">No investigation records</div>';
