@@ -830,9 +830,10 @@ export default function PatientMonitoringPage() {
                 variant="outline" 
                 className="gap-2 shrink-0"
                 onClick={async () => {
-                  toast({ title: "Generating Report", description: "Fetching all patient data..." });
+                  toast({ title: "Generating Comprehensive Report", description: "Fetching all patient data from all tabs..." });
                   try {
                     const sessionId = selectedSession.id;
+                    const patientId = selectedSession.patientId;
                     const fetchOpts = { credentials: 'include' as RequestCredentials };
                     
                     const fetchData = async (url: string) => {
@@ -840,15 +841,28 @@ export default function PatientMonitoringPage() {
                         const r = await fetch(url, fetchOpts);
                         if (r.ok) {
                           const data = await r.json();
-                          return Array.isArray(data) ? data : [];
+                          return Array.isArray(data) ? data : (data ? [data] : []);
                         }
                         return [];
                       } catch {
                         return [];
                       }
                     };
+
+                    const fetchSingleRecord = async (url: string) => {
+                      try {
+                        const r = await fetch(url, fetchOpts);
+                        if (r.ok) {
+                          const data = await r.json();
+                          return data || null;
+                        }
+                        return null;
+                      } catch {
+                        return null;
+                      }
+                    };
                     
-                    const [vitals, injections, mar, ventilator, abgLab, intake, output, diabetic, onceOnly, shiftNotes, airway, dutyStaff, allergies] = await Promise.all([
+                    const [vitals, injections, mar, ventilator, abgLab, intake, output, diabetic, onceOnly, shiftNotes, airway, dutyStaff, allergies, investigationChart, initialAssessment, indoorConsultation, doctorsVisit, surgeryNotes, nursingProgress, carePlan] = await Promise.all([
                       fetchData(`/api/patient-monitoring/vitals/${sessionId}`),
                       fetchData(`/api/patient-monitoring/inotropes/${sessionId}`),
                       fetchData(`/api/patient-monitoring/mar/${sessionId}`),
@@ -861,7 +875,14 @@ export default function PatientMonitoringPage() {
                       fetchData(`/api/patient-monitoring/shift-notes/${sessionId}`),
                       fetchData(`/api/patient-monitoring/airway/${sessionId}`),
                       fetchData(`/api/patient-monitoring/duty-staff/${sessionId}`),
-                      fetchData(`/api/patient-monitoring/allergies/${sessionId}`)
+                      fetchData(`/api/patient-monitoring/allergies/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/sessions/${sessionId}/investigation-chart`),
+                      fetchSingleRecord(`/api/patient-monitoring/initial-assessment/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/indoor-consultation/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/doctors-visit/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/surgery-notes/${sessionId}`),
+                      fetchData(`/api/patient-monitoring/nursing-progress/${sessionId}`),
+                      fetchSingleRecord(`/api/patient-monitoring/care-plan/${sessionId}`)
                     ]);
                     
                     const formatDate = (d: string | null | undefined) => {
@@ -877,119 +898,235 @@ export default function PatientMonitoringPage() {
                       if (!rows || !Array.isArray(rows) || rows.length === 0) return `<h2>${title}</h2><p class="no-data">No data recorded</p>`;
                       try {
                         const headerHtml = headers.map(h => `<th>${h}</th>`).join('');
-                        const bodyHtml = rows.map(r => { try { return renderRow(r); } catch { return '<tr><td colspan="99">Error</td></tr>'; } }).join('');
+                        const bodyHtml = rows.map((r, i) => { try { return renderRow({...r, _index: i+1}); } catch { return '<tr><td colspan="99">Error</td></tr>'; } }).join('');
                         return `<h2>${title}</h2><table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
                       } catch { return `<h2>${title}</h2><p class="no-data">Error loading data</p>`; }
+                    };
+
+                    const generateKeyValueTable = (title: string, data: any, fields: {label: string, key: string}[]) => {
+                      if (!data) return `<h2>${title}</h2><p class="no-data">No data recorded</p>`;
+                      const rows = fields.map(f => `<tr><td class="label-cell">${f.label}</td><td class="value-cell">${data[f.key] || '-'}</td></tr>`).join('');
+                      return `<h2>${title}</h2><table>${rows}</table>`;
                     };
 
                     const printContent = `
                       <html>
                       <head>
-                        <title>IPD Monitoring Report - ${selectedSession.patientName}</title>
+                        <title>Complete IPD Monitoring Report - ${selectedSession.patientName}</title>
                         <style>
                           body { font-family: Arial, sans-serif; padding: 20px; font-size: 11px; }
-                          .hospital-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
+                          .hospital-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; text-align: center; }
                           .hospital-logo { display: flex; align-items: center; }
-                          .logo-img { height: 60px; }
-                          .hospital-details { text-align: right; }
-                          .hospital-title { color: #6B3FA0; font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+                          .logo-img { height: 60px; margin-bottom: 8px; }
+                          .hospital-title { color: #6B3FA0; font-size: 18px; font-weight: bold; margin-bottom: 4px; }
                           .hospital-address { font-size: 11px; color: #4a5568; line-height: 1.4; }
                           .hospital-contact { font-size: 11px; color: #4a5568; font-weight: 600; }
-                          h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 18px; margin-top: 10px; }
-                          h2 { color: #2d3748; margin-top: 25px; font-size: 14px; background: #f7fafc; padding: 8px; border-left: 3px solid #3182ce; }
-                          .header { margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-                          .info-row { display: flex; gap: 8px; }
-                          .label { font-weight: bold; color: #4a5568; min-width: 100px; }
+                          h1 { text-align: center; background: #333; color: #fff; padding: 10px 15px; margin: 15px 0; font-size: 16px; font-weight: bold; }
+                          h2 { color: #1a1a1a; margin: 20px 0 8px 0; font-size: 13px; background: #e5e5e5; padding: 8px 12px; font-weight: bold; border-left: 4px solid #333; page-break-after: avoid; }
+                          h3 { color: #333; margin: 15px 0 6px 0; font-size: 12px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+                          .patient-header { margin-bottom: 20px; }
+                          .patient-header table { margin-bottom: 0; }
                           table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 15px; }
-                          th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
-                          th { background: #edf2f7; font-weight: 600; }
-                          tr:nth-child(even) { background: #f7fafc; }
-                          .no-data { color: #a0aec0; font-style: italic; margin: 10px 0; }
-                          .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 10px; }
-                          @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-                          @page { margin: 15mm; }
+                          th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; font-size: 10px; vertical-align: top; }
+                          th { background: #f0f0f0; font-weight: 600; text-align: center; }
+                          .label-cell { background: #f9f9f9; font-weight: 600; width: 30%; }
+                          .value-cell { width: 70%; }
+                          tr:nth-child(even) { background: #fafafa; }
+                          .no-data { color: #666; font-style: italic; margin: 10px 0; text-align: center; padding: 15px; border: 1px dashed #ccc; background: #fafafa; }
+                          .section-divider { border-top: 3px double #333; margin: 30px 0 20px 0; page-break-before: auto; }
+                          .footer { margin-top: 40px; padding-top: 15px; border-top: 2px solid #333; color: #666; font-size: 10px; text-align: center; }
+                          .signature-section { margin-top: 30px; display: flex; justify-content: space-between; }
+                          .signature-box { width: 30%; text-align: center; border-top: 1px solid #333; padding-top: 5px; }
+                          @media print { 
+                            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } 
+                            h2 { page-break-after: avoid; }
+                            table { page-break-inside: auto; }
+                            tr { page-break-inside: avoid; page-break-after: auto; }
+                          }
+                          @page { margin: 12mm; }
                         </style>
                       </head>
                       <body>
                         <div class="hospital-header">
-                          <div class="hospital-logo">
-                            <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" />
-                          </div>
-                          <div class="hospital-details">
+                          <div>
+                            <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo-img" onerror="this.style.display='none'" />
                             <div class="hospital-title">Gravity Hospital & Research Centre</div>
                             <div class="hospital-address">
-                              Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br/>
-                              Pimpri-Chinchwad, Maharashtra - 411062
+                              Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062
                             </div>
                             <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
                           </div>
                         </div>
-                        <h1>IPD Monitoring Report</h1>
-                        <div class="header">
-                          <div class="info-row"><span class="label">Patient Name:</span> ${selectedSession.patientName}</div>
-                          <div class="info-row"><span class="label">UHID:</span> ${selectedSession.uhid}</div>
-                          <div class="info-row"><span class="label">Ward/Bed:</span> ${selectedSession.ward} - Bed ${selectedSession.bedNumber}</div>
-                          <div class="info-row"><span class="label">Session Date:</span> ${format(new Date(selectedSession.sessionDate), "dd MMMM yyyy")}</div>
-                          <div class="info-row"><span class="label">Diagnosis:</span> ${selectedSession.primaryDiagnosis || "Not recorded"}</div>
-                          <div class="info-row"><span class="label">Consultant:</span> ${selectedSession.admittingConsultant || "Not assigned"}</div>
-                          <div class="info-row"><span class="label">Ventilator:</span> ${selectedSession.isVentilated ? "Yes" : "No"}</div>
-                          <div class="info-row"><span class="label">Admission Date:</span> ${formatDate(selectedSession.admissionDate)}</div>
+                        
+                        <h1>COMPLETE IPD MONITORING REPORT</h1>
+                        
+                        <div class="patient-header">
+                          <table>
+                            <tr>
+                              <td class="label-cell">Patient Name</td><td class="value-cell">${selectedSession.patientName}</td>
+                              <td class="label-cell">UHID</td><td class="value-cell">${selectedSession.uhid}</td>
+                            </tr>
+                            <tr>
+                              <td class="label-cell">Ward / Bed</td><td class="value-cell">${selectedSession.ward} - Bed ${selectedSession.bedNumber}</td>
+                              <td class="label-cell">Session Date</td><td class="value-cell">${format(new Date(selectedSession.sessionDate), "dd MMMM yyyy")}</td>
+                            </tr>
+                            <tr>
+                              <td class="label-cell">Diagnosis</td><td class="value-cell">${selectedSession.primaryDiagnosis || "Not recorded"}</td>
+                              <td class="label-cell">Consultant</td><td class="value-cell">${selectedSession.admittingConsultant || "Not assigned"}</td>
+                            </tr>
+                            <tr>
+                              <td class="label-cell">Ventilator</td><td class="value-cell">${selectedSession.isVentilated ? "Yes" : "No"}</td>
+                              <td class="label-cell">Age / Sex</td><td class="value-cell">${selectedSession.age || '-'} yrs / ${selectedSession.sex || '-'}</td>
+                            </tr>
+                          </table>
                         </div>
 
-                        ${generateTable('Vitals', ['Time', 'HR', 'BP', 'Temp', 'RR', 'SpO2', 'Staff'], vitals, (r: any) => 
-                          `<tr><td>${r.hourSlot || formatTime(r.createdAt)}</td><td>${r.heartRate || '-'}</td><td>${r.systolicBp || '-'}/${r.diastolicBp || '-'}</td><td>${r.temperature ? r.temperature + '°C' : '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+                        ${generateTable('1. VITALS CHART', ['S.No', 'Time', 'HR', 'BP', 'Temp', 'RR', 'SpO2', 'Staff'], vitals, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.hourSlot || formatTime(r.createdAt)}</td><td>${r.heartRate || '-'}</td><td>${r.systolicBp || '-'}/${r.diastolicBp || '-'}</td><td>${r.temperature ? r.temperature + '°C' : '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Injections', ['Injection Name', 'Diagnosis', 'Date', 'Staff Name'], injections, (r: any) => 
-                          `<tr><td>${r.drugName || '-'}</td><td>${r.diagnosis || '-'}</td><td>${formatDate(r.startTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
+                        ${generateTable('2. INJECTIONS', ['S.No', 'Injection Name', 'Dose', 'Route', 'Diagnosis', 'Date', 'Staff'], injections, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.diagnosis || '-'}</td><td>${formatDate(r.startTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Medicines', ['Medicine Name', 'Diagnosis', 'Date', 'Staff Name'], mar, (r: any) => 
-                          `<tr><td>${r.drugName || r.medicineName || '-'}</td><td>${r.diagnosis || '-'}</td><td>${formatDate(r.scheduledTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
+                        ${generateTable('3. MEDICINES (MAR)', ['S.No', 'Medicine Name', 'Dose', 'Route', 'Frequency', 'Date', 'Staff'], mar, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.drugName || r.medicineName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.frequency || '-'}</td><td>${formatDate(r.scheduledTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Ventilator Settings', ['Time', 'Mode', 'FiO2', 'PEEP', 'Tidal Vol', 'RR Set'], ventilator, (r: any) => 
-                          `<tr><td>${formatTime(r.createdAt)}</td><td>${r.mode || '-'}</td><td>${r.fio2 || '-'}%</td><td>${r.peep || '-'}</td><td>${r.tidalVolume || '-'}</td><td>${r.respiratoryRateSet || '-'}</td></tr>`
+                        ${generateTable('4. INTAKE CHART', ['S.No', 'Time', 'Type', 'Volume (ml)', 'Route', 'Staff'], intake, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.hourSlot || r.timeSlot || formatTime(r.createdAt)}</td><td>${r.intakeType || r.fluidType || '-'}</td><td>${r.volume || r.oralFluids || '-'}</td><td>${r.route || '-'}</td><td>${r.nurseName || r.recordedBy || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('ABG / Lab Values', ['Time', 'pH', 'pCO2', 'pO2', 'HCO3', 'Lactate', 'Na', 'K'], abgLab, (r: any) => 
-                          `<tr><td>${formatTime(r.createdAt)}</td><td>${r.ph || '-'}</td><td>${r.pco2 || '-'}</td><td>${r.po2 || '-'}</td><td>${r.hco3 || '-'}</td><td>${r.lactate || '-'}</td><td>${r.sodium || '-'}</td><td>${r.potassium || '-'}</td></tr>`
+                        ${generateTable('5. OUTPUT CHART', ['S.No', 'Time', 'Urine (ml)', 'Other Losses', 'Total Output', 'Staff'], output, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.hourSlot || r.timeSlot || formatTime(r.createdAt)}</td><td>${r.urineHourly || r.volume || '-'}</td><td>${r.otherLosses || r.outputType || '-'}</td><td>${r.totalOutput || '-'}</td><td>${r.nurseName || r.recordedBy || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Intake', ['Time', 'Type', 'Volume (ml)', 'Route', 'Staff'], intake, (r: any) => 
-                          `<tr><td>${r.hourSlot || formatTime(r.createdAt)}</td><td>${r.intakeType || '-'}</td><td>${r.volume || '-'}</td><td>${r.route || '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+                        ${generateTable('6. DIABETIC MONITORING', ['S.No', 'Time', 'Blood Sugar (mg/dL)', 'Insulin Type', 'Dose', 'Alert', 'Staff'], diabetic, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.checkTime || formatTime(r.createdAt)}</td><td>${r.bloodSugarLevel || '-'}</td><td>${r.insulinType || '-'}</td><td>${r.insulinDose || '-'}</td><td>${r.alertType || '-'}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Output', ['Time', 'Type', 'Volume (ml)', 'Color', 'Staff'], output, (r: any) => 
-                          `<tr><td>${r.hourSlot || formatTime(r.createdAt)}</td><td>${r.outputType || '-'}</td><td>${r.volume || '-'}</td><td>${r.color || '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+                        ${generateTable('7. ONCE-ONLY MEDICATIONS', ['S.No', 'Drug Name', 'Dose', 'Route', 'Indication', 'Given At', 'Given By'], onceOnly, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.indication || '-'}</td><td>${formatTime(r.givenAt || r.createdAt)}</td><td>${r.givenBy || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Diabetic Monitoring', ['Time', 'Blood Sugar', 'Insulin Type', 'Insulin Dose', 'Alert'], diabetic, (r: any) => 
-                          `<tr><td>${r.checkTime || formatTime(r.createdAt)}</td><td>${r.bloodSugarLevel || '-'} mg/dL</td><td>${r.insulinType || '-'}</td><td>${r.insulinDose || '-'}</td><td>${r.alertType || '-'}</td></tr>`
+                        ${generateTable('8. SHIFT NOTES', ['S.No', 'Shift', 'Notes', 'Staff', 'Time'], shiftNotes, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.shift || '-'}</td><td>${r.notes || '-'}</td><td>${r.nurseName || '-'}</td><td>${formatTime(r.createdAt)}</td></tr>`
                         )}
 
-                        ${generateTable('Once-Only Medications', ['Drug Name', 'Dose', 'Route', 'Indication', 'Given At', 'Given By'], onceOnly, (r: any) => 
-                          `<tr><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.indication || '-'}</td><td>${formatTime(r.givenAt || r.createdAt)}</td><td>${r.givenBy || '-'}</td></tr>`
+                        ${generateTable('9. DUTY STAFF / NURSE NOTES', ['S.No', 'Shift', 'Staff Name', 'Role', 'Date'], dutyStaff, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.shift || '-'}</td><td>${r.staffName || '-'}</td><td>${r.role || '-'}</td><td>${formatDate(r.createdAt)}</td></tr>`
                         )}
 
-                        ${generateTable('Shift Notes', ['Shift', 'Notes', 'Staff', 'Time'], shiftNotes, (r: any) => 
-                          `<tr><td>${r.shift || '-'}</td><td>${r.notes || '-'}</td><td>${r.nurseName || '-'}</td><td>${formatTime(r.createdAt)}</td></tr>`
+                        ${generateTable('10. ALLERGIES & PRECAUTIONS', ['S.No', 'Drug Allergies', 'Food Allergies', 'Special Precautions', 'Infection Control', 'Nurse'], allergies.length > 0 ? allergies : (allergies as any[]), (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.drugAllergies || r.allergen || '-'}</td><td>${r.foodAllergies || r.allergenType || '-'}</td><td>${r.specialPrecautions || r.reaction || '-'}</td><td>${r.infectionControlFlags || r.severity || '-'}</td><td>${r.nurseName || r.reportedBy || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Lines & Tubes / Airway', ['Type', 'Site', 'Size', 'Inserted Date', 'Due Date', 'Status'], airway, (r: any) => 
-                          `<tr><td>${r.lineType || '-'}</td><td>${r.site || '-'}</td><td>${r.size || '-'}</td><td>${formatDate(r.insertedDate)}</td><td>${formatDate(r.dueDate)}</td><td>${r.status || '-'}</td></tr>`
+                        <div class="section-divider"></div>
+
+                        ${investigationChart && investigationChart.length > 0 ? `
+                          <h2>11. INVESTIGATION CHART</h2>
+                          ${investigationChart.map((inv: any, idx: number) => `
+                            <h3>Investigation Entry ${idx + 1} - ${formatDate(inv.investigationDate)}</h3>
+                            <table>
+                              <tr><td class="label-cell">Blood Group</td><td>${inv.bloodGroup || '-'}</td><td class="label-cell">HIV</td><td>${inv.hiv || '-'}</td></tr>
+                              <tr><td class="label-cell">HBsAg</td><td>${inv.hbsag || '-'}</td><td class="label-cell">HCV</td><td>${inv.hcv || '-'}</td></tr>
+                              <tr><td class="label-cell">Hb / PCV</td><td>${inv.hbPcv || '-'}</td><td class="label-cell">TLC</td><td>${inv.tlc || '-'}</td></tr>
+                              <tr><td class="label-cell">ESR</td><td>${inv.esr || '-'}</td><td class="label-cell">Platelets</td><td>${inv.platelets || '-'}</td></tr>
+                              <tr><td class="label-cell">Blood Sugar (Fasting)</td><td>${inv.bloodSugarFasting || '-'}</td><td class="label-cell">BUN</td><td>${inv.bun || '-'}</td></tr>
+                              <tr><td class="label-cell">Sr. Creatinine</td><td>${inv.srCreatinine || '-'}</td><td class="label-cell">Sr. Na/K/Cl</td><td>${inv.srNaKCl || '-'}</td></tr>
+                              <tr><td class="label-cell">Sr. Bilirubin</td><td>${inv.srBilirubinTotal || '-'}</td><td class="label-cell">SGOT/SGPT</td><td>${inv.sgotSgpt || '-'}</td></tr>
+                              <tr><td class="label-cell">ECG</td><td>${inv.ecg || '-'}</td><td class="label-cell">USG</td><td>${inv.usg || '-'}</td></tr>
+                              <tr><td class="label-cell">X-Rays</td><td>${inv.xrays || '-'}</td><td class="label-cell">CT/MRI</td><td>${inv.ctScanMri || '-'}</td></tr>
+                              <tr><td class="label-cell">Urine Routine</td><td colspan="3">${inv.urineRoutine || '-'}</td></tr>
+                            </table>
+                          `).join('')}
+                        ` : '<h2>11. INVESTIGATION CHART</h2><p class="no-data">No investigation data recorded</p>'}
+
+                        ${initialAssessment ? `
+                          <h2>12. INITIAL ASSESSMENT</h2>
+                          <table>
+                            <tr><td class="label-cell">Patient Received Date/Time</td><td>${formatDate(initialAssessment.patientReceivedDate)} ${initialAssessment.patientReceivedTime || ''}</td><td class="label-cell">Accompanied By</td><td>${initialAssessment.patientAccompaniedBy || '-'}</td></tr>
+                            <tr><td class="label-cell">Allergies</td><td>${initialAssessment.allergiesDetails || initialAssessment.allergies || '-'}</td><td class="label-cell">Pain Score</td><td>${initialAssessment.painScore || '-'}/10</td></tr>
+                            <tr><td class="label-cell">Chief Complaints</td><td colspan="3">${initialAssessment.complaintsHistory || '-'}</td></tr>
+                            <tr><td class="label-cell">Pulse Rate</td><td>${initialAssessment.pulseRate || '-'}</td><td class="label-cell">Blood Pressure</td><td>${initialAssessment.bloodPressure || '-'}</td></tr>
+                            <tr><td class="label-cell">Temperature</td><td>${initialAssessment.temperature || '-'}</td><td class="label-cell">Respiratory Rate</td><td>${initialAssessment.respiratoryRate || '-'}</td></tr>
+                            <tr><td class="label-cell">Weight</td><td>${initialAssessment.weight || '-'} kg</td><td class="label-cell">Height</td><td>${initialAssessment.height || '-'} cm</td></tr>
+                            <tr><td class="label-cell">GCS Total</td><td>${initialAssessment.gcsTotal || '-'}</td><td class="label-cell">Conscious/Oriented</td><td>${initialAssessment.conscious ? 'Yes' : 'No'} / ${initialAssessment.oriented ? 'Yes' : 'No'}</td></tr>
+                            <tr><td class="label-cell">Provisional Diagnosis</td><td colspan="3">${initialAssessment.provisionalDiagnosis || '-'}</td></tr>
+                            <tr><td class="label-cell">Treatment Plan</td><td colspan="3">${initialAssessment.treatment || '-'}</td></tr>
+                            <tr><td class="label-cell">Clinical Assistant</td><td>${initialAssessment.clinicalAssistantName || '-'}</td><td class="label-cell">Consultant</td><td>${initialAssessment.inchargeConsultantName || '-'}</td></tr>
+                          </table>
+                        ` : '<h2>12. INITIAL ASSESSMENT</h2><p class="no-data">No initial assessment recorded</p>'}
+
+                        ${generateTable('13. INDOOR CONSULTATION SHEET', ['S.No', 'Date', 'Time', 'Doctor', 'Clinical Findings', 'Orders'], indoorConsultation, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${formatDate(r.entryDate)}</td><td>${r.entryTime || '-'}</td><td>${r.inChargeDoctor || '-'}</td><td>${r.clinicalFindings || '-'}</td><td>${r.orders || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Duty Staff', ['Shift', 'Staff Name', 'Role', 'Date'], dutyStaff, (r: any) => 
-                          `<tr><td>${r.shift || '-'}</td><td>${r.staffName || '-'}</td><td>${r.role || '-'}</td><td>${formatDate(r.createdAt)}</td></tr>`
+                        ${generateTable('14. DOCTOR\'S VISIT SHEET', ['S.No', 'Date', 'Time', 'Doctor', 'Visit Type', 'Procedure/Notes'], doctorsVisit, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${formatDate(r.visitDate)}</td><td>${r.visitTime || '-'}</td><td>${r.nameOfDoctor || '-'}</td><td>${r.visitType || '-'}</td><td>${r.procedure || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('Allergies', ['Allergen', 'Type', 'Severity', 'Reaction', 'Reported By'], allergies, (r: any) => 
-                          `<tr><td>${r.allergen || '-'}</td><td>${r.allergenType || '-'}</td><td>${r.severity || '-'}</td><td>${r.reaction || '-'}</td><td>${r.reportedBy || '-'}</td></tr>`
+                        ${surgeryNotes && surgeryNotes.length > 0 ? `
+                          <h2>15. SURGERY NOTES</h2>
+                          ${surgeryNotes.map((sn: any, idx: number) => `
+                            <h3>Surgery ${idx + 1} - ${formatDate(sn.surgeryDate)}</h3>
+                            <table>
+                              <tr><td class="label-cell">Pre-operative Diagnosis</td><td colspan="3">${sn.preoperativeDiagnosis || '-'}</td></tr>
+                              <tr><td class="label-cell">Surgery Planned</td><td>${sn.surgeryPlanned || '-'}</td><td class="label-cell">Surgery Performed</td><td>${sn.surgeryPerformed || '-'}</td></tr>
+                              <tr><td class="label-cell">Surgeon</td><td>${sn.surgeonName || sn.nameOfSurgeon || '-'}</td><td class="label-cell">Assistants</td><td>${[sn.assistant1, sn.assistant2].filter(Boolean).join(', ') || '-'}</td></tr>
+                              <tr><td class="label-cell">Anesthesia Type</td><td>${sn.typeOfAnaesthesia || '-'}</td><td class="label-cell">Anesthetist</td><td>${[sn.anaesthetist1, sn.anaesthetist2].filter(Boolean).join(', ') || '-'}</td></tr>
+                              <tr><td class="label-cell">Operation Started</td><td>${sn.operationStartedAt || '-'}</td><td class="label-cell">Completed</td><td>${sn.operationCompletedAt || '-'}</td></tr>
+                              <tr><td class="label-cell">Operation Notes</td><td colspan="3">${sn.operationNotes || '-'}</td></tr>
+                              <tr><td class="label-cell">Blood Loss</td><td>${sn.bloodLoss || '-'} ml</td><td class="label-cell">Blood Transfusion</td><td>${sn.bloodTransfusion || '-'}</td></tr>
+                              <tr><td class="label-cell">Post-op Vitals</td><td colspan="3">Pulse: ${sn.postopVitalsPulse || '-'}, BP: ${sn.postopVitalsBp || '-'}, SpO2: ${sn.postopVitalsSpo2 || '-'}%</td></tr>
+                              <tr><td class="label-cell">Shift Patient To</td><td>${sn.shiftPatientTo || '-'}</td><td class="label-cell">Tissue for HPE</td><td>${sn.tissueSubjectForHpe ? 'Yes' : 'No'}</td></tr>
+                            </table>
+                          `).join('')}
+                        ` : '<h2>15. SURGERY NOTES</h2><p class="no-data">No surgery notes recorded</p>'}
+
+                        ${generateTable('16. NURSING PROGRESS SHEET', ['S.No', 'Date/Time', 'Progress Notes', 'Nurse Signature'], nursingProgress, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${formatDate(r.entryDateTime)} ${formatTime(r.entryDateTime)}</td><td>${r.progressNotes || '-'}</td><td>${r.signatureName || '-'}</td></tr>`
                         )}
+
+                        ${carePlan ? `
+                          <h2>17. NURSING ASSESSMENT & CARE PLAN</h2>
+                          <table>
+                            <tr><td class="label-cell">Provisional Diagnosis</td><td colspan="3">${carePlan.provisionalDiagnosis || '-'}</td></tr>
+                            <tr><td class="label-cell">Allergies</td><td>${carePlan.allergies || '-'}</td><td class="label-cell">Blood Group</td><td>${carePlan.bloodGroup || '-'}</td></tr>
+                            <tr><td class="label-cell">Vital Signs</td><td colspan="3">Temp: ${carePlan.temperature || '-'}, Pulse: ${carePlan.pulse || '-'}, BP: ${carePlan.bp || '-'}, RR: ${carePlan.breathsPerMin || '-'}</td></tr>
+                            <tr><td class="label-cell">Height / Weight</td><td>${carePlan.height || '-'} cm / ${carePlan.weight || '-'} kg</td><td class="label-cell">Pain Score</td><td>${carePlan.painScore || '-'}/10</td></tr>
+                            <tr><td class="label-cell">Patient History</td><td colspan="3">${carePlan.patientHistory || '-'}</td></tr>
+                            <tr><td class="label-cell">Current Medications</td><td colspan="3">${carePlan.currentMedications || '-'}</td></tr>
+                            <tr><td class="label-cell">Morse Fall Risk Score</td><td>${carePlan.morseFallRiskScore || '-'}</td><td class="label-cell">Braden Scale</td><td>${carePlan.bradenScaleTotal || '-'}</td></tr>
+                            <tr><td class="label-cell">Nursing Care Shifts</td><td colspan="3">${carePlan.nursingCareShifts || '-'}</td></tr>
+                            <tr><td class="label-cell">Nursing Observations</td><td colspan="3">${carePlan.nursingObservations || '-'}</td></tr>
+                            <tr><td class="label-cell">Nursing Intervention</td><td colspan="3">${carePlan.nursingIntervention || '-'}</td></tr>
+                            <tr><td class="label-cell">Staff Nurse</td><td>${carePlan.admittingStaffNurse || '-'}</td><td class="label-cell">Emp ID</td><td>${carePlan.empId || '-'}</td></tr>
+                          </table>
+                        ` : '<h2>17. NURSING ASSESSMENT & CARE PLAN</h2><p class="no-data">No care plan recorded</p>'}
+
+                        ${generateTable('18. VENTILATOR SETTINGS', ['S.No', 'Time', 'Mode', 'FiO2 %', 'PEEP', 'Tidal Vol', 'RR Set'], ventilator, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${formatTime(r.createdAt)}</td><td>${r.mode || '-'}</td><td>${r.fio2 || '-'}</td><td>${r.peep || '-'}</td><td>${r.tidalVolume || '-'}</td><td>${r.respiratoryRateSet || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('19. ABG / LAB VALUES', ['S.No', 'Time', 'pH', 'pCO2', 'pO2', 'HCO3', 'Lactate', 'Na', 'K'], abgLab, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${formatTime(r.createdAt)}</td><td>${r.ph || '-'}</td><td>${r.pco2 || '-'}</td><td>${r.po2 || '-'}</td><td>${r.hco3 || '-'}</td><td>${r.lactate || '-'}</td><td>${r.sodium || '-'}</td><td>${r.potassium || '-'}</td></tr>`
+                        )}
+
+                        ${generateTable('20. LINES & TUBES / AIRWAY', ['S.No', 'Type', 'Site', 'Size', 'Inserted Date', 'Due Date', 'Status'], airway, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.lineType || '-'}</td><td>${r.site || '-'}</td><td>${r.size || '-'}</td><td>${formatDate(r.insertedDate)}</td><td>${formatDate(r.dueDate)}</td><td>${r.status || '-'}</td></tr>`
+                        )}
+
+                        <div class="signature-section">
+                          <div class="signature-box">Staff Nurse Signature</div>
+                          <div class="signature-box">Doctor Signature</div>
+                          <div class="signature-box">Consultant Signature</div>
+                        </div>
 
                         <div class="footer">
-                          <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital & Research Centre - IPD Monitoring System</p>
+                          <p><strong>Complete IPD Monitoring Report</strong></p>
+                          <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital & Research Centre</p>
+                          <p>This is a computer-generated document and includes all monitoring data recorded for this patient session.</p>
                         </div>
                       </body>
                       </html>
@@ -1004,14 +1141,15 @@ export default function PatientMonitoringPage() {
                         printWindow.print();
                       }, 500);
                     }
-                    toast({ title: "Report Ready", description: "Print dialog opened" });
+                    toast({ title: "Complete Report Ready", description: "Print dialog opened with all tabs data" });
                   } catch (error) {
+                    console.error('Print error:', error);
                     toast({ title: "Error", description: "Failed to generate report", variant: "destructive" });
                   }
                 }}
                 data-testid="button-export-pdf"
               >
-                  <Download className="h-4 w-4" /> Print
+                  <Printer className="h-4 w-4" /> Print All
                 </Button>
               </div>
 
