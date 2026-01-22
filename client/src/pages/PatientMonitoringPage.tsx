@@ -40,20 +40,26 @@ const getHospitalPrintHeader = () => `
   </div>
 `;
 
-// Reusable print styles
+// Reusable print styles - Enhanced tabular format
 const getPrintStyles = () => `
   body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
-  h1 { color: #1a365d; border-bottom: 2px solid #3182ce; padding-bottom: 10px; font-size: 16px; margin-top: 15px; text-align: center; }
-  h2 { color: #2d3748; margin-top: 20px; font-size: 13px; background: #f7fafc; padding: 6px 10px; border-left: 3px solid #3182ce; }
-  .patient-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; padding: 10px; background: #f7fafc; border-radius: 4px; }
-  .info-item { font-size: 11px; }
-  .info-label { font-weight: bold; color: #4a5568; }
-  table { width: 100%; border-collapse: collapse; margin-top: 8px; margin-bottom: 15px; }
-  th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; font-size: 11px; }
-  th { background: #edf2f7; font-weight: 600; }
-  tr:nth-child(even) { background: #f7fafc; }
-  .no-data { color: #a0aec0; font-style: italic; margin: 10px 0; text-align: center; }
-  .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; color: #718096; font-size: 10px; text-align: center; }
+  h1 { text-align: center; background: #333; color: #fff; padding: 8px 12px; margin: 15px 0; font-size: 14px; font-weight: bold; }
+  h2, h3 { color: #1a1a1a; margin: 15px 0 8px 0; font-size: 12px; background: #e5e5e5; padding: 6px 10px; font-weight: bold; }
+  h4 { color: #333; margin: 12px 0 6px 0; font-size: 11px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  .section-title { background: #e5e5e5; padding: 5px 10px; margin: 15px 0 8px 0; font-weight: bold; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+  th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; font-size: 11px; vertical-align: top; }
+  th { background: #f0f0f0; font-weight: 600; text-align: center; }
+  .label-cell { background: #f9f9f9; font-weight: 600; width: 25%; }
+  .value-cell { width: 25%; }
+  .check-cell { text-align: center; width: 50px; }
+  .no-data { color: #666; font-style: italic; margin: 10px 0; text-align: center; padding: 20px; border: 1px solid #ccc; }
+  .summary-row { background: #f0f0f0; font-weight: bold; }
+  .two-col { display: flex; gap: 20px; margin-bottom: 15px; }
+  .two-col > div { flex: 1; }
+  .text-box { border: 1px solid #333; padding: 8px; min-height: 60px; margin-bottom: 10px; }
+  .signature-section { margin-top: 20px; border-top: 1px solid #333; padding-top: 10px; }
+  .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #333; color: #666; font-size: 10px; text-align: center; }
   @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
   @page { margin: 15mm; }
 `;
@@ -1563,12 +1569,44 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
   };
 
   const handlePrint = () => {
-    const rows = vitals.map((r: any) => 
-      `<tr><td>${r.hourSlot || '-'}</td><td>${r.heartRate || '-'}</td><td>${r.systolicBp || '-'}/${r.diastolicBp || '-'}</td><td>${r.temperature ? r.temperature + '°C' : '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
-    ).join('');
+    const rows = HOUR_SLOTS.map(slot => {
+      const v = vitals.find((x: any) => x.hourSlot === slot);
+      return `<tr>
+        <td style="text-align:center;font-weight:bold;">${slot}</td>
+        <td style="text-align:center;">${v?.heartRate || '-'}</td>
+        <td style="text-align:center;">${v ? `${v.systolicBp || '-'}/${v.diastolicBp || '-'}` : '-'}</td>
+        <td style="text-align:center;">${v?.temperature ? `${v.temperature}°C` : '-'}</td>
+        <td style="text-align:center;">${v?.respiratoryRate || '-'}</td>
+        <td style="text-align:center;">${v?.spo2 ? `${v.spo2}%` : '-'}</td>
+        <td style="text-align:center;">${v?.nurseName || '-'}</td>
+      </tr>`;
+    }).join('');
     const content = `
-      <h1>Vitals Chart</h1>
-      ${vitals.length ? `<table><thead><tr><th>Time</th><th>HR</th><th>BP</th><th>Temp</th><th>RR</th><th>SpO2</th><th>Staff</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No vitals recorded</p>'}
+      <h1>HOURLY VITALS CHART (24 HOURS)</h1>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:80px;">Time Slot</th>
+            <th>Pulse (bpm)</th>
+            <th>BP (mmHg)</th>
+            <th>Temp (°C)</th>
+            <th>RR (/min)</th>
+            <th>SpO2 (%)</th>
+            <th>Staff Name</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Reviewed By:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow('Vitals Chart', content);
   };
@@ -1699,12 +1737,48 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
   };
 
   const handlePrint = () => {
-    const rows = records.map((r: any) => 
-      `<tr><td>${r.drugName || '-'}</td><td>${r.diagnosis || '-'}</td><td>${r.startTime ? format(new Date(r.startTime), 'dd/MM/yyyy') : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+    const rows = records.map((r: any, idx: number) => 
+      `<tr>
+        <td style="text-align:center;">${idx + 1}</td>
+        <td>${r.drugName || '-'}</td>
+        <td>${r.diagnosis || '-'}</td>
+        <td style="text-align:center;">${r.startTime ? format(new Date(r.startTime), 'dd/MM/yyyy') : '-'}</td>
+        <td style="text-align:center;">${r.startTime ? format(new Date(r.startTime), 'HH:mm') : '-'}</td>
+        <td>${r.nurseName || '-'}</td>
+      </tr>`
     ).join('');
     const content = `
-      <h1>Injections & Medication</h1>
-      ${records.length ? `<table><thead><tr><th>Injection Name</th><th>Diagnosis</th><th>Date</th><th>Staff</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No injections recorded</p>'}
+      <h1>INJECTIONS & MEDICATION RECORD</h1>
+      ${records.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th>Injection Name</th>
+              <th>Diagnosis/Indication</th>
+              <th style="width:100px;">Date</th>
+              <th style="width:80px;">Time</th>
+              <th>Administered By</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr class="summary-row">
+              <td colspan="6" style="text-align:right;">Total Injections: ${records.length}</td>
+            </tr>
+          </tfoot>
+        </table>
+      ` : '<div class="no-data">No injections recorded</div>'}
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Verified By:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow('Injections', content);
   };
@@ -2051,13 +2125,49 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
   };
 
   const handlePrint = () => {
-    const rows = records.map((r: any) => 
-      `<tr><td>${r.hourSlot || '-'}</td><td>${r.ivLine1 || 0}</td><td>${r.oral || 0}</td><td>${r.ngTube || 0}</td><td>${r.bloodProducts || 0}</td><td>${(r.ivLine1 || 0) + (r.oral || 0) + (r.ngTube || 0) + (r.bloodProducts || 0)}</td></tr>`
-    ).join('');
+    const rows = HOUR_SLOTS.map(slot => {
+      const r = records.find((x: any) => x.hourSlot === slot);
+      const total = (r?.ivLine1 || 0) + (r?.oral || 0) + (r?.ngTube || 0) + (r?.bloodProducts || 0);
+      return `<tr>
+        <td style="text-align:center;font-weight:bold;">${slot}</td>
+        <td style="text-align:center;">${r?.ivLine1 || '-'}</td>
+        <td style="text-align:center;">${r?.oral || '-'}</td>
+        <td style="text-align:center;">${r?.ngTube || '-'}</td>
+        <td style="text-align:center;">${r?.bloodProducts || '-'}</td>
+        <td style="text-align:center;font-weight:bold;">${total || '-'}</td>
+      </tr>`;
+    }).join('');
     const content = `
-      <h1>Intake Chart</h1>
-      <p><strong>Total Intake:</strong> ${fluidBalance?.totalIntake || 0} ml</p>
-      ${records.length ? `<table><thead><tr><th>Time</th><th>IV Line (ml)</th><th>Oral (ml)</th><th>NG Tube (ml)</th><th>Blood (ml)</th><th>Total (ml)</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No intake recorded</p>'}
+      <h1>FLUID INTAKE CHART (24 HOURS)</h1>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:80px;">Time Slot</th>
+            <th>IV Line 1 (ml)</th>
+            <th>Oral (ml)</th>
+            <th>NG Tube (ml)</th>
+            <th>Blood Products (ml)</th>
+            <th style="background:#d4edda;">Total (ml)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr class="summary-row">
+            <td colspan="5" style="text-align:right;font-weight:bold;">TOTAL INTAKE:</td>
+            <td style="text-align:center;font-weight:bold;background:#d4edda;">${fluidBalance?.totalIntake || 0} ml</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Recorded By:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow('Intake Chart', content);
   };
@@ -2184,13 +2294,63 @@ function OutputTab({ sessionId }: { sessionId: string }) {
   };
 
   const handlePrint = () => {
-    const rows = records.map((r: any) => 
-      `<tr><td>${r.hourSlot || '-'}</td><td>${r.urineOutput || 0}</td><td>${r.drainOutput || 0}</td><td>${r.vomitus || 0}</td><td>${r.stool || 0}</td><td>${(r.urineOutput || 0) + (r.drainOutput || 0) + (r.vomitus || 0) + (r.stool || 0)}</td></tr>`
-    ).join('');
+    const rows = HOUR_SLOTS.map(slot => {
+      const r = records.find((x: any) => x.hourSlot === slot);
+      const total = (r?.urineOutput || 0) + (r?.drainOutput || 0) + (r?.vomitus || 0) + (r?.stool || 0);
+      return `<tr>
+        <td style="text-align:center;font-weight:bold;">${slot}</td>
+        <td style="text-align:center;">${r?.urineOutput || '-'}</td>
+        <td style="text-align:center;">${r?.drainOutput || '-'}</td>
+        <td style="text-align:center;">${r?.vomitus || '-'}</td>
+        <td style="text-align:center;">${r?.stool || '-'}</td>
+        <td style="text-align:center;font-weight:bold;">${total || '-'}</td>
+      </tr>`;
+    }).join('');
+    const netBalance = (fluidBalance?.totalIntake || 0) - (fluidBalance?.totalOutput || 0);
     const content = `
-      <h1>Output Chart</h1>
-      <p><strong>Total Output:</strong> ${fluidBalance?.totalOutput || 0} ml | <strong>Net Balance:</strong> ${fluidBalance?.netBalance || 0} ml</p>
-      ${records.length ? `<table><thead><tr><th>Time</th><th>Urine (ml)</th><th>Drain (ml)</th><th>Vomitus (ml)</th><th>Stool (ml)</th><th>Total (ml)</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No output recorded</p>'}
+      <h1>FLUID OUTPUT CHART (24 HOURS)</h1>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:80px;">Time Slot</th>
+            <th>Urine (ml)</th>
+            <th>Drain (ml)</th>
+            <th>Vomitus (ml)</th>
+            <th>Stool (ml)</th>
+            <th style="background:#f8d7da;">Total (ml)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr class="summary-row">
+            <td colspan="5" style="text-align:right;font-weight:bold;">TOTAL OUTPUT:</td>
+            <td style="text-align:center;font-weight:bold;background:#f8d7da;">${fluidBalance?.totalOutput || 0} ml</td>
+          </tr>
+        </tfoot>
+      </table>
+      <h3>FLUID BALANCE SUMMARY</h3>
+      <table>
+        <tr>
+          <td class="label-cell">Total Intake:</td>
+          <td class="value-cell" style="text-align:center;">${fluidBalance?.totalIntake || 0} ml</td>
+          <td class="label-cell">Total Output:</td>
+          <td class="value-cell" style="text-align:center;">${fluidBalance?.totalOutput || 0} ml</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Net Balance:</td>
+          <td colspan="3" style="text-align:center;font-weight:bold;${netBalance >= 0 ? 'color:green;' : 'color:red;'}">${netBalance >= 0 ? '+' : ''}${netBalance} ml</td>
+        </tr>
+      </table>
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Recorded By:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow('Output Chart', content);
   };
@@ -2309,12 +2469,65 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
   };
 
   const handlePrint = () => {
-    const rows = records.map((r: any) => 
-      `<tr><td>${r.checkTime || format(new Date(r.createdAt), 'HH:mm')}</td><td>${r.bloodSugarLevel || '-'} mg/dL</td><td>${r.insulinType || '-'}</td><td>${r.insulinDose || '-'}</td><td>${r.alertType || '-'}</td></tr>`
+    const rows = records.map((r: any, idx: number) => 
+      `<tr>
+        <td style="text-align:center;">${idx + 1}</td>
+        <td style="text-align:center;">${r.checkTime || format(new Date(r.createdAt), 'HH:mm')}</td>
+        <td style="text-align:center;font-weight:bold;">${r.bloodSugarLevel || '-'}</td>
+        <td>${r.insulinType || '-'}</td>
+        <td style="text-align:center;">${r.insulinDose || '-'}</td>
+        <td style="text-align:center;${r.alertType === 'HIGH' ? 'color:red;font-weight:bold;' : r.alertType === 'LOW' ? 'color:orange;font-weight:bold;' : ''}">${r.alertType || 'Normal'}</td>
+        <td style="text-align:center;">${r.createdAt ? format(new Date(r.createdAt), 'dd/MM/yyyy') : '-'}</td>
+      </tr>`
     ).join('');
     const content = `
-      <h1>Diabetic Flow Chart</h1>
-      ${records.length ? `<table><thead><tr><th>Time</th><th>Blood Sugar</th><th>Insulin Type</th><th>Insulin Dose</th><th>Alert</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No diabetic records</p>'}
+      <h1>DIABETIC FLOW CHART</h1>
+      ${records.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th style="width:100px;">Check Time</th>
+              <th>Blood Sugar (mg/dL)</th>
+              <th>Insulin Type</th>
+              <th style="width:80px;">Dose (Units)</th>
+              <th style="width:80px;">Alert</th>
+              <th style="width:100px;">Date</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr class="summary-row">
+              <td colspan="7" style="text-align:right;">Total Records: ${records.length}</td>
+            </tr>
+          </tfoot>
+        </table>
+      ` : '<div class="no-data">No diabetic records</div>'}
+      <h3>REFERENCE VALUES</h3>
+      <table>
+        <tr>
+          <td class="label-cell">Fasting (Pre-Meal):</td>
+          <td class="value-cell">80-130 mg/dL</td>
+          <td class="label-cell">Post-Meal (2hr):</td>
+          <td class="value-cell">&lt;180 mg/dL</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Low (Hypoglycemia):</td>
+          <td class="value-cell" style="color:orange;">&lt;70 mg/dL</td>
+          <td class="label-cell">High (Hyperglycemia):</td>
+          <td class="value-cell" style="color:red;">&gt;250 mg/dL</td>
+        </tr>
+      </table>
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Monitored By:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow('Diabetic Chart', content);
   };
@@ -2441,12 +2654,48 @@ function MARTab({ sessionId }: { sessionId: string }) {
   };
 
   const handlePrint = () => {
-    const rows = records.map((r: any) => 
-      `<tr><td>${r.drugName || r.medicineName || '-'}</td><td>${r.diagnosis || '-'}</td><td>${r.scheduledTime ? format(new Date(r.scheduledTime), 'dd/MM/yyyy') : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
+    const rows = records.map((r: any, idx: number) => 
+      `<tr>
+        <td style="text-align:center;">${idx + 1}</td>
+        <td>${r.drugName || r.medicineName || '-'}</td>
+        <td>${r.diagnosis || '-'}</td>
+        <td style="text-align:center;">${r.scheduledTime ? format(new Date(r.scheduledTime), 'dd/MM/yyyy') : '-'}</td>
+        <td style="text-align:center;">${r.scheduledTime ? format(new Date(r.scheduledTime), 'HH:mm') : '-'}</td>
+        <td>${r.nurseName || '-'}</td>
+      </tr>`
     ).join('');
     const content = `
-      <h1>Medicines</h1>
-      ${records.length ? `<table><thead><tr><th>Medicine Name</th><th>Diagnosis</th><th>Date</th><th>Staff</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No medicines recorded</p>'}
+      <h1>MEDICATION ADMINISTRATION RECORD</h1>
+      ${records.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th>Medicine Name</th>
+              <th>Diagnosis/Indication</th>
+              <th style="width:100px;">Date</th>
+              <th style="width:80px;">Time</th>
+              <th>Administered By</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr class="summary-row">
+              <td colspan="6" style="text-align:right;">Total Medicines: ${records.length}</td>
+            </tr>
+          </tfoot>
+        </table>
+      ` : '<div class="no-data">No medicines recorded</div>'}
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Verified By:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow('Medicines', content);
   };
@@ -2667,13 +2916,57 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
   };
 
   const handlePrint = () => {
-    const rows = records.map((r: any) => 
-      `<tr><td>${r.shift || '-'}</td><td>${r.eventType || '-'}</td><td style="white-space:pre-wrap">${r.observation || '-'}</td><td>${r.nurseName || '-'}</td><td>${r.staffRole || 'NURSE'}</td><td>${r.noteTime ? format(new Date(r.noteTime), 'HH:mm') : '-'}</td></tr>`
-    ).join('');
-    const content = `
-      <h1>Nursing Shift Notes</h1>
-      ${records.length ? `<table><thead><tr><th>Shift</th><th>Type</th><th>Notes</th><th>Staff Name</th><th>Role</th><th>Time</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No shift notes recorded</p>'}
-    `;
+    const groupedByShift: Record<string, any[]> = {};
+    records.forEach((r: any) => {
+      const shift = r.shift || 'Unspecified';
+      if (!groupedByShift[shift]) groupedByShift[shift] = [];
+      groupedByShift[shift].push(r);
+    });
+    
+    let content = `<h1>NURSING SHIFT NOTES</h1>`;
+    
+    if (records.length) {
+      Object.entries(groupedByShift).forEach(([shift, shiftRecords]) => {
+        content += `<h3>${shift} Shift</h3>`;
+        const rows = shiftRecords.map((r: any, idx: number) => 
+          `<tr>
+            <td style="text-align:center;">${idx + 1}</td>
+            <td style="text-align:center;">${r.noteTime ? format(new Date(r.noteTime), 'HH:mm') : '-'}</td>
+            <td>${r.eventType || '-'}</td>
+            <td style="white-space:pre-wrap;">${r.observation || '-'}</td>
+            <td>${r.nurseName || '-'}</td>
+            <td style="text-align:center;">${r.staffRole || 'NURSE'}</td>
+          </tr>`
+        ).join('');
+        content += `<table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th style="width:80px;">Time</th>
+              <th style="width:120px;">Event Type</th>
+              <th>Notes/Observation</th>
+              <th style="width:150px;">Staff Name</th>
+              <th style="width:80px;">Role</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      });
+      content += `<div class="summary-row" style="padding:8px;background:#f0f0f0;margin:10px 0;">Total Notes: ${records.length}</div>`;
+    } else {
+      content += '<div class="no-data">No shift notes recorded</div>';
+    }
+    
+    content += `<div class="signature-section">
+      <table>
+        <tr>
+          <td class="label-cell">Reviewed By:</td>
+          <td class="value-cell"></td>
+          <td class="label-cell">Date:</td>
+          <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+        </tr>
+      </table>
+    </div>`;
     openPrintWindow('Shift Notes', content);
   };
 
@@ -2945,12 +3238,46 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
   };
 
   const handlePrint = () => {
-    const rows = records.map((r: any) => 
-      `<tr><td style="width:20%">${r.shiftStartTime ? format(new Date(r.shiftStartTime), 'dd/MM/yyyy HH:mm') : '-'}</td><td style="white-space:pre-wrap">${r.nursesNotes || r.observation || '-'}</td><td style="width:20%">${r.staffSignEmpNo || r.nurseName || '-'}</td></tr>`
+    const rows = records.map((r: any, idx: number) => 
+      `<tr>
+        <td style="text-align:center;">${idx + 1}</td>
+        <td style="text-align:center;">${r.shiftStartTime ? format(new Date(r.shiftStartTime), 'dd/MM/yyyy') : '-'}</td>
+        <td style="text-align:center;">${r.shiftStartTime ? format(new Date(r.shiftStartTime), 'HH:mm') : '-'}</td>
+        <td style="white-space:pre-wrap;">${r.nursesNotes || r.observation || '-'}</td>
+        <td>${r.staffSignEmpNo || r.nurseName || '-'}</td>
+      </tr>`
     ).join('');
     const content = `
-      <h1 style="text-align:center;border:2px solid #333;display:inline-block;padding:5px 20px;">NURSES NOTES</h1>
-      ${records.length ? `<table style="width:100%;margin-top:10px;"><thead><tr><th style="width:20%;border:1px solid #333;">Date & Time</th><th style="border:1px solid #333;">Nurses Notes</th><th style="width:20%;border:1px solid #333;">Staff Sign & Emp No.</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No nurse notes recorded</p>'}
+      <h1>NURSES NOTES</h1>
+      ${records.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th style="width:100px;">Date</th>
+              <th style="width:80px;">Time</th>
+              <th>Nurses Notes / Observations</th>
+              <th style="width:180px;">Staff Sign & Emp No.</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr class="summary-row">
+              <td colspan="5" style="text-align:right;">Total Notes: ${records.length}</td>
+            </tr>
+          </tfoot>
+        </table>
+      ` : '<div class="no-data">No nurse notes recorded</div>'}
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Reviewed By:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow('Nurses Notes', content);
   };
@@ -3050,16 +3377,49 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
 
   const handlePrint = () => {
     const content = record ? `
-      <h1>Allergies & Precautions</h1>
+      <h1>ALLERGIES & PRECAUTIONS</h1>
+      <h3>Allergy Information</h3>
       <table>
-        <tr><th>Known Allergies</th><td>${record.knownAllergies || '-'}</td></tr>
-        <tr><th>Drug Allergies</th><td>${record.drugAllergies || '-'}</td></tr>
-        <tr><th>Food Allergies</th><td>${record.foodAllergies || '-'}</td></tr>
-        <tr><th>Isolation Precautions</th><td>${record.isolationPrecautions || '-'}</td></tr>
-        <tr><th>Fall Risk</th><td>${record.fallRisk ? 'Yes' : 'No'}</td></tr>
-        <tr><th>Pressure Ulcer Risk</th><td>${record.pressureUlcerRisk ? 'Yes' : 'No'}</td></tr>
+        <tr>
+          <td class="label-cell" style="width:30%;">Known Allergies:</td>
+          <td style="width:70%;">${record.knownAllergies || 'None reported'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Drug Allergies:</td>
+          <td>${record.drugAllergies || 'None reported'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Food Allergies:</td>
+          <td>${record.foodAllergies || 'None reported'}</td>
+        </tr>
       </table>
-    ` : '<h1>Allergies & Precautions</h1><p class="no-data">No allergy data recorded</p>';
+      <h3>Special Precautions</h3>
+      <table>
+        <tr>
+          <td class="label-cell" style="width:30%;">Isolation Precautions:</td>
+          <td style="width:70%;">${record.isolationPrecautions || 'None'}</td>
+        </tr>
+      </table>
+      <h3>Risk Assessment</h3>
+      <table>
+        <tr>
+          <td class="label-cell" style="width:30%;">Fall Risk:</td>
+          <td style="width:20%;text-align:center;${record.fallRisk ? 'background:#f8d7da;color:red;font-weight:bold;' : ''}">${record.fallRisk ? 'YES' : 'No'}</td>
+          <td class="label-cell" style="width:30%;">Pressure Ulcer Risk:</td>
+          <td style="width:20%;text-align:center;${record.pressureUlcerRisk ? 'background:#f8d7da;color:red;font-weight:bold;' : ''}">${record.pressureUlcerRisk ? 'YES' : 'No'}</td>
+        </tr>
+      </table>
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Recorded By:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
+    ` : `<h1>ALLERGIES & PRECAUTIONS</h1><div class="no-data">No allergy data recorded</div>`;
     openPrintWindow('Allergies', content);
   };
 
@@ -3231,22 +3591,44 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
   ];
 
   const handlePrint = () => {
-    let rows = '';
-    investigations.forEach((inv: any) => {
-      const allSections = [...LAB_SECTIONS, ...IMAGING_SECTIONS];
-      allSections.forEach(section => {
-        section.fields.forEach(f => {
-          const val = inv[f.key];
-          if (val) {
-            rows += `<tr><td>${f.label}</td><td>${val}</td><td>${inv.investigationDate ? format(new Date(inv.investigationDate), 'dd/MM/yyyy') : '-'}</td></tr>`;
+    let content = `<h1>IPD INVESTIGATION CHART</h1>`;
+    
+    if (investigations.length) {
+      investigations.forEach((inv: any, invIdx: number) => {
+        content += `<h3>Investigation Entry #${invIdx + 1} - ${inv.investigationDate ? format(new Date(inv.investigationDate), 'dd/MM/yyyy') : 'Date Unknown'}</h3>`;
+        
+        const allSections = [...LAB_SECTIONS, ...IMAGING_SECTIONS];
+        allSections.forEach(section => {
+          const sectionRows = section.fields.map(f => {
+            const val = inv[f.key];
+            return val ? `<tr>
+              <td class="label-cell">${f.label}:</td>
+              <td class="value-cell">${val}</td>
+            </tr>` : null;
+          }).filter(Boolean).join('');
+          
+          if (sectionRows) {
+            content += `<h4>${section.title}</h4>
+              <table>
+                <tbody>${sectionRows}</tbody>
+              </table>`;
           }
         });
       });
-    });
-    const content = `
-      <h1>Investigation Chart</h1>
-      ${rows ? `<table><thead><tr><th>Test</th><th>Value</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No investigation records</p>'}
-    `;
+    } else {
+      content += '<div class="no-data">No investigation records</div>';
+    }
+    
+    content += `<div class="signature-section">
+      <table>
+        <tr>
+          <td class="label-cell">Ordered By:</td>
+          <td class="value-cell"></td>
+          <td class="label-cell">Date:</td>
+          <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+        </tr>
+      </table>
+    </div>`;
     openPrintWindow('Investigation Chart', content);
   };
 
@@ -3728,13 +4110,54 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
   };
 
   const handlePrint = () => {
-    const rows = tests.map((t: any) => 
-      `<tr><td>${t.testName || '-'}</td><td>${t.testType || '-'}</td><td>${t.status || '-'}</td><td>${t.doctorName || '-'}</td><td>${t.createdAt ? format(new Date(t.createdAt), 'dd/MM/yyyy') : '-'}</td></tr>`
-    ).join('');
-    const content = `
-      <h1>Diagnostic Tests</h1>
-      ${tests.length ? `<table><thead><tr><th>Test Name</th><th>Type</th><th>Status</th><th>Doctor</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No tests ordered</p>'}
-    `;
+    let content = `<h1>DIAGNOSTIC TESTS ORDER SHEET</h1>`;
+    
+    if (tests.length) {
+      Object.entries(groupedTests).forEach(([category, catTests]) => {
+        const catLabel = TEST_CATEGORIES[category as keyof typeof TEST_CATEGORIES]?.label || category;
+        content += `<h3>${catLabel}</h3>`;
+        const rows = catTests.map((t: any, idx: number) => 
+          `<tr>
+            <td style="text-align:center;">${idx + 1}</td>
+            <td>${t.testName || '-'}</td>
+            <td style="text-align:center;">${t.department || '-'}</td>
+            <td style="text-align:center;${t.status === 'COMPLETED' ? 'background:#d4edda;' : t.status === 'PENDING' ? 'background:#fff3cd;' : ''}">${t.status || '-'}</td>
+            <td>${t.doctorName || '-'}</td>
+            <td style="text-align:center;">${t.createdAt ? format(new Date(t.createdAt), 'dd/MM/yyyy') : '-'}</td>
+            <td style="text-align:center;">${t.createdAt ? format(new Date(t.createdAt), 'HH:mm') : '-'}</td>
+          </tr>`
+        ).join('');
+        content += `<table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th>Test Name</th>
+              <th style="width:120px;">Department</th>
+              <th style="width:100px;">Status</th>
+              <th style="width:150px;">Ordered By</th>
+              <th style="width:100px;">Date</th>
+              <th style="width:80px;">Time</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      });
+      content += `<div class="summary-row" style="padding:8px;background:#f0f0f0;margin:10px 0;">Total Tests Ordered: ${tests.length}</div>`;
+    } else {
+      content += '<div class="no-data">No tests ordered</div>';
+    }
+    
+    content += `<div class="signature-section">
+      <table>
+        <tr>
+          <td class="label-cell">Ordered By (Doctor):</td>
+          <td class="value-cell"></td>
+          <td class="label-cell">Date:</td>
+          <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+        </tr>
+      </table>
+    </div>`;
+    const printContent = content;
     openPrintWindow('Diagnostic Tests', content);
   };
 
@@ -4723,33 +5146,163 @@ function InitialAssessmentTab({ session }: { session: Session }) {
   };
 
   const handlePrint = () => {
-    const assessment = assessments[0];
-    if (!assessment) {
-      openPrintWindow('Initial Assessment', '<h1>Initial Assessment Form</h1><p class="no-data">No assessment recorded</p>');
+    const a = assessments[0];
+    if (!a) {
+      openPrintWindow('Initial Assessment', '<h1>IPD INITIAL ASSESSMENT FORM</h1><div class="no-data">No assessment recorded</div>');
       return;
     }
+    
+    const parseJsonSafe = (str: string) => { try { return JSON.parse(str || '[]'); } catch { return []; } };
+    const complaints = parseJsonSafe(a.complaintsHistory);
+    const surgicalHist = parseJsonSafe(a.surgicalHistory);
+    const gcsTotal = (a.gcsEyeOpening || 0) + (a.gcsMotorResponse || 0) + (a.gcsVerbalResponse || 0);
+    
     const content = `
-      <h1>Initial Assessment Form</h1>
+      <h1>IPD INITIAL ASSESSMENT FORM</h1>
+      
+      <h3>1. General Information</h3>
       <table>
-        <tr><th colspan="2" style="background:#f0f0f0;">Patient Information</th></tr>
-        <tr><td><strong>Date/Time Received</strong></td><td>${assessment.patientReceivedDate ? format(new Date(assessment.patientReceivedDate), 'dd/MM/yyyy') : '-'} ${assessment.patientReceivedTime || ''}</td></tr>
-        <tr><td><strong>Accompanied By</strong></td><td>${assessment.patientAccompaniedBy || '-'}</td></tr>
-        <tr><td><strong>Contact No</strong></td><td>${assessment.contactNo || '-'}</td></tr>
-        <tr><td><strong>Allergies</strong></td><td>${assessment.allergies || '-'} ${assessment.allergiesDetails || ''}</td></tr>
-        <tr><td><strong>Vulnerable</strong></td><td>${assessment.vulnerable || '-'} ${assessment.vulnerableDetails || ''}</td></tr>
-        <tr><th colspan="2" style="background:#f0f0f0;">Medical History</th></tr>
-        <tr><td><strong>Hypertension</strong></td><td>${assessment.hypertension || '-'} ${assessment.hypertensionSince ? `(Since: ${assessment.hypertensionSince})` : ''}</td></tr>
-        <tr><td><strong>Diabetes</strong></td><td>${assessment.diabetes || '-'} ${assessment.diabetesSince ? `(Since: ${assessment.diabetesSince})` : ''}</td></tr>
-        <tr><td><strong>CAD</strong></td><td>${assessment.coronaryArteryDisease || '-'}</td></tr>
-        <tr><td><strong>CVD</strong></td><td>${assessment.cerebroVascularDisease || '-'}</td></tr>
-        <tr><th colspan="2" style="background:#f0f0f0;">Vitals & GCS</th></tr>
-        <tr><td><strong>GCS Score</strong></td><td>${(assessment.gcsEyeOpening || 0) + (assessment.gcsMotorResponse || 0) + (assessment.gcsVerbalResponse || 0)}/15</td></tr>
-        <tr><td><strong>Pulse Rate</strong></td><td>${assessment.pulseRate || '-'}</td></tr>
-        <tr><td><strong>Blood Pressure</strong></td><td>${assessment.bloodPressure || '-'}</td></tr>
-        <tr><td><strong>Respiratory Rate</strong></td><td>${assessment.respiratoryRate || '-'}</td></tr>
-        <tr><td><strong>Temperature</strong></td><td>${assessment.temperature || '-'}</td></tr>
-        <tr><td><strong>Weight/Height/BMI</strong></td><td>${assessment.weight || '-'} / ${assessment.height || '-'} / ${assessment.bmi || '-'}</td></tr>
+        <tr>
+          <td class="label-cell">Patient Received Date:</td>
+          <td class="value-cell">${a.patientReceivedDate ? format(new Date(a.patientReceivedDate), 'dd/MM/yyyy') : '-'}</td>
+          <td class="label-cell">Time:</td>
+          <td class="value-cell">${a.patientReceivedTime || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Mode of Arrival:</td>
+          <td class="value-cell">${a.modeOfArrival || '-'}</td>
+          <td class="label-cell">Referred By:</td>
+          <td class="value-cell">${a.referredBy || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Accompanied By:</td>
+          <td class="value-cell">${a.patientAccompaniedBy || '-'}</td>
+          <td class="label-cell">Contact No:</td>
+          <td class="value-cell">${a.contactNo || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Allergies:</td>
+          <td class="value-cell">${a.allergies || '-'} ${a.allergiesDetails ? `(${a.allergiesDetails})` : ''}</td>
+          <td class="label-cell">Vulnerable:</td>
+          <td class="value-cell">${a.vulnerable || '-'} ${a.vulnerableDetails ? `(${a.vulnerableDetails})` : ''}</td>
+        </tr>
       </table>
+      
+      <h4>Chief Complaints</h4>
+      ${complaints.length ? `<table>
+        <thead><tr><th style="width:40px;">S.No</th><th>Complaint</th><th style="width:150px;">Duration</th></tr></thead>
+        <tbody>${complaints.map((c: any, i: number) => `<tr><td style="text-align:center;">${i+1}</td><td>${c.complaint || '-'}</td><td style="text-align:center;">${c.originDuration || '-'}</td></tr>`).join('')}</tbody>
+      </table>` : '<p style="color:#666;">No complaints recorded</p>'}
+      
+      <h3>2. Medical History</h3>
+      <table>
+        <tr>
+          <td class="label-cell" style="width:25%;">Hypertension:</td>
+          <td class="value-cell" style="width:25%;">${a.hypertension || '-'} ${a.hypertensionSince ? `(Since: ${a.hypertensionSince})` : ''}</td>
+          <td class="label-cell" style="width:25%;">Diabetes:</td>
+          <td class="value-cell" style="width:25%;">${a.diabetes || '-'} ${a.diabetesSince ? `(Since: ${a.diabetesSince})` : ''}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">CAD:</td>
+          <td class="value-cell">${a.coronaryArteryDisease || '-'}</td>
+          <td class="label-cell">CVD:</td>
+          <td class="value-cell">${a.cerebroVascularDisease || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">COPD/Asthma:</td>
+          <td class="value-cell">${a.copdAsthma || '-'}</td>
+          <td class="label-cell">Thyroid:</td>
+          <td class="value-cell">${a.thyroidDisorder || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Kidney Disease:</td>
+          <td class="value-cell">${a.kidneyDisease || '-'}</td>
+          <td class="label-cell">Liver Disease:</td>
+          <td class="value-cell">${a.liverDisease || '-'}</td>
+        </tr>
+      </table>
+      
+      <h4>Surgical History</h4>
+      ${surgicalHist.length ? `<table>
+        <thead><tr><th style="width:40px;">S.No</th><th>Procedure</th><th style="width:120px;">When</th><th>Complications</th></tr></thead>
+        <tbody>${surgicalHist.map((s: any, i: number) => `<tr><td style="text-align:center;">${i+1}</td><td>${s.procedure || '-'}</td><td style="text-align:center;">${s.when || '-'}</td><td>${s.complications || '-'}</td></tr>`).join('')}</tbody>
+      </table>` : '<p style="color:#666;">No surgical history</p>'}
+      
+      <h3>3. Examination</h3>
+      <h4>Glasgow Coma Scale (GCS)</h4>
+      <table>
+        <tr>
+          <td class="label-cell">Eye Opening:</td>
+          <td class="value-cell" style="text-align:center;">${a.gcsEyeOpening || '-'}/4</td>
+          <td class="label-cell">Motor Response:</td>
+          <td class="value-cell" style="text-align:center;">${a.gcsMotorResponse || '-'}/6</td>
+          <td class="label-cell">Verbal Response:</td>
+          <td class="value-cell" style="text-align:center;">${a.gcsVerbalResponse || '-'}/5</td>
+        </tr>
+        <tr>
+          <td colspan="6" style="text-align:center;font-weight:bold;background:#f0f0f0;">TOTAL GCS SCORE: ${gcsTotal}/15</td>
+        </tr>
+      </table>
+      
+      <h4>Vital Signs</h4>
+      <table>
+        <tr>
+          <td class="label-cell">Pulse Rate:</td>
+          <td class="value-cell">${a.pulseRate || '-'} bpm</td>
+          <td class="label-cell">Blood Pressure:</td>
+          <td class="value-cell">${a.bloodPressure || '-'} mmHg</td>
+          <td class="label-cell">Temperature:</td>
+          <td class="value-cell">${a.temperature || '-'} °F</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Respiratory Rate:</td>
+          <td class="value-cell">${a.respiratoryRate || '-'} /min</td>
+          <td class="label-cell">SpO2:</td>
+          <td class="value-cell">${a.spo2 || '-'} %</td>
+          <td class="label-cell">Weight:</td>
+          <td class="value-cell">${a.weight || '-'} kg</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Height:</td>
+          <td class="value-cell">${a.height || '-'} cm</td>
+          <td class="label-cell">BMI:</td>
+          <td class="value-cell">${a.bmi || '-'} kg/m²</td>
+          <td colspan="2"></td>
+        </tr>
+      </table>
+      
+      <h3>4. Diagnosis & Plan</h3>
+      <table>
+        <tr>
+          <td class="label-cell" style="width:30%;">Provisional Diagnosis:</td>
+          <td style="width:70%;">${a.provisionalDiagnosis || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Final Diagnosis:</td>
+          <td>${a.finalDiagnosis || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Treatment Plan:</td>
+          <td>${a.treatmentPlan || '-'}</td>
+        </tr>
+      </table>
+      
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Clinical Assistant:</td>
+            <td class="value-cell">${a.clinicalAssistantName || ''}</td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${a.clinicalAssistantDate ? format(new Date(a.clinicalAssistantDate), 'dd/MM/yyyy') : '-'}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Incharge Consultant:</td>
+            <td class="value-cell">${a.inchargeConsultantName || ''}</td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${a.inchargeConsultantDate ? format(new Date(a.inchargeConsultantDate), 'dd/MM/yyyy') : '-'}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow('Initial Assessment', content);
   };
@@ -5334,18 +5887,65 @@ function IndoorConsultationTab({ session }: { session: Session }) {
   };
 
   const handlePrint = () => {
-    const rows = entries.map((e: any) => 
-      `<tr><td>${e.entryDate ? format(new Date(e.entryDate), 'dd/MM/yyyy') : '-'}<br/>${e.entryTime || '-'}</td><td style="white-space:pre-wrap">${e.clinicalFindings || '-'}</td><td style="white-space:pre-wrap">${e.orders || '-'}</td></tr>`
-    ).join('');
     const content = `
-      <h1>Indoor Continuation Sheet</h1>
-      <div class="patient-info">
-        <div class="info-item"><span class="info-label">Patient:</span> ${session.patientName}</div>
-        <div class="info-item"><span class="info-label">UHID:</span> ${session.uhid}</div>
-        <div class="info-item"><span class="info-label">Ward:</span> ${session.ward || 'N/A'}</div>
-        <div class="info-item"><span class="info-label">Doctor:</span> ${session.admittingConsultant || 'N/A'}</div>
+      <h1>INDOOR CONTINUATION SHEET</h1>
+      <h3>Patient Information</h3>
+      <table>
+        <tr>
+          <td class="label-cell">Patient Name:</td>
+          <td class="value-cell">${session.patientName}</td>
+          <td class="label-cell">UHID:</td>
+          <td class="value-cell">${session.uhid}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Ward:</td>
+          <td class="value-cell">${session.ward || 'N/A'}</td>
+          <td class="label-cell">Admitting Consultant:</td>
+          <td class="value-cell">${session.admittingConsultant || 'N/A'}</td>
+        </tr>
+      </table>
+      
+      <h3>Daily Progress Notes</h3>
+      ${entries.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th style="width:100px;">Date</th>
+              <th style="width:80px;">Time</th>
+              <th>Clinical Findings / Daily Progress Notes</th>
+              <th>Orders</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${entries.map((e: any, idx: number) => 
+              `<tr>
+                <td style="text-align:center;">${idx + 1}</td>
+                <td style="text-align:center;">${e.entryDate ? format(new Date(e.entryDate), 'dd/MM/yyyy') : '-'}</td>
+                <td style="text-align:center;">${e.entryTime || '-'}</td>
+                <td style="white-space:pre-wrap;">${e.clinicalFindings || '-'}</td>
+                <td style="white-space:pre-wrap;">${e.orders || '-'}</td>
+              </tr>`
+            ).join('')}
+          </tbody>
+          <tfoot>
+            <tr class="summary-row">
+              <td colspan="5" style="text-align:right;">Total Entries: ${entries.length}</td>
+            </tr>
+          </tfoot>
+        </table>
+      ` : '<div class="no-data">No entries recorded</div>'}
+      
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Consultant Sign:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
       </div>
-      ${entries.length ? `<table><thead><tr><th style="width:100px">Date & Time</th><th>Clinical Findings / Daily Progress Notes</th><th>Orders</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No entries recorded</p>'}
     `;
     openPrintWindow('Indoor Continuation Sheet - ' + session.patientName, content);
   };
