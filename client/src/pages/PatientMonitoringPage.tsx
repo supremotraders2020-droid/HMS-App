@@ -3857,6 +3857,70 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
     { title: "BODY FLUIDS ANALYSIS", fields: BODY_FLUID_FIELDS }
   ];
 
+  const handlePrintSingle = (inv: any) => {
+    let content = `<h1>INVESTIGATION SHEET</h1>`;
+    content += `<h3>Investigation Date: ${inv.investigationDate ? format(new Date(inv.investigationDate), 'dd MMM yyyy') : 'Date Unknown'}</h3>`;
+    content += `<p style="margin-bottom:15px;"><strong>Recorded By:</strong> ${inv.nurseName || 'Staff'}</p>`;
+    
+    const allSections = [...LAB_SECTIONS, ...IMAGING_SECTIONS];
+    allSections.forEach(section => {
+      const hasData = section.fields.some(f => inv[f.key]);
+      if (!hasData) return;
+      const sectionRows = section.fields.filter(f => inv[f.key]).map(f => {
+        return `<tr>
+          <td class="label-cell">${f.label}</td>
+          <td class="value-cell">${inv[f.key] || ''}</td>
+        </tr>`;
+      }).join('');
+      
+      content += `<h4>${section.title}</h4>
+        <table>
+          <tbody>${sectionRows}</tbody>
+        </table>`;
+    });
+
+    if (inv.chestXrayFindings || inv.otherXrayFindings) {
+      content += `<h4>X-RAY</h4>
+        <table>
+          ${inv.chestXrayFindings ? `<tr><td class="label-cell">Chest X-ray</td><td class="value-cell">${inv.chestXrayFindings}</td></tr>` : ''}
+          ${inv.otherXrayFindings ? `<tr><td class="label-cell">Other X-ray</td><td class="value-cell">${inv.otherXrayFindings}</td></tr>` : ''}
+        </table>`;
+    }
+
+    if (inv.ecgFindings) {
+      content += `<h4>ECG</h4><table><tr><td class="label-cell">ECG Findings</td><td class="value-cell">${inv.ecgFindings}</td></tr></table>`;
+    }
+
+    if (inv.echoLvef || inv.echoFindings) {
+      content += `<h4>ECHO CARDIOGRAPHY</h4><table>
+        ${inv.echoLvef ? `<tr><td class="label-cell">LVEF</td><td class="value-cell">${inv.echoLvef}</td></tr>` : ''}
+        ${inv.echoIvs ? `<tr><td class="label-cell">IVS</td><td class="value-cell">${inv.echoIvs}</td></tr>` : ''}
+        ${inv.echoLvpw ? `<tr><td class="label-cell">LVPW</td><td class="value-cell">${inv.echoLvpw}</td></tr>` : ''}
+        ${inv.echoFindings ? `<tr><td class="label-cell">Echo Findings</td><td class="value-cell">${inv.echoFindings}</td></tr>` : ''}
+      </table>`;
+    }
+
+    if (inv.ctScanFindings || inv.mriFindings || inv.otherInvestigations) {
+      content += `<h4>CT SCAN / MRI / OTHER</h4><table>
+        ${inv.ctScanFindings ? `<tr><td class="label-cell">CT SCAN</td><td class="value-cell">${inv.ctScanFindings}</td></tr>` : ''}
+        ${inv.mriFindings ? `<tr><td class="label-cell">MRI SCAN</td><td class="value-cell">${inv.mriFindings}</td></tr>` : ''}
+        ${inv.otherInvestigations ? `<tr><td class="label-cell">OTHER</td><td class="value-cell">${inv.otherInvestigations}</td></tr>` : ''}
+      </table>`;
+    }
+
+    content += `<div class="signature-section">
+      <table>
+        <tr>
+          <td class="label-cell">Ordered By:</td>
+          <td class="value-cell"></td>
+          <td class="label-cell">Date:</td>
+          <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+        </tr>
+      </table>
+    </div>`;
+    openPrintWindow('Investigation Sheet', content);
+  };
+
   const handlePrint = () => {
     let content = `<h1>INVESTIGATION SHEET</h1>`;
     
@@ -4098,8 +4162,13 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
             {investigations.map((inv: any) => (
               <Card key={inv.id} className="p-4">
                 <div className="flex justify-between items-center mb-3">
-                  <Badge variant="outline" className="text-sm font-medium">{format(new Date(inv.investigationDate), "dd MMM yyyy")}</Badge>
-                  <span className="text-xs text-muted-foreground">By: {inv.nurseName || "Staff"}</span>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="text-sm font-medium">{format(new Date(inv.investigationDate), "dd MMM yyyy")}</Badge>
+                    <span className="text-xs text-muted-foreground">By: {inv.nurseName || "Staff"}</span>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => handlePrintSingle(inv)}>
+                    <Printer className="h-4 w-4 mr-1" /> Print
+                  </Button>
                 </div>
                 <ScrollArea className="max-h-[500px]">
                   <div className="space-y-4">
