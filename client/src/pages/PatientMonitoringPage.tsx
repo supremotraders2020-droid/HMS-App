@@ -4544,12 +4544,74 @@ function CarePlanTab({ session }: { session: Session }) {
   };
 
   const handlePrint = () => {
-    const rows = carePlans.map((p: any) => 
-      `<tr><td>${p.provisionalDiagnosis || '-'}</td><td>${p.treatmentAdvised || '-'}</td><td>${p.investigationsAdvised || '-'}</td><td>${p.treatingConsultantName || '-'}</td><td>${p.createdAt ? format(new Date(p.createdAt), 'dd/MM/yyyy') : '-'}</td></tr>`
-    ).join('');
     const content = `
-      <h1>Care Plan</h1>
-      ${carePlans.length ? `<table><thead><tr><th>Diagnosis</th><th>Treatment</th><th>Investigations</th><th>Consultant</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="no-data">No care plans created</p>'}
+      <h1>NURSING ASSESSMENT & CARE PLAN</h1>
+      
+      <h3>Patient Information</h3>
+      <table>
+        <tr>
+          <td class="label-cell">Patient Name:</td>
+          <td class="value-cell">${session.patientName || '-'}</td>
+          <td class="label-cell">UHID:</td>
+          <td class="value-cell">${session.uhid || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Ward:</td>
+          <td class="value-cell">${session.ward || '-'}</td>
+          <td class="label-cell">Bed No.:</td>
+          <td class="value-cell">${session.bedNumber || '-'}</td>
+        </tr>
+      </table>
+      
+      <h3>Care Plan Details</h3>
+      ${carePlans.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th>Provisional Diagnosis</th>
+              <th>Treatment Advised</th>
+              <th>Investigations Advised</th>
+              <th style="width:120px;">Treating Consultant</th>
+              <th style="width:90px;">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${carePlans.map((p: any, idx: number) => `
+              <tr>
+                <td style="text-align:center;">${idx + 1}</td>
+                <td>${p.provisionalDiagnosis || '-'}</td>
+                <td>${p.treatmentAdvised || '-'}</td>
+                <td>${p.investigationsAdvised || '-'}</td>
+                <td>${p.treatingConsultantName || '-'}</td>
+                <td style="text-align:center;">${p.createdAt ? format(new Date(p.createdAt), 'dd/MM/yyyy') : '-'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot>
+            <tr class="summary-row">
+              <td colspan="6" style="text-align:right;">Total Care Plans: ${carePlans.length}</td>
+            </tr>
+          </tfoot>
+        </table>
+      ` : '<div class="no-data">No care plans created</div>'}
+      
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Nurse Sign:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Consultant Sign:</td>
+            <td class="value-cell"></td>
+          </tr>
+          <tr>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow('Care Plan', content);
   };
@@ -6510,57 +6572,76 @@ function DoctorsVisitTab({ session }: { session: Session }) {
   };
 
   const handlePrint = () => {
-    const rows = entries.map((e: any) => 
-      `<tr>
-        <td style="padding:6px;border:1px solid #333;text-align:center;">${e.visitDate ? format(new Date(e.visitDate), 'dd/MM/yyyy') : '-'}</td>
-        <td style="padding:6px;border:1px solid #333;text-align:center;">${e.visitTime || '-'}</td>
-        <td style="padding:6px;border:1px solid #333;">${e.nameOfDoctor || '-'}</td>
-        <td style="padding:6px;border:1px solid #333;text-align:center;">${e.visitType === 'routine' ? '✓' : ''}</td>
-        <td style="padding:6px;border:1px solid #333;text-align:center;">${e.visitType === 'emergency' ? '✓' : ''}</td>
-        <td style="padding:6px;border:1px solid #333;">${e.procedure || '-'}</td>
-        <td style="padding:6px;border:1px solid #333;">${e.doctorSign || '-'}</td>
-      </tr>`
-    ).join('');
-
     const content = `
-      <h1 style="text-align:center;margin-bottom:10px;">DOCTOR'S VISIT SHEET</h1>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
-        <div><strong>Patient Name:</strong> ${session.patientName || '-'}</div>
-        <div><strong>PRN No.:</strong> ${session.uhid || '-'}</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
-        <div><strong>Age:</strong> ${session.age || '-'}</div>
-        <div><strong>Sex:</strong> ${session.sex || '-'}</div>
-        <div><strong>IPD No.:</strong> ${session.ipdNumber || '-'}</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:15px;border:1px solid #333;padding:5px;">
-        <div><strong>Ward:</strong> ${session.ward || '-'}</div>
-        <div><strong>Bed No.:</strong> ${session.bedNumber || '-'}</div>
-      </div>
+      <h1>DOCTOR'S VISIT SHEET</h1>
+      
+      <h3>Patient Information</h3>
+      <table>
+        <tr>
+          <td class="label-cell">Patient Name:</td>
+          <td class="value-cell">${session.patientName || '-'}</td>
+          <td class="label-cell">PRN No.:</td>
+          <td class="value-cell">${session.uhid || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Age:</td>
+          <td class="value-cell">${session.age || '-'}</td>
+          <td class="label-cell">Sex:</td>
+          <td class="value-cell">${session.sex || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Ward:</td>
+          <td class="value-cell">${session.ward || '-'}</td>
+          <td class="label-cell">Bed No.:</td>
+          <td class="value-cell">${session.bedNumber || '-'}</td>
+        </tr>
+      </table>
+      
+      <h3>Visit Records</h3>
       ${entries.length ? `
-        <table style="width:100%;border-collapse:collapse;margin-top:10px;">
+        <table>
           <thead>
-            <tr style="background:#f5f5f5;">
-              <th style="padding:8px;border:1px solid #333;width:80px;">Date</th>
-              <th style="padding:8px;border:1px solid #333;width:60px;">Time</th>
-              <th style="padding:8px;border:1px solid #333;">Name of Doctor</th>
-              <th style="padding:8px;border:1px solid #333;width:60px;" colspan="2">Visit</th>
-              <th style="padding:8px;border:1px solid #333;">Procedure</th>
-              <th style="padding:8px;border:1px solid #333;width:80px;">Sign</th>
-            </tr>
-            <tr style="background:#f5f5f5;">
-              <th style="padding:4px;border:1px solid #333;"></th>
-              <th style="padding:4px;border:1px solid #333;"></th>
-              <th style="padding:4px;border:1px solid #333;"></th>
-              <th style="padding:4px;border:1px solid #333;font-size:10px;">Routine</th>
-              <th style="padding:4px;border:1px solid #333;font-size:10px;">Emergency</th>
-              <th style="padding:4px;border:1px solid #333;"></th>
-              <th style="padding:4px;border:1px solid #333;"></th>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th style="width:90px;">Date</th>
+              <th style="width:70px;">Time</th>
+              <th>Name of Doctor</th>
+              <th style="width:80px;">Visit Type</th>
+              <th>Procedure</th>
+              <th style="width:100px;">Sign</th>
             </tr>
           </thead>
-          <tbody>${rows}</tbody>
+          <tbody>
+            ${entries.map((e: any, idx: number) => `
+              <tr>
+                <td style="text-align:center;">${idx + 1}</td>
+                <td style="text-align:center;">${e.visitDate ? format(new Date(e.visitDate), 'dd/MM/yyyy') : '-'}</td>
+                <td style="text-align:center;">${e.visitTime || '-'}</td>
+                <td>${e.nameOfDoctor || '-'}</td>
+                <td style="text-align:center;">${e.visitType === 'routine' ? 'Routine' : 'Emergency'}</td>
+                <td>${e.procedure || '-'}</td>
+                <td>${e.doctorSign || '-'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot>
+            <tr class="summary-row">
+              <td colspan="7" style="text-align:right;">Total Visits: ${entries.length} | Routine: ${entries.filter((e: any) => e.visitType === 'routine').length} | Emergency: ${entries.filter((e: any) => e.visitType === 'emergency').length}</td>
+            </tr>
+          </tfoot>
         </table>
-      ` : '<p class="no-data">No visit entries recorded</p>'}
+      ` : '<div class="no-data">No visit entries recorded</div>'}
+      
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Ward In-Charge Sign:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow("Doctor's Visit Sheet", content);
   };
@@ -6895,107 +6976,134 @@ function SurgeryNotesTab({ session }: { session: Session }) {
   };
 
   const handlePrint = () => {
-    const latestEntry = entries[0];
-    if (!latestEntry) {
+    const e = entries[0];
+    if (!e) {
       toast({ title: "No surgery notes to print", variant: "destructive" });
       return;
     }
 
     const content = `
-      <h1 style="text-align:center;margin-bottom:10px;">SURGERY NOTES</h1>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
-        <div><strong>Patient Name:</strong> ${session.patientName || '-'}</div>
-        <div><strong>PRN No.:</strong> ${session.uhid || '-'}</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
-        <div><strong>Age:</strong> ${session.age || '-'}</div>
-        <div><strong>Sex:</strong> ${session.sex || '-'}</div>
-        <div><strong>IPD No.:</strong> ${session.ipdNumber || '-'}</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:15px;border:1px solid #333;padding:5px;">
-        <div><strong>Ward:</strong> ${session.ward || '-'}</div>
-        <div><strong>Bed No.:</strong> ${session.bedNumber || '-'}</div>
-      </div>
-
-      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+      <h1>SURGERY NOTES</h1>
+      
+      <h3>Patient Information</h3>
+      <table>
         <tr>
-          <td style="border:1px solid #333;padding:5px;width:50%;"><strong>Name:</strong> ${session.patientName || '-'}</td>
-          <td style="border:1px solid #333;padding:5px;width:25%;"><strong>Age:</strong> ${session.age || '-'}</td>
-          <td style="border:1px solid #333;padding:5px;width:25%;"><strong>Sex:</strong> ${session.sex || '-'}</td>
+          <td class="label-cell">Patient Name:</td>
+          <td class="value-cell">${session.patientName || '-'}</td>
+          <td class="label-cell">UHID/PRN:</td>
+          <td class="value-cell">${session.uhid || '-'}</td>
         </tr>
         <tr>
-          <td style="border:1px solid #333;padding:5px;"><strong>Doctor Name:</strong> ${latestEntry.doctorName || '-'}</td>
-          <td style="border:1px solid #333;padding:5px;"><strong>MRN:</strong> ${latestEntry.mrn || session.uhid || '-'}</td>
-          <td style="border:1px solid #333;padding:5px;"><strong>Date:</strong> ${latestEntry.surgeryDate ? format(new Date(latestEntry.surgeryDate), 'dd/MM/yyyy') : '-'}</td>
-        </tr>
-      </table>
-
-      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
-        <tr>
-          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Name of Surgeon:</strong> ${latestEntry.nameOfSurgeon || '-'}</td>
+          <td class="label-cell">Age:</td>
+          <td class="value-cell">${session.age || '-'}</td>
+          <td class="label-cell">Sex:</td>
+          <td class="value-cell">${session.sex || '-'}</td>
         </tr>
         <tr>
-          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Preoperative Diagnosis:</strong> ${latestEntry.preoperativeDiagnosis || '-'}</td>
+          <td class="label-cell">Ward:</td>
+          <td class="value-cell">${session.ward || '-'}</td>
+          <td class="label-cell">Bed No.:</td>
+          <td class="value-cell">${session.bedNumber || '-'}</td>
         </tr>
         <tr>
-          <td style="border:1px solid #333;padding:8px;width:50%;"><strong>Surgery Planned:</strong> ${latestEntry.surgeryPlanned || '-'}</td>
-          <td style="border:1px solid #333;padding:8px;width:50%;"><strong>Surgery Performed:</strong> ${latestEntry.surgeryPerformed || '-'}</td>
-        </tr>
-        <tr>
-          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Surgeon Name:</strong> ${latestEntry.surgeonName || '-'}</td>
-        </tr>
-        <tr>
-          <td style="border:1px solid #333;padding:8px;"><strong>Assistant 1:</strong> ${latestEntry.assistant1 || '-'}</td>
-          <td style="border:1px solid #333;padding:8px;"><strong>Assistant 2:</strong> ${latestEntry.assistant2 || '-'}</td>
-        </tr>
-        <tr>
-          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Type of Anaesthesia:</strong> ${latestEntry.typeOfAnaesthesia || '-'}</td>
-        </tr>
-        <tr>
-          <td style="border:1px solid #333;padding:8px;"><strong>Anaesthetist 1:</strong> ${latestEntry.anaesthetist1 || '-'}</td>
-          <td style="border:1px solid #333;padding:8px;"><strong>Anaesthetist 2:</strong> ${latestEntry.anaesthetist2 || '-'}</td>
-        </tr>
-        <tr>
-          <td style="border:1px solid #333;padding:8px;"><strong>Operation Started At:</strong> ${latestEntry.operationStartedAt || '-'}</td>
-          <td style="border:1px solid #333;padding:8px;"><strong>Operation Completed At:</strong> ${latestEntry.operationCompletedAt || '-'}</td>
-        </tr>
-        <tr>
-          <td style="border:1px solid #333;padding:8px;" colspan="2"><strong>Operation Notes:</strong><br/>${latestEntry.operationNotes || '-'}</td>
+          <td class="label-cell">Surgery Date:</td>
+          <td class="value-cell">${e.surgeryDate ? format(new Date(e.surgeryDate), 'dd/MM/yyyy') : '-'}</td>
+          <td class="label-cell">MRN:</td>
+          <td class="value-cell">${e.mrn || session.uhid || '-'}</td>
         </tr>
       </table>
-
-      <div style="border:1px solid #333;padding:8px;margin-bottom:10px;">
-        <strong>Other Relevant Details:</strong><br/>
-        ${latestEntry.otherRelevantDetails || '-'}
-      </div>
-
-      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+      
+      <h3>Surgical Team</h3>
+      <table>
         <tr>
-          <td style="border:1px solid #333;padding:8px;"><strong>Blood Loss:</strong> ${latestEntry.bloodLoss || '-'}</td>
+          <td class="label-cell">Name of Surgeon:</td>
+          <td colspan="3">${e.nameOfSurgeon || '-'}</td>
         </tr>
         <tr>
-          <td style="border:1px solid #333;padding:8px;">
-            <strong>Postop Vitals:</strong>
-            P- ${latestEntry.postopVitalsPulse || '___'} &nbsp;&nbsp;
-            BP- ${latestEntry.postopVitalsBp || '___'} &nbsp;&nbsp;
-            SpO2- ${latestEntry.postopVitalsSpo2 || '___'} &nbsp;&nbsp;
-            <strong>Shift Patient To:</strong> ${latestEntry.shiftPatientTo || '___'}
-          </td>
+          <td class="label-cell">Surgeon Name:</td>
+          <td colspan="3">${e.surgeonName || '-'}</td>
         </tr>
         <tr>
-          <td style="border:1px solid #333;padding:8px;">
-            <strong>Blood Transfusion:</strong> ${latestEntry.bloodTransfusion === 'to_be_given' ? 'To Be Given' : 'Not To Be Given'}
-          </td>
+          <td class="label-cell">Assistant 1:</td>
+          <td class="value-cell">${e.assistant1 || '-'}</td>
+          <td class="label-cell">Assistant 2:</td>
+          <td class="value-cell">${e.assistant2 || '-'}</td>
         </tr>
         <tr>
-          <td style="border:1px solid #333;padding:8px;">
-            <strong>Tissue Subject For HPE:</strong> ${latestEntry.tissueSubjectForHpe ? 'Yes' : 'No'}
-          </td>
+          <td class="label-cell">Type of Anaesthesia:</td>
+          <td colspan="3">${e.typeOfAnaesthesia || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Anaesthetist 1:</td>
+          <td class="value-cell">${e.anaesthetist1 || '-'}</td>
+          <td class="label-cell">Anaesthetist 2:</td>
+          <td class="value-cell">${e.anaesthetist2 || '-'}</td>
         </tr>
       </table>
-
-      <div style="text-align:right;margin-top:30px;">
-        <strong>Name And Sign of the Surgeon:</strong> ${latestEntry.surgeonSign || '________________________'}
+      
+      <h3>Surgery Details</h3>
+      <table>
+        <tr>
+          <td class="label-cell" style="width:25%;">Preoperative Diagnosis:</td>
+          <td colspan="3">${e.preoperativeDiagnosis || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Surgery Planned:</td>
+          <td class="value-cell">${e.surgeryPlanned || '-'}</td>
+          <td class="label-cell">Surgery Performed:</td>
+          <td class="value-cell">${e.surgeryPerformed || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Operation Started:</td>
+          <td class="value-cell">${e.operationStartedAt || '-'}</td>
+          <td class="label-cell">Operation Completed:</td>
+          <td class="value-cell">${e.operationCompletedAt || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Operation Notes:</td>
+          <td colspan="3" style="white-space:pre-wrap;">${e.operationNotes || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Other Details:</td>
+          <td colspan="3">${e.otherRelevantDetails || '-'}</td>
+        </tr>
+      </table>
+      
+      <h3>Post-Operative Details</h3>
+      <table>
+        <tr>
+          <td class="label-cell">Blood Loss:</td>
+          <td class="value-cell">${e.bloodLoss || '-'} ml</td>
+          <td class="label-cell">Blood Transfusion:</td>
+          <td class="value-cell">${e.bloodTransfusion === 'to_be_given' ? 'To Be Given' : 'Not To Be Given'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Postop Pulse:</td>
+          <td class="value-cell">${e.postopVitalsPulse || '-'}</td>
+          <td class="label-cell">Postop BP:</td>
+          <td class="value-cell">${e.postopVitalsBp || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Postop SpO2:</td>
+          <td class="value-cell">${e.postopVitalsSpo2 || '-'}%</td>
+          <td class="label-cell">Shift Patient To:</td>
+          <td class="value-cell">${e.shiftPatientTo || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Tissue Subject For HPE:</td>
+          <td colspan="3">${e.tissueSubjectForHpe ? 'Yes' : 'No'}</td>
+        </tr>
+      </table>
+      
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Surgeon Signature:</td>
+            <td class="value-cell">${e.surgeonSign || ''}</td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${e.surgeryDate ? format(new Date(e.surgeryDate), 'dd/MM/yyyy') : format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
       </div>
     `;
     openPrintWindow("Surgery Notes", content);
@@ -7328,48 +7436,72 @@ function NursingProgressTab({ session }: { session: Session }) {
   const handlePrint = () => {
     const allEntries = entries.length > 0 ? entries : [];
     const content = `
-      <h1 style="text-align:center;margin-bottom:10px;">NURSING PROGRESS SHEET</h1>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
-        <div><strong>Patient Name:</strong> ${session.patientName || '-'}</div>
-        <div><strong>PRN No.:</strong> ${session.uhid || '-'}</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px;border:1px solid #333;padding:5px;">
-        <div><strong>Age:</strong> ${session.age || '-'}</div>
-        <div><strong>Sex:</strong> ${session.sex || '-'}</div>
-        <div><strong>IPD No.:</strong> ${session.ipdNumber || '-'}</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:10px;border:1px solid #333;padding:5px;">
-        <div><strong>Ward:</strong> ${session.ward || '-'}</div>
-        <div><strong>Bed No.:</strong> ${session.bedNumber || '-'}</div>
-      </div>
-      <div style="border:1px solid #333;padding:5px;margin-bottom:10px;">
-        <strong>Allergic To:</strong> ${allEntries[0]?.allergicTo || '-'}
-      </div>
-      <table style="width:100%;border-collapse:collapse;">
-        <thead>
-          <tr style="background:#f0f0f0;">
-            <th style="border:1px solid #333;padding:8px;width:20%;">Date / Time</th>
-            <th style="border:1px solid #333;padding:8px;">Progress Notes</th>
-            <th style="border:1px solid #333;padding:8px;width:20%;">Signature & Name</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${allEntries.map((e: any) => `
-            <tr>
-              <td style="border:1px solid #333;padding:8px;vertical-align:top;">
-                ${e.entryDateTime ? format(new Date(e.entryDateTime), "dd/MM/yyyy HH:mm") : '-'}
-              </td>
-              <td style="border:1px solid #333;padding:8px;vertical-align:top;white-space:pre-wrap;">
-                ${e.progressNotes || '-'}
-              </td>
-              <td style="border:1px solid #333;padding:8px;vertical-align:top;">
-                ${e.signatureName || '-'}
-              </td>
-            </tr>
-          `).join('')}
-          ${allEntries.length === 0 ? '<tr><td colspan="3" style="border:1px solid #333;padding:20px;text-align:center;">No entries recorded</td></tr>' : ''}
-        </tbody>
+      <h1>NURSING PROGRESS SHEET</h1>
+      
+      <h3>Patient Information</h3>
+      <table>
+        <tr>
+          <td class="label-cell">Patient Name:</td>
+          <td class="value-cell">${session.patientName || '-'}</td>
+          <td class="label-cell">UHID:</td>
+          <td class="value-cell">${session.uhid || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Age:</td>
+          <td class="value-cell">${session.age || '-'}</td>
+          <td class="label-cell">Sex:</td>
+          <td class="value-cell">${session.sex || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Ward:</td>
+          <td class="value-cell">${session.ward || '-'}</td>
+          <td class="label-cell">Bed No.:</td>
+          <td class="value-cell">${session.bedNumber || '-'}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Allergic To:</td>
+          <td colspan="3" class="value-cell">${allEntries[0]?.allergicTo || '-'}</td>
+        </tr>
       </table>
+      
+      <h3>Progress Notes</h3>
+      ${allEntries.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th style="width:120px;">Date / Time</th>
+              <th>Progress Notes</th>
+              <th style="width:150px;">Signature & Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${allEntries.map((e: any, idx: number) => `
+              <tr>
+                <td style="text-align:center;vertical-align:top;">${idx + 1}</td>
+                <td style="text-align:center;vertical-align:top;">${e.entryDateTime ? format(new Date(e.entryDateTime), "dd/MM/yyyy HH:mm") : '-'}</td>
+                <td style="vertical-align:top;white-space:pre-wrap;">${e.progressNotes || '-'}</td>
+                <td style="vertical-align:top;">${e.signatureName || '-'}</td>
+              </tr>`).join('')}
+          </tbody>
+          <tfoot>
+            <tr class="summary-row">
+              <td colspan="4" style="text-align:right;">Total Entries: ${allEntries.length}</td>
+            </tr>
+          </tfoot>
+        </table>
+      ` : '<div class="no-data">No entries recorded</div>'}
+      
+      <div class="signature-section">
+        <table>
+          <tr>
+            <td class="label-cell">Nurse In-Charge Sign:</td>
+            <td class="value-cell"></td>
+            <td class="label-cell">Date:</td>
+            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
+          </tr>
+        </table>
+      </div>
     `;
     openPrintWindow("Nursing Progress Sheet", content);
   };

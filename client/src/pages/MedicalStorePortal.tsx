@@ -1088,70 +1088,123 @@ export default function MedicalStorePortal({ currentUserId }: MedicalStorePortal
   const handlePrintPrescription = (prescription: Prescription) => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
+      const medicinesTable = prescription.medicines?.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th>Medicine Name</th>
+              <th style="width:100px;">Dosage</th>
+              <th style="width:100px;">Frequency</th>
+              <th style="width:80px;">Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${prescription.medicines.map((med: any, idx: number) => {
+              const medStr = typeof med === 'string' ? med : '';
+              return `<tr>
+                <td style="text-align:center;">${idx + 1}</td>
+                <td>${medStr || '-'}</td>
+                <td style="text-align:center;">-</td>
+                <td style="text-align:center;">-</td>
+                <td style="text-align:center;">-</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="background:#f0f0f0;font-weight:bold;">
+              <td colspan="5" style="text-align:right;">Total Medicines: ${prescription.medicines.length}</td>
+            </tr>
+          </tfoot>
+        </table>
+      ` : '<p style="color:#666;">No medicines prescribed</p>';
+
       printWindow.document.write(`
         <html>
           <head>
             <title>Prescription - ${prescription.prescriptionNumber}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-              .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-              .header h1 { margin: 0; color: #2563eb; }
-              .patient-info, .doctor-info { display: flex; justify-content: space-between; margin-bottom: 15px; }
-              .section { margin-bottom: 20px; }
-              .section-title { font-weight: bold; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px; }
-              .medicine-list { list-style: none; padding: 0; }
-              .medicine-list li { padding: 8px; background: #f5f5f5; margin-bottom: 5px; border-radius: 4px; }
-              .footer { margin-top: 40px; text-align: right; }
-              .signature-line { border-top: 1px solid #333; width: 200px; margin-left: auto; padding-top: 5px; }
-              @media print { body { padding: 0; } }
+              body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; font-size: 12px; }
+              .hospital-header { text-align: center; border-bottom: 2px solid #6B3FA0; padding-bottom: 15px; margin-bottom: 20px; }
+              .hospital-header h1 { margin: 0 0 5px; color: #6B3FA0; font-size: 20px; }
+              .hospital-header p { margin: 2px 0; color: #666; font-size: 11px; }
+              h3 { background: #e5e5e5; padding: 6px 10px; margin: 15px 0 10px; border-left: 3px solid #6B3FA0; font-size: 13px; }
+              table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+              th, td { border: 1px solid #333; padding: 6px 8px; }
+              th { background: #f0f0f0; font-weight: bold; }
+              .label-cell { font-weight: bold; background: #f9f9f9; width: 25%; }
+              .value-cell { width: 25%; }
+              .signature-section { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 15px; }
+              @media print { body { padding: 10px; } }
             </style>
           </head>
           <body>
-            <div class="header">
-              <h1>Gravity Hospital</h1>
-              <p>Prescription</p>
-            </div>
-            <div class="patient-info">
-              <div><strong>Patient:</strong> ${prescription.patientName}</div>
-              <div><strong>Prescription #:</strong> ${prescription.prescriptionNumber || '-'}</div>
-            </div>
-            <div class="patient-info">
-              <div><strong>Age/Gender:</strong> ${prescription.patientAge || '-'} / ${prescription.patientGender || '-'}</div>
-              <div><strong>Date:</strong> ${prescription.prescriptionDate}</div>
-            </div>
-            <div class="doctor-info">
-              <div><strong>Doctor:</strong> Dr. ${prescription.doctorName}</div>
-              <div><strong>Reg. No:</strong> ${prescription.doctorRegistrationNo || '-'}</div>
+            <div class="hospital-header">
+              <h1>Gravity Hospital & Research Centre</h1>
+              <p>Gat No. 167, Sahyog Nagar, Triveni Nagar, Pimpri-Chinchwad, Maharashtra 411062</p>
+              <p>Phone: +91-20-27654321 | Email: info@gravityhospital.com</p>
             </div>
             
-            ${prescription.chiefComplaints ? `<div class="section"><div class="section-title">Chief Complaints</div><p>${prescription.chiefComplaints}</p></div>` : ''}
+            <h2 style="text-align:center;margin-bottom:15px;">PRESCRIPTION</h2>
             
-            <div class="section">
-              <div class="section-title">Diagnosis</div>
-              <p>${prescription.diagnosis}</p>
-              ${prescription.provisionalDiagnosis ? `<p><em>Provisional: ${prescription.provisionalDiagnosis}</em></p>` : ''}
-            </div>
+            <h3>Patient Information</h3>
+            <table>
+              <tr>
+                <td class="label-cell">Patient Name:</td>
+                <td class="value-cell">${prescription.patientName || '-'}</td>
+                <td class="label-cell">Prescription #:</td>
+                <td class="value-cell">${prescription.prescriptionNumber || '-'}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Age / Gender:</td>
+                <td class="value-cell">${prescription.patientAge || '-'} / ${prescription.patientGender || '-'}</td>
+                <td class="label-cell">Date:</td>
+                <td class="value-cell">${prescription.prescriptionDate || '-'}</td>
+              </tr>
+            </table>
             
-            ${prescription.vitals ? `<div class="section"><div class="section-title">Vitals</div><p>${prescription.vitals}</p></div>` : ''}
+            <h3>Doctor Information</h3>
+            <table>
+              <tr>
+                <td class="label-cell">Doctor Name:</td>
+                <td class="value-cell">Dr. ${prescription.doctorName || '-'}</td>
+                <td class="label-cell">Registration No:</td>
+                <td class="value-cell">${prescription.doctorRegistrationNo || '-'}</td>
+              </tr>
+            </table>
             
-            <div class="section">
-              <div class="section-title">Medicines</div>
-              <ul class="medicine-list">
-                ${prescription.medicines?.map(med => `<li>${med}</li>`).join('') || '<li>No medicines prescribed</li>'}
-              </ul>
-            </div>
+            ${prescription.chiefComplaints ? `<h3>Chief Complaints</h3><table><tr><td>${prescription.chiefComplaints}</td></tr></table>` : ''}
             
-            ${prescription.instructions ? `<div class="section"><div class="section-title">Instructions</div><p>${prescription.instructions}</p></div>` : ''}
-            ${prescription.dietAdvice ? `<div class="section"><div class="section-title">Diet Advice</div><p>${prescription.dietAdvice}</p></div>` : ''}
-            ${prescription.activityAdvice ? `<div class="section"><div class="section-title">Activity Advice</div><p>${prescription.activityAdvice}</p></div>` : ''}
-            ${prescription.investigations ? `<div class="section"><div class="section-title">Investigations</div><p>${prescription.investigations}</p></div>` : ''}
-            ${prescription.followUpDate ? `<div class="section"><div class="section-title">Follow Up</div><p>${prescription.followUpDate}</p></div>` : ''}
+            <h3>Diagnosis</h3>
+            <table>
+              <tr>
+                <td class="label-cell" style="width:20%;">Diagnosis:</td>
+                <td>${prescription.diagnosis || '-'}</td>
+              </tr>
+              ${prescription.provisionalDiagnosis ? `<tr><td class="label-cell">Provisional:</td><td>${prescription.provisionalDiagnosis}</td></tr>` : ''}
+            </table>
             
-            <div class="footer">
-              <div class="signature-line">
-                <p>Dr. ${prescription.doctorName}</p>
-                ${prescription.signedByName ? `<p>Signed by: ${prescription.signedByName}</p>` : ''}
-              </div>
+            ${prescription.vitals ? `<h3>Vitals</h3><table><tr><td>${prescription.vitals}</td></tr></table>` : ''}
+            
+            <h3>Medicines</h3>
+            ${medicinesTable}
+            
+            ${prescription.instructions ? `<h3>Instructions</h3><table><tr><td>${prescription.instructions}</td></tr></table>` : ''}
+            ${prescription.dietAdvice ? `<h3>Diet Advice</h3><table><tr><td>${prescription.dietAdvice}</td></tr></table>` : ''}
+            ${prescription.activityAdvice ? `<h3>Activity Advice</h3><table><tr><td>${prescription.activityAdvice}</td></tr></table>` : ''}
+            ${prescription.investigations ? `<h3>Investigations</h3><table><tr><td>${prescription.investigations}</td></tr></table>` : ''}
+            ${prescription.followUpDate ? `<h3>Follow Up</h3><table><tr><td class="label-cell" style="width:15%;">Follow Up Date:</td><td>${prescription.followUpDate}</td></tr></table>` : ''}
+            
+            <div class="signature-section">
+              <table>
+                <tr>
+                  <td class="label-cell">Doctor Signature:</td>
+                  <td class="value-cell">Dr. ${prescription.doctorName || ''}</td>
+                  <td class="label-cell">Date:</td>
+                  <td class="value-cell">${prescription.prescriptionDate || ''}</td>
+                </tr>
+                ${prescription.signedByName ? `<tr><td class="label-cell">Signed by:</td><td colspan="3">${prescription.signedByName}</td></tr>` : ''}
+              </table>
             </div>
           </body>
         </html>
