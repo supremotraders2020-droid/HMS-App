@@ -4544,6 +4544,14 @@ function InitialAssessmentTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState(1);
+  
+  const sectionTabs = [
+    { id: 1, label: "1. General Info" },
+    { id: 2, label: "2. Medical History" },
+    { id: 3, label: "3. Examination" },
+    { id: 4, label: "4. Diagnosis" },
+  ];
   
   const defaultFormData = {
     patientReceivedDate: format(new Date(), "yyyy-MM-dd"),
@@ -4637,6 +4645,7 @@ function InitialAssessmentTab({ session }: { session: Session }) {
     setFormData(defaultFormData);
     setShowForm(false);
     setEditingId(null);
+    setActiveSection(1);
   };
 
   const handleEdit = (assessment: any) => {
@@ -4648,6 +4657,7 @@ function InitialAssessmentTab({ session }: { session: Session }) {
       inchargeConsultantDate: assessment.inchargeConsultantDate ? format(new Date(assessment.inchargeConsultantDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
     });
     setEditingId(assessment.id);
+    setActiveSection(1);
     setShowForm(true);
   };
 
@@ -4759,7 +4769,7 @@ function InitialAssessmentTab({ session }: { session: Session }) {
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
           {!showForm && (
-            <Button onClick={() => { setFormData(defaultFormData); setEditingId(null); setShowForm(true); }} className="gap-1">
+            <Button onClick={() => { setFormData(defaultFormData); setEditingId(null); setActiveSection(1); setShowForm(true); }} className="gap-1">
               <Plus className="h-4 w-4" /> New Assessment
             </Button>
           )}
@@ -4767,11 +4777,26 @@ function InitialAssessmentTab({ session }: { session: Session }) {
       </CardHeader>
       <CardContent>
         {showForm ? (
-          <div className="space-y-6">
-            {/* Section 1: Basic Information */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Basic Information</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
+          <div className="space-y-4">
+            {/* Section Tabs */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {sectionTabs.map(tab => (
+                <Button
+                  key={tab.id}
+                  size="sm"
+                  variant={activeSection === tab.id ? "default" : "outline"}
+                  onClick={() => setActiveSection(tab.id)}
+                  className="text-xs"
+                >
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Section 1: General Info */}
+            {activeSection === 1 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-base border-b pb-2">General Information</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div><Label>Patient Received Date</Label><Input type="date" value={formData.patientReceivedDate} onChange={(e) => updateField("patientReceivedDate", e.target.value)} /></div>
                   <div><Label>Time</Label><Input type="time" value={formData.patientReceivedTime} onChange={(e) => updateField("patientReceivedTime", e.target.value)} /></div>
@@ -4820,13 +4845,8 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                     ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Section 2: Complaints & History */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Complaints & History of Present Illness</CardTitle></CardHeader>
-              <CardContent>
+                <h3 className="font-semibold text-base border-b pb-2 mt-6">Complaints & History of Present Illness</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -4848,13 +4868,13 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                   </TableBody>
                 </Table>
                 <Button size="sm" variant="outline" onClick={() => setComplaints([...getComplaints(), { complaint: "", originDuration: "" }])} className="mt-2"><Plus className="h-4 w-4 mr-1" />Add Row</Button>
-              </CardContent>
-            </Card>
+              </div>
+            )}
 
-            {/* Section 3: Medical History */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Medical History</CardTitle></CardHeader>
-              <CardContent>
+            {/* Section 2: Medical History */}
+            {activeSection === 2 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-base border-b pb-2">Medical History</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -4887,13 +4907,8 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                     </TableRow>
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
 
-            {/* Section 4: Surgical History */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Surgical History</CardTitle></CardHeader>
-              <CardContent>
+                <h3 className="font-semibold text-base border-b pb-2 mt-6">Surgical History</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -4921,56 +4936,50 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                   <Label>Note (In case of complication please mention the place of surgery)</Label>
                   <Textarea value={formData.surgicalHistoryNote} onChange={(e) => updateField("surgicalHistoryNote", e.target.value)} rows={2} />
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Section 5: Personal & Family History */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader><CardTitle className="text-base">Personal History</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    { label: "Smoking", field: "smoking" },
-                    { label: "Alcohol", field: "alcohol" },
-                    { label: "Tobacco Chewing", field: "tobaccoChewing" },
-                  ].map(item => (
-                    <div key={item.field} className="flex items-center justify-between">
-                      <Label>{item.label}</Label>
-                      <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={(formData as any)[item.field] === v} onChange={() => updateField(item.field, v)} />{v}</label>))}</div>
+                <div className="grid md:grid-cols-2 gap-4 mt-6">
+                  <div>
+                    <h3 className="font-semibold text-base border-b pb-2 mb-3">Personal History</h3>
+                    <div className="space-y-3">
+                      {[
+                        { label: "Smoking", field: "smoking" },
+                        { label: "Alcohol", field: "alcohol" },
+                        { label: "Tobacco Chewing", field: "tobaccoChewing" },
+                      ].map(item => (
+                        <div key={item.field} className="flex items-center justify-between">
+                          <Label>{item.label}</Label>
+                          <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={(formData as any)[item.field] === v} onChange={() => updateField(item.field, v)} />{v}</label>))}</div>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between">
+                        <Label>Diet</Label>
+                        <div className="flex gap-2">{["Veg", "Non-veg"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={formData.dietType === v} onChange={() => updateField("dietType", v)} />{v}</label>))}</div>
+                      </div>
+                      <div><Label>Other Addictions</Label><Input value={formData.otherAddictions} onChange={(e) => updateField("otherAddictions", e.target.value)} /></div>
                     </div>
-                  ))}
-                  <div className="flex items-center justify-between">
-                    <Label>Diet</Label>
-                    <div className="flex gap-2">{["Veg", "Non-veg"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={formData.dietType === v} onChange={() => updateField("dietType", v)} />{v}</label>))}</div>
                   </div>
-                  <div><Label>Other Addictions</Label><Input value={formData.otherAddictions} onChange={(e) => updateField("otherAddictions", e.target.value)} /></div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader><CardTitle className="text-base">Family History</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    { label: "Hypertension", field: "familyHypertension" },
-                    { label: "Diabetes", field: "familyDiabetes" },
-                    { label: "IHD", field: "familyIhd" },
-                    { label: "CVA", field: "familyCva" },
-                    { label: "COPD/B Asthma", field: "familyCopdAsthma" },
-                    { label: "Tuberculosis", field: "familyTuberculosis" },
-                  ].map(item => (
-                    <div key={item.field} className="flex items-center justify-between">
-                      <Label>{item.label}</Label>
-                      <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={(formData as any)[item.field] === v} onChange={() => updateField(item.field, v)} />{v}</label>))}</div>
+                  <div>
+                    <h3 className="font-semibold text-base border-b pb-2 mb-3">Family History</h3>
+                    <div className="space-y-3">
+                      {[
+                        { label: "Hypertension", field: "familyHypertension" },
+                        { label: "Diabetes", field: "familyDiabetes" },
+                        { label: "IHD", field: "familyIhd" },
+                        { label: "CVA", field: "familyCva" },
+                        { label: "COPD/B Asthma", field: "familyCopdAsthma" },
+                        { label: "Tuberculosis", field: "familyTuberculosis" },
+                      ].map(item => (
+                        <div key={item.field} className="flex items-center justify-between">
+                          <Label>{item.label}</Label>
+                          <div className="flex gap-2">{["Yes", "No"].map(v => (<label key={v} className="flex items-center gap-1"><input type="radio" checked={(formData as any)[item.field] === v} onChange={() => updateField(item.field, v)} />{v}</label>))}</div>
+                        </div>
+                      ))}
+                      <div><Label>Other Specify</Label><Input value={formData.familyOtherSpecify} onChange={(e) => updateField("familyOtherSpecify", e.target.value)} /></div>
                     </div>
-                  ))}
-                  <div><Label>Other Specify</Label><Input value={formData.familyOtherSpecify} onChange={(e) => updateField("familyOtherSpecify", e.target.value)} /></div>
-                </CardContent>
-              </Card>
-            </div>
+                  </div>
+                </div>
 
-            {/* Section 6: Menstrual & Obstetric History */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Menstrual History & Obstetric History</CardTitle></CardHeader>
-              <CardContent>
+                <h3 className="font-semibold text-base border-b pb-2 mt-6">Menstrual History & Obstetric History</h3>
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                   <div><Label>Cycle</Label>
                     <Select value={formData.menstrualCycle} onValueChange={(v) => updateField("menstrualCycle", v)}>
@@ -4995,17 +5004,15 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                   <div><Label>EDD</Label><Input value={formData.edd} onChange={(e) => updateField("edd", e.target.value)} /></div>
                   <div><Label>Menarche Age (yr)</Label><Input value={formData.menarcheAge} onChange={(e) => updateField("menarcheAge", e.target.value)} /></div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            )}
 
-            {/* Section 7: Glasgow Coma Scale */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
+            {/* Section 3: Examination */}
+            {activeSection === 3 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-base border-b pb-2 flex items-center gap-2">
                   Glasgow Coma Scale: Score <Badge variant="secondary">{(formData.gcsEyeOpening || 0) + (formData.gcsMotorResponse || 0) + (formData.gcsVerbalResponse || 0)}/15</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
                     <Label className="mb-2 block">Eye Opening</Label>
@@ -5035,13 +5042,8 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                     ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Section 8: General Examination */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">General Examination</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
+                <h3 className="font-semibold text-base border-b pb-2 mt-6">General Examination</h3>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2"><Checkbox checked={formData.conscious} onCheckedChange={(c) => updateField("conscious", c)} />Conscious</label>
                   <label className="flex items-center gap-2"><Checkbox checked={formData.oriented} onCheckedChange={(c) => updateField("oriented", c)} />Oriented</label>
@@ -5076,25 +5078,17 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                   ))}
                 </div>
                 <div><Label>Head/EYES/EARS/NOSE/THROAT/SKIN</Label><Textarea value={formData.heent} onChange={(e) => updateField("heent", e.target.value)} rows={2} /></div>
-              </CardContent>
-            </Card>
 
-            {/* Section 9: Systemic Examination */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Systemic Examination</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                <div><Label>CVS</Label><Textarea value={formData.cvs} onChange={(e) => updateField("cvs", e.target.value)} rows={2} /></div>
-                <div><Label>RS</Label><Textarea value={formData.rs} onChange={(e) => updateField("rs", e.target.value)} rows={2} /></div>
-                <div><Label>PA</Label><Textarea value={formData.pa} onChange={(e) => updateField("pa", e.target.value)} rows={2} /></div>
-                <div><Label>CNS</Label><Textarea value={formData.cns} onChange={(e) => updateField("cns", e.target.value)} rows={2} /></div>
-                <div><Label>Local Examination</Label><Textarea value={formData.localExamination} onChange={(e) => updateField("localExamination", e.target.value)} rows={2} /></div>
-              </CardContent>
-            </Card>
+                <h3 className="font-semibold text-base border-b pb-2 mt-6">Systemic Examination</h3>
+                <div className="space-y-3">
+                  <div><Label>CVS</Label><Textarea value={formData.cvs} onChange={(e) => updateField("cvs", e.target.value)} rows={2} /></div>
+                  <div><Label>RS</Label><Textarea value={formData.rs} onChange={(e) => updateField("rs", e.target.value)} rows={2} /></div>
+                  <div><Label>PA</Label><Textarea value={formData.pa} onChange={(e) => updateField("pa", e.target.value)} rows={2} /></div>
+                  <div><Label>CNS</Label><Textarea value={formData.cns} onChange={(e) => updateField("cns", e.target.value)} rows={2} /></div>
+                  <div><Label>Local Examination</Label><Textarea value={formData.localExamination} onChange={(e) => updateField("localExamination", e.target.value)} rows={2} /></div>
+                </div>
 
-            {/* Section 10: Special Examinations */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Special Examinations</CardTitle></CardHeader>
-              <CardContent>
+                <h3 className="font-semibold text-base border-b pb-2 mt-6">Special Examinations</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -5127,13 +5121,13 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
+              </div>
+            )}
 
-            {/* Section 11: Investigation Advised */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Investigation Advised</CardTitle></CardHeader>
-              <CardContent>
+            {/* Section 4: Diagnosis */}
+            {activeSection === 4 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-base border-b pb-2">Investigation Advised</h3>
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                   {INVESTIGATIONS_LIST.map(inv => (
                     <label key={inv.key} className="flex items-center gap-2">
@@ -5143,22 +5137,14 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                   ))}
                 </div>
                 <div className="mt-3"><Label>Others</Label><Input value={formData.investigationsOthers} onChange={(e) => updateField("investigationsOthers", e.target.value)} /></div>
-              </CardContent>
-            </Card>
 
-            {/* Section 12: Provisional Diagnosis & Treatment */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Provisional Diagnosis & Treatment</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                <div><Label>Provisional Diagnosis</Label><Textarea value={formData.provisionalDiagnosis} onChange={(e) => updateField("provisionalDiagnosis", e.target.value)} rows={3} /></div>
-                <div><Label>Treatment (E.g. Medication, IV Fluid, Monitoring, Diet, Position etc.)</Label><Textarea value={formData.treatment} onChange={(e) => updateField("treatment", e.target.value)} rows={3} /></div>
-              </CardContent>
-            </Card>
+                <h3 className="font-semibold text-base border-b pb-2 mt-6">Provisional Diagnosis & Treatment</h3>
+                <div className="space-y-3">
+                  <div><Label>Provisional Diagnosis</Label><Textarea value={formData.provisionalDiagnosis} onChange={(e) => updateField("provisionalDiagnosis", e.target.value)} rows={3} /></div>
+                  <div><Label>Treatment (E.g. Medication, IV Fluid, Monitoring, Diet, Position etc.)</Label><Textarea value={formData.treatment} onChange={(e) => updateField("treatment", e.target.value)} rows={3} /></div>
+                </div>
 
-            {/* Section 13: Assessment Finished */}
-            <Card>
-              <CardHeader><CardTitle className="text-base">Assessment Finished</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
+                <h3 className="font-semibold text-base border-b pb-2 mt-6">Assessment Finished</h3>
                 <div className="grid md:grid-cols-4 gap-3">
                   <div className="md:col-span-2"><Label>Name of Clinical Assistant: Dr.</Label><Input value={formData.clinicalAssistantName} onChange={(e) => updateField("clinicalAssistantName", e.target.value)} /></div>
                   <div><Label>Date</Label><Input type="date" value={formData.clinicalAssistantDate} onChange={(e) => updateField("clinicalAssistantDate", e.target.value)} /></div>
@@ -5169,16 +5155,30 @@ function InitialAssessmentTab({ session }: { session: Session }) {
                   <div><Label>Date</Label><Input type="date" value={formData.inchargeConsultantDate} onChange={(e) => updateField("inchargeConsultantDate", e.target.value)} /></div>
                   <div><Label>Time</Label><Input type="time" value={formData.inchargeConsultantTime} onChange={(e) => updateField("inchargeConsultantTime", e.target.value)} /></div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            )}
 
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={resetForm}>Cancel</Button>
-              <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
-                {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-                {editingId ? "Update Assessment" : "Save Assessment"}
-              </Button>
+            {/* Navigation and Action Buttons */}
+            <div className="flex justify-between items-center gap-2 pt-4 border-t">
+              <div className="flex gap-2">
+                {activeSection > 1 && (
+                  <Button variant="outline" onClick={() => setActiveSection(activeSection - 1)}>
+                    Previous
+                  </Button>
+                )}
+                {activeSection < 4 && (
+                  <Button variant="outline" onClick={() => setActiveSection(activeSection + 1)}>
+                    Next
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={resetForm}>Cancel</Button>
+                <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+                  {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                  {editingId ? "Update Assessment" : "Save Assessment"}
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
