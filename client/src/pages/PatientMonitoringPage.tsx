@@ -3748,6 +3748,10 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
       setNewEntry(emptyEntry);
       toast({ title: "Investigation Entry Added" });
     },
+    onError: (error: any) => {
+      console.error("Investigation save error:", error);
+      toast({ title: "Failed to save", description: error?.message || "Please try again", variant: "destructive" });
+    },
   });
 
   const HEMATOLOGY_FIELDS = [
@@ -4072,8 +4076,16 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
 
             <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
               <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
-              <Button onClick={() => addMutation.mutate({ ...newEntry, investigationDate: new Date(newEntry.investigationDate) })} disabled={addMutation.isPending} data-testid="button-save-investigation">
-                Save Investigation Entry
+              <Button 
+                type="button"
+                onClick={() => {
+                  console.log("Saving investigation:", newEntry);
+                  addMutation.mutate({ ...newEntry, investigationDate: new Date(newEntry.investigationDate) });
+                }} 
+                disabled={addMutation.isPending} 
+                data-testid="button-save-investigation"
+              >
+                {addMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving...</> : "Save Investigation Entry"}
               </Button>
             </div>
           </Card>
