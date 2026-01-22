@@ -895,16 +895,16 @@ export default function PatientMonitoringPage() {
                     };
                     
                     const generateTable = (title: string, headers: string[], rows: any[], renderRow: (r: any) => string) => {
-                      if (!rows || !Array.isArray(rows) || rows.length === 0) return `<h2>${title}</h2><p class="no-data">No data recorded</p>`;
+                      if (!rows || !Array.isArray(rows) || rows.length === 0) return '';
                       try {
                         const headerHtml = headers.map(h => `<th>${h}</th>`).join('');
                         const bodyHtml = rows.map((r, i) => { try { return renderRow({...r, _index: i+1}); } catch { return '<tr><td colspan="99">Error</td></tr>'; } }).join('');
                         return `<h2>${title}</h2><table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
-                      } catch { return `<h2>${title}</h2><p class="no-data">Error loading data</p>`; }
+                      } catch { return ''; }
                     };
 
                     const generateKeyValueTable = (title: string, data: any, fields: {label: string, key: string}[]) => {
-                      if (!data) return `<h2>${title}</h2><p class="no-data">No data recorded</p>`;
+                      if (!data) return '';
                       const rows = fields.map(f => `<tr><td class="label-cell">${f.label}</td><td class="value-cell">${data[f.key] || '-'}</td></tr>`).join('');
                       return `<h2>${title}</h2><table>${rows}</table>`;
                     };
@@ -981,50 +981,50 @@ export default function PatientMonitoringPage() {
                           </table>
                         </div>
 
-                        ${generateTable('1. VITALS CHART', ['S.No', 'Time', 'HR', 'BP', 'Temp', 'RR', 'SpO2', 'Staff'], vitals, (r: any) => 
+                        ${generateTable('VITALS CHART', ['S.No', 'Time', 'HR', 'BP', 'Temp', 'RR', 'SpO2', 'Staff'], vitals, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.hourSlot || formatTime(r.createdAt)}</td><td>${r.heartRate || '-'}</td><td>${r.systolicBp || '-'}/${r.diastolicBp || '-'}</td><td>${r.temperature ? r.temperature + '°C' : '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('2. INJECTIONS', ['S.No', 'Injection Name', 'Dose', 'Route', 'Diagnosis', 'Date', 'Staff'], injections, (r: any) => 
+                        ${generateTable('INJECTIONS / INOTROPES', ['S.No', 'Injection Name', 'Dose', 'Route', 'Diagnosis', 'Date', 'Staff'], injections, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.diagnosis || '-'}</td><td>${formatDate(r.startTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('3. MEDICINES (MAR)', ['S.No', 'Medicine Name', 'Dose', 'Route', 'Frequency', 'Date', 'Staff'], mar, (r: any) => 
+                        ${generateTable('MEDICINES (MAR)', ['S.No', 'Medicine Name', 'Dose', 'Route', 'Frequency', 'Date', 'Staff'], mar, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.drugName || r.medicineName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.frequency || '-'}</td><td>${formatDate(r.scheduledTime || r.createdAt)}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('4. INTAKE CHART', ['S.No', 'Time', 'Type', 'Volume (ml)', 'Route', 'Staff'], intake, (r: any) => 
+                        ${generateTable('INTAKE CHART', ['S.No', 'Time', 'Type', 'Volume (ml)', 'Route', 'Staff'], intake, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.hourSlot || r.timeSlot || formatTime(r.createdAt)}</td><td>${r.intakeType || r.fluidType || '-'}</td><td>${r.volume || r.oralFluids || '-'}</td><td>${r.route || '-'}</td><td>${r.nurseName || r.recordedBy || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('5. OUTPUT CHART', ['S.No', 'Time', 'Urine (ml)', 'Other Losses', 'Total Output', 'Staff'], output, (r: any) => 
+                        ${generateTable('OUTPUT CHART', ['S.No', 'Time', 'Urine (ml)', 'Other Losses', 'Total Output', 'Staff'], output, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.hourSlot || r.timeSlot || formatTime(r.createdAt)}</td><td>${r.urineHourly || r.volume || '-'}</td><td>${r.otherLosses || r.outputType || '-'}</td><td>${r.totalOutput || '-'}</td><td>${r.nurseName || r.recordedBy || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('6. DIABETIC MONITORING', ['S.No', 'Time', 'Blood Sugar (mg/dL)', 'Insulin Type', 'Dose', 'Alert', 'Staff'], diabetic, (r: any) => 
+                        ${generateTable('DIABETIC MONITORING', ['S.No', 'Time', 'Blood Sugar (mg/dL)', 'Insulin Type', 'Dose', 'Alert', 'Staff'], diabetic, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.checkTime || formatTime(r.createdAt)}</td><td>${r.bloodSugarLevel || '-'}</td><td>${r.insulinType || '-'}</td><td>${r.insulinDose || '-'}</td><td>${r.alertType || '-'}</td><td>${r.nurseName || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('7. ONCE-ONLY MEDICATIONS', ['S.No', 'Drug Name', 'Dose', 'Route', 'Indication', 'Given At', 'Given By'], onceOnly, (r: any) => 
+                        ${generateTable('ONCE-ONLY MEDICATIONS', ['S.No', 'Drug Name', 'Dose', 'Route', 'Indication', 'Given At', 'Given By'], onceOnly, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.indication || '-'}</td><td>${formatTime(r.givenAt || r.createdAt)}</td><td>${r.givenBy || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('8. SHIFT NOTES', ['S.No', 'Shift', 'Notes', 'Staff', 'Time'], shiftNotes, (r: any) => 
+                        ${generateTable('SHIFT NOTES', ['S.No', 'Shift', 'Notes', 'Staff', 'Time'], shiftNotes, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.shift || '-'}</td><td>${r.notes || '-'}</td><td>${r.nurseName || '-'}</td><td>${formatTime(r.createdAt)}</td></tr>`
                         )}
 
-                        ${generateTable('9. DUTY STAFF / NURSE NOTES', ['S.No', 'Shift', 'Staff Name', 'Role', 'Date'], dutyStaff, (r: any) => 
+                        ${generateTable('DUTY STAFF / NURSE NOTES', ['S.No', 'Shift', 'Staff Name', 'Role', 'Date'], dutyStaff, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.shift || '-'}</td><td>${r.staffName || '-'}</td><td>${r.role || '-'}</td><td>${formatDate(r.createdAt)}</td></tr>`
                         )}
 
-                        ${generateTable('10. ALLERGIES & PRECAUTIONS', ['S.No', 'Drug Allergies', 'Food Allergies', 'Special Precautions', 'Infection Control', 'Nurse'], allergies.length > 0 ? allergies : (allergies as any[]), (r: any) => 
+                        ${generateTable('ALLERGIES & PRECAUTIONS', ['S.No', 'Drug Allergies', 'Food Allergies', 'Special Precautions', 'Infection Control', 'Nurse'], allergies.length > 0 ? allergies : (allergies as any[]), (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.drugAllergies || r.allergen || '-'}</td><td>${r.foodAllergies || r.allergenType || '-'}</td><td>${r.specialPrecautions || r.reaction || '-'}</td><td>${r.infectionControlFlags || r.severity || '-'}</td><td>${r.nurseName || r.reportedBy || '-'}</td></tr>`
                         )}
 
                         <div class="section-divider"></div>
 
                         ${investigationChart && investigationChart.length > 0 ? `
-                          <h2>11. INVESTIGATION CHART</h2>
+                          <h2>INVESTIGATION CHART</h2>
                           ${investigationChart.map((inv: any, idx: number) => `
                             <h3>Investigation Entry ${idx + 1} - ${formatDate(inv.investigationDate)}</h3>
                             <table>
@@ -1040,10 +1040,10 @@ export default function PatientMonitoringPage() {
                               <tr><td class="label-cell">Urine Routine</td><td colspan="3">${inv.urineRoutine || '-'}</td></tr>
                             </table>
                           `).join('')}
-                        ` : '<h2>11. INVESTIGATION CHART</h2><p class="no-data">No investigation data recorded</p>'}
+                        ` : ''}
 
                         ${initialAssessment ? `
-                          <h2>12. INITIAL ASSESSMENT</h2>
+                          <h2>INITIAL ASSESSMENT</h2>
                           <table>
                             <tr><td class="label-cell">Patient Received Date/Time</td><td>${formatDate(initialAssessment.patientReceivedDate)} ${initialAssessment.patientReceivedTime || ''}</td><td class="label-cell">Accompanied By</td><td>${initialAssessment.patientAccompaniedBy || '-'}</td></tr>
                             <tr><td class="label-cell">Allergies</td><td>${initialAssessment.allergiesDetails || initialAssessment.allergies || '-'}</td><td class="label-cell">Pain Score</td><td>${initialAssessment.painScore || '-'}/10</td></tr>
@@ -1056,18 +1056,18 @@ export default function PatientMonitoringPage() {
                             <tr><td class="label-cell">Treatment Plan</td><td colspan="3">${initialAssessment.treatment || '-'}</td></tr>
                             <tr><td class="label-cell">Clinical Assistant</td><td>${initialAssessment.clinicalAssistantName || '-'}</td><td class="label-cell">Consultant</td><td>${initialAssessment.inchargeConsultantName || '-'}</td></tr>
                           </table>
-                        ` : '<h2>12. INITIAL ASSESSMENT</h2><p class="no-data">No initial assessment recorded</p>'}
+                        ` : ''}
 
-                        ${generateTable('13. INDOOR CONSULTATION SHEET', ['S.No', 'Date', 'Time', 'Doctor', 'Clinical Findings', 'Orders'], indoorConsultation, (r: any) => 
+                        ${generateTable('INDOOR CONSULTATION SHEET', ['S.No', 'Date', 'Time', 'Doctor', 'Clinical Findings', 'Orders'], indoorConsultation, (r: any) => 
                           `<tr><td>${r._index}</td><td>${formatDate(r.entryDate)}</td><td>${r.entryTime || '-'}</td><td>${r.inChargeDoctor || '-'}</td><td>${r.clinicalFindings || '-'}</td><td>${r.orders || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('14. DOCTOR\'S VISIT SHEET', ['S.No', 'Date', 'Time', 'Doctor', 'Visit Type', 'Procedure/Notes'], doctorsVisit, (r: any) => 
+                        ${generateTable('DOCTOR\'S VISIT SHEET', ['S.No', 'Date', 'Time', 'Doctor', 'Visit Type', 'Procedure/Notes'], doctorsVisit, (r: any) => 
                           `<tr><td>${r._index}</td><td>${formatDate(r.visitDate)}</td><td>${r.visitTime || '-'}</td><td>${r.nameOfDoctor || '-'}</td><td>${r.visitType || '-'}</td><td>${r.procedure || '-'}</td></tr>`
                         )}
 
                         ${surgeryNotes && surgeryNotes.length > 0 ? `
-                          <h2>15. SURGERY NOTES</h2>
+                          <h2>SURGERY NOTES</h2>
                           ${surgeryNotes.map((sn: any, idx: number) => `
                             <h3>Surgery ${idx + 1} - ${formatDate(sn.surgeryDate)}</h3>
                             <table>
@@ -1082,14 +1082,14 @@ export default function PatientMonitoringPage() {
                               <tr><td class="label-cell">Shift Patient To</td><td>${sn.shiftPatientTo || '-'}</td><td class="label-cell">Tissue for HPE</td><td>${sn.tissueSubjectForHpe ? 'Yes' : 'No'}</td></tr>
                             </table>
                           `).join('')}
-                        ` : '<h2>15. SURGERY NOTES</h2><p class="no-data">No surgery notes recorded</p>'}
+                        ` : ''}
 
-                        ${generateTable('16. NURSING PROGRESS SHEET', ['S.No', 'Date/Time', 'Progress Notes', 'Nurse Signature'], nursingProgress, (r: any) => 
+                        ${generateTable('NURSING PROGRESS SHEET', ['S.No', 'Date/Time', 'Progress Notes', 'Nurse Signature'], nursingProgress, (r: any) => 
                           `<tr><td>${r._index}</td><td>${formatDate(r.entryDateTime)} ${formatTime(r.entryDateTime)}</td><td>${r.progressNotes || '-'}</td><td>${r.signatureName || '-'}</td></tr>`
                         )}
 
                         ${carePlan ? `
-                          <h2>17. NURSING ASSESSMENT & CARE PLAN</h2>
+                          <h2>NURSING ASSESSMENT & CARE PLAN</h2>
                           <table>
                             <tr><td class="label-cell">Provisional Diagnosis</td><td colspan="3">${carePlan.provisionalDiagnosis || '-'}</td></tr>
                             <tr><td class="label-cell">Allergies</td><td>${carePlan.allergies || '-'}</td><td class="label-cell">Blood Group</td><td>${carePlan.bloodGroup || '-'}</td></tr>
@@ -1103,17 +1103,17 @@ export default function PatientMonitoringPage() {
                             <tr><td class="label-cell">Nursing Intervention</td><td colspan="3">${carePlan.nursingIntervention || '-'}</td></tr>
                             <tr><td class="label-cell">Staff Nurse</td><td>${carePlan.admittingStaffNurse || '-'}</td><td class="label-cell">Emp ID</td><td>${carePlan.empId || '-'}</td></tr>
                           </table>
-                        ` : '<h2>17. NURSING ASSESSMENT & CARE PLAN</h2><p class="no-data">No care plan recorded</p>'}
+                        ` : ''}
 
-                        ${generateTable('18. VENTILATOR SETTINGS', ['S.No', 'Time', 'Mode', 'FiO2 %', 'PEEP', 'Tidal Vol', 'RR Set'], ventilator, (r: any) => 
+                        ${generateTable('VENTILATOR SETTINGS', ['S.No', 'Time', 'Mode', 'FiO2 %', 'PEEP', 'Tidal Vol', 'RR Set'], ventilator, (r: any) => 
                           `<tr><td>${r._index}</td><td>${formatTime(r.createdAt)}</td><td>${r.mode || '-'}</td><td>${r.fio2 || '-'}</td><td>${r.peep || '-'}</td><td>${r.tidalVolume || '-'}</td><td>${r.respiratoryRateSet || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('19. ABG / LAB VALUES', ['S.No', 'Time', 'pH', 'pCO2', 'pO2', 'HCO3', 'Lactate', 'Na', 'K'], abgLab, (r: any) => 
+                        ${generateTable('ABG / LAB VALUES', ['S.No', 'Time', 'pH', 'pCO2', 'pO2', 'HCO3', 'Lactate', 'Na', 'K'], abgLab, (r: any) => 
                           `<tr><td>${r._index}</td><td>${formatTime(r.createdAt)}</td><td>${r.ph || '-'}</td><td>${r.pco2 || '-'}</td><td>${r.po2 || '-'}</td><td>${r.hco3 || '-'}</td><td>${r.lactate || '-'}</td><td>${r.sodium || '-'}</td><td>${r.potassium || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('20. LINES & TUBES / AIRWAY', ['S.No', 'Type', 'Site', 'Size', 'Inserted Date', 'Due Date', 'Status'], airway, (r: any) => 
+                        ${generateTable('LINES & TUBES / AIRWAY', ['S.No', 'Type', 'Site', 'Size', 'Inserted Date', 'Due Date', 'Status'], airway, (r: any) => 
                           `<tr><td>${r._index}</td><td>${r.lineType || '-'}</td><td>${r.site || '-'}</td><td>${r.size || '-'}</td><td>${formatDate(r.insertedDate)}</td><td>${formatDate(r.dueDate)}</td><td>${r.status || '-'}</td></tr>`
                         )}
 
