@@ -23,7 +23,7 @@ import {
   PlusCircle, RefreshCw, Download, Stethoscope,
   Wind, Syringe, FlaskConical, ClipboardList, Baby,
   BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays, ArrowLeft,
-  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye, Trash2, Edit, Printer, ClipboardCheck
+  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye, Trash2, Edit, Printer, ClipboardCheck, Scan
 } from "lucide-react";
 
 // Reusable hospital print header HTML
