@@ -4284,6 +4284,19 @@ ${report.remarks ? `\nRemarks: ${report.remarks}` : ""}
               <Button 
                 size="icon" 
                 variant="ghost"
+                onClick={() => {
+                  queryClient.invalidateQueries();
+                  toast({ title: "Refreshed", description: "Data has been refreshed" });
+                }}
+                className="h-9 w-9"
+                data-testid="button-header-refresh"
+                title="Refresh data"
+              >
+                <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+              <Button 
+                size="icon" 
+                variant="ghost"
                 onClick={() => setActiveSection("notifications")}
                 className="relative h-9 w-9"
                 data-testid="button-header-notifications"
