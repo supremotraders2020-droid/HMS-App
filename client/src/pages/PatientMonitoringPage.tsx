@@ -115,6 +115,35 @@ type Session = {
   createdAt: string;
 };
 
+function getPatientInfoHtml(session: Session): string {
+  return `
+    <table class="patient-info-table" style="width:100%;margin-bottom:15px;border-collapse:collapse;">
+      <tr>
+        <td style="padding:4px 8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;width:15%;">Patient Name</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;width:35%;">${session.patientName}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;width:15%;">UHID</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;width:35%;">${session.uhid}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Age / Sex</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;">${session.age || '-'} yrs / ${session.sex || '-'}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Ward / Bed</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;">${session.ward} - Bed ${session.bedNumber}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Diagnosis</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;">${session.primaryDiagnosis || 'Not recorded'}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Consultant</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;">${session.admittingConsultant || 'Not assigned'}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Session Date</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;" colspan="3">${format(new Date(session.sessionDate), "dd MMMM yyyy")}</td>
+      </tr>
+    </table>
+  `;
+}
+
 export default function PatientMonitoringPage() {
   const { toast } = useToast();
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
@@ -1166,40 +1195,40 @@ export default function PatientMonitoringPage() {
                   <OverviewTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="vitals">
-                  <VitalsTab sessionId={selectedSession.id} />
+                  <VitalsTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="inotropes">
-                  <InotropesTab sessionId={selectedSession.id} />
+                  <InotropesTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="intake">
-                  <IntakeTab sessionId={selectedSession.id} />
+                  <IntakeTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="output">
-                  <OutputTab sessionId={selectedSession.id} />
+                  <OutputTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="diabetic">
-                  <DiabeticTab sessionId={selectedSession.id} />
+                  <DiabeticTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="mar">
-                  <MARTab sessionId={selectedSession.id} />
+                  <MARTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="notes">
-                  <ShiftNotesTab sessionId={selectedSession.id} />
+                  <ShiftNotesTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="staff">
-                  <DutyStaffTab sessionId={selectedSession.id} />
+                  <DutyStaffTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="allergies">
-                  <AllergiesTab sessionId={selectedSession.id} />
+                  <AllergiesTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="investigation">
-                  <InvestigationChartTab sessionId={selectedSession.id} />
+                  <InvestigationChartTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="care-plan">
                   <CarePlanTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="tests">
-                  <TestsTab sessionId={selectedSession.id} patientId={selectedSession.patientId} patientName={selectedSession.patientName} admittingConsultant={selectedSession.admittingConsultant} />
+                  <TestsTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="initial-assessment">
                   <InitialAssessmentTab session={selectedSession} />
@@ -1220,7 +1249,7 @@ export default function PatientMonitoringPage() {
                   <NursingProgressTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="nursing-assessment">
-                  <NursingAssessmentCarePlanTab sessionId={selectedSession?.id || ""} />
+                  <NursingAssessmentCarePlanTab session={selectedSession} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -1712,7 +1741,8 @@ function OverviewTab({ session }: { session: Session }) {
   );
 }
 
-function VitalsTab({ sessionId }: { sessionId: string }) {
+function VitalsTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState("");
@@ -1769,6 +1799,7 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
     }).join('');
     const content = `
       <h1>HOURLY VITALS CHART (24 HOURS)</h1>
+      ${getPatientInfoHtml(session)}
       <table>
         <thead>
           <tr>
@@ -1880,7 +1911,8 @@ function VitalsTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function InotropesTab({ sessionId }: { sessionId: string }) {
+function InotropesTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ injectionName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
@@ -1935,6 +1967,7 @@ function InotropesTab({ sessionId }: { sessionId: string }) {
     ).join('');
     const content = `
       <h1>INJECTIONS & MEDICATION RECORD</h1>
+      ${getPatientInfoHtml(session)}
       ${records.length ? `
         <table>
           <thead>
@@ -2268,7 +2301,8 @@ function ABGLabTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function IntakeTab({ sessionId }: { sessionId: string }) {
+function IntakeTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState("");
@@ -2325,6 +2359,7 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
     }).join('');
     const content = `
       <h1>FLUID INTAKE CHART (24 HOURS)</h1>
+      ${getPatientInfoHtml(session)}
       <table>
         <thead>
           <tr>
@@ -2437,7 +2472,8 @@ function IntakeTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function OutputTab({ sessionId }: { sessionId: string }) {
+function OutputTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState("");
@@ -2495,6 +2531,7 @@ function OutputTab({ sessionId }: { sessionId: string }) {
     const netBalance = (fluidBalance?.totalIntake || 0) - (fluidBalance?.totalOutput || 0);
     const content = `
       <h1>FLUID OUTPUT CHART (24 HOURS)</h1>
+      ${getPatientInfoHtml(session)}
       <table>
         <thead>
           <tr>
@@ -2620,7 +2657,8 @@ function OutputTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function DiabeticTab({ sessionId }: { sessionId: string }) {
+function DiabeticTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ bloodSugarLevel: "", insulinType: "", insulinDose: "", checkTime: "" });
@@ -2668,6 +2706,7 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
     ).join('');
     const content = `
       <h1>DIABETIC FLOW CHART</h1>
+      ${getPatientInfoHtml(session)}
       ${records.length ? `
         <table>
           <thead>
@@ -2796,7 +2835,8 @@ function DiabeticTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function MARTab({ sessionId }: { sessionId: string }) {
+function MARTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ medicineName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
@@ -2852,6 +2892,7 @@ function MARTab({ sessionId }: { sessionId: string }) {
     ).join('');
     const content = `
       <h1>MEDICATION ADMINISTRATION RECORD</h1>
+      ${getPatientInfoHtml(session)}
       ${records.length ? `
         <table>
           <thead>
@@ -3066,7 +3107,8 @@ function OnceOnlyTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function ShiftNotesTab({ sessionId }: { sessionId: string }) {
+function ShiftNotesTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ shift: "MORNING", noteType: "ASSESSMENT", noteContent: "", staffName: "", staffRole: "NURSE" });
@@ -3110,6 +3152,7 @@ function ShiftNotesTab({ sessionId }: { sessionId: string }) {
     });
     
     let content = `<h1>NURSING SHIFT NOTES</h1>`;
+    content += getPatientInfoHtml(session);
     
     if (records.length) {
       Object.entries(groupedByShift).forEach(([shift, shiftRecords]) => {
@@ -3385,7 +3428,8 @@ function AirwayTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function DutyStaffTab({ sessionId }: { sessionId: string }) {
+function DutyStaffTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ 
@@ -3435,6 +3479,7 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
     ).join('');
     const content = `
       <h1>NURSES NOTES</h1>
+      ${getPatientInfoHtml(session)}
       ${records.length ? `
         <table>
           <thead>
@@ -3540,7 +3585,8 @@ function DutyStaffTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function AllergiesTab({ sessionId }: { sessionId: string }) {
+function AllergiesTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ knownAllergies: "", drugAllergies: "", foodAllergies: "", isolationPrecautions: "", fallRisk: false, pressureUlcerRisk: false });
@@ -3564,6 +3610,7 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
   const handlePrint = () => {
     const content = record ? `
       <h1>ALLERGIES & PRECAUTIONS</h1>
+      ${getPatientInfoHtml(session)}
       <h3>Allergy Information</h3>
       <table>
         <tr>
@@ -3605,7 +3652,7 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
           </tr>
         </table>
       </div>
-    ` : `<h1>ALLERGIES & PRECAUTIONS</h1><div class="no-data">No allergy data recorded</div>`;
+    ` : `<h1>ALLERGIES & PRECAUTIONS</h1>${getPatientInfoHtml(session)}<div class="no-data">No allergy data recorded</div>`;
     openPrintWindow('Allergies', content);
   };
 
@@ -3708,7 +3755,8 @@ function AllergiesTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function InvestigationChartTab({ sessionId }: { sessionId: string }) {
+function InvestigationChartTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeSection, setActiveSection] = useState("hematology");
@@ -3859,6 +3907,7 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
 
   const handlePrintSingle = (inv: any) => {
     let content = `<h1>INVESTIGATION SHEET</h1>`;
+    content += getPatientInfoHtml(session);
     content += `<h3>Investigation Date: ${inv.investigationDate ? format(new Date(inv.investigationDate), 'dd MMM yyyy') : 'Date Unknown'}</h3>`;
     content += `<p style="margin-bottom:15px;"><strong>Recorded By:</strong> ${inv.nurseName || 'Staff'}</p>`;
     
@@ -3923,6 +3972,7 @@ function InvestigationChartTab({ sessionId }: { sessionId: string }) {
 
   const handlePrint = () => {
     let content = `<h1>INVESTIGATION SHEET</h1>`;
+    content += getPatientInfoHtml(session);
     
     if (investigations.length) {
       investigations.forEach((inv: any, invIdx: number) => {
@@ -4504,7 +4554,11 @@ const TEST_CATEGORIES = {
   }
 };
 
-function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { sessionId: string; patientId: string; patientName: string; admittingConsultant?: string }) {
+function TestsTab({ session }: { session: Session }) {
+  const sessionId = session.id;
+  const patientId = session.patientId;
+  const patientName = session.patientName;
+  const admittingConsultant = session.admittingConsultant;
   const { toast } = useToast();
   const [showOrderDialog, setShowOrderDialog] = useState(false);
   const [selectedTests, setSelectedTests] = useState<{name: string; type: string; department: string; category: string}[]>([]);
@@ -4614,6 +4668,7 @@ function TestsTab({ sessionId, patientId, patientName, admittingConsultant }: { 
 
   const handlePrint = () => {
     let content = `<h1>DIAGNOSTIC TESTS ORDER SHEET</h1>`;
+    content += getPatientInfoHtml(session);
     
     if (tests.length) {
       Object.entries(groupedTests).forEach(([category, catTests]) => {
@@ -8118,7 +8173,8 @@ function NursingProgressTab({ session }: { session: Session }) {
 }
 
 // ========== NURSING ASSESSMENT & CARE PLAN TAB ==========
-function NursingAssessmentCarePlanTab({ sessionId }: { sessionId: string }) {
+function NursingAssessmentCarePlanTab({ session }: { session: Session }) {
+  const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeSection, setActiveSection] = useState(1);
