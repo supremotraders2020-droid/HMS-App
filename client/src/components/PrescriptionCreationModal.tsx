@@ -365,14 +365,20 @@ export default function PrescriptionCreationModal({
     );
   }, [opdTemplates, templateSearch]);
 
-  // Safe JSON parsing helper
-  const safeJsonParse = (data: string | null | undefined, fallback: any = []) => {
+  // Safe JSON parsing helper - handles both strings and already-parsed objects
+  const safeJsonParse = (data: any, fallback: any = []) => {
     if (!data) return fallback;
-    try {
-      return JSON.parse(data);
-    } catch {
-      return fallback;
+    // If already an object/array, return it directly
+    if (typeof data === 'object') return data;
+    // If it's a string, try to parse it
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch {
+        return fallback;
+      }
     }
+    return fallback;
   };
 
   // Apply template to form
