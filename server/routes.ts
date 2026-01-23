@@ -13075,7 +13075,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   }
 
   // Face Embeddings - Store face data (Admin, Nurse, OPD_MANAGER)
-  app.post("/api/face-recognition/embeddings", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+  app.post("/api/face-recognition/embeddings", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { userId, userType, embeddingVector, faceQualityScore, captureDeviceId, captureLocation } = req.body;
       
@@ -13130,7 +13130,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Biometric Consent - Record consent
-  app.post("/api/face-recognition/consent", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+  app.post("/api/face-recognition/consent", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { userId, userType, consentStatus, ipAddress } = req.body;
       const user = (req as any).session?.user;
@@ -13180,7 +13180,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Revoke consent
-  app.post("/api/face-recognition/consent/revoke", requireAuth, requireRole(["ADMIN", "PATIENT"]), async (req, res) => {
+  app.post("/api/face-recognition/consent/revoke", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "PATIENT"]), async (req, res) => {
     try {
       const { userId, userType, reason } = req.body;
       const user = (req as any).session?.user;
@@ -13202,7 +13202,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Face Recognition - Match face against stored embeddings
-  app.post("/api/face-recognition/match", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER", "DOCTOR"]), async (req, res) => {
+  app.post("/api/face-recognition/match", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER", "DOCTOR"]), async (req, res) => {
     try {
       const startTime = Date.now();
       const { embeddingVector, userType, purpose, location, deviceId } = req.body;
@@ -13277,7 +13277,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Duplicate Patient Check - During registration
-  app.post("/api/face-recognition/duplicate-check", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+  app.post("/api/face-recognition/duplicate-check", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { embeddingVector, newPatientId, location } = req.body;
       const user = (req as any).session?.user;
@@ -13348,7 +13348,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Get duplicate alerts
-  app.get("/api/face-recognition/duplicate-alerts", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  app.get("/api/face-recognition/duplicate-alerts", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
     try {
       const status = req.query.status as string;
       const alerts = await storage.getDuplicatePatientAlerts(status);
@@ -13360,7 +13360,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Resolve duplicate alert
-  app.post("/api/face-recognition/duplicate-alerts/:id/resolve", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  app.post("/api/face-recognition/duplicate-alerts/:id/resolve", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
     try {
       const { status, notes, mergedToId } = req.body;
       const user = (req as any).session?.user;
@@ -13381,7 +13381,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Face Attendance - Punch In/Out
-  app.post("/api/face-recognition/attendance", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+  app.post("/api/face-recognition/attendance", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { embeddingVector, location, deviceId, staffId } = req.body;
       const user = (req as any).session?.user;
@@ -13470,7 +13470,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Get today's attendance (all staff)
-  app.get("/api/face-recognition/attendance-today", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  app.get("/api/face-recognition/attendance-today", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
     try {
       const attendance = await storage.getAllFaceAttendanceToday();
       res.json(attendance);
@@ -13481,7 +13481,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Recognition settings (Admin only)
-  app.get("/api/face-recognition/settings", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  app.get("/api/face-recognition/settings", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
     try {
       const settings = await storage.getAllFaceRecognitionSettings();
       res.json(settings);
@@ -13491,7 +13491,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  app.post("/api/face-recognition/settings", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  app.post("/api/face-recognition/settings", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
     try {
       const { key, value, description } = req.body;
       const user = (req as any).session?.user;
@@ -13505,7 +13505,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Recognition logs (Admin only)
-  app.get("/api/face-recognition/logs", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  app.get("/api/face-recognition/logs", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
     try {
       const filters = {
         userType: req.query.userType as string,
@@ -13520,7 +13520,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Recognition stats dashboard (Admin only)
-  app.get("/api/face-recognition/stats", requireAuth, requireRole(["ADMIN"]), async (req, res) => {
+  app.get("/api/face-recognition/stats", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
     try {
       const stats = await storage.getRecognitionStats();
       const settings = await storage.getAllFaceRecognitionSettings();
@@ -13542,7 +13542,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Patient quick check-in via face
-  app.post("/api/face-recognition/patient-checkin", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+  app.post("/api/face-recognition/patient-checkin", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { embeddingVector, location, deviceId } = req.body;
       const user = (req as any).session?.user;
