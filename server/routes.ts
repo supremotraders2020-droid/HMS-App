@@ -4700,6 +4700,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to calculate age from date of birth
+  const calculateAge = (dob: string | Date): string => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let years = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      years--;
+    }
+    return `${years} years`;
+  };
+
   // Render consent template with patient data as PDF (requires authentication)
   app.get("/api/consent-templates/:id/render", async (req, res) => {
     try {
@@ -4729,6 +4741,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ error: "Patient not found" });
         }
         patient = foundPatient;
+      }
+
+      // Handle dynamic consent forms that are generated on the fly (not from PDF files)
+      if (template.pdfPath.startsWith('/consents/dynamic/')) {
+        // Generate dynamic consent form as HTML for print
+        const consentType = template.pdfPath.split('/').pop();
+        
+        if (consentType === 'PATIENT_COUNSELLING') {
+          // Generate Patient Counselling, Education & Documentation Consent Form
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientPhone = patient?.phone || '__________';
+          const patientAddress = patient?.address || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          const currentTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Counselling, Education & Documentation Consent Form</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; margin: 0; padding: 20px; color: #333; }
+    .header { display: flex; align-items: flex-start; border-bottom: 2px solid #4a2683; padding-bottom: 15px; margin-bottom: 20px; }
+    .logo { width: 120px; height: auto; margin-right: 20px; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #4a2683; margin: 0; }
+    .hospital-address { font-size: 9pt; color: #666; margin: 5px 0; }
+    .hospital-contact { font-size: 9pt; color: #666; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 20px 0; padding: 10px; background: #f0e6ff; border-radius: 5px; color: #4a2683; }
+    .patient-info { background: #f9f9f9; padding: 12px; border-radius: 5px; margin-bottom: 20px; }
+    .patient-info table { width: 100%; border-collapse: collapse; }
+    .patient-info td { padding: 5px 10px; }
+    .patient-info .label { font-weight: bold; width: 25%; color: #555; }
+    .patient-info .value { width: 25%; border-bottom: 1px dotted #999; }
+    .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    .section-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #4a2683; }
+    .lang-title { color: #4a2683; font-weight: bold; margin: 15px 0 10px 0; font-size: 11pt; }
+    .consent-text { text-align: justify; margin: 10px 0; }
+    .signature-section { margin-top: 30px; display: flex; justify-content: space-between; }
+    .signature-box { width: 45%; }
+    .signature-line { border-bottom: 1px solid #333; margin: 30px 0 5px 0; }
+    .signature-label { font-size: 9pt; color: #666; }
+    .hindi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="/hospital-logo.png" alt="Gravity Hospital" class="logo" onerror="this.style.display='none'">
+    <div class="hospital-info">
+      <p class="hospital-name">Gravity Hospital & Research Centre</p>
+      <p class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</p>
+      <p class="hospital-contact">Phone: +91-20-27654321 | Email: info@gravityhospital.com | NABH Accredited</p>
+    </div>
+  </div>
+  
+  <div class="form-title">PATIENT COUNSELLING, EDUCATION & DOCUMENTATION CONSENT FORM<br>
+    <span class="hindi" style="font-size: 11pt;">रोगी परामर्श, शिक्षा एवं प्रलेखन सहमति पत्र</span><br>
+    <span class="marathi" style="font-size: 11pt;">रुग्ण समुपदेशन, शिक्षण व दस्तऐवजीकरण संमती फॉर्म</span>
+  </div>
+  
+  <div class="patient-info">
+    <table>
+      <tr>
+        <td class="label">Patient Name / रोगी का नाम:</td>
+        <td class="value">${patientName}</td>
+        <td class="label">Age / आयु:</td>
+        <td class="value">${patientAge}</td>
+      </tr>
+      <tr>
+        <td class="label">Gender / लिंग:</td>
+        <td class="value">${patientGender}</td>
+        <td class="label">Phone / फोन:</td>
+        <td class="value">${patientPhone}</td>
+      </tr>
+      <tr>
+        <td class="label">Address / पता:</td>
+        <td class="value" colspan="3">${patientAddress}</td>
+      </tr>
+    </table>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">🟦 ENGLISH</div>
+    <p class="consent-text"><strong>PATIENT COUNSELLING, EDUCATION & DOCUMENTATION CONSENT FORM</strong></p>
+    <p class="consent-text">I confirm that I have received proper counselling and education regarding my illness, diagnosis, treatment plan, medicines, procedures, possible risks, benefits, and alternatives.</p>
+    <p class="consent-text">The information was explained to me in a language I understand. I was given the opportunity to ask questions and all my questions were answered.</p>
+    <p class="consent-text">I understand that my counselling details will be documented in the hospital system and used for continuity of care, legal requirements, and medical records. My personal information will be kept confidential.</p>
+    <p class="consent-text"><strong>I voluntarily give my consent for patient counselling, education, and documentation.</strong></p>
+  </div>
+  
+  <div class="section">
+    <div class="section-title hindi">🟦 हिंदी (HINDI)</div>
+    <p class="consent-text hindi"><strong>रोगी परामर्श, शिक्षा एवं प्रलेखन सहमति पत्र</strong></p>
+    <p class="consent-text hindi">मैं यह पुष्टि करता/करती हूँ कि मुझे मेरी बीमारी, निदान, उपचार योजना, दवाइयों, प्रक्रियाओं, संभावित जोखिमों, लाभों एवं विकल्पों के बारे में उचित परामर्श और शिक्षा दी गई है।</p>
+    <p class="consent-text hindi">यह जानकारी मुझे मेरी समझ की भाषा में दी गई है। मुझे प्रश्न पूछने का अवसर दिया गया और मेरे सभी प्रश्नों के उत्तर दिए गए।</p>
+    <p class="consent-text hindi">मैं समझता/समझती हूँ कि मेरे परामर्श का विवरण अस्पताल प्रणाली में दर्ज किया जाएगा और इसका उपयोग उपचार निरंतरता, कानूनी आवश्यकताओं एवं मेडिकल रिकॉर्ड हेतु किया जाएगा। मेरी व्यक्तिगत जानकारी गोपनीय रखी जाएगी।</p>
+    <p class="consent-text hindi"><strong>मैं रोगी परामर्श, शिक्षा एवं प्रलेखन के लिए अपनी स्वेच्छा से सहमति देता/देती हूँ।</strong></p>
+  </div>
+  
+  <div class="section">
+    <div class="section-title marathi">🟦 मराठी (MARATHI)</div>
+    <p class="consent-text marathi"><strong>रुग्ण समुपदेशन, शिक्षण व दस्तऐवजीकरण संमती फॉर्म</strong></p>
+    <p class="consent-text marathi">माझ्या आजाराबाबत, निदान, उपचार योजना, औषधे, प्रक्रिया, संभाव्य धोके, फायदे व पर्याय यांची योग्य माहिती व समुपदेशन मला देण्यात आले आहे, याची मी खात्री देतो/देते.</p>
+    <p class="consent-text marathi">ही माहिती मला समजेल अशा भाषेत समजावून सांगण्यात आली आहे. मला प्रश्न विचारण्याची संधी देण्यात आली आणि माझ्या सर्व प्रश्नांची उत्तरे देण्यात आली.</p>
+    <p class="consent-text marathi">माझ्या समुपदेशनाची नोंद रुग्णालय प्रणालीमध्ये केली जाईल व ती उपचारातील सातत्य, कायदेशीर आवश्यकता व वैद्यकीय नोंदींसाठी वापरली जाईल. माझी वैयक्तिक माहिती गोपनीय ठेवली जाईल.</p>
+    <p class="consent-text marathi"><strong>रुग्ण समुपदेशन, शिक्षण व दस्तऐवजीकरणासाठी मी स्वेच्छेने संमती देत आहे.</strong></p>
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <p><strong>Patient / Attendant Details</strong></p>
+      <p>Name / नाव: ${patientName}</p>
+      <p>Relationship / संबंध: __________</p>
+      <div class="signature-line"></div>
+      <p class="signature-label">Signature / Thumb / हस्ताक्षर / अंगूठा</p>
+      <p>Date & Time / दिनांक व समय: ${currentDate} ${currentTime}</p>
+    </div>
+    <div class="signature-box">
+      <p><strong>Doctor / Healthcare Provider</strong></p>
+      <p>Name / नाम: __________</p>
+      <div class="signature-line"></div>
+      <p class="signature-label">Signature / हस्ताक्षर</p>
+      <p>Designation / पदनाम: __________</p>
+    </div>
+  </div>
+</body>
+</html>`;
+          
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+        
+        return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
 
       // Read the original PDF file - files are stored in server/public/consents/

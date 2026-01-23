@@ -2853,11 +2853,23 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      // === PATIENT EDUCATION ===
+      {
+        title: "Patient Counselling, Education & Documentation",
+        consentType: "PATIENT_COUNSELLING",
+        description: "Consent form confirming patient has received proper counselling and education regarding illness, diagnosis, treatment plan, medicines, procedures, risks, benefits, and alternatives. Includes documentation consent for hospital records. Trilingual: English, Hindi, Marathi.",
+        category: "Legal & Administrative",
+        pdfPath: "/consents/dynamic/PATIENT_COUNSELLING",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
     await db.insert(consentTemplates).values(templates);
-    console.log("Consent templates seeded successfully with 13 comprehensive forms");
+    console.log("Consent templates seeded successfully with 14 comprehensive forms");
   }
 
   // ========== PATHOLOGY TESTS SEEDING ==========
