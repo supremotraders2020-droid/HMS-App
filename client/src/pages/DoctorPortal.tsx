@@ -3826,6 +3826,19 @@ export default function DoctorPortal({ doctorName, hospitalName, doctorId = "doc
               <Button 
                 variant="ghost" 
                 size="icon" 
+                className="h-9 w-9"
+                onClick={() => {
+                  queryClient.invalidateQueries();
+                  toast({ title: "Refreshed", description: "Data has been refreshed" });
+                }}
+                data-testid="button-header-refresh"
+                title="Refresh data"
+              >
+                <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
                 className="relative h-9 w-9"
                 onClick={() => setActiveSection("notifications")}
                 data-testid="button-header-notifications"
