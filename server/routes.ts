@@ -4750,13 +4750,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (consentType === 'PATIENT_COUNSELLING') {
           // Generate Patient Counselling, Education & Documentation Consent Form
-          // Matching exact format from hospital's standard template (image 1)
+          // Each language on separate page - matching Digital Consent Form format
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
           const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-          const currentTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
           
           const htmlContent = `
 <!DOCTYPE html>
@@ -4765,164 +4764,244 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <meta charset="UTF-8">
   <title>Patient Counselling, Education & Documentation Consent Form</title>
   <style>
-    @page { size: A4; margin: 10mm; }
+    @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.4; padding: 15px; color: #333; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
     
-    /* Hospital Header - Matching Image 1 Format */
-    .hospital-header { display: table; width: 100%; margin-bottom: 0; }
-    .header-left { display: table-cell; vertical-align: middle; width: 200px; }
-    .header-left img { width: 180px; height: auto; }
-    .header-right { display: table-cell; vertical-align: middle; text-align: left; padding-left: 15px; }
-    .hospital-name { font-size: 20pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    
+    /* Hospital Header */
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 5px; }
     .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
     
-    /* Patient Info Row - Single line with borders like Image 1 */
-    .patient-row { border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 8px 0; margin: 10px 0; display: table; width: 100%; }
-    .patient-row-item { display: table-cell; padding: 0 10px; }
-    .patient-row-item:first-child { padding-left: 0; }
+    /* Patient Info Row */
+    .patient-row { display: table; width: 100%; border-bottom: 1px solid #333; padding: 8px 0; margin-bottom: 20px; }
+    .patient-row-item { display: table-cell; }
     .patient-label { font-weight: bold; font-size: 10pt; }
     .patient-value { font-size: 10pt; margin-left: 5px; }
     
     /* Form Title */
-    .form-title { font-size: 16pt; font-weight: bold; margin: 25px 0 15px 0; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 20px 0; padding: 10px; background: #f5f5f5; }
+    .form-title-sub { font-size: 10pt; margin-top: 5px; }
     
-    /* Patient Details Section */
-    .patient-details-section { margin: 20px 0; }
-    .patient-details-title { font-size: 12pt; font-weight: bold; margin-bottom: 10px; }
-    .patient-details-list { list-style: disc; margin-left: 25px; }
-    .patient-details-list li { margin: 8px 0; font-size: 11pt; }
-    .detail-line { display: inline-block; border-bottom: 1px solid #333; min-width: 180px; margin-left: 5px; }
+    /* Info Fields */
+    .info-fields { margin: 20px 0; }
+    .info-field { margin: 10px 0; font-size: 11pt; }
+    .field-line { display: inline-block; border-bottom: 1px solid #333; min-width: 200px; }
     
     /* Consent Section */
     .consent-section { margin: 25px 0; }
-    .consent-number { display: inline-block; background: #4a90a4; color: white; padding: 2px 8px; font-weight: bold; margin-right: 8px; }
-    .consent-heading { font-size: 14pt; font-weight: bold; margin-bottom: 15px; }
-    .consent-text { text-align: justify; margin: 12px 0; font-size: 11pt; line-height: 1.6; }
-    .consent-text strong { font-weight: bold; }
-    .consent-list { list-style: disc; margin-left: 25px; margin-top: 10px; }
-    .consent-list li { margin: 8px 0; }
+    .consent-heading { font-size: 13pt; font-weight: bold; margin-bottom: 15px; padding: 8px; background: #4a90a4; color: white; }
+    .consent-text { text-align: justify; margin: 12px 0; font-size: 11pt; line-height: 1.7; }
     
-    /* Language Sections */
-    .lang-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; background: #fafafa; }
-    .lang-header { display: flex; align-items: center; margin-bottom: 10px; }
-    .lang-box { display: inline-block; width: 15px; height: 15px; background: #4a90a4; margin-right: 8px; }
-    .lang-title { font-weight: bold; font-size: 11pt; }
-    .hindi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
-    .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    /* Declaration Section */
+    .declaration { margin-top: 30px; padding: 15px; border: 1px solid #ddd; background: #fafafa; }
+    .declaration-title { font-weight: bold; margin-bottom: 10px; font-size: 12pt; }
     
     /* Signature Section */
-    .signature-section { margin-top: 40px; display: table; width: 100%; }
-    .signature-box { display: table-cell; width: 48%; vertical-align: top; }
-    .signature-box:first-child { padding-right: 20px; }
-    .signature-box:last-child { padding-left: 20px; }
-    .signature-title { font-weight: bold; margin-bottom: 10px; }
-    .signature-field { margin: 8px 0; }
-    .signature-line { border-bottom: 1px solid #333; height: 30px; margin: 15px 0 5px 0; }
+    .signature-section { margin-top: 40px; }
+    .signature-row { display: table; width: 100%; margin-top: 20px; }
+    .signature-item { display: table-cell; width: 50%; vertical-align: top; padding-right: 20px; }
+    .signature-item:last-child { padding-right: 0; padding-left: 20px; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 10px 0 5px 0; }
     .signature-label { font-size: 9pt; color: #666; }
     
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    
     @media print { 
-      body { padding: 0; } 
-      .lang-section { break-inside: avoid; }
+      .page { padding: 0; }
     }
   </style>
 </head>
 <body>
-  <!-- Hospital Header - Matching Image 1 Format -->
+
+<!-- ==================== PAGE 1: ENGLISH ==================== -->
+<div class="page">
   <div class="hospital-header">
-    <div class="header-left">
-      <img src="/hospital-logo.png" alt="Gravity Hospital" onerror="this.outerHTML='<div style=\\'font-size:24pt;font-weight:bold;color:#4a2683;\\'>GRAVITY<br>HOSPITAL</div>'">
-    </div>
-    <div class="header-right">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
-      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,</div>
-      <div class="hospital-address">Pimpri-Chinchwad, Maharashtra - 411062</div>
-      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
-    </div>
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,</div>
+    <div class="hospital-address">Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <!-- Patient Info Row - Single horizontal line like Image 1 -->
   <div class="patient-row">
-    <div class="patient-row-item"><span class="patient-label">Patient Name:</span><span class="patient-value">${patientName}</span></div>
-    <div class="patient-row-item"><span class="patient-label">UHID No:</span><span class="patient-value">${patientUhid}</span></div>
-    <div class="patient-row-item"><span class="patient-label">Gender:</span><span class="patient-value">${patientGender}</span></div>
-    <div class="patient-row-item"><span class="patient-label">Age:</span><span class="patient-value">${patientAge}</span></div>
+    <div class="patient-row-item"><span class="patient-label">Patient Name:</span> <span class="patient-value">${patientName}</span></div>
+    <div class="patient-row-item"><span class="patient-label">UHID No:</span> <span class="patient-value">${patientUhid}</span></div>
+    <div class="patient-row-item"><span class="patient-label">Gender:</span> <span class="patient-value">${patientGender}</span></div>
+    <div class="patient-row-item"><span class="patient-label">Age:</span> <span class="patient-value">${patientAge}</span></div>
   </div>
   
-  <!-- Form Title -->
-  <h1 class="form-title">PATIENT COUNSELLING, EDUCATION & DOCUMENTATION CONSENT FORM</h1>
-  
-  <!-- Patient Details Section -->
-  <div class="patient-details-section">
-    <div class="patient-details-title">PATIENT DETAILS</div>
-    <ul class="patient-details-list">
-      <li>IPD No.: <span class="detail-line"></span></li>
-      <li>Ward: <span class="detail-line"></span></li>
-      <li>Bed No.: <span class="detail-line"></span></li>
-    </ul>
+  <div class="form-title">
+    PATIENT COUNSELLING, EDUCATION & DOCUMENTATION CONSENT FORM
   </div>
   
-  <!-- Main Consent Section -->
+  <div class="info-fields">
+    <div class="info-field">Department: <span class="field-line"></span></div>
+    <div class="info-field">Date: ____ / ____ / ______</div>
+  </div>
+  
   <div class="consent-section">
-    <div class="consent-heading"><span class="consent-number">1.</span> PATIENT COUNSELLING, EDUCATION & DOCUMENTATION CONSENT</div>
+    <div class="consent-heading">1. PATIENT COUNSELLING, EDUCATION & DOCUMENTATION CONSENT</div>
     
     <p class="consent-text">I confirm that I have received proper counselling and education regarding my illness, diagnosis, treatment plan, medicines, procedures, possible risks, benefits, and alternatives.</p>
     
     <p class="consent-text">The information was explained to me in a language I understand. I was given the opportunity to ask questions and all my questions were answered.</p>
     
-    <p class="consent-text">I have been informed that:</p>
-    <ul class="consent-list">
-      <li>My counselling details will be documented in the hospital system.</li>
-      <li>This documentation will be used for <strong>continuity of care</strong>, <strong>legal requirements</strong>, and <strong>medical records</strong>.</li>
-      <li>My personal information will be kept <strong>confidential</strong>.</li>
-    </ul>
+    <p class="consent-text">I have been informed that my counselling details will be documented in the hospital system and used for <strong>continuity of care</strong>, <strong>legal requirements</strong>, and <strong>medical records</strong>. My personal information will be kept <strong>confidential</strong>.</p>
     
     <p class="consent-text"><strong>I voluntarily give my consent for patient counselling, education, and documentation.</strong></p>
   </div>
   
-  <!-- Hindi Section -->
-  <div class="lang-section">
-    <div class="lang-header">
-      <span class="lang-box"></span>
-      <span class="lang-title hindi">हिंदी (HINDI)</span>
-    </div>
-    <p class="consent-text hindi"><strong>रोगी परामर्श, शिक्षा एवं प्रलेखन सहमति पत्र</strong></p>
-    <p class="consent-text hindi">मैं यह पुष्टि करता/करती हूँ कि मुझे मेरी बीमारी, निदान, उपचार योजना, दवाइयों, प्रक्रियाओं, संभावित जोखिमों, लाभों एवं विकल्पों के बारे में उचित परामर्श और शिक्षा दी गई है।</p>
-    <p class="consent-text hindi">यह जानकारी मुझे मेरी समझ की भाषा में दी गई है। मुझे प्रश्न पूछने का अवसर दिया गया और मेरे सभी प्रश्नों के उत्तर दिए गए।</p>
-    <p class="consent-text hindi"><strong>मैं रोगी परामर्श, शिक्षा एवं प्रलेखन के लिए अपनी स्वेच्छा से सहमति देता/देती हूँ।</strong></p>
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    <p class="consent-text">We confirm that all the above information has been explained to us clearly. We have understood the same and have given this consent voluntarily, without any pressure.</p>
   </div>
   
-  <!-- Marathi Section -->
-  <div class="lang-section">
-    <div class="lang-header">
-      <span class="lang-box"></span>
-      <span class="lang-title marathi">मराठी (MARATHI)</span>
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-item">
+        <div class="signature-field">Relative / Attendant Name: ______________________________</div>
+        <div class="signature-field">Relationship with Patient: ______________________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-label">Signature / Thumb Impression</div>
+        <div class="signature-field">Date: ____ / ____ / ______</div>
+      </div>
+      <div class="signature-item">
+        <div class="signature-field">Doctor Name: ______________________________</div>
+        <div class="signature-field">Designation: ______________________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-label">Signature</div>
+      </div>
     </div>
-    <p class="consent-text marathi"><strong>रुग्ण समुपदेशन, शिक्षण व दस्तऐवजीकरण संमती फॉर्म</strong></p>
+  </div>
+</div>
+
+<!-- ==================== PAGE 2: MARATHI (मराठी) ==================== -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,</div>
+    <div class="hospital-address">Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="patient-row">
+    <div class="patient-row-item"><span class="patient-label">Patient Name:</span> <span class="patient-value">${patientName}</span></div>
+    <div class="patient-row-item"><span class="patient-label">UHID No:</span> <span class="patient-value">${patientUhid}</span></div>
+    <div class="patient-row-item"><span class="patient-label">Gender:</span> <span class="patient-value">${patientGender}</span></div>
+    <div class="patient-row-item"><span class="patient-label">Age:</span> <span class="patient-value">${patientAge}</span></div>
+  </div>
+  
+  <div class="form-title marathi">
+    🏥 रुग्ण समुपदेशन, शिक्षण व दस्तऐवजीकरण संमतीपत्र
+  </div>
+  
+  <div class="info-fields marathi">
+    <div class="info-field">विभाग: <span class="field-line"></span></div>
+    <div class="info-field">तारीख: ____ / ____ / ______</div>
+  </div>
+  
+  <div class="consent-section">
+    <div class="consent-heading marathi">1. रुग्ण समुपदेशन, शिक्षण व दस्तऐवजीकरण संमती</div>
+    
     <p class="consent-text marathi">माझ्या आजाराबाबत, निदान, उपचार योजना, औषधे, प्रक्रिया, संभाव्य धोके, फायदे व पर्याय यांची योग्य माहिती व समुपदेशन मला देण्यात आले आहे, याची मी खात्री देतो/देते.</p>
+    
     <p class="consent-text marathi">ही माहिती मला समजेल अशा भाषेत समजावून सांगण्यात आली आहे. मला प्रश्न विचारण्याची संधी देण्यात आली आणि माझ्या सर्व प्रश्नांची उत्तरे देण्यात आली.</p>
+    
+    <p class="consent-text marathi">माझ्या समुपदेशनाची नोंद रुग्णालय प्रणालीमध्ये केली जाईल व ती <strong>उपचारातील सातत्य</strong>, <strong>कायदेशीर आवश्यकता</strong> व <strong>वैद्यकीय नोंदींसाठी</strong> वापरली जाईल. माझी वैयक्तिक माहिती <strong>गोपनीय</strong> ठेवली जाईल.</p>
+    
     <p class="consent-text marathi"><strong>रुग्ण समुपदेशन, शिक्षण व दस्तऐवजीकरणासाठी मी स्वेच्छेने संमती देत आहे.</strong></p>
   </div>
   
-  <!-- Signature Section -->
+  <div class="declaration">
+    <div class="declaration-title marathi">जाहीरनामा</div>
+    <p class="consent-text marathi">वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे. कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.</p>
+  </div>
+  
   <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-title">Patient / Attendant Details</div>
-      <div class="signature-field">Name / नाव: ${patientName}</div>
-      <div class="signature-field">Relationship / संबंध: __________</div>
-      <div class="signature-line"></div>
-      <div class="signature-label">Signature / Thumb Impression</div>
-      <div class="signature-field">Date & Time: ${currentDate} ${currentTime}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-title">Doctor / Healthcare Provider</div>
-      <div class="signature-field">Name / नाम: __________</div>
-      <div class="signature-field">Designation: __________</div>
-      <div class="signature-line"></div>
-      <div class="signature-label">Signature</div>
+    <div class="signature-row">
+      <div class="signature-item">
+        <div class="signature-field marathi">नातलगाचे नाव: ______________________________</div>
+        <div class="signature-field marathi">रुग्णाशी नाते: ______________________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-label marathi">स्वाक्षरी / अंगठा</div>
+        <div class="signature-field marathi">तारीख: ____ / ____ / ______</div>
+      </div>
+      <div class="signature-item">
+        <div class="signature-field marathi">डॉक्टरांचे नाव: ______________________________</div>
+        <div class="signature-field marathi">पदनाम: ______________________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-label marathi">स्वाक्षरी</div>
+      </div>
     </div>
   </div>
+</div>
+
+<!-- ==================== PAGE 3: HINDI (हिंदी) ==================== -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,</div>
+    <div class="hospital-address">Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="patient-row">
+    <div class="patient-row-item"><span class="patient-label">Patient Name:</span> <span class="patient-value">${patientName}</span></div>
+    <div class="patient-row-item"><span class="patient-label">UHID No:</span> <span class="patient-value">${patientUhid}</span></div>
+    <div class="patient-row-item"><span class="patient-label">Gender:</span> <span class="patient-value">${patientGender}</span></div>
+    <div class="patient-row-item"><span class="patient-label">Age:</span> <span class="patient-value">${patientAge}</span></div>
+  </div>
+  
+  <div class="form-title hindi">
+    🏥 रोगी परामर्श, शिक्षा एवं प्रलेखन सहमति पत्र
+  </div>
+  
+  <div class="info-fields hindi">
+    <div class="info-field">विभाग: <span class="field-line"></span></div>
+    <div class="info-field">दिनांक: ____ / ____ / ______</div>
+  </div>
+  
+  <div class="consent-section">
+    <div class="consent-heading hindi">1. रोगी परामर्श, शिक्षा एवं प्रलेखन सहमति</div>
+    
+    <p class="consent-text hindi">मैं यह पुष्टि करता/करती हूँ कि मुझे मेरी बीमारी, निदान, उपचार योजना, दवाइयों, प्रक्रियाओं, संभावित जोखिमों, लाभों एवं विकल्पों के बारे में उचित परामर्श और शिक्षा दी गई है।</p>
+    
+    <p class="consent-text hindi">यह जानकारी मुझे मेरी समझ की भाषा में दी गई है। मुझे प्रश्न पूछने का अवसर दिया गया और मेरे सभी प्रश्नों के उत्तर दिए गए।</p>
+    
+    <p class="consent-text hindi">मैं समझता/समझती हूँ कि मेरे परामर्श का विवरण अस्पताल प्रणाली में दर्ज किया जाएगा और इसका उपयोग <strong>उपचार निरंतरता</strong>, <strong>कानूनी आवश्यकताओं</strong> एवं <strong>मेडिकल रिकॉर्ड</strong> हेतु किया जाएगा। मेरी व्यक्तिगत जानकारी <strong>गोपनीय</strong> रखी जाएगी।</p>
+    
+    <p class="consent-text hindi"><strong>मैं रोगी परामर्श, शिक्षा एवं प्रलेखन के लिए अपनी स्वेच्छा से सहमति देता/देती हूँ।</strong></p>
+  </div>
+  
+  <div class="declaration">
+    <div class="declaration-title hindi">घोषणा</div>
+    <p class="consent-text hindi">उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है। हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।</p>
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-item">
+        <div class="signature-field hindi">परिजन का नाम: ______________________________</div>
+        <div class="signature-field hindi">रोगी से संबंध: ______________________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-label hindi">हस्ताक्षर / अंगूठा निशान</div>
+        <div class="signature-field hindi">दिनांक: ____ / ____ / ______</div>
+      </div>
+      <div class="signature-item">
+        <div class="signature-field hindi">डॉक्टर का नाम: ______________________________</div>
+        <div class="signature-field hindi">पदनाम: ______________________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-label hindi">हस्ताक्षर</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>`;
           
