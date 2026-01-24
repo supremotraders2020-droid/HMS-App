@@ -5026,23 +5026,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -5050,75 +5055,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT COUNSELLING & EDUCATION CONSENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">PATIENT COUNSELLING & EDUCATION DOCUMENTATION FORM</div>
-  
-  <div class="consent-text">
-    I confirm that I have received detailed counselling regarding my medical condition, diagnosis, available treatment options, expected outcomes, possible risks, and complications. The doctor has explained the treatment plan, medication usage, lifestyle modifications, and follow-up requirements in a language I understand. I was given sufficient opportunity to ask questions and all my concerns were addressed satisfactorily. I understand the importance of adherence to the prescribed treatment and instructions.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I hereby confirm that the above information has been explained to me and I have understood the same. I voluntarily give my consent for the recommended treatment.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient / Guardian Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Doctor's Signature & Stamp</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">रोगी परामर्श एवं शिक्षा दस्तावेज़ीकरण प्रपत्र</div>
-  
-  <div class="consent-text">
-    मैं यह पुष्टि करता/करती हूँ कि मुझे मेरी बीमारी, निदान, उपलब्ध उपचार विकल्पों, संभावित लाभ, जोखिम एवं जटिलताओं के बारे में विस्तृत परामर्श दिया गया है। डॉक्टर द्वारा उपचार योजना, दवाइयों के उपयोग, जीवनशैली में आवश्यक बदलाव एवं फॉलो-अप की जानकारी मेरी समझ की भाषा में दी गई है। मुझे प्रश्न पूछने का पूरा अवसर दिया गया और मेरी सभी शंकाओं का समाधान किया गया है। मैं उपचार निर्देशों का पालन करने के लिए सहमत हूँ।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं इसके द्वारा पुष्टि करता/करती हूँ कि उपरोक्त जानकारी मुझे समझाई गई है और मैंने इसे समझ लिया है। मैं स्वेच्छा से अनुशंसित उपचार के लिए अपनी सहमति देता/देती हूँ।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. COUNSELLING ACKNOWLEDGEMENT</div>
+    <div class="section-content">
+      I confirm that I have received detailed counselling regarding my medical condition, diagnosis, available treatment options, expected outcomes, possible risks, and complications.<br><br>
+      The doctor has explained the treatment plan, medication usage, lifestyle modifications, and follow-up requirements in a language I understand.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">डॉक्टर के हस्ताक्षर एवं मोहर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. EDUCATION CONFIRMATION</div>
+    <div class="section-content">
+      I was given sufficient opportunity to ask questions and all my concerns were addressed satisfactorily.<br><br>
+      I understand the importance of adherence to the prescribed treatment and instructions.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. DOCUMENTATION CONSENT</div>
+    <div class="section-content">
+      I give my consent for the hospital to maintain documentation of my medical records, treatment history, and counselling sessions as required by hospital policies and regulatory requirements.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5126,37 +5122,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> रुग्ण समुपदेशन व शिक्षण संमतीपत्र</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">रुग्ण समुपदेशन व शिक्षण दस्तऐवजीकरण प्रपत्र</div>
-  
-  <div class="consent-text">
-    माझ्या आजाराबाबत, निदान, उपलब्ध उपचार पर्याय, अपेक्षित परिणाम, संभाव्य धोके व गुंतागुंती याबाबत मला सविस्तर समुपदेशन देण्यात आले आहे. उपचार योजना, औषधांचा वापर, जीवनशैलीतील बदल व फॉलो-अप यांची माहिती मला समजेल अशा भाषेत दिली आहे. मला प्रश्न विचारण्याची संधी देण्यात आली असून माझ्या सर्व शंका दूर करण्यात आल्या आहेत. मी दिलेल्या वैद्यकीय सूचनांचे पालन करण्यास सहमत आहे.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मी याद्वारे पुष्टी करतो/करते की वरील माहिती मला समजावून सांगण्यात आली आहे व मला ती समजली आहे. शिफारस केलेल्या उपचारासाठी मी स्वेच्छेने संमती देतो/देते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. समुपदेशन पावती</div>
+    <div class="section-content">
+      माझ्या आजाराबाबत, निदान, उपलब्ध उपचार पर्याय, अपेक्षित परिणाम, संभाव्य धोके व गुंतागुंती याबाबत मला सविस्तर समुपदेशन देण्यात आले आहे.<br><br>
+      उपचार योजना, औषधांचा वापर, जीवनशैलीतील बदल व फॉलो-अप यांची माहिती मला समजेल अशा भाषेत दिली आहे.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">डॉक्टरांची स्वाक्षरी व शिक्का</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. शिक्षण पुष्टीकरण</div>
+    <div class="section-content">
+      मला प्रश्न विचारण्याची पुरेशी संधी देण्यात आली असून माझ्या सर्व शंका दूर करण्यात आल्या आहेत.<br><br>
+      मी दिलेल्या वैद्यकीय सूचनांचे पालन करण्याचे महत्त्व समजून घेतो/घेते.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. दस्तऐवजीकरण संमती</div>
+    <div class="section-content">
+      रुग्णालयाच्या धोरणांनुसार व नियामक आवश्यकतांनुसार माझ्या वैद्यकीय नोंदी, उपचार इतिहास व समुपदेशन सत्रांचे दस्तऐवजीकरण ठेवण्यास मी संमती देतो/देते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> रोगी परामर्श एवं शिक्षा सहमति पत्र</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. परामर्श पावती</div>
+    <div class="section-content">
+      मैं यह पुष्टि करता/करती हूँ कि मुझे मेरी बीमारी, निदान, उपलब्ध उपचार विकल्पों, संभावित लाभ, जोखिम एवं जटिलताओं के बारे में विस्तृत परामर्श दिया गया है।<br><br>
+      डॉक्टर द्वारा उपचार योजना, दवाइयों के उपयोग, जीवनशैली में आवश्यक बदलाव एवं फॉलो-अप की जानकारी मेरी समझ की भाषा में दी गई है।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. शिक्षा पुष्टि</div>
+    <div class="section-content">
+      मुझे प्रश्न पूछने का पूरा अवसर दिया गया और मेरी सभी शंकाओं का समाधान किया गया है।<br><br>
+      मैं निर्धारित उपचार और निर्देशों का पालन करने के महत्व को समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. दस्तावेज़ीकरण सहमति</div>
+    <div class="section-content">
+      मैं अस्पताल की नीतियों और नियामक आवश्यकताओं के अनुसार मेरे चिकित्सा अभिलेखों, उपचार इतिहास और परामर्श सत्रों के दस्तावेज़ीकरण के लिए सहमति देता/देती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5184,23 +5276,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -5208,75 +5305,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT EDUCATION CONSENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">PATIENT EDUCATION CONSENT</div>
-  
-  <div class="consent-text">
-    I acknowledge that I have been educated about my health condition, disease process, preventive measures, medication schedule, dietary advice, physical activity, and warning signs requiring medical attention. I understand that patient education is essential for better health outcomes and recovery. I agree to follow the instructions provided by the healthcare team.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I confirm that I have understood the health education provided to me and will comply with the medical advice given.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient / Guardian Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Educator's Signature & Stamp</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">रोगी शिक्षा सहमति</div>
-  
-  <div class="consent-text">
-    मैं स्वीकार करता/करती हूँ कि मुझे मेरी स्वास्थ्य स्थिति, रोग की प्रक्रिया, रोकथाम के उपाय, दवाइयों की समय-सारणी, आहार संबंधी सलाह, शारीरिक गतिविधि एवं चेतावनी संकेतों के बारे में जानकारी दी गई है। मैं समझता/समझती हूँ कि रोगी शिक्षा बेहतर स्वास्थ्य एवं शीघ्र स्वस्थ होने के लिए आवश्यक है। मैं दिए गए निर्देशों का पालन करने के लिए सहमत हूँ।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे दी गई स्वास्थ्य शिक्षा मैंने समझ ली है और चिकित्सा सलाह का पालन करूंगा/करूंगी।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. HEALTH EDUCATION ACKNOWLEDGEMENT</div>
+    <div class="section-content">
+      I acknowledge that I have been educated about my health condition, disease process, preventive measures, medication schedule, dietary advice, physical activity, and warning signs requiring medical attention.<br><br>
+      I understand that patient education is essential for better health outcomes and recovery.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">शिक्षक के हस्ताक्षर एवं मोहर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. TREATMENT COMPLIANCE</div>
+    <div class="section-content">
+      I agree to follow the instructions provided by the healthcare team regarding medications, lifestyle modifications, and follow-up visits.<br><br>
+      I understand the importance of adherence to the prescribed treatment plan.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. CONSENT FOR EDUCATION</div>
+    <div class="section-content">
+      I give my consent for the hospital to provide ongoing health education and documentation of the same as required by hospital policies.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5284,37 +5372,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> रुग्ण शिक्षण संमतीपत्र</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">रुग्ण शिक्षण संमती</div>
-  
-  <div class="consent-text">
-    माझ्या आरोग्य स्थितीबाबत, आजाराची प्रक्रिया, प्रतिबंधात्मक उपाय, औषधांचे वेळापत्रक, आहार सल्ला, शारीरिक हालचाल व धोक्याची लक्षणे याबाबत मला माहिती देण्यात आली आहे. रुग्ण शिक्षणामुळे आरोग्य सुधारण्यास मदत होते, हे मला समजले आहे. दिलेल्या सूचनांचे पालन करण्यास मी सहमत आहे.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मला दिलेली आरोग्य शिक्षण समजली असून वैद्यकीय सल्ल्याचे पालन करेन, असे मी पुष्टी करतो/करते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. आरोग्य शिक्षण पावती</div>
+    <div class="section-content">
+      माझ्या आरोग्य स्थितीबाबत, आजाराची प्रक्रिया, प्रतिबंधात्मक उपाय, औषधांचे वेळापत्रक, आहार सल्ला, शारीरिक हालचाल व धोक्याची लक्षणे याबाबत मला माहिती देण्यात आली आहे.<br><br>
+      रुग्ण शिक्षणामुळे आरोग्य सुधारण्यास मदत होते, हे मला समजले आहे.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">शिक्षकाची स्वाक्षरी व शिक्का</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. उपचार पालन</div>
+    <div class="section-content">
+      औषधे, जीवनशैलीतील बदल व फॉलो-अप भेटींबाबत आरोग्य कर्मचाऱ्यांनी दिलेल्या सूचनांचे पालन करण्यास मी सहमत आहे.<br><br>
+      दिलेल्या उपचार योजनेचे पालन करण्याचे महत्त्व मला समजले आहे.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. शिक्षण संमती</div>
+    <div class="section-content">
+      रुग्णालयाच्या धोरणांनुसार आरोग्य शिक्षण व त्याचे दस्तऐवजीकरण करण्यास मी संमती देतो/देते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> रोगी शिक्षा सहमति पत्र</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. स्वास्थ्य शिक्षा पावती</div>
+    <div class="section-content">
+      मैं स्वीकार करता/करती हूँ कि मुझे मेरी स्वास्थ्य स्थिति, रोग की प्रक्रिया, रोकथाम के उपाय, दवाइयों की समय-सारणी, आहार संबंधी सलाह, शारीरिक गतिविधि एवं चेतावनी संकेतों के बारे में जानकारी दी गई है।<br><br>
+      मैं समझता/समझती हूँ कि रोगी शिक्षा बेहतर स्वास्थ्य एवं शीघ्र स्वस्थ होने के लिए आवश्यक है।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. उपचार अनुपालन</div>
+    <div class="section-content">
+      मैं दवाइयों, जीवनशैली में बदलाव और फॉलो-अप विज़िट के बारे में स्वास्थ्य टीम द्वारा दिए गए निर्देशों का पालन करने के लिए सहमत हूँ।<br><br>
+      मैं निर्धारित उपचार योजना का पालन करने के महत्व को समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. शिक्षा के लिए सहमति</div>
+    <div class="section-content">
+      मैं अस्पताल की नीतियों के अनुसार स्वास्थ्य शिक्षा और उसके दस्तावेज़ीकरण के लिए सहमति देता/देती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5342,23 +5526,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -5366,75 +5555,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> BILLING SHEET ACKNOWLEDGEMENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">BILLING SHEET ACKNOWLEDGEMENT</div>
-  
-  <div class="consent-text">
-    I acknowledge that I have been informed about the hospital billing structure, including consultation fees, investigation charges, procedure costs, room rent, consumables, and applicable taxes. I understand that the final bill may vary based on treatment progress and complications. I agree to bear the charges not covered by insurance or government schemes.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I confirm that I have understood the billing structure and agree to pay the applicable charges as per the hospital policy.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient / Guardian Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Billing Staff Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">बिलिंग शीट पावती</div>
-  
-  <div class="consent-text">
-    मैं स्वीकार करता/करती हूँ कि मुझे अस्पताल की बिलिंग संरचना के बारे में जानकारी दी गई है, जिसमें परामर्श शुल्क, जांच शुल्क, प्रक्रियाओं का खर्च, कक्ष शुल्क, उपभोग्य सामग्री एवं कर शामिल हैं। मैं समझता/समझती हूँ कि उपचार के अनुसार अंतिम बिल में परिवर्तन हो सकता है। बीमा या योजना द्वारा कवर न की गई राशि का भुगतान करने के लिए मैं सहमत हूँ।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे बिलिंग संरचना समझ आ गई है और अस्पताल की नीति अनुसार लागू शुल्क का भुगतान करने के लिए सहमत हूँ।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. BILLING INFORMATION</div>
+    <div class="section-content">
+      I acknowledge that I have been informed about the hospital billing structure, including consultation fees, investigation charges, procedure costs, room rent, consumables, and applicable taxes.<br><br>
+      I understand that the final bill may vary based on treatment progress and any unforeseen complications.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">बिलिंग स्टाफ के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. PAYMENT ACKNOWLEDGEMENT</div>
+    <div class="section-content">
+      I agree to bear the charges not covered by insurance or government schemes.<br><br>
+      I understand that payment is required as per the hospital's billing policy.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. BILLING CONSENT</div>
+    <div class="section-content">
+      I give my consent for the hospital to generate and maintain billing records as required by hospital policies and regulatory requirements.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5442,37 +5622,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> बिलिंग शीट पोचपावती</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">बिलिंग शीट पोचपावती</div>
-  
-  <div class="consent-text">
-    रुग्णालयाच्या बिलिंग पद्धतीबाबत मला माहिती देण्यात आली आहे, ज्यामध्ये सल्ला शुल्क, तपासणी शुल्क, प्रक्रिया खर्च, खोली भाडे, साहित्य व कर यांचा समावेश आहे. उपचारादरम्यान अंतिम बिलात बदल होऊ शकतो, हे मला समजले आहे. विमा किंवा योजनेत समाविष्ट नसलेला खर्च भरण्यास मी सहमत आहे.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> बिलिंग पद्धत मला समजली असून रुग्णालयाच्या धोरणानुसार लागू शुल्क भरण्यास मी सहमत आहे, असे मी पुष्टी करतो/करते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. बिलिंग माहिती</div>
+    <div class="section-content">
+      रुग्णालयाच्या बिलिंग पद्धतीबाबत मला माहिती देण्यात आली आहे, ज्यामध्ये सल्ला शुल्क, तपासणी शुल्क, प्रक्रिया खर्च, खोली भाडे, साहित्य व कर यांचा समावेश आहे.<br><br>
+      उपचारादरम्यान अंतिम बिलात बदल होऊ शकतो, हे मला समजले आहे.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">बिलिंग स्टाफची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. देयक पावती</div>
+    <div class="section-content">
+      विमा किंवा योजनेत समाविष्ट नसलेला खर्च भरण्यास मी सहमत आहे.<br><br>
+      रुग्णालयाच्या बिलिंग धोरणानुसार देयक आवश्यक आहे, हे मला समजले आहे.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. बिलिंग संमती</div>
+    <div class="section-content">
+      रुग्णालयाच्या धोरणांनुसार व नियामक आवश्यकतांनुसार बिलिंग नोंदी तयार करण्यास व ठेवण्यास मी संमती देतो/देते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> बिलिंग शीट पावती</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. बिलिंग जानकारी</div>
+    <div class="section-content">
+      मैं स्वीकार करता/करती हूँ कि मुझे अस्पताल की बिलिंग संरचना के बारे में जानकारी दी गई है, जिसमें परामर्श शुल्क, जांच शुल्क, प्रक्रियाओं का खर्च, कक्ष शुल्क, उपभोग्य सामग्री एवं कर शामिल हैं।<br><br>
+      मैं समझता/समझती हूँ कि उपचार के अनुसार अंतिम बिल में परिवर्तन हो सकता है।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. भुगतान पावती</div>
+    <div class="section-content">
+      बीमा या योजना द्वारा कवर न की गई राशि का भुगतान करने के लिए मैं सहमत हूँ।<br><br>
+      अस्पताल की बिलिंग नीति के अनुसार भुगतान आवश्यक है, यह मैं समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. बिलिंग सहमति</div>
+    <div class="section-content">
+      अस्पताल की नीतियों और नियामक आवश्यकताओं के अनुसार बिलिंग रिकॉर्ड बनाने और बनाए रखने के लिए मैं सहमति देता/देती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5500,23 +5776,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -5524,75 +5805,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY SCHEME CONSENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">MJPJAY SCHEME CONSENT</div>
-  
-  <div class="consent-text">
-    I declare that I am eligible under the MJPJAY scheme and have submitted correct and complete documents. I authorize the hospital to upload my medical details and submit claims as per scheme guidelines. I understand that any discrepancy may lead to claim rejection, and non-covered expenses shall be borne by me.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I confirm that the information provided is true and authorize the hospital to process my claim under MJPJAY scheme.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient / Guardian Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Hospital Representative</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">MJPJAY योजना सहमति</div>
-  
-  <div class="consent-text">
-    मैं घोषणा करता/करती हूँ कि मैं MJPJAY योजना के अंतर्गत पात्र हूँ एवं सभी दस्तावेज सही रूप से जमा किए गए हैं। मैं अस्पताल को योजना के दिशा-निर्देशों के अनुसार मेरी चिकित्सा जानकारी अपलोड करने एवं दावा प्रस्तुत करने की अनुमति देता/देती हूँ। किसी भी त्रुटि के कारण दावा अस्वीकृत होने पर उसका उत्तरदायित्व मेरा होगा।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि दी गई जानकारी सत्य है और MJPJAY योजना के तहत मेरा दावा प्रोसेस करने के लिए अस्पताल को अधिकृत करता/करती हूँ।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. ELIGIBILITY DECLARATION</div>
+    <div class="section-content">
+      I declare that I am eligible under the MJPJAY (Mahatma Jyotiba Phule Jan Arogya Yojana) scheme and have submitted correct and complete documents as required.<br><br>
+      I understand the terms and conditions of the scheme and confirm that all information provided is accurate.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">अस्पताल प्रतिनिधि</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. AUTHORIZATION</div>
+    <div class="section-content">
+      I authorize the hospital to upload my medical details and submit claims as per scheme guidelines.<br><br>
+      I understand that any discrepancy in documents may lead to claim rejection, and non-covered expenses shall be borne by me.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. CONSENT FOR PROCESSING</div>
+    <div class="section-content">
+      I give my consent for the hospital to process my claim under MJPJAY scheme and share necessary medical information with scheme authorities.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5600,37 +5872,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY योजना संमतीपत्र</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">MJPJAY योजना संमती</div>
-  
-  <div class="consent-text">
-    मी MJPJAY योजनेस पात्र असून आवश्यक कागदपत्रे योग्यरीत्या सादर केली आहेत, असे घोषित करतो/करते. रुग्णालयास योजनेनुसार माझी वैद्यकीय माहिती अपलोड व दावा सादर करण्याची मी परवानगी देतो/देते. कोणत्याही त्रुटीमुळे दावा नाकारल्यास त्याची जबाबदारी माझी राहील.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> दिलेली माहिती सत्य असून MJPJAY योजनेअंतर्गत माझा दावा प्रक्रियेसाठी रुग्णालयास अधिकृत करतो/करते, असे मी पुष्टी करतो/करते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. पात्रता घोषणा</div>
+    <div class="section-content">
+      मी MJPJAY (महात्मा ज्योतिबा फुले जन आरोग्य योजना) योजनेस पात्र असून आवश्यक कागदपत्रे योग्यरीत्या सादर केली आहेत, असे घोषित करतो/करते.<br><br>
+      योजनेच्या अटी व शर्ती मला समजल्या असून दिलेली माहिती सत्य आहे.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">रुग्णालय प्रतिनिधी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. अधिकृतता</div>
+    <div class="section-content">
+      रुग्णालयास योजनेनुसार माझी वैद्यकीय माहिती अपलोड व दावा सादर करण्याची मी परवानगी देतो/देते.<br><br>
+      कागदपत्रांतील त्रुटीमुळे दावा नाकारल्यास त्याची जबाबदारी माझी राहील.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. प्रक्रियेसाठी संमती</div>
+    <div class="section-content">
+      MJPJAY योजनेअंतर्गत माझा दावा प्रक्रियेसाठी व योजना अधिकाऱ्यांना आवश्यक वैद्यकीय माहिती देण्यासाठी रुग्णालयास अधिकृत करतो/करते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY योजना सहमति पत्र</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. पात्रता घोषणा</div>
+    <div class="section-content">
+      मैं घोषणा करता/करती हूँ कि मैं MJPJAY (महात्मा ज्योतिबा फुले जन आरोग्य योजना) योजना के अंतर्गत पात्र हूँ एवं सभी दस्तावेज सही रूप से जमा किए गए हैं।<br><br>
+      मैं योजना की शर्तों को समझता/समझती हूँ और पुष्टि करता/करती हूँ कि दी गई जानकारी सत्य है।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. प्राधिकरण</div>
+    <div class="section-content">
+      मैं अस्पताल को योजना के दिशा-निर्देशों के अनुसार मेरी चिकित्सा जानकारी अपलोड करने एवं दावा प्रस्तुत करने की अनुमति देता/देती हूँ।<br><br>
+      किसी भी त्रुटि के कारण दावा अस्वीकृत होने पर उसका उत्तरदायित्व मेरा होगा।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. प्रसंस्करण के लिए सहमति</div>
+    <div class="section-content">
+      MJPJAY योजना के तहत मेरा दावा प्रोसेस करने और योजना अधिकारियों को आवश्यक चिकित्सा जानकारी साझा करने के लिए मैं अस्पताल को अधिकृत करता/करती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5658,23 +6026,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -5682,75 +6055,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> MINOR / INTERMEDIATE PROCEDURE CONSENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">MINOR / INTERMEDIATE PROCEDURE CONSENT (CONSENT 2.5)</div>
-  
-  <div class="consent-text">
-    I have been explained the nature, purpose, benefits, and possible risks of the proposed medical procedure. I understand that no guarantee of outcome has been given. I voluntarily consent to undergo the procedure with full understanding of potential complications.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I confirm that I have understood the procedure and voluntarily consent to undergo the same.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient / Guardian Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Doctor's Signature & Stamp</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">लघु / मध्यम प्रक्रिया सहमति (सहमति 2.5)</div>
-  
-  <div class="consent-text">
-    मुझे प्रस्तावित चिकित्सा प्रक्रिया की प्रकृति, उद्देश्य, लाभ एवं संभावित जोखिमों के बारे में समझाया गया है। मैं समझता/समझती हूँ कि परिणाम की कोई गारंटी नहीं दी गई है। मैं पूरी जानकारी के साथ इस प्रक्रिया के लिए स्वेच्छा से सहमति देता/देती हूँ।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे प्रक्रिया समझ आ गई है और स्वेच्छा से इसके लिए सहमति देता/देती हूँ।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. PROCEDURE INFORMATION</div>
+    <div class="section-content">
+      I have been explained the nature, purpose, benefits, and possible risks of the proposed medical procedure.<br><br>
+      I understand that no guarantee of outcome has been given and that results may vary.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">डॉक्टर के हस्ताक्षर एवं मोहर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. RISKS AND COMPLICATIONS</div>
+    <div class="section-content">
+      I understand that all medical procedures carry some risks and potential complications.<br><br>
+      I voluntarily consent to undergo the procedure with full understanding of potential complications.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. CONSENT FOR PROCEDURE</div>
+    <div class="section-content">
+      I give my consent for the medical team to perform the procedure and any additional procedures that may be necessary during the course of treatment.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5758,37 +6122,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> लघु / मध्यम प्रक्रिया संमतीपत्र</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">लघु / मध्यम प्रक्रिया संमती (संमती 2.5)</div>
-  
-  <div class="consent-text">
-    प्रस्तावित वैद्यकीय प्रक्रियेचे स्वरूप, उद्देश, फायदे व संभाव्य धोके मला समजावून सांगण्यात आले आहेत. कोणतीही परिणामाची हमी देण्यात आलेली नाही, हे मला समजले आहे. पूर्ण माहिती घेऊन मी या प्रक्रियेस स्वेच्छेने संमती देतो/देते.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> प्रक्रिया मला समजली असून स्वेच्छेने त्यास संमती देतो/देते, असे मी पुष्टी करतो/करते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. प्रक्रिया माहिती</div>
+    <div class="section-content">
+      प्रस्तावित वैद्यकीय प्रक्रियेचे स्वरूप, उद्देश, फायदे व संभाव्य धोके मला समजावून सांगण्यात आले आहेत.<br><br>
+      कोणतीही परिणामाची हमी देण्यात आलेली नाही व परिणाम बदलू शकतात, हे मला समजले आहे.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">डॉक्टरांची स्वाक्षरी व शिक्का</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. धोके आणि गुंतागुंत</div>
+    <div class="section-content">
+      सर्व वैद्यकीय प्रक्रियांमध्ये काही धोके व संभाव्य गुंतागुंत असतात, हे मला समजले आहे.<br><br>
+      पूर्ण माहिती घेऊन मी या प्रक्रियेस स्वेच्छेने संमती देतो/देते.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. प्रक्रियेसाठी संमती</div>
+    <div class="section-content">
+      प्रक्रिया पार पाडण्यासाठी व उपचारादरम्यान आवश्यक असल्यास अतिरिक्त प्रक्रियांसाठी वैद्यकीय टीमला मी संमती देतो/देते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> लघु / मध्यम प्रक्रिया सहमति पत्र</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. प्रक्रिया जानकारी</div>
+    <div class="section-content">
+      मुझे प्रस्तावित चिकित्सा प्रक्रिया की प्रकृति, उद्देश्य, लाभ एवं संभावित जोखिमों के बारे में समझाया गया है।<br><br>
+      मैं समझता/समझती हूँ कि परिणाम की कोई गारंटी नहीं दी गई है और परिणाम भिन्न हो सकते हैं।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. जोखिम और जटिलताएं</div>
+    <div class="section-content">
+      मैं समझता/समझती हूँ कि सभी चिकित्सा प्रक्रियाओं में कुछ जोखिम और संभावित जटिलताएं होती हैं।<br><br>
+      मैं पूरी जानकारी के साथ इस प्रक्रिया के लिए स्वेच्छा से सहमति देता/देती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. प्रक्रिया के लिए सहमति</div>
+    <div class="section-content">
+      प्रक्रिया करने और उपचार के दौरान आवश्यक होने पर अतिरिक्त प्रक्रियाओं के लिए चिकित्सा टीम को मैं सहमति देता/देती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5816,23 +6276,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -5840,75 +6305,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSICIAN FITNESS CERTIFICATE CONSENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">PHYSICIAN FITNESS CERTIFICATE CONSENT</div>
-  
-  <div class="consent-text">
-    I consent to undergo medical examination for assessment of my physical and mental fitness. I declare that all information provided by me is true and complete. I understand that the certificate will be issued based on clinical findings.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I confirm that the information provided is accurate and consent to the medical examination for fitness assessment.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Physician's Signature & Stamp</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">व्यक्ति का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">चिकित्सक फिटनेस प्रमाणपत्र सहमति</div>
-  
-  <div class="consent-text">
-    मैं अपनी शारीरिक एवं मानसिक फिटनेस के मूल्यांकन हेतु चिकित्सीय परीक्षण के लिए सहमति देता/देती हूँ। मेरे द्वारा दी गई जानकारी सही एवं पूर्ण है। चिकित्सीय निष्कर्षों के आधार पर प्रमाणपत्र जारी किया जाएगा, यह मैं समझता/समझती हूँ।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि दी गई जानकारी सही है और फिटनेस मूल्यांकन के लिए चिकित्सा परीक्षण की सहमति देता/देती हूँ।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">व्यक्ति के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. FITNESS EXAMINATION CONSENT</div>
+    <div class="section-content">
+      I consent to undergo medical examination for assessment of my physical and mental fitness.<br><br>
+      I declare that all information provided by me is true and complete to the best of my knowledge.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">चिकित्सक के हस्ताक्षर एवं मोहर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. CERTIFICATE ISSUANCE</div>
+    <div class="section-content">
+      I understand that the fitness certificate will be issued based on clinical findings and medical evaluation.<br><br>
+      I acknowledge that the certificate reflects my current health status at the time of examination.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. INFORMATION ACCURACY</div>
+    <div class="section-content">
+      I confirm that I have disclosed all relevant medical history and conditions that may affect the fitness assessment.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5916,37 +6372,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">व्यक्तीचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+  <div class="form-title"><span class="form-title-icon">🏥</span> चिकित्सक फिटनेस प्रमाणपत्र संमतीपत्र</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">चिकित्सक फिटनेस प्रमाणपत्र संमती</div>
-  
-  <div class="consent-text">
-    माझ्या शारीरिक व मानसिक तंदुरुस्तीच्या तपासणीसाठी मी वैद्यकीय तपासणीस संमती देतो/देते. मी दिलेली माहिती सत्य व पूर्ण आहे. वैद्यकीय तपासणीच्या निष्कर्षांनुसार प्रमाणपत्र दिले जाईल, हे मला मान्य आहे.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> दिलेली माहिती सत्य असून फिटनेस मूल्यांकनासाठी वैद्यकीय तपासणीस संमती देतो/देते, असे मी पुष्टी करतो/करते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">व्यक्तीची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. फिटनेस तपासणी संमती</div>
+    <div class="section-content">
+      माझ्या शारीरिक व मानसिक तंदुरुस्तीच्या तपासणीसाठी मी वैद्यकीय तपासणीस संमती देतो/देते.<br><br>
+      मी दिलेली माहिती सत्य व पूर्ण आहे, हे मी प्रमाणित करतो/करते.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">चिकित्सकांची स्वाक्षरी व शिक्का</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. प्रमाणपत्र जारी करणे</div>
+    <div class="section-content">
+      वैद्यकीय तपासणीच्या निष्कर्षांनुसार फिटनेस प्रमाणपत्र दिले जाईल, हे मला मान्य आहे.<br><br>
+      तपासणी वेळी माझ्या सध्याच्या आरोग्य स्थितीचे प्रमाणपत्र प्रतिबिंबित करते, हे मी मान्य करतो/करते.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. माहितीची अचूकता</div>
+    <div class="section-content">
+      फिटनेस मूल्यांकनावर परिणाम करणाऱ्या सर्व वैद्यकीय इतिहास व परिस्थिती मी उघड केल्या आहेत, हे मी पुष्टी करतो/करते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> चिकित्सक फिटनेस प्रमाणपत्र सहमति पत्र</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. फिटनेस परीक्षण सहमति</div>
+    <div class="section-content">
+      मैं अपनी शारीरिक एवं मानसिक फिटनेस के मूल्यांकन हेतु चिकित्सीय परीक्षण के लिए सहमति देता/देती हूँ।<br><br>
+      मेरे द्वारा दी गई जानकारी सही एवं पूर्ण है, यह मैं प्रमाणित करता/करती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. प्रमाणपत्र जारी करना</div>
+    <div class="section-content">
+      चिकित्सीय निष्कर्षों के आधार पर प्रमाणपत्र जारी किया जाएगा, यह मैं समझता/समझती हूँ।<br><br>
+      प्रमाणपत्र परीक्षण के समय मेरी वर्तमान स्वास्थ्य स्थिति को दर्शाता है, यह मैं स्वीकार करता/करती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. जानकारी की सटीकता</div>
+    <div class="section-content">
+      फिटनेस मूल्यांकन को प्रभावित करने वाले सभी चिकित्सा इतिहास और स्थितियां मैंने बताई हैं, यह मैं पुष्टि करता/करती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5974,23 +6526,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -5998,75 +6555,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSIOTHERAPY CONSENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">PHYSIOTHERAPY CONSENT</div>
-  
-  <div class="consent-text">
-    I have been explained the nature of physiotherapy treatment, expected benefits, duration, and possible discomfort or soreness. I understand that response to therapy may vary. I consent to physiotherapy sessions as advised by the therapist.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I confirm that I have understood the physiotherapy treatment plan and consent to the same.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient / Guardian Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Physiotherapist's Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">फिजियोथेरेपी सहमति</div>
-  
-  <div class="consent-text">
-    मुझे फिजियोथेरेपी उपचार की प्रकृति, अपेक्षित लाभ, अवधि एवं संभावित असुविधा के बारे में बताया गया है। उपचार का प्रभाव व्यक्ति-विशेष पर निर्भर कर सकता है। मैं निर्धारित फिजियोथेरेपी सत्रों के लिए सहमति देता/देती हूँ।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे फिजियोथेरेपी उपचार योजना समझ आ गई है और इसके लिए सहमति देता/देती हूँ।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. TREATMENT INFORMATION</div>
+    <div class="section-content">
+      I have been explained the nature of physiotherapy treatment, expected benefits, duration, and possible discomfort or soreness.<br><br>
+      I understand that response to therapy may vary from person to person.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">फिजियोथेरेपिस्ट के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. THERAPY SESSIONS</div>
+    <div class="section-content">
+      I consent to physiotherapy sessions as advised by the therapist.<br><br>
+      I understand the importance of regular attendance and compliance for optimal results.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. CONSENT FOR TREATMENT</div>
+    <div class="section-content">
+      I give my consent for the physiotherapist to perform the recommended treatment plan and make adjustments as necessary for my recovery.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6074,37 +6622,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> फिजिओथेरपी संमतीपत्र</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">फिजिओथेरपी संमती</div>
-  
-  <div class="consent-text">
-    फिजिओथेरपी उपचाराचे स्वरूप, फायदे, कालावधी व संभाव्य वेदना याबाबत मला माहिती देण्यात आली आहे. उपचाराचा परिणाम व्यक्तीनुसार बदलू शकतो. थेरपिस्टने सुचविलेल्या फिजिओथेरपी उपचारास मी संमती देतो/देते.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> फिजिओथेरपी उपचार योजना मला समजली असून त्यास संमती देतो/देते, असे मी पुष्टी करतो/करते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. उपचार माहिती</div>
+    <div class="section-content">
+      फिजिओथेरपी उपचाराचे स्वरूप, फायदे, कालावधी व संभाव्य वेदना याबाबत मला माहिती देण्यात आली आहे.<br><br>
+      उपचाराचा परिणाम व्यक्तीनुसार बदलू शकतो, हे मला समजले आहे.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">फिजिओथेरपिस्टची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. थेरपी सत्रे</div>
+    <div class="section-content">
+      थेरपिस्टने सुचविलेल्या फिजिओथेरपी उपचारास मी संमती देतो/देते.<br><br>
+      चांगल्या परिणामांसाठी नियमित उपस्थिती व पालन आवश्यक आहे, हे मला समजले आहे.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. उपचारांसाठी संमती</div>
+    <div class="section-content">
+      शिफारस केलेली उपचार योजना राबविण्यासाठी व माझ्या बऱ्या होण्यासाठी आवश्यक बदल करण्यासाठी फिजिओथेरपिस्टला मी संमती देतो/देते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> फिजियोथेरेपी सहमति पत्र</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. उपचार जानकारी</div>
+    <div class="section-content">
+      मुझे फिजियोथेरेपी उपचार की प्रकृति, अपेक्षित लाभ, अवधि एवं संभावित असुविधा के बारे में बताया गया है।<br><br>
+      उपचार का प्रभाव व्यक्ति-विशेष पर निर्भर कर सकता है, यह मैं समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. थेरेपी सत्र</div>
+    <div class="section-content">
+      मैं निर्धारित फिजियोथेरेपी सत्रों के लिए सहमति देता/देती हूँ।<br><br>
+      बेहतर परिणामों के लिए नियमित उपस्थिति और अनुपालन का महत्व मैं समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. उपचार के लिए सहमति</div>
+    <div class="section-content">
+      अनुशंसित उपचार योजना करने और मेरे स्वस्थ होने के लिए आवश्यक समायोजन करने के लिए फिजियोथेरेपिस्ट को मैं सहमति देता/देती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6132,23 +6776,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -6156,75 +6805,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> RECOVERY SHEET ACKNOWLEDGEMENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">RECOVERY SHEET ACKNOWLEDGEMENT</div>
-  
-  <div class="consent-text">
-    I acknowledge that I have been informed about my recovery plan, medications, activity restrictions, wound care, warning signs, and follow-up schedule. I understand the importance of compliance for proper recovery.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I confirm that I have understood the recovery instructions and will comply with the same for proper healing.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient / Guardian Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Nurse / Doctor Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">रिकवरी शीट पावती</div>
-  
-  <div class="consent-text">
-    मुझे मेरी रिकवरी योजना, दवाइयाँ, गतिविधि प्रतिबंध, घाव की देखभाल, चेतावनी संकेत एवं फॉलो-अप समय के बारे में जानकारी दी गई है। उचित स्वस्थ होने के लिए निर्देशों का पालन आवश्यक है, यह मैं समझता/समझती हूँ।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे रिकवरी निर्देश समझ आ गए हैं और उचित उपचार के लिए उनका पालन करूंगा/करूंगी।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. RECOVERY PLAN INFORMATION</div>
+    <div class="section-content">
+      I acknowledge that I have been informed about my recovery plan, medications, activity restrictions, and wound care instructions.<br><br>
+      I understand the importance of following these instructions for proper healing.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">नर्स / डॉक्टर के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. WARNING SIGNS AND FOLLOW-UP</div>
+    <div class="section-content">
+      I have been informed about warning signs that require immediate medical attention.<br><br>
+      I understand and acknowledge my follow-up schedule and the importance of regular check-ups.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. COMPLIANCE ACKNOWLEDGEMENT</div>
+    <div class="section-content">
+      I commit to following all recovery instructions and contacting the hospital if any complications arise.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6232,37 +6872,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> रिकव्हरी शीट पोचपावती</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">रिकव्हरी शीट पोचपावती</div>
-  
-  <div class="consent-text">
-    माझ्या रिकव्हरी योजनेबाबत, औषधे, हालचालीवरील निर्बंध, जखमेची काळजी, धोक्याची लक्षणे व फॉलो-अप वेळापत्रक मला सांगण्यात आले आहे. योग्य बरे होण्यासाठी नियमांचे पालन आवश्यक आहे, हे मला समजले आहे.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> रिकव्हरी सूचना मला समजल्या असून योग्य बरे होण्यासाठी त्यांचे पालन करेन, असे मी पुष्टी करतो/करते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. रिकव्हरी योजना माहिती</div>
+    <div class="section-content">
+      माझ्या रिकव्हरी योजनेबाबत, औषधे, हालचालीवरील निर्बंध व जखमेच्या काळजीबाबत मला माहिती देण्यात आली आहे.<br><br>
+      योग्य बरे होण्यासाठी या सूचनांचे पालन आवश्यक आहे, हे मला समजले आहे.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">नर्स / डॉक्टरांची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. धोक्याची लक्षणे आणि फॉलो-अप</div>
+    <div class="section-content">
+      तात्काळ वैद्यकीय मदत आवश्यक असलेल्या धोक्याच्या लक्षणांबाबत मला माहिती देण्यात आली आहे.<br><br>
+      माझे फॉलो-अप वेळापत्रक व नियमित तपासणीचे महत्त्व मला समजले आहे.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. अनुपालन पोचपावती</div>
+    <div class="section-content">
+      सर्व रिकव्हरी सूचनांचे पालन करण्याची व कोणत्याही गुंतागुंतीच्या परिस्थितीत रुग्णालयाशी संपर्क साधण्याची मी हमी देतो/देते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> रिकवरी शीट पावती</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. रिकवरी योजना जानकारी</div>
+    <div class="section-content">
+      मुझे मेरी रिकवरी योजना, दवाइयाँ, गतिविधि प्रतिबंध और घाव की देखभाल के बारे में जानकारी दी गई है।<br><br>
+      उचित स्वस्थ होने के लिए इन निर्देशों का पालन आवश्यक है, यह मैं समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. चेतावनी संकेत और फॉलो-अप</div>
+    <div class="section-content">
+      तत्काल चिकित्सा सहायता की आवश्यकता वाले चेतावनी संकेतों के बारे में मुझे जानकारी दी गई है।<br><br>
+      मेरा फॉलो-अप शेड्यूल और नियमित जांच का महत्व मैं समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. अनुपालन पावती</div>
+    <div class="section-content">
+      सभी रिकवरी निर्देशों का पालन करने और किसी भी जटिलता के मामले में अस्पताल से संपर्क करने की मैं प्रतिबद्धता देता/देती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6290,23 +7026,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -6314,75 +7055,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> GENERAL PROCEDURE CONSENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">GENERAL PROCEDURE CONSENT</div>
-  
-  <div class="consent-text">
-    I give my informed consent for the planned medical or surgical procedure after understanding its nature, benefits, risks, alternatives, and possible complications. I authorize the treating doctor to perform necessary procedures in my best interest.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I confirm that I have understood the procedure and authorize the medical team to proceed with the treatment.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient / Guardian Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Doctor's Signature & Stamp</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">सामान्य प्रक्रिया सहमति</div>
-  
-  <div class="consent-text">
-    मैं प्रस्तावित चिकित्सा/शल्य प्रक्रिया की प्रकृति, लाभ, जोखिम, विकल्प एवं संभावित जटिलताओं को समझने के बाद अपनी सूचित सहमति देता/देती हूँ। मेरे हित में आवश्यक प्रक्रिया करने की अनुमति मैं डॉक्टर को देता/देती हूँ।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे प्रक्रिया समझ आ गई है और चिकित्सा दल को उपचार के लिए अधिकृत करता/करती हूँ।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. PROCEDURE INFORMATION</div>
+    <div class="section-content">
+      I give my informed consent for the planned medical or surgical procedure after understanding its nature, benefits, risks, and alternatives.<br><br>
+      I understand that possible complications may occur and outcomes cannot be guaranteed.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">डॉक्टर के हस्ताक्षर एवं मोहर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. AUTHORIZATION</div>
+    <div class="section-content">
+      I authorize the treating doctor and medical team to perform necessary procedures in my best interest.<br><br>
+      I consent to any additional procedures that may be required during the course of treatment.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. CONSENT ACKNOWLEDGEMENT</div>
+    <div class="section-content">
+      I confirm that I have had the opportunity to ask questions and all my concerns have been addressed satisfactorily.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6390,37 +7122,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> सामान्य प्रक्रिया संमतीपत्र</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">सामान्य प्रक्रिया संमती</div>
-  
-  <div class="consent-text">
-    प्रस्तावित वैद्यकीय/शस्त्रक्रिया प्रक्रियेचे स्वरूप, फायदे, धोके, पर्याय व संभाव्य गुंतागुंत समजून घेऊन मी सुजाण संमती देतो/देते. माझ्या हितासाठी आवश्यक प्रक्रिया करण्याची परवानगी मी डॉक्टरांना देतो/देते.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> प्रक्रिया मला समजली असून उपचारासाठी वैद्यकीय पथकास अधिकृत करतो/करते, असे मी पुष्टी करतो/करते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. प्रक्रिया माहिती</div>
+    <div class="section-content">
+      प्रस्तावित वैद्यकीय/शस्त्रक्रिया प्रक्रियेचे स्वरूप, फायदे, धोके व पर्याय समजून घेऊन मी सुजाण संमती देतो/देते.<br><br>
+      संभाव्य गुंतागुंत होऊ शकते व परिणामांची हमी देता येत नाही, हे मला समजले आहे.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">डॉक्टरांची स्वाक्षरी व शिक्का</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. अधिकृतता</div>
+    <div class="section-content">
+      माझ्या हितासाठी आवश्यक प्रक्रिया करण्याची परवानगी मी डॉक्टर व वैद्यकीय पथकास देतो/देते.<br><br>
+      उपचारादरम्यान आवश्यक असल्यास अतिरिक्त प्रक्रियांसाठी मी संमती देतो/देते.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. संमती पोचपावती</div>
+    <div class="section-content">
+      मला प्रश्न विचारण्याची संधी मिळाली व माझ्या सर्व शंकांचे समाधानकारक उत्तर मिळाले, हे मी पुष्टी करतो/करते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> सामान्य प्रक्रिया सहमति पत्र</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. प्रक्रिया जानकारी</div>
+    <div class="section-content">
+      मैं प्रस्तावित चिकित्सा/शल्य प्रक्रिया की प्रकृति, लाभ, जोखिम और विकल्पों को समझने के बाद अपनी सूचित सहमति देता/देती हूँ।<br><br>
+      संभावित जटिलताएं हो सकती हैं और परिणामों की गारंटी नहीं दी जा सकती, यह मैं समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. प्राधिकरण</div>
+    <div class="section-content">
+      मेरे हित में आवश्यक प्रक्रिया करने की अनुमति मैं डॉक्टर और चिकित्सा टीम को देता/देती हूँ।<br><br>
+      उपचार के दौरान आवश्यक होने पर अतिरिक्त प्रक्रियाओं के लिए मैं सहमति देता/देती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. सहमति पावती</div>
+    <div class="section-content">
+      मुझे प्रश्न पूछने का अवसर मिला और मेरी सभी चिंताओं का संतोषजनक उत्तर दिया गया, यह मैं पुष्टि करता/करती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6448,23 +7276,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-    .page { page-break-after: always; padding: 20px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
-    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
-    .patient-info-item { font-size: 10pt; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title-icon { font-size: 20pt; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
     .patient-label { font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
-    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
-    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
-    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-    .signature-box { width: 45%; text-align: center; }
-    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
+    .section { margin: 20px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
+    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
+    .signature-grid { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .signature-field { font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -6472,75 +7305,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> ANAESTHESIA TYPE-WISE CONSENT</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
-  <div class="form-title">ANAESTHESIA TYPE-WISE CONSENT</div>
-  
-  <div class="consent-text">
-    I have been explained the type of anaesthesia to be administered (Local / Spinal / General / Regional), its purpose, risks, side effects, and alternatives. I understand that unforeseen complications may occur. I voluntarily consent to anaesthesia administration.
+  <div class="dept-date-row">
+    <span>Department: _____________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>Declaration:</strong> I confirm that I have understood the anaesthesia procedure and consent to the administration of the same.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">Patient / Guardian Signature</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line">Anaesthetist's Signature & Stamp</div>
-      <div style="margin-top: 10px;">Date: ${currentDate}</div>
-    </div>
-  </div>
-</div>
 
-<!-- Hindi Page -->
-<div class="page">
-  <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
-  </div>
-  
-  <div class="patient-info-row">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="form-title">एनेस्थीसिया प्रकार अनुसार सहमति</div>
-  
-  <div class="consent-text">
-    मुझे दिए जाने वाले एनेस्थीसिया (लोकल / स्पाइनल / जनरल / रीजनल) के प्रकार, उद्देश्य, जोखिम, दुष्प्रभाव एवं विकल्पों के बारे में बताया गया है। अप्रत्याशित जटिलताएँ हो सकती हैं, यह मैं समझता/समझती हूँ। मैं एनेस्थीसिया देने के लिए सहमति देता/देती हूँ।
-  </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे एनेस्थीसिया प्रक्रिया समझ आ गई है और इसके लिए सहमति देता/देती हूँ।
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  <div class="section">
+    <div class="section-title">1. ANAESTHESIA TYPE INFORMATION</div>
+    <div class="section-content">
+      I have been explained the type of anaesthesia to be administered (Local / Spinal / General / Regional), its purpose, and expected effects.<br><br>
+      I understand the differences between the types of anaesthesia and why a particular type has been recommended for my procedure.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">एनेस्थेटिस्ट के हस्ताक्षर एवं मोहर</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. RISKS AND SIDE EFFECTS</div>
+    <div class="section-content">
+      I have been informed about the potential risks, side effects, and alternatives to the recommended anaesthesia type.<br><br>
+      I understand that unforeseen complications may occur despite proper care and precautions.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. CONSENT FOR ANAESTHESIA</div>
+    <div class="section-content">
+      I voluntarily consent to the administration of anaesthesia as explained by the anaesthesiologist. I authorize changes to the anaesthesia plan if medically necessary.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    We confirm that all the above information has been explained to us clearly.<br>
+    We have understood the same and have given this consent voluntarily, without any pressure.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">Relative / Attendant Name: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Relationship with Patient: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Signature / Thumb Impression: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6548,37 +7372,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- Marathi Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
     <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
   </div>
   
-  <div class="patient-info-row">
+  <div class="form-title"><span class="form-title-icon">🏥</span> एनेस्थेशिया प्रकार अनुसार संमतीपत्र</div>
+  
+  <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title">एनेस्थेशिया प्रकार अनुसार संमती</div>
-  
-  <div class="consent-text">
-    देण्यात येणाऱ्या एनेस्थेशियाचा प्रकार (लोकल / स्पायनल / जनरल / रीजनल), त्याचा उद्देश, धोके, दुष्परिणाम व पर्याय मला समजावून सांगण्यात आले आहेत. अनपेक्षित गुंतागुंत होऊ शकते, हे मला समजले आहे. एनेस्थेशिया देण्यास मी संमती देतो/देते.
+  <div class="dept-date-row">
+    <span>विभाग: ______________________</span>
+    <span>तारीख: ____ / ____ / ______</span>
   </div>
-  
-  <div class="declaration">
-    <strong>घोषणा:</strong> एनेस्थेशिया प्रक्रिया मला समजली असून त्यास संमती देतो/देते, असे मी पुष्टी करतो/करते.
-  </div>
-  
-  <div class="signature-section">
-    <div class="signature-box">
-      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+
+  <div class="section">
+    <div class="section-title">1. एनेस्थेशिया प्रकार माहिती</div>
+    <div class="section-content">
+      देण्यात येणाऱ्या एनेस्थेशियाचा प्रकार (लोकल / स्पायनल / जनरल / रीजनल), त्याचा उद्देश व अपेक्षित परिणाम मला समजावून सांगण्यात आले आहेत.<br><br>
+      एनेस्थेशियाच्या प्रकारांमधील फरक व माझ्या प्रक्रियेसाठी विशिष्ट प्रकार का सुचविला गेला आहे, हे मला समजले आहे.
     </div>
-    <div class="signature-box">
-      <div class="signature-line">एनेस्थेटिस्टची स्वाक्षरी व शिक्का</div>
-      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. धोके आणि दुष्परिणाम</div>
+    <div class="section-content">
+      सुचविलेल्या एनेस्थेशिया प्रकाराचे संभाव्य धोके, दुष्परिणाम व पर्याय मला सांगण्यात आले आहेत.<br><br>
+      योग्य काळजी व सावधगिरी घेऊनही अनपेक्षित गुंतागुंत होऊ शकते, हे मला समजले आहे.
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. एनेस्थेशियासाठी संमती</div>
+    <div class="section-content">
+      भूलतज्ज्ञांनी समजावून सांगितल्याप्रमाणे एनेस्थेशिया देण्यास मी स्वेच्छेने संमती देतो/देते. वैद्यकीय आवश्यकतेनुसार एनेस्थेशिया योजनेत बदल करण्यास मी अधिकृत करतो/करते.
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">जाहीरनामा</div>
+    वरील सर्व माहिती आम्हाला स्पष्टपणे समजावून सांगण्यात आली आहे.<br>
+    कोणताही दबाव न आणता आम्ही ही संमती स्वेच्छेने देत आहोत.
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">नातलगाचे नाव: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रुग्णाशी नाते: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+  </div>
+  
+  <div class="form-title"><span class="form-title-icon">🏥</span> एनेस्थीसिया प्रकार अनुसार सहमति पत्र</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>विभाग: _______________________</span>
+    <span>दिनांक: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. एनेस्थीसिया प्रकार जानकारी</div>
+    <div class="section-content">
+      मुझे दिए जाने वाले एनेस्थीसिया का प्रकार (लोकल / स्पाइनल / जनरल / रीजनल), उसका उद्देश्य और अपेक्षित प्रभाव मुझे समझाया गया है।<br><br>
+      एनेस्थीसिया के प्रकारों में अंतर और मेरी प्रक्रिया के लिए विशेष प्रकार क्यों सुझाया गया है, यह मैं समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. जोखिम और दुष्प्रभाव</div>
+    <div class="section-content">
+      अनुशंसित एनेस्थीसिया प्रकार के संभावित जोखिम, दुष्प्रभाव और विकल्पों के बारे में मुझे जानकारी दी गई है।<br><br>
+      उचित देखभाल और सावधानी के बावजूद अप्रत्याशित जटिलताएं हो सकती हैं, यह मैं समझता/समझती हूँ।
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. एनेस्थीसिया के लिए सहमति</div>
+    <div class="section-content">
+      एनेस्थेटिस्ट द्वारा समझाए गए अनुसार एनेस्थीसिया देने के लिए मैं स्वेच्छा से सहमति देता/देती हूँ। चिकित्सकीय आवश्यकता होने पर एनेस्थीसिया योजना में बदलाव के लिए मैं अधिकृत करता/करती हूँ।
+    </div>
+  </div>
+
+  <div class="declaration">
+    <div class="declaration-title">घोषणा</div>
+    उपरोक्त सभी जानकारी हमें स्पष्ट रूप से समझाई गई है।<br>
+    हम बिना किसी दबाव के यह सहमति स्वेच्छा से प्रदान कर रहे हैं।
+  </div>
+  
+  <div class="signature-grid">
+    <div class="signature-row">
+      <span class="signature-field">परिजन का नाम: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">रोगी से संबंध: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">हस्ताक्षर / अंगूठा निशान: <span class="signature-line"></span></span>
+    </div>
+    <div class="signature-row">
+      <span class="signature-field">दिनांक: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
