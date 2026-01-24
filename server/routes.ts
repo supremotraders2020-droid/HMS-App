@@ -5525,9 +5525,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <title>Billing Sheet Acknowledgement</title>
   <style>
     @page { size: A4; margin: 15mm; }
+    @media print {
+      body { margin: 0; padding: 0; background: white; }
+      .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 0; page-break-after: always; box-shadow: none; }
+      .page:last-child { page-break-after: auto; }
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; background: #e0e0e0; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
