@@ -4882,23 +4882,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- ==================== PAGE 2: MARATHI (मराठी) ==================== -->
 <div class="page">
-  <div class="hospital-header">
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,</div>
-    <div class="hospital-address">Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
-  </div>
-  
-  <div class="patient-row">
-    <div class="patient-row-item"><span class="patient-label">Patient Name:</span> <span class="patient-value">${patientName}</span></div>
-    <div class="patient-row-item"><span class="patient-label">UHID No:</span> <span class="patient-value">${patientUhid}</span></div>
-    <div class="patient-row-item"><span class="patient-label">Gender:</span> <span class="patient-value">${patientGender}</span></div>
-    <div class="patient-row-item"><span class="patient-label">Age:</span> <span class="patient-value">${patientAge}</span></div>
-  </div>
-  
-  <div class="form-title marathi">
-    🏥 रुग्ण समुपदेशन, शिक्षण व दस्तऐवजीकरण संमतीपत्र
-  </div>
   
   <div class="info-fields marathi">
     <div class="info-field">विभाग: <span class="field-line"></span></div>
@@ -4943,23 +4926,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- ==================== PAGE 3: HINDI (हिंदी) ==================== -->
 <div class="page">
-  <div class="hospital-header">
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,</div>
-    <div class="hospital-address">Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
-  </div>
-  
-  <div class="patient-row">
-    <div class="patient-row-item"><span class="patient-label">Patient Name:</span> <span class="patient-value">${patientName}</span></div>
-    <div class="patient-row-item"><span class="patient-label">UHID No:</span> <span class="patient-value">${patientUhid}</span></div>
-    <div class="patient-row-item"><span class="patient-label">Gender:</span> <span class="patient-value">${patientGender}</span></div>
-    <div class="patient-row-item"><span class="patient-label">Age:</span> <span class="patient-value">${patientAge}</span></div>
-  </div>
-  
-  <div class="form-title hindi">
-    🏥 रोगी परामर्श, शिक्षा एवं प्रलेखन सहमति पत्र
-  </div>
   
   <div class="info-fields hindi">
     <div class="info-field">विभाग: <span class="field-line"></span></div>
