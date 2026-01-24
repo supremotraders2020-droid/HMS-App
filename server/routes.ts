@@ -5545,6 +5545,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-info-item { }
     .patient-label { font-weight: bold; }
     .form-title { font-size: 18pt; font-weight: bold; margin: 20px 0 15px 0; color: #333; }
+    .patient-details-section { margin: 20px 0; }
+    .patient-details-title { font-size: 14pt; font-weight: bold; color: #333; margin-bottom: 10px; }
+    .patient-details-list { list-style: disc; margin-left: 20px; font-size: 11pt; line-height: 2; }
+    .patient-details-list li { margin: 5px 0; }
     .section { margin: 15px 0; }
     .section-title { font-size: 11pt; font-weight: bold; color: #333; margin-bottom: 8px; padding: 6px 10px; background: #f5f5f5; border-left: 4px solid #4a2683; }
     .section-content { text-align: justify; margin: 8px 0; font-size: 10pt; line-height: 1.6; padding-left: 12px; }
@@ -5579,6 +5583,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   </div>
   
   <div class="form-title">BILLING SHEET ACKNOWLEDGEMENT</div>
+  
+  <div class="patient-details-section">
+    <div class="patient-details-title">PATIENT DETAILS</div>
+    <ul class="patient-details-list">
+      <li>IPD No.: _____________________</li>
+      <li>Ward: _____________________</li>
+      <li>Bed No.: _____________________</li>
+    </ul>
+  </div>
 
   <div class="section">
     <div class="section-title">1. BILLING INFORMATION</div>
