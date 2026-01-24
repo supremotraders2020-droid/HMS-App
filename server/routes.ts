@@ -5534,17 +5534,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; background: #e0e0e0; }
     .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; display: flex; align-items: center; justify-content: center; gap: 15px; }
-    .hospital-logo { width: 60px; height: 60px; }
-    .hospital-info { text-align: center; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; padding-bottom: 5px; }
+    .hospital-logo { width: 80px; height: auto; }
+    .hospital-info { }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; border: 2px solid #4a2683; padding: 10px; background: #fafafa; }
-    .form-title-icon { font-size: 20pt; }
-    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
-    .patient-info-item { font-size: 10pt; min-width: 150px; }
+    .patient-info-row { display: flex; justify-content: space-between; padding: 8px 0; margin: 10px 0; border-bottom: 1px solid #333; font-size: 10pt; }
+    .patient-info-item { }
     .patient-label { font-weight: bold; }
+    .form-title { font-size: 18pt; font-weight: bold; margin: 25px 0 20px 0; color: #333; }
+    .form-title-icon { display: none; }
+    .patient-info-box { display: none; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
     .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
@@ -5562,22 +5563,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" alt="Hospital Logo" class="hospital-logo" />
+    <img src="/hospital-logo.png" alt="Gravity Hospital" class="hospital-logo" onerror="this.style.display='none'" />
     <div class="hospital-info">
       <div class="hospital-name">Gravity Hospital & Research Centre</div>
-      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> BILLING SHEET ACKNOWLEDGEMENT</div>
-  
-  <div class="patient-info-box">
+  <div class="patient-info-row">
     <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
     <span class="patient-info-item"><span class="patient-label">UHID No:</span> ${patientUhid}</span>
     <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
+  
+  <div class="form-title">BILLING SHEET ACKNOWLEDGEMENT</div>
   
   <div class="dept-date-row">
     <span>Department: _____________________</span>
