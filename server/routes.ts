@@ -5534,11 +5534,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; background: #e0e0e0; }
     .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; display: flex; align-items: center; justify-content: center; gap: 15px; }
+    .hospital-logo { width: 60px; height: 60px; }
+    .hospital-info { text-align: center; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; border: 2px solid #4a2683; padding: 10px; background: #fafafa; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
     .patient-info-item { font-size: 10pt; min-width: 150px; }
@@ -5560,9 +5562,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    <img src="/hospital-logo.png" alt="Hospital Logo" class="hospital-logo" />
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
   </div>
   
   <div class="form-title"><span class="form-title-icon">🏥</span> BILLING SHEET ACKNOWLEDGEMENT</div>
@@ -5626,25 +5631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="hospital-header">
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
-  </div>
-  
   <div class="form-title"><span class="form-title-icon">🏥</span> बिलिंग शीट पोचपावती</div>
-  
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
-  </div>
-  
-  <div class="dept-date-row">
-    <span>विभाग: ______________________</span>
-    <span>तारीख: ____ / ____ / ______</span>
-  </div>
 
   <div class="section">
     <div class="section-title">1. बिलिंग माहिती</div>
@@ -5693,25 +5680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="hospital-header">
-    <div class="hospital-name">Gravity Hospital & Research Centre</div>
-    <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
-    <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
-  </div>
-  
   <div class="form-title"><span class="form-title-icon">🏥</span> बिलिंग शीट पावती</div>
-  
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
-  
-  <div class="dept-date-row">
-    <span>विभाग: _______________________</span>
-    <span>दिनांक: ____ / ____ / ______</span>
-  </div>
 
   <div class="section">
     <div class="section-title">1. बिलिंग जानकारी</div>
