@@ -905,10 +905,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 </p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries()} data-testid="button-refresh">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh Data
-            </Button>
           </div>
         </div>
       </div>

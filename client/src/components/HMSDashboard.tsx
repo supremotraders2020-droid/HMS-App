@@ -26,8 +26,10 @@ import {
   Eye,
   Sparkles,
   ArrowUpRight,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import type { ActivityLog, Appointment, ServicePatient, CriticalAlert } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -158,6 +160,7 @@ function CriticalAlertsPanel() {
 export default function HMSDashboard({ currentRole, userName, hospitalName, userId }: HMSDashboardProps) {
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ActivityLog | null>(null);
+  const { toast } = useToast();
 
   useNotifications({ 
     userId, 
@@ -449,6 +452,18 @@ export default function HMSDashboard({ currentRole, userName, hospitalName, user
                 </div>
                 
                 <div className="flex items-center gap-3 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      queryClient.invalidateQueries();
+                      toast({ title: "Refreshed", description: "Data has been refreshed" });
+                    }}
+                    className="h-8"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                    Refresh
+                  </Button>
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-full border border-emerald-200/50 dark:border-emerald-800/50">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
