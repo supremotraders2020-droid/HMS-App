@@ -5122,6 +5122,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT COUNSELLING & EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
@@ -5183,6 +5191,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT COUNSELLING & EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
@@ -5361,6 +5377,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
@@ -5422,6 +5446,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
@@ -5619,6 +5651,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> BILLING SHEET ACKNOWLEDGEMENT</div>
 
   <div class="section">
@@ -5668,6 +5708,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> BILLING SHEET ACKNOWLEDGEMENT</div>
 
   <div class="section">
@@ -5834,6 +5882,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY SCHEME CONSENT</div>
   
   <div class="patient-info-box">
@@ -5895,6 +5951,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY SCHEME CONSENT</div>
   
   <div class="patient-info-box">
@@ -6073,6 +6137,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> MINOR / INTERMEDIATE PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
@@ -6134,6 +6206,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> MINOR / INTERMEDIATE PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
@@ -6312,6 +6392,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> PHYSICIAN FITNESS CERTIFICATE CONSENT</div>
   
   <div class="patient-info-box">
@@ -6373,6 +6461,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> PHYSICIAN FITNESS CERTIFICATE CONSENT</div>
   
   <div class="patient-info-box">
@@ -6551,6 +6647,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> PHYSIOTHERAPY CONSENT</div>
   
   <div class="patient-info-box">
@@ -6612,6 +6716,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> PHYSIOTHERAPY CONSENT</div>
   
   <div class="patient-info-box">
@@ -6790,6 +6902,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> RECOVERY SHEET ACKNOWLEDGEMENT</div>
   
   <div class="patient-info-box">
@@ -6851,6 +6971,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> RECOVERY SHEET ACKNOWLEDGEMENT</div>
   
   <div class="patient-info-box">
@@ -7029,6 +7157,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> GENERAL PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
@@ -7090,6 +7226,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> GENERAL PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
@@ -7268,6 +7412,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> ANAESTHESIA TYPE-WISE CONSENT</div>
   
   <div class="patient-info-box">
@@ -7329,6 +7481,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
+
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID नं.:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
   <div class="form-title"><span class="form-title-icon">🏥</span> ANAESTHESIA TYPE-WISE CONSENT</div>
   
   <div class="patient-info-box">
