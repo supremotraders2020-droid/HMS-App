@@ -5009,6 +5009,1586 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.send(htmlContent);
         }
         
+        // ========== 1. Patient Counselling & Education Documentation Form ==========
+        if (consentType === 'PATIENT_COUNSELLING_DOC') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Counselling & Education Documentation Form</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">PATIENT COUNSELLING & EDUCATION DOCUMENTATION FORM</div>
+  
+  <div class="consent-text">
+    I confirm that I have received detailed counselling regarding my medical condition, diagnosis, available treatment options, expected outcomes, possible risks, and complications. The doctor has explained the treatment plan, medication usage, lifestyle modifications, and follow-up requirements in a language I understand. I was given sufficient opportunity to ask questions and all my concerns were addressed satisfactorily. I understand the importance of adherence to the prescribed treatment and instructions.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I hereby confirm that the above information has been explained to me and I have understood the same. I voluntarily give my consent for the recommended treatment.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient / Guardian Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Doctor's Signature & Stamp</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">रोगी परामर्श एवं शिक्षा दस्तावेज़ीकरण प्रपत्र</div>
+  
+  <div class="consent-text">
+    मैं यह पुष्टि करता/करती हूँ कि मुझे मेरी बीमारी, निदान, उपलब्ध उपचार विकल्पों, संभावित लाभ, जोखिम एवं जटिलताओं के बारे में विस्तृत परामर्श दिया गया है। डॉक्टर द्वारा उपचार योजना, दवाइयों के उपयोग, जीवनशैली में आवश्यक बदलाव एवं फॉलो-अप की जानकारी मेरी समझ की भाषा में दी गई है। मुझे प्रश्न पूछने का पूरा अवसर दिया गया और मेरी सभी शंकाओं का समाधान किया गया है। मैं उपचार निर्देशों का पालन करने के लिए सहमत हूँ।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं इसके द्वारा पुष्टि करता/करती हूँ कि उपरोक्त जानकारी मुझे समझाई गई है और मैंने इसे समझ लिया है। मैं स्वेच्छा से अनुशंसित उपचार के लिए अपनी सहमति देता/देती हूँ।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">डॉक्टर के हस्ताक्षर एवं मोहर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">रुग्ण समुपदेशन व शिक्षण दस्तऐवजीकरण प्रपत्र</div>
+  
+  <div class="consent-text">
+    माझ्या आजाराबाबत, निदान, उपलब्ध उपचार पर्याय, अपेक्षित परिणाम, संभाव्य धोके व गुंतागुंती याबाबत मला सविस्तर समुपदेशन देण्यात आले आहे. उपचार योजना, औषधांचा वापर, जीवनशैलीतील बदल व फॉलो-अप यांची माहिती मला समजेल अशा भाषेत दिली आहे. मला प्रश्न विचारण्याची संधी देण्यात आली असून माझ्या सर्व शंका दूर करण्यात आल्या आहेत. मी दिलेल्या वैद्यकीय सूचनांचे पालन करण्यास सहमत आहे.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मी याद्वारे पुष्टी करतो/करते की वरील माहिती मला समजावून सांगण्यात आली आहे व मला ती समजली आहे. शिफारस केलेल्या उपचारासाठी मी स्वेच्छेने संमती देतो/देते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">डॉक्टरांची स्वाक्षरी व शिक्का</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== 2. Patient Education Consent ==========
+        if (consentType === 'PATIENT_EDUCATION') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Education Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">PATIENT EDUCATION CONSENT</div>
+  
+  <div class="consent-text">
+    I acknowledge that I have been educated about my health condition, disease process, preventive measures, medication schedule, dietary advice, physical activity, and warning signs requiring medical attention. I understand that patient education is essential for better health outcomes and recovery. I agree to follow the instructions provided by the healthcare team.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I confirm that I have understood the health education provided to me and will comply with the medical advice given.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient / Guardian Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Educator's Signature & Stamp</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">रोगी शिक्षा सहमति</div>
+  
+  <div class="consent-text">
+    मैं स्वीकार करता/करती हूँ कि मुझे मेरी स्वास्थ्य स्थिति, रोग की प्रक्रिया, रोकथाम के उपाय, दवाइयों की समय-सारणी, आहार संबंधी सलाह, शारीरिक गतिविधि एवं चेतावनी संकेतों के बारे में जानकारी दी गई है। मैं समझता/समझती हूँ कि रोगी शिक्षा बेहतर स्वास्थ्य एवं शीघ्र स्वस्थ होने के लिए आवश्यक है। मैं दिए गए निर्देशों का पालन करने के लिए सहमत हूँ।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे दी गई स्वास्थ्य शिक्षा मैंने समझ ली है और चिकित्सा सलाह का पालन करूंगा/करूंगी।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">शिक्षक के हस्ताक्षर एवं मोहर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">रुग्ण शिक्षण संमती</div>
+  
+  <div class="consent-text">
+    माझ्या आरोग्य स्थितीबाबत, आजाराची प्रक्रिया, प्रतिबंधात्मक उपाय, औषधांचे वेळापत्रक, आहार सल्ला, शारीरिक हालचाल व धोक्याची लक्षणे याबाबत मला माहिती देण्यात आली आहे. रुग्ण शिक्षणामुळे आरोग्य सुधारण्यास मदत होते, हे मला समजले आहे. दिलेल्या सूचनांचे पालन करण्यास मी सहमत आहे.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मला दिलेली आरोग्य शिक्षण समजली असून वैद्यकीय सल्ल्याचे पालन करेन, असे मी पुष्टी करतो/करते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">शिक्षकाची स्वाक्षरी व शिक्का</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== 3. Billing Sheet Acknowledgement ==========
+        if (consentType === 'BILLING_ACKNOWLEDGEMENT') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Billing Sheet Acknowledgement</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">BILLING SHEET ACKNOWLEDGEMENT</div>
+  
+  <div class="consent-text">
+    I acknowledge that I have been informed about the hospital billing structure, including consultation fees, investigation charges, procedure costs, room rent, consumables, and applicable taxes. I understand that the final bill may vary based on treatment progress and complications. I agree to bear the charges not covered by insurance or government schemes.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I confirm that I have understood the billing structure and agree to pay the applicable charges as per the hospital policy.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient / Guardian Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Billing Staff Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">बिलिंग शीट पावती</div>
+  
+  <div class="consent-text">
+    मैं स्वीकार करता/करती हूँ कि मुझे अस्पताल की बिलिंग संरचना के बारे में जानकारी दी गई है, जिसमें परामर्श शुल्क, जांच शुल्क, प्रक्रियाओं का खर्च, कक्ष शुल्क, उपभोग्य सामग्री एवं कर शामिल हैं। मैं समझता/समझती हूँ कि उपचार के अनुसार अंतिम बिल में परिवर्तन हो सकता है। बीमा या योजना द्वारा कवर न की गई राशि का भुगतान करने के लिए मैं सहमत हूँ।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे बिलिंग संरचना समझ आ गई है और अस्पताल की नीति अनुसार लागू शुल्क का भुगतान करने के लिए सहमत हूँ।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">बिलिंग स्टाफ के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">बिलिंग शीट पोचपावती</div>
+  
+  <div class="consent-text">
+    रुग्णालयाच्या बिलिंग पद्धतीबाबत मला माहिती देण्यात आली आहे, ज्यामध्ये सल्ला शुल्क, तपासणी शुल्क, प्रक्रिया खर्च, खोली भाडे, साहित्य व कर यांचा समावेश आहे. उपचारादरम्यान अंतिम बिलात बदल होऊ शकतो, हे मला समजले आहे. विमा किंवा योजनेत समाविष्ट नसलेला खर्च भरण्यास मी सहमत आहे.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> बिलिंग पद्धत मला समजली असून रुग्णालयाच्या धोरणानुसार लागू शुल्क भरण्यास मी सहमत आहे, असे मी पुष्टी करतो/करते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">बिलिंग स्टाफची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== 4. MJPJAY Scheme Consent ==========
+        if (consentType === 'MJPJAY_SCHEME') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MJPJAY Scheme Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">MJPJAY SCHEME CONSENT</div>
+  
+  <div class="consent-text">
+    I declare that I am eligible under the MJPJAY scheme and have submitted correct and complete documents. I authorize the hospital to upload my medical details and submit claims as per scheme guidelines. I understand that any discrepancy may lead to claim rejection, and non-covered expenses shall be borne by me.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I confirm that the information provided is true and authorize the hospital to process my claim under MJPJAY scheme.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient / Guardian Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Hospital Representative</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">MJPJAY योजना सहमति</div>
+  
+  <div class="consent-text">
+    मैं घोषणा करता/करती हूँ कि मैं MJPJAY योजना के अंतर्गत पात्र हूँ एवं सभी दस्तावेज सही रूप से जमा किए गए हैं। मैं अस्पताल को योजना के दिशा-निर्देशों के अनुसार मेरी चिकित्सा जानकारी अपलोड करने एवं दावा प्रस्तुत करने की अनुमति देता/देती हूँ। किसी भी त्रुटि के कारण दावा अस्वीकृत होने पर उसका उत्तरदायित्व मेरा होगा।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि दी गई जानकारी सत्य है और MJPJAY योजना के तहत मेरा दावा प्रोसेस करने के लिए अस्पताल को अधिकृत करता/करती हूँ।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">अस्पताल प्रतिनिधि</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">MJPJAY योजना संमती</div>
+  
+  <div class="consent-text">
+    मी MJPJAY योजनेस पात्र असून आवश्यक कागदपत्रे योग्यरीत्या सादर केली आहेत, असे घोषित करतो/करते. रुग्णालयास योजनेनुसार माझी वैद्यकीय माहिती अपलोड व दावा सादर करण्याची मी परवानगी देतो/देते. कोणत्याही त्रुटीमुळे दावा नाकारल्यास त्याची जबाबदारी माझी राहील.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> दिलेली माहिती सत्य असून MJPJAY योजनेअंतर्गत माझा दावा प्रक्रियेसाठी रुग्णालयास अधिकृत करतो/करते, असे मी पुष्टी करतो/करते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">रुग्णालय प्रतिनिधी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== 5. Minor/Intermediate Procedure Consent ==========
+        if (consentType === 'MINOR_PROCEDURE') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Minor/Intermediate Procedure Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">MINOR / INTERMEDIATE PROCEDURE CONSENT (CONSENT 2.5)</div>
+  
+  <div class="consent-text">
+    I have been explained the nature, purpose, benefits, and possible risks of the proposed medical procedure. I understand that no guarantee of outcome has been given. I voluntarily consent to undergo the procedure with full understanding of potential complications.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I confirm that I have understood the procedure and voluntarily consent to undergo the same.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient / Guardian Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Doctor's Signature & Stamp</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">लघु / मध्यम प्रक्रिया सहमति (सहमति 2.5)</div>
+  
+  <div class="consent-text">
+    मुझे प्रस्तावित चिकित्सा प्रक्रिया की प्रकृति, उद्देश्य, लाभ एवं संभावित जोखिमों के बारे में समझाया गया है। मैं समझता/समझती हूँ कि परिणाम की कोई गारंटी नहीं दी गई है। मैं पूरी जानकारी के साथ इस प्रक्रिया के लिए स्वेच्छा से सहमति देता/देती हूँ।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे प्रक्रिया समझ आ गई है और स्वेच्छा से इसके लिए सहमति देता/देती हूँ।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">डॉक्टर के हस्ताक्षर एवं मोहर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">लघु / मध्यम प्रक्रिया संमती (संमती 2.5)</div>
+  
+  <div class="consent-text">
+    प्रस्तावित वैद्यकीय प्रक्रियेचे स्वरूप, उद्देश, फायदे व संभाव्य धोके मला समजावून सांगण्यात आले आहेत. कोणतीही परिणामाची हमी देण्यात आलेली नाही, हे मला समजले आहे. पूर्ण माहिती घेऊन मी या प्रक्रियेस स्वेच्छेने संमती देतो/देते.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> प्रक्रिया मला समजली असून स्वेच्छेने त्यास संमती देतो/देते, असे मी पुष्टी करतो/करते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">डॉक्टरांची स्वाक्षरी व शिक्का</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== 6. Physician Fitness Certificate Consent ==========
+        if (consentType === 'FITNESS_CERTIFICATE') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Physician Fitness Certificate Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">PHYSICIAN FITNESS CERTIFICATE CONSENT</div>
+  
+  <div class="consent-text">
+    I consent to undergo medical examination for assessment of my physical and mental fitness. I declare that all information provided by me is true and complete. I understand that the certificate will be issued based on clinical findings.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I confirm that the information provided is accurate and consent to the medical examination for fitness assessment.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Physician's Signature & Stamp</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">व्यक्ति का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">चिकित्सक फिटनेस प्रमाणपत्र सहमति</div>
+  
+  <div class="consent-text">
+    मैं अपनी शारीरिक एवं मानसिक फिटनेस के मूल्यांकन हेतु चिकित्सीय परीक्षण के लिए सहमति देता/देती हूँ। मेरे द्वारा दी गई जानकारी सही एवं पूर्ण है। चिकित्सीय निष्कर्षों के आधार पर प्रमाणपत्र जारी किया जाएगा, यह मैं समझता/समझती हूँ।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि दी गई जानकारी सही है और फिटनेस मूल्यांकन के लिए चिकित्सा परीक्षण की सहमति देता/देती हूँ।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">व्यक्ति के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">चिकित्सक के हस्ताक्षर एवं मोहर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">व्यक्तीचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">चिकित्सक फिटनेस प्रमाणपत्र संमती</div>
+  
+  <div class="consent-text">
+    माझ्या शारीरिक व मानसिक तंदुरुस्तीच्या तपासणीसाठी मी वैद्यकीय तपासणीस संमती देतो/देते. मी दिलेली माहिती सत्य व पूर्ण आहे. वैद्यकीय तपासणीच्या निष्कर्षांनुसार प्रमाणपत्र दिले जाईल, हे मला मान्य आहे.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> दिलेली माहिती सत्य असून फिटनेस मूल्यांकनासाठी वैद्यकीय तपासणीस संमती देतो/देते, असे मी पुष्टी करतो/करते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">व्यक्तीची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">चिकित्सकांची स्वाक्षरी व शिक्का</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== 7. Physiotherapy Consent ==========
+        if (consentType === 'PHYSIOTHERAPY') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Physiotherapy Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">PHYSIOTHERAPY CONSENT</div>
+  
+  <div class="consent-text">
+    I have been explained the nature of physiotherapy treatment, expected benefits, duration, and possible discomfort or soreness. I understand that response to therapy may vary. I consent to physiotherapy sessions as advised by the therapist.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I confirm that I have understood the physiotherapy treatment plan and consent to the same.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient / Guardian Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Physiotherapist's Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">फिजियोथेरेपी सहमति</div>
+  
+  <div class="consent-text">
+    मुझे फिजियोथेरेपी उपचार की प्रकृति, अपेक्षित लाभ, अवधि एवं संभावित असुविधा के बारे में बताया गया है। उपचार का प्रभाव व्यक्ति-विशेष पर निर्भर कर सकता है। मैं निर्धारित फिजियोथेरेपी सत्रों के लिए सहमति देता/देती हूँ।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे फिजियोथेरेपी उपचार योजना समझ आ गई है और इसके लिए सहमति देता/देती हूँ।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">फिजियोथेरेपिस्ट के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">फिजिओथेरपी संमती</div>
+  
+  <div class="consent-text">
+    फिजिओथेरपी उपचाराचे स्वरूप, फायदे, कालावधी व संभाव्य वेदना याबाबत मला माहिती देण्यात आली आहे. उपचाराचा परिणाम व्यक्तीनुसार बदलू शकतो. थेरपिस्टने सुचविलेल्या फिजिओथेरपी उपचारास मी संमती देतो/देते.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> फिजिओथेरपी उपचार योजना मला समजली असून त्यास संमती देतो/देते, असे मी पुष्टी करतो/करते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">फिजिओथेरपिस्टची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== 8. Recovery Sheet Acknowledgement ==========
+        if (consentType === 'RECOVERY_SHEET') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Recovery Sheet Acknowledgement</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">RECOVERY SHEET ACKNOWLEDGEMENT</div>
+  
+  <div class="consent-text">
+    I acknowledge that I have been informed about my recovery plan, medications, activity restrictions, wound care, warning signs, and follow-up schedule. I understand the importance of compliance for proper recovery.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I confirm that I have understood the recovery instructions and will comply with the same for proper healing.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient / Guardian Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Nurse / Doctor Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">रिकवरी शीट पावती</div>
+  
+  <div class="consent-text">
+    मुझे मेरी रिकवरी योजना, दवाइयाँ, गतिविधि प्रतिबंध, घाव की देखभाल, चेतावनी संकेत एवं फॉलो-अप समय के बारे में जानकारी दी गई है। उचित स्वस्थ होने के लिए निर्देशों का पालन आवश्यक है, यह मैं समझता/समझती हूँ।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे रिकवरी निर्देश समझ आ गए हैं और उचित उपचार के लिए उनका पालन करूंगा/करूंगी।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">नर्स / डॉक्टर के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">रिकव्हरी शीट पोचपावती</div>
+  
+  <div class="consent-text">
+    माझ्या रिकव्हरी योजनेबाबत, औषधे, हालचालीवरील निर्बंध, जखमेची काळजी, धोक्याची लक्षणे व फॉलो-अप वेळापत्रक मला सांगण्यात आले आहे. योग्य बरे होण्यासाठी नियमांचे पालन आवश्यक आहे, हे मला समजले आहे.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> रिकव्हरी सूचना मला समजल्या असून योग्य बरे होण्यासाठी त्यांचे पालन करेन, असे मी पुष्टी करतो/करते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">नर्स / डॉक्टरांची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== 9. General Procedure Consent ==========
+        if (consentType === 'GENERAL_PROCEDURE') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>General Procedure Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">GENERAL PROCEDURE CONSENT</div>
+  
+  <div class="consent-text">
+    I give my informed consent for the planned medical or surgical procedure after understanding its nature, benefits, risks, alternatives, and possible complications. I authorize the treating doctor to perform necessary procedures in my best interest.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I confirm that I have understood the procedure and authorize the medical team to proceed with the treatment.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient / Guardian Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Doctor's Signature & Stamp</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">सामान्य प्रक्रिया सहमति</div>
+  
+  <div class="consent-text">
+    मैं प्रस्तावित चिकित्सा/शल्य प्रक्रिया की प्रकृति, लाभ, जोखिम, विकल्प एवं संभावित जटिलताओं को समझने के बाद अपनी सूचित सहमति देता/देती हूँ। मेरे हित में आवश्यक प्रक्रिया करने की अनुमति मैं डॉक्टर को देता/देती हूँ।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे प्रक्रिया समझ आ गई है और चिकित्सा दल को उपचार के लिए अधिकृत करता/करती हूँ।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">डॉक्टर के हस्ताक्षर एवं मोहर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">सामान्य प्रक्रिया संमती</div>
+  
+  <div class="consent-text">
+    प्रस्तावित वैद्यकीय/शस्त्रक्रिया प्रक्रियेचे स्वरूप, फायदे, धोके, पर्याय व संभाव्य गुंतागुंत समजून घेऊन मी सुजाण संमती देतो/देते. माझ्या हितासाठी आवश्यक प्रक्रिया करण्याची परवानगी मी डॉक्टरांना देतो/देते.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> प्रक्रिया मला समजली असून उपचारासाठी वैद्यकीय पथकास अधिकृत करतो/करते, असे मी पुष्टी करतो/करते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">डॉक्टरांची स्वाक्षरी व शिक्का</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== 10. Anaesthesia Type-Wise Consent ==========
+        if (consentType === 'ANAESTHESIA_TYPE') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Anaesthesia Type-Wise Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { page-break-after: always; padding: 20px; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { width: 60px; height: 60px; margin-bottom: 5px; }
+    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-address { font-size: 9pt; color: #333; }
+    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .patient-info-row { display: flex; justify-content: space-between; border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-info-item { font-size: 10pt; }
+    .patient-label { font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; padding: 8px; background: #4a2683; color: white; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 11pt; line-height: 1.8; }
+    .declaration { margin: 20px 0; padding: 15px; border: 1px solid #ccc; background: #fafafa; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="form-title">ANAESTHESIA TYPE-WISE CONSENT</div>
+  
+  <div class="consent-text">
+    I have been explained the type of anaesthesia to be administered (Local / Spinal / General / Regional), its purpose, risks, side effects, and alternatives. I understand that unforeseen complications may occur. I voluntarily consent to anaesthesia administration.
+  </div>
+  
+  <div class="declaration">
+    <strong>Declaration:</strong> I confirm that I have understood the anaesthesia procedure and consent to the administration of the same.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">Patient / Guardian Signature</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Anaesthetist's Signature & Stamp</div>
+      <div style="margin-top: 10px;">Date: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
+  </div>
+  
+  <div class="form-title">एनेस्थीसिया प्रकार अनुसार सहमति</div>
+  
+  <div class="consent-text">
+    मुझे दिए जाने वाले एनेस्थीसिया (लोकल / स्पाइनल / जनरल / रीजनल) के प्रकार, उद्देश्य, जोखिम, दुष्प्रभाव एवं विकल्पों के बारे में बताया गया है। अप्रत्याशित जटिलताएँ हो सकती हैं, यह मैं समझता/समझती हूँ। मैं एनेस्थीसिया देने के लिए सहमति देता/देती हूँ।
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> मैं पुष्टि करता/करती हूँ कि मुझे एनेस्थीसिया प्रक्रिया समझ आ गई है और इसके लिए सहमति देता/देती हूँ।
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रोगी / अभिभावक के हस्ताक्षर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">एनेस्थेटिस्ट के हस्ताक्षर एवं मोहर</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <img src="/hospital-logo.png" class="hospital-logo" alt="Logo" onerror="this.style.display='none'" />
+    <div class="hospital-name">Gravity Hospital & Research Centre</div>
+    <div class="hospital-address">Gate No. 161, Sakhare Nagar, Trimurti Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+    <div class="hospital-contact">Contact: 7798817210, 7798661218</div>
+  </div>
+  
+  <div class="patient-info-row">
+    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+  </div>
+  
+  <div class="form-title">एनेस्थेशिया प्रकार अनुसार संमती</div>
+  
+  <div class="consent-text">
+    देण्यात येणाऱ्या एनेस्थेशियाचा प्रकार (लोकल / स्पायनल / जनरल / रीजनल), त्याचा उद्देश, धोके, दुष्परिणाम व पर्याय मला समजावून सांगण्यात आले आहेत. अनपेक्षित गुंतागुंत होऊ शकते, हे मला समजले आहे. एनेस्थेशिया देण्यास मी संमती देतो/देते.
+  </div>
+  
+  <div class="declaration">
+    <strong>घोषणा:</strong> एनेस्थेशिया प्रक्रिया मला समजली असून त्यास संमती देतो/देते, असे मी पुष्टी करतो/करते.
+  </div>
+  
+  <div class="signature-section">
+    <div class="signature-box">
+      <div class="signature-line">रुग्ण / पालकाची स्वाक्षरी</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">एनेस्थेटिस्टची स्वाक्षरी व शिक्का</div>
+      <div style="margin-top: 10px;">दिनांक: ${currentDate}</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+        
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
 

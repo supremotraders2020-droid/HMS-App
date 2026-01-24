@@ -2865,11 +2865,122 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      // === NEW CONSENT FORMS (10 Additional) ===
+      {
+        title: "Patient Counselling & Education Documentation Form",
+        consentType: "PATIENT_COUNSELLING_DOC",
+        description: "Detailed counselling documentation form confirming patient has received complete information about diagnosis, treatment options, risks, complications, medication usage, lifestyle modifications, and follow-up requirements. Trilingual: English, Hindi, Marathi.",
+        category: "Patient Education",
+        pdfPath: "/consents/dynamic/PATIENT_COUNSELLING_DOC",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Patient Education Consent",
+        consentType: "PATIENT_EDUCATION",
+        description: "Acknowledgement that patient has been educated about health condition, disease process, preventive measures, medication schedule, dietary advice, physical activity, and warning signs. Trilingual: English, Hindi, Marathi.",
+        category: "Patient Education",
+        pdfPath: "/consents/dynamic/PATIENT_EDUCATION",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Billing Sheet Acknowledgement",
+        consentType: "BILLING_ACKNOWLEDGEMENT",
+        description: "Acknowledgement of hospital billing structure including consultation fees, investigation charges, procedure costs, room rent, consumables, and applicable taxes. Trilingual: English, Hindi, Marathi.",
+        category: "Financial & Insurance",
+        pdfPath: "/consents/dynamic/BILLING_ACKNOWLEDGEMENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "MJPJAY Scheme Consent",
+        consentType: "MJPJAY_SCHEME",
+        description: "Declaration of eligibility under MJPJAY scheme with authorization for hospital to upload medical details and submit claims as per scheme guidelines. Trilingual: English, Hindi, Marathi.",
+        category: "Financial & Insurance",
+        pdfPath: "/consents/dynamic/MJPJAY_SCHEME",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Minor/Intermediate Procedure Consent (Consent 2.5)",
+        consentType: "MINOR_PROCEDURE",
+        description: "Consent for minor or intermediate medical procedures with explanation of nature, purpose, benefits, and possible risks. No outcome guarantee provided. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/dynamic/MINOR_PROCEDURE",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Physician Fitness Certificate Consent",
+        consentType: "FITNESS_CERTIFICATE",
+        description: "Consent for medical examination to assess physical and mental fitness. Certificate issued based on clinical findings. Trilingual: English, Hindi, Marathi.",
+        category: "Legal & Administrative",
+        pdfPath: "/consents/dynamic/FITNESS_CERTIFICATE",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Physiotherapy Consent",
+        consentType: "PHYSIOTHERAPY",
+        description: "Consent for physiotherapy treatment including explanation of treatment nature, expected benefits, duration, and possible discomfort. Trilingual: English, Hindi, Marathi.",
+        category: "Therapeutic",
+        pdfPath: "/consents/dynamic/PHYSIOTHERAPY",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Recovery Sheet Acknowledgement",
+        consentType: "RECOVERY_SHEET",
+        description: "Acknowledgement of recovery plan, medications, activity restrictions, wound care, warning signs, and follow-up schedule. Trilingual: English, Hindi, Marathi.",
+        category: "Post-Operative",
+        pdfPath: "/consents/dynamic/RECOVERY_SHEET",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "General Procedure Consent",
+        consentType: "GENERAL_PROCEDURE",
+        description: "Informed consent for planned medical or surgical procedure with understanding of nature, benefits, risks, alternatives, and possible complications. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/dynamic/GENERAL_PROCEDURE",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Anaesthesia Type-Wise Consent",
+        consentType: "ANAESTHESIA_TYPE",
+        description: "Consent for specific type of anaesthesia (Local/Spinal/General/Regional) with explanation of purpose, risks, side effects, and alternatives. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/dynamic/ANAESTHESIA_TYPE",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
     await db.insert(consentTemplates).values(templates);
-    console.log("Consent templates seeded successfully with 14 comprehensive forms");
+    console.log("Consent templates seeded successfully with 24 comprehensive forms");
   }
 
   // ========== PATHOLOGY TESTS SEEDING ==========
