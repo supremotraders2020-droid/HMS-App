@@ -5540,14 +5540,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .logo-section { display: flex; align-items: center; }
     .hospital-logo { height: 60px; width: auto; }
     .hospital-info { flex: 1; }
-    .hospital-name { font-size: 16pt; font-weight: bold; color: #e67e22; margin-bottom: 2px; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; line-height: 1.3; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .patient-info-row { display: flex; justify-content: space-between; padding: 8px 0; margin: 8px 0; border-bottom: 1px solid #999; font-size: 10pt; }
     .patient-info-item { }
     .patient-label { font-weight: bold; }
     .form-title { font-size: 20pt; font-weight: bold; margin: 25px 0 20px 0; color: #333; }
-    .patient-details-section { margin: 25px 0; }
+    .patient-details-section { margin: 25px 0; padding-top: 15px; border-top: 3px solid #2c5aa0; }
     .patient-details-title { font-size: 14pt; font-weight: bold; color: #333; margin-bottom: 12px; }
     .patient-details-list { list-style: disc; margin-left: 25px; font-size: 11pt; line-height: 2.2; }
     .patient-details-list li { margin: 8px 0; }
