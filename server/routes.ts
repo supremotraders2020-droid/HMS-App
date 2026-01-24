@@ -5130,7 +5130,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT COUNSELLING & EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -5199,7 +5198,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT COUNSELLING & EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -5385,7 +5383,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -5454,7 +5451,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -5659,8 +5655,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> BILLING SHEET ACKNOWLEDGEMENT</div>
-
+  
   <div class="section">
     <div class="section-title">1. बिलिंग माहिती</div>
     <div class="section-content">
@@ -5716,8 +5711,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> BILLING SHEET ACKNOWLEDGEMENT</div>
-
+  
   <div class="section">
     <div class="section-title">1. बिलिंग जानकारी</div>
     <div class="section-content">
@@ -5890,7 +5884,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY SCHEME CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -5959,7 +5952,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY SCHEME CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -6145,7 +6137,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> MINOR / INTERMEDIATE PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -6214,7 +6205,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> MINOR / INTERMEDIATE PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -6400,7 +6390,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSICIAN FITNESS CERTIFICATE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -6469,7 +6458,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSICIAN FITNESS CERTIFICATE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -6655,7 +6643,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSIOTHERAPY CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -6724,7 +6711,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSIOTHERAPY CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -6910,7 +6896,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> RECOVERY SHEET ACKNOWLEDGEMENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -6979,7 +6964,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> RECOVERY SHEET ACKNOWLEDGEMENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -7165,7 +7149,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> GENERAL PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -7234,7 +7217,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> GENERAL PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -7420,7 +7402,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> ANAESTHESIA TYPE-WISE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -7489,7 +7470,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
-  <div class="form-title"><span class="form-title-icon">🏥</span> ANAESTHESIA TYPE-WISE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
