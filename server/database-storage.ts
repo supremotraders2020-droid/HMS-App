@@ -2648,7 +2648,16 @@ export class DatabaseStorage implements IStorage {
 
   // ========== CONSENT TEMPLATES METHODS ==========
   async getAllConsentTemplates(): Promise<ConsentTemplate[]> {
-    return await db.select().from(consentTemplates).where(eq(consentTemplates.isActive, true)).orderBy(consentTemplates.category, consentTemplates.title);
+    const allTemplates = await db.select().from(consentTemplates).where(eq(consentTemplates.isActive, true)).orderBy(consentTemplates.category, consentTemplates.title);
+    const seenTypes = new Set<string>();
+    const uniqueTemplates: ConsentTemplate[] = [];
+    for (const template of allTemplates) {
+      if (!seenTypes.has(template.consentType)) {
+        seenTypes.add(template.consentType);
+        uniqueTemplates.push(template);
+      }
+    }
+    return uniqueTemplates;
   }
 
   async getConsentTemplate(id: string): Promise<ConsentTemplate | undefined> {
@@ -2689,10 +2698,7 @@ export class DatabaseStorage implements IStorage {
   // Seed consent templates with PDF files
   async seedConsentTemplates(): Promise<void> {
     const existing = await db.select().from(consentTemplates);
-    if (existing.length > 0) {
-      console.log("Consent templates already exist, skipping seed...");
-      return;
-    }
+    const existingConsentTypes = new Set(existing.map(t => t.consentType));
 
     const templates: InsertConsentTemplate[] = [
       // === LEGAL & ADMINISTRATIVE ===
@@ -2979,8 +2985,16 @@ export class DatabaseStorage implements IStorage {
       }
     ];
 
-    await db.insert(consentTemplates).values(templates);
-    console.log("Consent templates seeded successfully with 24 comprehensive forms");
+    // Filter out templates that already exist
+    const newTemplates = templates.filter(t => !existingConsentTypes.has(t.consentType));
+    
+    if (newTemplates.length === 0) {
+      console.log("All consent templates already exist, skipping seed...");
+      return;
+    }
+
+    await db.insert(consentTemplates).values(newTemplates);
+    console.log(`Consent templates seeded: ${newTemplates.length} new forms added (total: ${existing.length + newTemplates.length})`);
   }
 
   // ========== PATHOLOGY TESTS SEEDING ==========

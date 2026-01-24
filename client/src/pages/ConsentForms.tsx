@@ -23,7 +23,11 @@ import {
   Heart,
   Baby,
   User,
-  AlertCircle
+  AlertCircle,
+  GraduationCap,
+  CreditCard,
+  Activity,
+  Bed
 } from "lucide-react";
 
 interface UserInfo {
@@ -72,6 +76,10 @@ const TEMPLATE_CATEGORIES = [
   { value: "Diagnostic & Testing", label: "Diagnostic & Testing", icon: TestTube },
   { value: "Treatment", label: "Treatment", icon: Heart },
   { value: "Maternal & Neonatal", label: "Maternal & Neonatal", icon: Baby },
+  { value: "Patient Education", label: "Patient Education", icon: GraduationCap },
+  { value: "Financial & Insurance", label: "Financial & Insurance", icon: CreditCard },
+  { value: "Therapeutic", label: "Therapeutic", icon: Activity },
+  { value: "Post-Operative", label: "Post-Operative", icon: Bed },
 ];
 
 export default function ConsentForms({ currentUser }: ConsentFormsProps) {
@@ -227,6 +235,14 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
       case 'Maternal & Neonatal': 
         return 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300';
+      case 'Patient Education': 
+        return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
+      case 'Financial & Insurance': 
+        return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300';
+      case 'Therapeutic': 
+        return 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300';
+      case 'Post-Operative': 
+        return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300';
       default: 
         return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
     }
@@ -239,6 +255,10 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       case 'Diagnostic & Testing': return TestTube;
       case 'Treatment': return Heart;
       case 'Maternal & Neonatal': return Baby;
+      case 'Patient Education': return GraduationCap;
+      case 'Financial & Insurance': return CreditCard;
+      case 'Therapeutic': return Activity;
+      case 'Post-Operative': return Bed;
       default: return FileText;
     }
   };
@@ -276,7 +296,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
             <span className="truncate">Consent Forms Library</span>
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            13 trilingual consent forms (English, Hindi, Marathi) for comprehensive patient care
+            {templates.length} trilingual consent forms (English, Hindi, Marathi) for comprehensive patient care
           </p>
         </div>
         <div className="flex items-center gap-2">
