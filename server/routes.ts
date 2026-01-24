@@ -4775,7 +4775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 5px; }
     .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     
     /* Patient Info Row */
     .patient-row { display: table; width: 100%; border-bottom: 1px solid #333; padding: 8px 0; margin-bottom: 20px; }
@@ -5032,7 +5032,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
@@ -5040,7 +5040,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; padding: 8px 12px; background: transparent; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ""; display: inline-block; width: 14px; height: 14px; background: #2c5aa0; flex-shrink: 0; }
     .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
     .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
     .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
@@ -5282,7 +5283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
@@ -5290,7 +5291,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; padding: 8px 12px; background: transparent; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ""; display: inline-block; width: 14px; height: 14px; background: #2c5aa0; flex-shrink: 0; }
     .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
     .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
     .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
@@ -5766,7 +5768,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
@@ -5774,7 +5776,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; padding: 8px 12px; background: transparent; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ""; display: inline-block; width: 14px; height: 14px; background: #2c5aa0; flex-shrink: 0; }
     .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
     .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
     .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
@@ -6016,7 +6019,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
@@ -6024,7 +6027,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; padding: 8px 12px; background: transparent; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ""; display: inline-block; width: 14px; height: 14px; background: #2c5aa0; flex-shrink: 0; }
     .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
     .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
     .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
@@ -6266,7 +6270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
@@ -6274,7 +6278,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; padding: 8px 12px; background: transparent; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ""; display: inline-block; width: 14px; height: 14px; background: #2c5aa0; flex-shrink: 0; }
     .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
     .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
     .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
@@ -6516,7 +6521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
@@ -6524,7 +6529,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; padding: 8px 12px; background: transparent; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ""; display: inline-block; width: 14px; height: 14px; background: #2c5aa0; flex-shrink: 0; }
     .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
     .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
     .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
@@ -6766,7 +6772,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
@@ -6774,7 +6780,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; padding: 8px 12px; background: transparent; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ""; display: inline-block; width: 14px; height: 14px; background: #2c5aa0; flex-shrink: 0; }
     .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
     .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
     .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
@@ -7016,7 +7023,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
@@ -7024,7 +7031,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; padding: 8px 12px; background: transparent; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ""; display: inline-block; width: 14px; height: 14px; background: #2c5aa0; flex-shrink: 0; }
     .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
     .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
     .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
@@ -7266,7 +7274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
     .hospital-address { font-size: 9pt; color: #666; }
-    .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
     .form-title-icon { font-size: 20pt; }
     .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
@@ -7274,7 +7282,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
     .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
+    .section-title { font-size: 12pt; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; padding: 8px 12px; background: transparent; display: flex; align-items: center; gap: 10px; }
+    .section-title::before { content: ""; display: inline-block; width: 14px; height: 14px; background: #2c5aa0; flex-shrink: 0; }
     .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
     .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
     .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
