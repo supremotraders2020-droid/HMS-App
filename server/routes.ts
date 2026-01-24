@@ -5122,7 +5122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> रुग्ण समुपदेशन व शिक्षण संमतीपत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT COUNSELLING & EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -5183,7 +5183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> रोगी परामर्श एवं शिक्षा सहमति पत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT COUNSELLING & EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -5361,7 +5361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> रुग्ण शिक्षण संमतीपत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -5422,7 +5422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> रोगी शिक्षा सहमति पत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> PATIENT EDUCATION CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -5619,7 +5619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> बिलिंग शीट पोचपावती</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> BILLING SHEET ACKNOWLEDGEMENT</div>
 
   <div class="section">
     <div class="section-title">1. बिलिंग माहिती</div>
@@ -5668,7 +5668,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> बिलिंग शीट पावती</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> BILLING SHEET ACKNOWLEDGEMENT</div>
 
   <div class="section">
     <div class="section-title">1. बिलिंग जानकारी</div>
@@ -5834,7 +5834,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY योजना संमतीपत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY SCHEME CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -5895,7 +5895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY योजना सहमति पत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> MJPJAY SCHEME CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -6073,7 +6073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> लघु / मध्यम प्रक्रिया संमतीपत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> MINOR / INTERMEDIATE PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -6134,7 +6134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> लघु / मध्यम प्रक्रिया सहमति पत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> MINOR / INTERMEDIATE PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -6312,7 +6312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> चिकित्सक फिटनेस प्रमाणपत्र संमतीपत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSICIAN FITNESS CERTIFICATE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -6373,7 +6373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> चिकित्सक फिटनेस प्रमाणपत्र सहमति पत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSICIAN FITNESS CERTIFICATE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -6551,7 +6551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> फिजिओथेरपी संमतीपत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSIOTHERAPY CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -6612,7 +6612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> फिजियोथेरेपी सहमति पत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> PHYSIOTHERAPY CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -6790,7 +6790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> रिकव्हरी शीट पोचपावती</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> RECOVERY SHEET ACKNOWLEDGEMENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -6851,7 +6851,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> रिकवरी शीट पावती</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> RECOVERY SHEET ACKNOWLEDGEMENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -7029,7 +7029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> सामान्य प्रक्रिया संमतीपत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> GENERAL PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -7090,7 +7090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> सामान्य प्रक्रिया सहमति पत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> GENERAL PROCEDURE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
@@ -7268,7 +7268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> एनेस्थेशिया प्रकार अनुसार संमतीपत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> ANAESTHESIA TYPE-WISE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
@@ -7329,7 +7329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="form-title"><span class="form-title-icon">🏥</span> एनेस्थीसिया प्रकार अनुसार सहमति पत्र</div>
+  <div class="form-title"><span class="form-title-icon">🏥</span> ANAESTHESIA TYPE-WISE CONSENT</div>
   
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>

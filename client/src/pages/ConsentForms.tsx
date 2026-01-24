@@ -134,92 +134,91 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   };
 
   const handleDownload = async (template: ConsentTemplate) => {
+    if (!selectedPatientId || selectedPatientId === 'none') {
+      toast({ 
+        title: "Please select a patient", 
+        description: "You must select a patient before downloading a consent form.",
+        variant: "destructive" 
+      });
+      return;
+    }
     try {
-      if (selectedPatientId && selectedPatientId !== 'none') {
-        const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
-          headers: {
-            'x-user-id': currentUser.id,
-            'x-user-role': currentUser.role,
-          },
-        });
-        if (!response.ok) throw new Error('Failed to generate PDF');
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
-        link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        toast({ title: "Download started", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
-      } else {
-        const link = document.createElement('a');
-        link.href = template.pdfPath;
-        link.download = template.pdfPath.split('/').pop() || 'consent-form.pdf';
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast({ title: "Download started (blank form)" });
-      }
+      const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
+        headers: {
+          'x-user-id': currentUser.id,
+          'x-user-role': currentUser.role,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to generate PDF');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
+      link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast({ title: "Download started", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
     } catch {
       toast({ title: "Failed to download file", variant: "destructive" });
     }
   };
 
   const handleView = async (template: ConsentTemplate) => {
-    if (selectedPatientId && selectedPatientId !== 'none') {
-      try {
-        const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
-          headers: {
-            'x-user-id': currentUser.id,
-            'x-user-role': currentUser.role,
-          },
-        });
-        if (!response.ok) throw new Error('Failed to generate PDF');
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        window.open(url, '_blank');
-      } catch {
-        toast({ title: "Failed to view consent form", variant: "destructive" });
-      }
-    } else {
-      window.open(template.pdfPath, '_blank');
+    if (!selectedPatientId || selectedPatientId === 'none') {
+      toast({ 
+        title: "Please select a patient", 
+        description: "You must select a patient before viewing a consent form.",
+        variant: "destructive" 
+      });
+      return;
+    }
+    try {
+      const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
+        headers: {
+          'x-user-id': currentUser.id,
+          'x-user-role': currentUser.role,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to generate PDF');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch {
+      toast({ title: "Failed to view consent form", variant: "destructive" });
     }
   };
 
   const handlePrint = async (template: ConsentTemplate) => {
-    if (selectedPatientId && selectedPatientId !== 'none') {
-      try {
-        const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
-          headers: {
-            'x-user-id': currentUser.id,
-            'x-user-role': currentUser.role,
-          },
-        });
-        if (!response.ok) throw new Error('Failed to generate PDF');
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const printWindow = window.open(url, '_blank');
-        if (printWindow) {
-          printWindow.onload = () => {
-            printWindow.print();
-          };
-        }
-        toast({ title: "Opening print dialog...", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
-      } catch {
-        toast({ title: "Failed to print consent form", variant: "destructive" });
-      }
-    } else {
-      const printWindow = window.open(template.pdfPath, '_blank');
+    if (!selectedPatientId || selectedPatientId === 'none') {
+      toast({ 
+        title: "Please select a patient", 
+        description: "You must select a patient before printing a consent form.",
+        variant: "destructive" 
+      });
+      return;
+    }
+    try {
+      const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
+        headers: {
+          'x-user-id': currentUser.id,
+          'x-user-role': currentUser.role,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to generate PDF');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const printWindow = window.open(url, '_blank');
       if (printWindow) {
         printWindow.onload = () => {
           printWindow.print();
         };
       }
-      toast({ title: "Opening print dialog..." });
+      toast({ title: "Opening print dialog...", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
+    } catch {
+      toast({ title: "Failed to print consent form", variant: "destructive" });
     }
   };
 
