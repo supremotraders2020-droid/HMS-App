@@ -5531,31 +5531,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .page:last-child { page-break-after: auto; }
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; background: #e0e0e0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #333; background: #e0e0e0; }
     .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; padding-bottom: 5px; }
-    .hospital-logo { width: 80px; height: auto; }
-    .hospital-info { }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 2px; }
-    .hospital-address { font-size: 9pt; color: #666; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; gap: 8px; }
+    .logo-icon { width: 50px; height: 50px; border: 3px solid #4a2683; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
+    .logo-icon::before { content: "G"; font-size: 28px; font-weight: bold; color: #4a2683; }
+    .logo-icon::after { content: ""; position: absolute; top: 5px; right: -5px; width: 20px; height: 20px; border-top: 3px solid #e67e22; border-right: 3px solid #e67e22; border-radius: 0 50% 0 0; }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-text-gravity { font-size: 16pt; font-weight: bold; color: #4a2683; line-height: 1.1; }
+    .logo-text-hospital { font-size: 11pt; font-weight: bold; color: #4a2683; line-height: 1.1; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #e67e22; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #666; line-height: 1.3; }
     .hospital-contact { font-size: 9pt; color: #e67e22; font-weight: bold; }
-    .patient-info-row { display: flex; justify-content: space-between; padding: 8px 0; margin: 10px 0; border-bottom: 1px solid #333; font-size: 10pt; }
+    .patient-info-row { display: flex; justify-content: space-between; padding: 8px 0; margin: 8px 0; border-bottom: 1px solid #333; font-size: 10pt; }
     .patient-info-item { }
     .patient-label { font-weight: bold; }
-    .form-title { font-size: 18pt; font-weight: bold; margin: 25px 0 20px 0; color: #333; }
-    .form-title-icon { display: none; }
-    .patient-info-box { display: none; }
-    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 11pt; }
-    .section { margin: 20px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; color: #333; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-left: 4px solid #4a2683; }
-    .section-content { text-align: justify; margin: 10px 0; font-size: 11pt; line-height: 1.8; padding-left: 15px; }
-    .declaration { margin: 25px 0; padding: 15px; border: 2px solid #4a2683; background: #fafafa; }
-    .declaration-title { font-weight: bold; font-size: 12pt; margin-bottom: 10px; }
-    .signature-grid { margin-top: 30px; }
-    .signature-row { display: flex; justify-content: space-between; margin: 15px 0; }
+    .form-title { font-size: 18pt; font-weight: bold; margin: 20px 0 15px 0; color: #333; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 11pt; font-weight: bold; color: #333; margin-bottom: 8px; padding: 6px 10px; background: #f5f5f5; border-left: 4px solid #4a2683; }
+    .section-content { text-align: justify; margin: 8px 0; font-size: 10pt; line-height: 1.6; padding-left: 12px; }
+    .declaration { margin: 20px 0; padding: 12px; border: 2px solid #4a2683; background: #fafafa; }
+    .declaration-title { font-weight: bold; font-size: 11pt; margin-bottom: 8px; }
+    .signature-grid { margin-top: 25px; }
+    .signature-row { display: flex; justify-content: space-between; margin: 12px 0; }
     .signature-field { font-size: 10pt; }
-    .signature-line { border-bottom: 1px solid #333; min-width: 200px; display: inline-block; margin-left: 10px; }
+    .signature-line { border-bottom: 1px solid #333; min-width: 180px; display: inline-block; margin-left: 8px; }
   </style>
 </head>
 <body>
@@ -5563,7 +5566,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <!-- English Page -->
 <div class="page">
   <div class="hospital-header">
-    <img src="/hospital-logo.png" alt="Gravity Hospital" class="hospital-logo" onerror="this.style.display='none'" />
+    <div class="logo-section">
+      <div class="logo-icon"></div>
+      <div class="logo-text">
+        <span class="logo-text-gravity">GRAVITY</span>
+        <span class="logo-text-hospital">HOSPITAL</span>
+      </div>
+    </div>
     <div class="hospital-info">
       <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
@@ -5579,11 +5588,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   </div>
   
   <div class="form-title">BILLING SHEET ACKNOWLEDGEMENT</div>
-  
-  <div class="dept-date-row">
-    <span>Department: _____________________</span>
-    <span>Date: ____ / ____ / ______</span>
-  </div>
 
   <div class="section">
     <div class="section-title">1. BILLING INFORMATION</div>
