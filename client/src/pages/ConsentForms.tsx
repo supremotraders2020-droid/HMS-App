@@ -149,18 +149,35 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
           'x-user-role': currentUser.role,
         },
       });
-      if (!response.ok) throw new Error('Failed to generate PDF');
+      if (!response.ok) throw new Error('Failed to generate form');
+      
+      const contentType = response.headers.get('Content-Type') || '';
+      const isHtml = contentType.includes('text/html');
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
-      link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast({ title: "Download started", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
+      
+      if (isHtml) {
+        const htmlText = await blob.text();
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(htmlText);
+          printWindow.document.close();
+          printWindow.onload = () => {
+            printWindow.print();
+          };
+        }
+        toast({ title: "Print dialog opened", description: "Use 'Save as PDF' in your browser's print dialog to download." });
+      } else {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
+        link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast({ title: "Download started", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
+      }
     } catch {
       toast({ title: "Failed to download file", variant: "destructive" });
     }
