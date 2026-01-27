@@ -2982,6 +2982,17 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Surgical High Risk Consent",
+        consentType: "SURGICAL_HIGH_RISK",
+        description: "High-risk surgical consent for patients undergoing surgery with elevated risks due to medical conditions, age, or associated illnesses. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/dynamic/SURGICAL_HIGH_RISK",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 

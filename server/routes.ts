@@ -6283,6 +6283,185 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+
+        // ========== Surgical High Risk Consent ==========
+        if (consentType === 'SURGICAL_HIGH_RISK') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Surgical High Risk Consent Form</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 20px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 200px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; line-height: 1.8; }
+    .consent-text { margin: 12px 0; text-align: justify; }
+    .signature-section { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">SURGICAL HIGH RISK CONSENT FORM</div>
+
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">Patient ID / UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+  </div>
+  <div class="dept-date-row">
+    <span>Department / Consultant: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Consent Statement</div>
+    <div class="section-content">
+      <p class="consent-text">I have been explained about the proposed surgical procedure and informed that due to my current medical condition, age, or associated illnesses, this surgery is considered a high-risk procedure.</p>
+      <p class="consent-text">I understand that possible complications may include bleeding, infection, anesthesia-related complications, organ damage, delayed recovery, need for additional procedures, prolonged hospital stay, or other unforeseen risks, including risk to life.</p>
+      <p class="consent-text">The surgeon has explained the nature of the surgery, expected benefits, possible risks, complications, and available alternatives in a language I understand. I was given sufficient opportunity to ask questions and all my questions have been answered satisfactorily.</p>
+      <p class="consent-text"><strong>I voluntarily give my consent to undergo the above-mentioned high-risk surgical procedure.</strong></p>
+    </div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Patient / Attendant Name: ______________________</div>
+        <div class="signature-field">Relationship: ______________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature / Thumb Impression</div>
+        <div class="signature-field">Date & Time: ______________________</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Surgeon Name: ______________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title marathi">शस्त्रक्रिया उच्च धोका संमती फॉर्म</div>
+
+  <div class="section marathi">
+    <div class="section-title">संमती विधान</div>
+    <div class="section-content">
+      <p class="consent-text">माझ्या प्रस्तावित शस्त्रक्रियेबाबत मला सविस्तर माहिती देण्यात आली आहे. माझी सध्याची आरोग्यस्थिती, वय किंवा इतर आजार लक्षात घेता ही शस्त्रक्रिया उच्च धोक्याची असल्याचे मला समजावून सांगण्यात आले आहे.</p>
+      <p class="consent-text">या शस्त्रक्रियेदरम्यान किंवा नंतर रक्तस्राव, संसर्ग, भूल संबंधित गुंतागुंत, अवयवांना इजा, उशिरा बरे होणे, अतिरिक्त उपचारांची गरज, दीर्घ रुग्णालयात राहणे किंवा जीवितास धोका संभवतो, याची मला जाणीव करून देण्यात आली आहे.</p>
+      <p class="consent-text">शल्यविशारदांनी शस्त्रक्रियेची प्रकृती, फायदे, धोके, संभाव्य गुंतागुंत व पर्यायी उपचार मला समजेल अशा भाषेत सांगितले आहेत. मला प्रश्न विचारण्याची संधी देण्यात आली असून माझ्या सर्व प्रश्नांची समाधानकारक उत्तरे देण्यात आली.</p>
+      <p class="consent-text"><strong>मी स्वेच्छेने व पूर्ण जाणीवपूर्वक वरील उच्च धोका असलेल्या शस्त्रक्रियेस संमती देत आहे.</strong></p>
+    </div>
+  </div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">स्वाक्षरी / अंगठा: ______________________</div>
+        <div class="signature-field">दिनांक व वेळ: ______________________</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">शल्यविशारद स्वाक्षरी: ______________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title hindi">शल्य चिकित्सा उच्च जोखिम सहमति पत्र</div>
+
+  <div class="section hindi">
+    <div class="section-title">सहमति विवरण</div>
+    <div class="section-content">
+      <p class="consent-text">मुझे प्रस्तावित शल्य चिकित्सा प्रक्रिया के बारे में जानकारी दी गई है तथा यह भी बताया गया है कि मेरी वर्तमान स्वास्थ्य स्थिति, आयु या अन्य बीमारियों के कारण यह एक उच्च जोखिम वाली शल्य चिकित्सा है।</p>
+      <p class="consent-text">मुझे समझाया गया है कि इस शल्य चिकित्सा में रक्तस्राव, संक्रमण, एनेस्थीसिया से संबंधित जटिलताएँ, अंगों को क्षति, देर से ठीक होना, अतिरिक्त उपचार की आवश्यकता, लंबा अस्पताल प्रवास या जीवन को खतरा जैसी समस्याएँ हो सकती हैं।</p>
+      <p class="consent-text">सर्जन ने मुझे इस शल्य चिकित्सा की प्रकृति, लाभ, जोखिम, संभावित जटिलताओं एवं वैकल्पिक उपचारों के बारे में मेरी समझ की भाषा में जानकारी दी है। मुझे प्रश्न पूछने का अवसर दिया गया और मेरे सभी प्रश्नों के संतोषजनक उत्तर दिए गए।</p>
+      <p class="consent-text"><strong>मैं अपनी स्वेच्छा से उपरोक्त उच्च जोखिम शल्य चिकित्सा के लिए सहमति देता/देती हूँ।</strong></p>
+    </div>
+  </div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">हस्ताक्षर / अंगूठा निशान: ______________________</div>
+        <div class="signature-field">दिनांक व समय: ______________________</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">सर्जन हस्ताक्षर: ______________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
         
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
