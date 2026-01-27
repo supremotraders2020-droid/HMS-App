@@ -5883,6 +5883,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+
+        // ========== MJPJAY Scheme Consent ==========
+        if (consentType === 'MJPJAY_SCHEME') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MJPJAY Scheme Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #666; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; }
+    .checkbox-item { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; }
+    .checkbox { width: 14px; height: 14px; border: 1px solid #333; display: inline-block; flex-shrink: 0; margin-top: 3px; }
+    .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+    .signature-block { text-align: center; width: 45%; }
+    .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; }
+    @media print { .page { margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="data:image/png;base64,${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">123 Medical Drive, Healthcare District<br>City, State - 400001</div>
+      <div class="hospital-contact">Phone: +91 22 1234 5678 | Email: info@gravityhospital.com</div>
+    </div>
+  </div>
+
+  <div class="form-title">MJPJAY Scheme Consent Form</div>
+  
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
+  </div>
+  
+  <div class="dept-date-row">
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Declaration of Eligibility under MJPJAY Scheme</div>
+    <div class="section-content">
+      I, the undersigned, hereby declare that I am a beneficiary under the Mahatma Jyotiba Phule Jan Arogya Yojana (MJPJAY) scheme 
+      and I authorize Gravity Hospital & Research Centre to:
+      <br><br>
+      <div class="checkbox-item"><span class="checkbox"></span> Upload my medical records and treatment details to the MJPJAY portal</div>
+      <div class="checkbox-item"><span class="checkbox"></span> Submit claims on my behalf for the treatment received</div>
+      <div class="checkbox-item"><span class="checkbox"></span> Share necessary information with insurance authorities</div>
+      <div class="checkbox-item"><span class="checkbox"></span> Process my case as per MJPJAY guidelines and procedures</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Patient/Guardian Acknowledgement</div>
+    <div class="section-content">
+      I understand that the treatment will be provided as per the MJPJAY scheme guidelines. I confirm that all information 
+      provided by me is true and correct. I understand that providing false information may lead to disqualification from the scheme.
+    </div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-block">
+      <div class="signature-line">Patient/Guardian Signature</div>
+    </div>
+    <div class="signature-block">
+      <div class="signature-line">Hospital Representative</div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+
+  <div class="section">
+    <div class="section-title">महात्मा ज्योतिबा फुले जन आरोग्य योजना (MJPJAY) अंतर्गत पात्रतेची घोषणा</div>
+    <div class="section-content">
+      मी, खाली स्वाक्षरी केलेला/केलेली, याद्वारे घोषित करतो/करते की मी महात्मा ज्योतिबा फुले जन आरोग्य योजना (MJPJAY) योजनेचा/ची लाभार्थी आहे 
+      आणि मी ग्रॅविटी हॉस्पिटल अँड रिसर्च सेंटरला खालील गोष्टींसाठी अधिकृत करतो/करते:
+      <br><br>
+      <div class="checkbox-item"><span class="checkbox"></span> माझे वैद्यकीय रेकॉर्ड आणि उपचार तपशील MJPJAY पोर्टलवर अपलोड करणे</div>
+      <div class="checkbox-item"><span class="checkbox"></span> प्राप्त उपचारांसाठी माझ्या वतीने दावे सादर करणे</div>
+      <div class="checkbox-item"><span class="checkbox"></span> विमा अधिकाऱ्यांसोबत आवश्यक माहिती सामायिक करणे</div>
+      <div class="checkbox-item"><span class="checkbox"></span> MJPJAY मार्गदर्शक तत्त्वे आणि प्रक्रियांनुसार माझ्या केसवर प्रक्रिया करणे</div>
+    </div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-block">
+      <div class="signature-line">रुग्ण/पालक स्वाक्षरी</div>
+    </div>
+    <div class="signature-block">
+      <div class="signature-line">रुग्णालय प्रतिनिधी</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+
+  <div class="section">
+    <div class="section-title">महात्मा ज्योतिबा फुले जन आरोग्य योजना (MJPJAY) के तहत पात्रता की घोषणा</div>
+    <div class="section-content">
+      मैं, अधोहस्ताक्षरी, एतद्द्वारा घोषणा करता/करती हूं कि मैं महात्मा ज्योतिबा फुले जन आरोग्य योजना (MJPJAY) योजना का/की लाभार्थी हूं 
+      और मैं ग्रैविटी हॉस्पिटल एंड रिसर्च सेंटर को निम्नलिखित के लिए अधिकृत करता/करती हूं:
+      <br><br>
+      <div class="checkbox-item"><span class="checkbox"></span> मेरे मेडिकल रिकॉर्ड और उपचार विवरण MJPJAY पोर्टल पर अपलोड करना</div>
+      <div class="checkbox-item"><span class="checkbox"></span> प्राप्त उपचार के लिए मेरी ओर से दावे प्रस्तुत करना</div>
+      <div class="checkbox-item"><span class="checkbox"></span> बीमा अधिकारियों के साथ आवश्यक जानकारी साझा करना</div>
+      <div class="checkbox-item"><span class="checkbox"></span> MJPJAY दिशानिर्देशों और प्रक्रियाओं के अनुसार मेरे मामले को संसाधित करना</div>
+    </div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-block">
+      <div class="signature-line">रोगी/अभिभावक हस्ताक्षर</div>
+    </div>
+    <div class="signature-block">
+      <div class="signature-line">अस्पताल प्रतिनिधि</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
         
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
