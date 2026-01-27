@@ -5107,13 +5107,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -5167,13 +5160,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: _______________________</span>
@@ -5584,13 +5570,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -5644,13 +5623,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: _______________________</span>
@@ -5829,13 +5801,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -5889,13 +5854,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: _______________________</span>
@@ -6074,13 +6032,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -6134,13 +6085,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: _______________________</span>
@@ -6319,13 +6263,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -6379,13 +6316,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: _______________________</span>
@@ -6564,13 +6494,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -6624,13 +6547,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: _______________________</span>
@@ -6809,13 +6725,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -6869,13 +6778,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: _______________________</span>
@@ -7054,13 +6956,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -7114,13 +7009,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-
-  <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
-  </div>
   
   <div class="dept-date-row">
     <span>Department: _______________________</span>
