@@ -156,16 +156,16 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       const blob = await response.blob();
       
       if (isHtml) {
-        const htmlText = await blob.text();
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          printWindow.document.write(htmlText);
-          printWindow.document.close();
-          printWindow.onload = () => {
-            printWindow.print();
-          };
-        }
-        toast({ title: "Print dialog opened", description: "Use 'Save as PDF' in your browser's print dialog to download." });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
+        link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.html`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast({ title: "Download started", description: "Open the downloaded HTML file and use Print > Save as PDF to create a PDF." });
       } else {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
