@@ -6384,17 +6384,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page">
-  <div class="hospital-header">
-    <div class="logo-section">
-      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
-    </div>
-    <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
-      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
-      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
-    </div>
-  </div>
-
   <div class="form-title marathi">शस्त्रक्रिया उच्च धोका संमती फॉर्म</div>
 
   <div class="section marathi">
@@ -6422,17 +6411,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page">
-  <div class="hospital-header">
-    <div class="logo-section">
-      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
-    </div>
-    <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
-      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
-      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
-    </div>
-  </div>
-
   <div class="form-title hindi">शल्य चिकित्सा उच्च जोखिम सहमति पत्र</div>
 
   <div class="section hindi">
