@@ -6041,6 +6041,775 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+
+        // ========== Billing Acknowledgement ==========
+        if (consentType === 'BILLING_ACKNOWLEDGEMENT') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Billing Sheet Acknowledgement</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #666; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; }
+    .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+    .signature-block { text-align: center; width: 45%; }
+    .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; }
+    @media print { .page { margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">123 Medical Drive, Healthcare District<br>City, State - 400001</div>
+      <div class="hospital-contact">Phone: +91 22 1234 5678 | Email: info@gravityhospital.com</div>
+    </div>
+  </div>
+  <div class="form-title">Billing Sheet Acknowledgement</div>
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+  </div>
+  <div class="dept-date-row">
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+  <div class="section">
+    <div class="section-title">Acknowledgement</div>
+    <div class="section-content">
+      I acknowledge receipt and understanding of the hospital billing structure including consultation fees, investigation charges, procedure costs, room charges, nursing charges, and other applicable fees. I agree to pay all charges as per the hospital tariff.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">Patient/Guardian Signature</div></div>
+    <div class="signature-block"><div class="signature-line">Hospital Representative</div></div>
+  </div>
+</div>
+<!-- Marathi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">बिलिंग शीट पोचपावती</div>
+    <div class="section-content">
+      मी हॉस्पिटल बिलिंग संरचनेची पावती आणि समज घेतो ज्यामध्ये सल्ला शुल्क, तपासणी शुल्क, प्रक्रिया खर्च, खोली शुल्क, नर्सिंग शुल्क आणि इतर लागू शुल्क समाविष्ट आहे.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रुग्ण/पालक स्वाक्षरी</div></div>
+    <div class="signature-block"><div class="signature-line">रुग्णालय प्रतिनिधी</div></div>
+  </div>
+</div>
+<!-- Hindi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">बिलिंग शीट पावती</div>
+    <div class="section-content">
+      मैं अस्पताल बिलिंग संरचना की प्राप्ति और समझ को स्वीकार करता/करती हूं जिसमें परामर्श शुल्क, जांच शुल्क, प्रक्रिया लागत, कमरे का शुल्क, नर्सिंग शुल्क और अन्य लागू शुल्क शामिल हैं।
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रोगी/अभिभावक हस्ताक्षर</div></div>
+    <div class="signature-block"><div class="signature-line">अस्पताल प्रतिनिधि</div></div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== Fitness Certificate ==========
+        if (consentType === 'FITNESS_CERTIFICATE') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Physician Fitness Certificate</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #666; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; }
+    .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+    .signature-block { text-align: center; width: 45%; }
+    .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; }
+    @media print { .page { margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">123 Medical Drive, Healthcare District<br>City, State - 400001</div>
+      <div class="hospital-contact">Phone: +91 22 1234 5678 | Email: info@gravityhospital.com</div>
+    </div>
+  </div>
+  <div class="form-title">Physician Fitness Certificate Consent</div>
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+  </div>
+  <div class="dept-date-row">
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+  <div class="section">
+    <div class="section-title">Fitness Certificate Request</div>
+    <div class="section-content">
+      I request a fitness certificate for employment/travel/sports purposes. I confirm that all medical information provided is accurate and I authorize the hospital to issue the certificate based on the examination conducted.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">Patient Signature</div></div>
+    <div class="signature-block"><div class="signature-line">Physician Signature</div></div>
+  </div>
+</div>
+<!-- Marathi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">फिटनेस प्रमाणपत्र विनंती</div>
+    <div class="section-content">
+      मी रोजगार/प्रवास/खेळ उद्देशांसाठी फिटनेस प्रमाणपत्राची विनंती करतो. मी पुष्टी करतो की दिलेली सर्व वैद्यकीय माहिती अचूक आहे.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रुग्ण स्वाक्षरी</div></div>
+    <div class="signature-block"><div class="signature-line">वैद्य स्वाक्षरी</div></div>
+  </div>
+</div>
+<!-- Hindi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">फिटनेस प्रमाणपत्र अनुरोध</div>
+    <div class="section-content">
+      मैं रोजगार/यात्रा/खेल उद्देश्यों के लिए फिटनेस प्रमाणपत्र का अनुरोध करता/करती हूं। मैं पुष्टि करता/करती हूं कि प्रदान की गई सभी चिकित्सा जानकारी सटीक है।
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रोगी हस्ताक्षर</div></div>
+    <div class="signature-block"><div class="signature-line">चिकित्सक हस्ताक्षर</div></div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== General Procedure ==========
+        if (consentType === 'GENERAL_PROCEDURE') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>General Procedure Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #666; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; }
+    .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+    .signature-block { text-align: center; width: 45%; }
+    .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; }
+    @media print { .page { margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">123 Medical Drive, Healthcare District<br>City, State - 400001</div>
+      <div class="hospital-contact">Phone: +91 22 1234 5678 | Email: info@gravityhospital.com</div>
+    </div>
+  </div>
+  <div class="form-title">General Procedure Consent</div>
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+  </div>
+  <div class="dept-date-row">
+    <span>Procedure: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+  <div class="section">
+    <div class="section-title">Consent for General Procedure</div>
+    <div class="section-content">
+      I consent to the proposed procedure. The nature, purpose, risks, benefits, and alternatives have been explained to me. I understand that complications may occur and I authorize the medical team to perform additional procedures if necessary.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">Patient/Guardian Signature</div></div>
+    <div class="signature-block"><div class="signature-line">Physician Signature</div></div>
+  </div>
+</div>
+<!-- Marathi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">सामान्य प्रक्रियेसाठी संमती</div>
+    <div class="section-content">
+      मी प्रस्तावित प्रक्रियेसाठी संमती देतो. प्रक्रियेचे स्वरूप, उद्देश, जोखीम, फायदे आणि पर्याय मला समजावून सांगण्यात आले आहेत.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रुग्ण/पालक स्वाक्षरी</div></div>
+    <div class="signature-block"><div class="signature-line">वैद्य स्वाक्षरी</div></div>
+  </div>
+</div>
+<!-- Hindi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">सामान्य प्रक्रिया के लिए सहमति</div>
+    <div class="section-content">
+      मैं प्रस्तावित प्रक्रिया के लिए सहमति देता/देती हूं। प्रक्रिया की प्रकृति, उद्देश्य, जोखिम, लाभ और विकल्प मुझे समझाए गए हैं।
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रोगी/अभिभावक हस्ताक्षर</div></div>
+    <div class="signature-block"><div class="signature-line">चिकित्सक हस्ताक्षर</div></div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== Minor Procedure ==========
+        if (consentType === 'MINOR_PROCEDURE') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Minor/Intermediate Procedure Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #666; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; }
+    .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+    .signature-block { text-align: center; width: 45%; }
+    .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; }
+    @media print { .page { margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">123 Medical Drive, Healthcare District<br>City, State - 400001</div>
+      <div class="hospital-contact">Phone: +91 22 1234 5678 | Email: info@gravityhospital.com</div>
+    </div>
+  </div>
+  <div class="form-title">Minor/Intermediate Procedure Consent (Consent 2.5)</div>
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+  </div>
+  <div class="dept-date-row">
+    <span>Procedure: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+  <div class="section">
+    <div class="section-title">Consent for Minor/Intermediate Procedure</div>
+    <div class="section-content">
+      I consent to the minor/intermediate procedure as explained. I understand this includes procedures like wound dressing, catheterization, injections, and similar interventions that carry minimal risk.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">Patient/Guardian Signature</div></div>
+    <div class="signature-block"><div class="signature-line">Physician Signature</div></div>
+  </div>
+</div>
+<!-- Marathi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">किरकोळ/मध्यवर्ती प्रक्रियेसाठी संमती</div>
+    <div class="section-content">
+      मी समजावून सांगितल्याप्रमाणे किरकोळ/मध्यवर्ती प्रक्रियेसाठी संमती देतो. यामध्ये जखमेची ड्रेसिंग, कॅथेटरायझेशन, इंजेक्शन्स आणि तत्सम हस्तक्षेप समाविष्ट आहेत.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रुग्ण/पालक स्वाक्षरी</div></div>
+    <div class="signature-block"><div class="signature-line">वैद्य स्वाक्षरी</div></div>
+  </div>
+</div>
+<!-- Hindi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">छोटी/मध्यवर्ती प्रक्रिया के लिए सहमति</div>
+    <div class="section-content">
+      मैं समझाई गई छोटी/मध्यवर्ती प्रक्रिया के लिए सहमति देता/देती हूं। इसमें घाव ड्रेसिंग, कैथीटेराइजेशन, इंजेक्शन और इसी तरह के हस्तक्षेप शामिल हैं।
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रोगी/अभिभावक हस्ताक्षर</div></div>
+    <div class="signature-block"><div class="signature-line">चिकित्सक हस्ताक्षर</div></div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== Physiotherapy ==========
+        if (consentType === 'PHYSIOTHERAPY') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Physiotherapy Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #666; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; }
+    .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+    .signature-block { text-align: center; width: 45%; }
+    .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; }
+    @media print { .page { margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">123 Medical Drive, Healthcare District<br>City, State - 400001</div>
+      <div class="hospital-contact">Phone: +91 22 1234 5678 | Email: info@gravityhospital.com</div>
+    </div>
+  </div>
+  <div class="form-title">Physiotherapy Consent</div>
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+  </div>
+  <div class="dept-date-row">
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+  <div class="section">
+    <div class="section-title">Consent for Physiotherapy Treatment</div>
+    <div class="section-content">
+      I consent to physiotherapy treatment including exercises, manual therapy, electrotherapy, and rehabilitation techniques. I understand the treatment plan and potential risks have been explained to me.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">Patient/Guardian Signature</div></div>
+    <div class="signature-block"><div class="signature-line">Physiotherapist Signature</div></div>
+  </div>
+</div>
+<!-- Marathi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">फिजिओथेरपी उपचारासाठी संमती</div>
+    <div class="section-content">
+      मी व्यायाम, मॅन्युअल थेरपी, इलेक्ट्रोथेरपी आणि पुनर्वसन तंत्रांसह फिजिओथेरपी उपचारासाठी संमती देतो.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रुग्ण/पालक स्वाक्षरी</div></div>
+    <div class="signature-block"><div class="signature-line">फिजिओथेरपिस्ट स्वाक्षरी</div></div>
+  </div>
+</div>
+<!-- Hindi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">फिजियोथेरेपी उपचार के लिए सहमति</div>
+    <div class="section-content">
+      मैं व्यायाम, मैनुअल थेरेपी, इलेक्ट्रोथेरेपी और पुनर्वास तकनीकों सहित फिजियोथेरेपी उपचार के लिए सहमति देता/देती हूं।
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रोगी/अभिभावक हस्ताक्षर</div></div>
+    <div class="signature-block"><div class="signature-line">फिजियोथेरेपिस्ट हस्ताक्षर</div></div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== Recovery Sheet ==========
+        if (consentType === 'RECOVERY_SHEET') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Recovery Sheet Acknowledgement</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #666; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; }
+    .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+    .signature-block { text-align: center; width: 45%; }
+    .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; }
+    @media print { .page { margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">123 Medical Drive, Healthcare District<br>City, State - 400001</div>
+      <div class="hospital-contact">Phone: +91 22 1234 5678 | Email: info@gravityhospital.com</div>
+    </div>
+  </div>
+  <div class="form-title">Recovery Sheet Acknowledgement</div>
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+  </div>
+  <div class="dept-date-row">
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+  <div class="section">
+    <div class="section-title">Post-Procedure Recovery Acknowledgement</div>
+    <div class="section-content">
+      I acknowledge receiving post-procedure recovery instructions including medication schedule, wound care, activity restrictions, follow-up appointments, and warning signs to watch for. I understand when to seek emergency care.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">Patient/Guardian Signature</div></div>
+    <div class="signature-block"><div class="signature-line">Nurse/Physician Signature</div></div>
+  </div>
+</div>
+<!-- Marathi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">प्रक्रियेनंतर पुनर्प्राप्ती पोचपावती</div>
+    <div class="section-content">
+      मी औषध वेळापत्रक, जखमेची काळजी, क्रियाकलाप निर्बंध, फॉलो-अप भेटी आणि लक्षणे यांसह प्रक्रियेनंतर पुनर्प्राप्ती सूचना प्राप्त केल्याची पोचपावती देतो.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रुग्ण/पालक स्वाक्षरी</div></div>
+    <div class="signature-block"><div class="signature-line">नर्स/वैद्य स्वाक्षरी</div></div>
+  </div>
+</div>
+<!-- Hindi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">प्रक्रिया के बाद रिकवरी पावती</div>
+    <div class="section-content">
+      मैं दवा अनुसूची, घाव देखभाल, गतिविधि प्रतिबंध, फॉलो-अप अपॉइंटमेंट और चेतावनी संकेतों सहित प्रक्रिया के बाद रिकवरी निर्देश प्राप्त करने की पावती देता/देती हूं।
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रोगी/अभिभावक हस्ताक्षर</div></div>
+    <div class="signature-block"><div class="signature-line">नर्स/चिकित्सक हस्ताक्षर</div></div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== Anaesthesia Type ==========
+        if (consentType === 'ANAESTHESIA_TYPE') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Anaesthesia Type-Wise Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #666; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 150px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; }
+    .checkbox-item { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; }
+    .checkbox { width: 14px; height: 14px; border: 1px solid #333; display: inline-block; flex-shrink: 0; margin-top: 3px; }
+    .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+    .signature-block { text-align: center; width: 45%; }
+    .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; }
+    @media print { .page { margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">123 Medical Drive, Healthcare District<br>City, State - 400001</div>
+      <div class="hospital-contact">Phone: +91 22 1234 5678 | Email: info@gravityhospital.com</div>
+    </div>
+  </div>
+  <div class="form-title">Anaesthesia Type-Wise Consent</div>
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+  </div>
+  <div class="dept-date-row">
+    <span>Procedure: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+  <div class="section">
+    <div class="section-title">Type of Anaesthesia (Select applicable)</div>
+    <div class="section-content">
+      <div class="checkbox-item"><span class="checkbox"></span> General Anaesthesia</div>
+      <div class="checkbox-item"><span class="checkbox"></span> Spinal Anaesthesia</div>
+      <div class="checkbox-item"><span class="checkbox"></span> Epidural Anaesthesia</div>
+      <div class="checkbox-item"><span class="checkbox"></span> Regional/Local Anaesthesia</div>
+      <div class="checkbox-item"><span class="checkbox"></span> Sedation</div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">Consent</div>
+    <div class="section-content">
+      I consent to the selected type of anaesthesia. The risks including allergic reactions, breathing difficulties, nerve damage, and other complications have been explained to me.
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">Patient/Guardian Signature</div></div>
+    <div class="signature-block"><div class="signature-line">Anaesthetist Signature</div></div>
+  </div>
+</div>
+<!-- Marathi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">भूल प्रकार (लागू असलेले निवडा)</div>
+    <div class="section-content">
+      <div class="checkbox-item"><span class="checkbox"></span> सामान्य भूल</div>
+      <div class="checkbox-item"><span class="checkbox"></span> स्पायनल भूल</div>
+      <div class="checkbox-item"><span class="checkbox"></span> एपिड्युरल भूल</div>
+      <div class="checkbox-item"><span class="checkbox"></span> स्थानिक भूल</div>
+      <div class="checkbox-item"><span class="checkbox"></span> शामक औषध</div>
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रुग्ण/पालक स्वाक्षरी</div></div>
+    <div class="signature-block"><div class="signature-line">भूलतज्ञ स्वाक्षरी</div></div>
+  </div>
+</div>
+<!-- Hindi Page -->
+<div class="page">
+  <div class="section">
+    <div class="section-title">एनेस्थीसिया प्रकार (लागू का चयन करें)</div>
+    <div class="section-content">
+      <div class="checkbox-item"><span class="checkbox"></span> सामान्य एनेस्थीसिया</div>
+      <div class="checkbox-item"><span class="checkbox"></span> स्पाइनल एनेस्थीसिया</div>
+      <div class="checkbox-item"><span class="checkbox"></span> एपिड्यूरल एनेस्थीसिया</div>
+      <div class="checkbox-item"><span class="checkbox"></span> स्थानीय एनेस्थीसिया</div>
+      <div class="checkbox-item"><span class="checkbox"></span> सेडेशन</div>
+    </div>
+  </div>
+  <div class="signature-section">
+    <div class="signature-block"><div class="signature-line">रोगी/अभिभावक हस्ताक्षर</div></div>
+    <div class="signature-block"><div class="signature-line">एनेस्थेटिस्ट हस्ताक्षर</div></div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
         
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
