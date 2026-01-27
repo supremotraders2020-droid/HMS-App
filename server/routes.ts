@@ -4894,8 +4894,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
   
   <div class="info-fields marathi">
-    <div class="info-field">विभाग: <span class="field-line"></span></div>
-    <div class="info-field">तारीख: ____ / ____ / ______</div>
+    <div class="info-field">Department: <span class="field-line"></span></div>
+    <div class="info-field">Date: ____ / ____ / ______</div>
   </div>
   
   <div class="consent-section">
@@ -4922,7 +4922,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         <div class="signature-field marathi">रुग्णाशी नाते: ______________________________</div>
         <div class="signature-line"></div>
         <div class="signature-label marathi">स्वाक्षरी / अंगठा</div>
-        <div class="signature-field marathi">तारीख: ____ / ____ / ______</div>
+        <div class="signature-field marathi">Date: ____ / ____ / ______</div>
       </div>
       <div class="signature-item">
         <div class="signature-field marathi">डॉक्टरांचे नाव: ______________________________</div>
@@ -4938,7 +4938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
   
   <div class="info-fields hindi">
-    <div class="info-field">विभाग: <span class="field-line"></span></div>
+    <div class="info-field">Department: <span class="field-line"></span></div>
     <div class="info-field">दिनांक: ____ / ____ / ______</div>
   </div>
   
@@ -5109,15 +5109,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
 
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: ______________________</span>
-    <span>तारीख: ____ / ____ / ______</span>
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
 
   <div class="section">
@@ -5160,7 +5160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
     </div>
     <div class="signature-row">
-      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5171,12 +5171,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
     <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: _______________________</span>
+    <span>Department: _______________________</span>
     <span>दिनांक: ____ / ____ / ______</span>
   </div>
 
@@ -5404,7 +5404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
     </div>
     <div class="signature-row">
-      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5586,15 +5586,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
 
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: ______________________</span>
-    <span>तारीख: ____ / ____ / ______</span>
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
 
   <div class="section">
@@ -5637,7 +5637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
     </div>
     <div class="signature-row">
-      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5648,12 +5648,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
     <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: _______________________</span>
+    <span>Department: _______________________</span>
     <span>दिनांक: ____ / ____ / ______</span>
   </div>
 
@@ -5831,15 +5831,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
 
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: ______________________</span>
-    <span>तारीख: ____ / ____ / ______</span>
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
 
   <div class="section">
@@ -5882,7 +5882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
     </div>
     <div class="signature-row">
-      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -5893,12 +5893,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
     <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: _______________________</span>
+    <span>Department: _______________________</span>
     <span>दिनांक: ____ / ____ / ______</span>
   </div>
 
@@ -6076,15 +6076,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
 
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: ______________________</span>
-    <span>तारीख: ____ / ____ / ______</span>
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
 
   <div class="section">
@@ -6127,7 +6127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
     </div>
     <div class="signature-row">
-      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6138,12 +6138,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
     <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: _______________________</span>
+    <span>Department: _______________________</span>
     <span>दिनांक: ____ / ____ / ______</span>
   </div>
 
@@ -6321,15 +6321,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
 
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: ______________________</span>
-    <span>तारीख: ____ / ____ / ______</span>
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
 
   <div class="section">
@@ -6372,7 +6372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
     </div>
     <div class="signature-row">
-      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6383,12 +6383,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
     <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: _______________________</span>
+    <span>Department: _______________________</span>
     <span>दिनांक: ____ / ____ / ______</span>
   </div>
 
@@ -6566,15 +6566,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
 
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: ______________________</span>
-    <span>तारीख: ____ / ____ / ______</span>
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
 
   <div class="section">
@@ -6617,7 +6617,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
     </div>
     <div class="signature-row">
-      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6628,12 +6628,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
     <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: _______________________</span>
+    <span>Department: _______________________</span>
     <span>दिनांक: ____ / ____ / ______</span>
   </div>
 
@@ -6811,15 +6811,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
 
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: ______________________</span>
-    <span>तारीख: ____ / ____ / ______</span>
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
 
   <div class="section">
@@ -6862,7 +6862,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
     </div>
     <div class="signature-row">
-      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -6873,12 +6873,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
     <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: _______________________</span>
+    <span>Department: _______________________</span>
     <span>दिनांक: ____ / ____ / ______</span>
   </div>
 
@@ -7056,15 +7056,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
 
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">रुग्णाचे नाव:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID क्र.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">वय:</span> ${patientAge} वर्षे</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: ______________________</span>
-    <span>तारीख: ____ / ____ / ______</span>
+    <span>Department: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
   </div>
 
   <div class="section">
@@ -7107,7 +7107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <span class="signature-field">स्वाक्षरी / अंगठा: <span class="signature-line"></span></span>
     </div>
     <div class="signature-row">
-      <span class="signature-field">तारीख: ____ / ____ / ______</span>
+      <span class="signature-field">Date: ____ / ____ / ______</span>
     </div>
   </div>
 </div>
@@ -7118,12 +7118,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div class="patient-info-box">
     <span class="patient-info-item"><span class="patient-label">रोगी का नाम:</span> ${patientName}</span>
     <span class="patient-info-item"><span class="patient-label">UHID सं.:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">लिंग:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
     <span class="patient-info-item"><span class="patient-label">आयु:</span> ${patientAge} वर्ष</span>
   </div>
   
   <div class="dept-date-row">
-    <span>विभाग: _______________________</span>
+    <span>Department: _______________________</span>
     <span>दिनांक: ____ / ____ / ______</span>
   </div>
 
