@@ -2872,18 +2872,7 @@ export class DatabaseStorage implements IStorage {
         isBilingual: true,
         languages: "English, Hindi, Marathi"
       },
-      // === NEW CONSENT FORMS (10 Additional) ===
-      {
-        title: "Patient Counselling & Education Documentation Form",
-        consentType: "PATIENT_COUNSELLING_DOC",
-        description: "Detailed counselling documentation form confirming patient has received complete information about diagnosis, treatment options, risks, complications, medication usage, lifestyle modifications, and follow-up requirements. Trilingual: English, Hindi, Marathi.",
-        category: "Patient Education",
-        pdfPath: "/consents/dynamic/PATIENT_COUNSELLING_DOC",
-        version: "1.0",
-        isActive: true,
-        isBilingual: true,
-        languages: "English, Hindi, Marathi"
-      },
+      // === NEW CONSENT FORMS (9 Additional) ===
       {
         title: "Patient Education Consent",
         consentType: "PATIENT_EDUCATION",
