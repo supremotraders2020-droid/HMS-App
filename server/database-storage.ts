@@ -2971,6 +2971,17 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Anaesthesia High Risk Consent",
+        consentType: "ANAESTHESIA_HIGH_RISK",
+        description: "High-risk anaesthesia consent for patients with pre-existing conditions explaining potential complications, risks, and patient acknowledgement. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/dynamic/ANAESTHESIA_HIGH_RISK",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 

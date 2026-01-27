@@ -6132,6 +6132,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+
+        // ========== Anaesthesia High Risk Consent ==========
+        if (consentType === 'ANAESTHESIA_HIGH_RISK') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Anaesthesia High Risk Consent Form</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 20px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
+    .patient-info-item { font-size: 10pt; min-width: 200px; }
+    .patient-label { font-weight: bold; }
+    .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
+    .section { margin: 15px 0; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
+    .section-content { text-align: justify; line-height: 1.8; }
+    .consent-text { margin: 12px 0; text-align: justify; }
+    .signature-section { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">ANAESTHESIA HIGH RISK CONSENT FORM</div>
+
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">Patient ID / UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+  </div>
+  <div class="dept-date-row">
+    <span>Department / Consultant: ______________________</span>
+    <span>Date: ____ / ____ / ______</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Consent Statement</div>
+    <div class="section-content">
+      <p class="consent-text">I have been explained about the anaesthesia procedure planned for me, including the type of anaesthesia, the reasons for choosing it, and the possible risks involved due to my high-risk medical condition.</p>
+      <p class="consent-text">I understand that anaesthesia in high-risk cases may involve complications such as breathing difficulty, blood pressure changes, cardiac events, allergic reactions, prolonged recovery, or other unforeseen risks.</p>
+      <p class="consent-text">The anaesthetist has explained the benefits, risks, and available alternatives in a language I understand. I was given an opportunity to ask questions, and all my questions have been answered satisfactorily.</p>
+      <p class="consent-text"><strong>I voluntarily give my consent to undergo anaesthesia despite the high-risk nature of my condition.</strong></p>
+    </div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Patient / Attendant Name: ______________________</div>
+        <div class="signature-field">Relationship: ______________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature / Thumb Impression</div>
+        <div class="signature-field">Date & Time: ______________________</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Anaesthetist Name: ______________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="section marathi">
+    <div class="section-title">भूलतज्ज्ञ (अ‍ॅनेस्थेशिया) उच्च धोका संमती फॉर्म</div>
+    <div class="section-content">
+      <p class="consent-text">माझ्या शस्त्रक्रियेसाठी देण्यात येणाऱ्या भूल प्रक्रियेबाबत मला सविस्तर माहिती देण्यात आली आहे. माझ्या सध्याच्या आरोग्य स्थितीमुळे ही भूल प्रक्रिया उच्च धोक्याची असल्याचे मला समजावून सांगण्यात आले आहे.</p>
+      <p class="consent-text">या प्रक्रियेदरम्यान किंवा नंतर श्वसनास त्रास, रक्तदाबात बदल, हृदयविकाराशी संबंधित गुंतागुंत, अ‍ॅलर्जी किंवा इतर अनपेक्षित धोके संभवतात, याची मला जाणीव करून देण्यात आली आहे.</p>
+      <p class="consent-text">भूलतज्ज्ञांनी फायदे, धोके व पर्यायी उपचार मला समजेल अशा भाषेत सांगितले आहेत. मला प्रश्न विचारण्याची संधी देण्यात आली व माझ्या सर्व प्रश्नांची समाधानकारक उत्तरे देण्यात आली.</p>
+      <p class="consent-text"><strong>उच्च धोका असूनही मी स्वेच्छेने भूल प्रक्रियेस संमती देत आहे.</strong></p>
+    </div>
+  </div>
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">स्वाक्षरी / अंगठा: ______________________</div>
+        <div class="signature-field">दिनांक व वेळ: ______________________</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">भूलतज्ज्ञ स्वाक्षरी: ______________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="section hindi">
+    <div class="section-title">एनेस्थीसिया उच्च जोखिम सहमति पत्र</div>
+    <div class="section-content">
+      <p class="consent-text">मुझे दी जाने वाली एनेस्थीसिया प्रक्रिया के बारे में जानकारी दी गई है। मेरी वर्तमान स्वास्थ्य स्थिति को देखते हुए यह एक उच्च जोखिम वाली प्रक्रिया है, जिसके संभावित खतरे मुझे समझाए गए हैं।</p>
+      <p class="consent-text">मुझे बताया गया है कि एनेस्थीसिया के दौरान या बाद में सांस लेने में परेशानी, रक्तचाप में बदलाव, हृदय संबंधी समस्या, एलर्जी या अन्य जटिलताएँ हो सकती हैं।</p>
+      <p class="consent-text">एनेस्थीसिया विशेषज्ञ ने मुझे लाभ, जोखिम और उपलब्ध विकल्प मेरी समझ की भाषा में बताए हैं। मुझे प्रश्न पूछने का अवसर दिया गया और मेरे सभी प्रश्नों के उत्तर दिए गए।</p>
+      <p class="consent-text"><strong>मैं अपनी स्वेच्छा से उच्च जोखिम के बावजूद एनेस्थीसिया के लिए सहमति देता/देती हूँ।</strong></p>
+    </div>
+  </div>
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">हस्ताक्षर / अंगूठा निशान: ______________________</div>
+        <div class="signature-field">दिनांक व समय: ______________________</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">एनेस्थीसिया विशेषज्ञ हस्ताक्षर: ______________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
         
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
