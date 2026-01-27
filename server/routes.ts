@@ -6440,6 +6440,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+
+        // ========== Anaesthetist Notes - Format 1 ==========
+        if (consentType === 'ANAESTHETIST_NOTES_F1') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Anaesthetist Notes - Format 1</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 8px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 12px; }
+    .patient-info-item { font-size: 10pt; min-width: 180px; }
+    .patient-label { font-weight: bold; }
+    .section { margin: 12px 0; }
+    .section-title { font-size: 11pt; font-weight: bold; margin-bottom: 6px; color: #2c5aa0; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+    .field-row { display: flex; gap: 15px; margin: 8px 0; font-size: 10pt; }
+    .field-item { flex: 1; }
+    .field-label { font-weight: bold; display: inline; }
+    .field-line { border-bottom: 1px solid #666; display: inline-block; min-width: 150px; }
+    .signature-section { margin-top: 25px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 15px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 6px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 20px; margin: 4px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">ANAESTHETIST NOTES – FORMAT 1</div>
+
+  <div class="patient-info-box">
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">Patient ID / UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Date:</span> ______________________</span>
+    <span class="patient-info-item"><span class="patient-label">Department / Surgeon:</span> ______________________</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Pre-Anaesthetic Assessment</div>
+    <div class="field-row"><span class="field-label">Medical History:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">Surgical History:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">Allergies (if any):</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">Current Medications:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">ASA Grade:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">Airway Assessment:</span> <span class="field-line"></span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Anaesthesia Plan</div>
+    <div class="field-row"><span class="field-label">Type of Anaesthesia:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">Monitoring Planned:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">Risk Assessment:</span> High / Moderate / Low</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Intra-operative Notes</div>
+    <div class="field-row"><span class="field-label">Start Time:</span> __________ <span class="field-label" style="margin-left:20px;">End Time:</span> __________</div>
+    <div class="field-row"><span class="field-label">Drugs Administered:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">Vitals Stable:</span> Yes / No</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Post-Anaesthesia Plan</div>
+    <div class="field-row"><span class="field-label">Recovery Instructions:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">Pain Management Plan:</span> <span class="field-line"></span></div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Anaesthetist Name: ______________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature</div>
+        <div class="signature-field">Date & Time: ______________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="form-title marathi">भूलतज्ज्ञ नोंदी – प्रारूप 1</div>
+
+  <div class="section marathi">
+    <div class="section-title">भूलपूर्व तपासणी</div>
+    <div class="field-row"><span class="field-label">वैद्यकीय इतिहास:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">शस्त्रक्रिया इतिहास:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">अ‍ॅलर्जी (असल्यास):</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">सध्याची औषधे:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">ASA ग्रेड:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">श्वसनमार्ग तपासणी:</span> <span class="field-line"></span></div>
+  </div>
+
+  <div class="section marathi">
+    <div class="section-title">भूल योजना</div>
+    <div class="field-row"><span class="field-label">भूल प्रकार:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">नियोजित निरीक्षण:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">धोका मूल्यांकन:</span> उच्च / मध्यम / कमी</div>
+  </div>
+
+  <div class="section marathi">
+    <div class="section-title">शस्त्रक्रियेदरम्यान नोंदी</div>
+    <div class="field-row"><span class="field-label">सुरुवात वेळ:</span> ______ <span class="field-label" style="margin-left:20px;">समाप्ती वेळ:</span> ______</div>
+    <div class="field-row"><span class="field-label">दिलेली औषधे:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">जीवनसत्त्वे स्थिर:</span> होय / नाही</div>
+  </div>
+
+  <div class="section marathi">
+    <div class="section-title">भूलनंतर योजना</div>
+    <div class="field-row"><span class="field-label">रिकव्हरी सूचना:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">वेदना व्यवस्थापन योजना:</span> <span class="field-line"></span></div>
+  </div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">भूलतज्ज्ञ स्वाक्षरी: ______________________</div>
+        <div class="signature-field">दिनांक व वेळ: ______________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="form-title hindi">एनेस्थीसिया विशेषज्ञ नोट्स – प्रारूप 1</div>
+
+  <div class="section hindi">
+    <div class="section-title">पूर्व-एनेस्थीसिया मूल्यांकन</div>
+    <div class="field-row"><span class="field-label">चिकित्सीय इतिहास:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">शल्य चिकित्सा इतिहास:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">एलर्जी (यदि हो):</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">वर्तमान दवाइयाँ:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">ASA ग्रेड:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">वायुमार्ग परीक्षण:</span> <span class="field-line"></span></div>
+  </div>
+
+  <div class="section hindi">
+    <div class="section-title">एनेस्थीसिया योजना</div>
+    <div class="field-row"><span class="field-label">एनेस्थीसिया का प्रकार:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">नियोजित निगरानी:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">जोखिम मूल्यांकन:</span> उच्च / मध्यम / कम</div>
+  </div>
+
+  <div class="section hindi">
+    <div class="section-title">ऑपरेशन के दौरान नोट्स</div>
+    <div class="field-row"><span class="field-label">प्रारंभ समय:</span> ______ <span class="field-label" style="margin-left:20px;">समाप्ति समय:</span> ______</div>
+    <div class="field-row"><span class="field-label">दी गई दवाइयाँ:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">जीवन रक्षक संकेत स्थिर:</span> हाँ / नहीं</div>
+  </div>
+
+  <div class="section hindi">
+    <div class="section-title">पोस्ट-एनेस्थीसिया योजना</div>
+    <div class="field-row"><span class="field-label">रिकवरी निर्देश:</span> <span class="field-line"></span></div>
+    <div class="field-row"><span class="field-label">दर्द प्रबंधन योजना:</span> <span class="field-line"></span></div>
+  </div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">एनेस्थीसिया विशेषज्ञ हस्ताक्षर: ______________________</div>
+        <div class="signature-field">दिनांक व समय: ______________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
         
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }

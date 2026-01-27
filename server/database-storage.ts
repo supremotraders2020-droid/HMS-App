@@ -2993,6 +2993,17 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Anaesthetist Notes - Format 1",
+        consentType: "ANAESTHETIST_NOTES_F1",
+        description: "Pre-anaesthetic assessment, anaesthesia plan, intra-operative notes, and post-anaesthesia plan documentation. Trilingual: English, Hindi, Marathi.",
+        category: "Surgical & Procedural",
+        pdfPath: "/consents/dynamic/ANAESTHETIST_NOTES_F1",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
