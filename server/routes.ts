@@ -4829,7 +4829,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5033,7 +5032,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5275,7 +5273,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5527,7 +5524,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5749,7 +5745,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5991,7 +5986,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -6233,7 +6227,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -6475,7 +6468,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -6717,7 +6709,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -6959,7 +6950,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -7201,7 +7191,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
