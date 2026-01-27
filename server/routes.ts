@@ -4829,6 +4829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5032,6 +5033,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5273,6 +5275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5490,7 +5493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
     .logo-section { display: flex; align-items: center; }
-    .hospital-logo { height: 60px; width: auto; }
+    .hospital-logo { height: 50px; width: auto; }
     .hospital-info { flex: 1; }
     .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; line-height: 1.3; }
@@ -5524,6 +5527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5745,6 +5749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -5986,6 +5991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -6227,6 +6233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -6468,6 +6475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -6709,6 +6717,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -6950,6 +6959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -7191,6 +7201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
