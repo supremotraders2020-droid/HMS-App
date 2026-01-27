@@ -4775,8 +4775,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .page:last-child { page-break-after: auto; }
     
     /* Hospital Header */
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 5px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     
@@ -5002,8 +5005,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
     .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
@@ -5244,8 +5250,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
     .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
@@ -5718,8 +5727,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
     .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
@@ -5960,8 +5972,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
     .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
@@ -6202,8 +6217,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
     .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
@@ -6444,8 +6462,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
     .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
@@ -6686,8 +6707,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
     .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
@@ -6928,8 +6952,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
     .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
@@ -7170,8 +7197,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
     .page { page-break-after: always; padding: 20px; min-height: 100vh; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .hospital-name { font-size: 18pt; font-weight: bold; color: #e67e22; margin-bottom: 3px; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 5px; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #666; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
     .form-title { text-align: center; font-size: 16pt; font-weight: bold; margin: 20px 0; color: #333; }
