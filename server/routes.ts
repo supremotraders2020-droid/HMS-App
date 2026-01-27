@@ -4771,7 +4771,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
     
-    .page { page-break-after: always; padding: 20px; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     
     /* Hospital Header */
@@ -5003,7 +5003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .logo-section { display: flex; align-items: center; }
@@ -5248,7 +5248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .logo-section { display: flex; align-items: center; }
@@ -5725,7 +5725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .logo-section { display: flex; align-items: center; }
@@ -5970,7 +5970,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .logo-section { display: flex; align-items: center; }
@@ -6215,7 +6215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .logo-section { display: flex; align-items: center; }
@@ -6460,7 +6460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .logo-section { display: flex; align-items: center; }
@@ -6705,7 +6705,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .logo-section { display: flex; align-items: center; }
@@ -6950,7 +6950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .logo-section { display: flex; align-items: center; }
@@ -7195,7 +7195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
-    .page { page-break-after: always; padding: 20px; min-height: 100vh; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
     .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
     .logo-section { display: flex; align-items: center; }
