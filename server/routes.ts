@@ -6087,7 +6087,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
   <div class="hospital-header">
     <div class="logo-section">
-      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+      <img src="data:image/png;base64,${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
     </div>
     <div class="hospital-info">
       <div class="hospital-name">Gravity Hospital & Research Centre</div>
@@ -6097,10 +6097,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   </div>
   <div class="form-title">Billing Sheet Acknowledgement</div>
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -6194,7 +6194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
   <div class="hospital-header">
     <div class="logo-section">
-      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+      <img src="data:image/png;base64,${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
     </div>
     <div class="hospital-info">
       <div class="hospital-name">Gravity Hospital & Research Centre</div>
@@ -6204,10 +6204,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   </div>
   <div class="form-title">Physician Fitness Certificate Consent</div>
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -6301,7 +6301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
   <div class="hospital-header">
     <div class="logo-section">
-      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+      <img src="data:image/png;base64,${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
     </div>
     <div class="hospital-info">
       <div class="hospital-name">Gravity Hospital & Research Centre</div>
@@ -6311,10 +6311,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   </div>
   <div class="form-title">General Procedure Consent</div>
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   <div class="dept-date-row">
     <span>Procedure: ______________________</span>
@@ -6408,7 +6408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
   <div class="hospital-header">
     <div class="logo-section">
-      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+      <img src="data:image/png;base64,${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
     </div>
     <div class="hospital-info">
       <div class="hospital-name">Gravity Hospital & Research Centre</div>
@@ -6418,10 +6418,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   </div>
   <div class="form-title">Minor/Intermediate Procedure Consent (Consent 2.5)</div>
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   <div class="dept-date-row">
     <span>Procedure: ______________________</span>
@@ -6515,7 +6515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
   <div class="hospital-header">
     <div class="logo-section">
-      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+      <img src="data:image/png;base64,${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
     </div>
     <div class="hospital-info">
       <div class="hospital-name">Gravity Hospital & Research Centre</div>
@@ -6525,10 +6525,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   </div>
   <div class="form-title">Physiotherapy Consent</div>
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -6622,7 +6622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
   <div class="hospital-header">
     <div class="logo-section">
-      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+      <img src="data:image/png;base64,${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
     </div>
     <div class="hospital-info">
       <div class="hospital-name">Gravity Hospital & Research Centre</div>
@@ -6632,10 +6632,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   </div>
   <div class="form-title">Recovery Sheet Acknowledgement</div>
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   <div class="dept-date-row">
     <span>Department: ______________________</span>
@@ -6731,7 +6731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <div class="page">
   <div class="hospital-header">
     <div class="logo-section">
-      <img src="data:image/png;base64,\${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
+      <img src="data:image/png;base64,${hospitalLogoBase64}" alt="Hospital Logo" class="hospital-logo" />
     </div>
     <div class="hospital-info">
       <div class="hospital-name">Gravity Hospital & Research Centre</div>
@@ -6741,10 +6741,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   </div>
   <div class="form-title">Anaesthesia Type-Wise Consent</div>
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Gender:</span> \${patientGender}</span>
-    <span class="patient-info-item"><span class="patient-label">Age:</span> \${patientAge} years</span>
+    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+    <span class="patient-info-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+    <span class="patient-info-item"><span class="patient-label">Gender:</span> ${patientGender}</span>
+    <span class="patient-info-item"><span class="patient-label">Age:</span> ${patientAge} years</span>
   </div>
   <div class="dept-date-row">
     <span>Procedure: ______________________</span>
