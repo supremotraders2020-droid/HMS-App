@@ -1322,6 +1322,40 @@ export const insertConsentTemplateSchema = createInsertSchema(consentTemplates).
 export type InsertConsentTemplate = z.infer<typeof insertConsentTemplateSchema>;
 export type ConsentTemplate = typeof consentTemplates.$inferSelect;
 
+// Signed Digital Consents Table - Stores digitally signed consent records
+export const signedDigitalConsents = pgTable("signed_digital_consents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientUhid: text("patient_uhid"),
+  patientAge: text("patient_age"),
+  patientGender: text("patient_gender"),
+  consentType: text("consent_type").notNull(),
+  consentTitle: text("consent_title").notNull(),
+  language: text("language").notNull().default("English"),
+  patientSignature: text("patient_signature"),
+  witnessSignature: text("witness_signature"),
+  witnessName: text("witness_name"),
+  witnessRelation: text("witness_relation"),
+  doctorName: text("doctor_name"),
+  doctorDesignation: text("doctor_designation"),
+  doctorSignature: text("doctor_signature"),
+  consentContent: text("consent_content"),
+  signedAt: timestamp("signed_at").defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSignedDigitalConsentSchema = createInsertSchema(signedDigitalConsents).omit({
+  id: true,
+  signedAt: true,
+  createdAt: true,
+});
+export type InsertSignedDigitalConsent = z.infer<typeof insertSignedDigitalConsentSchema>;
+export type SignedDigitalConsent = typeof signedDigitalConsents.$inferSelect;
+
 // ========== AI INTELLIGENCE LAYER TABLES ==========
 
 // AI Engine Types
