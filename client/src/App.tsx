@@ -27,6 +27,7 @@ import PatientPortal from "@/pages/PatientPortal";
 import DoctorPortal from "@/pages/DoctorPortal";
 import EquipmentServicing from "@/pages/EquipmentServicing";
 import ConsentForms from "@/pages/ConsentForms";
+import DigitalCounsellingConsent from "@/pages/DigitalCounsellingConsent";
 import OxygenTracker from "@/pages/OxygenTracker";
 import BiowastePage from "@/pages/BiowastePage";
 import AIAnalytics from "@/pages/AIAnalytics";
@@ -230,6 +231,16 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold">Access Denied</h2>
             <p className="text-muted-foreground">Only administrators can access consent forms.</p>
+          </div>
+        )}
+      </Route>
+      <Route path="/digital-counselling-consent">
+        {currentUser.role === "ADMIN" ? (
+          <DigitalCounsellingConsent currentUser={currentUser} />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold">Access Denied</h2>
+            <p className="text-muted-foreground">Only administrators can access this form.</p>
           </div>
         )}
       </Route>

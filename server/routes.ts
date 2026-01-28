@@ -96,7 +96,8 @@ import { users, doctors, doctorProfiles, insertAppointmentSchema, insertInventor
   insertIcuBodyMarkingSchema, insertIcuNurseDiarySchema, insertIcuOnceOnlyDrugsSchema,
   insertIcuPreviousDayNotesSchema, insertIcuAllergyPrecautionsSchema,
   appointments, trackingPatients, patientConsents, patientBills, billPayments, patientInsurance, medicalRecords,
-  patientMovementLog, insertPatientMovementLogSchema
+  patientMovementLog, insertPatientMovementLogSchema,
+  signedDigitalConsents
 } from "@shared/schema";
 import { seedOpdDepartmentFlows, OPD_DEPARTMENT_FLOW_DATA } from "./seeds/opdDepartmentFlows";
 import { getChatbotResponse, getChatbotStats } from "./openai";
@@ -2255,6 +2256,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, message: "Patient consent deleted successfully" });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete patient consent" });
+    }
+  });
+
+
+  // ========== DIGITAL CONSENT ROUTES ==========
+
+  // Save digital consent to database
+  app.post("/api/digital-consents", async (req, res) => {
+    try {
+      const {
+        patientId,
+        patientName,
+        patientUhid,
+        patientAge,
+        patientGender,
+        consentType,
+        consentTitle,
+        language,
+        patientSignature,
+        witnessSignature,
+        witnessName,
+        witnessRelation,
+        doctorName,
+        doctorDesignation,
+        doctorSignature,
+        consentContent,
+        createdBy
+      } = req.body;
+
+      if (!patientId || !patientName || !consentType || !consentTitle) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const result = await db.insert(signedDigitalConsents).values({
+        patientId,
+        patientName,
+        patientUhid: patientUhid || null,
+        patientAge: patientAge || null,
+        patientGender: patientGender || null,
+        consentType,
+        consentTitle,
+        language: language || 'English',
+        patientSignature: patientSignature || null,
+        witnessSignature: witnessSignature || null,
+        witnessName: witnessName || null,
+        witnessRelation: witnessRelation || null,
+        doctorName: doctorName || null,
+        doctorDesignation: doctorDesignation || null,
+        doctorSignature: doctorSignature || null,
+        consentContent: consentContent || null,
+        ipAddress: req.ip || null,
+        userAgent: req.headers['user-agent'] || null,
+        createdBy: createdBy || null,
+      }).returning();
+
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Failed to save digital consent:", error);
+      res.status(500).json({ error: "Failed to save digital consent" });
+    }
+  });
+
+  // Get all digital consents
+  app.get("/api/digital-consents", async (_req, res) => {
+    try {
+      const consents = await db.select().from(signedDigitalConsents).orderBy(desc(signedDigitalConsents.createdAt));
+      res.json(consents);
+    } catch (error) {
+      console.error("Failed to fetch digital consents:", error);
+      res.status(500).json({ error: "Failed to fetch digital consents" });
+    }
+  });
+
+  // Get digital consents by patient ID
+  app.get("/api/digital-consents/patient/:patientId", async (req, res) => {
+    try {
+      const consents = await db.select().from(signedDigitalConsents)
+        .where(eq(signedDigitalConsents.patientId, req.params.patientId))
+        .orderBy(desc(signedDigitalConsents.createdAt));
+      res.json(consents);
+    } catch (error) {
+      console.error("Failed to fetch patient digital consents:", error);
+      res.status(500).json({ error: "Failed to fetch patient digital consents" });
+    }
+  });
+
+
+  // Download digital consent as HTML/PDF
+  app.post("/api/digital-consents/download-pdf", async (req, res) => {
+    try {
+      const { patientName, patientUhid, patientAge, patientGender, language, patientSignature, witnessSignature, witnessName, witnessRelation, doctorName, doctorDesignation, date, time } = req.body;
+
+      const titles: Record<string, string> = {
+        english: "PATIENT COUNSELLING, EDUCATION & DOCUMENTATION CONSENT FORM",
+        hindi: "रोगी परामर्श, शिक्षा एवं दस्तावेज़ीकरण सहमति पत्र",
+        marathi: "रुग्ण समुपदेशन, शिक्षण आणि दस्तऐवजीकरण संमती पत्र"
+      };
+      const title = titles[language] || titles.english;
+
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${title}</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 11pt; line-height: 1.5; color: #1a1a2e; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 0 auto; background: white; }
+    .header { display: flex; align-items: center; gap: 15px; padding-bottom: 12px; border-bottom: 2px solid #4a2683; margin-bottom: 15px; }
+    .logo { height: 50px; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; }
+    .hospital-address { font-size: 9pt; color: #555; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; color: #2c5aa0; margin: 15px 0; padding: 10px; background: #f0f4f8; border-radius: 5px; }
+    .patient-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px; }
+    .patient-label { font-size: 8pt; color: #64748b; text-transform: uppercase; }
+    .patient-value { font-size: 10pt; font-weight: 600; color: #1e293b; }
+    .section { margin-bottom: 15px; }
+    .section-heading { font-size: 11pt; font-weight: bold; color: #2c5aa0; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid #e2e8f0; }
+    .section-content { font-size: 10pt; line-height: 1.6; }
+    .signature-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
+    .signature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
+    .signature-label { font-size: 9pt; color: #64748b; margin-bottom: 5px; }
+    .signature-image { max-width: 200px; max-height: 80px; border: 1px solid #e2e8f0; border-radius: 5px; padding: 5px; }
+    .signature-line { border-bottom: 1px solid #1a1a2e; width: 200px; height: 60px; }
+    .date-time { font-size: 9pt; color: #64748b; margin-top: 5px; }
+    .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #64748b; text-align: center; }
+    @media print { body { -webkit-print-color-adjust: exact; } .page { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <img src="${hospitalLogoBase64}" class="logo" alt="Hospital Logo">
+      <div class="hospital-info">
+        <div class="hospital-name">Gravity Hospital & Research Centre</div>
+        <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062<br>Contact: 7796513130, 7769651310</div>
+      </div>
+    </div>
+    <div class="form-title">${title}</div>
+    ${language === 'english' ? `<div class="patient-info">
+      <div><div class="patient-label">Patient Name</div><div class="patient-value">${patientName || '___'}</div></div>
+      <div><div class="patient-label">UHID</div><div class="patient-value">${patientUhid || '___'}</div></div>
+      <div><div class="patient-label">Age</div><div class="patient-value">${patientAge || '___'} years</div></div>
+      <div><div class="patient-label">Gender</div><div class="patient-value">${patientGender || '___'}</div></div>
+    </div>` : ''}
+    <div class="section"><div class="section-heading">1. COUNSELLING & EDUCATION</div><div class="section-content">I have been provided with comprehensive counselling about my medical condition and treatment plan.</div></div>
+    <div class="section"><div class="section-heading">2. DOCUMENTATION & CONFIDENTIALITY</div><div class="section-content">I consent to documentation and confidentiality protocols as per hospital policies.</div></div>
+    <div class="section"><div class="section-heading">3. VOLUNTARY CONSENT</div><div class="section-content">I hereby declare this consent is given voluntarily without any coercion.</div></div>
+    <div class="signature-section">
+      <div class="signature-grid">
+        <div><div class="signature-label">Patient/Guardian Signature</div>${patientSignature ? `<img src="${patientSignature}" class="signature-image">` : '<div class="signature-line"></div>'}<div class="date-time">Date: ${date} | Time: ${time}</div></div>
+        <div><div class="signature-label">Witness Signature</div>${witnessSignature ? `<img src="${witnessSignature}" class="signature-image">` : '<div class="signature-line"></div>'}${witnessName ? `<div class="date-time">Name: ${witnessName}${witnessRelation ? ` (${witnessRelation})` : ''}</div>` : ''}</div>
+      </div>
+      <div style="margin-top: 15px;"><div class="signature-label">Counselled By</div><div class="patient-value">${doctorName || '___'}${doctorDesignation ? `, ${doctorDesignation}` : ''}</div></div>
+    </div>
+    <div class="footer">Digitally generated consent form. Generated on ${date} at ${time}.</div>
+  </div>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', `attachment; filename="Counselling_Consent_${patientName?.replace(/\s+/g, '_')}.html"`);
+      res.send(htmlContent);
+    } catch (error) {
+      console.error("Failed to generate consent PDF:", error);
+      res.status(500).json({ error: "Failed to generate consent PDF" });
     }
   });
 

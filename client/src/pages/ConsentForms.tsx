@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const { data: templates = [], isLoading } = useQuery<ConsentTemplate[]>({
     queryKey: ['/api/consent-templates'],
@@ -316,6 +318,10 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="default" size="sm" onClick={() => setLocation("/digital-counselling-consent")} className="gap-1">
+            <GraduationCap className="h-4 w-4" />
+            Digital Consent
+          </Button>
           <Badge variant="outline" className="flex items-center gap-1">
             <Languages className="h-3 w-3" />
             Trilingual
