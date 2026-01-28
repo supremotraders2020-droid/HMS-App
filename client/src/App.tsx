@@ -823,7 +823,7 @@ function AppContent() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                    {currentUser.role === "TECHNICIAN" && (
+                    {(currentUser.role === "TECHNICIAN" || currentUser.role === "MEDICAL_STORE") && (
                       <Button 
                         variant="ghost" 
                         size="icon" 
