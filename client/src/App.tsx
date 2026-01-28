@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { RefreshCw } from "lucide-react";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthForms from "@/components/AuthForms";
 import HMSSidebar from "@/components/HMSSidebar";
@@ -822,6 +823,16 @@ function AppContent() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                    {currentUser.role === "TECHNICIAN" && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => window.location.reload()}
+                        title="Refresh"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    )}
                     <ThemeSwitcher />
                   </div>
                 </header>
