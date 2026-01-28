@@ -6893,6 +6893,1075 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+
+        // ========== DAMA - Discharge Against Medical Advice ==========
+        if (consentType === 'DAMA_CONSENT') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DAMA - Discharge Against Medical Advice</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 15px; margin: 5px 0; }
+    .patient-item { font-size: 10pt; min-width: 180px; }
+    .patient-label { font-weight: bold; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 10.5pt; line-height: 1.6; }
+    .signature-section { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">DAMA – DISCHARGE AGAINST MEDICAL ADVICE</div>
+
+  <div class="patient-info-box">
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Ward/Room:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Date:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Time:</span> ________________</span>
+    </div>
+  </div>
+
+  <div class="consent-text">
+    <p>I have been informed by my treating doctor about my current medical condition and the treatment that is advised for my recovery. I understand that leaving the hospital at this stage is against medical advice and may lead to worsening of my condition, complications, or even risk to life.</p>
+    <br>
+    <p>I acknowledge that I am choosing to leave the hospital voluntarily despite being advised to continue treatment. I understand that the hospital and treating doctors will not be responsible for any adverse outcomes that may arise due to this decision.</p>
+    <br>
+    <p>I have been given the opportunity to ask questions and all my doubts have been addressed. I am making this decision of my own free will and without any pressure or coercion from anyone.</p>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Patient/Relative Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Witness Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature</div>
+      </div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Doctor Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="form-title marathi">डॅमा – वैद्यकीय सल्ल्याविरुद्ध डिस्चार्ज</div>
+
+  <div class="consent-text marathi">
+    <p>माझ्या उपचार करणाऱ्या डॉक्टरांनी मला माझ्या सध्याच्या आजाराची स्थिती व आवश्यक उपचारांची माहिती दिली आहे. सध्या रुग्णालयातून जाणे हे वैद्यकीय सल्ल्याच्या विरोधात आहे व त्यामुळे आजार वाढण्याची, गुंतागुंत होण्याची किंवा जीवाला धोका होण्याची शक्यता आहे, हे मला समजले आहे.</p>
+    <br>
+    <p>मी उपचार सुरू ठेवण्याचा सल्ला असतानाही स्वेच्छेने रुग्णालय सोडत आहे. या निर्णयामुळे होणाऱ्या कोणत्याही दुष्परिणामांसाठी रुग्णालय किंवा डॉक्टर जबाबदार नसतील, हे मला समजले आहे.</p>
+    <br>
+    <p>मला प्रश्न विचारण्याची संधी दिली गेली आणि माझ्या सर्व शंकांचे निराकरण झाले आहे. मी हा निर्णय माझ्या स्वतःच्या इच्छेने, कोणत्याही दबावाशिवाय घेत आहे.</p>
+  </div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">रुग्ण/नातेवाईक नाव: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">साक्षीदार नाव: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी</div>
+      </div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">डॉक्टर नाव: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="form-title hindi">डामा – चिकित्सा सलाह के विरुद्ध डिस्चार्ज</div>
+
+  <div class="consent-text hindi">
+    <p>मुझे मेरे उपचार करने वाले डॉक्टर द्वारा मेरी वर्तमान स्वास्थ्य स्थिति तथा आवश्यक उपचार के बारे में पूरी जानकारी दी गई है। मैं यह समझता/समझती हूँ कि इस समय अस्पताल छोड़ना चिकित्सकीय सलाह के विरुद्ध है तथा इससे मेरी स्थिति बिगड़ सकती है, जटिलताएँ हो सकती हैं या जीवन को खतरा हो सकता है।</p>
+    <br>
+    <p>मैं यह स्वीकार करता/करती हूँ कि उपचार जारी रखने की सलाह के बावजूद मैं स्वेच्छा से अस्पताल छोड़ रहा/रही हूँ। मैं समझता/समझती हूँ कि इस निर्णय से उत्पन्न किसी भी प्रतिकूल परिणाम के लिए अस्पताल व डॉक्टर जिम्मेदार नहीं होंगे।</p>
+    <br>
+    <p>मुझे प्रश्न पूछने का अवसर दिया गया और मेरी सभी शंकाओं का समाधान किया गया है। मैं यह निर्णय अपनी स्वतंत्र इच्छा से, बिना किसी दबाव के ले रहा/रही हूँ।</p>
+  </div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">मरीज/रिश्तेदार का नाम: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">साक्षी का नाम: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर</div>
+      </div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">डॉक्टर का नाम: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== Absconding from Hospital Documentation ==========
+        if (consentType === 'ABSCONDING_DOC') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Absconding from Hospital Documentation</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 15px; margin: 5px 0; }
+    .patient-item { font-size: 10pt; min-width: 180px; }
+    .patient-label { font-weight: bold; }
+    .content-text { text-align: justify; margin: 15px 0; font-size: 10.5pt; line-height: 1.6; }
+    .field-row { margin: 10px 0; font-size: 10pt; }
+    .field-label { font-weight: bold; }
+    .field-line { border-bottom: 1px solid #666; display: inline-block; min-width: 200px; }
+    .signature-section { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">ABSCONDING FROM HOSPITAL (DOCUMENTATION FORM)</div>
+
+  <div class="patient-info-box">
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Ward/Room:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Admission Date:</span> ________________</span>
+    </div>
+  </div>
+
+  <div class="content-text">
+    <p>This document records that the patient has left the hospital premises without prior intimation or formal discharge. The patient was last seen on the mentioned date and time, and the medical condition at that time has been recorded to the best of our knowledge.</p>
+    <br>
+    <p>Attempts to contact relatives or attendants have been documented where applicable. The hospital shall not be held responsible for any consequences arising after the patient absconds. This record is maintained for medico-legal purposes.</p>
+  </div>
+
+  <div class="field-row"><span class="field-label">Last Seen Date & Time:</span> <span class="field-line"></span></div>
+  <div class="field-row"><span class="field-label">Medical Condition at Last Seen:</span> <span class="field-line"></span></div>
+  <div class="field-row"><span class="field-label">Contact Attempts Made:</span> <span class="field-line"></span></div>
+  <div class="field-row"><span class="field-label">Relative/Attendant Contacted:</span> <span class="field-line"></span></div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Duty Nurse Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Doctor on Duty: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="form-title marathi">रुग्णालयातून पळून गेल्याची नोंद</div>
+
+  <div class="content-text marathi">
+    <p>हा दस्तऐवज रुग्णाने कोणतीही पूर्वसूचना न देता किंवा डिस्चार्ज प्रक्रिया पूर्ण न करता रुग्णालय सोडल्याची नोंद दर्शवितो. रुग्ण शेवटचा कधी व कोणत्या स्थितीत दिसला याची माहिती नोंदविण्यात आली आहे.</p>
+    <br>
+    <p>नातेवाईक किंवा सहकाऱ्यांशी संपर्क साधण्याचे प्रयत्न केले असल्यास ते देखील नोंदविले आहेत. रुग्ण पळून गेल्यानंतर होणाऱ्या कोणत्याही परिणामांसाठी रुग्णालय जबाबदार राहणार नाही. ही नोंद कायदेशीर उद्देशांसाठी ठेवण्यात आली आहे.</p>
+  </div>
+
+  <div class="field-row marathi"><span class="field-label">शेवटचा पाहिला दिनांक व वेळ:</span> <span class="field-line"></span></div>
+  <div class="field-row marathi"><span class="field-label">त्यावेळची वैद्यकीय स्थिती:</span> <span class="field-line"></span></div>
+  <div class="field-row marathi"><span class="field-label">संपर्क प्रयत्न:</span> <span class="field-line"></span></div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">कर्तव्यावरील नर्स: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">कर्तव्यावरील डॉक्टर: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="form-title hindi">अस्पताल से फरार होने का दस्तावेज</div>
+
+  <div class="content-text hindi">
+    <p>यह प्रपत्र इस बात का अभिलेख है कि मरीज बिना सूचना दिए या औपचारिक डिस्चार्ज के अस्पताल से चला गया/गई है। मरीज को अंतिम बार देखे जाने की तिथि व समय दर्ज किया गया है तथा उस समय की स्वास्थ्य स्थिति भी नोट की गई है।</p>
+    <br>
+    <p>रिश्तेदारों या परिचारकों से संपर्क के प्रयास भी दर्ज किए गए हैं। मरीज के फरार होने के बाद होने वाले किसी भी परिणाम के लिए अस्पताल जिम्मेदार नहीं होगा। यह रिकॉर्ड कानूनी उद्देश्यों के लिए रखा गया है।</p>
+  </div>
+
+  <div class="field-row hindi"><span class="field-label">अंतिम बार देखे जाने की तिथि व समय:</span> <span class="field-line"></span></div>
+  <div class="field-row hindi"><span class="field-label">उस समय की चिकित्सा स्थिति:</span> <span class="field-line"></span></div>
+  <div class="field-row hindi"><span class="field-label">संपर्क प्रयास:</span> <span class="field-line"></span></div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">ड्यूटी पर नर्स: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">ड्यूटी पर डॉक्टर: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== Physical Restraint Request Form ==========
+        if (consentType === 'RESTRAINT_REQUEST') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Physical Restraint Request Form</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 15px; margin: 5px 0; }
+    .patient-item { font-size: 10pt; min-width: 180px; }
+    .patient-label { font-weight: bold; }
+    .content-text { text-align: justify; margin: 12px 0; font-size: 10.5pt; line-height: 1.6; }
+    .content-text p { margin-bottom: 8px; }
+    .field-row { margin: 8px 0; font-size: 10pt; }
+    .field-label { font-weight: bold; }
+    .field-line { border-bottom: 1px solid #666; display: inline-block; min-width: 200px; }
+    .signature-section { margin-top: 25px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 15px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 6px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 20px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">PHYSICAL RESTRAINT REQUEST FORM</div>
+
+  <div class="patient-info-box">
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Ward/Room:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Date:</span> ________________</span>
+    </div>
+  </div>
+
+  <div class="content-text">
+    <p>This request is made due to the patient's current medical or behavioral condition, which poses a risk of harm to self or others.</p>
+    <p>Physical restraint is being considered only after other non-restrictive measures have been assessed or attempted.</p>
+    <p>The purpose of restraint is patient safety and continuation of necessary medical treatment.</p>
+    <p>The type and duration of restraint will be kept to the minimum required.</p>
+    <p>Continuous monitoring will be ensured to maintain dignity and prevent complications.</p>
+  </div>
+
+  <div class="field-row"><span class="field-label">Reason for Restraint:</span> <span class="field-line"></span></div>
+  <div class="field-row"><span class="field-label">Type of Restraint Requested:</span> <span class="field-line"></span></div>
+  <div class="field-row"><span class="field-label">Expected Duration:</span> <span class="field-line"></span></div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Requesting Nurse/Doctor: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Approved By (Doctor): ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="form-title marathi">शारीरिक प्रतिबंध विनंती फॉर्म</div>
+
+  <div class="content-text marathi">
+    <p>रुग्णाची सध्याची वैद्यकीय किंवा वर्तणुकीची स्थिती स्वतःला किंवा इतरांना धोका निर्माण करू शकते, म्हणून हा अर्ज करण्यात येत आहे.</p>
+    <p>इतर पर्यायांचा विचार केल्यानंतरच शारीरिक प्रतिबंध आवश्यक मानला जात आहे.</p>
+    <p>प्रतिबंधाचा उद्देश रुग्णाची सुरक्षितता व उपचार सुरू ठेवणे हा आहे.</p>
+    <p>प्रतिबंधाचा प्रकार व कालावधी कमीतकमी ठेवला जाईल.</p>
+    <p>रुग्णाच्या सन्मानाचे रक्षण करत सतत निरीक्षण केले जाईल.</p>
+  </div>
+
+  <div class="field-row marathi"><span class="field-label">प्रतिबंधाचे कारण:</span> <span class="field-line"></span></div>
+  <div class="field-row marathi"><span class="field-label">प्रतिबंधाचा प्रकार:</span> <span class="field-line"></span></div>
+  <div class="field-row marathi"><span class="field-label">अपेक्षित कालावधी:</span> <span class="field-line"></span></div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">विनंती करणारी नर्स/डॉक्टर: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">मंजुरी (डॉक्टर): ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="form-title hindi">शारीरिक बंधन अनुरोध प्रपत्र</div>
+
+  <div class="content-text hindi">
+    <p>यह अनुरोध मरीज की वर्तमान चिकित्सकीय या मानसिक स्थिति के कारण किया जा रहा है, जिससे स्वयं को या दूसरों को नुकसान पहुँचने की संभावना है।</p>
+    <p>अन्य वैकल्पिक उपायों पर विचार करने के बाद ही शारीरिक बंधन आवश्यक समझा गया है।</p>
+    <p>बंधन का उद्देश्य मरीज की सुरक्षा और उपचार जारी रखना है।</p>
+    <p>बंधन का प्रकार और समयावधि न्यूनतम रखी जाएगी।</p>
+    <p>मरीज की गरिमा बनाए रखते हुए निरंतर निगरानी सुनिश्चित की जाएगी।</p>
+  </div>
+
+  <div class="field-row hindi"><span class="field-label">बंधन का कारण:</span> <span class="field-line"></span></div>
+  <div class="field-row hindi"><span class="field-label">बंधन का प्रकार:</span> <span class="field-line"></span></div>
+  <div class="field-row hindi"><span class="field-label">अपेक्षित अवधि:</span> <span class="field-line"></span></div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">अनुरोध करने वाली नर्स/डॉक्टर: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">अनुमोदन (डॉक्टर): ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== Physical Restraint Informed Consent ==========
+        if (consentType === 'RESTRAINT_CONSENT') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Physical Restraint Informed Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 15px; margin: 5px 0; }
+    .patient-item { font-size: 10pt; min-width: 180px; }
+    .patient-label { font-weight: bold; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 10.5pt; line-height: 1.6; }
+    .consent-text p { margin-bottom: 10px; }
+    .signature-section { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">PHYSICAL RESTRAINT INFORMED CONSENT</div>
+
+  <div class="patient-info-box">
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Ward/Room:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Date:</span> ________________</span>
+    </div>
+  </div>
+
+  <div class="consent-text">
+    <p>I have been informed about the need for physical restraint due to the current condition of the patient.</p>
+    <p>I understand that restraint is being applied only for safety and medical reasons.</p>
+    <p>The possible discomforts and risks associated with restraint have been explained to me.</p>
+    <p>I am assured that the patient will be monitored regularly and treated with dignity.</p>
+    <p>I provide my informed consent for the use of physical restraint as advised.</p>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Patient/Relative Name: ________________</div>
+        <div class="signature-field">Relationship: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Witness Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Doctor Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="form-title marathi">शारीरिक प्रतिबंध सूचित संमती</div>
+
+  <div class="consent-text marathi">
+    <p>रुग्णाच्या सध्याच्या स्थितीमुळे शारीरिक प्रतिबंध आवश्यक असल्याची माहिती मला देण्यात आली आहे.</p>
+    <p>हा प्रतिबंध फक्त सुरक्षितता आणि उपचारासाठीच वापरला जाणार आहे, हे मला समजले आहे.</p>
+    <p>यामुळे होणारी संभाव्य अस्वस्थता व धोके मला समजावून सांगण्यात आले आहेत.</p>
+    <p>रुग्णाचे नियमित निरीक्षण केले जाईल व त्याच्या सन्मानाचे रक्षण केले जाईल, याची मला खात्री दिली आहे.</p>
+    <p>मी सूचित संमतीने शारीरिक प्रतिबंधाची परवानगी देत आहे.</p>
+  </div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">रुग्ण/नातेवाईक नाव: ________________</div>
+        <div class="signature-field">नाते: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">साक्षीदार नाव: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">डॉक्टर नाव: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="form-title hindi">शारीरिक बंधन सूचित सहमति</div>
+
+  <div class="consent-text hindi">
+    <p>मुझे मरीज की वर्तमान स्थिति के कारण शारीरिक बंधन की आवश्यकता के बारे में जानकारी दी गई है।</p>
+    <p>मैं समझता/समझती हूँ कि यह केवल सुरक्षा और उपचार के उद्देश्य से किया जा रहा है।</p>
+    <p>इससे होने वाली असुविधा और जोखिम मुझे समझाए गए हैं।</p>
+    <p>मुझे आश्वासन दिया गया है कि मरीज की नियमित निगरानी की जाएगी और उनके सम्मान की रक्षा की जाएगी।</p>
+    <p>मैं सूचित सहमति के साथ शारीरिक बंधन की अनुमति देता/देती हूँ।</p>
+  </div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">मरीज/रिश्तेदार का नाम: ________________</div>
+        <div class="signature-field">संबंध: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">साक्षी का नाम: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">डॉक्टर का नाम: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== Physical Restraint Monitoring Record ==========
+        if (consentType === 'RESTRAINT_MONITORING') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Physical Restraint Monitoring Record</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; line-height: 1.4; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 13pt; font-weight: bold; margin: 12px 0; color: #333; background: #f5f5f5; padding: 8px; }
+    .patient-info-box { border: 1px solid #333; padding: 8px; margin: 10px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 12px; margin: 4px 0; }
+    .patient-item { font-size: 9pt; min-width: 160px; }
+    .patient-label { font-weight: bold; }
+    .content-text { text-align: justify; margin: 10px 0; font-size: 9.5pt; line-height: 1.5; }
+    .monitoring-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 8pt; }
+    .monitoring-table th, .monitoring-table td { border: 1px solid #333; padding: 5px; text-align: center; }
+    .monitoring-table th { background: #f0f0f0; font-weight: bold; }
+    .signature-section { margin-top: 20px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 15px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 5px 0; font-size: 9pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 18px; margin: 4px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">MONITORING RECORD OF PHYSICAL RESTRAINT</div>
+
+  <div class="patient-info-box">
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Ward/Room:</span> ________</span>
+      <span class="patient-item"><span class="patient-label">Restraint Start Date/Time:</span> ________</span>
+    </div>
+  </div>
+
+  <div class="content-text">
+    <p>This record is maintained to document continuous monitoring of a patient placed under physical restraint. Regular assessments of vital signs, circulation, skin condition, comfort, and mental status are performed and recorded. Any signs of distress or complications are immediately reported to the treating doctor. Restraint is reviewed periodically and removed as soon as it is no longer medically necessary.</p>
+  </div>
+
+  <table class="monitoring-table">
+    <tr>
+      <th>Time</th>
+      <th>Vitals</th>
+      <th>Circulation</th>
+      <th>Skin</th>
+      <th>Comfort</th>
+      <th>Mental Status</th>
+      <th>Nurse Sign</th>
+    </tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </table>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Restraint Removed Date/Time: ________</div>
+        <div class="signature-field">Reason: ________________________</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Doctor Signature: ________________</div>
+        <div class="signature-line"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="form-title marathi">शारीरिक प्रतिबंध निरीक्षण नोंद</div>
+
+  <div class="content-text marathi">
+    <p>शारीरिक प्रतिबंधाखाली असलेल्या रुग्णाच्या सतत निरीक्षणासाठी ही नोंद ठेवण्यात येते. यामध्ये जीवनचिन्हे, रक्तसंचार, त्वचेची स्थिती, आराम आणि मानसिक अवस्था नियमितपणे तपासली जाते. कोणतीही अस्वस्थता किंवा गुंतागुंत आढळल्यास तात्काळ डॉक्टरांना कळविले जाते. प्रतिबंध वैद्यकीयदृष्ट्या आवश्यक नसताना लगेच काढला जातो.</p>
+  </div>
+
+  <table class="monitoring-table marathi">
+    <tr>
+      <th>वेळ</th>
+      <th>जीवनचिन्हे</th>
+      <th>रक्तसंचार</th>
+      <th>त्वचा</th>
+      <th>आराम</th>
+      <th>मानसिक स्थिती</th>
+      <th>नर्स स्वाक्षरी</th>
+    </tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </table>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">प्रतिबंध काढलेला दिनांक/वेळ: ________</div>
+        <div class="signature-field">कारण: ________________________</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">डॉक्टर स्वाक्षरी: ________________</div>
+        <div class="signature-line"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="form-title hindi">शारीरिक बंधन निगरानी रिकॉर्ड</div>
+
+  <div class="content-text hindi">
+    <p>यह रिकॉर्ड शारीरिक बंधन में रखे गए मरीज की निरंतर निगरानी के लिए बनाया गया है। इसमें समय-समय पर जीवन रक्षक संकेत, रक्त संचार, त्वचा की स्थिति, आराम और मानसिक स्थिति का आकलन दर्ज किया जाता है। किसी भी असुविधा या जटिलता की स्थिति में तुरंत डॉक्टर को सूचित किया जाता है। जब बंधन चिकित्सकीय रूप से आवश्यक नहीं रहता, तो उसे तुरंत हटा दिया जाता है।</p>
+  </div>
+
+  <table class="monitoring-table hindi">
+    <tr>
+      <th>समय</th>
+      <th>जीवन संकेत</th>
+      <th>रक्त संचार</th>
+      <th>त्वचा</th>
+      <th>आराम</th>
+      <th>मानसिक स्थिति</th>
+      <th>नर्स हस्ताक्षर</th>
+    </tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </table>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">बंधन हटाने की तिथि/समय: ________</div>
+        <div class="signature-field">कारण: ________________________</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">डॉक्टर हस्ताक्षर: ________________</div>
+        <div class="signature-line"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
+        // ========== MTP - Medical Termination of Pregnancy Consent ==========
+        if (consentType === 'MTP_CONSENT') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MTP - Medical Termination of Pregnancy Consent</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 15px; margin: 5px 0; }
+    .patient-item { font-size: 10pt; min-width: 180px; }
+    .patient-label { font-weight: bold; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 10.5pt; line-height: 1.6; }
+    .consent-text p { margin-bottom: 10px; }
+    .signature-section { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">MTP – MEDICAL TERMINATION OF PREGNANCY CONSENT</div>
+
+  <div class="patient-info-box">
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Weeks of Pregnancy:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Date:</span> ________________</span>
+    </div>
+  </div>
+
+  <div class="consent-text">
+    <p>I have been informed about the procedure of Medical Termination of Pregnancy (MTP) in accordance with the MTP Act of India.</p>
+    <p>The reasons, procedure, possible risks, and alternatives have been clearly explained to me.</p>
+    <p>I understand that this decision is being made voluntarily without any pressure.</p>
+    <p>I am assured that my privacy and confidentiality will be maintained.</p>
+    <p>I provide my informed consent for undergoing MTP as advised by the doctor.</p>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Patient Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Spouse/Guardian Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Doctor Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Witness Name: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature & Date</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="form-title marathi">एमटीपी – वैद्यकीय गर्भसमापन संमती</div>
+
+  <div class="consent-text marathi">
+    <p>भारताच्या एमटीपी कायद्यानुसार गर्भपात प्रक्रियेची मला सविस्तर माहिती देण्यात आली आहे.</p>
+    <p>प्रक्रिया, कारणे, संभाव्य धोके व पर्याय मला समजावून सांगण्यात आले आहेत.</p>
+    <p>हा निर्णय मी कोणत्याही दबावाशिवाय स्वेच्छेने घेत आहे.</p>
+    <p>माझी गोपनीयता जपली जाईल याची मला खात्री दिली आहे.</p>
+    <p>मी डॉक्टरांच्या सल्ल्यानुसार एमटीपी प्रक्रियेसाठी माझी सूचित संमती देत आहे.</p>
+  </div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">रुग्ण नाव: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">पती/पालक नाव: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">डॉक्टर नाव: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">साक्षीदार नाव: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="form-title hindi">एमटीपी – गर्भसमापन सूचित सहमति</div>
+
+  <div class="consent-text hindi">
+    <p>मुझे भारत के एमटीपी अधिनियम के अनुसार गर्भसमापन प्रक्रिया के बारे में पूरी जानकारी दी गई है।</p>
+    <p>इसके कारण, प्रक्रिया, संभावित जोखिम और विकल्प समझाए गए हैं।</p>
+    <p>मैं यह पुष्टि करता/करती हूँ कि यह निर्णय मैं बिना किसी दबाव के स्वेच्छा से ले रहा/रही हूँ।</p>
+    <p>मुझे आश्वासन दिया गया है कि मेरी गोपनीयता बनाए रखी जाएगी।</p>
+    <p>मैं डॉक्टर की सलाह के अनुसार एमटीपी प्रक्रिया के लिए अपनी सूचित सहमति देता/देती हूँ।</p>
+  </div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">मरीज का नाम: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">पति/अभिभावक का नाम: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+    </div>
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">डॉक्टर का नाम: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">साक्षी का नाम: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर व दिनांक</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
         
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }

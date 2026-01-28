@@ -3015,6 +3015,72 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "DAMA - Discharge Against Medical Advice",
+        consentType: "DAMA_CONSENT",
+        description: "Consent for patient leaving hospital against medical advice with risk acknowledgment. Trilingual: English, Hindi, Marathi.",
+        category: "Discharge & Documentation",
+        pdfPath: "/consents/dynamic/DAMA_CONSENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Absconding from Hospital Documentation",
+        consentType: "ABSCONDING_DOC",
+        description: "Documentation form for patients who leave without formal discharge. Trilingual: English, Hindi, Marathi.",
+        category: "Discharge & Documentation",
+        pdfPath: "/consents/dynamic/ABSCONDING_DOC",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Physical Restraint Request Form",
+        consentType: "RESTRAINT_REQUEST",
+        description: "Request form for physical restraint with safety justification. Trilingual: English, Hindi, Marathi.",
+        category: "Patient Safety",
+        pdfPath: "/consents/dynamic/RESTRAINT_REQUEST",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Physical Restraint Informed Consent",
+        consentType: "RESTRAINT_CONSENT",
+        description: "Informed consent for physical restraint application. Trilingual: English, Hindi, Marathi.",
+        category: "Patient Safety",
+        pdfPath: "/consents/dynamic/RESTRAINT_CONSENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Physical Restraint Monitoring Record",
+        consentType: "RESTRAINT_MONITORING",
+        description: "Continuous monitoring record for patients under physical restraint. Trilingual: English, Hindi, Marathi.",
+        category: "Patient Safety",
+        pdfPath: "/consents/dynamic/RESTRAINT_MONITORING",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "MTP - Medical Termination of Pregnancy Consent",
+        consentType: "MTP_CONSENT",
+        description: "Consent for medical termination of pregnancy as per MTP Act of India. Trilingual: English, Hindi, Marathi.",
+        category: "Obstetrics & Gynecology",
+        pdfPath: "/consents/dynamic/MTP_CONSENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
