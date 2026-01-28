@@ -827,8 +827,8 @@ function AppContent() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        onClick={() => window.location.reload()}
-                        title="Refresh"
+                        onClick={() => queryClient.invalidateQueries()}
+                        title="Refresh Data"
                       >
                         <RefreshCw className="h-4 w-4" />
                       </Button>
