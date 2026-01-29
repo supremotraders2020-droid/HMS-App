@@ -8307,6 +8307,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+
+        // ========== HAEMODIALYSIS CONSENT ==========
+        if (consentType === 'HAEMODIALYSIS_CONSENT') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Consent for Haemodialysis</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 15px; margin: 5px 0; }
+    .patient-item { font-size: 10pt; min-width: 180px; }
+    .patient-label { font-weight: bold; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 10.5pt; line-height: 1.6; }
+    .consent-text p { margin-bottom: 10px; }
+    .section-title { font-weight: bold; margin: 15px 0 10px 0; font-size: 11pt; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+    .checkbox { width: 16px; height: 16px; border: 1px solid #333; display: inline-block; }
+    .signature-section { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital \& Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">CONSENT FOR HAEMODIALYSIS</div>
+
+  <div class="patient-info-box">
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Diagnosis:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Date \& Time:</span> ________________</span>
+    </div>
+  </div>
+
+  <div class="section-title">Consent Statement</div>
+  <div class="consent-text">
+    <p>I have been informed about the need for Haemodialysis for my current medical condition. I understand that haemodialysis is a procedure used to remove waste products, excess fluids, and toxins from the blood when the kidneys are unable to function adequately.</p>
+    <p>The doctor has explained the nature of the procedure, expected benefits, and possible risks or complications, which may include low blood pressure, bleeding, infection, clotting of access, cramps, allergic reactions, or other unforeseen complications.</p>
+    <p>I understand that haemodialysis may need to be performed repeatedly as advised by the treating doctor. I have also been informed about alternative treatment options and the consequences of refusing haemodialysis.</p>
+    <p>All information has been explained to me in a language I understand. I was given the opportunity to ask questions and all my questions have been answered satisfactorily.</p>
+  </div>
+
+  <div class="section-title">Consent Declaration</div>
+  <div class="consent-text">
+    <p>I voluntarily give my consent for haemodialysis treatment and related digital documentation.</p>
+    <div class="checkbox-item"><span class="checkbox"></span> I Agree</div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Patient / Attendant Name: ________________</div>
+        <div class="signature-field">Relationship (if applicable): ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Digital Signature / Thumb Impression</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Doctor Name: ________________</div>
+        <div class="signature-field">Designation: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="form-title hindi">हीमोडायलिसिस के लिए सहमति पत्र</div>
+
+  <div class="section-title hindi">सहमति विवरण</div>
+  <div class="consent-text hindi">
+    <p>मुझे मेरी वर्तमान बीमारी के लिए हीमोडायलिसिस उपचार की आवश्यकता के बारे में जानकारी दी गई है। मुझे समझाया गया है कि यह एक प्रक्रिया है जिसके द्वारा किडनी ठीक से काम न करने पर रक्त से अपशिष्ट पदार्थ, अतिरिक्त तरल और विषाक्त पदार्थ हटाए जाते हैं।</p>
+    <p>डॉक्टर ने मुझे इस प्रक्रिया की प्रकृति, लाभ, तथा संभावित जोखिमों एवं जटिलताओं के बारे में बताया है, जिनमें रक्तचाप कम होना, रक्तस्राव, संक्रमण, एक्सेस में थक्का बनना, ऐंठन, एलर्जी या अन्य अप्रत्याशित जटिलताएं शामिल हो सकती हैं।</p>
+    <p>मुझे यह भी बताया गया है कि डॉक्टर की सलाह अनुसार यह उपचार बार-बार किया जा सकता है। वैकल्पिक उपचारों एवं हीमोडायलिसिस न करवाने के परिणामों के बारे में भी मुझे जानकारी दी गई है।</p>
+    <p>यह जानकारी मुझे मेरी समझ की भाषा में दी गई है। मुझे प्रश्न पूछने का अवसर दिया गया और मेरे सभी प्रश्नों के संतोषजनक उत्तर दिए गए।</p>
+  </div>
+
+  <div class="section-title hindi">सहमति घोषणा</div>
+  <div class="consent-text hindi">
+    <p>मैं हीमोडायलिसिस उपचार एवं संबंधित डिजिटल प्रलेखन के लिए अपनी स्वेच्छा से सहमति देता/देती हूँ।</p>
+    <div class="checkbox-item"><span class="checkbox"></span> मैं सहमत हूँ</div>
+  </div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">रोगी/परिचारक का नाम: ________________</div>
+        <div class="signature-field">संबंध: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर / अंगूठा निशान</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">दिनांक व समय: ________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="form-title marathi">हेमोडायलिसिससाठी संमती फॉर्म</div>
+
+  <div class="section-title marathi">संमती विधान</div>
+  <div class="consent-text marathi">
+    <p>माझ्या सध्याच्या आजारासाठी हेमोडायलिसिस उपचार आवश्यक असल्याचे मला समजावून सांगण्यात आले आहे. मूत्रपिंडे योग्य प्रकारे कार्य करत नसल्यास रक्तातील अपायकारक घटक, अतिरिक्त द्रव व विषारी पदार्थ काढून टाकण्यासाठी ही प्रक्रिया केली जाते, याची मला माहिती दिली गेली आहे.</p>
+    <p>या प्रक्रियेचे फायदे तसेच संभाव्य धोके व गुंतागुंत जसे की रक्तदाब कमी होणे, रक्तस्राव, संसर्ग, एक्सेसमध्ये थक्का होणे, आकडी येणे, अ‍ॅलर्जी किंवा इतर अनपेक्षित गुंतागुंत याबाबत मला माहिती देण्यात आली आहे।</p>
+    <p>डॉक्टरांच्या सल्ल्यानुसार हेमोडायलिसिस उपचार वारंवार करावा लागू शकतो, याची मला जाणीव आहे. पर्यायी उपचार व हेमोडायलिसिस न केल्यास होणारे परिणाम यांची माहितीही मला देण्यात आली आहे.</p>
+    <p>ही माहिती मला समजेल अशा भाषेत देण्यात आली आहे. मला प्रश्न विचारण्याची संधी देण्यात आली असून माझ्या सर्व प्रश्नांची समाधानकारक उत्तरे देण्यात आली आहेत.</p>
+  </div>
+
+  <div class="section-title marathi">संमती घोषणा</div>
+  <div class="consent-text marathi">
+    <p>हेमोडायलिसिस उपचार व संबंधित डिजिटल दस्तऐवजीकरणासाठी मी स्वेच्छेने संमती देत आहे.</p>
+    <div class="checkbox-item"><span class="checkbox"></span> मी संमत आहे</div>
+  </div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">रुग्ण/परिचारक नाव: ________________</div>
+        <div class="signature-field">नाते: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी / अंगठा</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">दिनांक व वेळ: ________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
         
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
