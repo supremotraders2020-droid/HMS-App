@@ -2877,62 +2877,38 @@ function MARTab({ session }: { session: Session }) {
     });
   };
 
-  const saveMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/once-only", data),
-    onSuccess: () => { 
-      refetch(); 
-      toast({ title: "Once-Only Drug Added", description: "STAT medication recorded" });
-      setForm({ drugName: "", dose: "", route: "", indication: "" });
-      setDialogOpen(false);
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to save drug", variant: "destructive" });
-    }
-  });
-
-  const handleSave = () => {
-    saveMutation.mutate({ 
-      sessionId, 
-      drugName: form.drugName,
-      dose: form.dose,
-      route: form.route,
-      timeOrdered: new Date().toISOString(),
-      nurseId: "system-nurse",
-      nurseName: "ICU Nurse"
-    });
-  };
-
   return (
     <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Once-Only / STAT Drugs</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardTitle className="text-lg">Medication Administration Record</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add STAT Drug</Button>
+            <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Medicine</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Once-Only Drug</DialogTitle>
-              <DialogDescription>Add a single-dose or STAT medication</DialogDescription>
+              <DialogTitle>Add Medicine</DialogTitle>
+              <DialogDescription>Record medication administration</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
-              <div><Label>Drug Name</Label><Input value={form.drugName} onChange={(e) => setForm({...form, drugName: e.target.value})} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Dose</Label><Input value={form.dose} onChange={(e) => setForm({...form, dose: e.target.value})} /></div>
-                <div><Label>Route</Label>
-                  <Select value={form.route} onValueChange={(v) => setForm({...form, route: v})}>
-                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                    <SelectContent>{["IV", "IM", "Oral", "SC"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+              <div><Label>Medicine Name</Label><Input value={form.medicineName} onChange={(e) => setForm({...form, medicineName: e.target.value})} /></div>
+              <div><Label>Diagnosis</Label><Input value={form.diagnosis} onChange={(e) => setForm({...form, diagnosis: e.target.value})} /></div>
+              <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
+              <div><Label>Staff Name</Label>
+                <Select value={form.nurseId} onValueChange={(v) => {
+                  const nurse = nurses.find((n: any) => n.id === v);
+                  setForm({...form, nurseId: v, nurseName: nurse?.fullName || ""});
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Select nurse..." /></SelectTrigger>
+                  <SelectContent>{nurses.map((n: any) => <SelectItem key={n.id} value={n.id}>{n.fullName}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
-              <div><Label>Indication</Label><Textarea value={form.indication} onChange={(e) => setForm({...form, indication: e.target.value})} /></div>
             </div>
             <DialogFooter className="gap-2">
               <DialogClose asChild>
                 <Button variant="outline" type="button">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleSave} disabled={!form.drugName || !form.dose || !form.route || saveMutation.isPending}>
+              <Button onClick={handleSave} disabled={!form.medicineName || !form.nurseId || saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Add"}
               </Button>
             </DialogFooter>
@@ -2941,28 +2917,24 @@ function MARTab({ session }: { session: Session }) {
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No once-only drugs administered</p>
+          <p className="text-muted-foreground text-center py-8">No medications recorded</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Drug</TableHead>
-                <TableHead>Dose</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead>Given At</TableHead>
-                <TableHead>By</TableHead>
-                <TableHead>Indication</TableHead>
+                <TableHead>Medicine</TableHead>
+                <TableHead>Diagnosis</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Staff</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {records.map((r: any) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.drugName}</TableCell>
-                  <TableCell>{r.dose}</TableCell>
-                  <TableCell>{r.route}</TableCell>
-                  <TableCell className="text-xs">{r.givenAt ? format(new Date(r.givenAt), "HH:mm") : "-"}</TableCell>
-                  <TableCell>{r.givenBy}</TableCell>
-                  <TableCell className="text-xs max-w-[200px] truncate">{r.indication}</TableCell>
+                  <TableCell>{r.diagnosis || "-"}</TableCell>
+                  <TableCell className="text-xs">{r.scheduledTime ? format(new Date(r.scheduledTime), "dd/MM/yyyy") : "-"}</TableCell>
+                  <TableCell>{r.nurseName || "-"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
