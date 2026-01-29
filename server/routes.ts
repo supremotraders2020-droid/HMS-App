@@ -8662,6 +8662,185 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+
+        // ========== SHIFT OTHER HOSPITAL CONSENT ==========
+        if (consentType === 'SHIFT_OTHER_HOSPITAL_CONSENT') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Consent for Shift to Other Hospital</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 15px; margin: 5px 0; }
+    .patient-item { font-size: 10pt; min-width: 180px; }
+    .patient-label { font-weight: bold; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 10.5pt; line-height: 1.6; }
+    .consent-text p { margin-bottom: 10px; }
+    .section-title { font-weight: bold; margin: 15px 0 10px 0; font-size: 11pt; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+    .checkbox { width: 16px; height: 16px; border: 1px solid #333; display: inline-block; }
+    .signature-section { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">CONSENT FOR SHIFT TO OTHER HOSPITAL</div>
+
+  <div class="patient-info-box">
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Diagnosis / Condition:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Referred To Hospital:</span> ________________</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Date & Time:</span> ________________</span>
+    </div>
+  </div>
+
+  <div class="section-title">Consent Statement</div>
+  <div class="consent-text">
+    <p>I have been informed about the medical condition of the patient and the need to shift the patient to another hospital for further evaluation, advanced care, specialist services, or facilities not available at this hospital.</p>
+    <p>The doctor has explained the reason for transfer, current clinical status, possible benefits, and potential risks involved during transportation, which may include deterioration of condition, delay in treatment, or other unforeseen complications.</p>
+    <p>I understand that appropriate precautions and arrangements will be made for safe transfer as per the patient's condition. I have also been informed about alternative options, including continuation of treatment at this hospital.</p>
+    <p>All information has been explained to me in a language I understand. I was given the opportunity to ask questions, and all my questions have been answered satisfactorily.</p>
+  </div>
+
+  <div class="section-title">Consent Declaration</div>
+  <div class="consent-text">
+    <p>I voluntarily give my consent for shifting the patient to another hospital and related digital documentation.</p>
+    <div class="checkbox-item"><span class="checkbox"></span> I Agree</div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Patient / Attendant Name: ________________</div>
+        <div class="signature-field">Relationship (if applicable): ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Digital Signature / Thumb Impression</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Doctor Name: ________________</div>
+        <div class="signature-field">Designation: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page">
+  <div class="form-title hindi">अन्य अस्पताल स्थानांतरण हेतु सहमति पत्र</div>
+
+  <div class="section-title hindi">सहमति विवरण</div>
+  <div class="consent-text hindi">
+    <p>मुझे रोगी की वर्तमान स्वास्थ्य स्थिति के बारे में जानकारी दी गई है तथा आगे के उपचार, उन्नत सुविधाओं या विशेषज्ञ सेवाओं के लिए रोगी को अन्य अस्पताल स्थानांतरित करने की आवश्यकता के बारे में बताया गया है।</p>
+    <p>डॉक्टर ने मुझे स्थानांतरण का कारण, रोगी की वर्तमान स्थिति, संभावित लाभ तथा परिवहन के दौरान होने वाले जोखिमों के बारे में बताया है, जिनमें रोगी की स्थिति बिगड़ना, उपचार में देरी या अन्य जटिलताएं शामिल हो सकती हैं।</p>
+    <p>मुझे यह भी बताया गया है कि रोगी की स्थिति के अनुसार सुरक्षित स्थानांतरण के लिए आवश्यक सावधानियाँ और व्यवस्था की जाएगी। मुझे इस अस्पताल में उपचार जारी रखने जैसे वैकल्पिक विकल्पों के बारे में भी बताया गया है।</p>
+    <p>यह जानकारी मुझे मेरी समझ की भाषा में दी गई है। मुझे प्रश्न पूछने का अवसर दिया गया और मेरे सभी प्रश्नों के संतोषजनक उत्तर दिए गए।</p>
+  </div>
+
+  <div class="section-title hindi">सहमति घोषणा</div>
+  <div class="consent-text hindi">
+    <p>मैं रोगी को अन्य अस्पताल स्थानांतरित करने एवं संबंधित डिजिटल प्रलेखन के लिए अपनी स्वेच्छा से सहमति देता/देती हूँ।</p>
+    <div class="checkbox-item"><span class="checkbox"></span> मैं सहमत हूँ</div>
+  </div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">रोगी/परिचारक का नाम: ________________</div>
+        <div class="signature-field">संबंध: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर / अंगूठा निशान</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">दिनांक व समय: ________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page">
+  <div class="form-title marathi">इतर रुग्णालयात स्थलांतरासाठी संमती फॉर्म</div>
+
+  <div class="section-title marathi">संमती विधान</div>
+  <div class="consent-text marathi">
+    <p>रुग्णाच्या सध्याच्या आरोग्यस्थितीबाबत मला माहिती देण्यात आली आहे तसेच पुढील उपचार, प्रगत सुविधा किंवा तज्ज्ञ सेवा उपलब्ध होण्यासाठी रुग्णास इतर रुग्णालयात स्थलांतरित करण्याची आवश्यकता असल्याचे सांगण्यात आले आहे.</p>
+    <p>स्थलांतराचे कारण, रुग्णाची सध्याची स्थिती, अपेक्षित फायदे तसेच स्थलांतरादरम्यान संभवणारे धोके—जसे की रुग्णाची प्रकृती खालावणे, उपचारात विलंब किंवा इतर अनपेक्षित गुंतागुंत—याबाबत मला माहिती देण्यात आली आहे.</p>
+    <p>रुग्णाच्या स्थितीनुसार सुरक्षित स्थलांतरासाठी आवश्यक ती काळजी व व्यवस्था करण्यात येईल, याची मला जाणीव आहे. या रुग्णालयातच उपचार सुरू ठेवण्यासारखे पर्यायी पर्यायही मला सांगण्यात आले आहेत.</p>
+    <p>ही माहिती मला समजेल अशा भाषेत देण्यात आली आहे. मला प्रश्न विचारण्याची संधी देण्यात आली असून माझ्या सर्व प्रश्नांची समाधानकारक उत्तरे देण्यात आली आहेत.</p>
+  </div>
+
+  <div class="section-title marathi">संमती घोषणा</div>
+  <div class="consent-text marathi">
+    <p>रुग्णास इतर रुग्णालयात स्थलांतरित करण्यासाठी व संबंधित डिजिटल दस्तऐवजीकरणासाठी मी स्वेच्छेने संमती देत आहे.</p>
+    <div class="checkbox-item"><span class="checkbox"></span> मी संमत आहे</div>
+  </div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">रुग्ण/परिचारक नाव: ________________</div>
+        <div class="signature-field">नाते: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी / अंगठा</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">दिनांक व वेळ: ________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
         
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
