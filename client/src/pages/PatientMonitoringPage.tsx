@@ -2867,149 +2867,15 @@ function MARTab({ session }: { session: Session }) {
       sessionId, 
       drugName: form.medicineName,
       diagnosis: form.diagnosis,
+      route: "Oral",
+      dose: "As prescribed",
+      frequency: "1x",
       scheduledTime: new Date(form.date).toISOString(),
       nurseId: form.nurseId,
       nurseName: form.nurseName,
       status: "GIVEN"
     });
   };
-
-  const handleNurseChange = (nurseId: string) => {
-    const selectedNurse = nurses.find((n: any) => n.id === nurseId);
-    setForm({ ...form, nurseId, nurseName: selectedNurse?.fullName || "" });
-  };
-
-  const handlePrint = () => {
-    const rows = records.map((r: any, idx: number) => 
-      `<tr>
-        <td style="text-align:center;">${idx + 1}</td>
-        <td>${r.drugName || r.medicineName || '-'}</td>
-        <td>${r.diagnosis || '-'}</td>
-        <td style="text-align:center;">${r.scheduledTime ? format(new Date(r.scheduledTime), 'dd/MM/yyyy') : '-'}</td>
-        <td style="text-align:center;">${r.scheduledTime ? format(new Date(r.scheduledTime), 'HH:mm') : '-'}</td>
-        <td>${r.nurseName || '-'}</td>
-      </tr>`
-    ).join('');
-    const content = `
-      <h1>MEDICATION ADMINISTRATION RECORD</h1>
-      ${getPatientInfoHtml(session)}
-      ${records.length ? `
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40px;">S.No</th>
-              <th>Medicine Name</th>
-              <th>Diagnosis/Indication</th>
-              <th style="width:100px;">Date</th>
-              <th style="width:80px;">Time</th>
-              <th>Administered By</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-          <tfoot>
-            <tr class="summary-row">
-              <td colspan="6" style="text-align:right;">Total Medicines: ${records.length}</td>
-            </tr>
-          </tfoot>
-        </table>
-      ` : '<div class="no-data">No medicines recorded</div>'}
-      <div class="signature-section">
-        <table>
-          <tr>
-            <td class="label-cell">Verified By:</td>
-            <td class="value-cell"></td>
-            <td class="label-cell">Date:</td>
-            <td class="value-cell">${format(new Date(), 'dd/MM/yyyy')}</td>
-          </tr>
-        </table>
-      </div>
-    `;
-    openPrintWindow('Medicines', content);
-  };
-
-  return (
-    <Card className="mt-4">
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-lg">Medicines</CardTitle>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" /> Print</Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Medicine</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Medicine</DialogTitle>
-              <DialogDescription>Record medication administration</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div><Label>Medicine Name</Label><Input value={form.medicineName} onChange={(e) => setForm({...form, medicineName: e.target.value})} placeholder="e.g., Paracetamol 500mg" /></div>
-              <div><Label>Diagnosis</Label><Input value={form.diagnosis} onChange={(e) => setForm({...form, diagnosis: e.target.value})} placeholder="e.g., Fever, Infection" /></div>
-              <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
-              <div>
-                <Label>Staff Name</Label>
-                <Select value={form.nurseId} onValueChange={handleNurseChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select nurse" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {nurses.map((nurse: any) => (
-                      <SelectItem key={nurse.id} value={nurse.id}>{nurse.fullName}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter className="gap-2">
-              <DialogClose asChild>
-                <Button variant="outline" type="button">Cancel</Button>
-              </DialogClose>
-              <Button onClick={handleSave} disabled={!form.medicineName || !form.nurseId || saveMutation.isPending}>
-                {saveMutation.isPending ? "Saving..." : "Add"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {records.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No medicines recorded</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Medicine Name</TableHead>
-                <TableHead>Diagnosis</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Staff Name</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {records.map((r: any) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.drugName || r.medicineName}</TableCell>
-                  <TableCell>{r.diagnosis || "-"}</TableCell>
-                  <TableCell>{r.scheduledTime ? format(new Date(r.scheduledTime), "dd/MM/yyyy") : format(new Date(r.createdAt), "dd/MM/yyyy")}</TableCell>
-                  <TableCell>{r.nurseName || "-"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function OnceOnlyTab({ sessionId }: { sessionId: string }) {
-  const { toast } = useToast();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ drugName: "", dose: "", route: "", indication: "" });
-
-  const { data: records = [], refetch } = useQuery<any[]>({
-    queryKey: [`/api/patient-monitoring/once-only/${sessionId}`]
-  });
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/once-only", data),
