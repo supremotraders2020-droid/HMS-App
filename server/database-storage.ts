@@ -3081,6 +3081,17 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Consent for Thrombolysis",
+        consentType: "THROMBOLYSIS_CONSENT",
+        description: "Digital consent for thrombolysis therapy to dissolve blood clots. Trilingual: English, Hindi, Marathi.",
+        category: "Consent & Certification",
+        pdfPath: "/consents/dynamic/THROMBOLYSIS_CONSENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
