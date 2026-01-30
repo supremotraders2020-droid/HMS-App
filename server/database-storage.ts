@@ -3092,6 +3092,17 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Consent for Lumbar Puncture (LP)",
+        consentType: "LUMBAR_PUNCTURE_CONSENT",
+        description: "Digital consent for lumbar puncture procedure to collect cerebrospinal fluid (CSF) or administer medication. Includes explanation of risks like headache, back pain, bleeding, infection, nerve injury. Trilingual: English, Hindi, Marathi.",
+        category: "Consent & Certification",
+        pdfPath: "/consents/dynamic/LUMBAR_PUNCTURE_CONSENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
