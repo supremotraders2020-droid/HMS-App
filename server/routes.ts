@@ -9379,6 +9379,186 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+
+        // ========== INTUBATION CONSENT ==========
+        if (consentType === 'INTUBATION_CONSENT') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientGender = patient?.gender || '__________';
+          const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
+          
+          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Consent for Intubation</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .logo-section { display: flex; align-items: center; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 15px; margin: 5px 0; }
+    .patient-item { font-size: 10pt; min-width: 180px; }
+    .patient-label { font-weight: bold; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 10.5pt; line-height: 1.6; }
+    .consent-text p { margin-bottom: 10px; }
+    .section-title { font-weight: bold; margin: 15px 0 10px 0; font-size: 11pt; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+    .checkbox { width: 16px; height: 16px; border: 1px solid #333; display: inline-block; }
+    .signature-section { margin-top: 30px; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .signature-block { width: 45%; }
+    .signature-field { margin: 8px 0; font-size: 10pt; }
+    .signature-line { border-bottom: 1px solid #333; height: 25px; margin: 5px 0; }
+    .hindi, .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    .lang-title { text-align: center; font-size: 13pt; font-weight: bold; margin: 20px 0 15px 0; color: #2c5aa0; border-bottom: 1px solid #2c5aa0; padding-bottom: 5px; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<!-- English Page -->
+<div class="page">
+  <div class="hospital-header">
+    <div class="logo-section">
+      <img src="\${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
+    </div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-title">CONSENT FOR INTUBATION (DIGITAL CONSENT)</div>
+
+  <div class="patient-info-box">
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> \${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> \${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> \${patientAge} / \${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Diagnosis / Indication:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Date & Time:</span> ________________</span>
+    </div>
+  </div>
+
+  <div class="section-title">Consent Statement</div>
+  <div class="consent-text">
+    <p>I have been informed about the need for Intubation, which involves insertion of a tube into the airway to assist or maintain breathing and to ensure adequate oxygen delivery.</p>
+    <p>The doctor has explained the reason for intubation, expected benefits, and possible risks or complications, which may include sore throat, injury to teeth or airway, bleeding, infection, difficulty in removal, need for ventilator support, or other unforeseen complications.</p>
+    <p>I understand that intubation may be required as an emergency or life-saving procedure, and its duration will depend on the patient's medical condition and response to treatment.</p>
+    <p>I have also been informed about alternative treatment options and the possible consequences of refusing intubation.</p>
+    <p>All information has been explained to me in a language I understand. I was given sufficient opportunity to ask questions, and all my questions have been answered satisfactorily.</p>
+  </div>
+
+  <div class="section-title">Consent Declaration</div>
+  <div class="consent-text">
+    <p>I voluntarily give my consent for intubation and related digital documentation.</p>
+    <div class="checkbox-item"><span class="checkbox"></span> I Agree</div>
+  </div>
+
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">Patient / Attendant Name: ________________</div>
+        <div class="signature-field">Relationship (if applicable): ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Digital Signature / Thumb Impression</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">Doctor Name: ________________</div>
+        <div class="signature-field">Designation: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">Signature</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hindi Page -->
+<div class="page hindi">
+  <div class="form-title hindi">इंट्यूबेशन के लिए सहमति पत्र</div>
+
+  <div class="section-title hindi">सहमति विवरण</div>
+  <div class="consent-text hindi">
+    <p>मुझे यह बताया गया है कि रोगी की श्वसन सहायता हेतु इंट्यूबेशन आवश्यक है, जिसमें साँस की नली में ट्यूब डाली जाती है ताकि ऑक्सीजन की आपूर्ति सुनिश्चित की जा सके।</p>
+    <p>डॉक्टर ने इंट्यूबेशन की आवश्यकता, इसके लाभ तथा संभावित जोखिमों एवं जटिलताओं के बारे में जानकारी दी है, जिनमें गले में दर्द, दाँत या वायुमार्ग को चोट, रक्तस्राव, संक्रमण, ट्यूब हटाने में कठिनाई, वेंटिलेटर की आवश्यकता या अन्य अप्रत्याशित जटिलताएँ शामिल हो सकती हैं।</p>
+    <p>मुझे यह भी बताया गया है कि इंट्यूबेशन एक आपातकालीन या जीवनरक्षक प्रक्रिया हो सकती है और इसकी अवधि रोगी की स्थिति पर निर्भर करेगी।</p>
+    <p>वैकल्पिक उपचारों एवं इंट्यूबेशन न करने के संभावित परिणामों के बारे में भी मुझे जानकारी दी गई है।</p>
+    <p>यह जानकारी मुझे मेरी समझ की भाषा में दी गई है। मुझे प्रश्न पूछने का अवसर दिया गया और मेरे सभी प्रश्नों के संतोषजनक उत्तर दिए गए।</p>
+  </div>
+
+  <div class="section-title hindi">सहमति घोषणा</div>
+  <div class="consent-text hindi">
+    <p>मैं इंट्यूबेशन प्रक्रिया एवं संबंधित डिजिटल प्रलेखन के लिए अपनी स्वेच्छा से सहमति देता/देती हूँ।</p>
+    <div class="checkbox-item"><span class="checkbox"></span> मैं सहमत हूँ</div>
+  </div>
+
+  <div class="signature-section hindi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">रोगी/परिचारक नाम: ________________</div>
+        <div class="signature-field">नाते: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">हस्ताक्षर / अंगूठा निशान</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">दिनांक व समय: ________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Marathi Page -->
+<div class="page marathi">
+  <div class="form-title marathi">इंट्यूबेशनसाठी संमती फॉर्म</div>
+
+  <div class="section-title marathi">संमती विधान</div>
+  <div class="consent-text marathi">
+    <p>रुग्णाच्या श्वसनासाठी इंट्यूबेशन आवश्यक असल्याचे मला समजावून सांगण्यात आले आहे. या प्रक्रियेत श्वसनमार्गामध्ये नळी टाकून श्वसन सुरळीत ठेवले जाते व ऑक्सिजनचा पुरवठा केला जातो.</p>
+    <p>इंट्यूबेशनची गरज, त्याचे फायदे तसेच संभाव्य धोके व गुंतागुंत—जसे की घशात वेदना, दात किंवा श्वसनमार्गाला इजा, रक्तस्राव, संसर्ग, नळी काढण्यात अडचण, व्हेंटिलेटरची गरज किंवा इतर अनपेक्षित गुंतागुंत—याबाबत मला माहिती देण्यात आली आहे.</p>
+    <p>इंट्यूबेशन ही आपत्कालीन किंवा जीवितरक्षक प्रक्रिया असू शकते आणि तिचा कालावधी रुग्णाच्या प्रकृतीवर अवलंबून असेल, याची मला जाणीव आहे.</p>
+    <p>पर्यायी उपचार व इंट्यूबेशन न केल्यास होणारे परिणाम यांचीही मला माहिती देण्यात आली आहे.</p>
+    <p>ही माहिती मला समजेल अशा भाषेत देण्यात आली आहे. मला प्रश्न विचारण्याची संधी देण्यात आली असून माझ्या सर्व प्रश्नांची समाधानकारक उत्तरे देण्यात आली आहेत.</p>
+  </div>
+
+  <div class="section-title marathi">संमती घोषणा</div>
+  <div class="consent-text marathi">
+    <p>इंट्यूबेशन प्रक्रिया व संबंधित डिजिटल दस्तऐवजीकरणासाठी मी स्वेच्छेने संमती देत आहे.</p>
+    <div class="checkbox-item"><span class="checkbox"></span> मी संमत आहे</div>
+  </div>
+
+  <div class="signature-section marathi">
+    <div class="signature-row">
+      <div class="signature-block">
+        <div class="signature-field">रुग्ण/परिचारक नाव: ________________</div>
+        <div class="signature-field">नाते: ________________</div>
+        <div class="signature-line"></div>
+        <div class="signature-field">स्वाक्षरी / अंगठा</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-field">दिनांक व वेळ: ________________</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
 

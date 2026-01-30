@@ -3125,6 +3125,17 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Consent for Intubation",
+        consentType: "INTUBATION_CONSENT",
+        description: "Digital consent for intubation procedure involving insertion of a tube into the airway to assist breathing. Includes explanation of risks like sore throat, injury to teeth/airway, bleeding, infection, difficulty in removal, or need for ventilator support. Trilingual: English, Hindi, Marathi.",
+        category: "Consent & Certification",
+        pdfPath: "/consents/dynamic/INTUBATION_CONSENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
