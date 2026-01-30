@@ -3103,6 +3103,17 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Consent for Ventilator Support",
+        consentType: "VENTILATOR_CONSENT",
+        description: "Digital consent for ventilator support to assist or take over breathing. Includes explanation of risks like infection, lung injury, prolonged ventilation, difficulty in weaning, or risk to life. Trilingual: English, Hindi, Marathi.",
+        category: "Consent & Certification",
+        pdfPath: "/consents/dynamic/VENTILATOR_CONSENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
