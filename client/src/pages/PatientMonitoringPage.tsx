@@ -1585,8 +1585,8 @@ function OverviewTab({ session }: { session: Session }) {
                     <div><span className="font-medium">Blood Group:</span> {inv.bloodGroup || '-'}</div>
                     <div><span className="font-medium">HIV:</span> {inv.hiv || '-'}</div>
                     <div><span className="font-medium">HbsAg:</span> {inv.hbsag || '-'}</div>
-                    <div><span className="font-medium">Hb/PCV:</span> {inv.hbPcv || '-'}</div>
-                    <div><span className="font-medium">TLC:</span> {inv.tlc || '-'}</div>
+                    <div><span className="font-medium">Hb:</span> {inv.hb || '-'}</div>
+                    <div><span className="font-medium">WBC:</span> {inv.wbc || '-'}</div>
                     <div><span className="font-medium">Platelets:</span> {inv.platelets || '-'}</div>
                   </div>
                 ))}
@@ -3623,7 +3623,7 @@ function InvestigationChartTab({ session }: { session: Session }) {
   const [newEntry, setNewEntry] = useState(emptyEntry);
 
   const { data: investigations = [], refetch } = useQuery<any[]>({
-    queryKey: ["/api/patient-monitoring/sessions", sessionId, "investigation-chart"]
+    queryKey: [`/api/patient-monitoring/sessions/${sessionId}/investigation-chart`]
   });
 
   const addMutation = useMutation({
