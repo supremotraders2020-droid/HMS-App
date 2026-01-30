@@ -3114,6 +3114,17 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Consent for Transfer for Diagnostic Purpose",
+        consentType: "TRANSFER_DIAGNOSTIC_CONSENT",
+        description: "Digital consent for temporary transfer of patient for diagnostic purposes such as investigations, imaging, or specialized tests not available at this hospital. Includes risks during transportation. Trilingual: English, Hindi, Marathi.",
+        category: "Consent & Certification",
+        pdfPath: "/consents/dynamic/TRANSFER_DIAGNOSTIC_CONSENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
