@@ -3136,6 +3136,17 @@ export class DatabaseStorage implements IStorage {
         isActive: true,
         isBilingual: true,
         languages: "English, Hindi, Marathi"
+      },
+      {
+        title: "Consent for Central Line Insertion",
+        consentType: "CENTRAL_LINE_CONSENT",
+        description: "Digital consent for Central Venous Line insertion for administration of medications, fluids, blood products, nutrition, or monitoring. Includes risks like bleeding, infection, air embolism, clot formation. Trilingual: English, Hindi, Marathi.",
+        category: "Consent & Certification",
+        pdfPath: "/consents/dynamic/CENTRAL_LINE_CONSENT",
+        version: "1.0",
+        isActive: true,
+        isBilingual: true,
+        languages: "English, Hindi, Marathi"
       }
     ];
 
