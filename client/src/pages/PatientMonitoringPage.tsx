@@ -1604,13 +1604,9 @@ function OverviewTab({ session }: { session: Session }) {
             {carePlan ? (
               <div className="text-xs space-y-1">
                 <div><span className="font-medium">Diagnosis:</span> {carePlan.provisionalDiagnosis || '-'}</div>
-                <div><span className="font-medium">Allergies:</span> {carePlan.allergies || '-'}</div>
-                <div className="flex gap-4">
-                  <span><span className="font-medium">Temp:</span> {carePlan.temperature || '-'}</span>
-                  <span><span className="font-medium">Pulse:</span> {carePlan.pulse || '-'}</span>
-                  <span><span className="font-medium">BP:</span> {carePlan.bp || '-'}</span>
-                </div>
-                <div><span className="font-medium">Medications:</span> {carePlan.currentMedications || '-'}</div>
+                <div><span className="font-medium">Treatment:</span> {carePlan.treatmentAdvised || '-'}</div>
+                <div><span className="font-medium">Investigations:</span> {carePlan.investigationsAdvised || '-'}</div>
+                <div><span className="font-medium">Consultant:</span> {carePlan.treatingConsultantName || '-'}</div>
               </div>
             ) : <p className="text-xs text-muted-foreground text-center py-2">No care plan recorded</p>}
           </CardContent>
