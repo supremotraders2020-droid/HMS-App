@@ -8951,7 +8951,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Hindi Page -->
 <div class="page hindi">
-  <div class="lang-title hindi">हिंदी (HINDI)</div>
   <div class="form-title hindi">लंबर पंक्चर (LP) के लिए सहमति पत्र</div>
 
   <div class="section-title hindi">सहमति विवरण</div>
@@ -8985,7 +8984,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 <!-- Marathi Page -->
 <div class="page marathi">
-  <div class="lang-title marathi">मराठी (MARATHI)</div>
   <div class="form-title marathi">लंबर पंक्चर (LP) साठी संमती फॉर्म</div>
 
   <div class="section-title marathi">संमती विधान</div>
