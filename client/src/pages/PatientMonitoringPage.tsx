@@ -1314,20 +1314,22 @@ function OverviewTab({ session }: { session: Session }) {
     enabled: !!session.id
   });
 
-  const { data: carePlan } = useQuery<any>({
+  const { data: carePlanData = [] } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/care-plan/${session.id}`],
     enabled: !!session.id
   });
+  const carePlan = carePlanData?.[0];
 
   const { data: tests = [] } = useQuery<any[]>({
-    queryKey: [`/api/patient-monitoring/tests/${session.id}`],
+    queryKey: [`/api/patient-monitoring/sessions/${session.id}/tests`],
     enabled: !!session.id
   });
 
-  const { data: initialAssessment } = useQuery<any>({
+  const { data: initialAssessmentData = [] } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/initial-assessment/${session.id}`],
     enabled: !!session.id
   });
+  const initialAssessment = initialAssessmentData?.[0];
 
   const { data: indoorConsultations = [] } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/indoor-consultation/${session.id}`],
@@ -1349,10 +1351,11 @@ function OverviewTab({ session }: { session: Session }) {
     enabled: !!session.id
   });
 
-  const { data: nursingAssessment } = useQuery<any>({
+  const { data: nursingAssessmentData = [] } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/nursing-assessment/${session.id}`],
     enabled: !!session.id
   });
+  const nursingAssessment = nursingAssessmentData?.[0];
 
   const formatTime = (d: string | null | undefined) => {
     if (!d) return '-';
@@ -4407,7 +4410,7 @@ function TestsTab({ session }: { session: Session }) {
   const [viewingReport, setViewingReport] = useState<{url: string; testName: string} | null>(null);
 
   const { data: tests = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/patient-monitoring/sessions", sessionId, "tests"],
+    queryKey: [`/api/patient-monitoring/sessions/${sessionId}/tests`],
     refetchInterval: 5000,
   });
 
@@ -4416,7 +4419,7 @@ function TestsTab({ session }: { session: Session }) {
       return apiRequest("POST", `/api/patient-monitoring/sessions/${sessionId}/tests`, testData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/patient-monitoring/sessions", sessionId, "tests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/sessions/${sessionId}/tests`] });
       queryClient.invalidateQueries({ queryKey: ["/api/technician/pending-tests"] });
       setShowOrderDialog(false);
       setSelectedTests([]);
@@ -4433,7 +4436,7 @@ function TestsTab({ session }: { session: Session }) {
       return apiRequest("PATCH", `/api/diagnostic-test-orders/${testId}/status`, { status });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/patient-monitoring/sessions", sessionId, "tests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/sessions/${sessionId}/tests`] });
       toast({ title: "Test status updated" });
     },
   });
