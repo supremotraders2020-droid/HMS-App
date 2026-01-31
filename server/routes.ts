@@ -17881,21 +17881,11 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+
   // Biometric Consent - Record consent
-  app.post("/api/face-recognition/consent", async (req, res) => {
+  app.post("/api/face-recognition/consent", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
-      const user = (req as any).session?.user;
-      
-      // Manual auth check with better error info
-      if (!user) {
-        console.log("Face-recognition consent: No session user found");
-        return res.status(401).json({ error: "Unauthorized. Please log in." });
-      }
-      
-      const allowedRoles = ["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER"];
-      if (!allowedRoles.includes(user.role)) {
-        return res.status(403).json({ error: `Access denied. Required roles: ${allowedRoles.join(", ")}` });
-      }
+      const user = (req as any).user || (req as any).session?.user;
       
       const { userId, userType, consentStatus, ipAddress } = req.body;
       
@@ -17966,21 +17956,9 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Face Recognition - Match face against stored embeddings
-  app.post("/api/face-recognition/match", async (req, res) => {
+  app.post("/api/face-recognition/match", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER", "DOCTOR"]), async (req, res) => {
     try {
-      const user = (req as any).session?.user;
-      
-      // Manual auth check
-      if (!user) {
-        console.log("Face-recognition match: No session user found");
-        return res.status(401).json({ error: "Unauthorized. Please log in." });
-      }
-      
-      const allowedRoles = ["SUPER_ADMIN", "ADMIN", "NURSE", "OPD_MANAGER", "DOCTOR"];
-      if (!allowedRoles.includes(user.role)) {
-        return res.status(403).json({ error: `Access denied. Required roles: ${allowedRoles.join(", ")}` });
-      }
-      
+      const user = (req as any).user || (req as any).session?.user;
       const startTime = Date.now();
       const { embeddingVector, userType, purpose, location, deviceId } = req.body;
       
@@ -18281,20 +18259,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Recognition logs (Admin only)
-  app.get("/api/face-recognition/logs", async (req, res) => {
+  app.get("/api/face-recognition/logs", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
     try {
-      const user = (req as any).session?.user;
-      
-      // Manual auth check
-      if (!user) {
-        console.log("Face-recognition logs: No session user found");
-        return res.status(401).json({ error: "Unauthorized. Please log in." });
-      }
-      
-      const allowedRoles = ["SUPER_ADMIN", "ADMIN"];
-      if (!allowedRoles.includes(user.role)) {
-        return res.status(403).json({ error: `Access denied. Required roles: ${allowedRoles.join(", ")}` });
-      }
       
       const filters = {
         userType: req.query.userType as string,
@@ -18309,20 +18275,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // Recognition stats dashboard (Admin only)
-  app.get("/api/face-recognition/stats", async (req, res) => {
+  app.get("/api/face-recognition/stats", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
     try {
-      const user = (req as any).session?.user;
-      
-      // Manual auth check
-      if (!user) {
-        console.log("Face-recognition stats: No session user found");
-        return res.status(401).json({ error: "Unauthorized. Please log in." });
-      }
-      
-      const allowedRoles = ["SUPER_ADMIN", "ADMIN"];
-      if (!allowedRoles.includes(user.role)) {
-        return res.status(403).json({ error: `Access denied. Required roles: ${allowedRoles.join(", ")}` });
-      }
       
       const stats = await storage.getRecognitionStats();
       const settings = await storage.getAllFaceRecognitionSettings();
