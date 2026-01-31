@@ -167,7 +167,9 @@ const requireAuth = (req: any, res: any, next: any) => {
   const session = req.session;
   const user = session?.user;
   
+  // Debug logging for auth issues
   if (!user) {
+    console.log(`[AUTH DEBUG] 401 for ${req.method} ${req.path} - sessionID: ${req.sessionID}, hasSession: ${!!session}, hasUser: ${!!user}, cookies: ${!!req.headers.cookie}`);
     return res.status(401).json({ error: "Unauthorized. Please log in." });
   }
   
