@@ -1,5 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { Pool } from "@neondatabase/serverless";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -10,8 +12,17 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Trust proxy for Replit HTTPS environment
 app.set('trust proxy', 1);
 
-// Session middleware for authentication
+// PostgreSQL session store for persistent sessions
+const PgSession = connectPgSimple(session);
+const sessionPool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+// Session middleware for authentication with PostgreSQL store
 app.use(session({
+  store: new PgSession({
+    pool: sessionPool,
+    tableName: 'user_sessions',
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET || 'hms-core-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
