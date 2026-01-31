@@ -7,14 +7,18 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
+// Trust proxy for Replit HTTPS environment
+app.set('trust proxy', 1);
+
 // Session middleware for authentication
 app.use(session({
   secret: process.env.SESSION_SECRET || 'hms-core-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     httpOnly: true,
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
