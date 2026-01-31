@@ -15147,10 +15147,25 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.json(allReports);
       }
       
-      // DOCTOR can only see reports for their patients
+      // DOCTOR can only see reports for their patients (from both lab reports and technician reports)
       if (user.role === "DOCTOR") {
-        const doctorReports = allReports.filter(r => r.doctorId === user.id);
-        return res.json(doctorReports);
+        const doctorLabReports = allReports.filter(r => r.doctorId === user.id);
+        
+        // Also include technician reports (from Patient Monitoring diagnostic tests)
+        const technicianReports = await storage.getTechnicianReportsByDoctor(user.id);
+        const formattedTechReports = technicianReports.map((r: any) => ({
+          ...r,
+          reportStatus: r.status === 'SUBMITTED' ? 'COMPLETED' : r.status,
+          reportType: 'TECHNICIAN_UPLOAD',
+          testResults: r.findings,
+          conclusion: r.conclusion,
+          recommendations: r.recommendations,
+          pdfUrl: r.fileData ? `/api/technician/report-file/${r.id}` : null,
+        }));
+        
+        // Combine both sources
+        const combinedReports = [...doctorLabReports, ...formattedTechReports];
+        return res.json(combinedReports);
       }
       
       // PATIENT can only see their own reports
