@@ -1315,6 +1315,18 @@ export default function BiometricService() {
                     </Select>
                   </div>
 
+                  {!faceDescriptor && (
+                    <div className="p-4 bg-amber-50 dark:bg-amber-950/50 rounded-lg space-y-2 border border-amber-300">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <span className="font-medium text-amber-800 dark:text-amber-200">Step Required</span>
+                      </div>
+                      <p className="text-sm text-amber-600 dark:text-amber-300">
+                        First click "Capture & Analyze Face" button above to capture the face before saving.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg space-y-2">
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-blue-600" />
