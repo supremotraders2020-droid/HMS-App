@@ -1187,10 +1187,22 @@ export default function BiometricService() {
                     <canvas ref={canvasRef} className="hidden" />
                     
                     {!isCapturing && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 gap-3">
+                        {!isModelLoaded && (
+                          <div className="bg-amber-500/90 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Loading face recognition models...
+                          </div>
+                        )}
+                        {isModelLoaded && (
+                          <div className="bg-green-500/90 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Models ready
+                          </div>
+                        )}
                         <Button onClick={startCamera} disabled={!isModelLoaded} size="lg" data-testid="button-start-camera">
                           <Camera className="mr-2 h-5 w-5" />
-                          Start Camera
+                          {isModelLoaded ? "Start Camera" : "Please wait..."}
                         </Button>
                       </div>
                     )}
@@ -1218,7 +1230,7 @@ export default function BiometricService() {
                   <div className="flex gap-2">
                     <Button 
                       onClick={captureAndAnalyzeFace} 
-                      disabled={!isCapturing || isProcessing || !currentDetection}
+                      disabled={!isCapturing || isProcessing || !isModelLoaded}
                       className="flex-1"
                       size="lg"
                       data-testid="button-capture-face"
@@ -1228,7 +1240,7 @@ export default function BiometricService() {
                       ) : (
                         <ScanFace className="mr-2 h-5 w-5" />
                       )}
-                      {isProcessing ? "Analyzing..." : "Capture & Analyze Face"}
+                      {!isModelLoaded ? "Loading Models..." : isProcessing ? "Analyzing..." : "Capture & Analyze Face"}
                     </Button>
                     <Button 
                       onClick={stopCamera} 
