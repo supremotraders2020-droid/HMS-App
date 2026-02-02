@@ -6649,93 +6649,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(otAuditLog).where(eq(otAuditLog.caseId, caseId)).orderBy(desc(otAuditLog.timestamp));
   }
 
-  // Seed OT Demo Data
+  // OT data should be added manually through the admin portal
+  // No demo data is seeded
   async seedOtDemoData(): Promise<void> {
-    const existingCases = await db.select().from(otCases).limit(1);
-    if (existingCases.length > 0) {
-      console.log("OT demo data already exists, skipping seed...");
-      return;
-    }
-
-    console.log("Seeding OT Demo Data...");
-    
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date(today);
-    dayAfter.setDate(dayAfter.getDate() + 2);
-
-    const formatDate = (d: Date) => d.toISOString().split('T')[0];
-
-    const demoCases = [
-      {
-        id: crypto.randomUUID(),
-        patientId: "demo-patient-1",
-        patientName: "Rajesh Kumar Sharma",
-        uhid: "GHOSP2024001",
-        surgeonId: "demo-surgeon-1",
-        surgeonName: "Dr. Vikram Patel",
-        anaesthetistId: "demo-anaesthetist-1",
-        anaesthetistName: "Dr. Sunita Reddy",
-        otRoom: "OT-1",
-        procedureName: "Laparoscopic Cholecystectomy",
-        procedureCode: "LC001",
-        diagnosis: "Cholelithiasis (Gallstones)",
-        scheduledDate: formatDate(today),
-        scheduledTime: "09:00",
-        estimatedDuration: 90,
-        urgencyLevel: "elective",
-        status: "SCHEDULED",
-        createdBy: "system"
-      },
-      {
-        id: crypto.randomUUID(),
-        patientId: "demo-patient-2",
-        patientName: "Priya Devi Patel",
-        uhid: "GHOSP2024002",
-        surgeonId: "demo-surgeon-2",
-        surgeonName: "Dr. Anil Mehta",
-        anaesthetistId: "demo-anaesthetist-1",
-        anaesthetistName: "Dr. Sunita Reddy",
-        otRoom: "OT-2",
-        procedureName: "Total Knee Replacement (Right)",
-        procedureCode: "TKR001",
-        diagnosis: "Osteoarthritis - Right Knee",
-        scheduledDate: formatDate(tomorrow),
-        scheduledTime: "10:30",
-        estimatedDuration: 150,
-        urgencyLevel: "elective",
-        status: "SCHEDULED",
-        createdBy: "system"
-      },
-      {
-        id: crypto.randomUUID(),
-        patientId: "demo-patient-3",
-        patientName: "Mohammed Farhan Khan",
-        uhid: "GHOSP2024003",
-        surgeonId: "demo-surgeon-3",
-        surgeonName: "Dr. Ramesh Gupta",
-        anaesthetistId: "demo-anaesthetist-2",
-        anaesthetistName: "Dr. Kavita Sharma",
-        otRoom: "OT-3",
-        procedureName: "Appendectomy (Laparoscopic)",
-        procedureCode: "APX001",
-        diagnosis: "Acute Appendicitis",
-        scheduledDate: formatDate(dayAfter),
-        scheduledTime: "08:00",
-        estimatedDuration: 60,
-        urgencyLevel: "urgent",
-        status: "SCHEDULED",
-        createdBy: "system"
-      }
-    ];
-
-    for (const demoCase of demoCases) {
-      await db.insert(otCases).values(demoCase);
-      console.log(`  Seeded OT case: ${demoCase.patientName} - ${demoCase.procedureName}`);
-    }
-
-    console.log("OT Demo Data seeding complete!");
+    console.log("OT data seeding skipped - real data should be added through admin portal");
   }
 }
 
