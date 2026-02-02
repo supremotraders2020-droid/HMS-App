@@ -1124,6 +1124,7 @@ export class DatabaseStorage implements IStorage {
   async ensureEssentialAccounts(): Promise<void> {
     const essentialAccounts = [
       { username: "superadmin", password: "SuperAdmin@123", role: "SUPER_ADMIN" as const, name: "Super Administrator", email: "superadmin@gravityhospital.in" },
+      { username: "admin", password: "Admin@123", role: "ADMIN" as const, name: "Administrator", email: "admin@gravityhospital.in" },
     ];
 
     for (const account of essentialAccounts) {
@@ -1138,10 +1139,10 @@ export class DatabaseStorage implements IStorage {
           email: account.email,
         });
         console.log(`Created essential account: ${account.username}`);
-      } else if (account.username === "superadmin") {
-        // Always ensure superadmin has the known password
+      } else if (account.username === "superadmin" || account.username === "admin") {
+        // Always ensure superadmin and admin have the known password
         const hashedPassword = await bcrypt.hash(account.password, SALT_ROUNDS);
-        await db.update(users).set({ password: hashedPassword }).where(eq(users.username, "superadmin"));
+        await db.update(users).set({ password: hashedPassword }).where(eq(users.username, account.username));
         console.log(`Reset password for essential account: ${account.username}`);
       }
     }
