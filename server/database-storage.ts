@@ -1198,73 +1198,10 @@ export class DatabaseStorage implements IStorage {
 
     console.log("Seeding initial data...");
 
-    // Seed demo users (5 per role = 25 users)
-    const demoUsers: InsertUser[] = [
-      // Admins
-      { username: "admin1", password: "Admin@123", role: "ADMIN", name: "Rajesh Sharma", email: "rajesh.sharma@gravityhospital.com" },
-      { username: "admin2", password: "Admin@123", role: "ADMIN", name: "Priya Mehta", email: "priya.mehta@gravityhospital.com" },
-      { username: "admin3", password: "Admin@123", role: "ADMIN", name: "Amit Patel", email: "amit.patel@gravityhospital.com" },
-      { username: "admin4", password: "Admin@123", role: "ADMIN", name: "Sunita Rao", email: "sunita.rao@gravityhospital.com" },
-      { username: "admin5", password: "Admin@123", role: "ADMIN", name: "Vikram Singh", email: "vikram.singh@gravityhospital.com" },
-      // Doctors
-      { username: "doctor1", password: "Doctor@123", role: "DOCTOR", name: "Dr. Anil Kulkarni", email: "anil.kulkarni@gravityhospital.com" },
-      { username: "doctor2", password: "Doctor@123", role: "DOCTOR", name: "Dr. Snehal Patil", email: "snehal.patil@gravityhospital.com" },
-      { username: "doctor3", password: "Doctor@123", role: "DOCTOR", name: "Dr. Rahul Deshmukh", email: "rahul.deshmukh@gravityhospital.com" },
-      { username: "doctor4", password: "Doctor@123", role: "DOCTOR", name: "Dr. Kavita Joshi", email: "kavita.joshi@gravityhospital.com" },
-      { username: "doctor5", password: "Doctor@123", role: "DOCTOR", name: "Dr. Suresh Nair", email: "suresh.nair@gravityhospital.com" },
-      // Nurses are now added only by admin through User Management
-      // No mock nurse data is seeded - real nurses must be added by admin
-      // OPD Managers
-      { username: "opd1", password: "OPD@123", role: "OPD_MANAGER", name: "Sachin Tendulkar", email: "sachin.t@gravityhospital.com" },
-      { username: "opd2", password: "OPD@123", role: "OPD_MANAGER", name: "Neeta Ambani", email: "neeta.a@gravityhospital.com" },
-      { username: "opd3", password: "OPD@123", role: "OPD_MANAGER", name: "Ramesh Iyer", email: "ramesh.i@gravityhospital.com" },
-      { username: "opd4", password: "OPD@123", role: "OPD_MANAGER", name: "Geeta Phogat", email: "geeta.p@gravityhospital.com" },
-      { username: "opd5", password: "OPD@123", role: "OPD_MANAGER", name: "Manish Malhotra", email: "manish.m@gravityhospital.com" },
-      // Patients
-      { username: "patient1", password: "Patient@123", role: "PATIENT", name: "Rahul Verma", email: "rahul.verma@gmail.com" },
-      { username: "patient2", password: "Patient@123", role: "PATIENT", name: "Anjali Kapoor", email: "anjali.kapoor@gmail.com" },
-      { username: "patient3", password: "Patient@123", role: "PATIENT", name: "Vikas Reddy", email: "vikas.reddy@gmail.com" },
-      { username: "patient4", password: "Patient@123", role: "PATIENT", name: "Pooja Sharma", email: "pooja.sharma@gmail.com" },
-      { username: "patient5", password: "Patient@123", role: "PATIENT", name: "Kiran Yadav", email: "kiran.yadav@gmail.com" },
-    ];
-
-    for (const user of demoUsers) {
-      const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS);
-      await db.insert(users).values({ ...user, password: hashedPassword });
-    }
-
-    // Doctors are now added only by admin through User Management
-    // No mock doctor data is seeded - real doctors must be added by admin
-
-    // Seed sample service patients
-    const samplePatients: InsertServicePatient[] = [
-      { firstName: "Sanjay", lastName: "Gupta", dateOfBirth: "1970-03-15", gender: "Male", phone: "9876543210", email: "sanjay.gupta@gmail.com", address: "123 MG Road, Pune", emergencyContact: "Priya Gupta", emergencyPhone: "9876543211", insuranceProvider: "Star Health", insuranceNumber: "SH123456" },
-      { firstName: "Anita", lastName: "Sharma", dateOfBirth: "1985-07-22", gender: "Female", phone: "9876543212", email: "anita.sharma@gmail.com", address: "456 FC Road, Pune", emergencyContact: "Rajesh Sharma", emergencyPhone: "9876543213", insuranceProvider: "ICICI Lombard", insuranceNumber: "IL789012" },
-      { firstName: "Vikram", lastName: "Singh", dateOfBirth: "1960-11-08", gender: "Male", phone: "9876543214", email: "vikram.singh@gmail.com", address: "789 JM Road, Pune", emergencyContact: "Meera Singh", emergencyPhone: "9876543215", insuranceProvider: "Max Bupa", insuranceNumber: "MB345678" },
-      { firstName: "Priya", lastName: "Patel", dateOfBirth: "1992-04-30", gender: "Female", phone: "9876543216", email: "priya.patel@gmail.com", address: "321 Koregaon Park, Pune", emergencyContact: "Amit Patel", emergencyPhone: "9876543217", insuranceProvider: "Bajaj Allianz", insuranceNumber: "BA901234" },
-    ];
-
-    for (const patient of samplePatients) {
-      await db.insert(servicePatients).values(patient);
-    }
-
-    // Seed tracking patients
-    const trackingPatientsData: InsertTrackingPatient[] = [
-      { name: "Sanjay Gupta", age: 55, gender: "Male", department: "General Medicine", room: "310A", diagnosis: "Hypertension", doctor: "Dr. Kavita Joshi", notes: null, dischargeDate: null },
-      { name: "Anita Sharma", age: 38, gender: "Female", department: "Cardiology", room: "205B", diagnosis: "Cardiac Arrhythmia", doctor: "Dr. Rahul Deshmukh", notes: null, dischargeDate: null },
-      { name: "Rajesh Kumar", age: 45, gender: "Male", department: "Orthopedics", room: "112A", diagnosis: "Knee Surgery Recovery", doctor: "Dr. Suresh Nair", notes: null, dischargeDate: null },
-      { name: "Priya Patel", age: 28, gender: "Female", department: "Gynecology", room: "401C", diagnosis: "Post-partum care", doctor: "Dr. Kavita Joshi", notes: null, dischargeDate: null },
-    ];
-
-    for (const tp of trackingPatientsData) {
-      await db.insert(trackingPatients).values({
-        ...tp,
-        status: "admitted",
-        admissionDate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
-      });
-    }
-
-    console.log("Initial data seeded successfully!");
+    // All users (admins, doctors, nurses, patients, etc.) must be added by admin through User Management
+    // No demo/mock data is seeded - real data must be added by admin
+    
+    console.log("Initial data seeded successfully (no dummy data)");
     
     // Seed health tips data
     await this.seedHealthTipsData();
