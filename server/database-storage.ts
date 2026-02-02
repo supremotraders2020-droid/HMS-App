@@ -1148,10 +1148,46 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // ========== ENSURE STAFF MASTER ENTRIES ==========
+  async ensureStaffMasterEntries(): Promise<void> {
+    // Get all doctors/nurses/OPD managers who don't have staff_master entries
+    const usersNeedingStaffMaster = await db.execute(sql`
+      SELECT u.id, u.username, u.name, u.role, u.email
+      FROM users u
+      LEFT JOIN staff_master sm ON sm.user_id = u.id
+      WHERE u.role IN ('DOCTOR', 'NURSE', 'OPD_MANAGER', 'TECHNICIAN', 'PATHOLOGY_LAB', 'MEDICAL_STORE')
+        AND sm.id IS NULL
+    `);
+    
+    for (const user of usersNeedingStaffMaster.rows as any[]) {
+      const empCode = `EMP${Date.now().toString().slice(-6)}${Math.random().toString(36).slice(-3).toUpperCase()}`;
+      const dept = user.role === 'DOCTOR' ? 'OPD' : 
+                   user.role === 'NURSE' ? 'NURSING' : 
+                   user.role === 'TECHNICIAN' ? 'DIAGNOSTIC' :
+                   user.role === 'PATHOLOGY_LAB' ? 'PATHOLOGY' :
+                   user.role === 'MEDICAL_STORE' ? 'PHARMACY' : 'ADMIN';
+      
+      await db.insert(staffMaster).values({
+        id: crypto.randomUUID(),
+        userId: user.id,
+        employeeCode: empCode,
+        fullName: user.name || user.username,
+        role: user.role,
+        department: dept,
+        status: 'ACTIVE',
+        email: user.email,
+      });
+      console.log(`Created staff_master for: ${user.username} (${user.role})`);
+    }
+  }
+
   // ========== SEED DATA METHOD ==========
   async seedInitialData(): Promise<void> {
     // Always ensure essential accounts exist (admin, patient)
     await this.ensureEssentialAccounts();
+    
+    // Ensure all staff have staff_master entries for login
+    await this.ensureStaffMasterEntries();
     
     // Check if data already exists
     const existingUsers = await db.select().from(users).limit(1);
