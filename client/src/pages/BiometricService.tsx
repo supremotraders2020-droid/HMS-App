@@ -613,7 +613,10 @@ export default function BiometricService() {
   }, [toast, stopVerifyCamera]);
 
   const captureAndAnalyzeFace = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current || !isModelLoaded) return;
+    if (!videoRef.current || !canvasRef.current || !isModelLoaded) {
+      toast({ title: "Please wait", description: "Camera or models not ready yet", variant: "destructive" });
+      return;
+    }
     
     setIsScanning(true);
     setIsProcessing(true);
@@ -633,10 +636,20 @@ export default function BiometricService() {
       ctx?.drawImage(video, 0, 0);
       
       const faceApi = (window as any).faceapi;
-      const detection = await faceApi
-        .detectSingleFace(video, new faceApi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+      
+      // Try detection with lower confidence threshold for better detection
+      let detection = await faceApi
+        .detectSingleFace(canvas, new faceApi.SsdMobilenetv1Options({ minConfidence: 0.3 }))
         .withFaceLandmarks()
         .withFaceDescriptor();
+      
+      // If no detection on canvas, try on video element
+      if (!detection) {
+        detection = await faceApi
+          .detectSingleFace(video, new faceApi.SsdMobilenetv1Options({ minConfidence: 0.2 }))
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+      }
       
       clearInterval(progressInterval);
       setScanProgress(100);
@@ -644,7 +657,8 @@ export default function BiometricService() {
       if (detection) {
         const qualityScore = detection.detection.score * 100;
         
-        if (qualityScore < 50) {
+        // Lowered quality threshold to 30% for more permissive detection
+        if (qualityScore < 30) {
           toast({ 
             title: "Low quality face capture", 
             description: "Please improve lighting and face position", 
