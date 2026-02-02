@@ -2806,12 +2806,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
       
       // Create user account for login
-      await databaseStorage.createUser({
+      const newUser = await databaseStorage.createUser({
         username,
         password: hashedPassword,
         role,
         name,
         email
+      });
+      
+      // CRITICAL: Create staff_master entry for login validation
+      const empCode = `EMP${Date.now().toString().slice(-6)}`;
+      await storage.createStaffMaster({
+        userId: newUser.id,
+        employeeCode: empCode,
+        fullName: name,
+        role: role,
+        department: department || (role === "DOCTOR" ? "OPD" : role === "NURSE" ? "NURSING" : "ADMIN"),
+        designation: title,
+        email: email,
+        phone: phone,
+        status: "ACTIVE",
       });
       
       // If role is DOCTOR, also create an entry in the doctors table for OPD
