@@ -405,8 +405,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // CRITICAL: Staff list validation - Staff roles must have an ACTIVE entry in staff_master table
-      // SUPER_ADMIN and PATIENT roles are exempt from this check
-      if (user.role !== "SUPER_ADMIN" && user.role !== "PATIENT" && STAFF_ROLES_REQUIRING_VALIDATION.includes(user.role)) {
+      // SUPER_ADMIN, ADMIN and PATIENT roles are exempt from this check
+      if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN" && user.role !== "PATIENT" && STAFF_ROLES_REQUIRING_VALIDATION.includes(user.role)) {
         // Try to find staff record by userId first (primary link)
         let staffRecord = await storage.getStaffMasterByUserId(user.id);
         
