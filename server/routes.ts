@@ -18947,15 +18947,17 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       }
 
       const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
-      if (!apiKey) {
+      const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+      
+      if (!apiKey || !baseURL) {
         return res.status(500).json({ 
           success: false, 
-          error: "OpenAI API key not configured" 
+          error: "OpenAI API not properly configured" 
         });
       }
 
       const OpenAI = (await import("openai")).default;
-      const openai = new OpenAI({ apiKey });
+      const openai = new OpenAI({ apiKey, baseURL });
 
       const idTypeNames: Record<string, string> = {
         aadhaar: "Aadhaar Card",
