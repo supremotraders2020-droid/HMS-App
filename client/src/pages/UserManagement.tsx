@@ -31,7 +31,10 @@ import {
   Loader2,
   Copy,
   CheckCircle2,
-  Key
+  Key,
+  Eye,
+  EyeOff,
+  RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -68,6 +71,7 @@ export default function UserManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<{username: string; password: string; name: string; role: string} | null>(null);
+  const [showCredentialsPassword, setShowCredentialsPassword] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<UserRole | "ALL">("ALL");
   
@@ -104,7 +108,9 @@ export default function UserManagement() {
     specialization: string;
     status: string;
     username: string;
+    newPassword?: string;
   } | null>(null);
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   const { data: staffMembers = [], isLoading } = useQuery<HospitalTeamMember[]>({
     queryKey: ["/api/team-members"],
@@ -136,6 +142,7 @@ export default function UserManagement() {
         password: ""
       });
       setIsAddDialogOpen(false);
+      setShowCredentialsPassword(false);
       setIsCredentialsDialogOpen(true);
     },
     onError: (error: Error) => {
@@ -240,8 +247,10 @@ export default function UserManagement() {
       department: member.department,
       specialization: member.specialization || "",
       status: member.status,
-      username: (member as any).username || ""
+      username: (member as any).username || "",
+      newPassword: undefined
     });
+    setShowEditPassword(false);
     setIsEditDialogOpen(true);
   };
 
@@ -266,7 +275,8 @@ export default function UserManagement() {
         specialization: editStaff.specialization || editStaff.department,
         email: editStaff.email,
         phone: editStaff.phone,
-        status: editStaff.status
+        status: editStaff.status,
+        newPassword: editStaff.newPassword
       }
     });
   };
@@ -472,10 +482,15 @@ export default function UserManagement() {
           {editStaff && (
             <div className="space-y-4">
               {editStaff.username && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                  <div className="flex items-center justify-between">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Key className="h-4 w-4 text-blue-600" />
+                    <span className="font-semibold text-blue-800 dark:text-blue-200">Login Credentials</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded px-3 py-2 border">
                     <div>
-                      <Label className="text-xs text-blue-600 dark:text-blue-400">Login User ID</Label>
+                      <Label className="text-xs text-muted-foreground">User ID</Label>
                       <p className="font-mono font-bold text-lg">{editStaff.username}</p>
                     </div>
                     <Button 
@@ -489,7 +504,61 @@ export default function UserManagement() {
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">This is the username for login. Password cannot be displayed (it is encrypted).</p>
+                  
+                  <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded px-3 py-2 border">
+                    <div className="flex-1">
+                      <Label className="text-xs text-muted-foreground">Password</Label>
+                      {editStaff.newPassword ? (
+                        <p className="font-mono font-bold text-lg tracking-widest">
+                          {showEditPassword ? editStaff.newPassword : "•".repeat(editStaff.newPassword.length)}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">Click reset to generate new password</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {editStaff.newPassword && (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => setShowEditPassword(!showEditPassword)}
+                          >
+                            {showEditPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => {
+                              navigator.clipboard.writeText(editStaff.newPassword!);
+                              toast({ title: "Copied!", description: "Password copied to clipboard" });
+                            }}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => {
+                          const newPass = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+                          setEditStaff({...editStaff, newPassword: newPass});
+                          setShowEditPassword(true);
+                        }}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Reset
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {editStaff.newPassword && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      New password will be saved when you click "Update Staff Member"
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -663,22 +732,33 @@ export default function UserManagement() {
                     </Button>
                   </div>
                   <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded px-3 py-2 border">
-                    <div>
+                    <div className="flex-1">
                       <Label className="text-xs text-muted-foreground">Password</Label>
-                      <p className="font-mono font-bold text-lg tracking-widest">{"•".repeat(createdCredentials.password.length)}</p>
+                      <p className="font-mono font-bold text-lg tracking-widest">
+                        {showCredentialsPassword ? createdCredentials.password : "•".repeat(createdCredentials.password.length)}
+                      </p>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => {
-                        navigator.clipboard.writeText(createdCredentials.password);
-                        toast({ title: "Copied!", description: "Password copied to clipboard" });
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy Password
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setShowCredentialsPassword(!showCredentialsPassword)}
+                      >
+                        {showCredentialsPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => {
+                          navigator.clipboard.writeText(createdCredentials.password);
+                          toast({ title: "Copied!", description: "Password copied to clipboard" });
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

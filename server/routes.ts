@@ -2877,12 +2877,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update team member
   app.patch("/api/team-members/:id", async (req, res) => {
     try {
-      const member = await storage.updateTeamMember(req.params.id, req.body);
+      const { newPassword, ...updates } = req.body;
+      
+      // If password reset is requested, update the user's password
+      if (newPassword && updates.email) {
+        const user = await databaseStorage.getUserByEmail(updates.email);
+        if (user) {
+          const hashedPassword = await bcrypt.hash(newPassword, 10);
+          await db.update(users).set({ password: hashedPassword }).where(eq(users.id, user.id));
+        }
+      }
+      
+      const member = await storage.updateTeamMember(req.params.id, updates);
       if (!member) {
         return res.status(404).json({ error: "Team member not found" });
       }
       res.json(member);
     } catch (error) {
+      console.error("Error updating team member:", error);
       res.status(500).json({ error: "Failed to update team member" });
     }
   });
