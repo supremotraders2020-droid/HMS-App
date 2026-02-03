@@ -28,7 +28,10 @@ import {
   Search,
   Edit,
   Trash2,
-  Loader2
+  Loader2,
+  Copy,
+  CheckCircle2,
+  Key
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -63,6 +66,8 @@ export default function UserManagement() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{username: string; password: string; name: string; role: string} | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<UserRole | "ALL">("ALL");
   
@@ -115,10 +120,11 @@ export default function UserManagement() {
       department: string;
     }) => {
       const response = await apiRequest("POST", "/api/team-members", staffData);
-      return response.json();
+      return { ...await response.json(), credentials: { username: staffData.username, password: staffData.password, name: staffData.name, role: staffData.title } };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/team-members"] });
+      setCreatedCredentials(data.credentials);
       setNewStaff({
         name: "",
         email: "",
@@ -129,10 +135,7 @@ export default function UserManagement() {
         password: ""
       });
       setIsAddDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Staff member added successfully. They can now login with their username and password.",
-      });
+      setIsCredentialsDialogOpen(true);
     },
     onError: (error: Error) => {
       toast({
@@ -585,6 +588,90 @@ export default function UserManagement() {
                   Cancel
                 </Button>
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              User Created Successfully
+            </DialogTitle>
+            <DialogDescription>
+              Save these login credentials. The password cannot be retrieved later.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {createdCredentials && (
+            <div className="space-y-4">
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Key className="h-4 w-4 text-green-600" />
+                  <span className="font-semibold text-green-800 dark:text-green-200">Login Credentials</span>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Name</Label>
+                    <p className="font-medium">{createdCredentials.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Role</Label>
+                    <p className="font-medium">{createdCredentials.role}</p>
+                  </div>
+                  <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded px-3 py-2 border">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">User ID</Label>
+                      <p className="font-mono font-bold text-lg">{createdCredentials.username}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdCredentials.username);
+                        toast({ title: "Copied!", description: "User ID copied to clipboard" });
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded px-3 py-2 border">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Password</Label>
+                      <p className="font-mono font-bold text-lg">{createdCredentials.password}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdCredentials.password);
+                        toast({ title: "Copied!", description: "Password copied to clipboard" });
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm">
+                <p className="text-amber-800 dark:text-amber-200">
+                  <strong>Important:</strong> Please save or share these credentials now. The password is encrypted and cannot be retrieved later.
+                </p>
+              </div>
+              
+              <Button 
+                onClick={() => {
+                  setIsCredentialsDialogOpen(false);
+                  setCreatedCredentials(null);
+                }}
+                className="w-full"
+              >
+                Done - I have saved the credentials
+              </Button>
             </div>
           )}
         </DialogContent>

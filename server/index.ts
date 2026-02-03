@@ -9,14 +9,18 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
-// Trust proxy for Replit HTTPS environment
+// Trust proxy for HTTPS environment (Replit or other reverse proxy)
 app.set('trust proxy', 1);
 
 // PostgreSQL session store for persistent sessions
 const PgSession = connectPgSimple(session);
 const sessionPool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+// Determine if running in production (HTTPS) or development (HTTP)
+const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1';
+
 // Session middleware for authentication with PostgreSQL store
+// Works on both local server (HTTP) and deployed environment (HTTPS)
 app.use(session({
   store: new PgSession({
     pool: sessionPool,
@@ -27,7 +31,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,
+    secure: isProduction, // true for HTTPS (production), false for HTTP (local)
     httpOnly: true,
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
