@@ -18991,7 +18991,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   });
 
   // OCR processing endpoint - uses OpenAI GPT-4V for real extraction
-  app.post("/api/id-card-scans/process-ocr", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
+  app.post("/api/id-card-scans/process-ocr", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN", "DOCTOR", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
       const { frontImage, backImage, idCardType, sessionId } = req.body;
       
