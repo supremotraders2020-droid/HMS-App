@@ -227,11 +227,11 @@ export default function UserManagement() {
     }
 
     addStaffMutation.mutate({
-      name: newStaff.name,
+      name: newStaff.name.trim(),
       title: roleToTitle[newStaff.role] || newStaff.role,
-      email: newStaff.email,
-      phone: newStaff.phone,
-      username: newStaff.username,
+      email: newStaff.email.trim(),
+      phone: newStaff.phone.trim(),
+      username: newStaff.username.trim(),
       password: newStaff.password,
       department: newStaff.department || "general"
     });

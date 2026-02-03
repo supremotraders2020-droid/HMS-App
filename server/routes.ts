@@ -2783,8 +2783,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { name, title, email, phone, username, password, department } = req.body;
       
+      // Trim whitespace from user inputs
+      const trimmedUsername = username?.trim();
+      const trimmedName = name?.trim();
+      const trimmedEmail = email?.trim();
+      const trimmedPhone = phone?.trim();
+      
       // Validate required fields
-      if (!name || !title || !email || !phone || !username || !password) {
+      if (!trimmedName || !title || !trimmedEmail || !trimmedPhone || !trimmedUsername || !password) {
         return res.status(400).json({ error: "All fields are required: name, title, email, phone, username, password" });
       }
       
@@ -2794,13 +2800,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if username already exists
-      const existingUser = await databaseStorage.getUserByUsername(username);
+      const existingUser = await databaseStorage.getUserByUsername(trimmedUsername);
       if (existingUser) {
         return res.status(400).json({ error: "Username already exists" });
       }
       
       // Check if email already exists
-      const existingEmail = await databaseStorage.getUserByEmail(email);
+      const existingEmail = await databaseStorage.getUserByEmail(trimmedEmail);
       if (existingEmail) {
         return res.status(400).json({ error: "Email already registered" });
       }
@@ -2818,12 +2824,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create user account for login - also store plain password for admin viewing
       const newUser = await db.insert(users).values({
-        username,
+        username: trimmedUsername,
         password: hashedPassword,
         plainPassword: password,
         role,
-        name,
-        email
+        name: trimmedName,
+        email: trimmedEmail
       }).returning().then(rows => rows[0]);
       
       // CRITICAL: Create staff_master entry for login validation
@@ -2831,22 +2837,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createStaffMaster({
         userId: newUser.id,
         employeeCode: empCode,
-        fullName: name,
+        fullName: trimmedName,
         role: role,
         department: department || (role === "DOCTOR" ? "OPD" : role === "NURSE" ? "NURSING" : "ADMIN"),
         designation: title,
-        email: email,
-        phone: phone,
+        email: trimmedEmail,
+        phone: trimmedPhone,
         status: "ACTIVE",
       });
       
       // If role is DOCTOR, also create an entry in the doctors table for OPD
       if (role === "DOCTOR") {
         const specialty = departmentToSpecialty[department] || "General Medicine";
-        const avatarInitials = name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+        const avatarInitials = trimmedName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
         
         await databaseStorage.createDoctor({
-          name,
+          name: trimmedName,
           specialty,
           qualification: "MBBS", // Default qualification
           experience: 5, // Default experience
@@ -2858,14 +2864,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create team member with proper department
       const memberData = {
-        name,
+        name: trimmedName,
         title,
         department: department || role, // Use provided department or role as fallback
         specialization: title,
-        email,
-        phone,
+        email: trimmedEmail,
+        phone: trimmedPhone,
         status: "available" as const,
-        avatar: name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+        avatar: trimmedName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
       };
       
       const member = await storage.createTeamMember(memberData);
