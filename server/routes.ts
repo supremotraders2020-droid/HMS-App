@@ -2881,12 +2881,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { newPassword, ...updates } = req.body;
       
-      // If password reset is requested, update the user's password
+      // If password is being set/reset, update the user's password and store plain text
       if (newPassword && updates.email) {
         const user = await databaseStorage.getUserByEmail(updates.email);
         if (user) {
           const hashedPassword = await bcrypt.hash(newPassword, 10);
-          await db.update(users).set({ password: hashedPassword }).where(eq(users.id, user.id));
+          await db.update(users).set({ 
+            password: hashedPassword,
+            plainPassword: newPassword
+          }).where(eq(users.id, user.id));
         }
       }
       

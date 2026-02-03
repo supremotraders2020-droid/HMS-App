@@ -108,6 +108,7 @@ export default function UserManagement() {
     status: string;
     username: string;
     plainPassword?: string | null;
+    newPassword?: string;
   } | null>(null);
   const [showEditPassword, setShowEditPassword] = useState(false);
 
@@ -247,7 +248,8 @@ export default function UserManagement() {
       specialization: member.specialization || "",
       status: member.status,
       username: (member as any).username || "",
-      plainPassword: (member as any).plainPassword || null
+      plainPassword: (member as any).plainPassword || null,
+      newPassword: undefined
     });
     setShowEditPassword(false);
     setIsEditDialogOpen(true);
@@ -274,7 +276,8 @@ export default function UserManagement() {
         specialization: editStaff.specialization || editStaff.department,
         email: editStaff.email,
         phone: editStaff.phone,
-        status: editStaff.status
+        status: editStaff.status,
+        newPassword: editStaff.newPassword
       }
     });
   };
@@ -506,16 +509,20 @@ export default function UserManagement() {
                   <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded px-3 py-2 border">
                     <div className="flex-1">
                       <Label className="text-xs text-muted-foreground">Password</Label>
-                      {editStaff.plainPassword ? (
+                      {editStaff.newPassword ? (
+                        <p className="font-mono font-bold text-lg tracking-widest">
+                          {showEditPassword ? editStaff.newPassword : "•".repeat(editStaff.newPassword.length)}
+                        </p>
+                      ) : editStaff.plainPassword ? (
                         <p className="font-mono font-bold text-lg tracking-widest">
                           {showEditPassword ? editStaff.plainPassword : "•".repeat(editStaff.plainPassword.length)}
                         </p>
                       ) : (
-                        <p className="text-sm text-muted-foreground italic">Password not available</p>
+                        <p className="text-sm text-muted-foreground italic">Click "Set Password" to create a new password</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {editStaff.plainPassword && (
+                      {(editStaff.plainPassword || editStaff.newPassword) && (
                         <>
                           <Button 
                             variant="ghost" 
@@ -528,16 +535,37 @@ export default function UserManagement() {
                             variant="ghost" 
                             size="icon"
                             onClick={() => {
-                              navigator.clipboard.writeText(editStaff.plainPassword!);
-                              toast({ title: "Copied!", description: "Password copied to clipboard" });
+                              const pwd = editStaff.newPassword || editStaff.plainPassword;
+                              if (pwd) {
+                                navigator.clipboard.writeText(pwd);
+                                toast({ title: "Copied!", description: "Password copied to clipboard" });
+                              }
                             }}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
                         </>
                       )}
+                      {!editStaff.plainPassword && !editStaff.newPassword && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            const newPass = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+                            setEditStaff({...editStaff, newPassword: newPass});
+                            setShowEditPassword(true);
+                          }}
+                        >
+                          Set Password
+                        </Button>
+                      )}
                     </div>
                   </div>
+                  {editStaff.newPassword && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      New password will be saved when you click "Update Staff Member"
+                    </p>
+                  )}
                 </div>
               )}
 
