@@ -14655,10 +14655,37 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Get current user's store info (for medical store portal)
   app.get("/api/medical-stores/my-store/:userId", async (req, res) => {
     try {
-      const storeUser = await databaseStorage.getMedicalStoreUserByUserId(req.params.userId);
+      let storeUser = await databaseStorage.getMedicalStoreUserByUserId(req.params.userId);
+      
+      // Auto-create default store for MEDICAL_STORE users without one
       if (!storeUser) {
+        const user = await databaseStorage.getUser(req.params.userId);
+        if (user && user.role === "MEDICAL_STORE") {
+          // Create a default medical store
+          const defaultStore = await databaseStorage.createMedicalStore({
+            name: `${user.name || user.username}'s Pharmacy`,
+            licenseNumber: `PH${Date.now().toString().slice(-8)}`,
+            address: "Gravity Hospital Campus",
+            phone: "1234567890",
+            email: user.email || `${user.username}@hospital.com`,
+            operatingHours: "9:00 AM - 9:00 PM",
+            status: "active"
+          });
+          
+          // Link user to the store
+          storeUser = await databaseStorage.createMedicalStoreUser({
+            userId: user.id,
+            storeId: defaultStore.id,
+            role: "manager",
+            permissions: ["view_inventory", "manage_sales", "view_prescriptions", "dispense_medications"]
+          });
+          
+          console.log(`Auto-created medical store for user ${user.username}`);
+          return res.json({ storeUser, store: defaultStore });
+        }
         return res.status(404).json({ error: "Store user not found" });
       }
+      
       const store = await databaseStorage.getMedicalStore(storeUser.storeId);
       res.json({ storeUser, store });
     } catch (error) {
