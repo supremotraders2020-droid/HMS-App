@@ -18920,25 +18920,153 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
-  // OCR processing endpoint - simulates OCR extraction
+  // OCR processing endpoint - uses OpenAI GPT-4V for real extraction
   app.post("/api/id-card-scans/process-ocr", requireAuth, requireRole(["ADMIN", "NURSE", "OPD_MANAGER"]), async (req, res) => {
     try {
-      const { imageData, idCardType, side } = req.body;
+      const { frontImage, backImage, idCardType, sessionId } = req.body;
       
-      // In a real implementation, this would call an OCR service
-      // For now, we return a structure that the frontend can use
-      // The frontend will handle actual OCR using browser-based libraries
+      if (!frontImage || !backImage) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Both front and back images are required" 
+        });
+      }
       
+      if (!idCardType) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "ID card type is required" 
+        });
+      }
+      
+      if (!sessionId) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Session ID is required for tracking" 
+        });
+      }
+
+      const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ 
+          success: false, 
+          error: "OpenAI API key not configured" 
+        });
+      }
+
+      const OpenAI = (await import("openai")).default;
+      const openai = new OpenAI({ apiKey });
+
+      const idTypeNames: Record<string, string> = {
+        aadhaar: "Aadhaar Card",
+        pan: "PAN Card",
+        driving_license: "Driving License",
+        passport: "Passport",
+        voter_id: "Voter ID"
+      };
+
+      const idTypeName = idTypeNames[idCardType] || idCardType;
+
+      const prompt = `You are an expert OCR system for extracting information from Indian ID cards. Analyze these two images (front and back) of a ${idTypeName} and extract the following information in JSON format:
+
+{
+  "firstName": "First name of the person",
+  "lastName": "Last name/surname of the person",
+  "dateOfBirth": "Date of birth in YYYY-MM-DD format",
+  "gender": "Male or Female",
+  "address": "Full address if visible",
+  "idNumber": "The ${idTypeName} number",
+  "fatherName": "Father's name if visible (optional)",
+  "issuedDate": "Issue date if visible (optional)",
+  "expiryDate": "Expiry date if visible (optional)"
+}
+
+Important:
+- Extract ONLY what is clearly visible in the images
+- For date of birth, convert to YYYY-MM-DD format
+- If a field is not visible or unclear, use empty string ""
+- Return ONLY valid JSON, no additional text`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { 
+                type: "image_url", 
+                image_url: { 
+                  url: frontImage,
+                  detail: "high"
+                } 
+              },
+              { 
+                type: "image_url", 
+                image_url: { 
+                  url: backImage,
+                  detail: "high"
+                } 
+              }
+            ]
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.1
+      });
+
+      const responseText = response.choices[0]?.message?.content || "";
+      
+      let extractedData;
+      try {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          extractedData = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("No JSON found in response");
+        }
+      } catch (parseError) {
+        console.error("Failed to parse OCR response:", responseText);
+        return res.status(500).json({ 
+          success: false, 
+          error: "Failed to parse extracted data",
+          rawResponse: responseText
+        });
+      }
+
+      let age = null;
+      if (extractedData.dateOfBirth) {
+        const birthDate = new Date(extractedData.dateOfBirth);
+        const today = new Date();
+        age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+      }
+
       res.json({
         success: true,
-        message: "Image received for processing",
+        sessionId,
         idCardType,
-        side,
+        data: {
+          firstName: extractedData.firstName || "",
+          lastName: extractedData.lastName || "",
+          dateOfBirth: extractedData.dateOfBirth || "",
+          gender: extractedData.gender || "",
+          address: extractedData.address || "",
+          idNumber: extractedData.idNumber || "",
+          fatherName: extractedData.fatherName || "",
+          age
+        },
         timestamp: new Date().toISOString()
       });
     } catch (error) {
       console.error("Error processing OCR:", error);
-      res.status(500).json({ error: "Failed to process OCR" });
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to process OCR: " + (error instanceof Error ? error.message : "Unknown error")
+      });
     }
   });
 

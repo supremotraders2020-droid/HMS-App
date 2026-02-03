@@ -53,7 +53,7 @@ import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/s
 import type { ServicePatient, MedicalRecord, PatientConsent, Doctor, IdCardScan, CriticalAlert } from "@shared/schema";
 import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, ImageIcon, ExternalLink, ClipboardList, Bed, DollarSign, History, ChevronRight } from "lucide-react";
+import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, AlertCircle, ImageIcon, ExternalLink, ClipboardList, Bed, DollarSign, History, ChevronRight } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const patientFormSchema = insertServicePatientSchema.extend({
@@ -135,6 +135,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [selectedIdCardType, setSelectedIdCardType] = useState<string>("");
   const [frontImage, setFrontImage] = useState<string | null>(null);
   const [backImage, setBackImage] = useState<string | null>(null);
+  const [ocrSessionId, setOcrSessionId] = useState<string>(() => crypto.randomUUID());
   const [extractedAge, setExtractedAge] = useState<number | null>(null);
   const [extractedData, setExtractedData] = useState<{
     name: string;
@@ -149,6 +150,32 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [idCardDepartment, setIdCardDepartment] = useState("");
   const [idCardVisitReason, setIdCardVisitReason] = useState("");
   const [idCardVisitType, setIdCardVisitType] = useState("");
+
+  const patientFormRef = useRef<any>(null);
+
+  const clearOcrData = useCallback(() => {
+    setExtractedAge(null);
+    setExtractedData({ name: "", dob: "", gender: "", idNumber: "", address: "", age: null });
+    if (patientFormRef.current) {
+      patientFormRef.current.setValue("firstName", "");
+      patientFormRef.current.setValue("lastName", "");
+      patientFormRef.current.setValue("dateOfBirth", "");
+      patientFormRef.current.setValue("gender", "");
+      patientFormRef.current.setValue("address", "");
+    }
+  }, []);
+
+  const handleSetFrontImage = useCallback((image: string | null) => {
+    setOcrSessionId(crypto.randomUUID());
+    clearOcrData();
+    setFrontImage(image);
+  }, [clearOcrData]);
+
+  const handleSetBackImage = useCallback((image: string | null) => {
+    setOcrSessionId(crypto.randomUUID());
+    clearOcrData();
+    setBackImage(image);
+  }, [clearOcrData]);
   
   // Camera capture states
   const [showCameraDialog, setShowCameraDialog] = useState(false);
@@ -352,11 +379,11 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       return;
     }
     
-    // Set the appropriate image based on target
+    // Set the appropriate image based on target (using handlers that clear old data)
     if (cameraTarget === "front") {
-      setFrontImage(imageData);
+      handleSetFrontImage(imageData);
     } else {
-      setBackImage(imageData);
+      handleSetBackImage(imageData);
     }
     
     // Close camera dialog
@@ -367,7 +394,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       title: "Photo Captured",
       description: `${cameraTarget === "front" ? "Front" : "Back"} side of ID card captured successfully.`
     });
-  }, [cameraTarget, stopCamera, toast]);
+  }, [cameraTarget, stopCamera, toast, handleSetFrontImage, handleSetBackImage]);
   
   // Open camera dialog
   const openCameraDialog = useCallback((target: "front" | "back") => {
@@ -477,6 +504,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       insuranceNumber: "",
     },
   });
+
+  patientFormRef.current = patientForm;
 
   // Handle URL params for prefilling patient registration form
   useEffect(() => {
@@ -1147,7 +1176,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                   size="icon"
                                   variant="destructive"
                                   className="absolute top-1 right-1 h-5 w-5"
-                                  onClick={() => setFrontImage(null)}
+                                  onClick={() => handleSetFrontImage(null)}
                                 >
                                   <X className="h-3 w-3" />
                                 </Button>
@@ -1162,7 +1191,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                   size="icon"
                                   variant="destructive"
                                   className="absolute top-1 right-1 h-5 w-5"
-                                  onClick={() => setBackImage(null)}
+                                  onClick={() => handleSetBackImage(null)}
                                 >
                                   <X className="h-3 w-3" />
                                 </Button>
@@ -1171,11 +1200,20 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </div>
                         )}
                         
-                        {/* Process OCR Button */}
-                        {(frontImage || backImage) && (
+                        {/* Message when only one image is uploaded */}
+                        {((frontImage && !backImage) || (!frontImage && backImage)) && (
+                          <div className="p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded text-sm text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            <span>Please upload both front and back images to process OCR</span>
+                          </div>
+                        )}
+                        
+                        {/* Process OCR Button - requires both front AND back images */}
+                        {(frontImage && backImage) && (
                           <Button 
                             type="button"
-                            className="w-full bg-blue-600 hover:bg-blue-700"
+                            variant="default"
+                            className="w-full"
                             onClick={async () => {
                               if (!selectedIdCardType) {
                                 toast({
@@ -1187,42 +1225,72 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               }
                               
                               setIsProcessingOcr(true);
-                              await new Promise(resolve => setTimeout(resolve, 1500));
                               
-                              const simulatedData = {
-                                firstName: "Priya",
-                                lastName: "Sharma",
-                                dob: "2008-03-15",
-                                gender: "Female",
-                                address: "45 Gandhi Nagar, Pune, Maharashtra - 411001",
-                                idNumber: selectedIdCardType === "aadhaar" ? "1234 5678 9012" : 
-                                          selectedIdCardType === "pan" ? "ABCDE1234F" :
-                                          selectedIdCardType === "passport" ? "J1234567" : "DL-1234567890"
-                              };
-                              
-                              const today = new Date();
-                              const birthDate = new Date(simulatedData.dob);
-                              let calculatedAge = today.getFullYear() - birthDate.getFullYear();
-                              const monthDiff = today.getMonth() - birthDate.getMonth();
-                              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                                calculatedAge--;
+                              try {
+                                const currentSessionId = ocrSessionId;
+                                
+                                const response = await fetch("/api/id-card-scans/process-ocr", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  credentials: "include",
+                                  body: JSON.stringify({
+                                    frontImage,
+                                    backImage,
+                                    idCardType: selectedIdCardType,
+                                    sessionId: currentSessionId
+                                  })
+                                });
+                                
+                                const result = await response.json();
+                                
+                                if (currentSessionId !== ocrSessionId) {
+                                  console.log("OCR session mismatch - images changed during processing");
+                                  toast({
+                                    title: "OCR Cancelled",
+                                    description: "Images were changed during processing. Please try again.",
+                                    variant: "destructive"
+                                  });
+                                  return;
+                                }
+                                
+                                if (!result.success) {
+                                  throw new Error(result.error || "OCR processing failed");
+                                }
+                                
+                                const extractedInfo = result.data;
+                                
+                                setExtractedAge(extractedInfo.age);
+                                setExtractedData({
+                                  name: `${extractedInfo.firstName} ${extractedInfo.lastName}`,
+                                  dob: extractedInfo.dateOfBirth,
+                                  gender: extractedInfo.gender,
+                                  idNumber: extractedInfo.idNumber,
+                                  address: extractedInfo.address,
+                                  age: extractedInfo.age
+                                });
+                                
+                                patientForm.setValue("firstName", extractedInfo.firstName);
+                                patientForm.setValue("lastName", extractedInfo.lastName);
+                                patientForm.setValue("dateOfBirth", extractedInfo.dateOfBirth);
+                                patientForm.setValue("gender", extractedInfo.gender);
+                                patientForm.setValue("address", extractedInfo.address);
+                                
+                                toast({
+                                  title: "OCR Complete",
+                                  description: `Extracted: ${extractedInfo.firstName} ${extractedInfo.lastName}${extractedInfo.age ? `, Age: ${extractedInfo.age} years` : ""}${extractedInfo.idNumber ? `, ID: ${extractedInfo.idNumber}` : ""}`
+                                });
+                              } catch (error) {
+                                console.error("OCR error:", error);
+                                toast({
+                                  title: "OCR Failed",
+                                  description: error instanceof Error ? error.message : "Failed to extract data from ID card",
+                                  variant: "destructive"
+                                });
+                              } finally {
+                                setIsProcessingOcr(false);
                               }
-                              setExtractedAge(calculatedAge);
-                              
-                              patientForm.setValue("firstName", simulatedData.firstName);
-                              patientForm.setValue("lastName", simulatedData.lastName);
-                              patientForm.setValue("dateOfBirth", simulatedData.dob);
-                              patientForm.setValue("gender", simulatedData.gender);
-                              patientForm.setValue("address", simulatedData.address);
-                              
-                              setIsProcessingOcr(false);
-                              
-                              toast({
-                                title: "OCR Complete",
-                                description: `Extracted: ${simulatedData.firstName} ${simulatedData.lastName}, Age: ${calculatedAge} years, ID: ${simulatedData.idNumber}`
-                              });
                             }}
-                            disabled={isProcessingOcr}
+                            disabled={isProcessingOcr || !frontImage || !backImage}
                             data-testid="button-process-ocr"
                           >
                             {isProcessingOcr ? (
@@ -2825,9 +2893,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       reader.onload = (ev) => {
                         const imageData = ev.target?.result as string;
                         if (cameraTarget === "front") {
-                          setFrontImage(imageData);
+                          handleSetFrontImage(imageData);
                         } else {
-                          setBackImage(imageData);
+                          handleSetBackImage(imageData);
                         }
                         setShowCameraDialog(false);
                         toast({
@@ -2968,9 +3036,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                             reader.onload = (ev) => {
                               const imageData = ev.target?.result as string;
                               if (cameraTarget === "front") {
-                                setFrontImage(imageData);
+                                handleSetFrontImage(imageData);
                               } else {
-                                setBackImage(imageData);
+                                handleSetBackImage(imageData);
                               }
                               stopCamera();
                               setShowCameraDialog(false);
