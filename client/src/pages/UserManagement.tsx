@@ -103,6 +103,7 @@ export default function UserManagement() {
     department: string;
     specialization: string;
     status: string;
+    username: string;
   } | null>(null);
 
   const { data: staffMembers = [], isLoading } = useQuery<HospitalTeamMember[]>({
@@ -238,7 +239,8 @@ export default function UserManagement() {
       role: titleToRole(member.title),
       department: member.department,
       specialization: member.specialization || "",
-      status: member.status
+      status: member.status,
+      username: (member as any).username || ""
     });
     setIsEditDialogOpen(true);
   };
@@ -469,6 +471,28 @@ export default function UserManagement() {
           
           {editStaff && (
             <div className="space-y-4">
+              {editStaff.username && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xs text-blue-600 dark:text-blue-400">Login User ID</Label>
+                      <p className="font-mono font-bold text-lg">{editStaff.username}</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(editStaff.username);
+                        toast({ title: "Copied!", description: "User ID copied to clipboard" });
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">This is the username for login. Password cannot be displayed (it is encrypted).</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="edit-name">Full Name *</Label>
@@ -788,6 +812,12 @@ export default function UserManagement() {
                         <p className="text-xs text-muted-foreground">
                           {member.department} • {member.phone}
                         </p>
+                        {(member as any).username && (
+                          <p className="text-xs font-mono bg-primary/10 px-2 py-0.5 rounded inline-block mt-1">
+                            <Key className="h-3 w-3 inline mr-1" />
+                            User ID: <strong>{(member as any).username}</strong>
+                          </p>
+                        )}
                       </div>
                     </div>
                     

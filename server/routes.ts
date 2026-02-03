@@ -2714,7 +2714,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/team-members", async (_req, res) => {
     try {
       const members = await storage.getAllTeamMembers();
-      res.json(members);
+      
+      // Enrich with username from users table by matching email
+      const enrichedMembers = await Promise.all(members.map(async (member) => {
+        const user = await databaseStorage.getUserByEmail(member.email);
+        return {
+          ...member,
+          username: user?.username || null
+        };
+      }));
+      
+      res.json(enrichedMembers);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch team members" });
     }
