@@ -2907,12 +2907,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete team member
   app.delete("/api/team-members/:id", async (req, res) => {
     try {
+      // First get the team member to find their email
+      const member = await storage.getTeamMemberById(req.params.id);
+      if (!member) {
+        return res.status(404).json({ error: "Team member not found" });
+      }
+      
+      // Delete the user account by email
+      if (member.email) {
+        const user = await databaseStorage.getUserByEmail(member.email);
+        if (user) {
+          // Delete from staff_master first (foreign key constraint)
+          await db.delete(staffMaster).where(eq(staffMaster.userId, user.id));
+          // Delete the user account
+          await db.delete(users).where(eq(users.id, user.id));
+        }
+      }
+      
+      // Delete the team member
       const deleted = await storage.deleteTeamMember(req.params.id);
       if (!deleted) {
         return res.status(404).json({ error: "Team member not found" });
       }
       res.json({ success: true, message: "Team member deleted" });
     } catch (error) {
+      console.error("Error deleting team member:", error);
       res.status(500).json({ error: "Failed to delete team member" });
     }
   });
