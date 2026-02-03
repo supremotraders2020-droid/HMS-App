@@ -161,6 +161,7 @@ export interface IStorage {
   // Hospital Team Members
   getAllTeamMembers(): Promise<HospitalTeamMember[]>;
   getTeamMemberById(id: string): Promise<HospitalTeamMember | undefined>;
+  getTeamMemberByEmail(email: string): Promise<HospitalTeamMember | undefined>;
   getTeamMembersByDepartment(department: string): Promise<HospitalTeamMember[]>;
   getOnCallTeamMembers(): Promise<HospitalTeamMember[]>;
   createTeamMember(member: InsertHospitalTeamMember): Promise<HospitalTeamMember>;
@@ -2386,6 +2387,10 @@ export class MemStorage implements IStorage {
 
   async getTeamMemberById(id: string): Promise<HospitalTeamMember | undefined> {
     return this.hospitalTeamMembers.get(id);
+  }
+
+  async getTeamMemberByEmail(email: string): Promise<HospitalTeamMember | undefined> {
+    return Array.from(this.hospitalTeamMembers.values()).find(m => m.email === email);
   }
 
   async getTeamMembersByDepartment(department: string): Promise<HospitalTeamMember[]> {

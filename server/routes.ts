@@ -2813,6 +2813,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if username already exists
       const existingUser = await databaseStorage.getUserByUsername(trimmedUsername);
       if (existingUser) {
+        // Check if team member record exists - if not, create it (data sync fix)
+        const existingTeamMember = await storage.getTeamMemberByEmail(trimmedEmail);
+        if (!existingTeamMember) {
+          // Create the missing team member record to sync data
+          const memberData = {
+            name: existingUser.name || trimmedName,
+            title,
+            department: department || existingUser.role,
+            specialization: title,
+            email: existingUser.email || trimmedEmail,
+            phone: trimmedPhone,
+            status: "available" as const,
+            avatar: (existingUser.name || trimmedName).split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+          };
+          const member = await storage.createTeamMember(memberData);
+          return res.status(201).json({ ...member, synced: true, message: "User synced to team members" });
+        }
         return res.status(400).json({ error: "Username already exists" });
       }
       

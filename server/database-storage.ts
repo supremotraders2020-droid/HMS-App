@@ -1063,6 +1063,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(hospitalTeamMembers).where(eq(hospitalTeamMembers.department, department));
   }
 
+  async getTeamMemberByEmail(email: string): Promise<HospitalTeamMember | undefined> {
+    const result = await db.select().from(hospitalTeamMembers).where(eq(hospitalTeamMembers.email, email));
+    return result[0];
+  }
+
   async getOnCallTeamMembers(): Promise<HospitalTeamMember[]> {
     return await db.select().from(hospitalTeamMembers).where(eq(hospitalTeamMembers.isOnCall, true));
   }
