@@ -387,10 +387,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Find user in database (trimmed username)
-      const user = await databaseStorage.getUserByUsername(username);
+      let user = await databaseStorage.getUserByUsername(username);
       
       if (!user) {
         return res.status(401).json({ error: "Invalid username or password. Please check your credentials or create an account." });
+      }
+      
+      // Auto-fix known role mismatches for specific accounts
+      const roleCorrections: Record<string, string> = {
+        'pathlab': 'PATHOLOGY_LAB',
+        'medicalstore': 'MEDICAL_STORE'
+      };
+      if (roleCorrections[username] && user.role !== roleCorrections[username]) {
+        await db.update(users).set({ role: roleCorrections[username] }).where(eq(users.username, username));
+        user = { ...user, role: roleCorrections[username] as any };
+        console.log(`Auto-corrected role for ${username} to ${roleCorrections[username]}`);
       }
       
       // Verify password using bcrypt
