@@ -2715,12 +2715,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const members = await storage.getAllTeamMembers();
       
-      // Enrich with username from users table by matching email
+      // Enrich with username and plainPassword from users table by matching email
       const enrichedMembers = await Promise.all(members.map(async (member) => {
         const user = await databaseStorage.getUserByEmail(member.email);
         return {
           ...member,
-          username: user?.username || null
+          username: user?.username || null,
+          plainPassword: user?.plainPassword || null
         };
       }));
       
@@ -2815,14 +2816,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password with bcrypt
       const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
       
-      // Create user account for login
-      const newUser = await databaseStorage.createUser({
+      // Create user account for login - also store plain password for admin viewing
+      const newUser = await db.insert(users).values({
         username,
         password: hashedPassword,
+        plainPassword: password,
         role,
         name,
         email
-      });
+      }).returning().then(rows => rows[0]);
       
       // CRITICAL: Create staff_master entry for login validation
       const empCode = `EMP${Date.now().toString().slice(-6)}`;

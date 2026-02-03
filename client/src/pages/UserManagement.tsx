@@ -33,8 +33,7 @@ import {
   CheckCircle2,
   Key,
   Eye,
-  EyeOff,
-  RefreshCw
+  EyeOff
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -108,7 +107,7 @@ export default function UserManagement() {
     specialization: string;
     status: string;
     username: string;
-    newPassword?: string;
+    plainPassword?: string | null;
   } | null>(null);
   const [showEditPassword, setShowEditPassword] = useState(false);
 
@@ -248,7 +247,7 @@ export default function UserManagement() {
       specialization: member.specialization || "",
       status: member.status,
       username: (member as any).username || "",
-      newPassword: undefined
+      plainPassword: (member as any).plainPassword || null
     });
     setShowEditPassword(false);
     setIsEditDialogOpen(true);
@@ -275,8 +274,7 @@ export default function UserManagement() {
         specialization: editStaff.specialization || editStaff.department,
         email: editStaff.email,
         phone: editStaff.phone,
-        status: editStaff.status,
-        newPassword: editStaff.newPassword
+        status: editStaff.status
       }
     });
   };
@@ -508,16 +506,16 @@ export default function UserManagement() {
                   <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded px-3 py-2 border">
                     <div className="flex-1">
                       <Label className="text-xs text-muted-foreground">Password</Label>
-                      {editStaff.newPassword ? (
+                      {editStaff.plainPassword ? (
                         <p className="font-mono font-bold text-lg tracking-widest">
-                          {showEditPassword ? editStaff.newPassword : "•".repeat(editStaff.newPassword.length)}
+                          {showEditPassword ? editStaff.plainPassword : "•".repeat(editStaff.plainPassword.length)}
                         </p>
                       ) : (
-                        <p className="text-sm text-muted-foreground italic">Click reset to generate new password</p>
+                        <p className="text-sm text-muted-foreground italic">Password not available</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {editStaff.newPassword && (
+                      {editStaff.plainPassword && (
                         <>
                           <Button 
                             variant="ghost" 
@@ -530,7 +528,7 @@ export default function UserManagement() {
                             variant="ghost" 
                             size="icon"
                             onClick={() => {
-                              navigator.clipboard.writeText(editStaff.newPassword!);
+                              navigator.clipboard.writeText(editStaff.plainPassword!);
                               toast({ title: "Copied!", description: "Password copied to clipboard" });
                             }}
                           >
@@ -538,27 +536,8 @@ export default function UserManagement() {
                           </Button>
                         </>
                       )}
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="gap-2"
-                        onClick={() => {
-                          const newPass = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
-                          setEditStaff({...editStaff, newPassword: newPass});
-                          setShowEditPassword(true);
-                        }}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                        Reset
-                      </Button>
                     </div>
                   </div>
-                  
-                  {editStaff.newPassword && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400">
-                      New password will be saved when you click "Update Staff Member"
-                    </p>
-                  )}
                 </div>
               )}
 
