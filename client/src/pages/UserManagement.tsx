@@ -665,17 +665,19 @@ export default function UserManagement() {
                   <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded px-3 py-2 border">
                     <div>
                       <Label className="text-xs text-muted-foreground">Password</Label>
-                      <p className="font-mono font-bold text-lg">{createdCredentials.password}</p>
+                      <p className="font-mono font-bold text-lg tracking-widest">{"•".repeat(createdCredentials.password.length)}</p>
                     </div>
                     <Button 
-                      variant="ghost" 
-                      size="icon"
+                      variant="outline" 
+                      size="sm"
+                      className="gap-2"
                       onClick={() => {
                         navigator.clipboard.writeText(createdCredentials.password);
                         toast({ title: "Copied!", description: "Password copied to clipboard" });
                       }}
                     >
                       <Copy className="h-4 w-4" />
+                      Copy Password
                     </Button>
                   </div>
                 </div>
