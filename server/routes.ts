@@ -480,6 +480,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all patient users with credentials (admin only)
+  app.get("/api/admin/patient-users", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (_req, res) => {
+    try {
+      const allUsers = await databaseStorage.getAllUsers();
+      const patients = allUsers
+        .filter(user => user.role === "PATIENT")
+        .map(user => ({
+          id: user.id,
+          username: user.username,
+          plainPassword: user.plainPassword || null,
+          name: user.name || "",
+          email: user.email || "",
+          dateOfBirth: user.dateOfBirth || "",
+          status: user.status,
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin,
+        }));
+      res.json(patients);
+    } catch (error) {
+      console.error("Failed to get patient users:", error);
+      res.status(500).json({ error: "Failed to fetch patient users" });
+    }
+  });
+
+  // Update patient credentials (admin only)
+  app.patch("/api/admin/patient-users/:id", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
+    try {
+      const { username, password, name, email } = req.body;
+      const userId = req.params.id;
+      
+      const user = await databaseStorage.getUser(userId);
+      if (!user || user.role !== "PATIENT") {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+
+      const updates: any = {};
+      if (name !== undefined && name.trim()) updates.name = name.trim();
+      if (email !== undefined && email.trim()) updates.email = email.trim();
+      
+      if (username && username.trim() && username.trim() !== user.username) {
+        const trimmedUsername = username.trim();
+        if (trimmedUsername.length < 3) {
+          return res.status(400).json({ error: "Username must be at least 3 characters" });
+        }
+        const existingUser = await storage.getUserByUsername(trimmedUsername);
+        if (existingUser) {
+          return res.status(400).json({ error: "Username already taken" });
+        }
+        updates.username = trimmedUsername;
+      }
+      
+      if (password && password.length > 0) {
+        if (password.length < 6) {
+          return res.status(400).json({ error: "Password must be at least 6 characters" });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        updates.password = hashedPassword;
+        updates.plainPassword = password;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await databaseStorage.updateUser(userId, updates);
+      }
+
+      const updatedUser = await databaseStorage.getUser(userId);
+      res.json({
+        id: updatedUser!.id,
+        username: updatedUser!.username,
+        plainPassword: updatedUser!.plainPassword,
+        name: updatedUser!.name,
+        email: updatedUser!.email,
+        status: updatedUser!.status,
+      });
+    } catch (error) {
+      console.error("Failed to update patient:", error);
+      res.status(500).json({ error: "Failed to update patient" });
+    }
+  });
+
   // Get user by username
   app.get("/api/users/by-username/:username", async (req, res) => {
     try {

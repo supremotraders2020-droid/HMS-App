@@ -33,11 +33,25 @@ import {
   CheckCircle2,
   Key,
   Eye,
-  EyeOff
+  EyeOff,
+  Save,
+  Heart
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { HospitalTeamMember } from "@shared/schema";
+
+interface PatientUser {
+  id: string;
+  username: string;
+  plainPassword: string | null;
+  name: string;
+  email: string;
+  dateOfBirth: string;
+  status: string;
+  createdAt: string;
+  lastLogin: string | null;
+}
 
 type UserRole = "ADMIN" | "DOCTOR" | "PATIENT" | "NURSE" | "OPD_MANAGER" | "MEDICAL_STORE" | "PATHOLOGY_LAB" | "TECHNICIAN";
 
@@ -111,9 +125,42 @@ export default function UserManagement() {
     newPassword?: string;
   } | null>(null);
   const [showEditPassword, setShowEditPassword] = useState(false);
+  const [patientSearch, setPatientSearch] = useState("");
+  const [patientPasswordVisibility, setPatientPasswordVisibility] = useState<Record<string, boolean>>({});
+  const [editingPatient, setEditingPatient] = useState<{id: string; username: string; password: string; name: string; email: string} | null>(null);
+  const [isEditPatientDialogOpen, setIsEditPatientDialogOpen] = useState(false);
+  const [showEditPatientPassword, setShowEditPatientPassword] = useState(false);
 
   const { data: staffMembers = [], isLoading } = useQuery<HospitalTeamMember[]>({
     queryKey: ["/api/team-members"],
+  });
+
+  const { data: patientUsers = [], isLoading: isLoadingPatients } = useQuery<PatientUser[]>({
+    queryKey: ["/api/admin/patient-users"],
+  });
+
+  const updatePatientMutation = useMutation({
+    mutationFn: async (data: { id: string; username?: string; password?: string; name?: string; email?: string }) => {
+      const { id, ...updates } = data;
+      const response = await apiRequest("PATCH", `/api/admin/patient-users/${id}`, updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/patient-users"] });
+      setEditingPatient(null);
+      setIsEditPatientDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Patient credentials updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update patient",
+        variant: "destructive"
+      });
+    }
   });
 
   const addStaffMutation = useMutation({
@@ -308,6 +355,39 @@ export default function UserManagement() {
     const matchesRole = filterRole === "ALL" || memberRole === filterRole;
     return matchesSearch && matchesRole;
   });
+
+  const filteredPatients = patientUsers.filter(patient => {
+    const matchesSearch = (patient.name || "").toLowerCase().includes(patientSearch.toLowerCase()) ||
+                         (patient.username || "").toLowerCase().includes(patientSearch.toLowerCase()) ||
+                         (patient.email || "").toLowerCase().includes(patientSearch.toLowerCase());
+    return matchesSearch;
+  });
+
+  const togglePatientPasswordVisibility = (id: string) => {
+    setPatientPasswordVisibility(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleEditPatient = (patient: PatientUser) => {
+    setEditingPatient({
+      id: patient.id,
+      username: patient.username,
+      password: "",
+      name: patient.name,
+      email: patient.email,
+    });
+    setShowEditPatientPassword(false);
+    setIsEditPatientDialogOpen(true);
+  };
+
+  const handleUpdatePatient = () => {
+    if (!editingPatient) return;
+    const updates: any = { id: editingPatient.id };
+    if (editingPatient.username) updates.username = editingPatient.username;
+    if (editingPatient.password) updates.password = editingPatient.password;
+    if (editingPatient.name) updates.name = editingPatient.name;
+    if (editingPatient.email) updates.email = editingPatient.email;
+    updatePatientMutation.mutate(updates);
+  };
 
   const doctorCount = staffMembers.filter(s => titleToRole(s.title) === "DOCTOR").length;
   const nurseCount = staffMembers.filter(s => titleToRole(s.title) === "NURSE").length;
@@ -937,6 +1017,214 @@ export default function UserManagement() {
               })
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isEditPatientDialogOpen} onOpenChange={setIsEditPatientDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Patient Credentials</DialogTitle>
+            <DialogDescription>
+              Update patient login credentials
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editingPatient && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="patient-name">Name</Label>
+                <Input
+                  id="patient-name"
+                  value={editingPatient.name}
+                  onChange={(e) => setEditingPatient({...editingPatient, name: e.target.value})}
+                  placeholder="Patient name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="patient-email">Email</Label>
+                <Input
+                  id="patient-email"
+                  type="email"
+                  value={editingPatient.email}
+                  onChange={(e) => setEditingPatient({...editingPatient, email: e.target.value})}
+                  placeholder="Patient email"
+                />
+              </div>
+              <div>
+                <Label htmlFor="patient-username">User ID (Username)</Label>
+                <Input
+                  id="patient-username"
+                  value={editingPatient.username}
+                  onChange={(e) => setEditingPatient({...editingPatient, username: e.target.value})}
+                  placeholder="Username"
+                />
+              </div>
+              <div>
+                <Label htmlFor="patient-password">New Password</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      id="patient-password"
+                      type={showEditPatientPassword ? "text" : "password"}
+                      value={editingPatient.password}
+                      onChange={(e) => setEditingPatient({...editingPatient, password: e.target.value})}
+                      placeholder="Leave empty to keep current"
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowEditPatientPassword(!showEditPatientPassword)}
+                  >
+                    {showEditPatientPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Leave empty to keep the current password</p>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  onClick={handleUpdatePatient}
+                  className="flex-1"
+                  disabled={updatePatientMutation.isPending}
+                >
+                  {updatePatientMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Update Patient
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingPatient(null);
+                    setIsEditPatientDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5" />
+                Patient Accounts ({patientUsers.length})
+              </CardTitle>
+              <CardDescription>All registered patient login credentials</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4 mb-4">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, username, or email..."
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {isLoadingPatients ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading patients...</span>
+            </div>
+          ) : filteredPatients.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {patientSearch ? "No patients match your search" : "No patient accounts found"}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 px-4 py-2 text-xs font-medium text-muted-foreground border-b">
+                <span>Patient</span>
+                <span className="w-32 text-center">User ID</span>
+                <span className="w-40 text-center">Password</span>
+                <span className="w-20 text-center">Status</span>
+                <span className="w-16 text-center">Actions</span>
+              </div>
+              {filteredPatients.map((patient) => (
+                <div key={patient.id} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 items-center p-3 border rounded-md hover-elevate">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{patient.name || "Unnamed"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{patient.email || "No email"}</p>
+                  </div>
+                  <div className="w-32 text-center">
+                    <div className="flex items-center gap-1 justify-center">
+                      <span className="font-mono text-sm font-bold">{patient.username}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          navigator.clipboard.writeText(patient.username);
+                          toast({ title: "Copied!", description: "User ID copied" });
+                        }}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="w-40 text-center">
+                    {patient.plainPassword ? (
+                      <div className="flex items-center gap-1 justify-center">
+                        <span className="font-mono text-sm">
+                          {patientPasswordVisibility[patient.id] ? patient.plainPassword : "••••••••"}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => togglePatientPasswordVisibility(patient.id)}
+                        >
+                          {patientPasswordVisibility[patient.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            navigator.clipboard.writeText(patient.plainPassword!);
+                            toast({ title: "Copied!", description: "Password copied" });
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Not stored</span>
+                    )}
+                  </div>
+                  <div className="w-20 text-center">
+                    <Badge variant={patient.status === "active" ? "default" : "secondary"}>
+                      {patient.status?.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div className="w-16 text-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditPatient(patient)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
