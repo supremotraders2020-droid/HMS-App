@@ -512,7 +512,7 @@ export default function PathologyLabPortal({ currentUserId, currentUserName }: P
     o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.testName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.suggestedTest?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const filteredReports = reports.filter(r =>
     r.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
