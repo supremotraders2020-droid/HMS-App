@@ -2170,11 +2170,11 @@ export default function OPDService() {
                 <h3 className="font-semibold">Online</h3>
               </div>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p>info@galaxyhospital.com</p>
-                <p>appointments@galaxyhospital.com</p>
+                <p>info@gravityhospital.com</p>
+                <p>appointments@gravityhospital.com</p>
                 <div className="flex items-center gap-1">
                   <Globe className="h-4 w-4" />
-                  <span>www.galaxyhospital.com</span>
+                  <span>www.gravityhospital.com</span>
                 </div>
               </div>
             </div>

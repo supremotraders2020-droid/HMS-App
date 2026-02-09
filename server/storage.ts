@@ -1142,11 +1142,11 @@ export class MemStorage implements IStorage {
 
     // Default staff members
     const defaultStaff = [
-      { name: "Nurse Priya Sharma", role: "nurse", email: "priya.sharma@galaxy.hospital", phone: "+91 98765 11111", department: "General Ward" },
-      { name: "Nurse Anjali Patel", role: "nurse", email: "anjali.patel@galaxy.hospital", phone: "+91 98765 22222", department: "ICU" },
-      { name: "Dr. Rajesh Kumar", role: "doctor", email: "rajesh.kumar@galaxy.hospital", phone: "+91 98765 33333", department: "Orthopedics" },
-      { name: "Tech. Suresh Rao", role: "technician", email: "suresh.rao@galaxy.hospital", phone: "+91 98765 44444", department: "Lab" },
-      { name: "Admin Meera Joshi", role: "administrator", email: "meera.joshi@galaxy.hospital", phone: "+91 98765 55555", department: "Admin" },
+      { name: "Nurse Priya Sharma", role: "nurse", email: "priya.sharma@gravity.hospital", phone: "+91 98765 11111", department: "General Ward" },
+      { name: "Nurse Anjali Patel", role: "nurse", email: "anjali.patel@gravity.hospital", phone: "+91 98765 22222", department: "ICU" },
+      { name: "Dr. Rajesh Kumar", role: "doctor", email: "rajesh.kumar@gravity.hospital", phone: "+91 98765 33333", department: "Orthopedics" },
+      { name: "Tech. Suresh Rao", role: "technician", email: "suresh.rao@gravity.hospital", phone: "+91 98765 44444", department: "Lab" },
+      { name: "Admin Meera Joshi", role: "administrator", email: "meera.joshi@gravity.hospital", phone: "+91 98765 55555", department: "Admin" },
     ];
 
     defaultStaff.forEach(staff => {
@@ -2228,16 +2228,16 @@ export class MemStorage implements IStorage {
   private initializeNotificationData() {
     // Sample team members
     const sampleTeamMembers = [
-      { name: "Dr. Priya Sharma", title: "Chief Medical Officer", department: "emergency_medicine", specialization: "Emergency Medicine", email: "priya.sharma@galaxy.hospital", phone: "+91 98765 43210", isOnCall: true, status: "available" },
-      { name: "Dr. Rajesh Kumar", title: "Senior Cardiologist", department: "cardiology", specialization: "Interventional Cardiology", email: "rajesh.kumar@galaxy.hospital", phone: "+91 98765 43211", isOnCall: false, status: "available" },
-      { name: "Dr. Anjali Patel", title: "Head of Pediatrics", department: "pediatrics", specialization: "Pediatric Care", email: "anjali.patel@galaxy.hospital", phone: "+91 98765 43212", isOnCall: true, status: "busy" },
-      { name: "Dr. Suresh Reddy", title: "Orthopedic Surgeon", department: "orthopedics", specialization: "Joint Replacement", email: "suresh.reddy@galaxy.hospital", phone: "+91 98765 43213", isOnCall: false, status: "available" },
-      { name: "Dr. Meera Gupta", title: "Neurologist", department: "neurology", specialization: "Stroke Care", email: "meera.gupta@galaxy.hospital", phone: "+91 98765 43214", isOnCall: true, status: "available" },
-      { name: "Dr. Vikram Singh", title: "General Surgeon", department: "general_surgery", specialization: "Laparoscopic Surgery", email: "vikram.singh@galaxy.hospital", phone: "+91 98765 43215", isOnCall: false, status: "offline" },
-      { name: "Dr. Kavita Joshi", title: "Radiologist", department: "radiology", specialization: "Diagnostic Imaging", email: "kavita.joshi@galaxy.hospital", phone: "+91 98765 43216", isOnCall: false, status: "available" },
-      { name: "Dr. Arjun Mehta", title: "Pathologist", department: "pathology", specialization: "Clinical Pathology", email: "arjun.mehta@galaxy.hospital", phone: "+91 98765 43217", isOnCall: false, status: "available" },
-      { name: "Nurse Sunita Verma", title: "Head Nurse", department: "emergency_medicine", specialization: "Emergency Care", email: "sunita.verma@galaxy.hospital", phone: "+91 98765 43218", isOnCall: true, status: "available" },
-      { name: "Mr. Ramesh Nair", title: "Hospital Administrator", department: "administration", specialization: "Operations Management", email: "ramesh.nair@galaxy.hospital", phone: "+91 98765 43219", isOnCall: false, status: "available" },
+      { name: "Dr. Priya Sharma", title: "Chief Medical Officer", department: "emergency_medicine", specialization: "Emergency Medicine", email: "priya.sharma@gravity.hospital", phone: "+91 98765 43210", isOnCall: true, status: "available" },
+      { name: "Dr. Rajesh Kumar", title: "Senior Cardiologist", department: "cardiology", specialization: "Interventional Cardiology", email: "rajesh.kumar@gravity.hospital", phone: "+91 98765 43211", isOnCall: false, status: "available" },
+      { name: "Dr. Anjali Patel", title: "Head of Pediatrics", department: "pediatrics", specialization: "Pediatric Care", email: "anjali.patel@gravity.hospital", phone: "+91 98765 43212", isOnCall: true, status: "busy" },
+      { name: "Dr. Suresh Reddy", title: "Orthopedic Surgeon", department: "orthopedics", specialization: "Joint Replacement", email: "suresh.reddy@gravity.hospital", phone: "+91 98765 43213", isOnCall: false, status: "available" },
+      { name: "Dr. Meera Gupta", title: "Neurologist", department: "neurology", specialization: "Stroke Care", email: "meera.gupta@gravity.hospital", phone: "+91 98765 43214", isOnCall: true, status: "available" },
+      { name: "Dr. Vikram Singh", title: "General Surgeon", department: "general_surgery", specialization: "Laparoscopic Surgery", email: "vikram.singh@gravity.hospital", phone: "+91 98765 43215", isOnCall: false, status: "offline" },
+      { name: "Dr. Kavita Joshi", title: "Radiologist", department: "radiology", specialization: "Diagnostic Imaging", email: "kavita.joshi@gravity.hospital", phone: "+91 98765 43216", isOnCall: false, status: "available" },
+      { name: "Dr. Arjun Mehta", title: "Pathologist", department: "pathology", specialization: "Clinical Pathology", email: "arjun.mehta@gravity.hospital", phone: "+91 98765 43217", isOnCall: false, status: "available" },
+      { name: "Nurse Sunita Verma", title: "Head Nurse", department: "emergency_medicine", specialization: "Emergency Care", email: "sunita.verma@gravity.hospital", phone: "+91 98765 43218", isOnCall: true, status: "available" },
+      { name: "Mr. Ramesh Nair", title: "Hospital Administrator", department: "administration", specialization: "Operations Management", email: "ramesh.nair@gravity.hospital", phone: "+91 98765 43219", isOnCall: false, status: "available" },
     ];
 
     sampleTeamMembers.forEach(member => {

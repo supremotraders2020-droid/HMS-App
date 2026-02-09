@@ -662,14 +662,14 @@ function AppContent() {
       
       if (response.ok) {
         // Registration successful - auto login with the new user
-        const galaxyHospital = hospitals[0];
+        const gravityHospital = hospitals[0];
         setCurrentUser({
           id: data.id,
           username: data.username,
           name: data.name || `${userData.firstName} ${userData.lastName}`,
           role: data.role,
-          tenantId: galaxyHospital.id,
-          hospitalName: galaxyHospital.name
+          tenantId: gravityHospital.id,
+          hospitalName: gravityHospital.name
         });
       } else {
         setLoginError(data.error || "Registration failed. Please try again.");
@@ -683,8 +683,8 @@ function AppContent() {
   };
 
   const handleLogin = async (username: string, password: string, role: UserRole) => {
-    const galaxyHospital = hospitals[0]; // Gravity Hospital
-    setCurrentHospital(galaxyHospital);
+    const gravityHospital = hospitals[0]; // Gravity Hospital
+    setCurrentHospital(gravityHospital);
     setLoginError(null);
     
     // Try to authenticate with password validation
@@ -702,8 +702,8 @@ function AppContent() {
           username: user.username,
           name: user.name || getDisplayName(username, role),
           role: user.role || role,
-          tenantId: galaxyHospital.id,
-          hospitalName: galaxyHospital.name
+          tenantId: gravityHospital.id,
+          hospitalName: gravityHospital.name
         });
         return;
       } else {
