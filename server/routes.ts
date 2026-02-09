@@ -3550,6 +3550,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  // Helper: Create lab test orders from prescription suggested tests (with dedup)
+  async function createLabOrdersFromPrescription(prescription: any) {
+    if (!prescription.suggestedTest) return 0;
+    try {
+      const testValue = prescription.suggestedTest.trim();
+      if (!testValue) return 0;
+      
+      let testsToOrder: string[] = [];
+      if (testValue.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(testValue);
+          testsToOrder = Array.isArray(parsed) 
+            ? parsed.map((t: any) => typeof t === 'string' ? t : t.testName || t.name || '').filter(Boolean)
+            : [];
+        } catch { testsToOrder = [testValue]; }
+      } else if (testValue.includes(',')) {
+        testsToOrder = testValue.split(',').map((t: string) => t.trim()).filter(Boolean);
+      } else {
+        testsToOrder = [testValue];
+      }
+      
+      if (testsToOrder.length === 0) return 0;
+      
+      // Check for existing lab orders for this prescription to avoid duplicates
+      const allLabOrders = await databaseStorage.getLabTestOrders();
+      const existingTestsForPrescription = allLabOrders
+        .filter((o: any) => o.testId === `PRESC-${prescription.id}`)
+        .map((o: any) => o.testName);
+      
+      const year = new Date().getFullYear();
+      let created = 0;
+      
+      for (let i = 0; i < testsToOrder.length; i++) {
+        const testName = testsToOrder[i];
+        if (!testName || existingTestsForPrescription.includes(testName)) continue;
+        const ts = Date.now();
+        const orderNumber = `LAB-${year}-${ts}-${i}-${created}`;
+        
+        await databaseStorage.createLabTestOrder({
+          orderNumber,
+          patientId: prescription.patientId,
+          patientName: prescription.patientName,
+          patientAge: prescription.patientAge || undefined,
+          patientGender: prescription.patientGender || undefined,
+          doctorId: prescription.doctorId,
+          doctorName: prescription.doctorName,
+          testId: `PRESC-${prescription.id}`,
+          testName: testName,
+          testCode: undefined,
+          priority: 'NORMAL',
+          clinicalNotes: prescription.diagnosis || undefined,
+          suggestedTest: testName,
+          orderStatus: 'PENDING',
+        });
+        created++;
+      }
+      
+      if (created > 0) {
+        console.log(`Created ${created} lab test orders from prescription ${prescription.prescriptionNumber || prescription.id}`);
+      }
+      return created;
+    } catch (err) {
+      console.error("Error creating lab orders from prescription:", err);
+      return 0;
+    }
+  }
+
   // ========== PRESCRIPTION ROUTES ==========
 
   // Get all prescriptions (with patient data isolation for PATIENT role)
@@ -3637,6 +3705,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parsed.data.doctorName
         ).catch(err => console.error("Notification error:", err));
       }
+
+      // Create lab orders for suggested tests immediately
+      await createLabOrdersFromPrescription(prescription);
 
       res.status(201).json(prescription);
     } catch (error) {
@@ -3748,64 +3819,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         signedByName: prescription.signedByName
       }).catch(err => console.error("Medical store notification error:", err));
 
-      // Create lab test orders for suggested tests - route to Pathology Lab Portal
-      if (prescription.suggestedTest) {
-        try {
-          // Parse suggested tests - could be comma-separated, JSON array, or single test
-          let testsToOrder: string[] = [];
-          const testValue = prescription.suggestedTest.trim();
-          
-          if (testValue.startsWith('[')) {
-            // JSON array format
-            try {
-              const parsed = JSON.parse(testValue);
-              testsToOrder = Array.isArray(parsed) 
-                ? parsed.map((t: any) => typeof t === 'string' ? t : t.testName || t.name || '') 
-                : [];
-            } catch { testsToOrder = [testValue]; }
-          } else if (testValue.includes(',')) {
-            // Comma-separated format
-            testsToOrder = testValue.split(',').map((t: string) => t.trim()).filter(Boolean);
-          } else {
-            // Single test
-            testsToOrder = [testValue];
-          }
-          
-          // Create lab test orders using timestamp-based unique order numbers
-          const year = new Date().getFullYear();
-          let createdTestCount = 0;
-          
-          for (let ti = 0; ti < testsToOrder.length; ti++) {
-            const testName = testsToOrder[ti];
-            if (!testName) continue;
-            const ts = Date.now();
-            const orderNumber = `LAB-${year}-${ts}-${ti}`;
-            
-            await databaseStorage.createLabTestOrder({
-              orderNumber,
-              patientId: prescription.patientId,
-              patientName: prescription.patientName,
-              patientAge: prescription.patientAge || undefined,
-              patientGender: prescription.patientGender || undefined,
-              doctorId: prescription.doctorId,
-              doctorName: prescription.doctorName,
-              testId: `PRESC-${prescription.id}`,
-              testName: testName,
-              testCode: undefined,
-              priority: 'NORMAL',
-              clinicalNotes: prescription.diagnosis || undefined,
-              suggestedTest: testName,
-              orderStatus: 'PENDING',
-            });
-            createdTestCount++;
-          }
-          
-          console.log(`Created ${testsToOrder.length} lab test orders from prescription ${prescription.prescriptionNumber}`);
-        } catch (labOrderError) {
-          console.error("Error creating lab test orders:", labOrderError);
-          // Don't fail the finalization, just log the error
-        }
-      }
+      // Create lab test orders for suggested tests (with dedup - won't create if already exist from prescription creation)
+      await createLabOrdersFromPrescription(prescription);
 
       res.json(prescription);
     } catch (error) {
@@ -3819,7 +3834,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all finalized prescriptions with suggested tests
       const allPrescriptions = await storage.getPrescriptions();
       const finalizedWithTests = allPrescriptions.filter(
-        (p: any) => p.prescriptionStatus === 'finalized' && p.suggestedTest
+        (p: any) => p.suggestedTest
       );
       
       let createdCount = 0;
@@ -3877,7 +3892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         success: true, 
-        message: `Created ${createdCount} lab orders from ${finalizedWithTests.length} finalized prescriptions` 
+        message: `Created ${createdCount} lab orders from ${finalizedWithTests.length} prescriptions with suggested tests` 
       });
     } catch (error) {
       console.error("Backfill error:", error);
@@ -3961,6 +3976,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           signedByName: createdPrescription.signedByName
         }).catch(err => console.error("Medical store notification error:", err));
       }
+
+      // Create lab orders for suggested tests immediately
+      await createLabOrdersFromPrescription(createdPrescription);
 
       res.status(201).json({ 
         ...createdPrescription, 
