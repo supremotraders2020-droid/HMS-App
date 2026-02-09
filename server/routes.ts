@@ -304,6 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Seed initial data if database is empty
   await databaseStorage.seedInitialData();
+  await databaseStorage.seedBedCategories();
   await databaseStorage.seedEquipmentData();
   await databaseStorage.seedBmwData();
   await databaseStorage.seedConsentTemplates();

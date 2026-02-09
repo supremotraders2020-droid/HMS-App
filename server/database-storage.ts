@@ -28,7 +28,7 @@ import {
   otCases, otCaseTeam, otPreopCounselling, otPreopChecklist, otPreanaestheticEval,
   otSafetyChecklist, otPreopAssessment, otReEvaluation, otConsentSurgery, otConsentAnaesthesia,
   otAnaesthesiaRecord, otTimeLog, otSurgeonNotes, otPostopAssessment, otMonitoringChart,
-  otLabourChart, otNeonateSheet, otAuditLog,
+  otLabourChart, otNeonateSheet, otAuditLog, bedCategories,
   type OtCase, type InsertOtCase, type OtCaseTeam, type InsertOtCaseTeam,
   type OtPreopCounselling, type InsertOtPreopCounselling, type OtPreopChecklist, type InsertOtPreopChecklist,
   type OtPreanaestheticEval, type InsertOtPreanaestheticEval, type OtSafetyChecklist, type InsertOtSafetyChecklist,
@@ -1396,6 +1396,33 @@ export class DatabaseStorage implements IStorage {
   async deleteEmergencyContact(id: string): Promise<boolean> {
     const result = await db.delete(emergencyContacts).where(eq(emergencyContacts.id, id)).returning();
     return result.length > 0;
+  }
+
+  async seedBedCategories(): Promise<void> {
+    const existing = await db.select().from(bedCategories).limit(1);
+    if (existing.length > 0) {
+      console.log("Bed categories already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding bed categories...");
+
+    const categories = [
+      { id: "cat-daycare", name: "Day-Care", code: "DC", description: "Day-care beds for short procedures", categoryType: "day_care", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
+      { id: "cat-general", name: "General Ward", code: "GEN", description: "Standard general ward beds for routine care", categoryType: "inpatient", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
+      { id: "cat-hdu", name: "HDU", code: "HDU", description: "High Dependency Unit for step-down care", categoryType: "inpatient", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
+      { id: "cat-icu", name: "ICU", code: "ICU", description: "Intensive Care Unit beds with critical monitoring", categoryType: "icu", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
+      { id: "cat-isolation", name: "Isolation", code: "ISO", description: "Isolation rooms for infectious cases", categoryType: "isolation", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
+      { id: "cat-nicu", name: "NICU", code: "NICU", description: "Neonatal Intensive Care Unit", categoryType: "icu", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
+      { id: "cat-private", name: "Private", code: "PVT", description: "Private single-bed rooms", categoryType: "inpatient", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
+      { id: "cat-semi-private", name: "Semi-Private", code: "SP", description: "Semi-private rooms with 2 beds", categoryType: "inpatient", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
+    ];
+
+    for (const cat of categories) {
+      await db.insert(bedCategories).values(cat).onConflictDoNothing();
+    }
+
+    console.log(`Seeded ${categories.length} bed categories successfully!`);
   }
 
   // Seed Equipment Data
