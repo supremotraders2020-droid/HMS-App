@@ -124,6 +124,7 @@ import {
   type InsuranceClaimLog, type InsertInsuranceClaimLog,
   type InsuranceProviderChecklist, type InsertInsuranceProviderChecklist,
   faceEmbeddings, biometricConsent, faceRecognitionLogs, faceAttendance, faceRecognitionSettings, duplicatePatientAlerts,
+  patientMonitoringSessions,
   referralSources, patientReferrals,
   hospitalServiceDepartments, hospitalServices,
   beds, type Bed, type InsertBed,
@@ -1833,6 +1834,229 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log(`Seeded ${bedData.length} beds successfully!`);
+  }
+
+  async seedDemoPatientData(): Promise<void> {
+    const existingCharts = await db.select().from(icuCharts).limit(1);
+    const existingSessions = await db.select().from(patientMonitoringSessions).limit(1);
+    if (existingCharts.length > 0 && existingSessions.length > 0) {
+      console.log("Demo patient data already exists, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding demo patient data (ICU charts, monitoring sessions, tracking patients)...");
+
+    const patientUsers = await db.select().from(users).where(eq(users.role, "PATIENT")).limit(5);
+    const doctorUsers = await db.select().from(users).where(eq(users.role, "DOCTOR")).limit(3);
+    const nurseUsers = await db.select().from(users).where(eq(users.role, "NURSE")).limit(2);
+
+    if (patientUsers.length === 0 || doctorUsers.length === 0) {
+      console.log("No patients/doctors found, skipping demo data seed...");
+      return;
+    }
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().split('T')[0];
+    const twoDaysAgoStr = new Date(today.getTime() - 172800000).toISOString().split('T')[0];
+
+    const demoPatients = [
+      { name: "Rajesh Kumar", age: 55, sex: "Male", bloodGroup: "B+", weight: "72", diagnosis: "Acute Myocardial Infarction", ward: "ICU", bed: "ICU-01", department: "Cardiology", isIcu: true },
+      { name: "Sunita Devi", age: 62, sex: "Female", bloodGroup: "A+", weight: "65", diagnosis: "Severe Pneumonia with Respiratory Failure", ward: "ICU", bed: "ICU-02", department: "Pulmonology", isIcu: true },
+      { name: "Amit Sharma", age: 45, sex: "Male", bloodGroup: "O+", weight: "80", diagnosis: "Diabetic Ketoacidosis", ward: "HDU", bed: "HDU-01", department: "Internal Medicine", isIcu: false },
+      { name: "Priya Patel", age: 35, sex: "Female", bloodGroup: "AB+", weight: "58", diagnosis: "Post-Operative Care (Appendectomy)", ward: "General Ward A", bed: "GEN-01", department: "General Surgery", isIcu: false },
+      { name: "Mohammad Ali", age: 70, sex: "Male", bloodGroup: "A-", weight: "68", diagnosis: "Acute Cerebrovascular Accident", ward: "ICU", bed: "ICU-03", department: "Neurology", isIcu: true },
+    ];
+
+    const doctorName1 = doctorUsers[0]?.name ? `Dr. ${doctorUsers[0].name}` : "Dr. Anil Kulkarni";
+    const doctorName2 = doctorUsers.length > 1 && doctorUsers[1]?.name ? `Dr. ${doctorUsers[1].name}` : "Dr. Sunil Gupta";
+    const nurseName = nurseUsers[0]?.name ? nurseUsers[0].name : "Nurse Priya";
+    const nurseId = nurseUsers[0]?.id || "system";
+
+    const existingTracking = await db.select().from(trackingPatients).limit(1);
+    if (existingTracking.length === 0) {
+      for (let i = 0; i < demoPatients.length; i++) {
+        const p = demoPatients[i];
+        const admDate = new Date(today.getTime() - (i + 1) * 86400000);
+        await db.insert(trackingPatients).values({
+          name: p.name,
+          age: p.age,
+          gender: p.sex,
+          department: p.department,
+          room: p.bed,
+          diagnosis: p.diagnosis,
+          admissionDate: admDate,
+          status: "admitted",
+          doctor: i % 2 === 0 ? doctorName1 : doctorName2,
+          nurse: nurseName,
+          isInIcu: p.isIcu,
+          bloodGroup: p.bloodGroup,
+          attendingDoctor: doctorName1,
+          assignedNurse: nurseName,
+        }).onConflictDoNothing();
+      }
+      console.log("  Seeded tracking patients...");
+    }
+
+    if (existingCharts.length === 0) {
+      const icuPatients = demoPatients.filter(p => p.isIcu);
+      for (let i = 0; i < icuPatients.length; i++) {
+        const p = icuPatients[i];
+        const patientId = patientUsers[i % patientUsers.length]?.id || patientUsers[0].id;
+        const admDate = new Date(today.getTime() - (i + 2) * 86400000).toISOString();
+
+        await db.insert(icuCharts).values({
+          id: `icu-chart-demo-${i + 1}`,
+          patientId: patientId,
+          patientName: p.name,
+          age: String(p.age),
+          sex: p.sex,
+          bloodGroup: p.bloodGroup,
+          weight: p.weight,
+          diagnosis: p.diagnosis,
+          dateOfAdmission: admDate,
+          ward: p.ward,
+          bedNo: p.bed,
+          chartDate: todayStr,
+          admittingConsultant: doctorName1,
+          icuConsultant: doctorName2,
+          createdBy: nurseId,
+        }).onConflictDoNothing();
+
+        if (yesterdayStr !== todayStr) {
+          await db.insert(icuCharts).values({
+            id: `icu-chart-demo-${i + 1}-yesterday`,
+            patientId: patientId,
+            patientName: p.name,
+            age: String(p.age),
+            sex: p.sex,
+            bloodGroup: p.bloodGroup,
+            weight: p.weight,
+            diagnosis: p.diagnosis,
+            dateOfAdmission: admDate,
+            ward: p.ward,
+            bedNo: p.bed,
+            chartDate: yesterdayStr,
+            admittingConsultant: doctorName1,
+            icuConsultant: doctorName2,
+            createdBy: nurseId,
+          }).onConflictDoNothing();
+        }
+      }
+      console.log("  Seeded ICU charts...");
+    }
+
+    if (existingSessions.length === 0) {
+      for (let i = 0; i < demoPatients.length; i++) {
+        const p = demoPatients[i];
+        const patientId = patientUsers[i % patientUsers.length]?.id || patientUsers[0].id;
+        const admDate = new Date(today.getTime() - (i + 1) * 86400000);
+
+        await db.insert(patientMonitoringSessions).values({
+          id: `pm-session-demo-${i + 1}`,
+          patientId: patientId,
+          patientName: p.name,
+          uhid: `GH-2026-${String(i + 1).padStart(3, '0')}`,
+          age: p.age,
+          sex: p.sex,
+          admissionDateTime: admDate,
+          ward: p.ward,
+          bedNumber: p.bed,
+          bloodGroup: p.bloodGroup,
+          weightKg: p.weight,
+          primaryDiagnosis: p.diagnosis,
+          admittingConsultant: i % 2 === 0 ? doctorName1 : doctorName2,
+          icuConsultant: p.isIcu ? doctorName2 : null,
+          isVentilated: p.isIcu && i === 1,
+          sessionDate: todayStr,
+          createdBy: nurseId,
+          createdByName: nurseName,
+        }).onConflictDoNothing();
+
+        await db.insert(patientMonitoringSessions).values({
+          id: `pm-session-demo-${i + 1}-prev`,
+          patientId: patientId,
+          patientName: p.name,
+          uhid: `GH-2026-${String(i + 1).padStart(3, '0')}`,
+          age: p.age,
+          sex: p.sex,
+          admissionDateTime: admDate,
+          ward: p.ward,
+          bedNumber: p.bed,
+          bloodGroup: p.bloodGroup,
+          weightKg: p.weight,
+          primaryDiagnosis: p.diagnosis,
+          admittingConsultant: i % 2 === 0 ? doctorName1 : doctorName2,
+          icuConsultant: p.isIcu ? doctorName2 : null,
+          isVentilated: p.isIcu && i === 1,
+          sessionDate: yesterdayStr,
+          createdBy: nurseId,
+          createdByName: nurseName,
+        }).onConflictDoNothing();
+      }
+      console.log("  Seeded patient monitoring sessions...");
+    }
+
+    const existingAdmissions = await db.select().from(admissions).limit(1);
+    if (existingAdmissions.length === 0) {
+      for (let i = 0; i < demoPatients.length; i++) {
+        const p = demoPatients[i];
+        const patientId = patientUsers[i % patientUsers.length]?.id || patientUsers[0].id;
+        const admDate = new Date(today.getTime() - (i + 1) * 86400000);
+
+        await db.insert(admissions).values({
+          patientId: patientId,
+          admissionDate: admDate,
+          department: p.department,
+          roomNumber: p.bed,
+          admittingPhysician: i % 2 === 0 ? doctorName1 : doctorName2,
+          primaryDiagnosis: p.diagnosis,
+          status: "admitted",
+          notes: `Patient admitted for ${p.diagnosis}. ${p.isIcu ? 'Currently in ICU under close monitoring.' : 'Stable condition, regular monitoring.'}`,
+        }).onConflictDoNothing();
+      }
+      console.log("  Seeded admissions...");
+    }
+
+    console.log("Demo patient data seeded successfully!");
+  }
+
+  async seedAdditionalHealthTips(): Promise<void> {
+    const existingCount = await db.select().from(healthTips);
+    if (existingCount.length >= 10) {
+      console.log("Sufficient health tips exist, skipping additional seed...");
+      return;
+    }
+
+    console.log("Seeding additional health tips...");
+
+    const now = new Date();
+    const setTime = (daysAgo: number, hour: number): Date => {
+      const d = new Date(now.getTime() - daysAgo * 86400000);
+      d.setHours(hour, 0, 0, 0);
+      return d;
+    };
+
+    const additionalTips = [
+      { title: "Importance of Hand Hygiene", content: "Wash your hands frequently with soap and water for at least 20 seconds. Hand hygiene prevents 80% of common infections. Use alcohol-based sanitizer when soap is unavailable.", category: "hygiene", season: "All", priority: "high", targetAudience: "all", scheduledFor: "9AM", isActive: true, generatedAt: setTime(3, 9) },
+      { title: "Heart-Healthy Indian Diet", content: "Include omega-3 rich foods like flaxseeds (alsi), walnuts, and fish in your diet. Replace refined oils with mustard or olive oil. Add garlic, turmeric, and fenugreek to daily cooking for cardiovascular benefits.", category: "diet", season: "All", priority: "medium", targetAudience: "all", scheduledFor: "9PM", isActive: true, generatedAt: setTime(3, 21) },
+      { title: "Managing Blood Pressure Naturally", content: "Reduce salt intake to less than 5g per day. Practice deep breathing exercises (Pranayama) for 15 minutes daily. Regular walking for 30 minutes can reduce systolic BP by 5-8 mmHg.", category: "wellness", season: "All", priority: "high", targetAudience: "all", scheduledFor: "9AM", isActive: true, generatedAt: setTime(2, 9) },
+      { title: "Diabetes Prevention Tips", content: "Choose whole grains (brown rice, jowar, bajra) over refined carbohydrates. Include bitter gourd (karela), fenugreek seeds, and amla in your diet. Walk for at least 30 minutes after meals to regulate blood sugar.", category: "diet", season: "All", priority: "high", targetAudience: "all", scheduledFor: "9PM", isActive: true, generatedAt: setTime(2, 21) },
+      { title: "Importance of Sleep for Recovery", content: "Aim for 7-8 hours of quality sleep. Maintain a consistent sleep schedule. Avoid screens 1 hour before bedtime. A dark, cool room promotes better sleep quality.", category: "wellness", season: "All", priority: "medium", targetAudience: "all", scheduledFor: "9AM", isActive: true, generatedAt: setTime(1, 9) },
+      { title: "Post-Surgery Care Tips", content: "Follow your doctor's wound care instructions carefully. Take medications on schedule. Stay hydrated and eat protein-rich foods for faster healing. Report any signs of infection immediately.", category: "general", season: "All", priority: "high", targetAudience: "all", scheduledFor: "9PM", isActive: true, generatedAt: setTime(1, 21) },
+      { title: "Stay Active During Monsoon", content: "Indoor exercises like yoga, stretching, and light weights keep you fit during rainy season. Avoid exercising in waterlogged areas. Stay hydrated even in cool weather.", category: "wellness", weatherContext: "Rainy, 26C", season: "Monsoon", priority: "medium", targetAudience: "all", scheduledFor: "9AM", isActive: true, generatedAt: setTime(4, 9) },
+      { title: "Eye Care in Digital Age", content: "Follow the 20-20-20 rule: Every 20 minutes, look at something 20 feet away for 20 seconds. Adjust screen brightness to match surroundings. Blink frequently to prevent dry eyes.", category: "general", season: "All", priority: "medium", targetAudience: "all", scheduledFor: "9PM", isActive: true, generatedAt: setTime(4, 21) },
+      { title: "Immunity Boosting Foods", content: "Include citrus fruits, amla (Indian gooseberry), tulsi tea, and turmeric milk in your daily routine. Eat seasonal fruits and vegetables. Vitamin C and Zinc-rich foods strengthen your immune system.", category: "diet", season: "Winter", priority: "high", targetAudience: "all", scheduledFor: "9AM", isActive: true, generatedAt: setTime(5, 9) },
+      { title: "Mental Health Awareness", content: "Take breaks during work to prevent burnout. Practice mindfulness or meditation for 10 minutes daily. Talk to someone you trust if feeling overwhelmed. Seeking help is a sign of strength.", category: "wellness", season: "All", priority: "high", targetAudience: "all", scheduledFor: "9PM", isActive: true, generatedAt: setTime(5, 21) },
+      { title: "Bone Health for All Ages", content: "Consume calcium-rich foods like milk, ragi, and sesame seeds daily. Get 15-20 minutes of morning sunlight for Vitamin D. Weight-bearing exercises like walking strengthen bones.", category: "general", season: "All", priority: "medium", targetAudience: "all", scheduledFor: "9AM", isActive: true, generatedAt: setTime(6, 9) },
+      { title: "Summer Hydration Guide", content: "Drink at least 3 liters of water daily in summer. Include buttermilk (chaas), coconut water, and nimbu pani. Avoid excessive caffeine and sugary drinks. Eat water-rich fruits like watermelon and cucumber.", category: "seasonal", weatherContext: "Hot, 38C", season: "Summer", priority: "high", targetAudience: "all", scheduledFor: "9PM", isActive: true, generatedAt: setTime(6, 21) },
+    ];
+
+    for (const tip of additionalTips) {
+      await db.insert(healthTips).values(tip as any).onConflictDoNothing();
+    }
+
+    console.log(`Seeded ${additionalTips.length} additional health tips!`);
   }
 
   // ========== HOSPITAL SETTINGS METHODS ==========

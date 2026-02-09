@@ -320,6 +320,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await databaseStorage.seedHospitalServices();
   await databaseStorage.seedSystemTemplates();
   await databaseStorage.seedOtDemoData();
+  await databaseStorage.seedDemoPatientData();
+  await databaseStorage.seedAdditionalHealthTips();
   
   // Ensure lab test order sequence exists for concurrency-safe order numbers
   await databaseStorage.ensureLabTestOrderSequence();
