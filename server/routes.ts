@@ -3129,11 +3129,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Determine role from title
-      let role: "ADMIN" | "DOCTOR" | "NURSE" | "OPD_MANAGER" = "OPD_MANAGER";
+      let role: "ADMIN" | "DOCTOR" | "NURSE" | "OPD_MANAGER" | "TECHNICIAN" | "MEDICAL_STORE" | "PATHOLOGY_LAB" = "OPD_MANAGER";
       const lowerTitle = title.toLowerCase();
       if (lowerTitle.includes("doctor") || lowerTitle.includes("dr.")) role = "DOCTOR";
       else if (lowerTitle.includes("nurse")) role = "NURSE";
       else if (lowerTitle.includes("admin")) role = "ADMIN";
+      else if (lowerTitle.includes("technician") || lowerTitle.includes("lab tech") || lowerTitle.includes("diagnostic")) role = "TECHNICIAN";
+      else if (lowerTitle.includes("pathology") || lowerTitle.includes("lab")) role = "PATHOLOGY_LAB";
+      else if (lowerTitle.includes("medical store") || lowerTitle.includes("pharmacy") || lowerTitle.includes("pharmacist")) role = "MEDICAL_STORE";
       else if (lowerTitle.includes("opd") || lowerTitle.includes("manager")) role = "OPD_MANAGER";
       
       // Hash password with bcrypt
