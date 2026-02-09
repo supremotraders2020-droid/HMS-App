@@ -3768,14 +3768,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             testsToOrder = [testValue];
           }
           
-          // Create lab test orders for each test
-          const allOrders = await databaseStorage.getAllLabTestOrders();
-          let orderCount = allOrders.length;
+          // Create lab test orders using timestamp-based unique order numbers
+          const year = new Date().getFullYear();
+          let createdTestCount = 0;
           
-          for (const testName of testsToOrder) {
+          for (let ti = 0; ti < testsToOrder.length; ti++) {
+            const testName = testsToOrder[ti];
             if (!testName) continue;
-            orderCount++;
-            const orderNumber = `LAB-${new Date().getFullYear()}-${String(orderCount).padStart(4, '0')}`;
+            const ts = Date.now();
+            const orderNumber = `LAB-${year}-${ts}-${ti}`;
             
             await databaseStorage.createLabTestOrder({
               orderNumber,
@@ -3793,6 +3794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               suggestedTest: testName,
               orderStatus: 'PENDING',
             });
+            createdTestCount++;
           }
           
           console.log(`Created ${testsToOrder.length} lab test orders from prescription ${prescription.prescriptionNumber}`);
@@ -3819,7 +3821,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let createdCount = 0;
       const existingOrders = await databaseStorage.getAllLabTestOrders();
-      let orderCount = existingOrders.length;
+      const bfYear = new Date().getFullYear();
       
       for (const prescription of finalizedWithTests) {
         // Check if orders already exist for this prescription
@@ -3847,8 +3849,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         for (const testName of testsToOrder) {
           if (!testName) continue;
-          orderCount++;
-          const orderNumber = `LAB-${new Date().getFullYear()}-${String(orderCount).padStart(4, '0')}`;
+          const bfTs = Date.now();
+          const orderNumber = `LAB-${bfYear}-${bfTs}-${createdCount}`;
           
           await databaseStorage.createLabTestOrder({
             orderNumber,
@@ -15436,8 +15438,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
   // Create lab test order
   app.post("/api/lab-test-orders", async (req, res) => {
     try {
-      const allOrders = await databaseStorage.getAllLabTestOrders();
-      const orderNumber = `LAB-${new Date().getFullYear()}-${String(allOrders.length + 1).padStart(4, '0')}`;
+      const orderNumber = `LAB-${new Date().getFullYear()}-${Date.now()}`;
       const order = await databaseStorage.createLabTestOrder({ ...req.body, orderNumber });
       res.status(201).json(order);
     } catch (error) {
