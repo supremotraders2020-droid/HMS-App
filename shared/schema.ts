@@ -6806,3 +6806,33 @@ export const nursingAssessmentCarePlan = pgTable("nursing_assessment_care_plan",
 export const insertNursingAssessmentCarePlanSchema = createInsertSchema(nursingAssessmentCarePlan).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertNursingAssessmentCarePlan = z.infer<typeof insertNursingAssessmentCarePlanSchema>;
 export type NursingAssessmentCarePlan = typeof nursingAssessmentCarePlan.$inferSelect;
+
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  settingKey: text("setting_key").notNull().unique(),
+  settingValue: text("setting_value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedBy: varchar("updated_by"),
+});
+
+export const backupLogs = pgTable("backup_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  backupType: text("backup_type").notNull(),
+  status: text("status").notNull().default("pending"),
+  tablesIncluded: integer("tables_included"),
+  totalRecords: integer("total_records"),
+  fileSize: text("file_size"),
+  filePath: text("file_path"),
+  errorMessage: text("error_message"),
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  triggeredBy: varchar("triggered_by"),
+});
+
+export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit({ id: true, updatedAt: true });
+export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
+export type SystemSetting = typeof systemSettings.$inferSelect;
+
+export const insertBackupLogSchema = createInsertSchema(backupLogs).omit({ id: true, startedAt: true });
+export type InsertBackupLog = z.infer<typeof insertBackupLogSchema>;
+export type BackupLog = typeof backupLogs.$inferSelect;
