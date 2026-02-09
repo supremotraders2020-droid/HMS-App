@@ -1490,6 +1490,351 @@ export class DatabaseStorage implements IStorage {
     console.log("Equipment data seeded successfully!");
   }
 
+  async seedInventoryItems(): Promise<void> {
+    const existing = await db.select().from(inventoryItems).limit(1);
+    if (existing.length > 0) {
+      console.log("Inventory items already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding inventory items...");
+
+    const items: InsertInventoryItem[] = [
+      { name: "Disposable Gloves (Box of 100)", category: "gloves", currentStock: 500, lowStockThreshold: 50, unit: "boxes", cost: "350", supplier: "MedSupply India", description: "Latex-free nitrile examination gloves" },
+      { name: "Surgical Gloves (Sterile)", category: "gloves", currentStock: 300, lowStockThreshold: 30, unit: "pairs", cost: "45", supplier: "MedSupply India", description: "Sterile powdered surgical gloves" },
+      { name: "Disposable Syringes 5ml", category: "syringes", currentStock: 1000, lowStockThreshold: 100, unit: "units", cost: "8", supplier: "BD India", description: "Luer-lock disposable syringes 5ml" },
+      { name: "Disposable Syringes 10ml", category: "syringes", currentStock: 800, lowStockThreshold: 80, unit: "units", cost: "10", supplier: "BD India", description: "Luer-lock disposable syringes 10ml" },
+      { name: "Insulin Syringes 1ml", category: "syringes", currentStock: 500, lowStockThreshold: 50, unit: "units", cost: "12", supplier: "BD India", description: "U-100 insulin syringes with needle" },
+      { name: "N95 Masks", category: "disposables", currentStock: 400, lowStockThreshold: 50, unit: "units", cost: "35", supplier: "3M India", description: "NIOSH-approved N95 respirator masks" },
+      { name: "Surgical Masks (3-ply)", category: "disposables", currentStock: 2000, lowStockThreshold: 200, unit: "units", cost: "5", supplier: "Venus Safety", description: "3-ply disposable surgical face masks" },
+      { name: "IV Infusion Set", category: "disposables", currentStock: 300, lowStockThreshold: 30, unit: "units", cost: "55", supplier: "Romsons", description: "Sterile IV infusion set with flow regulator" },
+      { name: "IV Cannula (20G)", category: "disposables", currentStock: 400, lowStockThreshold: 40, unit: "units", cost: "25", supplier: "BD India", description: "20-gauge intravenous cannula with wings" },
+      { name: "Cotton Roll (500g)", category: "disposables", currentStock: 150, lowStockThreshold: 15, unit: "rolls", cost: "120", supplier: "Jaycot Industries", description: "Absorbent cotton roll 500 grams" },
+      { name: "Bandage Roll (10cm x 3m)", category: "disposables", currentStock: 600, lowStockThreshold: 60, unit: "rolls", cost: "18", supplier: "Premierpads", description: "Cotton elastic bandage roll" },
+      { name: "Antiseptic Solution (Betadine 500ml)", category: "disposables", currentStock: 100, lowStockThreshold: 10, unit: "bottles", cost: "180", supplier: "Win-Medicare", description: "Povidone-iodine 10% antiseptic solution" },
+      { name: "Gauze Pads (10x10cm)", category: "disposables", currentStock: 1000, lowStockThreshold: 100, unit: "packs", cost: "25", supplier: "Premierpads", description: "Sterile gauze swab pads pack of 5" },
+      { name: "Surgical Tape (2.5cm x 9.1m)", category: "disposables", currentStock: 200, lowStockThreshold: 20, unit: "rolls", cost: "45", supplier: "3M India", description: "Micropore surgical tape" },
+      { name: "Hypodermic Needles (22G)", category: "disposables", currentStock: 1500, lowStockThreshold: 150, unit: "units", cost: "3", supplier: "BD India", description: "22-gauge hypodermic needles" },
+      { name: "Suture Kit (Silk 3-0)", category: "disposables", currentStock: 200, lowStockThreshold: 20, unit: "units", cost: "85", supplier: "Ethicon India", description: "Non-absorbable silk braided suture" },
+      { name: "Urine Collection Bag", category: "disposables", currentStock: 250, lowStockThreshold: 25, unit: "units", cost: "40", supplier: "Romsons", description: "Sterile urine drainage bag 2L" },
+      { name: "Disposable Bed Sheet", category: "disposables", currentStock: 300, lowStockThreshold: 30, unit: "units", cost: "60", supplier: "MedSupply India", description: "Non-woven disposable bed sheet" },
+    ];
+
+    for (const item of items) {
+      await db.insert(inventoryItems).values(item).onConflictDoNothing();
+    }
+
+    console.log(`Seeded ${items.length} inventory items successfully!`);
+  }
+
+  async seedOxygenCylinders(): Promise<void> {
+    const existing = await db.select().from(oxygenCylinders).limit(1);
+    if (existing.length > 0) {
+      console.log("Oxygen cylinders already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding oxygen cylinders...");
+
+    const cylinders: InsertOxygenCylinder[] = [
+      { cylinderCode: "OXY-B-001", cylinderType: "B-type", capacity: "200", filledPressure: "2000", currentPressure: "2000", status: "full", vendor: "Linde India", location: "ICU", purityCertificateDate: "2025-01-15", hydrostaticTestDate: "2023-06-10", nextTestDueDate: "2028-06-10" },
+      { cylinderCode: "OXY-B-002", cylinderType: "B-type", capacity: "200", filledPressure: "2000", currentPressure: "1200", status: "in_use", vendor: "Linde India", location: "Emergency", purityCertificateDate: "2025-01-15", hydrostaticTestDate: "2023-08-20", nextTestDueDate: "2028-08-20" },
+      { cylinderCode: "OXY-D-001", cylinderType: "D-type", capacity: "500", filledPressure: "2000", currentPressure: "2000", status: "full", vendor: "INOX Air Products", location: "General Ward", purityCertificateDate: "2025-02-01", hydrostaticTestDate: "2024-01-15", nextTestDueDate: "2029-01-15" },
+      { cylinderCode: "OXY-E-001", cylinderType: "E-type", capacity: "680", filledPressure: "2000", currentPressure: "500", status: "in_use", vendor: "INOX Air Products", location: "OT-1", purityCertificateDate: "2024-12-10", hydrostaticTestDate: "2022-11-05", nextTestDueDate: "2027-11-05" },
+      { cylinderCode: "OXY-H-001", cylinderType: "H-type", capacity: "7000", filledPressure: "2200", currentPressure: "2200", status: "full", vendor: "Linde India", location: "Central Store", purityCertificateDate: "2025-01-20", hydrostaticTestDate: "2024-03-01", nextTestDueDate: "2029-03-01" },
+      { cylinderCode: "OXY-H-002", cylinderType: "H-type", capacity: "7000", filledPressure: "2200", currentPressure: "300", status: "empty", vendor: "Linde India", location: "Central Store", purityCertificateDate: "2024-11-05", hydrostaticTestDate: "2023-04-18", nextTestDueDate: "2028-04-18" },
+    ];
+
+    for (const cyl of cylinders) {
+      await db.insert(oxygenCylinders).values(cyl).onConflictDoNothing();
+    }
+
+    console.log(`Seeded ${cylinders.length} oxygen cylinders successfully!`);
+  }
+
+  async seedDiseaseCatalog(): Promise<void> {
+    const existing = await db.select().from(diseaseCatalog).limit(1);
+    if (existing.length > 0) {
+      console.log("Disease catalog already exists, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding disease catalog...");
+
+    const diseases: InsertDiseaseCatalog[] = [
+      { diseaseName: "Diabetes Mellitus", alternateNames: "Sugar Disease, Madhumeha", category: "metabolic", affectedSystem: "Endocrine", shortDescription: "A condition where the body cannot properly process blood sugar (glucose)", causes: JSON.stringify(["Insulin resistance", "Insufficient insulin production", "Genetic factors"]), riskFactors: JSON.stringify(["Obesity", "Sedentary lifestyle", "Family history", "Age over 45"]), symptoms: JSON.stringify(["Frequent urination", "Excessive thirst", "Unexplained weight loss", "Blurred vision", "Fatigue"]), emergencySigns: JSON.stringify(["Very high blood sugar (>400 mg/dL)", "Diabetic ketoacidosis", "Loss of consciousness"]), clinicalParameters: JSON.stringify({ fastingBloodSugar: "70-100 mg/dL", postMealSugar: "<140 mg/dL", hba1c: "<7%" }), dosList: JSON.stringify(["Monitor blood sugar regularly", "Take medications on time", "Exercise 30 min daily", "Eat balanced meals"]), dontsList: JSON.stringify(["Skip meals", "Consume excess sugar", "Miss medications", "Ignore foot care"]), isActive: true },
+      { diseaseName: "Hypertension", alternateNames: "High Blood Pressure, BP", category: "cardiovascular", affectedSystem: "Heart", shortDescription: "Persistently elevated blood pressure in the arteries", causes: JSON.stringify(["Narrowing of arteries", "High salt intake", "Stress", "Genetic predisposition"]), riskFactors: JSON.stringify(["Obesity", "Smoking", "High salt diet", "Excessive alcohol", "Family history"]), symptoms: JSON.stringify(["Headache", "Dizziness", "Chest pain", "Shortness of breath", "Nosebleeds"]), emergencySigns: JSON.stringify(["BP above 180/120 mmHg", "Severe chest pain", "Vision changes", "Difficulty speaking"]), clinicalParameters: JSON.stringify({ normalBP: "<120/80 mmHg", stage1: "130-139/80-89 mmHg", stage2: ">=140/90 mmHg" }), dosList: JSON.stringify(["Take BP medications daily", "Reduce salt intake", "Exercise regularly", "Manage stress"]), dontsList: JSON.stringify(["Stop medication without consulting doctor", "Consume excess salt", "Smoke", "Drink excess alcohol"]), isActive: true },
+      { diseaseName: "Asthma", alternateNames: "Dama, Bronchial Asthma", category: "respiratory", affectedSystem: "Lungs", shortDescription: "Chronic inflammatory disease of the airways causing breathing difficulty", causes: JSON.stringify(["Airway inflammation", "Genetic factors", "Environmental allergens"]), riskFactors: JSON.stringify(["Family history", "Allergies", "Air pollution", "Smoking exposure", "Respiratory infections"]), symptoms: JSON.stringify(["Wheezing", "Shortness of breath", "Chest tightness", "Coughing especially at night"]), emergencySigns: JSON.stringify(["Severe breathlessness", "Blue lips or fingertips", "Unable to speak full sentences", "Inhaler not helping"]), clinicalParameters: JSON.stringify({ peakFlow: ">80% of personal best", spO2: ">95%" }), dosList: JSON.stringify(["Keep inhaler accessible", "Avoid known triggers", "Follow action plan", "Get flu vaccine yearly"]), dontsList: JSON.stringify(["Ignore worsening symptoms", "Stop controller medications", "Smoke", "Exercise in cold air without precaution"]), isActive: true },
+      { diseaseName: "Dengue Fever", alternateNames: "Break-bone Fever, Haddi Tod Bukhar", category: "infectious", affectedSystem: "Blood", shortDescription: "Mosquito-borne viral infection causing high fever and body pain", causes: JSON.stringify(["Dengue virus transmitted by Aedes mosquitoes"]), riskFactors: JSON.stringify(["Monsoon season", "Stagnant water near home", "Previous dengue infection", "Tropical climate"]), symptoms: JSON.stringify(["High fever (104F)", "Severe headache", "Pain behind eyes", "Joint and muscle pain", "Skin rash", "Nausea"]), emergencySigns: JSON.stringify(["Severe abdominal pain", "Persistent vomiting", "Bleeding from nose or gums", "Blood in vomit or stool", "Platelet count <20000"]), clinicalParameters: JSON.stringify({ plateletCount: ">150000/mcL", hematocrit: "Normal range" }), dosList: JSON.stringify(["Stay hydrated", "Rest completely", "Use mosquito nets", "Monitor platelet count daily"]), dontsList: JSON.stringify(["Take aspirin or ibuprofen", "Ignore warning signs", "Self-medicate", "Delay hospital visit if bleeding"]), isActive: true },
+      { diseaseName: "Typhoid Fever", alternateNames: "Motijhara, Enteric Fever", category: "infectious", affectedSystem: "Digestive", shortDescription: "Bacterial infection caused by contaminated food or water", causes: JSON.stringify(["Salmonella typhi bacteria", "Contaminated water or food"]), riskFactors: JSON.stringify(["Poor sanitation", "Contaminated water supply", "Close contact with infected person"]), symptoms: JSON.stringify(["Sustained high fever", "Weakness", "Abdominal pain", "Headache", "Loss of appetite", "Constipation or diarrhea"]), emergencySigns: JSON.stringify(["Intestinal bleeding", "Perforation of intestine", "Very high fever not responding to medication"]), clinicalParameters: JSON.stringify({ widalTest: "Positive >1:160", bloodCulture: "Positive for S. typhi" }), dosList: JSON.stringify(["Complete full antibiotic course", "Drink boiled water", "Eat hygienic food", "Wash hands frequently"]), dontsList: JSON.stringify(["Stop antibiotics early", "Eat street food", "Drink unfiltered water", "Share personal items"]), isActive: true },
+      { diseaseName: "Malaria", alternateNames: "Malaria Bukhar", category: "infectious", affectedSystem: "Blood", shortDescription: "Parasitic infection transmitted by Anopheles mosquito bites", causes: JSON.stringify(["Plasmodium parasite via mosquito bite"]), riskFactors: JSON.stringify(["Living in endemic areas", "Lack of mosquito protection", "Rainy season", "Travel to endemic regions"]), symptoms: JSON.stringify(["Cyclic high fever with chills", "Sweating", "Headache", "Body aches", "Nausea and vomiting", "Fatigue"]), emergencySigns: JSON.stringify(["Cerebral malaria (confusion)", "Severe anemia", "Respiratory distress", "Organ failure"]), clinicalParameters: JSON.stringify({ bloodSmear: "Negative for parasites", rapidTest: "Negative" }), dosList: JSON.stringify(["Complete antimalarial course", "Use mosquito nets", "Apply repellent", "Drain stagnant water"]), dontsList: JSON.stringify(["Skip medication doses", "Ignore recurring fever", "Self-diagnose", "Delay treatment"]), isActive: true },
+      { diseaseName: "Pneumonia", alternateNames: "Lung Infection, Nimoniya", category: "respiratory", affectedSystem: "Lungs", shortDescription: "Infection that inflames the air sacs in one or both lungs", causes: JSON.stringify(["Bacterial infection", "Viral infection", "Fungal infection", "Aspiration"]), riskFactors: JSON.stringify(["Age >65 or <2", "Chronic lung disease", "Weakened immune system", "Smoking", "Recent hospitalization"]), symptoms: JSON.stringify(["Cough with phlegm", "Fever and chills", "Shortness of breath", "Chest pain when breathing", "Fatigue"]), emergencySigns: JSON.stringify(["Severe difficulty breathing", "Confusion", "Blue discoloration of lips", "High persistent fever"]), clinicalParameters: JSON.stringify({ spO2: ">95%", chestXray: "Clear lung fields", wbc: "4000-11000/mcL" }), dosList: JSON.stringify(["Complete antibiotic course", "Rest adequately", "Stay hydrated", "Practice deep breathing"]), dontsList: JSON.stringify(["Smoke", "Ignore breathing difficulty", "Skip medications", "Delay medical care"]), isActive: true },
+      { diseaseName: "COVID-19", alternateNames: "Coronavirus Disease, SARS-CoV-2", category: "infectious", affectedSystem: "Lungs", shortDescription: "Respiratory illness caused by the SARS-CoV-2 coronavirus", causes: JSON.stringify(["SARS-CoV-2 virus", "Airborne transmission", "Contact with infected surfaces"]), riskFactors: JSON.stringify(["Unvaccinated status", "Age >60", "Comorbidities", "Immunocompromised", "Close contact with infected"]), symptoms: JSON.stringify(["Fever", "Dry cough", "Fatigue", "Loss of taste or smell", "Sore throat", "Body aches"]), emergencySigns: JSON.stringify(["Persistent chest pain", "SpO2 <94%", "Confusion", "Inability to stay awake", "Bluish lips"]), clinicalParameters: JSON.stringify({ spO2: ">95%", rtPcr: "Negative", ctValue: ">35" }), dosList: JSON.stringify(["Isolate if positive", "Monitor oxygen levels", "Stay hydrated", "Get vaccinated"]), dontsList: JSON.stringify(["Ignore symptoms", "Avoid testing", "Self-medicate with steroids", "Break isolation"]), isActive: true },
+      { diseaseName: "Tuberculosis", alternateNames: "TB, Kshay Rog", category: "infectious", affectedSystem: "Lungs", shortDescription: "Bacterial infection primarily affecting the lungs, spread through air", causes: JSON.stringify(["Mycobacterium tuberculosis bacteria", "Airborne transmission"]), riskFactors: JSON.stringify(["Close contact with TB patient", "HIV/AIDS", "Malnutrition", "Smoking", "Overcrowded living"]), symptoms: JSON.stringify(["Persistent cough >3 weeks", "Coughing blood", "Night sweats", "Weight loss", "Evening fever", "Chest pain"]), emergencySigns: JSON.stringify(["Massive hemoptysis", "Severe respiratory distress", "Meningitis symptoms"]), clinicalParameters: JSON.stringify({ sputumTest: "Negative for AFB", chestXray: "No active lesions", genexpert: "Not detected" }), dosList: JSON.stringify(["Complete DOTS therapy", "Cover mouth when coughing", "Ensure ventilation", "Eat nutritious food"]), dontsList: JSON.stringify(["Stop medication early", "Spit in open", "Skip follow-up visits", "Ignore side effects"]), isActive: true },
+      { diseaseName: "Heart Disease", alternateNames: "Coronary Artery Disease, Hriday Rog", category: "cardiovascular", affectedSystem: "Heart", shortDescription: "Conditions affecting the heart including coronary artery disease and heart failure", causes: JSON.stringify(["Atherosclerosis", "High cholesterol", "Hypertension", "Diabetes"]), riskFactors: JSON.stringify(["Smoking", "High cholesterol", "Hypertension", "Diabetes", "Obesity", "Family history", "Sedentary lifestyle"]), symptoms: JSON.stringify(["Chest pain or discomfort", "Shortness of breath", "Fatigue", "Palpitations", "Swollen ankles"]), emergencySigns: JSON.stringify(["Crushing chest pain", "Pain radiating to left arm or jaw", "Sudden breathlessness", "Loss of consciousness"]), clinicalParameters: JSON.stringify({ cholesterol: "<200 mg/dL", ldl: "<100 mg/dL", hdl: ">40 mg/dL", bp: "<130/80 mmHg" }), dosList: JSON.stringify(["Take heart medications regularly", "Follow heart-healthy diet", "Exercise as advised", "Manage stress"]), dontsList: JSON.stringify(["Smoke", "Eat high-fat foods", "Ignore chest pain", "Skip medications"]), isActive: true },
+    ];
+
+    for (const disease of diseases) {
+      await db.insert(diseaseCatalog).values(disease).onConflictDoNothing();
+    }
+
+    console.log(`Seeded ${diseases.length} diseases in catalog successfully!`);
+  }
+
+  async seedSwabMasters(): Promise<void> {
+    const existingAreas = await db.select().from(swabAreaMaster).limit(1);
+    const existingSites = await db.select().from(swabSamplingSiteMaster).limit(1);
+    const existingOrganisms = await db.select().from(swabOrganismMaster).limit(1);
+
+    if (existingAreas.length > 0 && existingSites.length > 0 && existingOrganisms.length > 0) {
+      console.log("Swab master data already exists, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding swab master data...");
+
+    if (existingAreas.length === 0) {
+      const areas: InsertSwabAreaMaster[] = [
+        { block: "Block A", floor: "2nd Floor", areaType: "OT", areaName: "OT-1", equipment: "OT Table, OT Light", isActive: true },
+        { block: "Block A", floor: "2nd Floor", areaType: "OT", areaName: "OT-2", equipment: "OT Table, Instrument Trolley", isActive: true },
+        { block: "Block B", floor: "1st Floor", areaType: "ICU", areaName: "ICU-1", equipment: "Ventilator, Patient Monitor", isActive: true },
+        { block: "Block B", floor: "1st Floor", areaType: "ICU", areaName: "ICU-2", equipment: "Ventilator, Infusion Pump", isActive: true },
+        { block: "Block A", floor: "Ground Floor", areaType: "OT", areaName: "CSSD", equipment: "Autoclave, Instrument Washer", isActive: true },
+        { block: "Block C", floor: "1st Floor", areaType: "OT", areaName: "Labour Room", equipment: "Delivery Table, Infant Warmer", isActive: true },
+      ];
+      for (const area of areas) {
+        await db.insert(swabAreaMaster).values(area).onConflictDoNothing();
+      }
+      console.log(`Seeded ${areas.length} swab areas.`);
+    }
+
+    if (existingSites.length === 0) {
+      const sites: InsertSwabSamplingSiteMaster[] = [
+        { siteName: "OT Table", description: "Operating table surface", isActive: true },
+        { siteName: "Instrument Trolley", description: "Surgical instrument trolley surface", isActive: true },
+        { siteName: "OT Light Handle", description: "Overhead OT light handle", isActive: true },
+        { siteName: "Ventilator Surface", description: "External surface of ventilator machine", isActive: true },
+        { siteName: "Patient Monitor", description: "Touch screen and buttons of patient monitor", isActive: true },
+        { siteName: "Suction Machine", description: "Suction machine surface and nozzle area", isActive: true },
+        { siteName: "Anesthesia Machine", description: "Anesthesia workstation surface", isActive: true },
+        { siteName: "Wall Surface", description: "Wall near patient area", isActive: true },
+        { siteName: "Floor Surface", description: "Floor near OT/ICU bed area", isActive: true },
+        { siteName: "Door Handle", description: "Frequently touched door handles", isActive: true },
+      ];
+      for (const site of sites) {
+        await db.insert(swabSamplingSiteMaster).values(site).onConflictDoNothing();
+      }
+      console.log(`Seeded ${sites.length} sampling sites.`);
+    }
+
+    if (existingOrganisms.length === 0) {
+      const organisms: InsertSwabOrganismMaster[] = [
+        { organismName: "No Growth", category: "none", riskLevel: "low", description: "No microbial growth detected", isActive: true },
+        { organismName: "Staphylococcus aureus", category: "pathogen", riskLevel: "high", description: "Common hospital-acquired pathogen causing skin and wound infections", isActive: true },
+        { organismName: "MRSA", category: "pathogen", riskLevel: "critical", description: "Methicillin-resistant Staphylococcus aureus - drug-resistant pathogen", isActive: true },
+        { organismName: "Escherichia coli", category: "pathogen", riskLevel: "medium", description: "Gram-negative bacterium causing urinary and GI infections", isActive: true },
+        { organismName: "Pseudomonas aeruginosa", category: "pathogen", riskLevel: "high", description: "Opportunistic pathogen common in ICU and burn units", isActive: true },
+        { organismName: "Klebsiella pneumoniae", category: "pathogen", riskLevel: "high", description: "Gram-negative bacterium causing pneumonia and UTIs", isActive: true },
+        { organismName: "Acinetobacter baumannii", category: "pathogen", riskLevel: "critical", description: "Multi-drug resistant hospital-acquired pathogen", isActive: true },
+        { organismName: "Candida species", category: "pathogen", riskLevel: "medium", description: "Fungal pathogen causing bloodstream and surgical site infections", isActive: true },
+        { organismName: "Enterococcus faecalis", category: "pathogen", riskLevel: "medium", description: "Gram-positive bacterium causing surgical site infections", isActive: true },
+        { organismName: "Coagulase-negative Staphylococci", category: "flora", riskLevel: "low", description: "Normal skin flora, usually non-pathogenic", isActive: true },
+        { organismName: "Bacillus species", category: "flora", riskLevel: "low", description: "Environmental organism, generally non-pathogenic", isActive: true },
+        { organismName: "Aspergillus species", category: "pathogen", riskLevel: "high", description: "Environmental fungus causing respiratory infections in immunocompromised", isActive: true },
+      ];
+      for (const org of organisms) {
+        await db.insert(swabOrganismMaster).values(org).onConflictDoNothing();
+      }
+      console.log(`Seeded ${organisms.length} organisms.`);
+    }
+
+    console.log("Swab master data seeded successfully!");
+  }
+
+  async seedPathologyLabs(): Promise<void> {
+    const existing = await db.select().from(pathologyLabs).limit(1);
+    if (existing.length > 0) {
+      console.log("Pathology labs already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding pathology labs...");
+
+    await db.insert(pathologyLabs).values({
+      labName: "Main Pathology Lab",
+      labCode: "LAB-001",
+      labType: "IN_HOUSE",
+      address: "Ground Floor, Block A, Hospital Campus",
+      phone: "+91 20 1234 5600",
+      email: "pathlab@hospital.in",
+      licenseNumber: "MH-PATH-2024-001",
+      accreditation: "NABL",
+      operatingHours: "24/7",
+      contactPerson: "Dr. Lab Director",
+      isActive: true,
+      canAccessFullRecords: true,
+    }).onConflictDoNothing();
+
+    console.log("Seeded main pathology lab successfully!");
+  }
+
+  async seedMedicalStores(): Promise<void> {
+    const existing = await db.select().from(medicalStores).limit(1);
+    if (existing.length > 0) {
+      console.log("Medical stores already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding medical stores...");
+
+    await db.insert(medicalStores).values({
+      storeCode: "MS-001",
+      storeName: "Main Hospital Pharmacy",
+      storeType: "IN_HOUSE",
+      ownerName: "Hospital Administration",
+      licenseNumber: "MH-PHARM-2024-001",
+      gstNumber: "27AABCH1234A1Z5",
+      drugLicenseNumber: "MH-DL-2024-001",
+      address: "Ground Floor, Main Building, Hospital Campus",
+      city: "Pune",
+      state: "Maharashtra",
+      pincode: "411001",
+      phone: "+91 20 1234 5601",
+      email: "pharmacy@hospital.in",
+      operatingHours: "08:00 AM - 10:00 PM",
+      is24Hours: false,
+      status: "ACTIVE",
+      hasInventoryAccess: true,
+      canSubstituteMedicines: false,
+      requiresDoctorApproval: true,
+    }).onConflictDoNothing();
+
+    console.log("Seeded main medical store successfully!");
+  }
+
+  async seedDietTemplates(): Promise<void> {
+    const existing = await db.select().from(dietTemplates).limit(1);
+    if (existing.length > 0) {
+      console.log("Diet templates already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding diet templates...");
+
+    const templates: InsertDietTemplate[] = [
+      {
+        diseaseId: "general",
+        templateName: "General Diet Plan",
+        dietType: "both",
+        mealPlan: JSON.stringify({ early_morning: "Warm water with lemon", breakfast: "Poha/Upma with vegetables, milk or tea", mid_morning: "Seasonal fruit", lunch: "2 Roti, dal, sabzi, rice, curd, salad", evening_snack: "Green tea with roasted chana or makhana", dinner: "2 Roti, light sabzi, dal soup", bedtime: "Warm turmeric milk" }),
+        foodsToAvoid: JSON.stringify(["Excessive fried foods", "Processed foods", "Excess sugar", "Excess salt"]),
+        foodsToLimit: JSON.stringify(["Red meat", "Refined flour (maida)", "Carbonated drinks"]),
+        safeInModeration: JSON.stringify(["Ghee", "Sweets on occasions", "Coffee"]),
+        portionGuidance: "Eat until 80% full. Use a standard thali for portion control.",
+        hydrationGuidance: "Drink 8-10 glasses of water daily. Include buttermilk and coconut water.",
+        specialNotes: "Eat seasonal and locally available foods. Prefer home-cooked meals.",
+        isActive: true,
+      },
+      {
+        diseaseId: "diabetic",
+        templateName: "Diabetic Diet Plan",
+        dietType: "both",
+        mealPlan: JSON.stringify({ early_morning: "Methi seeds soaked water or warm water", breakfast: "Multigrain roti with paneer/egg bhurji, green tea", mid_morning: "Handful of almonds or small apple", lunch: "1 Jowar/Bajra roti, palak dal, green sabzi, small portion brown rice, curd", evening_snack: "Roasted makhana or sprouts chaat", dinner: "1 Multigrain roti, bottle gourd sabzi, moong dal soup", bedtime: "Sugar-free turmeric milk (if needed)" }),
+        foodsToAvoid: JSON.stringify(["White sugar", "White rice in excess", "Mango", "Grapes", "Banana", "Maida products", "Sugary drinks", "Fruit juices"]),
+        foodsToLimit: JSON.stringify(["Potato", "White bread", "Honey", "Dates"]),
+        safeInModeration: JSON.stringify(["Brown rice", "Whole wheat roti", "Low-GI fruits like guava and orange"]),
+        portionGuidance: "Small frequent meals every 3-4 hours. Never skip meals.",
+        hydrationGuidance: "Drink 8-10 glasses of water. Avoid sweetened beverages. Buttermilk is good.",
+        specialNotes: "Always eat carbohydrates with protein or fiber to slow sugar absorption.",
+        isActive: true,
+      },
+      {
+        diseaseId: "cardiac",
+        templateName: "Cardiac (Heart-Healthy) Diet Plan",
+        dietType: "both",
+        mealPlan: JSON.stringify({ early_morning: "Warm water with garlic clove (optional)", breakfast: "Oats porridge with fruits, or idli with sambar", mid_morning: "Walnuts and flaxseeds", lunch: "2 Roti (wheat/jowar), lauki/tinda sabzi, dal, salad, small portion rice", evening_snack: "Green tea with roasted chana", dinner: "1 Roti, steamed fish/paneer, vegetable soup", bedtime: "Warm water" }),
+        foodsToAvoid: JSON.stringify(["Fried foods", "Red meat", "Butter", "Full-fat cheese", "Processed meats", "Excess salt", "Trans fats"]),
+        foodsToLimit: JSON.stringify(["Egg yolk (max 3/week)", "Coconut oil", "Salt (less than 5g/day)"]),
+        safeInModeration: JSON.stringify(["Olive oil", "Mustard oil", "Dark chocolate", "Nuts"]),
+        portionGuidance: "Small portions. Avoid overeating. Dinner should be lightest meal.",
+        hydrationGuidance: "6-8 glasses of water. Limit fluid if heart failure is present (as per doctor).",
+        specialNotes: "Focus on omega-3 rich foods like walnuts, flaxseeds, and fish.",
+        isActive: true,
+      },
+      {
+        diseaseId: "renal",
+        templateName: "Renal (Kidney-Friendly) Diet Plan",
+        dietType: "both",
+        mealPlan: JSON.stringify({ early_morning: "Warm water", breakfast: "White bread toast with jam, or semolina upma, tea with little milk", mid_morning: "Apple or pear (peeled)", lunch: "2 Roti, lauki/tinda sabzi (low potassium), dal (small portion), white rice", evening_snack: "Arrowroot biscuits with tea", dinner: "1 Roti, cabbage sabzi, light soup", bedtime: "As advised by doctor" }),
+        foodsToAvoid: JSON.stringify(["Banana", "Orange", "Tomato (excess)", "Spinach", "Nuts in excess", "Coconut water", "Dry fruits", "Whole grains in excess"]),
+        foodsToLimit: JSON.stringify(["Salt (as per doctor)", "Protein (as per GFR)", "Potassium-rich foods", "Phosphorus-rich foods"]),
+        safeInModeration: JSON.stringify(["Low-potassium fruits like apple and pear", "White rice", "Refined flour in small quantity"]),
+        portionGuidance: "Protein portion as per nephrologist advice (0.6-0.8g/kg). Strict fluid limit if on dialysis.",
+        hydrationGuidance: "Fluid intake as prescribed by nephrologist. Track daily intake.",
+        specialNotes: "This diet must be personalized based on kidney function (GFR) and dialysis status. Always follow nephrologist guidance.",
+        isActive: true,
+      },
+      {
+        diseaseId: "soft-liquid",
+        templateName: "Soft/Liquid Diet Plan",
+        dietType: "both",
+        mealPlan: JSON.stringify({ early_morning: "Warm water or clear soup", breakfast: "Daliya porridge or mashed banana with milk", mid_morning: "Fresh fruit juice (strained) or coconut water", lunch: "Khichdi (well-cooked), dal soup, mashed vegetables, curd", evening_snack: "Custard or fruit puree", dinner: "Suji kheer or rice porridge with dal water", bedtime: "Warm milk" }),
+        foodsToAvoid: JSON.stringify(["Hard or crunchy foods", "Raw vegetables", "Nuts and seeds", "Spicy foods", "Fried items"]),
+        foodsToLimit: JSON.stringify(["Fibrous vegetables", "Whole grains", "Citrus fruits"]),
+        safeInModeration: JSON.stringify(["Well-cooked soft rice", "Mashed potato", "Soft paneer"]),
+        portionGuidance: "Small, frequent meals (6 times a day). Chew thoroughly or blend foods.",
+        hydrationGuidance: "Sip fluids frequently. ORS if needed. Clear soups and broths are excellent.",
+        specialNotes: "Suitable for post-surgery recovery, dental procedures, difficulty swallowing, and GI issues.",
+        isActive: true,
+      },
+    ];
+
+    for (const template of templates) {
+      await db.insert(dietTemplates).values(template).onConflictDoNothing();
+    }
+
+    console.log(`Seeded ${templates.length} diet templates successfully!`);
+  }
+
+  async seedDefaultBeds(): Promise<void> {
+    const existing = await db.select().from(beds).limit(1);
+    if (existing.length > 0) {
+      console.log("Beds already exist, skipping seed...");
+      return;
+    }
+
+    console.log("Seeding default beds...");
+
+    const bedData: InsertBed[] = [
+      { bedNumber: "GEN-01", bedName: "General Ward Bed 1", categoryId: "cat-general", wardName: "General Ward A", floor: "1st Floor", department: "General", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "GEN-02", bedName: "General Ward Bed 2", categoryId: "cat-general", wardName: "General Ward A", floor: "1st Floor", department: "General", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "GEN-03", bedName: "General Ward Bed 3", categoryId: "cat-general", wardName: "General Ward A", floor: "1st Floor", department: "General", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "GEN-04", bedName: "General Ward Bed 4", categoryId: "cat-general", wardName: "General Ward B", floor: "1st Floor", department: "General", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "GEN-05", bedName: "General Ward Bed 5", categoryId: "cat-general", wardName: "General Ward B", floor: "1st Floor", department: "General", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "GEN-06", bedName: "General Ward Bed 6", categoryId: "cat-general", wardName: "General Ward B", floor: "1st Floor", department: "General", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "ICU-01", bedName: "ICU Bed 1", categoryId: "cat-icu", wardName: "ICU", floor: "2nd Floor", department: "ICU", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
+      { bedNumber: "ICU-02", bedName: "ICU Bed 2", categoryId: "cat-icu", wardName: "ICU", floor: "2nd Floor", department: "ICU", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
+      { bedNumber: "ICU-03", bedName: "ICU Bed 3", categoryId: "cat-icu", wardName: "ICU", floor: "2nd Floor", department: "ICU", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
+      { bedNumber: "ICU-04", bedName: "ICU Bed 4", categoryId: "cat-icu", wardName: "ICU", floor: "2nd Floor", department: "ICU", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
+      { bedNumber: "HDU-01", bedName: "HDU Bed 1", categoryId: "cat-hdu", wardName: "HDU", floor: "2nd Floor", department: "HDU", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, isActive: true },
+      { bedNumber: "HDU-02", bedName: "HDU Bed 2", categoryId: "cat-hdu", wardName: "HDU", floor: "2nd Floor", department: "HDU", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, isActive: true },
+      { bedNumber: "PVT-01", bedName: "Private Room 1", categoryId: "cat-private", wardName: "Private Wing", floor: "3rd Floor", department: "Private", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "PVT-02", bedName: "Private Room 2", categoryId: "cat-private", wardName: "Private Wing", floor: "3rd Floor", department: "Private", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "PVT-03", bedName: "Private Room 3", categoryId: "cat-private", wardName: "Private Wing", floor: "3rd Floor", department: "Private", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "SP-01", bedName: "Semi-Private Room 1", categoryId: "cat-semi-private", wardName: "Semi-Private Wing", floor: "2nd Floor", department: "Semi-Private", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "SP-02", bedName: "Semi-Private Room 2", categoryId: "cat-semi-private", wardName: "Semi-Private Wing", floor: "2nd Floor", department: "Semi-Private", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "ISO-01", bedName: "Isolation Room 1", categoryId: "cat-isolation", wardName: "Isolation Ward", floor: "Ground Floor", department: "Isolation", occupancyStatus: "AVAILABLE", isIsolationBed: true, infectionControlFlag: true, ppeProtocolRequired: true, isActive: true },
+      { bedNumber: "ISO-02", bedName: "Isolation Room 2", categoryId: "cat-isolation", wardName: "Isolation Ward", floor: "Ground Floor", department: "Isolation", occupancyStatus: "AVAILABLE", isIsolationBed: true, infectionControlFlag: true, ppeProtocolRequired: true, isActive: true },
+      { bedNumber: "NICU-01", bedName: "NICU Bed 1", categoryId: "cat-nicu", wardName: "NICU", floor: "2nd Floor", department: "NICU", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
+    ];
+
+    for (const bed of bedData) {
+      await db.insert(beds).values(bed).onConflictDoNothing();
+    }
+
+    console.log(`Seeded ${bedData.length} beds successfully!`);
+  }
+
   // ========== HOSPITAL SETTINGS METHODS ==========
   async getHospitalSettings(): Promise<HospitalSettings | undefined> {
     const result = await db.select().from(hospitalSettings).limit(1);

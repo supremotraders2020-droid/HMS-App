@@ -306,6 +306,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await databaseStorage.seedInitialData();
   await databaseStorage.seedBedCategories();
   await databaseStorage.seedEquipmentData();
+  await databaseStorage.seedInventoryItems();
+  await databaseStorage.seedOxygenCylinders();
+  await databaseStorage.seedDiseaseCatalog();
+  await databaseStorage.seedSwabMasters();
+  await databaseStorage.seedPathologyLabs();
+  await databaseStorage.seedMedicalStores();
+  await databaseStorage.seedDietTemplates();
+  await databaseStorage.seedDefaultBeds();
   await databaseStorage.seedBmwData();
   await databaseStorage.seedConsentTemplates();
   await databaseStorage.seedPathologyTests();
