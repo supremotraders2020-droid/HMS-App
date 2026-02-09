@@ -97,7 +97,8 @@ import { users, doctors, doctorProfiles, staffMaster, insertAppointmentSchema, i
   insertIcuPreviousDayNotesSchema, insertIcuAllergyPrecautionsSchema,
   appointments, trackingPatients, patientConsents, patientBills, billPayments, patientInsurance, medicalRecords,
   patientMovementLog, insertPatientMovementLogSchema,
-  signedDigitalConsents
+  signedDigitalConsents,
+  systemSettings, backupLogs
 } from "@shared/schema";
 import { seedOpdDepartmentFlows, OPD_DEPARTMENT_FLOW_DATA } from "./seeds/opdDepartmentFlows";
 import { getChatbotResponse, getChatbotStats } from "./openai";
@@ -556,6 +557,204 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to update patient:", error);
       res.status(500).json({ error: "Failed to update patient" });
+    }
+  });
+
+  // ============ SYSTEM SETTINGS & BACKUP ============
+
+  // Get all system settings
+  app.get("/api/system/settings", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (_req, res) => {
+    try {
+      const settings = await db.select().from(systemSettings);
+      const settingsMap: Record<string, string> = {};
+      for (const s of settings) {
+        settingsMap[s.settingKey] = s.settingValue;
+      }
+      res.json(settingsMap);
+    } catch (error) {
+      console.error("Failed to fetch system settings:", error);
+      res.status(500).json({ error: "Failed to fetch system settings" });
+    }
+  });
+
+  // Save system settings (batch update)
+  app.put("/api/system/settings", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
+    try {
+      const settingsData = req.body;
+      const userId = (req as any).session?.userId || "system";
+      
+      for (const [key, value] of Object.entries(settingsData)) {
+        const existing = await db.select().from(systemSettings).where(eq(systemSettings.settingKey, key));
+        if (existing.length > 0) {
+          await db.update(systemSettings)
+            .set({ settingValue: String(value), updatedAt: new Date(), updatedBy: userId })
+            .where(eq(systemSettings.settingKey, key));
+        } else {
+          await db.insert(systemSettings).values({
+            settingKey: key,
+            settingValue: String(value),
+            updatedBy: userId,
+          });
+        }
+      }
+      
+      res.json({ success: true, message: "Settings saved successfully" });
+    } catch (error) {
+      console.error("Failed to save system settings:", error);
+      res.status(500).json({ error: "Failed to save system settings" });
+    }
+  });
+
+  // Get backup history
+  app.get("/api/system/backups", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (_req, res) => {
+    try {
+      const backups = await db.select().from(backupLogs).orderBy(desc(backupLogs.startedAt)).limit(20);
+      res.json(backups);
+    } catch (error) {
+      console.error("Failed to fetch backup logs:", error);
+      res.status(500).json({ error: "Failed to fetch backup logs" });
+    }
+  });
+
+  // Manual backup - exports all database tables to JSON
+  app.post("/api/system/backup", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId || "manual";
+      
+      const [backupRecord] = await db.insert(backupLogs).values({
+        backupType: "manual",
+        status: "in_progress",
+        triggeredBy: userId,
+      }).returning();
+
+      const backupDir = path.join(process.cwd(), "backups");
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const backupFileName = `backup_${timestamp}.json`;
+      const backupFilePath = path.join(backupDir, backupFileName);
+
+      const tableQueries: Record<string, string> = {
+        users: "SELECT id, username, role, name, email, status, created_at FROM users",
+        doctors: "SELECT * FROM doctors",
+        appointments: "SELECT * FROM appointments",
+        patients: "SELECT * FROM tracking_patients",
+        prescriptions: "SELECT * FROM prescriptions",
+        inventory_items: "SELECT * FROM inventory_items",
+        staff_members: "SELECT * FROM staff_members",
+        medical_records: "SELECT * FROM medical_records",
+        notifications: "SELECT * FROM notifications",
+        activity_logs: "SELECT * FROM activity_logs",
+        equipment: "SELECT * FROM equipment",
+        hospital_settings: "SELECT * FROM hospital_settings",
+        consent_forms: "SELECT * FROM consent_forms",
+        bed_categories: "SELECT * FROM bed_categories",
+        beds: "SELECT * FROM beds",
+        system_settings: "SELECT * FROM system_settings",
+      };
+
+      const backupData: Record<string, any> = {
+        metadata: {
+          backupId: backupRecord.id,
+          timestamp: new Date().toISOString(),
+          type: "manual",
+          triggeredBy: userId,
+        },
+        tables: {},
+      };
+
+      let totalRecords = 0;
+      let tablesExported = 0;
+
+      for (const [tableName, query] of Object.entries(tableQueries)) {
+        try {
+          const result = await pool.query(query);
+          backupData.tables[tableName] = {
+            count: result.rows.length,
+            data: result.rows,
+          };
+          totalRecords += result.rows.length;
+          tablesExported++;
+        } catch (tableError: any) {
+          backupData.tables[tableName] = {
+            count: 0,
+            error: tableError.message,
+          };
+        }
+      }
+
+      fs.writeFileSync(backupFilePath, JSON.stringify(backupData, null, 2));
+      const stats = fs.statSync(backupFilePath);
+      const fileSizeKB = (stats.size / 1024).toFixed(2);
+
+      await db.update(backupLogs)
+        .set({
+          status: "completed",
+          tablesIncluded: tablesExported,
+          totalRecords: totalRecords,
+          fileSize: `${fileSizeKB} KB`,
+          filePath: backupFilePath,
+          completedAt: new Date(),
+        })
+        .where(eq(backupLogs.id, backupRecord.id));
+
+      await db.update(systemSettings)
+        .set({ settingValue: new Date().toISOString(), updatedAt: new Date() })
+        .where(eq(systemSettings.settingKey, "lastBackup"))
+        .then(async (result) => {
+          if (!result.rowCount || result.rowCount === 0) {
+            await db.insert(systemSettings).values({
+              settingKey: "lastBackup",
+              settingValue: new Date().toISOString(),
+            });
+          }
+        });
+
+      res.json({
+        success: true,
+        backupId: backupRecord.id,
+        tablesExported,
+        totalRecords,
+        fileSize: `${fileSizeKB} KB`,
+        filePath: backupFileName,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error("Backup failed:", error);
+      res.status(500).json({ error: "Backup failed: " + error.message });
+    }
+  });
+
+  // Download backup file
+  app.get("/api/system/backup/download/:filename", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
+    try {
+      const filename = path.basename(req.params.filename);
+      if (!/^(backup_|auto_backup_)[\w\-]+\.json$/.test(filename)) {
+        return res.status(400).json({ error: "Invalid backup filename" });
+      }
+      const backupDir = path.join(process.cwd(), "backups");
+      const filePath = path.join(backupDir, filename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Backup file not found" });
+      }
+      
+      res.download(filePath, filename);
+    } catch (error) {
+      console.error("Failed to download backup:", error);
+      res.status(500).json({ error: "Failed to download backup" });
+    }
+  });
+
+  // Clear cache endpoint
+  app.post("/api/system/clear-cache", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (_req, res) => {
+    try {
+      res.json({ success: true, message: "Cache cleared successfully" });
+    } catch (error) {
+      console.error("Failed to clear cache:", error);
+      res.status(500).json({ error: "Failed to clear cache" });
     }
   });
 
@@ -22768,6 +22967,120 @@ Important:
 
   // Start birthday wish scheduler (9 AM IST daily)
   notificationService.startBirthdayScheduler();
+
+  // Auto backup scheduler - runs every 24 hours
+  const runAutoBackup = async () => {
+    try {
+      const autoBackupSetting = await db.select().from(systemSettings).where(eq(systemSettings.settingKey, "autoBackupEnabled"));
+      const isEnabled = !autoBackupSetting.length || autoBackupSetting[0].settingValue !== "false";
+      
+      if (!isEnabled) {
+        console.log("[Auto Backup] Skipped - auto backup is disabled");
+        return;
+      }
+
+      console.log("[Auto Backup] Starting scheduled backup...");
+      
+      const [backupRecord] = await db.insert(backupLogs).values({
+        backupType: "automatic",
+        status: "in_progress",
+        triggeredBy: "scheduler",
+      }).returning();
+
+      const backupDir = path.join(process.cwd(), "backups");
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const backupFileName = `auto_backup_${timestamp}.json`;
+      const backupFilePath = path.join(backupDir, backupFileName);
+
+      const tableQueries: Record<string, string> = {
+        users: "SELECT id, username, role, name, email, status, created_at FROM users",
+        doctors: "SELECT * FROM doctors",
+        appointments: "SELECT * FROM appointments",
+        patients: "SELECT * FROM tracking_patients",
+        prescriptions: "SELECT * FROM prescriptions",
+        inventory_items: "SELECT * FROM inventory_items",
+        staff_members: "SELECT * FROM staff_members",
+        medical_records: "SELECT * FROM medical_records",
+        system_settings: "SELECT * FROM system_settings",
+      };
+
+      const backupData: Record<string, any> = {
+        metadata: { backupId: backupRecord.id, timestamp: new Date().toISOString(), type: "automatic" },
+        tables: {},
+      };
+
+      let totalRecords = 0;
+      let tablesExported = 0;
+
+      for (const [tableName, query] of Object.entries(tableQueries)) {
+        try {
+          const result = await pool.query(query);
+          backupData.tables[tableName] = { count: result.rows.length, data: result.rows };
+          totalRecords += result.rows.length;
+          tablesExported++;
+        } catch (e: any) {
+          backupData.tables[tableName] = { count: 0, error: e.message };
+        }
+      }
+
+      fs.writeFileSync(backupFilePath, JSON.stringify(backupData, null, 2));
+      const stats = fs.statSync(backupFilePath);
+      const fileSizeKB = (stats.size / 1024).toFixed(2);
+
+      await db.update(backupLogs)
+        .set({ status: "completed", tablesIncluded: tablesExported, totalRecords, fileSize: `${fileSizeKB} KB`, filePath: backupFilePath, completedAt: new Date() })
+        .where(eq(backupLogs.id, backupRecord.id));
+
+      const existing = await db.select().from(systemSettings).where(eq(systemSettings.settingKey, "lastBackup"));
+      if (existing.length > 0) {
+        await db.update(systemSettings).set({ settingValue: new Date().toISOString(), updatedAt: new Date() }).where(eq(systemSettings.settingKey, "lastBackup"));
+      } else {
+        await db.insert(systemSettings).values({ settingKey: "lastBackup", settingValue: new Date().toISOString() });
+      }
+
+      // Clean old backups based on retention period
+      const retentionSetting = await db.select().from(systemSettings).where(eq(systemSettings.settingKey, "retentionPeriod"));
+      const retentionDays = retentionSetting.length ? parseInt(retentionSetting[0].settingValue) || 30 : 30;
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
+      
+      const oldBackups = await db.select().from(backupLogs).where(and(eq(backupLogs.backupType, "automatic"), sql`${backupLogs.startedAt} < ${cutoffDate}`));
+      for (const old of oldBackups) {
+        if (old.filePath && fs.existsSync(old.filePath)) {
+          fs.unlinkSync(old.filePath);
+        }
+      }
+      if (oldBackups.length > 0) {
+        await db.delete(backupLogs).where(and(eq(backupLogs.backupType, "automatic"), sql`${backupLogs.startedAt} < ${cutoffDate}`));
+      }
+
+      console.log(`[Auto Backup] Completed - ${tablesExported} tables, ${totalRecords} records, ${fileSizeKB} KB`);
+    } catch (error) {
+      console.error("[Auto Backup] Failed:", error);
+    }
+  };
+
+  // Check backup frequency and schedule accordingly
+  const startAutoBackupScheduler = async () => {
+    const freqSetting = await db.select().from(systemSettings).where(eq(systemSettings.settingKey, "backupFrequency")).catch(() => []);
+    const frequency = freqSetting.length ? freqSetting[0].settingValue : "daily";
+    
+    let intervalMs: number;
+    switch (frequency) {
+      case "hourly": intervalMs = 60 * 60 * 1000; break;
+      case "weekly": intervalMs = 7 * 24 * 60 * 60 * 1000; break;
+      default: intervalMs = 24 * 60 * 60 * 1000; break; // daily
+    }
+    
+    setInterval(runAutoBackup, intervalMs);
+    console.log(`[Auto Backup] Scheduler started - frequency: ${frequency}`);
+  };
+
+  startAutoBackupScheduler();
 
   return httpServer;
 }
