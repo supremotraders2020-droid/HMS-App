@@ -697,14 +697,24 @@ function AppContent() {
       
       if (response.ok) {
         const user = await response.json();
+        const userRole = user.role || role;
         setCurrentUser({
           id: user.id,
           username: user.username,
-          name: user.name || getDisplayName(username, role),
-          role: user.role || role,
+          name: user.name || getDisplayName(username, userRole),
+          role: userRole,
           tenantId: gravityHospital.id,
           hospitalName: gravityHospital.name
         });
+        if (userRole === "TECHNICIAN") {
+          setLocation("/technician-portal");
+        } else if (userRole === "MEDICAL_STORE") {
+          setLocation("/medical-store");
+        } else if (userRole === "PATHOLOGY_LAB") {
+          setLocation("/pathology-lab-portal");
+        } else {
+          setLocation("/");
+        }
         return;
       } else {
         const errorData = await response.json();
