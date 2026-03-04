@@ -1197,10 +1197,7 @@ export default function PatientMonitoringPage() {
                   <VitalsTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="drugchart">
-                  <div className="space-y-2">
-                    <InotropesTab session={selectedSession} />
-                    <MARTab session={selectedSession} />
-                  </div>
+                  <InotropesTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="intake">
                   <IntakeTab session={selectedSession} />
