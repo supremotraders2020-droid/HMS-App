@@ -1171,11 +1171,10 @@ export default function PatientMonitoringPage() {
                 <TabsList className="inline-flex flex-wrap h-auto gap-1 p-1.5 bg-muted/50 rounded-lg">
                   <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Overview</TabsTrigger>
                   <TabsTrigger value="vitals" className="text-xs gap-1.5 data-[state=active]:bg-background"><Heart className="h-3.5 w-3.5" />Vitals</TabsTrigger>
-                  <TabsTrigger value="inotropes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Injection</TabsTrigger>
+                  <TabsTrigger value="drugchart" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Drug Chart</TabsTrigger>
                   <TabsTrigger value="intake" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Intake</TabsTrigger>
                   <TabsTrigger value="output" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Output</TabsTrigger>
                   <TabsTrigger value="diabetic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Diabetic</TabsTrigger>
-                  <TabsTrigger value="mar" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />Medicines</TabsTrigger>
                   <TabsTrigger value="notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Shift Notes</TabsTrigger>
                   <TabsTrigger value="staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Nurse Notes</TabsTrigger>
                   <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
@@ -1197,8 +1196,11 @@ export default function PatientMonitoringPage() {
                 <TabsContent value="vitals">
                   <VitalsTab session={selectedSession} />
                 </TabsContent>
-                <TabsContent value="inotropes">
-                  <InotropesTab session={selectedSession} />
+                <TabsContent value="drugchart">
+                  <div className="space-y-2">
+                    <InotropesTab session={selectedSession} />
+                    <MARTab session={selectedSession} />
+                  </div>
                 </TabsContent>
                 <TabsContent value="intake">
                   <IntakeTab session={selectedSession} />
@@ -1208,9 +1210,6 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="diabetic">
                   <DiabeticTab session={selectedSession} />
-                </TabsContent>
-                <TabsContent value="mar">
-                  <MARTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="notes">
                   <ShiftNotesTab session={selectedSession} />
