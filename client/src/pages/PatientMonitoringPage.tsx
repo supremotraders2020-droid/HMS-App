@@ -1994,7 +1994,7 @@ function InotropesTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ injectionName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
+  const [form, setForm] = useState({ injectionName: "", injectionFrequency: "", medicineName: "", medicineFrequency: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/inotropes/${sessionId}`]
@@ -2009,7 +2009,7 @@ function InotropesTab({ session }: { session: Session }) {
     onSuccess: () => { 
       refetch(); 
       toast({ title: "Injection Added", description: "Record saved successfully" }); 
-      setForm({ injectionName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
+      setForm({ injectionName: "", injectionFrequency: "", medicineName: "", medicineFrequency: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
       setDialogOpen(false);
     },
     onError: () => {
@@ -2017,11 +2017,16 @@ function InotropesTab({ session }: { session: Session }) {
     }
   });
 
+  const FREQUENCY_OPTIONS = ["OD", "BD", "TDS", "QID", "HS"];
+
   const handleSave = () => {
     saveMutation.mutate({ 
       sessionId, 
       drugName: form.injectionName,
       diagnosis: form.diagnosis,
+      injectionFrequency: form.injectionFrequency || null,
+      medicineName: form.medicineName || null,
+      medicineFrequency: form.medicineFrequency || null,
       startTime: new Date(form.date).toISOString(),
       nurseId: form.nurseId,
       nurseName: form.nurseName
@@ -2097,8 +2102,27 @@ function InotropesTab({ session }: { session: Session }) {
               <DialogDescription>Add injection/medication details</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
-              <div><Label>Injection Name</Label><Input value={form.injectionName} onChange={(e) => setForm({...form, injectionName: e.target.value})} placeholder="e.g., Noradrenaline" /></div>
               <div><Label>Diagnosis</Label><Input value={form.diagnosis} onChange={(e) => setForm({...form, diagnosis: e.target.value})} placeholder="e.g., Septic Shock" /></div>
+              <div><Label>Injection Name</Label><Input value={form.injectionName} onChange={(e) => setForm({...form, injectionName: e.target.value})} placeholder="e.g., Noradrenaline" /></div>
+              <div>
+                <Label>Frequency (Injection)</Label>
+                <Select value={form.injectionFrequency} onValueChange={(v) => setForm({...form, injectionFrequency: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select frequency..." /></SelectTrigger>
+                  <SelectContent>
+                    {FREQUENCY_OPTIONS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Medicine Name</Label><Input value={form.medicineName} onChange={(e) => setForm({...form, medicineName: e.target.value})} placeholder="e.g., Paracetamol 500mg" /></div>
+              <div>
+                <Label>Frequency (Medicine)</Label>
+                <Select value={form.medicineFrequency} onValueChange={(v) => setForm({...form, medicineFrequency: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select frequency..." /></SelectTrigger>
+                  <SelectContent>
+                    {FREQUENCY_OPTIONS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
               <div>
                 <Label>Staff Name</Label>
@@ -2133,8 +2157,11 @@ function InotropesTab({ session }: { session: Session }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Injection Name</TableHead>
                 <TableHead>Diagnosis</TableHead>
+                <TableHead>Injection Name</TableHead>
+                <TableHead>Freq.</TableHead>
+                <TableHead>Medicine Name</TableHead>
+                <TableHead>Freq.</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Staff Name</TableHead>
               </TableRow>
@@ -2142,8 +2169,11 @@ function InotropesTab({ session }: { session: Session }) {
             <TableBody>
               {records.map((r: any) => (
                 <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.drugName}</TableCell>
                   <TableCell>{r.diagnosis || "-"}</TableCell>
+                  <TableCell className="font-medium">{r.drugName}</TableCell>
+                  <TableCell>{r.injectionFrequency || "-"}</TableCell>
+                  <TableCell>{r.medicineName || "-"}</TableCell>
+                  <TableCell>{r.medicineFrequency || "-"}</TableCell>
                   <TableCell>{r.startTime ? format(new Date(r.startTime), "dd/MM/yyyy") : format(new Date(r.createdAt), "dd/MM/yyyy")}</TableCell>
                   <TableCell>{r.nurseName || "-"}</TableCell>
                 </TableRow>
