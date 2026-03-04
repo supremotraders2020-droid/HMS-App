@@ -1744,9 +1744,14 @@ function VitalsTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingVital, setEditingVital] = useState<any>(null);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [vitalsForm, setVitalsForm] = useState({
-    pulse: "", sbp: "", dbp: "", temperature: "", respiratoryRate: "", spo2: ""
+    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: ""
+  });
+  const [editForm, setEditForm] = useState({
+    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: ""
   });
 
   const { data: vitals = [], refetch } = useQuery<any[]>({
@@ -1758,12 +1763,25 @@ function VitalsTab({ session }: { session: Session }) {
     onSuccess: () => {
       refetch();
       toast({ title: "Vitals Saved", description: "Record added successfully" });
-      setVitalsForm({ pulse: "", sbp: "", dbp: "", temperature: "", respiratoryRate: "", spo2: "" });
+      setVitalsForm({ pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "" });
       setSelectedSlot("");
       setDialogOpen(false);
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to save vitals", variant: "destructive" });
+    }
+  });
+
+  const editMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("PUT", `/api/patient-monitoring/vitals/${data.id}`, data),
+    onSuccess: () => {
+      refetch();
+      toast({ title: "Vitals Updated", description: "Record updated successfully" });
+      setEditDialogOpen(false);
+      setEditingVital(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update vitals", variant: "destructive" });
     }
   });
 
@@ -1774,12 +1792,41 @@ function VitalsTab({ session }: { session: Session }) {
       hourSlot: selectedSlot,
       heartRate: vitalsForm.pulse ? parseInt(vitalsForm.pulse) : null,
       systolicBp: vitalsForm.sbp ? parseInt(vitalsForm.sbp) : null,
-      diastolicBp: vitalsForm.dbp ? parseInt(vitalsForm.dbp) : null,
+      diastolicBp: null,
       temperature: vitalsForm.temperature ? vitalsForm.temperature : null,
       respiratoryRate: vitalsForm.respiratoryRate ? parseInt(vitalsForm.respiratoryRate) : null,
       spo2: vitalsForm.spo2 ? parseInt(vitalsForm.spo2) : null,
       nurseId: "system-nurse",
       nurseName: "ICU Nurse"
+    });
+  };
+
+  const handleEdit = (v: any) => {
+    setEditingVital(v);
+    setEditForm({
+      pulse: v.heartRate ? String(v.heartRate) : "",
+      sbp: v.systolicBp ? String(v.systolicBp) : "",
+      temperature: v.temperature ? String(v.temperature) : "",
+      respiratoryRate: v.respiratoryRate ? String(v.respiratoryRate) : "",
+      spo2: v.spo2 ? String(v.spo2) : ""
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = () => {
+    if (!editingVital) return;
+    editMutation.mutate({
+      id: editingVital.id,
+      sessionId,
+      hourSlot: editingVital.hourSlot,
+      heartRate: editForm.pulse ? parseInt(editForm.pulse) : null,
+      systolicBp: editForm.sbp ? parseInt(editForm.sbp) : null,
+      diastolicBp: null,
+      temperature: editForm.temperature ? editForm.temperature : null,
+      respiratoryRate: editForm.respiratoryRate ? parseInt(editForm.respiratoryRate) : null,
+      spo2: editForm.spo2 ? parseInt(editForm.spo2) : null,
+      nurseId: editingVital.nurseId || "system-nurse",
+      nurseName: editingVital.nurseName || "ICU Nurse"
     });
   };
 
@@ -1789,8 +1836,8 @@ function VitalsTab({ session }: { session: Session }) {
       return `<tr>
         <td style="text-align:center;font-weight:bold;">${slot}</td>
         <td style="text-align:center;">${v?.heartRate || '-'}</td>
-        <td style="text-align:center;">${v ? `${v.systolicBp || '-'}/${v.diastolicBp || '-'}` : '-'}</td>
-        <td style="text-align:center;">${v?.temperature ? `${v.temperature}°C` : '-'}</td>
+        <td style="text-align:center;">${v ? `${v.systolicBp || '-'}` : '-'}</td>
+        <td style="text-align:center;">${v?.temperature ? `${v.temperature}°F` : '-'}</td>
         <td style="text-align:center;">${v?.respiratoryRate || '-'}</td>
         <td style="text-align:center;">${v?.spo2 ? `${v.spo2}%` : '-'}</td>
         <td style="text-align:center;">${v?.nurseName || '-'}</td>
@@ -1805,7 +1852,7 @@ function VitalsTab({ session }: { session: Session }) {
             <th style="width:80px;">Time Slot</th>
             <th>Pulse (bpm)</th>
             <th>BP (mmHg)</th>
-            <th>Temp (°C)</th>
+            <th>Temp (°F)</th>
             <th>RR (/min)</th>
             <th>SpO2 (%)</th>
             <th>Staff Name</th>
@@ -1855,9 +1902,8 @@ function VitalsTab({ session }: { session: Session }) {
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Pulse (bpm)</Label><IntegerInput value={vitalsForm.pulse} onValueChange={(value) => setVitalsForm({...vitalsForm, pulse: value})} min={30} max={250} data-testid="input-pulse" /></div>
                 <div><Label>SpO2 (%)</Label><IntegerInput value={vitalsForm.spo2} onValueChange={(value) => setVitalsForm({...vitalsForm, spo2: value})} min={50} max={100} data-testid="input-spo2" /></div>
-                <div><Label>SBP (mmHg)</Label><IntegerInput value={vitalsForm.sbp} onValueChange={(value) => setVitalsForm({...vitalsForm, sbp: value})} min={50} max={250} data-testid="input-sbp" /></div>
-                <div><Label>DBP (mmHg)</Label><IntegerInput value={vitalsForm.dbp} onValueChange={(value) => setVitalsForm({...vitalsForm, dbp: value})} min={30} max={150} data-testid="input-dbp" /></div>
-                <div><Label>Temp (°C)</Label><NumericInput value={vitalsForm.temperature} onValueChange={(value) => setVitalsForm({...vitalsForm, temperature: value})} allowDecimal={true} data-testid="input-temp" /></div>
+                <div><Label>BP (mmHg)</Label><IntegerInput value={vitalsForm.sbp} onValueChange={(value) => setVitalsForm({...vitalsForm, sbp: value})} min={50} max={250} data-testid="input-sbp" /></div>
+                <div><Label>Temp (°F)</Label><NumericInput value={vitalsForm.temperature} onValueChange={(value) => setVitalsForm({...vitalsForm, temperature: value})} allowDecimal={true} data-testid="input-temp" /></div>
                 <div><Label>RR (/min)</Label><IntegerInput value={vitalsForm.respiratoryRate} onValueChange={(value) => setVitalsForm({...vitalsForm, respiratoryRate: value})} min={5} max={60} data-testid="input-rr" /></div>
               </div>
             </div>
@@ -1867,6 +1913,33 @@ function VitalsTab({ session }: { session: Session }) {
               </DialogClose>
               <Button onClick={handleSave} disabled={!selectedSlot || saveMutation.isPending} data-testid="button-save-vitals">
                 {saveMutation.isPending ? "Saving..." : "Save Vitals"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Vitals Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Vitals — {editingVital?.hourSlot}</DialogTitle>
+              <DialogDescription>Update vital signs for this time slot</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Pulse (bpm)</Label><IntegerInput value={editForm.pulse} onValueChange={(value) => setEditForm({...editForm, pulse: value})} min={30} max={250} /></div>
+                <div><Label>SpO2 (%)</Label><IntegerInput value={editForm.spo2} onValueChange={(value) => setEditForm({...editForm, spo2: value})} min={50} max={100} /></div>
+                <div><Label>BP (mmHg)</Label><IntegerInput value={editForm.sbp} onValueChange={(value) => setEditForm({...editForm, sbp: value})} min={50} max={250} /></div>
+                <div><Label>Temp (°F)</Label><NumericInput value={editForm.temperature} onValueChange={(value) => setEditForm({...editForm, temperature: value})} allowDecimal={true} /></div>
+                <div><Label>RR (/min)</Label><IntegerInput value={editForm.respiratoryRate} onValueChange={(value) => setEditForm({...editForm, respiratoryRate: value})} min={5} max={60} /></div>
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleEditSave} disabled={editMutation.isPending}>
+                {editMutation.isPending ? "Saving..." : "Update Vitals"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1885,6 +1958,7 @@ function VitalsTab({ session }: { session: Session }) {
                 <TableHead>RR</TableHead>
                 <TableHead>SpO2</TableHead>
                 <TableHead>By</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1894,11 +1968,18 @@ function VitalsTab({ session }: { session: Session }) {
                   <TableRow key={slot} className={v ? "" : "opacity-50"}>
                     <TableCell className="font-medium">{slot}</TableCell>
                     <TableCell>{v?.heartRate || "-"}</TableCell>
-                    <TableCell>{v ? `${v.systolicBp || "-"}/${v.diastolicBp || "-"}` : "-"}</TableCell>
-                    <TableCell>{v?.temperature ? `${v.temperature}°C` : "-"}</TableCell>
+                    <TableCell>{v ? `${v.systolicBp || "-"}` : "-"}</TableCell>
+                    <TableCell>{v?.temperature ? `${v.temperature}°F` : "-"}</TableCell>
                     <TableCell>{v?.respiratoryRate || "-"}</TableCell>
                     <TableCell>{v?.spo2 ? `${v.spo2}%` : "-"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{v?.nurseName || "-"}</TableCell>
+                    <TableCell>
+                      {v && (
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(v)} className="h-7 px-2 text-xs">
+                          Edit
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 );
               })}
