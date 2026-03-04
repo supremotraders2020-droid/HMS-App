@@ -100,4 +100,15 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+
+  const shutdown = () => {
+    server.close(() => {
+      sessionPool.end();
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(1), 5000);
+  };
+
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
 })();
