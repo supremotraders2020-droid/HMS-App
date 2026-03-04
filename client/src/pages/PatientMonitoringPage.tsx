@@ -2741,7 +2741,7 @@ function DiabeticTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ bloodSugarLevel: "", insulinType: "", insulinDose: "", checkTime: "" });
+  const [form, setForm] = useState({ bloodSugarLevel: "", insulinType: "", insulinDose: "", checkTime: "", hourSlot: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/diabetic/${sessionId}`]
@@ -2752,7 +2752,7 @@ function DiabeticTab({ session }: { session: Session }) {
     onSuccess: () => { 
       refetch(); 
       toast({ title: "Diabetic Record Saved", description: "Record added successfully" });
-      setForm({ bloodSugarLevel: "", insulinType: "", insulinDose: "", checkTime: "" });
+      setForm({ bloodSugarLevel: "", insulinType: "", insulinDose: "", checkTime: "", hourSlot: "" });
       setDialogOpen(false);
     },
     onError: () => {
@@ -2767,6 +2767,8 @@ function DiabeticTab({ session }: { session: Session }) {
       recordedTime: new Date().toISOString(),
       insulinType: form.insulinType || null,
       insulinDose: form.insulinDose || null,
+      checkTime: form.checkTime || null,
+      hourSlot: form.hourSlot || null,
       nurseId: "system-nurse",
       nurseName: "ICU Nurse"
     });
@@ -2853,6 +2855,14 @@ function DiabeticTab({ session }: { session: Session }) {
               <DialogDescription>Record blood sugar level and insulin administration</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
+              <div><Label>Hour Slot</Label>
+                <Select value={form.hourSlot} onValueChange={(v) => setForm({...form, hourSlot: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select time slot..." /></SelectTrigger>
+                  <SelectContent>
+                    {HOUR_SLOTS.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div><Label>Check Time</Label>
                 <Select value={form.checkTime} onValueChange={(v) => setForm({...form, checkTime: v})}>
                   <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
