@@ -99,6 +99,7 @@ export default function UserManagement() {
     { value: "icu", label: "ICU" },
     { value: "surgery", label: "Surgery" },
     { value: "obstetrics", label: "Obstetrics & Gynecology" },
+    { value: "radiology", label: "Radiology" },
   ];
 
   const [newStaff, setNewStaff] = useState({
