@@ -525,27 +525,27 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
                         onClick={() => patient.hasBarcode && handleQuickScan(patient.barcode.uhid)}
                         data-testid={`patient-item-${patient.id}`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${patient.hasBarcode ? 'bg-primary/10' : 'bg-muted'}`}>
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={`p-2 rounded-full flex-shrink-0 ${patient.hasBarcode ? 'bg-primary/10' : 'bg-muted'}`}>
                             <User className={`h-4 w-4 ${patient.hasBarcode ? 'text-primary' : 'text-muted-foreground'}`} />
                           </div>
-                          <div>
-                            <p className="font-medium">{patient.name}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{patient.name}</p>
                             {patient.hasBarcode ? (
-                              <p className="text-sm text-muted-foreground font-mono">{patient.barcode.uhid}</p>
+                              <p className="text-sm text-muted-foreground font-mono truncate">{patient.barcode.uhid}</p>
                             ) : (
                               <p className="text-sm text-muted-foreground">No barcode assigned</p>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                           {patient.hasBarcode ? (
                             <>
                               <Badge variant={patient.barcode.admissionType === "IPD" ? "default" : "secondary"}>
                                 {patient.barcode.admissionType}
                               </Badge>
                               {patient.barcode.wardBed && (
-                                <Badge variant="outline">{patient.barcode.wardBed}</Badge>
+                                <Badge variant="outline" className="hidden sm:inline-flex">{patient.barcode.wardBed}</Badge>
                               )}
                               <Button 
                                 size="icon" 
