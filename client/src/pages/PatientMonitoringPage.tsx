@@ -2607,8 +2607,8 @@ function OutputTab({ session }: { session: Session }) {
       hourSlot: selectedSlot,
       urineOutput: parseInt(form.urineOutput) || 0,
       drainOutput: parseInt(form.drainOutput) || 0,
-      vomitus: parseInt(form.vomitus) || 0,
-      stool: parseInt(form.stool) || 0,
+      vomitus: form.vomitus || "",
+      stool: form.stool || "",
       nurseId: "system-nurse",
       nurseName: "ICU Nurse"
     });
@@ -2637,8 +2637,8 @@ function OutputTab({ session }: { session: Session }) {
             <th style="width:80px;">Time Slot</th>
             <th>Urine (ml)</th>
             <th>Drain (ml)</th>
-            <th>Vomitus (ml)</th>
-            <th>Stool (ml)</th>
+            <th>Vomitus (T)</th>
+            <th>Stool (T)</th>
             <th style="background:#f8d7da;">Total (ml)</th>
           </tr>
         </thead>
@@ -2705,8 +2705,8 @@ function OutputTab({ session }: { session: Session }) {
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Urine (ml)</Label><Input type="number" value={form.urineOutput} onChange={(e) => setForm({...form, urineOutput: e.target.value})} /></div>
                 <div><Label>Drain (ml)</Label><Input type="number" value={form.drainOutput} onChange={(e) => setForm({...form, drainOutput: e.target.value})} /></div>
-                <div><Label>Vomitus (ml)</Label><Input type="number" value={form.vomitus} onChange={(e) => setForm({...form, vomitus: e.target.value})} /></div>
-                <div><Label>Stool (ml)</Label><Input type="number" value={form.stool} onChange={(e) => setForm({...form, stool: e.target.value})} /></div>
+                <div><Label>Vomitus (T)</Label><Input type="text" value={form.vomitus} onChange={(e) => setForm({...form, vomitus: e.target.value})} placeholder="e.g. 50ml or bilious" /></div>
+                <div><Label>Stool (T)</Label><Input type="text" value={form.stool} onChange={(e) => setForm({...form, stool: e.target.value})} placeholder="e.g. formed / loose" /></div>
               </div>
             </div>
             <DialogFooter className="gap-2">
