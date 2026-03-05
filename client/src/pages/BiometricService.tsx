@@ -823,14 +823,35 @@ export default function BiometricService() {
     return user?.name || user?.username || userId;
   };
 
-  const getFilteredUsers = () => {
-    return users?.filter(u => {
-      if (selectedUserType === "PATIENT") return u.role === "PATIENT";
+  const getFilteredUsers = (): Array<{ id: string; displayName: string; role: string }> => {
+    if (selectedUserType === "PATIENT") {
+      // Merge servicePatients (Patient Registry) + PATIENT-role users
+      const merged: Array<{ id: string; displayName: string; role: string }> = [];
+      const addedIds = new Set<string>();
+
+      // First add all servicePatients
+      patients.forEach(p => {
+        const name = `${p.firstName || ""} ${p.lastName || ""}`.trim() || p.id.slice(0, 8);
+        merged.push({ id: p.id, displayName: name, role: "PATIENT" });
+        addedIds.add(p.id);
+      });
+
+      // Then add PATIENT-role users not already in the list
+      users?.filter(u => u.role === "PATIENT").forEach(u => {
+        if (!addedIds.has(u.id)) {
+          merged.push({ id: u.id, displayName: u.name || u.username, role: "PATIENT" });
+          addedIds.add(u.id);
+        }
+      });
+
+      return merged;
+    }
+    return (users?.filter(u => {
       if (selectedUserType === "DOCTOR") return u.role === "DOCTOR";
       if (selectedUserType === "NURSE") return u.role === "NURSE";
       if (selectedUserType === "STAFF") return !["PATIENT", "DOCTOR", "NURSE", "ADMIN"].includes(u.role);
       return false;
-    }) || [];
+    }) || []).map(u => ({ id: u.id, displayName: u.name || u.username, role: u.role }));
   };
 
   const watchedBiometricType = storeForm.watch("biometricType");
@@ -1335,7 +1356,7 @@ export default function BiometricService() {
                         ) : (
                           getFilteredUsers().map(user => (
                             <SelectItem key={user.id} value={String(user.id)}>
-                              {user.name || user.username} ({user.role})
+                              {user.displayName} ({user.role})
                             </SelectItem>
                           ))
                         )}
