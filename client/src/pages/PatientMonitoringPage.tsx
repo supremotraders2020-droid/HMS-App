@@ -1175,8 +1175,6 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="intake" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Intake</TabsTrigger>
                   <TabsTrigger value="output" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Output</TabsTrigger>
                   <TabsTrigger value="diabetic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Diabetic</TabsTrigger>
-                  <TabsTrigger value="notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Shift Notes</TabsTrigger>
-                  <TabsTrigger value="staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Nurse Notes</TabsTrigger>
                   <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
                   <TabsTrigger value="investigation" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Investigation</TabsTrigger>
                   <TabsTrigger value="care-plan" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileCheck className="h-3.5 w-3.5" />Care Plan</TabsTrigger>
@@ -1208,12 +1206,7 @@ export default function PatientMonitoringPage() {
                 <TabsContent value="diabetic">
                   <DiabeticTab session={selectedSession} />
                 </TabsContent>
-                <TabsContent value="notes">
-                  <ShiftNotesTab session={selectedSession} />
-                </TabsContent>
-                <TabsContent value="staff">
-                  <DutyStaffTab session={selectedSession} />
-                </TabsContent>
+
                 <TabsContent value="allergies">
                   <AllergiesTab session={selectedSession} />
                 </TabsContent>
