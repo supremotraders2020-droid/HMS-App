@@ -13579,6 +13579,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         bedNo: body.bedNo,
         allergicTo: body.allergicTo,
         entryDateTime: body.entryDateTime ? new Date(body.entryDateTime) : new Date(),
+        shiftNote: body.shiftNote || null,
         progressNotes: body.progressNotes,
         signatureName: body.signatureName,
         createdBy: (req as any).session?.user?.id
@@ -13596,7 +13597,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     try {
       const body = req.body;
       const updateData: Record<string, any> = {};
-      const allowedFields = ['allergicTo', 'entryDateTime', 'progressNotes', 'signatureName'];
+      const allowedFields = ['allergicTo', 'entryDateTime', 'shiftNote', 'progressNotes', 'signatureName'];
       for (const field of allowedFields) {
         if (body[field] !== undefined) {
           updateData[field] = body[field];

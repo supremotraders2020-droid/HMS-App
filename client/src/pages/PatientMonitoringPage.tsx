@@ -7846,7 +7846,8 @@ function NursingProgressTab({ session }: { session: Session }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     allergicTo: "",
-    entryDateTime: new Date().toISOString().slice(0, 16),
+    entryDate: new Date().toISOString().slice(0, 10),
+    shiftNote: "",
     progressNotes: "",
     signatureName: ""
   });
@@ -7902,7 +7903,8 @@ function NursingProgressTab({ session }: { session: Session }) {
   const resetForm = () => {
     setFormData({
       allergicTo: "",
-      entryDateTime: new Date().toISOString().slice(0, 16),
+      entryDate: new Date().toISOString().slice(0, 10),
+      shiftNote: "",
       progressNotes: "",
       signatureName: ""
     });
@@ -7922,7 +7924,8 @@ function NursingProgressTab({ session }: { session: Session }) {
       ward: session.ward,
       bedNo: session.bedNumber,
       allergicTo: formData.allergicTo,
-      entryDateTime: formData.entryDateTime ? new Date(formData.entryDateTime).toISOString() : new Date().toISOString(),
+      entryDateTime: formData.entryDate ? new Date(formData.entryDate).toISOString() : new Date().toISOString(),
+      shiftNote: formData.shiftNote,
       progressNotes: formData.progressNotes,
       signatureName: formData.signatureName
     };
@@ -7937,7 +7940,8 @@ function NursingProgressTab({ session }: { session: Session }) {
   const handleEdit = (entry: any) => {
     setFormData({
       allergicTo: entry.allergicTo || "",
-      entryDateTime: entry.entryDateTime ? format(new Date(entry.entryDateTime), "yyyy-MM-dd'T'HH:mm") : new Date().toISOString().slice(0, 16),
+      entryDate: entry.entryDateTime ? format(new Date(entry.entryDateTime), "yyyy-MM-dd") : new Date().toISOString().slice(0, 10),
+      shiftNote: entry.shiftNote || "",
       progressNotes: entry.progressNotes || "",
       signatureName: entry.signatureName || ""
     });
@@ -7982,7 +7986,8 @@ function NursingProgressTab({ session }: { session: Session }) {
           <thead>
             <tr>
               <th style="width:40px;">S.No</th>
-              <th style="width:120px;">Date / Time</th>
+              <th style="width:100px;">Date</th>
+              <th style="width:100px;">Shift Note</th>
               <th>Progress Notes</th>
               <th style="width:150px;">Signature & Name</th>
             </tr>
@@ -7991,14 +7996,15 @@ function NursingProgressTab({ session }: { session: Session }) {
             ${allEntries.map((e: any, idx: number) => `
               <tr>
                 <td style="text-align:center;vertical-align:top;">${idx + 1}</td>
-                <td style="text-align:center;vertical-align:top;">${e.entryDateTime ? format(new Date(e.entryDateTime), "dd/MM/yyyy HH:mm") : '-'}</td>
+                <td style="text-align:center;vertical-align:top;">${e.entryDateTime ? format(new Date(e.entryDateTime), "dd/MM/yyyy") : '-'}</td>
+                <td style="text-align:center;vertical-align:top;">${e.shiftNote || '-'}</td>
                 <td style="vertical-align:top;white-space:pre-wrap;">${e.progressNotes || '-'}</td>
                 <td style="vertical-align:top;">${e.signatureName || '-'}</td>
               </tr>`).join('')}
           </tbody>
           <tfoot>
             <tr class="summary-row">
-              <td colspan="4" style="text-align:right;">Total Entries: ${allEntries.length}</td>
+              <td colspan="5" style="text-align:right;">Total Entries: ${allEntries.length}</td>
             </tr>
           </tfoot>
         </table>
@@ -8043,7 +8049,7 @@ function NursingProgressTab({ session }: { session: Session }) {
         {showForm ? (
           <div className="space-y-4 border rounded-lg p-4 bg-muted/30">
             <h3 className="font-semibold border-b pb-2">Nursing Progress Entry</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label>Allergic To</Label>
                 <Input 
@@ -8053,12 +8059,26 @@ function NursingProgressTab({ session }: { session: Session }) {
                 />
               </div>
               <div>
-                <Label>Date / Time</Label>
+                <Label>Date</Label>
                 <Input 
-                  type="datetime-local" 
-                  value={formData.entryDateTime} 
-                  onChange={(e) => setFormData({ ...formData, entryDateTime: e.target.value })} 
+                  type="date" 
+                  value={formData.entryDate} 
+                  onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })} 
                 />
+              </div>
+              <div>
+                <Label>Shift Note</Label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  value={formData.shiftNote}
+                  onChange={(e) => setFormData({ ...formData, shiftNote: e.target.value })}
+                >
+                  <option value="">Select shift...</option>
+                  <option value="Morning">Morning</option>
+                  <option value="Evening">Evening</option>
+                  <option value="Night">Night</option>
+                  <option value="General">General</option>
+                </select>
               </div>
             </div>
             <div>
@@ -8093,7 +8113,8 @@ function NursingProgressTab({ session }: { session: Session }) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-40">Date / Time</TableHead>
+                  <TableHead className="w-32">Date</TableHead>
+                  <TableHead className="w-28">Shift Note</TableHead>
                   <TableHead>Progress Notes</TableHead>
                   <TableHead className="w-40">Signature & Name</TableHead>
                   <TableHead className="w-20 text-right">Actions</TableHead>
@@ -8103,7 +8124,10 @@ function NursingProgressTab({ session }: { session: Session }) {
                 {entries.map((entry: any) => (
                   <TableRow key={entry.id}>
                     <TableCell className="whitespace-nowrap text-sm">
-                      {entry.entryDateTime ? format(new Date(entry.entryDateTime), "dd MMM yyyy HH:mm") : "-"}
+                      {entry.entryDateTime ? format(new Date(entry.entryDateTime), "dd MMM yyyy") : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {entry.shiftNote ? <Badge variant="outline">{entry.shiftNote}</Badge> : "-"}
                     </TableCell>
                     <TableCell className="text-sm max-w-md">
                       <div className="line-clamp-2">{entry.progressNotes || "-"}</div>

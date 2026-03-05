@@ -6663,6 +6663,7 @@ export const nursingProgressSheet = pgTable("nursing_progress_sheet", {
   bedNo: varchar("bed_no"),
   allergicTo: text("allergic_to"),
   entryDateTime: timestamp("entry_date_time").defaultNow(),
+  shiftNote: varchar("shift_note"),
   progressNotes: text("progress_notes"),
   signatureName: varchar("signature_name"),
   createdAt: timestamp("created_at").defaultNow(),
