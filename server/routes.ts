@@ -1905,39 +1905,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = (req as any).session?.user;
       let patients = await storage.getAllServicePatients();
 
-      // Also include PATIENT-role users who don't yet have a service patient record
+      // Also include PATIENT-role users who don't yet have a matching service patient record
       const allUsers = await databaseStorage.getAllUsers();
       const patientUsers = allUsers.filter(u => u.role === "PATIENT");
       const existingIds = new Set(patients.map(p => p.id));
-      const existingUserIds = new Set(patients.map(p => p.userId).filter(Boolean));
+      // Build a set of full names from existing servicePatients for dedup by name
+      const existingNames = new Set(
+        patients.map(p => `${p.firstName || ""} ${p.lastName || ""}`.trim().toLowerCase())
+      );
       for (const pu of patientUsers) {
-        if (!existingIds.has(pu.id) && !existingUserIds.has(pu.id)) {
+        if (!existingIds.has(pu.id)) {
+          const fullName = (pu.name || pu.username || "").trim();
+          if (existingNames.has(fullName.toLowerCase())) continue; // already exists by name
+          const nameParts = fullName.split(/\s+/);
+          const firstName = nameParts[0] || fullName;
+          const lastName = nameParts.slice(1).join(" ") || "";
           patients.push({
             id: pu.id,
-            userId: pu.id,
-            name: pu.name || pu.username,
-            age: null,
+            _userId: pu.id,
+            firstName,
+            lastName,
+            dateOfBirth: pu.dateOfBirth || null,
             gender: null,
             phone: pu.phone || null,
             email: pu.email || null,
             address: null,
-            bloodGroup: null,
             emergencyContact: null,
             emergencyPhone: null,
-            medicalHistory: null,
-            allergies: null,
-            currentMedications: null,
             insuranceProvider: null,
             insuranceNumber: null,
-            status: "active",
             assignedNurseId: null,
-            admissionDate: null,
-            dischargeDate: null,
-            diagnosis: null,
-            ward: null,
-            bedNumber: null,
             createdAt: pu.createdAt || new Date(),
-            updatedAt: pu.createdAt || new Date(),
           } as any);
         }
       }
@@ -1945,12 +1943,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // CRITICAL: Patient data isolation - PATIENT role only sees their own record
       if (user && user.role === 'PATIENT') {
         const patientId = user.id;
-        patients = patients.filter(p => 
-          p.id === patientId ||
-          p.userId === patientId ||
-          p.name?.toLowerCase() === user.name?.toLowerCase() ||
-          p.name?.toLowerCase() === user.username?.toLowerCase()
-        );
+        const userFullName = (user.name || user.username || "").trim().toLowerCase();
+        patients = patients.filter(p => {
+          const patientFullName = `${(p as any).firstName || ""} ${(p as any).lastName || ""}`.trim().toLowerCase();
+          return (
+            p.id === patientId ||
+            (p as any)._userId === patientId ||
+            (userFullName && patientFullName === userFullName)
+          );
+        });
       }
       
       res.json(patients);
