@@ -2405,7 +2405,7 @@ function IntakeTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState("");
-  const [form, setForm] = useState({ ivLine1: "", oral: "", ngTube: "", bloodProducts: "" });
+  const [form, setForm] = useState({ ivLine1: "", oral: "", bloodProducts: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/intake/${sessionId}`]
@@ -2421,7 +2421,7 @@ function IntakeTab({ session }: { session: Session }) {
       refetch(); 
       queryClient.invalidateQueries({ queryKey: [`/api/patient-monitoring/fluid-balance/${sessionId}`] }); 
       toast({ title: "Intake Saved", description: "Record added successfully" });
-      setForm({ ivLine1: "", oral: "", ngTube: "", bloodProducts: "" });
+      setForm({ ivLine1: "", oral: "", bloodProducts: "" });
       setSelectedSlot("");
       setDialogOpen(false);
     },
@@ -2436,7 +2436,6 @@ function IntakeTab({ session }: { session: Session }) {
       hourSlot: selectedSlot,
       ivLine1: parseInt(form.ivLine1) || 0,
       oral: parseInt(form.oral) || 0,
-      ngTube: parseInt(form.ngTube) || 0,
       bloodProducts: parseInt(form.bloodProducts) || 0,
       nurseId: "system-nurse",
       nurseName: "ICU Nurse"
@@ -2446,12 +2445,11 @@ function IntakeTab({ session }: { session: Session }) {
   const handlePrint = () => {
     const rows = HOUR_SLOTS.map(slot => {
       const r = records.find((x: any) => x.hourSlot === slot);
-      const total = (r?.ivLine1 || 0) + (r?.oral || 0) + (r?.ngTube || 0) + (r?.bloodProducts || 0);
+      const total = (r?.ivLine1 || 0) + (r?.oral || 0) + (r?.bloodProducts || 0);
       return `<tr>
         <td style="text-align:center;font-weight:bold;">${slot}</td>
         <td style="text-align:center;">${r?.ivLine1 || '-'}</td>
         <td style="text-align:center;">${r?.oral || '-'}</td>
-        <td style="text-align:center;">${r?.ngTube || '-'}</td>
         <td style="text-align:center;">${r?.bloodProducts || '-'}</td>
         <td style="text-align:center;font-weight:bold;">${total || '-'}</td>
       </tr>`;
@@ -2463,9 +2461,8 @@ function IntakeTab({ session }: { session: Session }) {
         <thead>
           <tr>
             <th style="width:80px;">Time Slot</th>
-            <th>IV Line 1 (ml)</th>
+            <th>IV Fluid (ml)</th>
             <th>Oral (ml)</th>
-            <th>NG Tube (ml)</th>
             <th>Blood Products (ml)</th>
             <th style="background:#d4edda;">Total (ml)</th>
           </tr>
@@ -2518,9 +2515,8 @@ function IntakeTab({ session }: { session: Session }) {
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>IV Line 1 (ml)</Label><Input type="number" value={form.ivLine1} onChange={(e) => setForm({...form, ivLine1: e.target.value})} /></div>
+                <div><Label>IV Fluid (ml)</Label><Input type="number" value={form.ivLine1} onChange={(e) => setForm({...form, ivLine1: e.target.value})} /></div>
                 <div><Label>Oral (ml)</Label><Input type="number" value={form.oral} onChange={(e) => setForm({...form, oral: e.target.value})} /></div>
-                <div><Label>NG Tube (ml)</Label><Input type="number" value={form.ngTube} onChange={(e) => setForm({...form, ngTube: e.target.value})} /></div>
                 <div><Label>Blood Products (ml)</Label><Input type="number" value={form.bloodProducts} onChange={(e) => setForm({...form, bloodProducts: e.target.value})} /></div>
               </div>
             </div>
@@ -2542,9 +2538,8 @@ function IntakeTab({ session }: { session: Session }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Time</TableHead>
-                <TableHead>IV Line 1</TableHead>
+                <TableHead>IV Fluid</TableHead>
                 <TableHead>Oral</TableHead>
-                <TableHead>NG Tube</TableHead>
                 <TableHead>Blood</TableHead>
                 <TableHead>Total</TableHead>
               </TableRow>
@@ -2557,7 +2552,6 @@ function IntakeTab({ session }: { session: Session }) {
                     <TableCell className="font-medium">{slot}</TableCell>
                     <TableCell>{r?.ivLine1 || "-"}</TableCell>
                     <TableCell>{r?.oral || "-"}</TableCell>
-                    <TableCell>{r?.ngTube || "-"}</TableCell>
                     <TableCell>{r?.bloodProducts || "-"}</TableCell>
                     <TableCell className="font-semibold">{r?.hourlyTotal || "-"}</TableCell>
                   </TableRow>
