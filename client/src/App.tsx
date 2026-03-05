@@ -833,16 +833,14 @@ function AppContent() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                    {(currentUser.role === "TECHNICIAN" || currentUser.role === "MEDICAL_STORE" || currentUser.role === "PATHOLOGY_LAB") && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => queryClient.invalidateQueries()}
-                        title="Refresh Data"
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => queryClient.invalidateQueries()}
+                      title="Refresh Data"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
                     <ThemeSwitcher />
                   </div>
                 </header>
