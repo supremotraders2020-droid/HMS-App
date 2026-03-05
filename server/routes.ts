@@ -1904,6 +1904,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = (req as any).session?.user;
       let patients = await storage.getAllServicePatients();
+
+      // Also include PATIENT-role users who don't yet have a service patient record
+      const allUsers = await databaseStorage.getAllUsers();
+      const patientUsers = allUsers.filter(u => u.role === "PATIENT");
+      const existingIds = new Set(patients.map(p => p.id));
+      const existingUserIds = new Set(patients.map(p => p.userId).filter(Boolean));
+      for (const pu of patientUsers) {
+        if (!existingIds.has(pu.id) && !existingUserIds.has(pu.id)) {
+          patients.push({
+            id: pu.id,
+            userId: pu.id,
+            name: pu.name || pu.username,
+            age: null,
+            gender: null,
+            phone: pu.phone || null,
+            email: pu.email || null,
+            address: null,
+            bloodGroup: null,
+            emergencyContact: null,
+            emergencyPhone: null,
+            medicalHistory: null,
+            allergies: null,
+            currentMedications: null,
+            insuranceProvider: null,
+            insuranceNumber: null,
+            status: "active",
+            assignedNurseId: null,
+            admissionDate: null,
+            dischargeDate: null,
+            diagnosis: null,
+            ward: null,
+            bedNumber: null,
+            createdAt: pu.createdAt || new Date(),
+            updatedAt: pu.createdAt || new Date(),
+          } as any);
+        }
+      }
       
       // CRITICAL: Patient data isolation - PATIENT role only sees their own record
       if (user && user.role === 'PATIENT') {

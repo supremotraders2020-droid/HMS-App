@@ -895,6 +895,8 @@ export default function BiometricService() {
               <Button variant="outline" size="sm" className="w-full sm:w-auto" data-testid="button-refresh" onClick={() => {
                 queryClient.invalidateQueries({ queryKey: ["/api/biometric/stats"] });
                 queryClient.invalidateQueries({ queryKey: ["/api/face-recognition/stats"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/patients/service"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/users"] });
               }}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
