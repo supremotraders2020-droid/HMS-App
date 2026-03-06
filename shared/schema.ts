@@ -4806,6 +4806,7 @@ export type MedicineCatalog = typeof medicineCatalog.$inferSelect;
 // Hospital Departments List
 export const HOSPITAL_DEPARTMENTS = [
   "Emergency",
+  "Casualty",
   "Cardiology", 
   "Neurology",
   "Orthopedics",
