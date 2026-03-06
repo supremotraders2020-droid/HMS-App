@@ -755,16 +755,15 @@ export default function PatientTrackingService() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const notes = formData.get("notes") as string;
-    const nurse = formData.get("nurse") as string;
     admitPatientMutation.mutate({
-      name: formData.get("name") as string,
-      age: parseInt(formData.get("age") as string),
-      gender: formData.get("gender") as string,
-      department: formData.get("department") as string,
-      room: formData.get("room") as string,
+      name: selectedAdmitPatientName,
+      age: parseInt(admitFormAge) || 0,
+      gender: admitFormGender,
+      department: selectedAdmitDepartment,
+      room: selectedRoom,
       diagnosis: formData.get("diagnosis") as string,
-      doctor: formData.get("doctor") as string,
-      nurse: nurse || undefined,
+      doctor: selectedAdmitDoctor,
+      nurse: selectedAdmitNurse || undefined,
       notes: notes || undefined,
     });
   };

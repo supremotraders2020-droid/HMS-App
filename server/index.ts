@@ -106,7 +106,7 @@ app.use((req, res, next) => {
       sessionPool.end();
       process.exit(0);
     });
-    setTimeout(() => process.exit(1), 5000);
+    setTimeout(() => process.exit(0), 1500);
   };
 
   process.on("SIGTERM", shutdown);
