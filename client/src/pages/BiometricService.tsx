@@ -1747,16 +1747,22 @@ export default function BiometricService() {
                         name="patientId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-slate-700 dark:text-slate-300">Patient ID</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Enter patient ID..."
-                                className="h-11"
-                                data-testid="input-patient-id-verify"
-                                {...field}
-                                value={field.value || ""}
-                              />
-                            </FormControl>
+                            <FormLabel className="text-slate-700 dark:text-slate-300">Select Patient</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                              <FormControl>
+                                <SelectTrigger className="h-11" data-testid="input-patient-id-verify">
+                                  <SelectValue placeholder="Select a patient..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="max-h-60 overflow-y-auto">
+                                {patients.map((patient) => (
+                                  <SelectItem key={patient.id} value={patient.id}>
+                                    {patient.firstName} {patient.lastName}
+                                    {patient.patientId ? ` (${patient.patientId})` : ""}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
