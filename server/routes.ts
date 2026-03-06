@@ -12552,8 +12552,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.put("/api/patient-monitoring/vitals/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const { id: _id, ...updateData } = req.body;
+      const id = req.params.id;
+      const { id: _id, recordedAt, version, ...updateData } = req.body;
       const result = await db.update(vitalsHourly)
         .set(updateData)
         .where(eq(vitalsHourly.id, id))
@@ -12561,6 +12561,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       if (result.length === 0) return res.status(404).json({ error: "Vitals record not found" });
       res.json(result[0]);
     } catch (error) {
+      console.error("Failed to update vitals:", error);
       res.status(500).json({ error: "Failed to update vitals" });
     }
   });
