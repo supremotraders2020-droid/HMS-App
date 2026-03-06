@@ -1574,7 +1574,9 @@ export default function PatientTrackingService() {
                                         if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
                                         setAdmitFormAge(isNaN(age) ? "" : String(age));
                                       }
-                                      if (matched.gender) setAdmitFormGender(matched.gender);
+                                      if (matched.gender) setAdmitFormGender(
+                                        matched.gender.charAt(0).toUpperCase() + matched.gender.slice(1).toLowerCase()
+                                      );
                                     }
                                   }}
                                   data-testid={`admit-patient-option-${patient.id}`}
