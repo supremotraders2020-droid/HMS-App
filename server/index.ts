@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import { Pool } from "@neondatabase/serverless";
+import pg from "pg";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -12,9 +12,10 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Trust proxy for HTTPS environment (Replit or other reverse proxy)
 app.set('trust proxy', 1);
 
-// PostgreSQL session store for persistent sessions
+// PostgreSQL session store using standard pg Pool (Neon serverless Pool is WebSocket-based
+// and incompatible with connect-pg-simple which requires standard TCP connections)
 const PgSession = connectPgSimple(session);
-const sessionPool = new Pool({ connectionString: process.env.DATABASE_URL });
+const sessionPool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 
 // Determine if running in production (HTTPS) or development (HTTP)
 const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1';
