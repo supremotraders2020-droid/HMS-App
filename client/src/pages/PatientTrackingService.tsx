@@ -213,6 +213,8 @@ export default function PatientTrackingService() {
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [admitPatientPopoverOpen, setAdmitPatientPopoverOpen] = useState(false);
   const [selectedAdmitPatientName, setSelectedAdmitPatientName] = useState<string>("");
+  const [admitFormAge, setAdmitFormAge] = useState<string>("");
+  const [admitFormGender, setAdmitFormGender] = useState<string>("");
   const [vitalsPatientPopoverOpen, setVitalsPatientPopoverOpen] = useState(false);
   const [selectedVitalsPatientId, setSelectedVitalsPatientId] = useState<string>("");
   const [medsPatientPopoverOpen, setMedsPatientPopoverOpen] = useState(false);
@@ -476,6 +478,8 @@ export default function PatientTrackingService() {
       });
       setActiveTab("patients");
       setSelectedAdmitPatientName("");
+      setAdmitFormAge("");
+      setAdmitFormGender("");
       setSelectedAdmitDepartment("");
       setSelectedAdmitDoctor("");
       setSelectedAdmitNurse("");
@@ -1559,6 +1563,20 @@ export default function PatientTrackingService() {
                                   onSelect={(value) => {
                                     setSelectedAdmitPatientName(value);
                                     setAdmitPatientPopoverOpen(false);
+                                    const matched = servicePatients.find(
+                                      (p) => `${p.firstName} ${p.lastName}`.toLowerCase() === value.toLowerCase()
+                                    );
+                                    if (matched) {
+                                      if (matched.dateOfBirth) {
+                                        const dob = new Date(matched.dateOfBirth);
+                                        const today = new Date();
+                                        let age = today.getFullYear() - dob.getFullYear();
+                                        const m = today.getMonth() - dob.getMonth();
+                                        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                                        setAdmitFormAge(isNaN(age) ? "" : String(age));
+                                      }
+                                      if (matched.gender) setAdmitFormGender(matched.gender);
+                                    }
                                   }}
                                   data-testid={`admit-patient-option-${patient.id}`}
                                 >
@@ -1584,11 +1602,11 @@ export default function PatientTrackingService() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="age">Age</Label>
-                    <Input type="number" name="age" required min="0" max="150" placeholder="Age" data-testid="input-age" />
+                    <Input type="number" name="age" required min="0" max="150" placeholder="Age" data-testid="input-age" value={admitFormAge} onChange={(e) => setAdmitFormAge(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="gender">Gender</Label>
-                    <Select name="gender" required>
+                    <Select name="gender" required value={admitFormGender} onValueChange={setAdmitFormGender}>
                       <SelectTrigger data-testid="select-gender">
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
