@@ -1691,30 +1691,9 @@ export default function PatientTrackingService() {
                         <SelectValue placeholder="Select department" />
                       </SelectTrigger>
                       <SelectContent className="max-h-[200px] overflow-y-auto">
-                        <SelectItem value="General Medicine">General Medicine</SelectItem>
-                        <SelectItem value="Cardiology">Cardiology</SelectItem>
-                        <SelectItem value="Orthopedics">Orthopedics</SelectItem>
-                        <SelectItem value="Pediatrics">Pediatrics</SelectItem>
-                        <SelectItem value="Neurology">Neurology</SelectItem>
-                        <SelectItem value="Gynecology">Gynecology</SelectItem>
-                        <SelectItem value="Pulmonology">Pulmonology</SelectItem>
-                        <SelectItem value="Dermatology">Dermatology</SelectItem>
-                        <SelectItem value="Gastroenterology">Gastroenterology</SelectItem>
-                        <SelectItem value="Endocrinology">Endocrinology</SelectItem>
-                        <SelectItem value="Nephrology">Nephrology</SelectItem>
-                        <SelectItem value="Ophthalmology">Ophthalmology</SelectItem>
-                        <SelectItem value="ICU">ICU</SelectItem>
-                        <SelectItem value="Emergency">Emergency</SelectItem>
-                        <SelectItem value="ENT">ENT</SelectItem>
-                        <SelectItem value="Oncology">Oncology</SelectItem>
-                        <SelectItem value="Psychiatry">Psychiatry</SelectItem>
-                        <SelectItem value="Urology">Urology</SelectItem>
-                        <SelectItem value="Rheumatology">Rheumatology</SelectItem>
-                        <SelectItem value="Pathology">Pathology</SelectItem>
-                        <SelectItem value="Radiology">Radiology</SelectItem>
-                        <SelectItem value="Physiotherapy">Physiotherapy</SelectItem>
-                        <SelectItem value="Dental">Dental</SelectItem>
-                        <SelectItem value="General Surgery">General Surgery</SelectItem>
+                        {HOSPITAL_DEPARTMENTS.map((dept) => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
