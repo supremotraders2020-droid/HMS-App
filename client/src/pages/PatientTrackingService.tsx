@@ -51,7 +51,8 @@ import {
   Clipboard,
   TrendingUp,
   TrendingDown,
-  ArrowUpDown
+  ArrowUpDown,
+  Printer
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -1344,6 +1345,61 @@ export default function PatientTrackingService() {
                               ))}
                             </SelectContent>
                           </Select>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            onClick={() => {
+                              const w = window.open("", "_blank", "width=800,height=600");
+                              if (!w) return;
+                              w.document.write(`<!DOCTYPE html><html><head><title>Patient - ${patient.name}</title>
+                              <style>
+                                body { font-family: Arial, sans-serif; padding: 30px; color: #000; }
+                                h1 { font-size: 22px; border-bottom: 2px solid #1a56db; padding-bottom: 8px; margin-bottom: 20px; }
+                                h2 { font-size: 15px; color: #1a56db; margin: 18px 0 6px; }
+                                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 30px; }
+                                .row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+                                .label { color: #555; }
+                                .value { font-weight: 600; }
+                                .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1e40af; }
+                                .header-info { display: flex; gap: 20px; margin-bottom: 16px; }
+                                @media print { button { display: none; } }
+                              </style></head><body>
+                              <h1>GRAVITY HOSPITAL — Patient Record</h1>
+                              <div class="header-info">
+                                <span class="badge">${patient.status?.toUpperCase()}</span>
+                                ${patient.isInIcu ? '<span class="badge" style="background:#cffafe;color:#164e63;">IN ICU</span>' : ''}
+                              </div>
+                              <h2>Patient Information</h2>
+                              <div class="grid">
+                                <div class="row"><span class="label">Name</span><span class="value">${patient.name}</span></div>
+                                <div class="row"><span class="label">Age</span><span class="value">${patient.age} yrs</span></div>
+                                <div class="row"><span class="label">Gender</span><span class="value">${patient.gender}</span></div>
+                                <div class="row"><span class="label">Blood Group</span><span class="value">${patient.bloodGroup || "N/A"}</span></div>
+                              </div>
+                              <h2>Admission Details</h2>
+                              <div class="grid">
+                                <div class="row"><span class="label">Room</span><span class="value">${patient.room || "N/A"}</span></div>
+                                <div class="row"><span class="label">Department</span><span class="value">${patient.department || "N/A"}</span></div>
+                                <div class="row"><span class="label">Admitted</span><span class="value">${new Date(patient.admissionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
+                                ${patient.dischargeDate ? `<div class="row"><span class="label">Discharged</span><span class="value">${new Date(patient.dischargeDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>` : ''}
+                              </div>
+                              <h2>Clinical Details</h2>
+                              <div class="grid">
+                                <div class="row"><span class="label">Attending Doctor</span><span class="value">${patient.doctor || "N/A"}</span></div>
+                                <div class="row"><span class="label">Nurse</span><span class="value">${patient.nurse || "N/A"}</span></div>
+                                <div class="row" style="grid-column:span 2"><span class="label">Diagnosis</span><span class="value">${patient.diagnosis || "N/A"}</span></div>
+                                ${patient.notes ? `<div class="row" style="grid-column:span 2"><span class="label">Notes</span><span class="value">${patient.notes}</span></div>` : ''}
+                              </div>
+                              <p style="margin-top:30px;font-size:11px;color:#888;">Printed on: ${new Date().toLocaleString('en-IN')} | Gravity Hospital</p>
+                              <script>window.onload=function(){window.print();}<\/script>
+                              </body></html>`);
+                              w.document.close();
+                            }}
+                          >
+                            <Printer className="h-4 w-4 mr-1" />
+                            Print
+                          </Button>
                           <Dialog open={historyPatient?.id === patient.id} onOpenChange={(open) => !open && setHistoryPatient(null)}>
                             <DialogTrigger asChild>
                               <Button
