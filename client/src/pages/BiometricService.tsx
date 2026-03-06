@@ -117,6 +117,8 @@ export default function BiometricService() {
     verified: boolean;
     confidenceScore: number;
     patientId: string;
+    verificationId: string;
+    processingTime: number;
   } | null>(null);
   const { toast } = useToast();
 
@@ -312,6 +314,7 @@ export default function BiometricService() {
   const verifyMutation = useMutation({
     mutationFn: async (data: VerifyFormData) => {
       setScanningBiometric(true);
+      const startTime = Date.now();
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       const response = await apiRequest("POST", "/api/biometric/verify", {
@@ -319,7 +322,8 @@ export default function BiometricService() {
         biometricType: data.biometricType,
         templateData: `VERIFY_${Date.now()}`,
       });
-      return response.json();
+      const result = await response.json();
+      return { ...result, processingTime: Date.now() - startTime };
     },
     onSuccess: (data) => {
       setScanningBiometric(false);
@@ -327,6 +331,8 @@ export default function BiometricService() {
         verified: data.verified,
         confidenceScore: data.confidenceScore,
         patientId: data.patientId,
+        verificationId: data.verificationId,
+        processingTime: data.processingTime,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/biometric/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/biometric/verifications"] });
@@ -1822,29 +1828,59 @@ export default function BiometricService() {
                   </form>
                 </Form>
 
-                {verificationResult && (
-                  <div className={`mt-6 p-4 rounded-lg ${
-                    verificationResult.verified 
-                      ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800" 
-                      : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      {verificationResult.verified ? (
-                        <CheckCircle2 className="h-8 w-8 text-green-600" />
-                      ) : (
-                        <XCircle className="h-8 w-8 text-red-600" />
-                      )}
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-white">
+                {verificationResult && (() => {
+                  const matchedPatient = patients.find(p => p.id === verificationResult.patientId);
+                  const patientName = matchedPatient
+                    ? `${matchedPatient.firstName} ${matchedPatient.lastName}`
+                    : verificationResult.patientId;
+                  return (
+                    <div className="mt-6 space-y-3">
+                      <div className={`p-5 rounded-lg text-center ${
+                        verificationResult.verified
+                          ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                          : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                      }`}>
+                        <div className="flex justify-center mb-2">
+                          {verificationResult.verified ? (
+                            <CheckCircle2 className="h-10 w-10 text-green-600" />
+                          ) : (
+                            <XCircle className="h-10 w-10 text-red-600" />
+                          )}
+                        </div>
+                        <p className="font-semibold text-lg text-slate-900 dark:text-white">
                           {verificationResult.verified ? "Identity Verified" : "Verification Failed"}
                         </p>
                         <p className="text-sm text-slate-500">
                           Confidence: {verificationResult.confidenceScore}%
                         </p>
                       </div>
+                      <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <tbody>
+                            <tr className="border-b border-slate-100 dark:border-slate-800">
+                              <td className="px-4 py-2 text-slate-500 font-medium w-32">User Name</td>
+                              <td className="px-4 py-2 text-slate-900 dark:text-white font-medium">{patientName}</td>
+                            </tr>
+                            <tr className="border-b border-slate-100 dark:border-slate-800">
+                              <td className="px-4 py-2 text-slate-500 font-medium">User ID</td>
+                              <td className="px-4 py-2 text-slate-500 text-xs font-mono">{verificationResult.patientId}</td>
+                            </tr>
+                            <tr className="border-b border-slate-100 dark:border-slate-800">
+                              <td className="px-4 py-2 text-slate-500 font-medium">User Type</td>
+                              <td className="px-4 py-2">
+                                <Badge className="bg-blue-600 text-white text-xs">PATIENT</Badge>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="px-4 py-2 text-slate-500 font-medium">Processing Time</td>
+                              <td className="px-4 py-2 text-slate-900 dark:text-white font-medium">{verificationResult.processingTime}ms</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
