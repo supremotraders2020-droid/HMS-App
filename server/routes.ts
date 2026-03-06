@@ -2799,38 +2799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Store biometric template for patient
-  app.post("/api/biometric/:patientId", async (req, res) => {
-    try {
-      const { biometricType, templateData, quality } = req.body;
-      
-      if (!biometricType || !templateData) {
-        return res.status(400).json({ error: "Biometric type and template data are required" });
-      }
-      
-      const template = await storage.createBiometricTemplate({
-        patientId: req.params.patientId,
-        biometricType,
-        templateData,
-        encryptionIv: "",
-        quality: quality || 0,
-        isActive: true,
-      });
-      
-      res.status(201).json({
-        success: true,
-        templateId: template.id,
-        message: "Biometric template stored with AES-256 encryption",
-        encryption: "AES-256-CBC",
-        hipaaCompliant: true,
-      });
-    } catch (error) {
-      console.error("Biometric storage error:", error);
-      res.status(500).json({ error: "Failed to store biometric template" });
-    }
-  });
-
-  // Verify patient identity using biometric data
+  // Verify patient identity using biometric data — MUST be before /:patientId route
   app.post("/api/biometric/verify", async (req, res) => {
     try {
       const { patientId, biometricType, templateData } = req.body;
@@ -2879,6 +2848,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Biometric verification error:", error);
       res.status(500).json({ error: "Failed to verify biometric data" });
+    }
+  });
+
+  app.post("/api/biometric/:patientId", async (req, res) => {
+    try {
+      const { biometricType, templateData, quality } = req.body;
+      
+      if (!biometricType || !templateData) {
+        return res.status(400).json({ error: "Biometric type and template data are required" });
+      }
+      
+      const template = await storage.createBiometricTemplate({
+        patientId: req.params.patientId,
+        biometricType,
+        templateData,
+        encryptionIv: "",
+        quality: quality || 0,
+        isActive: true,
+      });
+      
+      res.status(201).json({
+        success: true,
+        templateId: template.id,
+        message: "Biometric template stored with AES-256 encryption",
+        encryption: "AES-256-CBC",
+        hipaaCompliant: true,
+      });
+    } catch (error) {
+      console.error("Biometric storage error:", error);
+      res.status(500).json({ error: "Failed to store biometric template" });
     }
   });
 
