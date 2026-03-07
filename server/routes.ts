@@ -492,6 +492,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user phone/contact info (admin only, used by Speed Dial)
+  app.patch("/api/users/:id", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (req, res) => {
+    try {
+      const { phone } = req.body;
+      const userId = req.params.id;
+      const user = await databaseStorage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      await db.update(users).set({ phone: phone || null }).where(eq(users.id, userId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to update user phone:", error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
   // Get all patient users with credentials (admin only)
   app.get("/api/admin/patient-users", requireAuth, requireRole(["SUPER_ADMIN", "ADMIN"]), async (_req, res) => {
     try {

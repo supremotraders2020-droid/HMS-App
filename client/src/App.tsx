@@ -727,20 +727,8 @@ function AppContent() {
     }
   };
 
-  const getDisplayName = (username: string, role: UserRole) => {
-    // Mock display names based on role
-    const names: Record<UserRole, string> = {
-      SUPER_ADMIN: "System Administrator",
-      ADMIN: "Dr. Michael Chen",
-      DOCTOR: "Dr. Sarah Wilson", 
-      NURSE: "Nurse Jennifer Adams",
-      OPD_MANAGER: "Mary Johnson",
-      PATIENT: "John Smith",
-      MEDICAL_STORE: "Pharmacy Staff",
-      PATHOLOGY_LAB: "Lab Technician",
-      TECHNICIAN: "Diagnostic Technician"
-    };
-    return names[role] || username;
+  const getDisplayName = (username: string, _role: UserRole) => {
+    return username;
   };
 
   const handleLogout = () => {

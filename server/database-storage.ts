@@ -5966,11 +5966,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async seedNurseDepartmentPreferences(): Promise<void> {
-    const existing = await db.select().from(nurseDepartmentPreferences).limit(1);
-    if (existing.length > 0) {
-      console.log("Nurse department preferences already exist, skipping seed...");
-      return;
-    }
+    // Nurse department preferences must be set by real nurses via their profile.
+    // No dummy/seed data is inserted — only data from user management is valid.
+    console.log("Nurse department preferences: skipping seed (real data only).");
+    return;
 
     console.log("Seeding nurse department preferences...");
 
