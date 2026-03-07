@@ -297,6 +297,11 @@ export default function PatientTrackingService() {
     queryKey: ["/api/nurse-department-preferences"],
   });
 
+  // All nurses from user management (full list regardless of dept preferences)
+  const { data: allNurses = [] } = useQuery<any[]>({
+    queryKey: ["/api/users/nurses"],
+  });
+
   // State for admit form department selection
   const [selectedAdmitDepartment, setSelectedAdmitDepartment] = useState<string>("");
   const [selectedAdmitDoctor, setSelectedAdmitDoctor] = useState<string>("");
@@ -339,17 +344,21 @@ export default function PatientTrackingService() {
     return matched.length > 0 ? matched : doctors;
   })();
 
-  // Filter nurses by department (using their department preferences)
-  // Falls back to all nurses if none assigned to this department
-  const filteredNurses = (() => {
-    if (!selectedAdmitDepartment) return nurseDeptPreferences;
-    const matched = nurseDeptPreferences.filter(nurse => {
-      return nurse.primaryDepartment === selectedAdmitDepartment ||
-             nurse.secondaryDepartment === selectedAdmitDepartment ||
-             nurse.tertiaryDepartment === selectedAdmitDepartment;
-    });
-    return matched.length > 0 ? matched : nurseDeptPreferences;
-  })();
+  // Build nurse display list — always uses ALL nurses from user management.
+  // Dept preferences are used only to label each nurse's department affinity.
+  const filteredNurses = allNurses.map(nurse => {
+    const pref = nurseDeptPreferences.find((p: any) => p.nurseId === nurse.id || p.nurseName === nurse.fullName);
+    const deptLabel = pref
+      ? (pref.primaryDepartment === selectedAdmitDepartment
+          ? `${pref.primaryDepartment} (Primary)`
+          : pref.secondaryDepartment === selectedAdmitDepartment
+            ? `${pref.secondaryDepartment} (Secondary)`
+            : pref.tertiaryDepartment === selectedAdmitDepartment
+              ? `${pref.tertiaryDepartment} (Tertiary)`
+              : pref.primaryDepartment || "General")
+      : "General";
+    return { ...nurse, deptLabel };
+  });
 
   const { data: patientHistory } = useQuery<{
     patient: TrackingPatient;
@@ -1764,21 +1773,14 @@ export default function PatientTrackingService() {
                       <SelectContent className="max-h-[200px] overflow-y-auto">
                         {!selectedAdmitDepartment ? (
                           <div className="p-2 text-sm text-muted-foreground text-center">Please select a department first</div>
+                        ) : filteredNurses.length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">No nurses found</div>
                         ) : (
-                          filteredNurses.map((nurse) => {
-                            const deptLabel = nurse.primaryDepartment === selectedAdmitDepartment
-                              ? `${selectedAdmitDepartment} (Primary)`
-                              : nurse.secondaryDepartment === selectedAdmitDepartment
-                                ? `${selectedAdmitDepartment} (Secondary)`
-                                : nurse.tertiaryDepartment === selectedAdmitDepartment
-                                  ? `${selectedAdmitDepartment} (Tertiary)`
-                                  : nurse.primaryDepartment || "All Depts";
-                            return (
-                              <SelectItem key={nurse.nurseId} value={nurse.nurseName}>
-                                {nurse.nurseName} - {deptLabel}
-                              </SelectItem>
-                            );
-                          })
+                          filteredNurses.map((nurse) => (
+                            <SelectItem key={nurse.id} value={nurse.fullName}>
+                              {nurse.fullName} - {nurse.deptLabel}
+                            </SelectItem>
+                          ))
                         )}
                       </SelectContent>
                     </Select>
