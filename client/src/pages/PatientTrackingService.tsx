@@ -332,16 +332,19 @@ export default function PatientTrackingService() {
     return diffDays;
   };
 
+  // Deduplicate doctors by name (Radix Select uses value as key; same name = duplicate key warning)
+  const uniqueDoctors = doctors.filter((doc, idx, arr) => arr.findIndex(d => d.name === doc.name) === idx);
+
   // Filter doctors by department (matching specialty to department)
   // Falls back to all doctors if no specialty match found (e.g. Casualty, ICU)
   const filteredDoctors = (() => {
-    if (!selectedAdmitDepartment) return doctors;
+    if (!selectedAdmitDepartment) return uniqueDoctors;
     const dept = selectedAdmitDepartment.toLowerCase();
-    const matched = doctors.filter(doc => {
+    const matched = uniqueDoctors.filter(doc => {
       const specialty = doc.specialty?.toLowerCase() || "";
       return specialty.includes(dept) || dept.includes(specialty) || specialty === "general" || dept === "general medicine";
     });
-    return matched.length > 0 ? matched : doctors;
+    return matched.length > 0 ? matched : uniqueDoctors;
   })();
 
   // Build nurse display list — always uses ALL nurses from user management.
