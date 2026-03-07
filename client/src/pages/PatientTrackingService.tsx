@@ -328,22 +328,28 @@ export default function PatientTrackingService() {
   };
 
   // Filter doctors by department (matching specialty to department)
-  const filteredDoctors = selectedAdmitDepartment
-    ? doctors.filter(doc => {
-        const specialty = doc.specialty?.toLowerCase() || "";
-        const dept = selectedAdmitDepartment.toLowerCase();
-        return specialty.includes(dept) || dept.includes(specialty) || specialty === "general" || dept === "general medicine";
-      })
-    : doctors;
+  // Falls back to all doctors if no specialty match found (e.g. Casualty, ICU)
+  const filteredDoctors = (() => {
+    if (!selectedAdmitDepartment) return doctors;
+    const dept = selectedAdmitDepartment.toLowerCase();
+    const matched = doctors.filter(doc => {
+      const specialty = doc.specialty?.toLowerCase() || "";
+      return specialty.includes(dept) || dept.includes(specialty) || specialty === "general" || dept === "general medicine";
+    });
+    return matched.length > 0 ? matched : doctors;
+  })();
 
   // Filter nurses by department (using their department preferences)
-  const filteredNurses = selectedAdmitDepartment
-    ? nurseDeptPreferences.filter(nurse => {
-        return nurse.primaryDepartment === selectedAdmitDepartment ||
-               nurse.secondaryDepartment === selectedAdmitDepartment ||
-               nurse.tertiaryDepartment === selectedAdmitDepartment;
-      })
-    : nurseDeptPreferences;
+  // Falls back to all nurses if none assigned to this department
+  const filteredNurses = (() => {
+    if (!selectedAdmitDepartment) return nurseDeptPreferences;
+    const matched = nurseDeptPreferences.filter(nurse => {
+      return nurse.primaryDepartment === selectedAdmitDepartment ||
+             nurse.secondaryDepartment === selectedAdmitDepartment ||
+             nurse.tertiaryDepartment === selectedAdmitDepartment;
+    });
+    return matched.length > 0 ? matched : nurseDeptPreferences;
+  })();
 
   const { data: patientHistory } = useQuery<{
     patient: TrackingPatient;
@@ -1735,8 +1741,6 @@ export default function PatientTrackingService() {
                       <SelectContent className="max-h-[200px] overflow-y-auto">
                         {!selectedAdmitDepartment ? (
                           <div className="p-2 text-sm text-muted-foreground text-center">Please select a department first</div>
-                        ) : filteredDoctors.length === 0 ? (
-                          <div className="p-2 text-sm text-muted-foreground text-center">No doctors available for this department</div>
                         ) : (
                           filteredDoctors.map((doctor) => (
                             <SelectItem key={doctor.id} value={doctor.name}>
@@ -1760,18 +1764,18 @@ export default function PatientTrackingService() {
                       <SelectContent className="max-h-[200px] overflow-y-auto">
                         {!selectedAdmitDepartment ? (
                           <div className="p-2 text-sm text-muted-foreground text-center">Please select a department first</div>
-                        ) : filteredNurses.length === 0 ? (
-                          <div className="p-2 text-sm text-muted-foreground text-center">No nurses assigned to this department</div>
                         ) : (
                           filteredNurses.map((nurse) => {
-                            const deptLevel = nurse.primaryDepartment === selectedAdmitDepartment 
-                              ? "Primary" 
-                              : nurse.secondaryDepartment === selectedAdmitDepartment 
-                                ? "Secondary" 
-                                : "Tertiary";
+                            const deptLabel = nurse.primaryDepartment === selectedAdmitDepartment
+                              ? `${selectedAdmitDepartment} (Primary)`
+                              : nurse.secondaryDepartment === selectedAdmitDepartment
+                                ? `${selectedAdmitDepartment} (Secondary)`
+                                : nurse.tertiaryDepartment === selectedAdmitDepartment
+                                  ? `${selectedAdmitDepartment} (Tertiary)`
+                                  : nurse.primaryDepartment || "All Depts";
                             return (
                               <SelectItem key={nurse.nurseId} value={nurse.nurseName}>
-                                {nurse.nurseName} - {selectedAdmitDepartment} ({deptLevel})
+                                {nurse.nurseName} - {deptLabel}
                               </SelectItem>
                             );
                           })
