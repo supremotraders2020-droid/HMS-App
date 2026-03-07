@@ -801,9 +801,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all nurses
   app.get("/api/users/nurses", async (_req, res) => {
     try {
+      // Only return nurses registered in User Management (hospital_team_members)
+      const teamMembers = await databaseStorage.getAllTeamMembers();
+      const registeredNurseNames = teamMembers
+        .filter(m => m.title === "Nurse")
+        .map(m => m.name.toLowerCase().trim());
+
       const allUsers = await databaseStorage.getAllUsers();
       const nurses = allUsers
-        .filter(user => user.role === "NURSE")
+        .filter(user => user.role === "NURSE" &&
+          registeredNurseNames.includes((user.name || user.username || "").toLowerCase().trim()))
         .map(({ password, ...user }) => ({
           id: user.id,
           username: user.username,
@@ -817,12 +824,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all doctors - merge with doctor_profiles when available
+  // Get all doctors - only those registered in User Management (hospital_team_members)
   app.get("/api/doctors", async (_req, res) => {
     try {
       const doctors = await storage.getDoctors();
       const allProfiles = await storage.getAllDoctorProfiles();
-      
+
+      // Only return doctors present in User Management (hospital_team_members with title='Doctor')
+      const teamMembers = await databaseStorage.getAllTeamMembers();
+      const registeredDoctorNames = teamMembers
+        .filter(m => m.title === "Doctor")
+        .map(m => m.name.toLowerCase().trim());
+
       // Helper to normalize name (remove "Dr." prefix, lowercase, trim)
       const normalizeName = (name: string) => name.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
       
@@ -835,42 +848,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const normalizedProfileName = normalizeName(profile.fullName);
           const profileFirstName = normalizedProfileName.split(' ')[0];
           
-          // Exact match
           if (normalizedDoctorName === normalizedProfileName) return profile;
-          // Profile name starts with doctor name (e.g., "ajay" matches "ajay patil")
           if (normalizedProfileName.startsWith(normalizedDoctorName)) return profile;
-          // Doctor name starts with profile first name
           if (normalizedDoctorName.startsWith(profileFirstName)) return profile;
-          // First names match exactly
           if (doctorFirstName === profileFirstName) return profile;
         }
         return null;
       };
       
-      // Merge doctor data with profile data when available
-      const mergedDoctors = doctors.map(doctor => {
-        const profile = findMatchingProfile(doctor.name);
-        
-        if (profile) {
-          // Extract numeric experience from profile (e.g., "10+ Years" -> 10)
-          const expMatch = profile.experience?.match(/(\d+)/);
-          const profileExp = expMatch ? parseInt(expMatch[1]) : doctor.experience;
+      // Filter to only User Management doctors, then merge with profile data
+      const mergedDoctors = doctors
+        .filter(doctor => registeredDoctorNames.includes(normalizeName(doctor.name)))
+        .map(doctor => {
+          const profile = findMatchingProfile(doctor.name);
           
-          // Extract numeric fee from profile (e.g., "₹500" -> "500")
-          const feeMatch = profile.consultationFee?.match(/(\d+)/);
-          const profileFee = feeMatch ? feeMatch[1] : null;
-          
-          return {
-            ...doctor,
-            name: profile.fullName || doctor.name,
-            specialty: profile.specialty || doctor.specialty,
-            qualification: profile.qualifications || doctor.qualification,
-            experience: profileExp,
-            consultationFee: profileFee
-          };
-        }
-        return doctor;
-      });
+          if (profile) {
+            const expMatch = profile.experience?.match(/(\d+)/);
+            const profileExp = expMatch ? parseInt(expMatch[1]) : doctor.experience;
+            const feeMatch = profile.consultationFee?.match(/(\d+)/);
+            const profileFee = feeMatch ? feeMatch[1] : null;
+            
+            return {
+              ...doctor,
+              name: profile.fullName || doctor.name,
+              specialty: profile.specialty || doctor.specialty,
+              qualification: profile.qualifications || doctor.qualification,
+              experience: profileExp,
+              consultationFee: profileFee
+            };
+          }
+          return doctor;
+        });
       
       res.json(mergedDoctors);
     } catch (error) {
