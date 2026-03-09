@@ -249,8 +249,7 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
         const abgData = chartData.abgReports || [];
         const diabeticData = chartData.diabeticChart || [];
         const nursingRemarks = chartData.nursingRemarks || [];
-        const notes = chartData.doctorNurseNotes || [];
-        const bodyMarkings = chartData.bodyMarkings || [];
+        const oxygenData = chartData.oxygenRecords || [];
         const allergyData = chartData.allergyPrecautions || null;
 
         const printContent = `
@@ -309,70 +308,49 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
               <div class="info-row"><span class="label">Ventilator:</span> ${(selectedChart as any).isVentilated ? 'Yes' : 'No'}</div>
             </div>
 
-            ${generateTable('Vitals', ['Time', 'HR', 'BP', 'Temp', 'RR', 'SpO2', 'GCS'], vitals, (r: any) => 
-              `<tr><td>${r.hourSlot || formatTime(r.recordedAt)}</td><td>${r.heartRate || '-'}</td><td>${r.systolicBp || '-'}/${r.diastolicBp || '-'}</td><td>${r.temperature ? r.temperature + '°C' : '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td><td>${r.gcsTotal || '-'}</td></tr>`
+            ${generateTable('Vitals', ['Hour', 'Pulse', 'BP', 'Temp (°C)', 'Core Temp', 'RR', 'SpO2 (%)', 'CVP', 'Sanction', 'Secretion', 'Urine Tube'], vitals, (r: any) => 
+              `<tr><td>${r.hour || '-'}</td><td>${r.pulse || '-'}</td><td>${r.bp || '-'}</td><td>${r.temperature || '-'}</td><td>${r.coreTemp || '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 || '-'}</td><td>${r.cvp || '-'}</td><td>${r.sanction || '-'}</td><td>${r.secretion || '-'}</td><td>${r.urineTube || '-'}</td></tr>`
             )}
 
-            ${generateTable('Ventilator Settings', ['Time', 'Mode', 'FiO2', 'PEEP', 'Tidal Vol', 'RR Set', 'PS'], ventilator, (r: any) => 
-              `<tr><td>${formatTime(r.recordedAt)}</td><td>${r.mode || '-'}</td><td>${r.fio2 || '-'}%</td><td>${r.peep || '-'}</td><td>${r.tidalVolume || '-'}</td><td>${r.respiratoryRateSet || '-'}</td><td>${r.pressureSupport || '-'}</td></tr>`
+            ${generateTable('Ventilator Settings', ['Time', 'Mode', 'FiO2 (%)', 'PEEP/CPAP', 'Set Tidal Vol', 'Exp Tidal Vol', 'RR/min', 'PS'], ventilator, (r: any) => 
+              `<tr><td>${r.time || '-'}</td><td>${r.mode || '-'}</td><td>${r.fio2 || '-'}</td><td>${r.peepCpap || '-'}</td><td>${r.setTidalVolume || '-'}</td><td>${r.expTidalVolume || '-'}</td><td>${r.respRatePerMin || '-'}</td><td>${r.pressureSupport || '-'}</td></tr>`
             )}
 
-            ${generateTable('Hemodynamic Monitoring', ['Time', 'CVP', 'MAP', 'Art Line', 'Cardiac Output', 'SVR'], hemodynamic, (r: any) => 
-              `<tr><td>${formatTime(r.recordedAt)}</td><td>${r.cvp || '-'}</td><td>${r.map || '-'}</td><td>${r.arterialLine || '-'}</td><td>${r.cardiacOutput || '-'}</td><td>${r.svr || '-'}</td></tr>`
+            ${generateTable('Hemodynamic Monitoring', ['Time', 'HR', 'MAP', 'CVP', 'ICP', 'CPP', 'Inotrope', 'Dose'], hemodynamic, (r: any) => 
+              `<tr><td>${r.time || '-'}</td><td>${r.heartRate || '-'}</td><td>${r.map || '-'}</td><td>${r.cvp || '-'}</td><td>${r.icp || '-'}</td><td>${r.cpp || '-'}</td><td>${r.inotropeName || '-'}</td><td>${r.inotropeDose || '-'}</td></tr>`
             )}
 
-            ${generateTable('Intake (I/O Balance)', ['Time', 'Type', 'Volume (ml)', 'Route'], intakeData, (r: any) => 
-              `<tr><td>${r.hourSlot || formatTime(r.recordedAt)}</td><td>${r.intakeType || '-'}</td><td>${r.volume || '-'}</td><td>${r.route || '-'}</td></tr>`
+            ${generateTable('Intake (I/O Balance)', ['Time Slot', 'Line 1', 'Line 2', 'Line 3', 'Line 4', 'Total Intake'], intakeData, (r: any) => 
+              `<tr><td>${r.timeSlot || '-'}</td><td>${r.line1 || '-'}</td><td>${r.line2 || '-'}</td><td>${r.line3 || '-'}</td><td>${r.line4 || '-'}</td><td>${r.totalIntake || '-'}</td></tr>`
             )}
 
-            ${generateTable('Output (I/O Balance)', ['Time', 'Type', 'Volume (ml)', 'Color'], outputData, (r: any) => 
-              `<tr><td>${r.hourSlot || formatTime(r.recordedAt)}</td><td>${r.outputType || '-'}</td><td>${r.volume || '-'}</td><td>${r.color || '-'}</td></tr>`
+            ${generateTable('Output (I/O Balance)', ['Time Slot', 'Urine Hourly', 'Other Losses', 'Total Output'], outputData, (r: any) => 
+              `<tr><td>${r.timeSlot || '-'}</td><td>${r.urineHourly || '-'}</td><td>${r.otherLosses || '-'}</td><td>${r.totalOutput || '-'}</td></tr>`
             )}
 
-            ${generateTable('Medication Orders', ['Drug', 'Dose', 'Route', 'Frequency', 'Start Date', 'Status'], medications, (r: any) => 
-              `<tr><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.frequency || '-'}</td><td>${formatDate(r.startDate)}</td><td>${r.status || '-'}</td></tr>`
+            ${generateTable('Medication Orders', ['Drug', 'Dose', 'Route', 'Frequency', 'Time'], medications, (r: any) => 
+              `<tr><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.frequency || '-'}</td><td>${r.time || '-'}</td></tr>`
             )}
 
-            ${generateTable('Once-Only Drugs', ['Drug', 'Dose', 'Route', 'Given At', 'Given By'], onceOnly, (r: any) => 
-              `<tr><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${formatTime(r.givenAt)}</td><td>${r.givenBy || '-'}</td></tr>`
+            ${onceOnly.length > 0 ? generateTable('Once-Only Drugs', ['Drug', 'Dose', 'Route', 'Given At', 'Given By'], onceOnly, (r: any) => 
+              `<tr><td>${r.drugName || '-'}</td><td>${r.dose || '-'}</td><td>${r.route || '-'}</td><td>${r.givenAt || '-'}</td><td>${r.givenBy || '-'}</td></tr>`
+            ) : ''}
+
+            ${generateTable('ABG Reports', ['Time', 'pH', 'pCO2', 'pO2', 'SBC', 'BE', 'SaO2 (%)', 'Lactate'], abgData, (r: any) => 
+              `<tr><td>${r.time || '-'}</td><td>${r.ph || '-'}</td><td>${r.pco2 || '-'}</td><td>${r.po2 || '-'}</td><td>${r.sbc || '-'}</td><td>${r.be || '-'}</td><td>${r.sao2 || '-'}</td><td>${r.lactate || '-'}</td></tr>`
             )}
 
-            ${generateTable('ABG Reports', ['Time', 'pH', 'pCO2', 'pO2', 'HCO3', 'Lactate', 'BE'], abgData, (r: any) => 
-              `<tr><td>${formatTime(r.recordedAt)}</td><td>${r.ph || '-'}</td><td>${r.pco2 || '-'}</td><td>${r.po2 || '-'}</td><td>${r.hco3 || '-'}</td><td>${r.lactate || '-'}</td><td>${r.baseExcess || '-'}</td></tr>`
+            ${generateTable('Diabetic Chart', ['Time', 'BSL', 'Insulin', 'Na', 'K', 'Cl'], diabeticData, (r: any) => 
+              `<tr><td>${r.time || '-'}</td><td>${r.bsl || '-'}</td><td>${r.insulin || '-'}</td><td>${r.na || '-'}</td><td>${r.k || '-'}</td><td>${r.cl || '-'}</td></tr>`
             )}
 
-            ${generateTable('Diabetic Chart', ['Time', 'Blood Sugar', 'Insulin Type', 'Dose'], diabeticData, (r: any) => 
-              `<tr><td>${r.checkTime || formatTime(r.recordedAt)}</td><td>${r.bloodSugar || '-'} mg/dL</td><td>${r.insulinType || '-'}</td><td>${r.insulinDose || '-'}</td></tr>`
+            ${generateTable('Nursing Remarks', ['Time', 'Initials', 'Remarks'], nursingRemarks, (r: any) => 
+              `<tr><td>${r.time || '-'}</td><td>${r.initials || '-'}</td><td>${r.remarks || '-'}</td></tr>`
             )}
 
-            ${generateTable('Nursing Remarks', ['Shift', 'Remarks', 'Nurse', 'Time'], nursingRemarks, (r: any) => 
-              `<tr><td>${r.shift || '-'}</td><td>${r.remarks || '-'}</td><td>${r.nurseName || '-'}</td><td>${formatTime(r.createdAt)}</td></tr>`
+            ${generateTable('Oxygen Monitoring', ['Hour Slot', 'Oxygen (Liter)', 'SpO2 (%)'], oxygenData, (r: any) => 
+              `<tr><td>${r.hourSlot || '-'}</td><td>${r.oxygenLiter ? r.oxygenLiter + ' L' : '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td></tr>`
             )}
-
-            ${generateTable('Doctor & Nurse Notes', ['Time', 'Note Type', 'Notes', 'Recorded By'], notes, (r: any) => 
-              `<tr><td>${formatTime(r.createdAt)}</td><td>${r.noteType || '-'}</td><td>${r.notes || '-'}</td><td>${r.recordedBy || '-'}</td></tr>`
-            )}
-
-            <h2>Body Marking / Pressure Sore Chart</h2>
-            <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 15px;">
-              <div style="position: relative; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; background: #f8fafc;">
-                <img src="/body-diagram.png" alt="Body Diagram" style="height: 280px; display: block;" />
-                ${bodyMarkings.map((m: any) => m.positionX !== undefined && m.positionY !== undefined ? 
-                  `<div style="position: absolute; left: calc(${m.positionX}% + 10px); top: calc(${m.positionY}% + 10px); width: 12px; height: 12px; background: #3b82f6; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>` : ''
-                ).join('')}
-              </div>
-              <div style="flex: 1;">
-                <h3 style="font-size: 11px; margin-bottom: 8px; color: #374151;">Recorded Markings</h3>
-                ${bodyMarkings.length === 0 ? '<p class="no-data">No body markings recorded</p>' : `
-                  <table>
-                    <thead><tr><th>Area</th><th>Type</th><th>Grade</th><th>Date</th></tr></thead>
-                    <tbody>
-                      ${bodyMarkings.map((r: any) => `<tr><td>${r.markedArea || '-'}</td><td>${r.typeOfInjury || '-'}</td><td>${r.grade || '-'}</td><td>${r.date || formatDate(r.createdAt)}</td></tr>`).join('')}
-                    </tbody>
-                  </table>
-                `}
-              </div>
-            </div>
 
             <h2>Allergy & Special Precautions</h2>
             ${allergyData ? `
@@ -381,12 +359,7 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
                 <tr><td>Drug Allergy</td><td>${allergyData.drugAllergy || 'None'}</td></tr>
                 <tr><td>Food Allergy</td><td>${allergyData.foodAllergy || 'None'}</td></tr>
                 <tr><td>Other Allergy</td><td>${allergyData.otherAllergy || 'None'}</td></tr>
-                <tr><td>Fall Risk</td><td>${allergyData.fallRisk ? 'Yes' : 'No'}</td></tr>
-                <tr><td>Aspiration Risk</td><td>${allergyData.aspirationRisk ? 'Yes' : 'No'}</td></tr>
-                <tr><td>Pressure Sore Risk</td><td>${allergyData.pressureSoreRisk ? 'Yes' : 'No'}</td></tr>
-                <tr><td>DVT Risk</td><td>${allergyData.dvtRisk ? 'Yes' : 'No'}</td></tr>
-                <tr><td>Isolation</td><td>${allergyData.isolation || 'None'}</td></tr>
-                <tr><td>Special Precautions</td><td>${allergyData.specialPrecautions || '-'}</td></tr>
+                <tr><td>Special Precautions</td><td>${allergyData.specialPrecautions || 'None'}</td></tr>
               </table>
             ` : '<p class="no-data">No allergy/precaution data recorded</p>'}
 
