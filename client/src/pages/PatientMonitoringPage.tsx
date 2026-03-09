@@ -995,7 +995,7 @@ export default function PatientMonitoringPage() {
                             </tr>
                             <tr>
                               <td class="label-cell">Ward / Bed</td><td class="value-cell">${selectedSession.ward} - Bed ${selectedSession.bedNumber}</td>
-                              <td class="label-cell">Session Date</td><td class="value-cell">${format(new Date(selectedSession.sessionDate), "dd MMMM yyyy")}</td>
+                              <td class="label-cell">Session Date</td><td class="value-cell">${selectedSession.sessionDate ? (() => { try { return format(new Date(selectedSession.sessionDate), "dd MMMM yyyy"); } catch { return selectedSession.sessionDate; } })() : '-'}</td>
                             </tr>
                             <tr>
                               <td class="label-cell">Diagnosis</td><td class="value-cell">${selectedSession.primaryDiagnosis || "Not recorded"}</td>
@@ -1160,8 +1160,8 @@ export default function PatientMonitoringPage() {
                     }
                     toast({ title: "Complete Report Ready", description: "Print dialog opened with all tabs data" });
                   } catch (error) {
-                    console.error('Print error:', error);
-                    toast({ title: "Error", description: "Failed to generate report", variant: "destructive" });
+                    console.error('Print error:', error instanceof Error ? error.message + '\n' + error.stack : String(error));
+                    toast({ title: "Error", description: `Failed to generate report: ${error instanceof Error ? error.message : String(error)}`, variant: "destructive" });
                   }
                 }}
                 data-testid="button-export-pdf"

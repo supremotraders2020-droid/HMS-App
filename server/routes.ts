@@ -14354,15 +14354,16 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const allBeds = await db.select().from(beds).where(eq(beds.isActive, true));
       const categories = await db.select().from(bedCategories).where(eq(bedCategories.isActive, true));
       
+      const statusUpper = (s: string | null | undefined) => (s || '').toUpperCase();
       const stats = {
         totalBeds: allBeds.length,
-        availableBeds: allBeds.filter(b => b.occupancyStatus === "AVAILABLE").length,
-        occupiedBeds: allBeds.filter(b => b.occupancyStatus === "OCCUPIED").length,
-        cleaningBeds: allBeds.filter(b => b.occupancyStatus === "CLEANING").length,
-        blockedBeds: allBeds.filter(b => b.occupancyStatus === "BLOCKED").length,
-        maintenanceBeds: allBeds.filter(b => b.occupancyStatus === "MAINTENANCE").length,
+        availableBeds: allBeds.filter(b => statusUpper(b.occupancyStatus) === "AVAILABLE").length,
+        occupiedBeds: allBeds.filter(b => statusUpper(b.occupancyStatus) === "OCCUPIED").length,
+        cleaningBeds: allBeds.filter(b => statusUpper(b.occupancyStatus) === "CLEANING").length,
+        blockedBeds: allBeds.filter(b => statusUpper(b.occupancyStatus) === "BLOCKED").length,
+        maintenanceBeds: allBeds.filter(b => statusUpper(b.occupancyStatus) === "MAINTENANCE").length,
         occupancyRate: allBeds.length > 0 
-          ? Math.round((allBeds.filter(b => b.occupancyStatus === "OCCUPIED").length / allBeds.length) * 100) 
+          ? Math.round((allBeds.filter(b => statusUpper(b.occupancyStatus) === "OCCUPIED").length / allBeds.length) * 100) 
           : 0,
         isolationBeds: allBeds.filter(b => b.isIsolationBed).length,
         icuBeds: allBeds.filter(b => b.department === "ICU").length,
@@ -14379,8 +14380,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
           stats.byWard[bed.wardName] = { total: 0, occupied: 0, available: 0 };
         }
         stats.byWard[bed.wardName].total++;
-        if (bed.occupancyStatus === "OCCUPIED") stats.byWard[bed.wardName].occupied++;
-        if (bed.occupancyStatus === "AVAILABLE") stats.byWard[bed.wardName].available++;
+        if (statusUpper(bed.occupancyStatus) === "OCCUPIED") stats.byWard[bed.wardName].occupied++;
+        if (statusUpper(bed.occupancyStatus) === "AVAILABLE") stats.byWard[bed.wardName].available++;
       });
       
       // Group by department
@@ -14389,8 +14390,8 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
           stats.byDepartment[bed.department] = { total: 0, occupied: 0, available: 0 };
         }
         stats.byDepartment[bed.department].total++;
-        if (bed.occupancyStatus === "OCCUPIED") stats.byDepartment[bed.department].occupied++;
-        if (bed.occupancyStatus === "AVAILABLE") stats.byDepartment[bed.department].available++;
+        if (statusUpper(bed.occupancyStatus) === "OCCUPIED") stats.byDepartment[bed.department].occupied++;
+        if (statusUpper(bed.occupancyStatus) === "AVAILABLE") stats.byDepartment[bed.department].available++;
       });
       
       res.json(stats);
