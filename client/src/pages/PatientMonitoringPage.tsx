@@ -3095,7 +3095,7 @@ function OxygenTab({ session }: { session: Session }) {
     });
   };
 
-  const OXYGEN_LITERS = Array.from({ length: 16 }, (_, i) => `${i + 1} L/min`);
+  const OXYGEN_LITERS = Array.from({ length: 16 }, (_, i) => `${i + 1} L`);
 
   const handlePrint = () => {
     const rows = records.map((r: any, idx: number) =>
