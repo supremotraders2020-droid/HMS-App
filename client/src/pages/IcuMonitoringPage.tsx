@@ -250,7 +250,6 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
         const diabeticData = chartData.diabeticChart || [];
         const nursingRemarks = chartData.nursingRemarks || [];
         const oxygenData = chartData.oxygenRecords || [];
-        const allergyData = chartData.allergyPrecautions || null;
 
         const printContent = `
           <html>
@@ -351,17 +350,6 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
             ${generateTable('Oxygen Monitoring', ['Hour Slot', 'Oxygen (Liter)', 'SpO2 (%)'], oxygenData, (r: any) => 
               `<tr><td>${r.hourSlot || '-'}</td><td>${r.oxygenLiter ? r.oxygenLiter + ' L' : '-'}</td><td>${r.spo2 ? r.spo2 + '%' : '-'}</td></tr>`
             )}
-
-            <h2>Allergy & Special Precautions</h2>
-            ${allergyData ? `
-              <table>
-                <tr><th>Field</th><th>Value</th></tr>
-                <tr><td>Drug Allergy</td><td>${allergyData.drugAllergy || 'None'}</td></tr>
-                <tr><td>Food Allergy</td><td>${allergyData.foodAllergy || 'None'}</td></tr>
-                <tr><td>Other Allergy</td><td>${allergyData.otherAllergy || 'None'}</td></tr>
-                <tr><td>Special Precautions</td><td>${allergyData.specialPrecautions || 'None'}</td></tr>
-              </table>
-            ` : '<p class="no-data">No allergy/precaution data recorded</p>'}
 
             <div class="footer">
               <p>Generated on ${format(new Date(), "dd/MM/yyyy HH:mm")} | Gravity Hospital & Research Centre - ICU Monitoring System</p>
