@@ -1510,14 +1510,13 @@ function OverviewTab({ session }: { session: Session }) {
             {oxygenData.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Time Slot</th><th className="p-1">Oxygen</th><th className="p-1">SpO2</th><th className="p-1">By</th></tr></thead>
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time Slot</th><th className="p-1">Oxygen</th><th className="p-1">SpO2</th></tr></thead>
                   <tbody>
                     {oxygenData.slice(0, 5).map((r: any, i: number) => (
                       <tr key={i} className="border-b border-muted/30">
                         <td className="p-1 font-medium">{r.hour_slot || '-'}</td>
                         <td className="p-1 text-center font-semibold">{r.oxygen_liter || '-'}</td>
                         <td className="p-1 text-center">{r.spo2 ? `${r.spo2}%` : '-'}</td>
-                        <td className="p-1 text-center">{r.nurse_name || '-'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -3194,7 +3193,6 @@ function OxygenTab({ session }: { session: Session }) {
                 <TableHead>Time Slot</TableHead>
                 <TableHead>Oxygen</TableHead>
                 <TableHead>SpO2</TableHead>
-                <TableHead>By</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -3204,7 +3202,6 @@ function OxygenTab({ session }: { session: Session }) {
                   <TableCell className="font-medium">{r.hour_slot}</TableCell>
                   <TableCell className="font-semibold text-sky-600">{r.oxygen_liter}</TableCell>
                   <TableCell>{r.spo2 ? `${r.spo2}%` : '-'}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{r.nurse_name || '-'}</TableCell>
                   <TableCell>
                     <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteMutation.mutate(r.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
