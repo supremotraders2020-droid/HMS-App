@@ -1375,7 +1375,7 @@ function OverviewTab({ session }: { session: Session }) {
             {vitals.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th></tr></thead>
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th><th className="p-1">Sanction</th><th className="p-1">Secretion</th><th className="p-1">Urine Tube</th></tr></thead>
                   <tbody>
                     {vitals.slice(0, 5).map((v: any, i: number) => (
                       <tr key={i} className="border-b border-muted/30">
@@ -1384,6 +1384,9 @@ function OverviewTab({ session }: { session: Session }) {
                         <td className="p-1 text-center">{v.systolicBp}/{v.diastolicBp}</td>
                         <td className="p-1 text-center">{v.temperature ? `${v.temperature}°C` : '-'}</td>
                         <td className="p-1 text-center">{v.spo2 ? `${v.spo2}%` : '-'}</td>
+                        <td className="p-1 text-center">{v.sanction || '-'}</td>
+                        <td className="p-1 text-center">{v.secretion || '-'}</td>
+                        <td className="p-1 text-center">{v.urineTube || '-'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1991,6 +1994,9 @@ function VitalsTab({ session }: { session: Session }) {
                 <TableHead>Temp</TableHead>
                 <TableHead>RR</TableHead>
                 <TableHead>SpO2</TableHead>
+                <TableHead>Sanction</TableHead>
+                <TableHead>Secretion</TableHead>
+                <TableHead>Urine Tube</TableHead>
                 <TableHead>By</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -2006,6 +2012,9 @@ function VitalsTab({ session }: { session: Session }) {
                     <TableCell>{v?.temperature ? `${v.temperature}°F` : "-"}</TableCell>
                     <TableCell>{v?.respiratoryRate || "-"}</TableCell>
                     <TableCell>{v?.spo2 ? `${v.spo2}%` : "-"}</TableCell>
+                    <TableCell>{v?.sanction || "-"}</TableCell>
+                    <TableCell>{v?.secretion || "-"}</TableCell>
+                    <TableCell>{v?.urineTube || "-"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{v?.nurseName || "-"}</TableCell>
                     <TableCell>
                       {v && (
