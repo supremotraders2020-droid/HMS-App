@@ -1380,31 +1380,108 @@ function OverviewTab({ session }: { session: Session }) {
     <div className="space-y-4 mt-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
-          <SectionHeader icon={Heart} title="Vitals" count={vitals.length} color="rose" />
+          <SectionHeader icon={AlertTriangle} title="Allergies & Precautions" count={allergies ? 1 : 0} color="red" />
           <CardContent className="p-2">
-            {vitals.length > 0 ? (
+            {allergies ? (
+              <div className="text-xs space-y-1">
+                <div className="flex gap-2"><span className="font-medium w-24">Drug Allergies:</span><span>{allergies.drugAllergies || allergies.allergen || '-'}</span></div>
+                <div className="flex gap-2"><span className="font-medium w-24">Food Allergies:</span><span>{allergies.foodAllergies || '-'}</span></div>
+                <div className="flex gap-2"><span className="font-medium w-24">Precautions:</span><span>{allergies.specialPrecautions || allergies.reaction || '-'}</span></div>
+              </div>
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No allergies recorded</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <SectionHeader icon={FileCheck} title="Care Plan" count={carePlan ? 1 : 0} color="emerald" />
+          <CardContent className="p-2">
+            {carePlan ? (
+              <div className="text-xs space-y-1">
+                <div><span className="font-medium">Diagnosis:</span> {carePlan.provisionalDiagnosis || '-'}</div>
+                <div><span className="font-medium">Treatment:</span> {carePlan.treatmentAdvised || '-'}</div>
+                <div><span className="font-medium">Investigations:</span> {carePlan.investigationsAdvised || '-'}</div>
+                <div><span className="font-medium">Consultant:</span> {carePlan.treatingConsultantName || '-'}</div>
+              </div>
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No care plan recorded</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <SectionHeader icon={Activity} title="Diabetic Monitoring" count={diabeticData.length} color="amber" />
+          <CardContent className="p-2">
+            {diabeticData.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th><th className="p-1">Sanction</th><th className="p-1">Secretion</th><th className="p-1">Urine Tube</th><th className="p-1">By</th></tr></thead>
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">BSL</th><th className="p-1">Insulin</th><th className="p-1">Dose</th></tr></thead>
                   <tbody>
-                    {vitals.slice(0, 5).map((v: any, i: number) => (
+                    {diabeticData.slice(0, 5).map((r: any, i: number) => (
                       <tr key={i} className="border-b border-muted/30">
-                        <td className="p-1 font-medium">{v.hourSlot || formatTime(v.createdAt)}</td>
-                        <td className="p-1 text-center">{v.heartRate || '-'}</td>
-                        <td className="p-1 text-center">{v.systolicBp}/{v.diastolicBp}</td>
-                        <td className="p-1 text-center">{v.temperature ? `${v.temperature}°C` : '-'}</td>
-                        <td className="p-1 text-center">{v.spo2 ? `${v.spo2}%` : '-'}</td>
-                        <td className="p-1 text-center">{v.sanction || '-'}</td>
-                        <td className="p-1 text-center">{v.secretion || '-'}</td>
-                        <td className="p-1 text-center">{v.urineTube || '-'}</td>
-                        <td className="p-1 text-center">{v.nurseName || '-'}</td>
+                        <td className="p-1 font-medium">{r.checkTime || formatTime(r.createdAt)}</td>
+                        <td className="p-1 text-center">{r.bloodSugarLevel || '-'} mg/dL</td>
+                        <td className="p-1 text-center">{r.insulinType || '-'}</td>
+                        <td className="p-1 text-center">{r.insulinDose || '-'}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                {vitals.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{vitals.length - 5} more records</p>}
+                {diabeticData.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{diabeticData.length - 5} more</p>}
               </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No vitals recorded</p>}
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No diabetic data recorded</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <SectionHeader icon={Stethoscope} title="Doctor's Visit Sheet" count={doctorsVisits.length} color="pink" />
+          <CardContent className="p-2">
+            {doctorsVisits.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b"><th className="p-1 text-left">Date</th><th className="p-1">Doctor</th><th className="p-1">Type</th></tr></thead>
+                  <tbody>
+                    {doctorsVisits.slice(0, 4).map((r: any, i: number) => (
+                      <tr key={i} className="border-b border-muted/30">
+                        <td className="p-1 font-medium">{formatDate(r.visitDate)}</td>
+                        <td className="p-1 truncate max-w-[100px]">{r.nameOfDoctor || '-'}</td>
+                        <td className="p-1 text-center">{r.visitType || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No visits recorded</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <SectionHeader icon={FileText} title="Indoor Continuation Sheet" count={indoorConsultations.length} color="slate" />
+          <CardContent className="p-2">
+            {indoorConsultations.length > 0 ? (
+              <div className="space-y-1">
+                {indoorConsultations.slice(0, 3).map((r: any, i: number) => (
+                  <div key={i} className="text-xs border-b border-muted/30 pb-1">
+                    <div className="flex justify-between"><span className="font-medium">{formatDate(r.entryDate)}</span><span className="text-muted-foreground">{r.inChargeDoctor}</span></div>
+                    <p className="text-muted-foreground truncate">{r.clinicalFindings || '-'}</p>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No records</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <SectionHeader icon={ClipboardList} title="Initial Assessment" count={initialAssessment ? 1 : 0} color="sky" />
+          <CardContent className="p-2">
+            {initialAssessment ? (
+              <div className="text-xs space-y-1">
+                <div><span className="font-medium">Received:</span> {formatDate(initialAssessment.patientReceivedDate)} {initialAssessment.patientReceivedTime || ''}</div>
+                <div><span className="font-medium">Complaints:</span> {initialAssessment.complaintsHistory || '-'}</div>
+                <div className="flex gap-4">
+                  <span><span className="font-medium">Pulse:</span> {initialAssessment.pulseRate || '-'}</span>
+                  <span><span className="font-medium">BP:</span> {initialAssessment.bloodPressure || '-'}</span>
+                </div>
+                <div><span className="font-medium">Diagnosis:</span> {initialAssessment.provisionalDiagnosis || '-'}</div>
+              </div>
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No initial assessment</p>}
           </CardContent>
         </Card>
 
@@ -1457,73 +1534,22 @@ function OverviewTab({ session }: { session: Session }) {
         </Card>
 
         <Card>
-          <SectionHeader icon={Droplets} title="Output" count={outputData.length} color="orange" />
+          <SectionHeader icon={ClipboardList} title="Investigation Chart" count={investigation.length} color="cyan" />
           <CardContent className="p-2">
-            {outputData.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">Urine</th><th className="p-1">Other</th><th className="p-1">Total</th></tr></thead>
-                  <tbody>
-                    {outputData.slice(0, 5).map((r: any, i: number) => (
-                      <tr key={i} className="border-b border-muted/30">
-                        <td className="p-1 font-medium">{r.hourSlot || r.timeSlot || formatTime(r.createdAt)}</td>
-                        <td className="p-1 text-center">{r.urineHourly || r.volume || '-'}</td>
-                        <td className="p-1 text-center">{r.otherLosses || '-'}</td>
-                        <td className="p-1 text-center">{r.totalOutput || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {outputData.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{outputData.length - 5} more</p>}
+            {investigation.length > 0 ? (
+              <div className="text-xs space-y-1">
+                {investigation.slice(0, 1).map((inv: any, i: number) => (
+                  <div key={i} className="grid grid-cols-2 gap-1">
+                    <div><span className="font-medium">Blood Group:</span> {inv.bloodGroup || '-'}</div>
+                    <div><span className="font-medium">HIV:</span> {inv.hiv || '-'}</div>
+                    <div><span className="font-medium">HbsAg:</span> {inv.hbsag || '-'}</div>
+                    <div><span className="font-medium">Hb:</span> {inv.hb || '-'}</div>
+                    <div><span className="font-medium">WBC:</span> {inv.wbc || '-'}</div>
+                    <div><span className="font-medium">Platelets:</span> {inv.platelets || '-'}</div>
+                  </div>
+                ))}
               </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No output recorded</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <SectionHeader icon={Activity} title="Diabetic Monitoring" count={diabeticData.length} color="amber" />
-          <CardContent className="p-2">
-            {diabeticData.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">BSL</th><th className="p-1">Insulin</th><th className="p-1">Dose</th></tr></thead>
-                  <tbody>
-                    {diabeticData.slice(0, 5).map((r: any, i: number) => (
-                      <tr key={i} className="border-b border-muted/30">
-                        <td className="p-1 font-medium">{r.checkTime || formatTime(r.createdAt)}</td>
-                        <td className="p-1 text-center">{r.bloodSugarLevel || '-'} mg/dL</td>
-                        <td className="p-1 text-center">{r.insulinType || '-'}</td>
-                        <td className="p-1 text-center">{r.insulinDose || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {diabeticData.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{diabeticData.length - 5} more</p>}
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No diabetic data recorded</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <SectionHeader icon={Wind} title="Oxygen Monitoring" count={oxygenData.length} color="sky" />
-          <CardContent className="p-2">
-            {oxygenData.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Time Slot</th><th className="p-1">Oxygen</th><th className="p-1">SpO2</th></tr></thead>
-                  <tbody>
-                    {oxygenData.slice(0, 5).map((r: any, i: number) => (
-                      <tr key={i} className="border-b border-muted/30">
-                        <td className="p-1 font-medium">{r.hour_slot || '-'}</td>
-                        <td className="p-1 text-center font-semibold">{r.oxygen_liter || '-'}</td>
-                        <td className="p-1 text-center">{r.spo2 ? `${r.spo2}%` : '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {oxygenData.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{oxygenData.length - 5} more</p>}
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No oxygen records</p>}
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No investigations</p>}
           </CardContent>
         </Card>
 
@@ -1552,23 +1578,6 @@ function OverviewTab({ session }: { session: Session }) {
         </Card>
 
         <Card>
-          <SectionHeader icon={FileText} title="Shift Notes" count={shiftNotes.length} color="blue" />
-          <CardContent className="p-2">
-            {shiftNotes.length > 0 ? (
-              <div className="space-y-1">
-                {shiftNotes.slice(0, 3).map((r: any, i: number) => (
-                  <div key={i} className="text-xs border-b border-muted/30 pb-1">
-                    <div className="flex justify-between"><span className="font-medium">{r.shift}</span><span className="text-muted-foreground">{r.nurseName}</span></div>
-                    <p className="text-muted-foreground truncate">{r.notes || '-'}</p>
-                  </div>
-                ))}
-                {shiftNotes.length > 3 && <p className="text-[10px] text-muted-foreground text-center">+{shiftNotes.length - 3} more</p>}
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No shift notes</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
           <SectionHeader icon={Users} title="Nurse Notes / Duty Staff" count={dutyStaff.length} color="indigo" />
           <CardContent className="p-2">
             {dutyStaff.length > 0 ? (
@@ -1592,49 +1601,113 @@ function OverviewTab({ session }: { session: Session }) {
         </Card>
 
         <Card>
-          <SectionHeader icon={AlertTriangle} title="Allergies & Precautions" count={allergies ? 1 : 0} color="red" />
+          <SectionHeader icon={ClipboardCheck} title="Nursing Assessment & Care Plan" count={nursingAssessment ? 1 : 0} color="stone" />
           <CardContent className="p-2">
-            {allergies ? (
+            {nursingAssessment ? (
               <div className="text-xs space-y-1">
-                <div className="flex gap-2"><span className="font-medium w-24">Drug Allergies:</span><span>{allergies.drugAllergies || allergies.allergen || '-'}</span></div>
-                <div className="flex gap-2"><span className="font-medium w-24">Food Allergies:</span><span>{allergies.foodAllergies || '-'}</span></div>
-                <div className="flex gap-2"><span className="font-medium w-24">Precautions:</span><span>{allergies.specialPrecautions || allergies.reaction || '-'}</span></div>
+                <div><span className="font-medium">Diagnosis:</span> {nursingAssessment.provisionalDiagnosis || '-'}</div>
+                <div><span className="font-medium">Patient History:</span> {nursingAssessment.patientHistory || '-'}</div>
+                <div><span className="font-medium">Fall Risk:</span> {nursingAssessment.morseFallRiskScore || '-'}</div>
               </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No allergies recorded</p>}
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No assessment recorded</p>}
           </CardContent>
         </Card>
 
         <Card>
-          <SectionHeader icon={ClipboardList} title="Investigation Chart" count={investigation.length} color="cyan" />
+          <SectionHeader icon={FileText} title="Nursing Progress Sheet" count={nursingProgress.length} color="yellow" />
           <CardContent className="p-2">
-            {investigation.length > 0 ? (
-              <div className="text-xs space-y-1">
-                {investigation.slice(0, 1).map((inv: any, i: number) => (
-                  <div key={i} className="grid grid-cols-2 gap-1">
-                    <div><span className="font-medium">Blood Group:</span> {inv.bloodGroup || '-'}</div>
-                    <div><span className="font-medium">HIV:</span> {inv.hiv || '-'}</div>
-                    <div><span className="font-medium">HbsAg:</span> {inv.hbsag || '-'}</div>
-                    <div><span className="font-medium">Hb:</span> {inv.hb || '-'}</div>
-                    <div><span className="font-medium">WBC:</span> {inv.wbc || '-'}</div>
-                    <div><span className="font-medium">Platelets:</span> {inv.platelets || '-'}</div>
+            {nursingProgress.length > 0 ? (
+              <div className="space-y-1">
+                {nursingProgress.slice(0, 3).map((r: any, i: number) => (
+                  <div key={i} className="text-xs border-b border-muted/30 pb-1">
+                    <div className="flex justify-between"><span className="font-medium">{formatDate(r.entryDateTime)}</span><span className="text-muted-foreground">{r.signatureName}</span></div>
+                    <p className="text-muted-foreground truncate">{r.progressNotes || '-'}</p>
                   </div>
                 ))}
               </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No investigations</p>}
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No progress notes</p>}
           </CardContent>
         </Card>
 
         <Card>
-          <SectionHeader icon={FileCheck} title="Care Plan" count={carePlan ? 1 : 0} color="emerald" />
+          <SectionHeader icon={Droplets} title="Output" count={outputData.length} color="orange" />
           <CardContent className="p-2">
-            {carePlan ? (
-              <div className="text-xs space-y-1">
-                <div><span className="font-medium">Diagnosis:</span> {carePlan.provisionalDiagnosis || '-'}</div>
-                <div><span className="font-medium">Treatment:</span> {carePlan.treatmentAdvised || '-'}</div>
-                <div><span className="font-medium">Investigations:</span> {carePlan.investigationsAdvised || '-'}</div>
-                <div><span className="font-medium">Consultant:</span> {carePlan.treatingConsultantName || '-'}</div>
+            {outputData.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">Urine</th><th className="p-1">Other</th><th className="p-1">Total</th></tr></thead>
+                  <tbody>
+                    {outputData.slice(0, 5).map((r: any, i: number) => (
+                      <tr key={i} className="border-b border-muted/30">
+                        <td className="p-1 font-medium">{r.hourSlot || r.timeSlot || formatTime(r.createdAt)}</td>
+                        <td className="p-1 text-center">{r.urineHourly || r.volume || '-'}</td>
+                        <td className="p-1 text-center">{r.otherLosses || '-'}</td>
+                        <td className="p-1 text-center">{r.totalOutput || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {outputData.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{outputData.length - 5} more</p>}
               </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No care plan recorded</p>}
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No output recorded</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <SectionHeader icon={Wind} title="Oxygen Monitoring" count={oxygenData.length} color="sky" />
+          <CardContent className="p-2">
+            {oxygenData.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time Slot</th><th className="p-1">Oxygen</th><th className="p-1">SpO2</th></tr></thead>
+                  <tbody>
+                    {oxygenData.slice(0, 5).map((r: any, i: number) => (
+                      <tr key={i} className="border-b border-muted/30">
+                        <td className="p-1 font-medium">{r.hour_slot || '-'}</td>
+                        <td className="p-1 text-center font-semibold">{r.oxygen_liter || '-'}</td>
+                        <td className="p-1 text-center">{r.spo2 ? `${r.spo2}%` : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {oxygenData.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{oxygenData.length - 5} more</p>}
+              </div>
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No oxygen records</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <SectionHeader icon={FileText} title="Shift Notes" count={shiftNotes.length} color="blue" />
+          <CardContent className="p-2">
+            {shiftNotes.length > 0 ? (
+              <div className="space-y-1">
+                {shiftNotes.slice(0, 3).map((r: any, i: number) => (
+                  <div key={i} className="text-xs border-b border-muted/30 pb-1">
+                    <div className="flex justify-between"><span className="font-medium">{r.shift}</span><span className="text-muted-foreground">{r.nurseName}</span></div>
+                    <p className="text-muted-foreground truncate">{r.notes || '-'}</p>
+                  </div>
+                ))}
+                {shiftNotes.length > 3 && <p className="text-[10px] text-muted-foreground text-center">+{shiftNotes.length - 3} more</p>}
+              </div>
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No shift notes</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <SectionHeader icon={Hospital} title="Surgery Notes" count={surgeryNotes.length} color="fuchsia" />
+          <CardContent className="p-2">
+            {surgeryNotes.length > 0 ? (
+              <div className="text-xs space-y-1">
+                {surgeryNotes.slice(0, 1).map((sn: any, i: number) => (
+                  <div key={i}>
+                    <div><span className="font-medium">Date:</span> {formatDate(sn.surgeryDate)}</div>
+                    <div><span className="font-medium">Pre-op Dx:</span> {sn.preoperativeDiagnosis || '-'}</div>
+                    <div><span className="font-medium">Surgery:</span> {sn.surgeryPerformed || sn.surgeryPlanned || '-'}</div>
+                    <div><span className="font-medium">Surgeon:</span> {sn.surgeonName || sn.nameOfSurgeon || '-'}</div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No surgery notes</p>}
           </CardContent>
         </Card>
 
@@ -1661,104 +1734,31 @@ function OverviewTab({ session }: { session: Session }) {
         </Card>
 
         <Card>
-          <SectionHeader icon={ClipboardList} title="Initial Assessment" count={initialAssessment ? 1 : 0} color="sky" />
+          <SectionHeader icon={Heart} title="Vitals" count={vitals.length} color="rose" />
           <CardContent className="p-2">
-            {initialAssessment ? (
-              <div className="text-xs space-y-1">
-                <div><span className="font-medium">Received:</span> {formatDate(initialAssessment.patientReceivedDate)} {initialAssessment.patientReceivedTime || ''}</div>
-                <div><span className="font-medium">Complaints:</span> {initialAssessment.complaintsHistory || '-'}</div>
-                <div className="flex gap-4">
-                  <span><span className="font-medium">Pulse:</span> {initialAssessment.pulseRate || '-'}</span>
-                  <span><span className="font-medium">BP:</span> {initialAssessment.bloodPressure || '-'}</span>
-                </div>
-                <div><span className="font-medium">Diagnosis:</span> {initialAssessment.provisionalDiagnosis || '-'}</div>
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No initial assessment</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <SectionHeader icon={FileText} title="Indoor Continuation Sheet" count={indoorConsultations.length} color="slate" />
-          <CardContent className="p-2">
-            {indoorConsultations.length > 0 ? (
-              <div className="space-y-1">
-                {indoorConsultations.slice(0, 3).map((r: any, i: number) => (
-                  <div key={i} className="text-xs border-b border-muted/30 pb-1">
-                    <div className="flex justify-between"><span className="font-medium">{formatDate(r.entryDate)}</span><span className="text-muted-foreground">{r.inChargeDoctor}</span></div>
-                    <p className="text-muted-foreground truncate">{r.clinicalFindings || '-'}</p>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No records</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <SectionHeader icon={Stethoscope} title="Doctor's Visit Sheet" count={doctorsVisits.length} color="pink" />
-          <CardContent className="p-2">
-            {doctorsVisits.length > 0 ? (
+            {vitals.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Date</th><th className="p-1">Doctor</th><th className="p-1">Type</th></tr></thead>
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th><th className="p-1">Sanction</th><th className="p-1">Secretion</th><th className="p-1">Urine Tube</th><th className="p-1">By</th></tr></thead>
                   <tbody>
-                    {doctorsVisits.slice(0, 4).map((r: any, i: number) => (
+                    {vitals.slice(0, 5).map((v: any, i: number) => (
                       <tr key={i} className="border-b border-muted/30">
-                        <td className="p-1 font-medium">{formatDate(r.visitDate)}</td>
-                        <td className="p-1 truncate max-w-[100px]">{r.nameOfDoctor || '-'}</td>
-                        <td className="p-1 text-center">{r.visitType || '-'}</td>
+                        <td className="p-1 font-medium">{v.hourSlot || formatTime(v.createdAt)}</td>
+                        <td className="p-1 text-center">{v.heartRate || '-'}</td>
+                        <td className="p-1 text-center">{v.systolicBp}/{v.diastolicBp}</td>
+                        <td className="p-1 text-center">{v.temperature ? `${v.temperature}°C` : '-'}</td>
+                        <td className="p-1 text-center">{v.spo2 ? `${v.spo2}%` : '-'}</td>
+                        <td className="p-1 text-center">{v.sanction || '-'}</td>
+                        <td className="p-1 text-center">{v.secretion || '-'}</td>
+                        <td className="p-1 text-center">{v.urineTube || '-'}</td>
+                        <td className="p-1 text-center">{v.nurseName || '-'}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                {vitals.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{vitals.length - 5} more records</p>}
               </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No visits recorded</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <SectionHeader icon={Hospital} title="Surgery Notes" count={surgeryNotes.length} color="fuchsia" />
-          <CardContent className="p-2">
-            {surgeryNotes.length > 0 ? (
-              <div className="text-xs space-y-1">
-                {surgeryNotes.slice(0, 1).map((sn: any, i: number) => (
-                  <div key={i}>
-                    <div><span className="font-medium">Date:</span> {formatDate(sn.surgeryDate)}</div>
-                    <div><span className="font-medium">Pre-op Dx:</span> {sn.preoperativeDiagnosis || '-'}</div>
-                    <div><span className="font-medium">Surgery:</span> {sn.surgeryPerformed || sn.surgeryPlanned || '-'}</div>
-                    <div><span className="font-medium">Surgeon:</span> {sn.surgeonName || sn.nameOfSurgeon || '-'}</div>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No surgery notes</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <SectionHeader icon={FileText} title="Nursing Progress Sheet" count={nursingProgress.length} color="yellow" />
-          <CardContent className="p-2">
-            {nursingProgress.length > 0 ? (
-              <div className="space-y-1">
-                {nursingProgress.slice(0, 3).map((r: any, i: number) => (
-                  <div key={i} className="text-xs border-b border-muted/30 pb-1">
-                    <div className="flex justify-between"><span className="font-medium">{formatDate(r.entryDateTime)}</span><span className="text-muted-foreground">{r.signatureName}</span></div>
-                    <p className="text-muted-foreground truncate">{r.progressNotes || '-'}</p>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No progress notes</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <SectionHeader icon={ClipboardCheck} title="Nursing Assessment & Care Plan" count={nursingAssessment ? 1 : 0} color="stone" />
-          <CardContent className="p-2">
-            {nursingAssessment ? (
-              <div className="text-xs space-y-1">
-                <div><span className="font-medium">Diagnosis:</span> {nursingAssessment.provisionalDiagnosis || '-'}</div>
-                <div><span className="font-medium">Patient History:</span> {nursingAssessment.patientHistory || '-'}</div>
-                <div><span className="font-medium">Fall Risk:</span> {nursingAssessment.morseFallRiskScore || '-'}</div>
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No assessment recorded</p>}
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No vitals recorded</p>}
           </CardContent>
         </Card>
       </div>
