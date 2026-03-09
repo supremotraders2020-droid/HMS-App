@@ -1911,16 +1911,16 @@ function VitalsTab({ session }: { session: Session }) {
                   <Label>Secretion</Label>
                   <Input value={vitalsForm.secretion} onChange={(e) => setVitalsForm({...vitalsForm, secretion: e.target.value})} placeholder="Secretion" />
                 </div>
-              </div>
-              <div className="space-y-1">
-                <Label>Urine Tube</Label>
-                <Select value={vitalsForm.urineTube} onValueChange={(v) => setVitalsForm({...vitalsForm, urineTube: v})}>
-                  <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Yes">Yes</SelectItem>
-                    <SelectItem value="No">No</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-1">
+                  <Label>Urine Tube</Label>
+                  <Select value={vitalsForm.urineTube} onValueChange={(v) => setVitalsForm({...vitalsForm, urineTube: v})}>
+                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Yes">Yes</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <DialogFooter className="gap-2">
@@ -1956,16 +1956,16 @@ function VitalsTab({ session }: { session: Session }) {
                   <Label>Secretion</Label>
                   <Input value={editForm.secretion} onChange={(e) => setEditForm({...editForm, secretion: e.target.value})} placeholder="Secretion" />
                 </div>
-              </div>
-              <div className="space-y-1">
-                <Label>Urine Tube</Label>
-                <Select value={editForm.urineTube} onValueChange={(v) => setEditForm({...editForm, urineTube: v})}>
-                  <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Yes">Yes</SelectItem>
-                    <SelectItem value="No">No</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-1">
+                  <Label>Urine Tube</Label>
+                  <Select value={editForm.urineTube} onValueChange={(v) => setEditForm({...editForm, urineTube: v})}>
+                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Yes">Yes</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <DialogFooter className="gap-2">
