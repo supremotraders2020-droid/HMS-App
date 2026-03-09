@@ -751,15 +751,6 @@ function IcuChartDetail({ chart, completeData, canEdit, userId, userRole }: {
               <TabsTrigger value="oxygen" className="gap-1" data-testid="tab-oxygen">
                 <Gauge className="w-3 h-3" /> Oxygen
               </TabsTrigger>
-              <TabsTrigger value="body" className="gap-1" data-testid="tab-body">
-                <User className="w-3 h-3" /> Body Chart
-              </TabsTrigger>
-              <TabsTrigger value="notes" className="gap-1" data-testid="tab-notes">
-                <FileText className="w-3 h-3" /> Doctor & Nurse Notes
-              </TabsTrigger>
-              <TabsTrigger value="tests" className="gap-1" data-testid="tab-tests">
-                <Beaker className="w-3 h-3" /> Tests
-              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -822,35 +813,6 @@ function IcuChartDetail({ chart, completeData, canEdit, userId, userRole }: {
             <OxygenSection chartId={chart.id} data={completeData?.oxygenRecords || []} canEdit={canEdit} userId={userId} />
           </TabsContent>
 
-          <TabsContent value="body" className="mt-4">
-            <BodyChartSection 
-              chartId={chart.id} 
-              markingsData={completeData?.bodyMarkings || []}
-              allergyData={completeData?.allergyPrecautions}
-              canEdit={canEdit} 
-              userId={userId} 
-            />
-          </TabsContent>
-
-          <TabsContent value="notes" className="mt-4">
-            <DoctorNurseNotesSection 
-              chartId={chart.id}
-              notesData={completeData?.doctorNurseNotes || []}
-              canEdit={canEdit}
-              userId={userId}
-              userRole={userRole}
-            />
-          </TabsContent>
-
-          <TabsContent value="tests" className="mt-4">
-            <TestsSection 
-              chartId={chart.id}
-              patientId={chart.patientId || ""}
-              patientName={chart.patientName || ""}
-              canEdit={canEdit}
-              userId={userId}
-            />
-          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
