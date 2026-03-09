@@ -1375,7 +1375,7 @@ function OverviewTab({ session }: { session: Session }) {
             {vitals.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th><th className="p-1">Sanction</th><th className="p-1">Secretion</th><th className="p-1">Urine Tube</th></tr></thead>
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th><th className="p-1">Sanction</th><th className="p-1">Secretion</th><th className="p-1">Urine Tube</th><th className="p-1">By</th></tr></thead>
                   <tbody>
                     {vitals.slice(0, 5).map((v: any, i: number) => (
                       <tr key={i} className="border-b border-muted/30">
@@ -1387,6 +1387,7 @@ function OverviewTab({ session }: { session: Session }) {
                         <td className="p-1 text-center">{v.sanction || '-'}</td>
                         <td className="p-1 text-center">{v.secretion || '-'}</td>
                         <td className="p-1 text-center">{v.urineTube || '-'}</td>
+                        <td className="p-1 text-center">{v.nurseName || '-'}</td>
                       </tr>
                     ))}
                   </tbody>
