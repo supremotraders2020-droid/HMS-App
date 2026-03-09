@@ -1797,7 +1797,7 @@ function VitalsTab({ session }: { session: Session }) {
       secretion: vitalsForm.secretion || null,
       urineTube: vitalsForm.urineTube || null,
       nurseId: selectedNurse || "system-nurse",
-      nurseName: selectedNurse ? (nurses.find((n: any) => n.id === selectedNurse)?.name || selectedNurse) : "ICU Nurse"
+      nurseName: selectedNurse ? (nurses.find((n: any) => n.id === selectedNurse)?.fullName || selectedNurse) : "ICU Nurse"
     });
   };
 
@@ -1833,7 +1833,7 @@ function VitalsTab({ session }: { session: Session }) {
       secretion: editForm.secretion || null,
       urineTube: editForm.urineTube || null,
       nurseId: editSelectedNurse || editingVital.nurseId || "system-nurse",
-      nurseName: editSelectedNurse ? (nurses.find((n: any) => n.id === editSelectedNurse)?.name || editSelectedNurse) : (editingVital.nurseName || "ICU Nurse")
+      nurseName: editSelectedNurse ? (nurses.find((n: any) => n.id === editSelectedNurse)?.fullName || editSelectedNurse) : (editingVital.nurseName || "ICU Nurse")
     });
   };
 
@@ -1913,7 +1913,7 @@ function VitalsTab({ session }: { session: Session }) {
                     <SelectTrigger><SelectValue placeholder="Select nurse..." /></SelectTrigger>
                     <SelectContent>
                       {nurses.map((n: any) => (
-                        <SelectItem key={n.id} value={n.id}>{n.name}</SelectItem>
+                        <SelectItem key={n.id} value={n.id}>{n.fullName}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -1970,7 +1970,7 @@ function VitalsTab({ session }: { session: Session }) {
                   <SelectTrigger><SelectValue placeholder="Select nurse..." /></SelectTrigger>
                   <SelectContent>
                     {nurses.map((n: any) => (
-                      <SelectItem key={n.id} value={n.id}>{n.name}</SelectItem>
+                      <SelectItem key={n.id} value={n.id}>{n.fullName}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
