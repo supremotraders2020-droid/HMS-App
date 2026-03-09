@@ -21581,6 +21581,47 @@ Important:
     }
   });
 
+  // ICU Oxygen Records
+  app.post("/api/icu-charts/:chartId/oxygen", requireAuth, async (req, res) => {
+    try {
+      const record = await storage.createIcuOxygenRecord({ ...req.body, icuChartId: req.params.chartId });
+      res.status(201).json(record);
+    } catch (error) {
+      console.error("Error creating ICU oxygen record:", error);
+      res.status(500).json({ error: "Failed to create oxygen record" });
+    }
+  });
+
+  app.get("/api/icu-charts/:chartId/oxygen", requireAuth, async (req, res) => {
+    try {
+      const records = await storage.getIcuOxygenRecordsByChartId(req.params.chartId);
+      res.json(records);
+    } catch (error) {
+      console.error("Error fetching ICU oxygen records:", error);
+      res.status(500).json({ error: "Failed to fetch oxygen records" });
+    }
+  });
+
+  app.patch("/api/icu-oxygen/:id", requireAuth, async (req, res) => {
+    try {
+      const record = await storage.updateIcuOxygenRecord(req.params.id, req.body);
+      res.json(record);
+    } catch (error) {
+      console.error("Error updating ICU oxygen record:", error);
+      res.status(500).json({ error: "Failed to update oxygen record" });
+    }
+  });
+
+  app.delete("/api/icu-oxygen/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteIcuOxygenRecord(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting ICU oxygen record:", error);
+      res.status(500).json({ error: "Failed to delete oxygen record" });
+    }
+  });
+
   // ICU Hemodynamic Monitoring
   app.post("/api/icu-charts/:chartId/hemodynamic", requireAuth, async (req, res) => {
     try {

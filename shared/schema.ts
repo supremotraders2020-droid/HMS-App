@@ -5183,6 +5183,21 @@ export const insertIcuVitalChartsSchema = createInsertSchema(icuVitalCharts).omi
 export type InsertIcuVitalCharts = z.infer<typeof insertIcuVitalChartsSchema>;
 export type IcuVitalCharts = typeof icuVitalCharts.$inferSelect;
 
+// ICU Oxygen Records
+export const icuOxygenRecords = pgTable("icu_oxygen_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  icuChartId: varchar("icu_chart_id").notNull(),
+  hourSlot: text("hour_slot").notNull(),
+  oxygenLiter: text("oxygen_liter"),
+  spo2: text("spo2"),
+  recordedBy: varchar("recorded_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIcuOxygenRecordSchema = createInsertSchema(icuOxygenRecords).omit({ id: true, createdAt: true });
+export type InsertIcuOxygenRecord = z.infer<typeof insertIcuOxygenRecordSchema>;
+export type IcuOxygenRecord = typeof icuOxygenRecords.$inferSelect;
+
 // Hemodynamic Monitoring
 export const icuHemodynamicMonitoring = pgTable("icu_hemodynamic_monitoring", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plus, Search, Calendar, User, Thermometer, BarChart3, FileText, AlertTriangle, Stethoscope, Syringe, Beaker, FlaskConical, Scale, Timer, BedDouble, ArrowLeft, Download, ArrowUp, ArrowDown } from "lucide-react";
+import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plus, Search, Calendar, User, Thermometer, BarChart3, FileText, AlertTriangle, Stethoscope, Syringe, Beaker, FlaskConical, Scale, Timer, BedDouble, ArrowLeft, Download, ArrowUp, ArrowDown, Gauge } from "lucide-react";
 import { format } from "date-fns";
 import { Pencil, Check, X } from "lucide-react";
 import type { IcuCharts, ServicePatient } from "@shared/schema";
@@ -748,6 +748,9 @@ function IcuChartDetail({ chart, completeData, canEdit, userId, userRole }: {
               <TabsTrigger value="nursing" className="gap-1" data-testid="tab-nursing">
                 <ClipboardList className="w-3 h-3" /> Nursing
               </TabsTrigger>
+              <TabsTrigger value="oxygen" className="gap-1" data-testid="tab-oxygen">
+                <Gauge className="w-3 h-3" /> Oxygen
+              </TabsTrigger>
               <TabsTrigger value="body" className="gap-1" data-testid="tab-body">
                 <User className="w-3 h-3" /> Body Chart
               </TabsTrigger>
@@ -813,6 +816,10 @@ function IcuChartDetail({ chart, completeData, canEdit, userId, userRole }: {
               canEdit={canEdit} 
               userId={userId} 
             />
+          </TabsContent>
+
+          <TabsContent value="oxygen" className="mt-4">
+            <OxygenSection chartId={chart.id} data={completeData?.oxygenRecords || []} canEdit={canEdit} userId={userId} />
           </TabsContent>
 
           <TabsContent value="body" className="mt-4">
@@ -2645,6 +2652,156 @@ function NursingSection({ chartId, remarksData, dutyData, diaryData, canEdit, us
         </Dialog>
       </div>
 
+    </div>
+  );
+}
+
+function OxygenSection({ chartId, data, canEdit, userId }: {
+  chartId: string;
+  data: any[];
+  canEdit: boolean;
+  userId: number | string;
+}) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ hourSlot: "", oxygenLiter: "", spo2: "" });
+
+  const OXYGEN_LITERS = Array.from({ length: 16 }, (_, i) => String(i + 1));
+
+  const createMutation = useMutation({
+    mutationFn: (body: any) => apiRequest("POST", `/api/icu-charts/${chartId}/oxygen`, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Oxygen record saved" });
+      setOpen(false);
+      setForm({ hourSlot: "", oxygenLiter: "", spo2: "" });
+    },
+    onError: () => toast({ title: "Failed to save oxygen record", variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/icu-oxygen/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
+      toast({ title: "Record deleted" });
+    },
+  });
+
+  const handleSave = () => {
+    if (!form.hourSlot) return toast({ title: "Please select an hour slot", variant: "destructive" });
+    createMutation.mutate({ ...form, recordedBy: String(userId) });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h3 className="text-base font-semibold flex items-center gap-2">
+          <Gauge className="w-4 h-4 text-blue-500" /> Oxygen Monitoring
+        </h3>
+        {canEdit && (
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1">
+                <Plus className="w-3 h-3" /> Add Record
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Add Oxygen Record</DialogTitle>
+                <DialogDescription>Record oxygen delivery and SpO2 for a specific hour slot</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-1">
+                  <Label>Hour Slot</Label>
+                  <Select value={form.hourSlot} onValueChange={(v) => setForm(f => ({ ...f, hourSlot: v }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select hour" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HOURS_24.map(h => (
+                        <SelectItem key={h} value={h}>{h}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Oxygen (Liter)</Label>
+                  <Select value={form.oxygenLiter} onValueChange={(v) => setForm(f => ({ ...f, oxygenLiter: v }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select liters" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {OXYGEN_LITERS.map(l => (
+                        <SelectItem key={l} value={l}>{l} L</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>SpO2 (%)</Label>
+                  <Input
+                    placeholder="e.g. 98"
+                    value={form.spo2}
+                    onChange={e => setForm(f => ({ ...f, spo2: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                <Button onClick={handleSave} disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Saving..." : "Save"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
+      {data.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground text-sm">
+            No oxygen records found. {canEdit ? "Add the first record using the button above." : ""}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40">
+                    <th className="px-4 py-2 text-left font-medium">Hour Slot</th>
+                    <th className="px-4 py-2 text-left font-medium">Oxygen (Liter)</th>
+                    <th className="px-4 py-2 text-left font-medium">SpO2 (%)</th>
+                    {canEdit && <th className="px-4 py-2 text-left font-medium">Action</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((rec: any) => (
+                    <tr key={rec.id} className="border-b last:border-0 hover:bg-muted/20">
+                      <td className="px-4 py-2">{rec.hourSlot}</td>
+                      <td className="px-4 py-2">{rec.oxygenLiter ? `${rec.oxygenLiter} L` : "—"}</td>
+                      <td className="px-4 py-2">{rec.spo2 ? `${rec.spo2}%` : "—"}</td>
+                      {canEdit && (
+                        <td className="px-4 py-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => deleteMutation.mutate(rec.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

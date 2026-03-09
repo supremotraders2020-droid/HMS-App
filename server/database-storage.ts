@@ -145,6 +145,8 @@ import {
   icuMedicationOrders, icuNursingRemarks, icuNursingDuty, icuFluidOrders,
   icuNutritionChart, icuBodyMarking, icuNurseDiary, icuOnceOnlyDrugs,
   icuPreviousDayNotes, icuAllergyPrecautions, icuDoctorNurseNotes,
+  icuOxygenRecords,
+  type IcuOxygenRecord, type InsertIcuOxygenRecord,
   type IcuCharts, type InsertIcuCharts,
   type IcuVitalCharts, type InsertIcuVitalCharts,
   type IcuHemodynamicMonitoring, type InsertIcuHemodynamicMonitoring,
@@ -6376,6 +6378,26 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
+  // ICU Oxygen Records
+  async createIcuOxygenRecord(record: InsertIcuOxygenRecord): Promise<IcuOxygenRecord> {
+    const result = await db.insert(icuOxygenRecords).values(record).returning();
+    return result[0];
+  }
+
+  async getIcuOxygenRecordsByChartId(icuChartId: string): Promise<IcuOxygenRecord[]> {
+    return await db.select().from(icuOxygenRecords).where(eq(icuOxygenRecords.icuChartId, icuChartId)).orderBy(icuOxygenRecords.hourSlot);
+  }
+
+  async updateIcuOxygenRecord(id: string, updates: Partial<InsertIcuOxygenRecord>): Promise<IcuOxygenRecord | undefined> {
+    const result = await db.update(icuOxygenRecords).set(updates).where(eq(icuOxygenRecords.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteIcuOxygenRecord(id: string): Promise<boolean> {
+    await db.delete(icuOxygenRecords).where(eq(icuOxygenRecords.id, id));
+    return true;
+  }
+
   // ICU Hemodynamic Monitoring
   async createIcuHemodynamicEntry(entry: InsertIcuHemodynamicMonitoring): Promise<IcuHemodynamicMonitoring> {
     const result = await db.insert(icuHemodynamicMonitoring).values(entry).returning();
@@ -6886,7 +6908,8 @@ export class DatabaseStorage implements IStorage {
       dailyInvestigations, diabeticChart, playOfDay, cuffPressure, ettTracheostomy,
       duration, fluidBalanceTarget, intakeChart, outputChart, medicationOrders,
       nursingRemarks, nursingDuty, fluidOrders, nutritionChart, bodyMarkings,
-      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions, doctorNurseNotes
+      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions, doctorNurseNotes,
+      oxygenRecords
     ] = await Promise.all([
       this.getIcuVitalChartsByChartId(icuChartId),
       this.getIcuHemodynamicByChartId(icuChartId),
@@ -6913,7 +6936,8 @@ export class DatabaseStorage implements IStorage {
       this.getIcuOnceOnlyDrugsByChartId(icuChartId),
       this.getIcuPreviousDayNotesByChartId(icuChartId),
       this.getIcuAllergyPrecautionsByChartId(icuChartId),
-      this.getIcuDoctorNurseNotesByChartId(icuChartId)
+      this.getIcuDoctorNurseNotesByChartId(icuChartId),
+      this.getIcuOxygenRecordsByChartId(icuChartId)
     ]);
 
     return {
@@ -6922,7 +6946,8 @@ export class DatabaseStorage implements IStorage {
       dailyInvestigations, diabeticChart, playOfDay, cuffPressure, ettTracheostomy,
       duration, fluidBalanceTarget, intakeChart, outputChart, medicationOrders,
       nursingRemarks, nursingDuty, fluidOrders, nutritionChart, bodyMarkings,
-      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions, doctorNurseNotes
+      nurseDiary, onceOnlyDrugs, previousDayNotes, allergyPrecautions, doctorNurseNotes,
+      oxygenRecords
     };
   }
 
