@@ -5172,6 +5172,9 @@ export const icuVitalCharts = pgTable("icu_vital_charts", {
   cvp: text("cvp"),
   respiratoryRate: text("respiratory_rate"),
   spo2: text("spo2"),
+  sanction: text("sanction"),
+  secretion: text("secretion"),
+  urineTube: text("urine_tube"),
   recordedBy: varchar("recorded_by"),
   createdAt: timestamp("created_at").defaultNow(),
 });

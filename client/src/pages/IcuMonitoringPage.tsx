@@ -861,6 +861,9 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
     respiratoryRate: "",
     spo2: "",
     cvp: "",
+    sanction: "",
+    secretion: "",
+    urineTube: "",
   });
 
   const addMutation = useMutation({
@@ -870,7 +873,7 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/icu-charts", chartId, "complete"] });
       setShowAddForm(false);
-      setNewEntry({ hour: "", temperature: "", pulse: "", bp: "", respiratoryRate: "", spo2: "", cvp: "" });
+      setNewEntry({ hour: "", temperature: "", pulse: "", bp: "", respiratoryRate: "", spo2: "", cvp: "", sanction: "", secretion: "", urineTube: "" });
       toast({ title: "Vital signs recorded" });
     },
   });
@@ -949,6 +952,9 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
     { key: "respiratoryRate", label: "RR", unit: "/min", icon: <Wind className="w-4 h-4" /> },
     { key: "spo2", label: "SpO2", unit: "%", icon: <Droplets className="w-4 h-4" /> },
     { key: "cvp", label: "CVP", unit: "cmH2O", icon: <BarChart3 className="w-4 h-4" /> },
+    { key: "sanction", label: "Sanction", unit: "", icon: <FileText className="w-4 h-4" /> },
+    { key: "secretion", label: "Secretion", unit: "", icon: <FlaskConical className="w-4 h-4" /> },
+    { key: "urineTube", label: "Urine Tube", unit: "", icon: <Beaker className="w-4 h-4" /> },
   ];
 
   return (
@@ -1035,6 +1041,36 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
                 placeholder="8"
                 data-testid="input-vitals-cvp"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Sanction</Label>
+              <Input
+                value={newEntry.sanction}
+                onChange={e => setNewEntry(prev => ({ ...prev, sanction: e.target.value }))}
+                placeholder="Sanction"
+                data-testid="input-vitals-sanction"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Secretion</Label>
+              <Input
+                value={newEntry.secretion}
+                onChange={e => setNewEntry(prev => ({ ...prev, secretion: e.target.value }))}
+                placeholder="Secretion"
+                data-testid="input-vitals-secretion"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Urine Tube</Label>
+              <Select value={newEntry.urineTube} onValueChange={v => setNewEntry(prev => ({ ...prev, urineTube: v }))}>
+                <SelectTrigger data-testid="select-vitals-urine-tube">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Yes">Yes</SelectItem>
+                  <SelectItem value="No">No</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex items-end gap-2">
               <Button onClick={() => addMutation.mutate()} disabled={!newEntry.hour || addMutation.isPending} data-testid="button-save-vitals">
