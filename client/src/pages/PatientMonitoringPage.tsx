@@ -1737,10 +1737,10 @@ function VitalsTab({ session }: { session: Session }) {
   const [editingVital, setEditingVital] = useState<any>(null);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [vitalsForm, setVitalsForm] = useState({
-    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: ""
+    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", sanction: "", secretion: "", urineTube: ""
   });
   const [editForm, setEditForm] = useState({
-    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: ""
+    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", sanction: "", secretion: "", urineTube: ""
   });
 
   const { data: vitals = [], refetch } = useQuery<any[]>({
@@ -1752,7 +1752,7 @@ function VitalsTab({ session }: { session: Session }) {
     onSuccess: () => {
       refetch();
       toast({ title: "Vitals Saved", description: "Record added successfully" });
-      setVitalsForm({ pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "" });
+      setVitalsForm({ pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", sanction: "", secretion: "", urineTube: "" });
       setSelectedSlot("");
       setDialogOpen(false);
     },
@@ -1785,6 +1785,9 @@ function VitalsTab({ session }: { session: Session }) {
       temperature: vitalsForm.temperature ? vitalsForm.temperature : null,
       respiratoryRate: vitalsForm.respiratoryRate ? parseInt(vitalsForm.respiratoryRate) : null,
       spo2: vitalsForm.spo2 ? parseInt(vitalsForm.spo2) : null,
+      sanction: vitalsForm.sanction || null,
+      secretion: vitalsForm.secretion || null,
+      urineTube: vitalsForm.urineTube || null,
       nurseId: "system-nurse",
       nurseName: "ICU Nurse"
     });
@@ -1797,7 +1800,10 @@ function VitalsTab({ session }: { session: Session }) {
       sbp: v.systolicBp ? String(v.systolicBp) : "",
       temperature: v.temperature ? String(v.temperature) : "",
       respiratoryRate: v.respiratoryRate ? String(v.respiratoryRate) : "",
-      spo2: v.spo2 ? String(v.spo2) : ""
+      spo2: v.spo2 ? String(v.spo2) : "",
+      sanction: v.sanction || "",
+      secretion: v.secretion || "",
+      urineTube: v.urineTube || ""
     });
     setEditDialogOpen(true);
   };
@@ -1814,6 +1820,9 @@ function VitalsTab({ session }: { session: Session }) {
       temperature: editForm.temperature ? editForm.temperature : null,
       respiratoryRate: editForm.respiratoryRate ? parseInt(editForm.respiratoryRate) : null,
       spo2: editForm.spo2 ? parseInt(editForm.spo2) : null,
+      sanction: editForm.sanction || null,
+      secretion: editForm.secretion || null,
+      urineTube: editForm.urineTube || null,
       nurseId: editingVital.nurseId || "system-nurse",
       nurseName: editingVital.nurseName || "ICU Nurse"
     });
@@ -1894,6 +1903,24 @@ function VitalsTab({ session }: { session: Session }) {
                 <div><Label>BP (mmHg)</Label><IntegerInput value={vitalsForm.sbp} onValueChange={(value) => setVitalsForm({...vitalsForm, sbp: value})} min={50} max={250} data-testid="input-sbp" /></div>
                 <div><Label>Temp (°F)</Label><NumericInput value={vitalsForm.temperature} onValueChange={(value) => setVitalsForm({...vitalsForm, temperature: value})} allowDecimal={true} data-testid="input-temp" /></div>
                 <div><Label>RR (/min)</Label><IntegerInput value={vitalsForm.respiratoryRate} onValueChange={(value) => setVitalsForm({...vitalsForm, respiratoryRate: value})} min={5} max={60} data-testid="input-rr" /></div>
+                <div className="space-y-1">
+                  <Label>Sanction</Label>
+                  <Input value={vitalsForm.sanction} onChange={(e) => setVitalsForm({...vitalsForm, sanction: e.target.value})} placeholder="Sanction" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Secretion</Label>
+                  <Input value={vitalsForm.secretion} onChange={(e) => setVitalsForm({...vitalsForm, secretion: e.target.value})} placeholder="Secretion" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Urine Tube</Label>
+                <Select value={vitalsForm.urineTube} onValueChange={(v) => setVitalsForm({...vitalsForm, urineTube: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Yes">Yes</SelectItem>
+                    <SelectItem value="No">No</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter className="gap-2">
@@ -1921,6 +1948,24 @@ function VitalsTab({ session }: { session: Session }) {
                 <div><Label>BP (mmHg)</Label><IntegerInput value={editForm.sbp} onValueChange={(value) => setEditForm({...editForm, sbp: value})} min={50} max={250} /></div>
                 <div><Label>Temp (°F)</Label><NumericInput value={editForm.temperature} onValueChange={(value) => setEditForm({...editForm, temperature: value})} allowDecimal={true} /></div>
                 <div><Label>RR (/min)</Label><IntegerInput value={editForm.respiratoryRate} onValueChange={(value) => setEditForm({...editForm, respiratoryRate: value})} min={5} max={60} /></div>
+                <div className="space-y-1">
+                  <Label>Sanction</Label>
+                  <Input value={editForm.sanction} onChange={(e) => setEditForm({...editForm, sanction: e.target.value})} placeholder="Sanction" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Secretion</Label>
+                  <Input value={editForm.secretion} onChange={(e) => setEditForm({...editForm, secretion: e.target.value})} placeholder="Secretion" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Urine Tube</Label>
+                <Select value={editForm.urineTube} onValueChange={(v) => setEditForm({...editForm, urineTube: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Yes">Yes</SelectItem>
+                    <SelectItem value="No">No</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter className="gap-2">
