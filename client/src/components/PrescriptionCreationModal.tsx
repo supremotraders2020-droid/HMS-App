@@ -545,11 +545,6 @@ export default function PrescriptionCreationModal({
   };
 
   const addMedicine = () => {
-    if (!currentMedicine.medicineName.trim()) {
-      toast({ title: "Please enter medicine name", variant: "destructive" });
-      return;
-    }
-    
     setMedicines([...medicines, { ...currentMedicine }]);
     setCurrentMedicine({
       medicineName: '',
@@ -737,8 +732,8 @@ export default function PrescriptionCreationModal({
   // Save Draft only needs patient selected
   const canSaveDraft = !!patientName;
   
-  // Sign & Finalize needs everything complete - including mandatory fields
-  const canFinalizeRx = patientName && diagnosis && patientComplaints && doctorObservations && pastHistoryReference && (medicines.length > 0 || hasUnaddedMedicine);
+  // Sign & Finalize needs patient name, diagnosis and medicines
+  const canFinalizeRx = patientName && diagnosis && (medicines.length > 0 || hasUnaddedMedicine);
   
   // Legacy isValid for backward compatibility
   const isValid = canFinalizeRx;
@@ -895,14 +890,14 @@ export default function PrescriptionCreationModal({
                 </CardContent>
               </Card>
 
-              {/* Patient Complaints, Doctor Observations, Past History Reference - Required Fields */}
+              {/* Patient Complaints, Doctor Observations, Past History Reference - Optional Fields */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Clinical Notes *</CardTitle>
+                  <CardTitle className="text-base">Clinical Notes</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="patientComplaints">Patient Complaints *</Label>
+                    <Label htmlFor="patientComplaints">Patient Complaints</Label>
                     <Textarea
                       id="patientComplaints"
                       data-testid="input-patient-complaints"
@@ -913,7 +908,7 @@ export default function PrescriptionCreationModal({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="doctorObservations">Doctor Observations *</Label>
+                    <Label htmlFor="doctorObservations">Doctor Observations</Label>
                     <Textarea
                       id="doctorObservations"
                       data-testid="input-doctor-observations"
@@ -924,7 +919,7 @@ export default function PrescriptionCreationModal({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="pastHistoryReference">Past History Reference *</Label>
+                    <Label htmlFor="pastHistoryReference">Past History Reference</Label>
                     <Textarea
                       id="pastHistoryReference"
                       data-testid="input-past-history-reference"
@@ -1105,7 +1100,7 @@ export default function PrescriptionCreationModal({
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2 sm:col-span-2 relative">
-                      <Label>Medicine Name *</Label>
+                      <Label>Medicine Name</Label>
                       <Input
                         data-testid="input-medicine-name"
                         value={currentMedicine.medicineName || medicineSearch}
