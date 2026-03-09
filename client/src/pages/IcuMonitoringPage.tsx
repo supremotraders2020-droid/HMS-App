@@ -725,8 +725,8 @@ function IcuChartDetail({ chart, completeData, canEdit, userId, userRole }: {
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <ScrollArea className="w-full">
-            <TabsList className="w-full justify-start">
+          <div className="w-full overflow-x-auto pb-1">
+            <TabsList className="w-max justify-start">
               <TabsTrigger value="vitals" className="gap-1" data-testid="tab-vitals">
                 <Heart className="w-3 h-3" /> Vitals
               </TabsTrigger>
@@ -761,7 +761,7 @@ function IcuChartDetail({ chart, completeData, canEdit, userId, userRole }: {
                 <Beaker className="w-3 h-3" /> Tests
               </TabsTrigger>
             </TabsList>
-          </ScrollArea>
+          </div>
 
           <TabsContent value="vitals" className="mt-4">
             <VitalsSection chartId={chart.id} data={completeData?.vitalCharts || []} canEdit={canEdit} userId={userId} />
