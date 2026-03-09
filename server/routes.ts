@@ -12787,6 +12787,45 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
     }
   });
 
+  // ========== OXYGEN MONITORING ==========
+  app.get("/api/patient-monitoring/oxygen/:sessionId", async (req, res) => {
+    try {
+      const result = await pool.query(
+        "SELECT * FROM ipd_oxygen_records WHERE session_id = $1 ORDER BY created_at DESC",
+        [req.params.sessionId]
+      );
+      res.json(result.rows);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch oxygen records" });
+    }
+  });
+
+  app.post("/api/patient-monitoring/oxygen", async (req, res) => {
+    try {
+      const { sessionId, hourSlot, oxygenLiter, spo2, nurseId, nurseName } = req.body;
+      if (!sessionId || !hourSlot || !oxygenLiter) {
+        return res.status(400).json({ error: "sessionId, hourSlot and oxygenLiter are required" });
+      }
+      const result = await pool.query(
+        `INSERT INTO ipd_oxygen_records (session_id, hour_slot, oxygen_liter, spo2, nurse_id, nurse_name)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+        [sessionId, hourSlot, oxygenLiter, spo2 || null, nurseId || null, nurseName || null]
+      );
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save oxygen record" });
+    }
+  });
+
+  app.delete("/api/patient-monitoring/oxygen/:id", async (req, res) => {
+    try {
+      await pool.query("DELETE FROM ipd_oxygen_records WHERE id = $1", [req.params.id]);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete oxygen record" });
+    }
+  });
+
   // ========== MEDICATION ADMINISTRATION RECORD (MAR) ==========
   app.get("/api/patient-monitoring/mar/:sessionId", async (req, res) => {
     try {

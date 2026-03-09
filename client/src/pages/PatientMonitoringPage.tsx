@@ -1175,6 +1175,7 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="intake" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Intake</TabsTrigger>
                   <TabsTrigger value="output" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Output</TabsTrigger>
                   <TabsTrigger value="diabetic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Diabetic</TabsTrigger>
+                  <TabsTrigger value="oxygen" className="text-xs gap-1.5 data-[state=active]:bg-background"><Wind className="h-3.5 w-3.5" />Oxygen</TabsTrigger>
                   <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
                   <TabsTrigger value="investigation" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Investigation</TabsTrigger>
                   <TabsTrigger value="care-plan" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileCheck className="h-3.5 w-3.5" />Care Plan</TabsTrigger>
@@ -1205,6 +1206,10 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="diabetic">
                   <DiabeticTab session={selectedSession} />
+                </TabsContent>
+
+                <TabsContent value="oxygen">
+                  <OxygenTab session={selectedSession} />
                 </TabsContent>
 
                 <TabsContent value="allergies">
@@ -1275,6 +1280,11 @@ function OverviewTab({ session }: { session: Session }) {
 
   const { data: diabeticData = [] } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/diabetic/${session.id}`],
+    enabled: !!session.id
+  });
+
+  const { data: oxygenData = [] } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/oxygen/${session.id}`],
     enabled: !!session.id
   });
 
@@ -1491,6 +1501,30 @@ function OverviewTab({ session }: { session: Session }) {
                 {diabeticData.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{diabeticData.length - 5} more</p>}
               </div>
             ) : <p className="text-xs text-muted-foreground text-center py-2">No diabetic data recorded</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <SectionHeader icon={Wind} title="Oxygen Monitoring" count={oxygenData.length} color="sky" />
+          <CardContent className="p-2">
+            {oxygenData.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time Slot</th><th className="p-1">Oxygen</th><th className="p-1">SpO2</th><th className="p-1">By</th></tr></thead>
+                  <tbody>
+                    {oxygenData.slice(0, 5).map((r: any, i: number) => (
+                      <tr key={i} className="border-b border-muted/30">
+                        <td className="p-1 font-medium">{r.hour_slot || '-'}</td>
+                        <td className="p-1 text-center font-semibold">{r.oxygen_liter || '-'}</td>
+                        <td className="p-1 text-center">{r.spo2 ? `${r.spo2}%` : '-'}</td>
+                        <td className="p-1 text-center">{r.nurse_name || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {oxygenData.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{oxygenData.length - 5} more</p>}
+              </div>
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No oxygen records</p>}
           </CardContent>
         </Card>
 
@@ -3012,6 +3046,169 @@ function DiabeticTab({ session }: { session: Session }) {
                   <TableCell>{r.insulinDose || "-"}</TableCell>
                   <TableCell>
                     {r.alertType && <Badge variant="destructive">{r.alertType}</Badge>}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function OxygenTab({ session }: { session: Session }) {
+  const sessionId = session.id;
+  const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({ hourSlot: "", oxygenLiter: "", spo2: "" });
+
+  const { data: records = [], refetch } = useQuery<any[]>({
+    queryKey: [`/api/patient-monitoring/oxygen/${sessionId}`]
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/oxygen", data),
+    onSuccess: () => {
+      refetch();
+      toast({ title: "Oxygen Record Saved", description: "Record added successfully" });
+      setForm({ hourSlot: "", oxygenLiter: "", spo2: "" });
+      setDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save record", variant: "destructive" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/patient-monitoring/oxygen/${id}`),
+    onSuccess: () => { refetch(); toast({ title: "Record deleted" }); },
+    onError: () => { toast({ title: "Error", description: "Failed to delete record", variant: "destructive" }); }
+  });
+
+  const handleSave = () => {
+    saveMutation.mutate({
+      sessionId,
+      hourSlot: form.hourSlot,
+      oxygenLiter: form.oxygenLiter,
+      spo2: form.spo2 ? parseInt(form.spo2) : null,
+    });
+  };
+
+  const OXYGEN_LITERS = Array.from({ length: 16 }, (_, i) => `${i + 1} L/min`);
+
+  const handlePrint = () => {
+    const rows = records.map((r: any, idx: number) =>
+      `<tr>
+        <td style="text-align:center;">${idx + 1}</td>
+        <td style="text-align:center;">${r.hour_slot || '-'}</td>
+        <td style="text-align:center;font-weight:bold;">${r.oxygen_liter || '-'}</td>
+        <td style="text-align:center;">${r.spo2 ? r.spo2 + '%' : '-'}</td>
+        <td style="text-align:center;">${r.nurse_name || '-'}</td>
+      </tr>`
+    ).join('');
+    const content = `
+      <h1>OXYGEN MONITORING CHART</h1>
+      ${getPatientInfoHtml(session)}
+      ${records.length ? `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">S.No</th>
+              <th style="width:100px;">Hour Slot</th>
+              <th>Oxygen (L/min)</th>
+              <th style="width:80px;">SpO2 (%)</th>
+              <th>Staff</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr class="summary-row">
+              <td colspan="5" style="text-align:right;">Total Records: ${records.length}</td>
+            </tr>
+          </tfoot>
+        </table>
+      ` : '<div class="no-data">No oxygen records</div>'}
+    `;
+    openPrintWindow('Oxygen Monitoring Chart', content);
+  };
+
+  return (
+    <Card className="mt-4">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
+        <CardTitle className="text-lg flex items-center gap-2"><Wind className="h-5 w-5 text-sky-500" />Oxygen Monitoring Chart</CardTitle>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" />Print</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" />Add Record</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Oxygen Record</DialogTitle>
+                <DialogDescription>Record oxygen therapy and SpO2 for the selected time slot</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Hour Slot</Label>
+                  <Select value={form.hourSlot} onValueChange={(v) => setForm({ ...form, hourSlot: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select time slot..." /></SelectTrigger>
+                    <SelectContent>
+                      {HOUR_SLOTS.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Oxygen</Label>
+                  <Select value={form.oxygenLiter} onValueChange={(v) => setForm({ ...form, oxygenLiter: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select oxygen level..." /></SelectTrigger>
+                    <SelectContent>
+                      {OXYGEN_LITERS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>SpO2 (%)</Label>
+                  <IntegerInput value={form.spo2} onValueChange={(v) => setForm({ ...form, spo2: v })} min={50} max={100} />
+                </div>
+              </div>
+              <DialogFooter className="gap-2">
+                <DialogClose asChild>
+                  <Button variant="outline" type="button">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleSave} disabled={!form.hourSlot || !form.oxygenLiter || saveMutation.isPending}>
+                  {saveMutation.isPending ? "Saving..." : "Save"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {records.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">No oxygen records</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Time Slot</TableHead>
+                <TableHead>Oxygen</TableHead>
+                <TableHead>SpO2</TableHead>
+                <TableHead>By</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {records.map((r: any) => (
+                <TableRow key={r.id}>
+                  <TableCell className="font-medium">{r.hour_slot}</TableCell>
+                  <TableCell className="font-semibold text-sky-600">{r.oxygen_liter}</TableCell>
+                  <TableCell>{r.spo2 ? `${r.spo2}%` : '-'}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{r.nurse_name || '-'}</TableCell>
+                  <TableCell>
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteMutation.mutate(r.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
