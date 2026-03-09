@@ -1739,12 +1739,16 @@ function VitalsTab({ session }: { session: Session }) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingVital, setEditingVital] = useState<any>(null);
   const [selectedSlot, setSelectedSlot] = useState("");
+  const [selectedNurse, setSelectedNurse] = useState("");
+  const [editSelectedNurse, setEditSelectedNurse] = useState("");
   const [vitalsForm, setVitalsForm] = useState({
     pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", sanction: "", secretion: "", urineTube: ""
   });
   const [editForm, setEditForm] = useState({
     pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", sanction: "", secretion: "", urineTube: ""
   });
+
+  const { data: nurses = [] } = useQuery<any[]>({ queryKey: ["/api/users/nurses"] });
 
   const { data: vitals = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/vitals/${sessionId}`]
@@ -1757,6 +1761,7 @@ function VitalsTab({ session }: { session: Session }) {
       toast({ title: "Vitals Saved", description: "Record added successfully" });
       setVitalsForm({ pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", sanction: "", secretion: "", urineTube: "" });
       setSelectedSlot("");
+      setSelectedNurse("");
       setDialogOpen(false);
     },
     onError: () => {
@@ -1791,8 +1796,8 @@ function VitalsTab({ session }: { session: Session }) {
       sanction: vitalsForm.sanction || null,
       secretion: vitalsForm.secretion || null,
       urineTube: vitalsForm.urineTube || null,
-      nurseId: "system-nurse",
-      nurseName: "ICU Nurse"
+      nurseId: selectedNurse || "system-nurse",
+      nurseName: selectedNurse ? (nurses.find((n: any) => n.id === selectedNurse)?.name || selectedNurse) : "ICU Nurse"
     });
   };
 
@@ -1808,6 +1813,7 @@ function VitalsTab({ session }: { session: Session }) {
       secretion: v.secretion || "",
       urineTube: v.urineTube || ""
     });
+    setEditSelectedNurse(v.nurseId || "");
     setEditDialogOpen(true);
   };
 
@@ -1826,8 +1832,8 @@ function VitalsTab({ session }: { session: Session }) {
       sanction: editForm.sanction || null,
       secretion: editForm.secretion || null,
       urineTube: editForm.urineTube || null,
-      nurseId: editingVital.nurseId || "system-nurse",
-      nurseName: editingVital.nurseName || "ICU Nurse"
+      nurseId: editSelectedNurse || editingVital.nurseId || "system-nurse",
+      nurseName: editSelectedNurse ? (nurses.find((n: any) => n.id === editSelectedNurse)?.name || editSelectedNurse) : (editingVital.nurseName || "ICU Nurse")
     });
   };
 
@@ -1891,14 +1897,27 @@ function VitalsTab({ session }: { session: Session }) {
               <DialogDescription>Enter patient vital signs for the selected time slot</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label>Hour Slot</Label>
-                <Select value={selectedSlot} onValueChange={setSelectedSlot}>
-                  <SelectTrigger><SelectValue placeholder="Select time..." /></SelectTrigger>
-                  <SelectContent>
-                    {HOUR_SLOTS.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Hour Slot</Label>
+                  <Select value={selectedSlot} onValueChange={setSelectedSlot}>
+                    <SelectTrigger><SelectValue placeholder="Select time..." /></SelectTrigger>
+                    <SelectContent>
+                      {HOUR_SLOTS.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>By Nurse</Label>
+                  <Select value={selectedNurse} onValueChange={setSelectedNurse}>
+                    <SelectTrigger><SelectValue placeholder="Select nurse..." /></SelectTrigger>
+                    <SelectContent>
+                      {nurses.map((n: any) => (
+                        <SelectItem key={n.id} value={n.id}>{n.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Pulse (bpm)</Label><IntegerInput value={vitalsForm.pulse} onValueChange={(value) => setVitalsForm({...vitalsForm, pulse: value})} min={30} max={250} data-testid="input-pulse" /></div>
@@ -1945,6 +1964,17 @@ function VitalsTab({ session }: { session: Session }) {
               <DialogDescription>Update vital signs for this time slot</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              <div>
+                <Label>By Nurse</Label>
+                <Select value={editSelectedNurse} onValueChange={setEditSelectedNurse}>
+                  <SelectTrigger><SelectValue placeholder="Select nurse..." /></SelectTrigger>
+                  <SelectContent>
+                    {nurses.map((n: any) => (
+                      <SelectItem key={n.id} value={n.id}>{n.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Pulse (bpm)</Label><IntegerInput value={editForm.pulse} onValueChange={(value) => setEditForm({...editForm, pulse: value})} min={30} max={250} /></div>
                 <div><Label>SpO2 (%)</Label><IntegerInput value={editForm.spo2} onValueChange={(value) => setEditForm({...editForm, spo2: value})} min={50} max={100} /></div>
