@@ -2725,17 +2725,22 @@ function AnaesthesiaRecordForm({ existing, onSubmit, isLoading, caseData }: { ex
 
 function TimeLogForm({ existing, onSubmit, isLoading }: { existing: any[]; onSubmit: (d: any) => void; isLoading: boolean }) {
   const [eventType, setEventType] = useState("");
-  
+  const [recordedBy, setRecordedBy] = useState("");
+
+  const { data: nursesData } = useQuery<any[]>({ queryKey: ["/api/users/nurses"] });
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     onSubmit({
       eventType: formData.get("eventType"),
       eventTime: formData.get("eventTime"),
-      recordedBy: formData.get("recordedBy"),
+      recordedBy,
       notes: formData.get("notes"),
     });
     (e.target as HTMLFormElement).reset();
+    setEventType("");
+    setRecordedBy("");
   };
 
   const timeEvents = [
@@ -2789,7 +2794,14 @@ function TimeLogForm({ existing, onSubmit, isLoading }: { existing: any[]; onSub
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Recorded By</Label>
-            <Input name="recordedBy" placeholder="Staff name" required />
+            <Select value={recordedBy} onValueChange={setRecordedBy} required>
+              <SelectTrigger><SelectValue placeholder="Select nurse" /></SelectTrigger>
+              <SelectContent>
+                {(nursesData || []).map((n: any) => (
+                  <SelectItem key={n.id} value={n.fullName || n.username}>{n.fullName || n.username}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Notes (optional)</Label>
@@ -2797,7 +2809,7 @@ function TimeLogForm({ existing, onSubmit, isLoading }: { existing: any[]; onSub
           </div>
         </div>
         <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading || !recordedBy}>
             {isLoading ? "Adding..." : "Add Time Entry"}
           </Button>
         </div>
