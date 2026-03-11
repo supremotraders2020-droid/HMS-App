@@ -98,7 +98,7 @@ const HOUR_SLOTS = [
 
 const SHIFTS = ["MORNING", "EVENING", "NIGHT"] as const;
 
-type Session = {
+export type Session = {
   id: string;
   patientId: string;
   patientName: string;
@@ -1260,7 +1260,7 @@ type FluidBalance = { totalIntake: number; totalOutput: number; netBalance: numb
 type AirwayRecord = { id: string; airwayType: string; endotrachealTubeSize?: string; centralLineType?: string; centralLineSite?: string; urinaryCatheterSize?: string; ngTubeSize?: string };
 type AllergiesRecord = { id: string; knownAllergies?: string; drugAllergies?: string; foodAllergies?: string; isolationPrecautions?: string; fallRisk?: boolean; pressureUlcerRisk?: boolean };
 
-function OverviewTab({ session }: { session: Session }) {
+export function OverviewTab({ session }: { session: Session }) {
   const { data: vitals = [] } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/vitals/${session.id}`],
     enabled: !!session.id
@@ -1769,7 +1769,7 @@ function OverviewTab({ session }: { session: Session }) {
   );
 }
 
-function VitalsTab({ session }: { session: Session }) {
+export function VitalsTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -2101,7 +2101,7 @@ function VitalsTab({ session }: { session: Session }) {
   );
 }
 
-function InotropesTab({ session }: { session: Session }) {
+export function InotropesTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -2297,7 +2297,7 @@ function InotropesTab({ session }: { session: Session }) {
   );
 }
 
-function VentilatorTab({ sessionId, isOnVentilator }: { sessionId: string; isOnVentilator: boolean }) {
+export function VentilatorTab({ sessionId, isOnVentilator }: { sessionId: string; isOnVentilator: boolean }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ mode: "CMV", fio2: "", peep: "", tidalVolume: "", respiratoryRateSet: "" });
@@ -2417,7 +2417,7 @@ function VentilatorTab({ sessionId, isOnVentilator }: { sessionId: string; isOnV
   );
 }
 
-function ABGLabTab({ sessionId }: { sessionId: string }) {
+export function ABGLabTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ ph: "", pco2: "", po2: "", hco3: "", lactate: "", hemoglobin: "" });
@@ -2521,7 +2521,7 @@ function ABGLabTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function IntakeTab({ session }: { session: Session }) {
+export function IntakeTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -2686,7 +2686,7 @@ function IntakeTab({ session }: { session: Session }) {
   );
 }
 
-function OutputTab({ session }: { session: Session }) {
+export function OutputTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -2871,7 +2871,7 @@ function OutputTab({ session }: { session: Session }) {
   );
 }
 
-function DiabeticTab({ session }: { session: Session }) {
+export function DiabeticTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -3059,7 +3059,7 @@ function DiabeticTab({ session }: { session: Session }) {
   );
 }
 
-function OxygenTab({ session }: { session: Session }) {
+export function OxygenTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -3272,7 +3272,7 @@ function OxygenTab({ session }: { session: Session }) {
   );
 }
 
-function MARTab({ session }: { session: Session }) {
+export function MARTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -3382,7 +3382,7 @@ function MARTab({ session }: { session: Session }) {
   );
 }
 
-function ShiftNotesTab({ session }: { session: Session }) {
+export function ShiftNotesTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -3557,7 +3557,7 @@ function ShiftNotesTab({ session }: { session: Session }) {
   );
 }
 
-function AirwayTab({ sessionId }: { sessionId: string }) {
+export function AirwayTab({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ 
@@ -3703,7 +3703,7 @@ function AirwayTab({ sessionId }: { sessionId: string }) {
   );
 }
 
-function DutyStaffTab({ session }: { session: Session }) {
+export function DutyStaffTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -3860,7 +3860,7 @@ function DutyStaffTab({ session }: { session: Session }) {
   );
 }
 
-function AllergiesTab({ session }: { session: Session }) {
+export function AllergiesTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -4030,7 +4030,7 @@ function AllergiesTab({ session }: { session: Session }) {
   );
 }
 
-function InvestigationChartTab({ session }: { session: Session }) {
+export function InvestigationChartTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -4829,7 +4829,7 @@ const TEST_CATEGORIES = {
   }
 };
 
-function TestsTab({ session }: { session: Session }) {
+export function TestsTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const patientId = session.patientId;
   const patientName = session.patientName;
@@ -5239,7 +5239,7 @@ const REFERRAL_DEPARTMENTS = [
   "Opthalmic", "Neuro", "Pead", "Psychiatry", "Physiotherapy", "Diabetics"
 ];
 
-function CarePlanTab({ session }: { session: Session }) {
+export function CarePlanTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
@@ -5858,7 +5858,7 @@ const INVESTIGATIONS_LIST = [
   { key: "sCreatinine", label: "S. CREATININE" },
 ];
 
-function InitialAssessmentTab({ session }: { session: Session }) {
+export function InitialAssessmentTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -6677,7 +6677,7 @@ function InitialAssessmentTab({ session }: { session: Session }) {
 }
 
 // ========== INDOOR CONSULTATION SHEET TAB ==========
-function IndoorConsultationTab({ session }: { session: Session }) {
+export function IndoorConsultationTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -6957,7 +6957,7 @@ function IndoorConsultationTab({ session }: { session: Session }) {
 }
 
 // Doctor's Progress Sheet Tab
-function DoctorsProgressTab({ session }: { session: Session }) {
+export function DoctorsProgressTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -7295,7 +7295,7 @@ function DoctorsProgressTab({ session }: { session: Session }) {
 }
 
 // Doctor's Visit Sheet Tab
-function DoctorsVisitTab({ session }: { session: Session }) {
+export function DoctorsVisitTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -7619,7 +7619,7 @@ function DoctorsVisitTab({ session }: { session: Session }) {
 }
 
 // Surgery Notes Tab
-function SurgeryNotesTab({ session }: { session: Session }) {
+export function SurgeryNotesTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -8161,7 +8161,7 @@ function SurgeryNotesTab({ session }: { session: Session }) {
 }
 
 // Nursing Progress Sheet Tab
-function NursingProgressTab({ session }: { session: Session }) {
+export function NursingProgressTab({ session }: { session: Session }) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -8472,7 +8472,7 @@ function NursingProgressTab({ session }: { session: Session }) {
 }
 
 // ========== NURSING ASSESSMENT & CARE PLAN TAB ==========
-function NursingAssessmentCarePlanTab({ session }: { session: Session }) {
+export function NursingAssessmentCarePlanTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);

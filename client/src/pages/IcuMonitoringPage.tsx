@@ -13,10 +13,19 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plus, Search, Calendar, User, Thermometer, BarChart3, FileText, AlertTriangle, Stethoscope, Syringe, Beaker, FlaskConical, Scale, Timer, BedDouble, ArrowLeft, Download, ArrowUp, ArrowDown, Gauge } from "lucide-react";
+import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plus, Search, Calendar, User, Thermometer, BarChart3, FileText, AlertTriangle, Stethoscope, Syringe, Beaker, FlaskConical, Scale, Timer, BedDouble, ArrowLeft, Download, ArrowUp, ArrowDown, Gauge, FileCheck, ClipboardCheck, Hospital, CheckSquare } from "lucide-react";
 import { format } from "date-fns";
 import { Pencil, Check, X } from "lucide-react";
 import type { IcuCharts, ServicePatient } from "@shared/schema";
+import {
+  type Session as IpdSession,
+  OverviewTab, VitalsTab, InotropesTab, VentilatorTab, ABGLabTab,
+  IntakeTab, OutputTab, DiabeticTab, OxygenTab, MARTab,
+  ShiftNotesTab, AirwayTab, DutyStaffTab, AllergiesTab,
+  InvestigationChartTab, TestsTab, CarePlanTab, InitialAssessmentTab,
+  IndoorConsultationTab, DoctorsProgressTab, DoctorsVisitTab,
+  SurgeryNotesTab, NursingProgressTab, NursingAssessmentCarePlanTab
+} from "./PatientMonitoringPage";
 
 function EditableCell({ 
   value, 
@@ -393,7 +402,6 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
 
         <IcuChartDetail 
           chart={selectedChart} 
-          completeData={completeChart}
           canEdit={canEdit}
           userId={userId}
           userRole={userRole}
@@ -650,130 +658,89 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
   );
 }
 
-function IcuChartDetail({ chart, completeData, canEdit, userId, userRole }: {
+function IcuChartDetail({ chart, canEdit, userId, userRole }: {
   chart: IcuCharts;
-  completeData: any;
   canEdit: boolean;
   userId?: string;
   userRole: string;
 }) {
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("vitals");
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const { data: sessions = [], isLoading: loadingSessions } = useQuery<IpdSession[]>({
+    queryKey: ["/api/patient-monitoring/sessions/patient", chart.patientId],
+    queryFn: async () => {
+      const res = await fetch(`/api/patient-monitoring/sessions/patient/${chart.patientId}`);
+      if (!res.ok) throw new Error("Failed to fetch sessions");
+      return res.json();
+    },
+    enabled: !!chart.patientId,
+  });
+
+  const selectedSession = sessions[0] ?? null;
+
+  if (loadingSessions) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-muted-foreground">Loading patient data...</CardContent>
+      </Card>
+    );
+  }
+
+  if (!selectedSession) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center">
+          <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+          <p className="font-medium">No IPD monitoring session found for this patient.</p>
+          <p className="text-sm text-muted-foreground mt-1">Create an IPD session in Patient Monitoring to see detailed records here.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Blood Group:</span>
-              <span className="ml-2 font-medium">{chart.bloodGroup || "N/A"}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Weight:</span>
-              <span className="ml-2 font-medium">{chart.weight || "N/A"} kg</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">ICU Consultant:</span>
-              <span className="ml-2 font-medium">{chart.icuConsultant || "N/A"}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Admission Date:</span>
-              <span className="ml-2 font-medium">{chart.dateOfAdmission || "N/A"}</span>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="w-full overflow-x-auto pb-1">
-            <TabsList className="w-max justify-start">
-              <TabsTrigger value="vitals" className="gap-1" data-testid="tab-vitals">
-                <Heart className="w-3 h-3" /> Vitals
-              </TabsTrigger>
-              <TabsTrigger value="ventilator" className="gap-1" data-testid="tab-ventilator">
-                <Wind className="w-3 h-3" /> Ventilator
-              </TabsTrigger>
-              <TabsTrigger value="hemodynamic" className="gap-1" data-testid="tab-hemodynamic">
-                <Activity className="w-3 h-3" /> Hemodynamic
-              </TabsTrigger>
-              <TabsTrigger value="fluid" className="gap-1" data-testid="tab-fluid">
-                <Droplets className="w-3 h-3" /> I/O Balance
-              </TabsTrigger>
-              <TabsTrigger value="medications" className="gap-1" data-testid="tab-medications">
-                <Pill className="w-3 h-3" /> Medications
-              </TabsTrigger>
-              <TabsTrigger value="labs" className="gap-1" data-testid="tab-labs">
-                <FlaskConical className="w-3 h-3" /> Labs/ABG
-              </TabsTrigger>
-              <TabsTrigger value="nursing" className="gap-1" data-testid="tab-nursing">
-                <ClipboardList className="w-3 h-3" /> Nursing
-              </TabsTrigger>
-              <TabsTrigger value="oxygen" className="gap-1" data-testid="tab-oxygen">
-                <Gauge className="w-3 h-3" /> Oxygen
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="inline-flex flex-wrap h-auto gap-1 p-1.5 bg-muted/50 rounded-lg">
+            <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Overview</TabsTrigger>
+            <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
+            <TabsTrigger value="care-plan" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileCheck className="h-3.5 w-3.5" />Care Plan</TabsTrigger>
+            <TabsTrigger value="diabetic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Diabetic</TabsTrigger>
+            <TabsTrigger value="doctors-progress" className="text-xs gap-1.5 data-[state=active]:bg-background"><Stethoscope className="h-3.5 w-3.5" />Doctor's Progress Sheet</TabsTrigger>
+            <TabsTrigger value="doctors-visit" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Doctor's Visit Sheet</TabsTrigger>
+            <TabsTrigger value="drugchart" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Drug Chart</TabsTrigger>
+            <TabsTrigger value="indoor-consultation" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Indoor Continuation Sheet</TabsTrigger>
+            <TabsTrigger value="initial-assessment" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Initial Assessment</TabsTrigger>
+            <TabsTrigger value="intake" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Intake</TabsTrigger>
+            <TabsTrigger value="investigation" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Investigation</TabsTrigger>
+            <TabsTrigger value="nursing-assessment" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardCheck className="h-3.5 w-3.5" />Nursing Assessment & Care Plan</TabsTrigger>
+            <TabsTrigger value="nursing-progress" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Nursing Progress Sheet</TabsTrigger>
+            <TabsTrigger value="output" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Output</TabsTrigger>
+            <TabsTrigger value="oxygen" className="text-xs gap-1.5 data-[state=active]:bg-background"><Wind className="h-3.5 w-3.5" />Oxygen</TabsTrigger>
+            <TabsTrigger value="surgery-notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Hospital className="h-3.5 w-3.5" />Surgery Notes</TabsTrigger>
+            <TabsTrigger value="tests" className="text-xs gap-1.5 data-[state=active]:bg-background"><Beaker className="h-3.5 w-3.5" />Tests</TabsTrigger>
+            <TabsTrigger value="vitals" className="text-xs gap-1.5 data-[state=active]:bg-background"><Heart className="h-3.5 w-3.5" />Vitals</TabsTrigger>
+          </TabsList>
 
-          <TabsContent value="vitals" className="mt-4">
-            <VitalsSection chartId={chart.id} data={completeData?.vitalCharts || []} canEdit={canEdit} userId={userId} />
-          </TabsContent>
-
-          <TabsContent value="ventilator" className="mt-4">
-            <VentilatorSection chartId={chart.id} data={completeData?.ventilator || []} canEdit={canEdit} userId={userId} />
-          </TabsContent>
-
-          <TabsContent value="hemodynamic" className="mt-4">
-            <HemodynamicSection chartId={chart.id} data={completeData?.hemodynamic || []} canEdit={canEdit} userId={userId} />
-          </TabsContent>
-
-          <TabsContent value="fluid" className="mt-4">
-            <FluidBalanceSection 
-              chartId={chart.id} 
-              intakeData={completeData?.intakeChart || []} 
-              outputData={completeData?.outputChart || []}
-              targetData={completeData?.fluidBalanceTarget}
-              canEdit={canEdit} 
-              userId={userId} 
-            />
-          </TabsContent>
-
-          <TabsContent value="medications" className="mt-4">
-            <MedicationsSection 
-              chartId={chart.id} 
-              ordersData={completeData?.medicationOrders || []}
-              onceOnlyData={completeData?.onceOnlyDrugs || []}
-              canEdit={canEdit} 
-              userId={userId} 
-            />
-          </TabsContent>
-
-          <TabsContent value="labs" className="mt-4">
-            <LabsSection 
-              chartId={chart.id} 
-              abgData={completeData?.abgReports || []}
-              investigationsData={completeData?.dailyInvestigations}
-              diabeticData={completeData?.diabeticChart || []}
-              canEdit={canEdit} 
-              userId={userId} 
-            />
-          </TabsContent>
-
-          <TabsContent value="nursing" className="mt-4">
-            <NursingSection 
-              chartId={chart.id} 
-              remarksData={completeData?.nursingRemarks || []}
-              dutyData={completeData?.nursingDuty || []}
-              diaryData={completeData?.nurseDiary || []}
-              canEdit={canEdit} 
-              userId={userId} 
-            />
-          </TabsContent>
-
-          <TabsContent value="oxygen" className="mt-4">
-            <OxygenSection chartId={chart.id} data={completeData?.oxygenRecords || []} canEdit={canEdit} userId={userId} />
-          </TabsContent>
-
+          <TabsContent value="overview"><OverviewTab session={selectedSession} /></TabsContent>
+          <TabsContent value="allergies"><AllergiesTab session={selectedSession} /></TabsContent>
+          <TabsContent value="care-plan"><CarePlanTab session={selectedSession} /></TabsContent>
+          <TabsContent value="diabetic"><DiabeticTab session={selectedSession} /></TabsContent>
+          <TabsContent value="doctors-progress"><DoctorsProgressTab session={selectedSession} /></TabsContent>
+          <TabsContent value="doctors-visit"><DoctorsVisitTab session={selectedSession} /></TabsContent>
+          <TabsContent value="drugchart"><InotropesTab session={selectedSession} /></TabsContent>
+          <TabsContent value="indoor-consultation"><IndoorConsultationTab session={selectedSession} /></TabsContent>
+          <TabsContent value="initial-assessment"><InitialAssessmentTab session={selectedSession} /></TabsContent>
+          <TabsContent value="intake"><IntakeTab session={selectedSession} /></TabsContent>
+          <TabsContent value="investigation"><InvestigationChartTab session={selectedSession} /></TabsContent>
+          <TabsContent value="nursing-assessment"><NursingAssessmentCarePlanTab session={selectedSession} /></TabsContent>
+          <TabsContent value="nursing-progress"><NursingProgressTab session={selectedSession} /></TabsContent>
+          <TabsContent value="output"><OutputTab session={selectedSession} /></TabsContent>
+          <TabsContent value="oxygen"><OxygenTab session={selectedSession} /></TabsContent>
+          <TabsContent value="surgery-notes"><SurgeryNotesTab session={selectedSession} /></TabsContent>
+          <TabsContent value="tests"><TestsTab session={selectedSession} /></TabsContent>
+          <TabsContent value="vitals"><VitalsTab session={selectedSession} /></TabsContent>
         </Tabs>
       </CardContent>
     </Card>
