@@ -4157,7 +4157,8 @@ export function InvestigationChartTab({ session }: { session: Session }) {
     { id: "liver", label: "Liver & Lipid", icon: Activity },
     { id: "coagulation", label: "Coagulation & Hormones", icon: Beaker },
     { id: "abg", label: "ABG & Imaging", icon: Scan },
-    { id: "bodyfluid", label: "Body Fluids", icon: ClipboardList }
+    { id: "bodyfluid", label: "Body Fluids", icon: ClipboardList },
+    { id: "other", label: "Other", icon: FileText }
   ];
 
   const LAB_SECTIONS = [
@@ -4452,7 +4453,6 @@ export function InvestigationChartTab({ session }: { session: Session }) {
                   <div><h4 className="font-medium text-sm bg-violet-500/10 text-violet-700 dark:text-violet-400 p-2 rounded mb-2">CT SCAN</h4><Textarea value={newEntry.ctScanFindings} onChange={e => setNewEntry(prev => ({ ...prev, ctScanFindings: e.target.value }))} placeholder="CT Scan findings..." className="h-20" /></div>
                   <div><h4 className="font-medium text-sm bg-violet-500/10 text-violet-700 dark:text-violet-400 p-2 rounded mb-2">MRI SCAN</h4><Textarea value={newEntry.mriFindings} onChange={e => setNewEntry(prev => ({ ...prev, mriFindings: e.target.value }))} placeholder="MRI findings..." className="h-20" /></div>
                 </div>
-                <div><h4 className="font-medium text-sm bg-stone-500/10 text-stone-700 dark:text-stone-400 p-2 rounded mb-2">OTHER</h4><Textarea value={newEntry.otherInvestigations} onChange={e => setNewEntry(prev => ({ ...prev, otherInvestigations: e.target.value }))} placeholder="Other investigations..." className="h-16" /></div>
               </TabsContent>
 
               <TabsContent value="bodyfluid" className="space-y-4">
@@ -4469,6 +4469,21 @@ export function InvestigationChartTab({ session }: { session: Session }) {
                       onChange={e => setNewEntry(prev => ({ ...prev, bodyFluidOther: e.target.value }))}
                       placeholder="Enter any other body fluid findings, remarks or observations..."
                       rows={3}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="other" className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-sm bg-stone-500/10 text-stone-700 dark:text-stone-400 p-2 rounded mb-2">OTHER INVESTIGATIONS</h4>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Additional investigations, remarks or findings</Label>
+                    <Textarea
+                      value={newEntry.otherInvestigations}
+                      onChange={e => setNewEntry(prev => ({ ...prev, otherInvestigations: e.target.value }))}
+                      placeholder="Enter any other investigations, clinical remarks, or miscellaneous findings..."
+                      rows={5}
                     />
                   </div>
                 </div>
