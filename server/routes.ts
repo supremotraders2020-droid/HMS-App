@@ -10216,6 +10216,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(htmlContent);
         }
+        if (consentType === 'FORM_F') {
+          const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '___________________________';
+          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '___';
+          const patientAddress = (patient as any)?.address || '___________________________';
+          const patientPhone = (patient as any)?.phone || (patient as any)?.contactNumber || '_______________';
+          const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+          const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Form F - Record for Pregnant Women (PC-PNDT Act)</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10.5pt; line-height: 1.6; color: #111; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
+    .hospital-logo { height: 50px; width: auto; }
+    .hospital-info { flex: 1; }
+    .hospital-name { font-size: 15pt; font-weight: bold; color: #2c5aa0; }
+    .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
+    .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
+    .form-ref { text-align: right; font-weight: bold; font-size: 11pt; margin-bottom: 4px; }
+    .form-title-main { text-align: center; font-size: 11pt; font-weight: bold; text-transform: uppercase; margin: 10px 0; border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 6px 0; }
+    .location-date { display: flex; justify-content: space-between; margin: 10px 0; font-size: 10pt; }
+    .marathi-box { border: 1.5px solid #333; padding: 8px 12px; margin: 10px 0; text-align: center; font-size: 12pt; font-weight: bold; font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    .marathi { font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    .consent-body { margin: 10px 0; font-size: 10.5pt; text-align: justify; }
+    .state-line { margin: 10px 0; font-size: 10.5pt; font-weight: bold; }
+    .children-heading { margin: 10px 0 6px 0; font-size: 10pt; font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    .children-table { border-collapse: collapse; margin: 5px 0 10px 0; }
+    .children-table td, .children-table th { border: 1.5px solid #333; padding: 5px 18px; font-size: 10.5pt; }
+    .sig-right { text-align: right; margin: 18px 0 10px 0; font-size: 10pt; font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
+    .declaration-title { font-weight: bold; font-size: 10.5pt; text-transform: uppercase; margin: 14px 0 8px 0; }
+    .declaration-body { font-size: 10.5pt; text-align: justify; margin: 6px 0; }
+    .doctor-sig { text-align: right; margin-top: 18px; font-size: 10.5pt; }
+    .hospital-footer { margin-top: 20px; padding-top: 10px; border-top: 1.5px solid #333; font-size: 9.5pt; }
+    .blank { border-bottom: 1px solid #333; display: inline-block; min-width: 140px; }
+    @media print { .page { margin: 0; box-shadow: none; padding: 15mm; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="hospital-header">
+    <div><img src="${hospitalLogoBase64}" alt="Logo" class="hospital-logo"></div>
+    <div class="hospital-info">
+      <div class="hospital-name">Gravity Hospital &amp; Research Centre</div>
+      <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk, Pimpri-Chinchwad, Maharashtra - 411062</div>
+      <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
+    </div>
+  </div>
+
+  <div class="form-ref">FORM F</div>
+  <div class="form-title-main">Form for Maintenance of Record in Respect of Pregnant Women<br>by Genetic Clinic / Ultrasound Clinic / Imaging Center</div>
+
+  <div class="location-date">
+    <span>ठिकाण - <span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>
+    <span>दिनांक: <strong>${currentDate}</strong></span>
+  </div>
+
+  <div class="marathi-box marathi">गर्भवती स्त्रीचे संमती पत्र आणि जाहीरनामा</div>
+
+  <div class="consent-body marathi">
+    मी (सौ.) &nbsp;<strong>${patientName}</strong>&nbsp; यांची पत्नी / मुलगी &nbsp;<span class="blank">${patientAge} Yrs</span>&nbsp;
+    पत्ता &nbsp;<span class="blank">${patientAddress}</span>&nbsp;
+    फोन नं &nbsp;<strong>${patientPhone}</strong>&nbsp;
+    प्रतिज्ञापूर्वक नमूद करते की, माझ्यावरती करण्यात येणारी सोनोग्राफी ही गर्भलिंग निदानासाठी नाही.
+    सदर तपासणीद्वारे मला गर्भलिंग सांगितले जाणार नाही, यांची मला जाणीव आहे,
+    आणि मला माहित करून घेण्याची माझी इच्छा नाही, यासाठी मी स्वेच्छेने संमती देत आहे.
+  </div>
+
+  <div class="state-line">राज्य – MAHARASHTRA</div>
+
+  <div class="children-heading marathi">हयात असणाऱ्या मुलांची संख्या</div>
+  <table class="children-table">
+    <tr>
+      <td class="marathi">पुरुष / मुलं</td>
+      <td style="min-width:60px;">&nbsp;&nbsp;&nbsp;&nbsp;</td>
+      <td class="marathi">स्त्री / मुली</td>
+      <td style="min-width:60px;">&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    </tr>
+  </table>
+
+  <div class="sig-right">गर्भवती स्त्रीचा सही / अंगठा</div>
+
+  <div class="declaration-title">Declaration of Doctor / Person Conducting<br>Ultrasonography / Image Scanning</div>
+
+  <div class="declaration-body">
+    1. Dr. <span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    declare that while conducting ultrasonography / Image on <strong>${patientName}</strong>,
+    I have neither detected nor disclosed the sex of her foetus to anybody in any scanner.
+  </div>
+
+  <div class="doctor-sig">
+    Dr. <span class="blank" style="min-width:200px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br><br>
+    CONSULTING RADIOLOGIST
+  </div>
+
+  <div class="hospital-footer">
+    <strong>GRAVITY HOSPITAL AND RESEARCH CENTRE</strong><br>
+    Gat no 167, Sahayog nagar, Triveninagar chowk, Pune 411062
+  </div>
+</div>
+</body>
+</html>`;
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(htmlContent);
+        }
+
         return res.status(404).json({ error: "Unknown dynamic consent form type" });
       }
 
