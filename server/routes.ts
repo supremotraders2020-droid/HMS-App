@@ -21450,6 +21450,76 @@ Important:
     }
   });
 
+  // Auto-create IPD monitoring session for ICU patient if none exists
+  app.post("/api/icu/ensure-ipd-session/:patientId", requireAuth, async (req, res) => {
+    try {
+      const { patientId } = req.params;
+      const userId = (req.session as any)?.userId || "system";
+      const userName = (req.session as any)?.userName || "System";
+
+      // Check if session already exists
+      const existingSessions = await db.select().from(patientMonitoringSessions)
+        .where(eq(patientMonitoringSessions.patientId, patientId));
+      if (existingSessions.length > 0) {
+        return res.json(existingSessions[0]);
+      }
+
+      // Fetch tracking patient for UHID and other info
+      const trackingPt = await db.select().from(trackingPatients)
+        .where(eq(trackingPatients.id, patientId));
+
+      // Fetch latest ICU chart for this patient
+      const icuChart = await db.select().from(icuCharts)
+        .where(eq(icuCharts.patientId, patientId))
+        .orderBy(desc(icuCharts.createdAt));
+
+      const pt = trackingPt[0];
+      const chart = icuChart[0];
+
+      if (!pt && !chart) {
+        return res.status(404).json({ error: "Patient not found" });
+      }
+
+      const patientName = chart?.patientName || pt?.patientName || "Unknown";
+      const uhid = pt?.uhid || pt?.id?.slice(0, 8).toUpperCase() || "ICU-" + Date.now();
+      const ageRaw = chart?.age || pt?.age?.toString() || "0";
+      const age = parseInt(ageRaw) || 0;
+      const sex = chart?.sex || pt?.gender || "Unknown";
+      const ward = chart?.ward || "ICU";
+      const bedNumber = chart?.bedNo || "ICU-BED";
+      const bloodGroup = chart?.bloodGroup || pt?.bloodGroup || null;
+      const primaryDiagnosis = chart?.diagnosis || pt?.diagnosis || "ICU Admission";
+      const admittingConsultant = chart?.admittingConsultant || pt?.admittingDoctor || "ICU Consultant";
+      const icuConsultantName = chart?.icuConsultant || null;
+      const admissionDate = chart?.dateOfAdmission ? new Date(chart.dateOfAdmission) : new Date();
+      const sessionDate = new Date().toISOString().split("T")[0];
+
+      const newSession = await db.insert(patientMonitoringSessions).values({
+        patientId,
+        patientName,
+        uhid,
+        age,
+        sex,
+        admissionDateTime: admissionDate,
+        ward,
+        bedNumber,
+        bloodGroup,
+        primaryDiagnosis,
+        admittingConsultant,
+        icuConsultant: icuConsultantName,
+        isVentilated: false,
+        sessionDate,
+        createdBy: userId,
+        createdByName: userName,
+      }).returning();
+
+      res.status(201).json(newSession[0]);
+    } catch (error) {
+      console.error("Error ensuring IPD session for ICU patient:", error);
+      res.status(500).json({ error: "Failed to create IPD session" });
+    }
+  });
+
   // Get available ICU beds
   app.get("/api/icu/available-beds", requireAuth, async (req, res) => {
     try {

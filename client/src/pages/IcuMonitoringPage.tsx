@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -666,7 +666,7 @@ function IcuChartDetail({ chart, canEdit, userId, userRole }: {
 }) {
   const [activeTab, setActiveTab] = useState("overview");
 
-  const { data: sessions = [], isLoading: loadingSessions } = useQuery<IpdSession[]>({
+  const { data: sessions = [], isLoading: loadingSessions, refetch: refetchSessions } = useQuery<IpdSession[]>({
     queryKey: ["/api/patient-monitoring/sessions/patient", chart.patientId],
     queryFn: async () => {
       const res = await fetch(`/api/patient-monitoring/sessions/patient/${chart.patientId}`);
@@ -676,9 +676,25 @@ function IcuChartDetail({ chart, canEdit, userId, userRole }: {
     enabled: !!chart.patientId,
   });
 
+  const ensureSessionMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/icu/ensure-ipd-session/${chart.patientId}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchSessions();
+    },
+  });
+
+  useEffect(() => {
+    if (!loadingSessions && sessions.length === 0 && chart.patientId) {
+      ensureSessionMutation.mutate();
+    }
+  }, [loadingSessions, sessions.length, chart.patientId]);
+
   const selectedSession = sessions[0] ?? null;
 
-  if (loadingSessions) {
+  if (loadingSessions || ensureSessionMutation.isPending) {
     return (
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">Loading patient data...</CardContent>
@@ -689,11 +705,7 @@ function IcuChartDetail({ chart, canEdit, userId, userRole }: {
   if (!selectedSession) {
     return (
       <Card>
-        <CardContent className="py-10 text-center">
-          <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-          <p className="font-medium">No IPD monitoring session found for this patient.</p>
-          <p className="text-sm text-muted-foreground mt-1">Create an IPD session in Patient Monitoring to see detailed records here.</p>
-        </CardContent>
+        <CardContent className="py-8 text-center text-muted-foreground">Setting up patient records...</CardContent>
       </Card>
     );
   }
