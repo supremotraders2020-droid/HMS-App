@@ -2534,6 +2534,7 @@ export const ipdInvestigationChart = pgTable("ipd_investigation_chart", {
   bodyFluidRbc: text("body_fluid_rbc"),
   bodyFluidSugar: text("body_fluid_sugar"),
   bodyFluidProteins: text("body_fluid_proteins"),
+  bodyFluidOther: text("body_fluid_other"),
   
   // Legacy fields for backward compatibility
   hbPcv: text("hb_pcv"),

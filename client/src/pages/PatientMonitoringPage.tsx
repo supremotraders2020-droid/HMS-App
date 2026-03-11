@@ -4054,7 +4054,7 @@ export function InvestigationChartTab({ session }: { session: Session }) {
     echoLvef: "", echoIvs: "", echoLvpw: "", echoEe: "", echoFindings: "",
     angioLtMain: "", angioLad: "", angioLcx: "", angioRca: "", angioFindings: "",
     ctScanFindings: "", mriFindings: "", otherInvestigations: "",
-    bodyFluidType: "", bodyFluidOrganism: "", bodyFluidSensitivity: "", bodyFluidTlc: "", bodyFluidRbc: "", bodyFluidSugar: "", bodyFluidProteins: ""
+    bodyFluidType: "", bodyFluidOrganism: "", bodyFluidSensitivity: "", bodyFluidTlc: "", bodyFluidRbc: "", bodyFluidSugar: "", bodyFluidProteins: "", bodyFluidOther: ""
   };
   
   const [newEntry, setNewEntry] = useState(emptyEntry);
@@ -4460,6 +4460,18 @@ export function InvestigationChartTab({ session }: { session: Session }) {
                   <h4 className="font-medium text-sm bg-teal-500/10 text-teal-700 dark:text-teal-400 p-2 rounded mb-2">BODY FLUIDS (CSF/Pleural/Sputum/BAL/Pericardial/Peritoneal/Synovial/Abscess)</h4>
                   {renderSectionFields(BODY_FLUID_FIELDS)}
                 </div>
+                <div>
+                  <h4 className="font-medium text-sm bg-teal-500/10 text-teal-700 dark:text-teal-400 p-2 rounded mb-2">OTHER</h4>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Additional findings / remarks</Label>
+                    <Textarea
+                      value={newEntry.bodyFluidOther || ""}
+                      onChange={e => setNewEntry(prev => ({ ...prev, bodyFluidOther: e.target.value }))}
+                      placeholder="Enter any other body fluid findings, remarks or observations..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
 
@@ -4524,6 +4536,13 @@ export function InvestigationChartTab({ session }: { session: Session }) {
                         </div>
                       );
                     })}
+
+                    {inv.bodyFluidOther && (
+                      <div>
+                        <h5 className="text-xs font-semibold text-primary mb-2 bg-primary/5 p-1.5 rounded">BODY FLUIDS — OTHER</h5>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap px-1">{inv.bodyFluidOther}</p>
+                      </div>
+                    )}
 
                     {(inv.chestXrayFindings || inv.otherXrayFindings) && (
                       <div>
