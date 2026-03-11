@@ -95,6 +95,7 @@ import { users, doctors, doctorProfiles, staffMaster, insertAppointmentSchema, i
   insertIcuNursingDutySchema, insertIcuFluidOrdersSchema, insertIcuNutritionChartSchema,
   insertIcuBodyMarkingSchema, insertIcuNurseDiarySchema, insertIcuOnceOnlyDrugsSchema,
   insertIcuPreviousDayNotesSchema, insertIcuAllergyPrecautionsSchema,
+  icuCharts,
   appointments, trackingPatients, patientConsents, patientBills, billPayments, patientInsurance, medicalRecords,
   patientMovementLog, insertPatientMovementLogSchema,
   signedDigitalConsents,
