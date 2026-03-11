@@ -6610,6 +6610,7 @@ export const doctorsVisitSheet = pgTable("doctors_visit_sheet", {
   nameOfDoctor: text("name_of_doctor"),
   visitType: text("visit_type"), // "routine" or "emergency"
   procedure: text("procedure"),
+  clinicalNotes: text("clinical_notes"),
   doctorSign: text("doctor_sign"),
   
   createdAt: timestamp("created_at").defaultNow(),

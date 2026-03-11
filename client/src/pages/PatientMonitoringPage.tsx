@@ -7305,6 +7305,7 @@ export function DoctorsVisitTab({ session }: { session: Session }) {
     nameOfDoctor: "",
     visitType: "routine",
     procedure: "",
+    clinicalNotes: "",
     doctorSign: ""
   });
 
@@ -7363,6 +7364,7 @@ export function DoctorsVisitTab({ session }: { session: Session }) {
       nameOfDoctor: "",
       visitType: "routine",
       procedure: "",
+      clinicalNotes: "",
       doctorSign: ""
     });
     setEditingId(null);
@@ -7398,6 +7400,7 @@ export function DoctorsVisitTab({ session }: { session: Session }) {
       nameOfDoctor: entry.nameOfDoctor || "",
       visitType: entry.visitType || "routine",
       procedure: entry.procedure || "",
+      clinicalNotes: entry.clinicalNotes || "",
       doctorSign: entry.doctorSign || ""
     });
     setEditingId(entry.id);
@@ -7441,6 +7444,7 @@ export function DoctorsVisitTab({ session }: { session: Session }) {
               <th>Name of Doctor</th>
               <th style="width:80px;">Visit Type</th>
               <th>Procedure</th>
+              <th>Clinical Notes</th>
               <th style="width:100px;">Sign</th>
             </tr>
           </thead>
@@ -7453,13 +7457,14 @@ export function DoctorsVisitTab({ session }: { session: Session }) {
                 <td>${e.nameOfDoctor || '-'}</td>
                 <td style="text-align:center;">${e.visitType === 'routine' ? 'Routine' : 'Emergency'}</td>
                 <td>${e.procedure || '-'}</td>
+                <td>${e.clinicalNotes || '-'}</td>
                 <td>${e.doctorSign || '-'}</td>
               </tr>
             `).join('')}
           </tbody>
           <tfoot>
             <tr class="summary-row">
-              <td colspan="7" style="text-align:right;">Total Visits: ${entries.length} | Routine: ${entries.filter((e: any) => e.visitType === 'routine').length} | Emergency: ${entries.filter((e: any) => e.visitType === 'emergency').length}</td>
+              <td colspan="8" style="text-align:right;">Total Visits: ${entries.length} | Routine: ${entries.filter((e: any) => e.visitType === 'routine').length} | Emergency: ${entries.filter((e: any) => e.visitType === 'emergency').length}</td>
             </tr>
           </tfoot>
         </table>
@@ -7542,13 +7547,22 @@ export function DoctorsVisitTab({ session }: { session: Session }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label>Procedure</Label>
                 <Textarea 
                   value={formData.procedure} 
                   onChange={(e) => setFormData({ ...formData, procedure: e.target.value })}
                   placeholder="Procedure performed (if any)"
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label>Clinical Notes</Label>
+                <Textarea 
+                  value={formData.clinicalNotes} 
+                  onChange={(e) => setFormData({ ...formData, clinicalNotes: e.target.value })}
+                  placeholder="Observations, findings, plan of care..."
                   rows={2}
                 />
               </div>
@@ -7582,6 +7596,7 @@ export function DoctorsVisitTab({ session }: { session: Session }) {
                   <TableHead>Name of Doctor</TableHead>
                   <TableHead className="w-24 text-center">Visit Type</TableHead>
                   <TableHead>Procedure</TableHead>
+                  <TableHead>Clinical Notes</TableHead>
                   <TableHead className="w-24">Sign</TableHead>
                   <TableHead className="w-20 text-right">Actions</TableHead>
                 </TableRow>
@@ -7600,6 +7615,7 @@ export function DoctorsVisitTab({ session }: { session: Session }) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm max-w-xs truncate">{entry.procedure || "-"}</TableCell>
+                    <TableCell className="text-sm max-w-xs truncate">{entry.clinicalNotes || "-"}</TableCell>
                     <TableCell className="text-sm">{entry.doctorSign || "-"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-1 justify-end">
