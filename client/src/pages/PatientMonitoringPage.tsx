@@ -3063,7 +3063,7 @@ function OxygenTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ hourSlot: "", oxygenLiter: "", spo2: "" });
+  const [form, setForm] = useState({ hourSlot: "", oxygenLiter: "", spo2: "", rylesTube: "", rylesTubeNote: "", centralLine: "" });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/oxygen/${sessionId}`]
@@ -3074,7 +3074,7 @@ function OxygenTab({ session }: { session: Session }) {
     onSuccess: () => {
       refetch();
       toast({ title: "Oxygen Record Saved", description: "Record added successfully" });
-      setForm({ hourSlot: "", oxygenLiter: "", spo2: "" });
+      setForm({ hourSlot: "", oxygenLiter: "", spo2: "", rylesTube: "", rylesTubeNote: "", centralLine: "" });
       setDialogOpen(false);
     },
     onError: () => {
@@ -3094,6 +3094,9 @@ function OxygenTab({ session }: { session: Session }) {
       hourSlot: form.hourSlot,
       oxygenLiter: form.oxygenLiter,
       spo2: form.spo2 ? parseInt(form.spo2) : null,
+      rylesTube: form.rylesTube || null,
+      rylesTubeNote: form.rylesTubeNote || null,
+      centralLine: form.centralLine || null,
     });
   };
 
@@ -3173,6 +3176,38 @@ function OxygenTab({ session }: { session: Session }) {
                   <Label>SpO2 (%)</Label>
                   <IntegerInput value={form.spo2} onValueChange={(v) => setForm({ ...form, spo2: v })} min={50} max={100} />
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Ryle's Tube</Label>
+                    <Select value={form.rylesTube} onValueChange={(v) => setForm({ ...form, rylesTube: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Central Line</Label>
+                    <Select value={form.centralLine} onValueChange={(v) => setForm({ ...form, centralLine: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {form.rylesTube === "Yes" && (
+                  <div>
+                    <Label>Ryle's Tube Note</Label>
+                    <Input
+                      value={form.rylesTubeNote}
+                      onChange={(e) => setForm({ ...form, rylesTubeNote: e.target.value })}
+                      placeholder="Enter note (e.g. 14 Fr, NGT, etc.)"
+                    />
+                  </div>
+                )}
               </div>
               <DialogFooter className="gap-2">
                 <DialogClose asChild>
@@ -3196,6 +3231,8 @@ function OxygenTab({ session }: { session: Session }) {
                 <TableHead>Time Slot</TableHead>
                 <TableHead>Oxygen</TableHead>
                 <TableHead>SpO2</TableHead>
+                <TableHead>Ryle's Tube</TableHead>
+                <TableHead>Central Line</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -3205,6 +3242,21 @@ function OxygenTab({ session }: { session: Session }) {
                   <TableCell className="font-medium">{r.hour_slot}</TableCell>
                   <TableCell className="font-semibold text-sky-600">{r.oxygen_liter}</TableCell>
                   <TableCell>{r.spo2 ? `${r.spo2}%` : '-'}</TableCell>
+                  <TableCell>
+                    {r.ryles_tube ? (
+                      <span>
+                        <span className={r.ryles_tube === "Yes" ? "text-amber-500 font-medium" : "text-muted-foreground"}>{r.ryles_tube}</span>
+                        {r.ryles_tube === "Yes" && r.ryles_tube_note && (
+                          <span className="ml-1 text-xs text-muted-foreground">({r.ryles_tube_note})</span>
+                        )}
+                      </span>
+                    ) : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {r.central_line ? (
+                      <span className={r.central_line === "Yes" ? "text-amber-500 font-medium" : "text-muted-foreground"}>{r.central_line}</span>
+                    ) : '-'}
+                  </TableCell>
                   <TableCell>
                     <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteMutation.mutate(r.id)}>
                       <Trash2 className="h-3.5 w-3.5" />

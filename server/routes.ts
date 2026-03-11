@@ -12802,14 +12802,14 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/patient-monitoring/oxygen", async (req, res) => {
     try {
-      const { sessionId, hourSlot, oxygenLiter, spo2, nurseId, nurseName } = req.body;
+      const { sessionId, hourSlot, oxygenLiter, spo2, nurseId, nurseName, rylesTube, rylesTubeNote, centralLine } = req.body;
       if (!sessionId || !hourSlot || !oxygenLiter) {
         return res.status(400).json({ error: "sessionId, hourSlot and oxygenLiter are required" });
       }
       const result = await pool.query(
-        `INSERT INTO ipd_oxygen_records (session_id, hour_slot, oxygen_liter, spo2, nurse_id, nurse_name)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-        [sessionId, hourSlot, oxygenLiter, spo2 || null, nurseId || null, nurseName || null]
+        `INSERT INTO ipd_oxygen_records (session_id, hour_slot, oxygen_liter, spo2, nurse_id, nurse_name, ryles_tube, ryles_tube_note, central_line)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+        [sessionId, hourSlot, oxygenLiter, spo2 || null, nurseId || null, nurseName || null, rylesTube || null, rylesTubeNote || null, centralLine || null]
       );
       res.status(201).json(result.rows[0]);
     } catch (error) {
