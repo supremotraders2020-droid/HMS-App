@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { BloodPressureInput } from "@/components/validated-inputs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -917,9 +918,9 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
             </div>
             <div className="space-y-2">
               <Label>BP (mmHg)</Label>
-              <Input
+              <BloodPressureInput
                 value={newEntry.bp}
-                onChange={e => setNewEntry(prev => ({ ...prev, bp: e.target.value }))}
+                onValueChange={(value) => setNewEntry(prev => ({ ...prev, bp: value }))}
                 placeholder="120/80"
                 data-testid="input-vitals-bp"
               />
