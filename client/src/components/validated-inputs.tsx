@@ -158,19 +158,7 @@ export const BloodPressureInput = forwardRef<HTMLInputElement, ValidatedInputPro
       const value = e.target.value;
       
       if (value === '' || isValidBloodPressure(value)) {
-        if (value && value.includes('/')) {
-          const parts = value.split('/');
-          const systolic = parseInt(parts[0], 10);
-          const diastolic = parseInt(parts[1], 10);
-          if ((parts[0] && (systolic < 50 || systolic > 250)) || 
-              (parts[1] && (diastolic < 30 || diastolic > 150))) {
-            setLocalError("Enter valid BP range");
-          } else {
-            setLocalError("");
-          }
-        } else {
-          setLocalError("");
-        }
+        setLocalError("");
         onChange?.(value);
         onValueChange?.(value);
       }

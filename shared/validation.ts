@@ -6,7 +6,7 @@ export const ValidationPatterns = {
   textOnly: /^[a-zA-Z\s.,;:!?'"()\-]*$/,
   textWithNumbers: /^[a-zA-Z0-9\s.,;:!?'"()\-/]*$/,
   nameField: /^[a-zA-Z\s.\-']*$/,
-  bloodPressure: /^[0-9]{0,3}\/?[0-9]{0,3}$/,
+  bloodPressure: /^[0-9]*\/?[0-9]*$/,
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   phone: /^[0-9+\-\s()]*$/,
   alphanumeric: /^[a-zA-Z0-9\s\-_]*$/,

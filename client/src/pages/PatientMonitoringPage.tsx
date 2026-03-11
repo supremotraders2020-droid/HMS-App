@@ -1959,7 +1959,7 @@ export function VitalsTab({ session }: { session: Session }) {
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Pulse (bpm)</Label><IntegerInput value={vitalsForm.pulse} onValueChange={(value) => setVitalsForm({...vitalsForm, pulse: value})} min={30} max={250} data-testid="input-pulse" /></div>
                 <div><Label>SpO2 (%)</Label><IntegerInput value={vitalsForm.spo2} onValueChange={(value) => setVitalsForm({...vitalsForm, spo2: value})} min={50} max={100} data-testid="input-spo2" /></div>
-                <div><Label>BP (mmHg)</Label><IntegerInput value={vitalsForm.sbp} onValueChange={(value) => setVitalsForm({...vitalsForm, sbp: value})} min={50} max={250} data-testid="input-sbp" /></div>
+                <div><Label>BP (mmHg)</Label><IntegerInput value={vitalsForm.sbp} onValueChange={(value) => setVitalsForm({...vitalsForm, sbp: value})} data-testid="input-sbp" /></div>
                 <div><Label>Temp (°F)</Label><NumericInput value={vitalsForm.temperature} onValueChange={(value) => setVitalsForm({...vitalsForm, temperature: value})} allowDecimal={true} data-testid="input-temp" /></div>
                 <div><Label>RR (/min)</Label><IntegerInput value={vitalsForm.respiratoryRate} onValueChange={(value) => setVitalsForm({...vitalsForm, respiratoryRate: value})} min={5} max={60} data-testid="input-rr" /></div>
                 <div className="space-y-1">
@@ -2015,7 +2015,7 @@ export function VitalsTab({ session }: { session: Session }) {
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Pulse (bpm)</Label><IntegerInput value={editForm.pulse} onValueChange={(value) => setEditForm({...editForm, pulse: value})} min={30} max={250} /></div>
                 <div><Label>SpO2 (%)</Label><IntegerInput value={editForm.spo2} onValueChange={(value) => setEditForm({...editForm, spo2: value})} min={50} max={100} /></div>
-                <div><Label>BP (mmHg)</Label><IntegerInput value={editForm.sbp} onValueChange={(value) => setEditForm({...editForm, sbp: value})} min={50} max={250} /></div>
+                <div><Label>BP (mmHg)</Label><IntegerInput value={editForm.sbp} onValueChange={(value) => setEditForm({...editForm, sbp: value})} /></div>
                 <div><Label>Temp (°F)</Label><NumericInput value={editForm.temperature} onValueChange={(value) => setEditForm({...editForm, temperature: value})} allowDecimal={true} /></div>
                 <div><Label>RR (/min)</Label><IntegerInput value={editForm.respiratoryRate} onValueChange={(value) => setEditForm({...editForm, respiratoryRate: value})} min={5} max={60} /></div>
                 <div className="space-y-1">
