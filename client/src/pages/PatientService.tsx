@@ -118,6 +118,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   
   // Longitudinal Patient Profile States
   const [allPatientsSearch, setAllPatientsSearch] = useState("");
+  const [allPatientsPeriod, setAllPatientsPeriod] = useState("all");
   const [selectedProfilePatient, setSelectedProfilePatient] = useState<ServicePatient | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profileActiveSection, setProfileActiveSection] = useState("opd");
@@ -480,13 +481,45 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   // Filter patients for the "All Patients" tab
   const filteredAllPatients = patients.filter((patient) => {
     const searchLower = allPatientsSearch.toLowerCase();
-    return (
+    const matchesSearch = (
       `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchLower) ||
       patient.phone?.toLowerCase().includes(searchLower) ||
       patient.email?.toLowerCase().includes(searchLower) ||
       patient.id.toLowerCase().includes(searchLower)
     );
+    if (!matchesSearch) return false;
+    if (allPatientsPeriod === "all") return true;
+    const createdAt = patient.createdAt ? new Date(patient.createdAt) : null;
+    if (!createdAt) return false;
+    const now = new Date();
+    const diffDays = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    if (allPatientsPeriod === "weekly") return diffDays <= 7;
+    if (allPatientsPeriod === "monthly") return diffDays <= 30;
+    if (allPatientsPeriod === "quarterly") return diffDays <= 90;
+    if (allPatientsPeriod === "yearly") return diffDays <= 365;
+    return true;
   });
+
+  const handleDownloadPatientsCSV = () => {
+    const headers = ["Patient Name", "ID", "Gender", "Date of Birth", "Phone", "Email", "Registered On"];
+    const rows = filteredAllPatients.map(p => [
+      `${p.firstName} ${p.lastName}`,
+      p.id,
+      p.gender,
+      p.dateOfBirth,
+      p.phone || "",
+      p.email || "",
+      p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ""
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `patients_${allPatientsPeriod}_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const patientForm = useForm({
     resolver: zodResolver(patientFormSchema),
@@ -2060,7 +2093,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
           {/* List of All Patients Tab - Longitudinal Patient Profile */}
           <TabsContent value="all-patients" className="space-y-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between gap-4">
+              <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
                 <div>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <History className="h-5 w-5 text-blue-600" />
@@ -2068,15 +2101,33 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   </CardTitle>
                   <CardDescription>View comprehensive longitudinal patient profiles with full medical history</CardDescription>
                 </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    placeholder="Search by name, phone, email, or ID..."
-                    value={allPatientsSearch}
-                    onChange={(e) => setAllPatientsSearch(e.target.value)}
-                    className="pl-9 w-80"
-                    data-testid="input-search-all-patients"
-                  />
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={allPatientsPeriod} onValueChange={setAllPatientsPeriod}>
+                    <SelectTrigger className="w-36" data-testid="select-patients-period">
+                      <SelectValue placeholder="All Time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="weekly">This Week</SelectItem>
+                      <SelectItem value="monthly">This Month</SelectItem>
+                      <SelectItem value="quarterly">This Quarter</SelectItem>
+                      <SelectItem value="yearly">This Year</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      placeholder="Search by name, phone, email, or ID..."
+                      value={allPatientsSearch}
+                      onChange={(e) => setAllPatientsSearch(e.target.value)}
+                      className="pl-9 w-64"
+                      data-testid="input-search-all-patients"
+                    />
+                  </div>
+                  <Button variant="outline" size="default" onClick={handleDownloadPatientsCSV} disabled={filteredAllPatients.length === 0}>
+                    <Download className="h-4 w-4 mr-1" />
+                    Download CSV
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -2153,6 +2204,11 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                     </ScrollArea>
                     <div className="text-sm text-slate-500 text-center pt-2">
                       Showing {filteredAllPatients.length} of {patients.length} patients
+                      {allPatientsPeriod !== "all" && (
+                        <span className="ml-1 text-blue-500">
+                          ({allPatientsPeriod === "weekly" ? "this week" : allPatientsPeriod === "monthly" ? "this month" : allPatientsPeriod === "quarterly" ? "this quarter" : "this year"})
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
