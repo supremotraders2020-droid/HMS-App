@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -105,14 +105,30 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   const [iframeLoading, setIframeLoading] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Called when the iframe loads — attach mutation observer to detect edits
-  const onIframeLoad = useCallback(() => {
-    setIframeLoading(false);
-    const iframeDoc = iframeRef.current?.contentDocument;
-    if (!iframeDoc) return;
-    const observer = new MutationObserver(() => setHasEdits(true));
-    observer.observe(iframeDoc.body, { subtree: true, childList: true, characterData: true });
-  }, []);
+  // Write HTML directly into iframe document so contentDocument is always accessible
+  useEffect(() => {
+    if (!viewHtml || !iframeRef.current) return;
+    const iframe = iframeRef.current;
+    // Wait until iframe is in the DOM with a real document
+    const write = () => {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+      doc.open();
+      doc.write(viewHtml);
+      doc.close();
+      setIframeLoading(false);
+      // Attach mutation observer to detect any edits
+      const observer = new MutationObserver(() => setHasEdits(true));
+      observer.observe(doc.body, { subtree: true, childList: true, characterData: true });
+    };
+    // If the iframe src is already about:blank and ready, write immediately
+    if (iframe.contentDocument?.readyState === 'complete' || iframe.contentDocument?.readyState === 'interactive') {
+      write();
+    } else {
+      iframe.onload = write;
+    }
+  }, [viewHtml]);
+
 
   const { data: templates = [], isLoading } = useQuery<ConsentTemplate[]>({
     queryKey: ['/api/consent-templates'],
@@ -626,16 +642,12 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
               </div>
             )}
-            {viewHtml && (
-              <iframe
-                ref={iframeRef}
-                srcDoc={viewHtml}
-                onLoad={onIframeLoad}
-                className="w-full h-full border-0"
-                title="Consent Form Preview"
-                sandbox="allow-same-origin allow-scripts allow-modals allow-popups"
-              />
-            )}
+            <iframe
+              ref={iframeRef}
+              src="about:blank"
+              className="w-full h-full border-0"
+              title="Consent Form Preview"
+            />
           </div>
 
           {hasEdits && (
