@@ -10240,7 +10240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .hospital-name { font-size: 15pt; font-weight: bold; color: #2c5aa0; }
     .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
-    .form-ref { text-align: right; font-weight: bold; font-size: 11pt; margin-bottom: 4px; }
+    .form-ref { text-align: center; font-weight: bold; font-size: 13pt; letter-spacing: 2px; margin: 8px 0; }
     .form-title-main { text-align: center; font-size: 11pt; font-weight: bold; text-transform: uppercase; margin: 10px 0; border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 6px 0; }
     .location-date { display: flex; justify-content: space-between; margin: 10px 0; font-size: 10pt; }
     .marathi-box { border: 1.5px solid #333; padding: 8px 12px; margin: 10px 0; text-align: center; font-size: 12pt; font-weight: bold; font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
@@ -10250,6 +10250,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     .children-heading { margin: 10px 0 6px 0; font-size: 10pt; font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
     .children-table { border-collapse: collapse; margin: 5px 0 10px 0; }
     .children-table td, .children-table th { border: 1.5px solid #333; padding: 5px 18px; font-size: 10.5pt; }
+    .editable-cell { min-width: 80px; cursor: text; background: #fafff7; outline: none; }
+    .editable-cell:hover { background: #f0f8ee; }
+    .editable-cell:focus { background: #e8f5e4; box-shadow: inset 0 0 0 2px #4a8c4a; }
     .sig-right { text-align: right; margin: 18px 0 10px 0; font-size: 10pt; font-family: 'Noto Sans Devanagari', 'Mangal', Arial, sans-serif; }
     .declaration-title { font-weight: bold; font-size: 10.5pt; text-transform: uppercase; margin: 14px 0 8px 0; }
     .declaration-body { font-size: 10.5pt; text-align: justify; margin: 6px 0; }
@@ -10295,9 +10298,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <table class="children-table">
     <tr>
       <td class="marathi">पुरुष / मुलं</td>
-      <td style="min-width:60px;">&nbsp;&nbsp;&nbsp;&nbsp;</td>
+      <td class="editable-cell" contenteditable="true" title="Click to enter number of boys">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
       <td class="marathi">स्त्री / मुली</td>
-      <td style="min-width:60px;">&nbsp;&nbsp;&nbsp;&nbsp;</td>
+      <td class="editable-cell" contenteditable="true" title="Click to enter number of girls">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
     </tr>
   </table>
 
