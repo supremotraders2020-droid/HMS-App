@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   FileCheck, 
@@ -30,7 +31,9 @@ import {
   Activity,
   Bed,
   ShieldCheck,
-  LogOut
+  LogOut,
+  CheckCircle2,
+  X
 } from "lucide-react";
 
 interface UserInfo {
@@ -94,6 +97,23 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
+  // View dialog state
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewHtml, setViewHtml] = useState("");
+  const [viewTemplate, setViewTemplate] = useState<ConsentTemplate | null>(null);
+  const [hasEdits, setHasEdits] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Called when the iframe loads — attach mutation observer to detect edits
+  const onIframeLoad = useCallback(() => {
+    setIframeLoading(false);
+    const iframeDoc = iframeRef.current?.contentDocument;
+    if (!iframeDoc) return;
+    const observer = new MutationObserver(() => setHasEdits(true));
+    observer.observe(iframeDoc.body, { subtree: true, childList: true, characterData: true });
+  }, []);
+
   const { data: templates = [], isLoading } = useQuery<ConsentTemplate[]>({
     queryKey: ['/api/consent-templates'],
     queryFn: async () => {
@@ -139,56 +159,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
     return `/api/consent-templates/${template.id}/render?patientId=${patientId}`;
   };
 
-  const handleDownload = async (template: ConsentTemplate) => {
-    if (!selectedPatientId || selectedPatientId === 'none') {
-      toast({ 
-        title: "Please select a patient", 
-        description: "You must select a patient before downloading a consent form.",
-        variant: "destructive" 
-      });
-      return;
-    }
-    try {
-      const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
-        headers: {
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to generate form');
-      
-      const contentType = response.headers.get('Content-Type') || '';
-      const isHtml = contentType.includes('text/html');
-      const blob = await response.blob();
-      
-      if (isHtml) {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
-        link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.html`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        toast({ title: "Download started", description: "Open the downloaded HTML file and use Print > Save as PDF to create a PDF." });
-      } else {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
-        link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        toast({ title: "Download started", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
-      }
-    } catch {
-      toast({ title: "Failed to download file", variant: "destructive" });
-    }
-  };
-
+  // Opens the form in the View dialog — all edits happen here
   const handleView = async (template: ConsentTemplate) => {
     if (!selectedPatientId || selectedPatientId === 'none') {
       toast({ 
@@ -199,21 +170,100 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       return;
     }
     try {
+      setIframeLoading(true);
+      setHasEdits(false);
+      setViewTemplate(template);
+      setViewDialogOpen(true);
       const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
         headers: {
           'x-user-id': currentUser.id,
           'x-user-role': currentUser.role,
         },
       });
-      if (!response.ok) throw new Error('Failed to generate PDF');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      if (!response.ok) throw new Error('Failed to load form');
+      const html = await response.text();
+      setViewHtml(html);
     } catch {
-      toast({ title: "Failed to view consent form", variant: "destructive" });
+      toast({ title: "Failed to load consent form", variant: "destructive" });
+      setViewDialogOpen(false);
     }
   };
 
+  // Gets the current (possibly edited) HTML from the iframe
+  const getCurrentHtml = (): string => {
+    const iframeDoc = iframeRef.current?.contentDocument;
+    if (iframeDoc) {
+      return '<!DOCTYPE html>' + iframeDoc.documentElement.outerHTML;
+    }
+    return viewHtml;
+  };
+
+  // Download uses whatever is currently in the iframe (including edits)
+  const handleDialogDownload = () => {
+    if (!viewTemplate) return;
+    const html = getCurrentHtml();
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
+    link.download = `${viewTemplate.title.replace(/\s+/g, '_')}_${patientName}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    toast({ title: "Download started", description: "Open the file and use Print → Save as PDF to create a PDF." });
+  };
+
+  // Print uses whatever is currently in the iframe (including edits)
+  const handleDialogPrint = () => {
+    const iframeWin = iframeRef.current?.contentWindow;
+    if (iframeWin) {
+      iframeWin.focus();
+      iframeWin.print();
+    } else {
+      toast({ title: "Could not open print dialog", variant: "destructive" });
+    }
+  };
+
+  // Card-level Download — opens View first if not already open, otherwise fresh fetch
+  const handleDownload = async (template: ConsentTemplate) => {
+    if (!selectedPatientId || selectedPatientId === 'none') {
+      toast({ 
+        title: "Please select a patient", 
+        description: "You must select a patient before downloading a consent form.",
+        variant: "destructive" 
+      });
+      return;
+    }
+    // If this template is currently open in the view dialog with edits, use those
+    if (viewDialogOpen && viewTemplate?.id === template.id && hasEdits) {
+      handleDialogDownload();
+      return;
+    }
+    try {
+      const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
+        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role },
+      });
+      if (!response.ok) throw new Error('Failed to generate form');
+      const contentType = response.headers.get('Content-Type') || '';
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
+      link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.${contentType.includes('text/html') ? 'html' : 'pdf'}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast({ title: "Download started", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
+    } catch {
+      toast({ title: "Failed to download file", variant: "destructive" });
+    }
+  };
+
+  // Card-level Print — opens the form and triggers print
   const handlePrint = async (template: ConsentTemplate) => {
     if (!selectedPatientId || selectedPatientId === 'none') {
       toast({ 
@@ -223,21 +273,21 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       });
       return;
     }
+    // If this template is open in the view dialog, print directly from iframe
+    if (viewDialogOpen && viewTemplate?.id === template.id) {
+      handleDialogPrint();
+      return;
+    }
     try {
       const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
-        headers: {
-          'x-user-id': currentUser.id,
-          'x-user-role': currentUser.role,
-        },
+        headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role },
       });
-      if (!response.ok) throw new Error('Failed to generate PDF');
+      if (!response.ok) throw new Error('Failed to generate form');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const printWindow = window.open(url, '_blank');
       if (printWindow) {
-        printWindow.onload = () => {
-          printWindow.print();
-        };
+        printWindow.onload = () => printWindow.print();
       }
       toast({ title: "Opening print dialog...", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
     } catch {
@@ -532,6 +582,70 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* View / Edit Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={(open) => { setViewDialogOpen(open); if (!open) { setViewHtml(""); setViewTemplate(null); setHasEdits(false); } }}>
+        <DialogContent className="max-w-5xl w-full h-[92vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <DialogTitle className="text-base font-semibold truncate">
+                  {viewTemplate?.title ?? "Consent Form"}
+                </DialogTitle>
+                {hasEdits && (
+                  <Badge className="bg-emerald-500 text-white flex items-center gap-1 shrink-0">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Edited
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {hasEdits && (
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    Edits captured — Download/Print will use your changes
+                  </span>
+                )}
+                <Button variant="outline" size="sm" onClick={handleDialogDownload} disabled={!viewHtml}>
+                  <Download className="h-4 w-4 mr-1" />
+                  Download
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDialogPrint} disabled={!viewHtml}>
+                  <Printer className="h-4 w-4 mr-1" />
+                  Print
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setViewDialogOpen(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-hidden relative bg-gray-100 dark:bg-gray-900">
+            {iframeLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            )}
+            {viewHtml && (
+              <iframe
+                ref={iframeRef}
+                srcDoc={viewHtml}
+                onLoad={onIframeLoad}
+                className="w-full h-full border-0"
+                title="Consent Form Preview"
+                sandbox="allow-same-origin allow-scripts allow-modals allow-popups"
+              />
+            )}
+          </div>
+
+          {hasEdits && (
+            <div className="px-4 py-2 border-t bg-emerald-50 dark:bg-emerald-950/30 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 flex-shrink-0">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Your edits are live. Click <strong className="mx-1">Download</strong> or <strong className="mx-1">Print</strong> above to save or print this edited version.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
