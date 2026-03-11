@@ -5353,6 +5353,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Render consent template with patient data as PDF (requires authentication)
   app.get("/api/consent-templates/:id/render", async (req, res) => {
     try {
+      // Disable caching so changes are always reflected immediately
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+
       const { patientId } = req.query;
       
       // Check authentication via headers
