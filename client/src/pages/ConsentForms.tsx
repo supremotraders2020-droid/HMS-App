@@ -28,7 +28,9 @@ import {
   GraduationCap,
   CreditCard,
   Activity,
-  Bed
+  Bed,
+  ShieldCheck,
+  LogOut
 } from "lucide-react";
 
 interface UserInfo {
@@ -72,6 +74,7 @@ interface Patient {
 
 const TEMPLATE_CATEGORIES = [
   { value: "all", label: "All Forms", icon: FileCheck },
+  { value: "Consent & Certification", label: "Consent & Certification", icon: ShieldCheck },
   { value: "Legal & Administrative", label: "Legal & Administrative", icon: ClipboardList },
   { value: "Surgical & Procedural", label: "Surgical & Procedural", icon: Stethoscope },
   { value: "Diagnostic & Testing", label: "Diagnostic & Testing", icon: TestTube },
@@ -81,6 +84,7 @@ const TEMPLATE_CATEGORIES = [
   { value: "Financial & Insurance", label: "Financial & Insurance", icon: CreditCard },
   { value: "Therapeutic", label: "Therapeutic", icon: Activity },
   { value: "Post-Operative", label: "Post-Operative", icon: Bed },
+  { value: "Discharge & Documentation", label: "Discharge & Documentation", icon: LogOut },
 ];
 
 export default function ConsentForms({ currentUser }: ConsentFormsProps) {
@@ -261,6 +265,10 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
         return 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300';
       case 'Post-Operative': 
         return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300';
+      case 'Consent & Certification':
+        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300';
+      case 'Discharge & Documentation':
+        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300';
       default: 
         return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
     }
@@ -277,6 +285,8 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       case 'Financial & Insurance': return CreditCard;
       case 'Therapeutic': return Activity;
       case 'Post-Operative': return Bed;
+      case 'Consent & Certification': return ShieldCheck;
+      case 'Discharge & Documentation': return LogOut;
       default: return FileText;
     }
   };
