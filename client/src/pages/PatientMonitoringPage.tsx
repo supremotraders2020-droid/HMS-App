@@ -4460,18 +4460,6 @@ export function InvestigationChartTab({ session }: { session: Session }) {
                   <h4 className="font-medium text-sm bg-teal-500/10 text-teal-700 dark:text-teal-400 p-2 rounded mb-2">BODY FLUIDS (CSF/Pleural/Sputum/BAL/Pericardial/Peritoneal/Synovial/Abscess)</h4>
                   {renderSectionFields(BODY_FLUID_FIELDS)}
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm bg-teal-500/10 text-teal-700 dark:text-teal-400 p-2 rounded mb-2">OTHER</h4>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Additional findings / remarks</Label>
-                    <Textarea
-                      value={newEntry.bodyFluidOther || ""}
-                      onChange={e => setNewEntry(prev => ({ ...prev, bodyFluidOther: e.target.value }))}
-                      placeholder="Enter any other body fluid findings, remarks or observations..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
               </TabsContent>
 
               <TabsContent value="other" className="space-y-4">
