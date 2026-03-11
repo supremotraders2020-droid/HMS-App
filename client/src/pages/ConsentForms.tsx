@@ -32,8 +32,7 @@ import {
   Bed,
   ShieldCheck,
   LogOut,
-  CheckCircle2,
-  X
+  CheckCircle2
 } from "lucide-react";
 
 interface UserInfo {
@@ -694,9 +693,6 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
                 <Button variant="outline" size="sm" onClick={handleDialogPrint} disabled={!viewHtml}>
                   <Printer className="h-4 w-4 mr-1" />
                   Print
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => { persistEdits(); setViewDialogOpen(false); setViewHtml(""); setViewTemplate(null); setHasEdits(false); }}>
-                  <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
