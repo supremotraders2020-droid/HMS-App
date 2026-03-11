@@ -668,33 +668,16 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       }}>
         <DialogContent className="max-w-5xl w-full h-[92vh] flex flex-col p-0 gap-0">
           <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-3 min-w-0">
-                <DialogTitle className="text-base font-semibold truncate">
-                  {viewTemplate?.title ?? "Consent Form"}
-                </DialogTitle>
-                {hasEdits && (
-                  <Badge className="bg-emerald-500 text-white flex items-center gap-1 shrink-0">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Edited
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {hasEdits && (
-                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                    Edits captured — Download/Print will use your changes
-                  </span>
-                )}
-                <Button variant="outline" size="sm" onClick={handleDialogDownload} disabled={!viewHtml}>
-                  <Download className="h-4 w-4 mr-1" />
-                  Download
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleDialogPrint} disabled={!viewHtml}>
-                  <Printer className="h-4 w-4 mr-1" />
-                  Print
-                </Button>
-              </div>
+            <div className="flex items-center gap-3 min-w-0">
+              <DialogTitle className="text-base font-semibold truncate">
+                {viewTemplate?.title ?? "Consent Form"}
+              </DialogTitle>
+              {hasEdits && (
+                <Badge className="bg-emerald-500 text-white flex items-center gap-1 shrink-0">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Edited — close to save changes
+                </Badge>
+              )}
             </div>
           </DialogHeader>
 
@@ -712,12 +695,6 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
             />
           </div>
 
-          {hasEdits && (
-            <div className="px-4 py-2 border-t bg-emerald-50 dark:bg-emerald-950/30 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 flex-shrink-0">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Your edits are live. Click <strong className="mx-1">Download</strong> or <strong className="mx-1">Print</strong> above to save or print this edited version.
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </div>
