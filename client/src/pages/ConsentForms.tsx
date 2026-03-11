@@ -105,6 +105,10 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   const [iframeLoading, setIframeLoading] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // Persist edits after dialog close so card Download/Print can use them
+  const [savedEditedHtml, setSavedEditedHtml] = useState<string | null>(null);
+  const [savedEditedTemplateId, setSavedEditedTemplateId] = useState<string | null>(null);
+
   // Write HTML directly into iframe document so contentDocument is always accessible
   useEffect(() => {
     if (!viewHtml || !iframeRef.current) return;
@@ -190,6 +194,11 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       setHasEdits(false);
       setViewTemplate(template);
       setViewDialogOpen(true);
+      // Clear saved edits for other templates when a different one is opened
+      if (savedEditedTemplateId && savedEditedTemplateId !== template.id) {
+        setSavedEditedHtml(null);
+        setSavedEditedTemplateId(null);
+      }
       const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
         headers: {
           'x-user-id': currentUser.id,
@@ -212,6 +221,15 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       return '<!DOCTYPE html>' + iframeDoc.documentElement.outerHTML;
     }
     return viewHtml;
+  };
+
+  // Save edits to persistent state so card buttons can use them after dialog closes
+  const persistEdits = () => {
+    if (viewTemplate && hasEdits) {
+      const html = getCurrentHtml();
+      setSavedEditedHtml(html);
+      setSavedEditedTemplateId(viewTemplate.id);
+    }
   };
 
   // Download uses whatever is currently in the iframe (including edits)
@@ -242,7 +260,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
     }
   };
 
-  // Card-level Download — opens View first if not already open, otherwise fresh fetch
+  // Card-level Download — uses saved edits if available, otherwise fetches fresh
   const handleDownload = async (template: ConsentTemplate) => {
     if (!selectedPatientId || selectedPatientId === 'none') {
       toast({ 
@@ -252,11 +270,27 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       });
       return;
     }
-    // If this template is currently open in the view dialog with edits, use those
+    // If dialog is open with this template and has edits, use live iframe content
     if (viewDialogOpen && viewTemplate?.id === template.id && hasEdits) {
       handleDialogDownload();
       return;
     }
+    // If we have saved edits for this template (from a previous view session), use those
+    if (savedEditedTemplateId === template.id && savedEditedHtml) {
+      const blob = new Blob([savedEditedHtml], { type: 'text/html;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const patientName = selectedPatient ? `${selectedPatient.firstName}_${selectedPatient.lastName}` : 'patient';
+      link.download = `${template.title.replace(/\s+/g, '_')}_${patientName}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast({ title: "Download started (with your edits)", description: "Open the file and use Print → Save as PDF." });
+      return;
+    }
+    // No edits — fetch a fresh copy from server
     try {
       const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
         headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role },
@@ -279,7 +313,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
     }
   };
 
-  // Card-level Print — opens the form and triggers print
+  // Card-level Print — uses saved edits if available, otherwise fetches fresh
   const handlePrint = async (template: ConsentTemplate) => {
     if (!selectedPatientId || selectedPatientId === 'none') {
       toast({ 
@@ -289,11 +323,26 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       });
       return;
     }
-    // If this template is open in the view dialog, print directly from iframe
+    // If dialog is open with this template, print from iframe directly
     if (viewDialogOpen && viewTemplate?.id === template.id) {
       handleDialogPrint();
       return;
     }
+    // If we have saved edits for this template, print those
+    if (savedEditedTemplateId === template.id && savedEditedHtml) {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(savedEditedHtml);
+        printWindow.document.close();
+        printWindow.onload = () => printWindow.print();
+        // Fallback: trigger print after a short delay if onload doesn't fire
+        setTimeout(() => { try { printWindow.print(); } catch {} }, 800);
+      }
+      toast({ title: "Opening print dialog (with your edits)...", description: `Form: ${template.title}` });
+      return;
+    }
+    // No edits — fetch fresh from server
     try {
       const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
         headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role },
@@ -526,13 +575,19 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
                         <CardTitle className="text-sm sm:text-base leading-tight" data-testid={`template-title-${template.id}`}>
                           {template.title}
                         </CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <Badge className={getCategoryColor(template.category)} data-testid={`template-category-${template.id}`}>
                             {template.category}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
                             v{template.version}
                           </Badge>
+                          {savedEditedTemplateId === template.id && (
+                            <Badge className="bg-emerald-500 text-white text-xs flex items-center gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Edited
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -600,7 +655,18 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       </Tabs>
 
       {/* View / Edit Dialog */}
-      <Dialog open={viewDialogOpen} onOpenChange={(open) => { setViewDialogOpen(open); if (!open) { setViewHtml(""); setViewTemplate(null); setHasEdits(false); } }}>
+      <Dialog open={viewDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          // Save edits before closing so card buttons can use them
+          persistEdits();
+          setViewDialogOpen(false);
+          setViewHtml("");
+          setViewTemplate(null);
+          setHasEdits(false);
+        } else {
+          setViewDialogOpen(true);
+        }
+      }}>
         <DialogContent className="max-w-5xl w-full h-[92vh] flex flex-col p-0 gap-0">
           <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -629,7 +695,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
                   <Printer className="h-4 w-4 mr-1" />
                   Print
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setViewDialogOpen(false)}>
+                <Button variant="ghost" size="icon" onClick={() => { persistEdits(); setViewDialogOpen(false); setViewHtml(""); setViewTemplate(null); setHasEdits(false); }}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
