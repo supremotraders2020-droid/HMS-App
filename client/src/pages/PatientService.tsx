@@ -122,6 +122,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [selectedProfilePatient, setSelectedProfilePatient] = useState<ServicePatient | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [profileActiveSection, setProfileActiveSection] = useState("opd");
+  const [selectedHistoryPatient, setSelectedHistoryPatient] = useState<ServicePatient | null>(null);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   
   // Appointment prefill data from Check-in
   const [prefillAppointmentData, setPrefillAppointmentData] = useState<{
@@ -459,6 +461,10 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
+  });
+
+  const { data: allTrackingPatients = [] } = useQuery<any[]>({
+    queryKey: ["/api/tracking/patients"],
   });
 
   // Fetch longitudinal patient profile when a patient is selected
@@ -2184,7 +2190,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           <div className="col-span-3 text-sm text-slate-600 dark:text-slate-300 truncate">
                             {patient.email || "—"}
                           </div>
-                          <div className="col-span-2 text-right">
+                          <div className="col-span-2 flex gap-1 justify-end flex-wrap">
                             <Button
                               variant="outline"
                               size="sm"
@@ -2197,6 +2203,19 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               View Profile
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-emerald-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedHistoryPatient(patient);
+                                setShowHistoryDialog(true);
+                              }}
+                            >
+                              <History className="h-4 w-4 mr-1" />
+                              History
                             </Button>
                           </div>
                         </div>
@@ -2474,6 +2493,131 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Patient History Dialog */}
+      {(() => {
+        const tp = selectedHistoryPatient
+          ? allTrackingPatients.find((t: any) =>
+              t.name?.toLowerCase() === `${selectedHistoryPatient.firstName} ${selectedHistoryPatient.lastName}`.toLowerCase()
+            )
+          : null;
+        const admDate = tp?.admissionDate ? new Date(tp.admissionDate) : null;
+        const endDate = tp?.dischargeDate ? new Date(tp.dischargeDate) : new Date();
+        const totalDays = admDate ? Math.max(0, Math.round((endDate.getTime() - admDate.getTime()) / 86400000)) : 0;
+        const icuDays = tp?.icuDays ?? 0;
+        const wardDays = Math.max(0, totalDays - icuDays);
+        const ventDays = tp?.ventilatorDays ?? 0;
+        return (
+          <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+            <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5 text-emerald-600" />
+                  Patient History — {selectedHistoryPatient?.firstName} {selectedHistoryPatient?.lastName}
+                </DialogTitle>
+                <DialogDescription>Admission and stay details from Patient Monitoring</DialogDescription>
+              </DialogHeader>
+
+              {!tp ? (
+                <div className="py-10 text-center text-muted-foreground">
+                  <Bed className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                  <p className="font-medium">No admission record found</p>
+                  <p className="text-sm mt-1">This patient has not been admitted through the Patient Monitoring module.</p>
+                </div>
+              ) : (
+                <div className="space-y-4 pt-2">
+                  {/* Row 1: Patient Details + Admission & Stay */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Patient Details */}
+                    <div className="border rounded-lg p-4 space-y-2">
+                      <h4 className="font-semibold text-sm flex items-center gap-1.5 mb-3">
+                        <User className="h-4 w-4" /> Patient Details
+                      </h4>
+                      {[
+                        { label: "Name", value: tp.name },
+                        { label: "Age", value: tp.age ? `${tp.age} years` : "N/A" },
+                        { label: "Gender", value: tp.gender },
+                        { label: "Blood Group", value: tp.bloodGroup || "N/A" },
+                        { label: "Room", value: tp.room },
+                        { label: "Diagnosis", value: tp.diagnosis },
+                        { label: "Attending Doctor", value: tp.attendingDoctor || tp.doctor || "N/A" },
+                        { label: "Status", value: tp.status, isBadge: true },
+                      ].map(({ label, value, isBadge }) => (
+                        <div key={label} className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">{label}:</span>
+                          {isBadge ? (
+                            <Badge variant={value === "critical" ? "destructive" : value === "stable" ? "secondary" : "outline"} className="capitalize">{value}</Badge>
+                          ) : (
+                            <span className="font-medium text-right max-w-[55%] truncate">{value || "N/A"}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Admission & Stay Duration */}
+                    <div className="border rounded-lg p-4 space-y-3">
+                      <h4 className="font-semibold text-sm flex items-center gap-1.5 mb-3">
+                        <Calendar className="h-4 w-4" /> Admission & Stay Duration
+                      </h4>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Admission Date:</span>
+                        <span className="font-medium">{admDate ? admDate.toLocaleDateString() : "N/A"}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm py-1.5 border-t">
+                        <span className="flex items-center gap-1.5 text-muted-foreground"><Bed className="h-3.5 w-3.5 text-blue-500" /> Total Hospital Stay:</span>
+                        <span className="font-bold text-blue-500">{totalDays} days</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm py-1.5 border-t">
+                        <span className="flex items-center gap-1.5 text-muted-foreground"><Bed className="h-3.5 w-3.5 text-green-500" /> General Ward:</span>
+                        <span className="font-bold text-green-500">{wardDays} days</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm py-1.5 border-t">
+                        <span className="flex items-center gap-1.5 text-muted-foreground"><HeartPulse className="h-3.5 w-3.5 text-red-500" /> ICU Stay:</span>
+                        <span className="font-bold text-red-500">{icuDays} days</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm py-1.5 border-t">
+                        <span className="flex items-center gap-1.5 text-muted-foreground"><Activity className="h-3.5 w-3.5 text-cyan-500" /> Ventilator:</span>
+                        <span className="font-bold text-cyan-500">{ventDays} days</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Additional Information */}
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-semibold text-sm flex items-center gap-1.5 mb-3">
+                      <FileText className="h-4 w-4" /> Additional Information
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs mb-1">Currently in ICU</p>
+                        <Badge variant={tp.isInIcu ? "destructive" : "secondary"}>{tp.isInIcu ? "Yes" : "No"}</Badge>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs mb-1">Department</p>
+                        <p className="font-medium capitalize">{tp.department || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs mb-1">Assigned Nurse</p>
+                        <p className="font-medium">{tp.assignedNurse || tp.nurse || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs mb-1">ICU Transfer Date</p>
+                        <p className="font-medium">{tp.icuTransferDate ? new Date(tp.icuTransferDate).toLocaleDateString() : "N/A"}</p>
+                      </div>
+                    </div>
+                    {tp.notes && (
+                      <div className="mt-3 pt-3 border-t">
+                        <p className="text-muted-foreground text-xs mb-1">Notes</p>
+                        <p className="text-sm">{tp.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
 
       {/* Patient Detail Dialog */}
       <Dialog open={showPatientDetailDialog} onOpenChange={setShowPatientDetailDialog}>
