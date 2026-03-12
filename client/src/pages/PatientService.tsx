@@ -2108,10 +2108,10 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Time</SelectItem>
-                      <SelectItem value="weekly">This Week</SelectItem>
-                      <SelectItem value="monthly">This Month</SelectItem>
-                      <SelectItem value="quarterly">This Quarter</SelectItem>
-                      <SelectItem value="yearly">This Year</SelectItem>
+                      <SelectItem value="weekly">Week</SelectItem>
+                      <SelectItem value="monthly">Month</SelectItem>
+                      <SelectItem value="quarterly">Quarterly</SelectItem>
+                      <SelectItem value="yearly">Year</SelectItem>
                     </SelectContent>
                   </Select>
                   <div className="relative">
@@ -2206,7 +2206,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       Showing {filteredAllPatients.length} of {patients.length} patients
                       {allPatientsPeriod !== "all" && (
                         <span className="ml-1 text-blue-500">
-                          ({allPatientsPeriod === "weekly" ? "this week" : allPatientsPeriod === "monthly" ? "this month" : allPatientsPeriod === "quarterly" ? "this quarter" : "this year"})
+                          ({allPatientsPeriod === "weekly" ? "week" : allPatientsPeriod === "monthly" ? "month" : allPatientsPeriod === "quarterly" ? "quarterly" : "year"})
                         </span>
                       )}
                     </div>
