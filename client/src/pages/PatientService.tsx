@@ -53,8 +53,117 @@ import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/s
 import type { ServicePatient, MedicalRecord, PatientConsent, Doctor, IdCardScan, CriticalAlert } from "@shared/schema";
 import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, AlertCircle, ImageIcon, ExternalLink, ClipboardList, Bed, DollarSign, History, ChevronRight } from "lucide-react";
+import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, AlertCircle, ImageIcon, ExternalLink, ClipboardList, Bed, DollarSign, History, ChevronRight, Wind, LogOut } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
+function calculateDays(dateString: string | Date | null | undefined): number {
+  if (!dateString) return 0;
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+type PatientMovement = {
+  id: string;
+  eventType: string;
+  fromLocation?: string;
+  toLocation?: string;
+  notes?: string;
+  performedBy?: string;
+  occurredAt: string;
+};
+
+function PatientHistoryTimeline({ patientId }: { patientId: string }) {
+  const { data: movements = [], isLoading } = useQuery<PatientMovement[]>({
+    queryKey: ["/api/tracking/patients", patientId, "movements"],
+    refetchInterval: 30000,
+    enabled: Boolean(patientId),
+  });
+
+  const getEventIcon = (eventType: string) => {
+    switch (eventType?.toLowerCase()) {
+      case "admission": return <Plus className="h-4 w-4 text-green-600" />;
+      case "discharge": return <LogOut className="h-4 w-4 text-blue-600" />;
+      case "icu_transfer": return <HeartPulse className="h-4 w-4 text-red-600" />;
+      case "ward_transfer": return <Bed className="h-4 w-4 text-purple-600" />;
+      default: return <MapPin className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getEventColor = (eventType: string) => {
+    switch (eventType?.toLowerCase()) {
+      case "admission": return "border-green-500 bg-green-50 dark:bg-green-900/20";
+      case "discharge": return "border-blue-500 bg-blue-50 dark:bg-blue-900/20";
+      case "icu_transfer": return "border-red-500 bg-red-50 dark:bg-red-900/20";
+      case "ward_transfer": return "border-purple-500 bg-purple-50 dark:bg-purple-900/20";
+      default: return "border-gray-500 bg-gray-50 dark:bg-gray-900/20";
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" /> Movement Timeline
+          </CardTitle>
+        </CardHeader>
+        <CardContent><div className="text-center text-muted-foreground py-4">Loading...</div></CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" /> Movement Timeline
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {movements.length === 0 ? (
+          <div className="text-center text-muted-foreground py-4">No movement history recorded</div>
+        ) : (
+          <div className="relative space-y-4">
+            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-muted" />
+            {movements.map((movement) => {
+              const d = new Date(movement.occurredAt);
+              const date = d.toLocaleDateString();
+              const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+              return (
+                <div key={movement.id} className="relative pl-10">
+                  <div className="absolute left-2 top-2 w-4 h-4 rounded-full bg-background border-2 border-primary flex items-center justify-center">
+                    {getEventIcon(movement.eventType)}
+                  </div>
+                  <div className={cn("p-3 rounded-lg border-l-4", getEventColor(movement.eventType))}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium capitalize">{movement.eventType.replace("_", " ")}</span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" /><span>{date} {time}</span>
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {movement.fromLocation && movement.toLocation && (
+                        <div className="flex items-center gap-2">
+                          <span>{movement.fromLocation}</span>
+                          <ChevronRight className="h-4 w-4" />
+                          <span className="font-medium">{movement.toLocation}</span>
+                        </div>
+                      )}
+                      {movement.notes && <p className="mt-1 text-xs">{movement.notes}</p>}
+                      {movement.performedBy && <p className="mt-1 text-xs">By: {movement.performedBy}</p>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 const patientFormSchema = insertServicePatientSchema.extend({
   firstName: z.string().min(1, "First name is required"),
@@ -465,6 +574,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
   const { data: allTrackingPatients = [] } = useQuery<any[]>({
     queryKey: ["/api/tracking/patients"],
+    refetchInterval: 30000,
   });
 
   // Fetch longitudinal patient profile when a patient is selected
@@ -2496,26 +2606,26 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
       {/* Patient History Dialog */}
       {(() => {
+        const fullName = selectedHistoryPatient
+          ? `${selectedHistoryPatient.firstName} ${selectedHistoryPatient.lastName}`.trim()
+          : "";
         const tp = selectedHistoryPatient
-          ? allTrackingPatients.find((t: any) =>
-              t.name?.toLowerCase() === `${selectedHistoryPatient.firstName} ${selectedHistoryPatient.lastName}`.toLowerCase()
-            )
+          ? allTrackingPatients.find((t: any) => {
+              const tn = (t.name || "").trim().toLowerCase();
+              const fn = fullName.toLowerCase();
+              if (tn === fn) return true;
+              const parts = fn.split(" ").filter(Boolean);
+              return parts.length > 0 && parts.every((p) => tn.includes(p));
+            })
           : null;
-        const admDate = tp?.admissionDate ? new Date(tp.admissionDate) : null;
-        const endDate = tp?.dischargeDate ? new Date(tp.dischargeDate) : new Date();
-        const totalDays = admDate ? Math.max(0, Math.round((endDate.getTime() - admDate.getTime()) / 86400000)) : 0;
-        const icuDays = tp?.icuDays ?? 0;
-        const wardDays = Math.max(0, totalDays - icuDays);
-        const ventDays = tp?.ventilatorDays ?? 0;
         return (
           <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
             <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <History className="h-5 w-5 text-emerald-600" />
-                  Patient History — {selectedHistoryPatient?.firstName} {selectedHistoryPatient?.lastName}
+                  <History className="h-5 w-5 text-purple-600" />
+                  Patient History - {fullName}
                 </DialogTitle>
-                <DialogDescription>Admission and stay details from Patient Monitoring</DialogDescription>
               </DialogHeader>
 
               {!tp ? (
@@ -2525,93 +2635,138 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   <p className="text-sm mt-1">This patient has not been admitted through the Patient Monitoring module.</p>
                 </div>
               ) : (
-                <div className="space-y-4 pt-2">
-                  {/* Row 1: Patient Details + Admission & Stay */}
+                <div className="space-y-6 mt-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Patient Details */}
-                    <div className="border rounded-lg p-4 space-y-2">
-                      <h4 className="font-semibold text-sm flex items-center gap-1.5 mb-3">
-                        <User className="h-4 w-4" /> Patient Details
-                      </h4>
-                      {[
-                        { label: "Name", value: tp.name },
-                        { label: "Age", value: tp.age ? `${tp.age} years` : "N/A" },
-                        { label: "Gender", value: tp.gender },
-                        { label: "Blood Group", value: tp.bloodGroup || "N/A" },
-                        { label: "Room", value: tp.room },
-                        { label: "Diagnosis", value: tp.diagnosis },
-                        { label: "Attending Doctor", value: tp.attendingDoctor || tp.doctor || "N/A" },
-                        { label: "Status", value: tp.status, isBadge: true },
-                      ].map(({ label, value, isBadge }) => (
-                        <div key={label} className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">{label}:</span>
-                          {isBadge ? (
-                            <Badge variant={value === "critical" ? "destructive" : value === "stable" ? "secondary" : "outline"} className="capitalize">{value}</Badge>
-                          ) : (
-                            <span className="font-medium text-right max-w-[55%] truncate">{value || "N/A"}</span>
-                          )}
+                    {/* Patient Details Card */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" /> Patient Details
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        {[
+                          { label: "Name", value: tp.name },
+                          { label: "Age", value: tp.age ? `${tp.age} years` : "N/A" },
+                          { label: "Gender", value: tp.gender ? <span className="capitalize">{tp.gender}</span> : "N/A" },
+                          { label: "Blood Group", value: tp.bloodGroup || "N/A" },
+                          { label: "Room", value: tp.room || "N/A" },
+                          { label: "Diagnosis", value: tp.diagnosis || "N/A" },
+                          { label: "Attending Doctor", value: tp.attendingDoctor || "N/A" },
+                        ].map(({ label, value }) => (
+                          <div key={label} className="flex justify-between">
+                            <span className="text-muted-foreground">{label}:</span>
+                            <span className="font-medium text-right max-w-[55%]">{value}</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Status:</span>
+                          <Badge variant={tp.status === "critical" ? "destructive" : tp.status === "stable" ? "default" : "secondary"}>
+                            {tp.status}
+                          </Badge>
                         </div>
-                      ))}
-                    </div>
+                      </CardContent>
+                    </Card>
 
-                    {/* Admission & Stay Duration */}
-                    <div className="border rounded-lg p-4 space-y-3">
-                      <h4 className="font-semibold text-sm flex items-center gap-1.5 mb-3">
-                        <Calendar className="h-4 w-4" /> Admission & Stay Duration
-                      </h4>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Admission Date:</span>
-                        <span className="font-medium">{admDate ? admDate.toLocaleDateString() : "N/A"}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm py-1.5 border-t">
-                        <span className="flex items-center gap-1.5 text-muted-foreground"><Bed className="h-3.5 w-3.5 text-blue-500" /> Total Hospital Stay:</span>
-                        <span className="font-bold text-blue-500">{totalDays} days</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm py-1.5 border-t">
-                        <span className="flex items-center gap-1.5 text-muted-foreground"><Bed className="h-3.5 w-3.5 text-green-500" /> General Ward:</span>
-                        <span className="font-bold text-green-500">{wardDays} days</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm py-1.5 border-t">
-                        <span className="flex items-center gap-1.5 text-muted-foreground"><HeartPulse className="h-3.5 w-3.5 text-red-500" /> ICU Stay:</span>
-                        <span className="font-bold text-red-500">{icuDays} days</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm py-1.5 border-t">
-                        <span className="flex items-center gap-1.5 text-muted-foreground"><Activity className="h-3.5 w-3.5 text-cyan-500" /> Ventilator:</span>
-                        <span className="font-bold text-cyan-500">{ventDays} days</span>
-                      </div>
-                    </div>
+                    {/* Admission & Stay Duration Card */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" /> Admission & Stay Duration
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Admission Date:</span>
+                          <span className="font-medium">
+                            {tp.admissionDate ? new Date(tp.admissionDate).toLocaleDateString() : "N/A"}
+                          </span>
+                        </div>
+                        <div className="border-t pt-3 space-y-2">
+                          <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <Bed className="h-4 w-4 text-blue-600" />
+                              <span className="text-blue-700 dark:text-blue-300">Total Hospital Stay:</span>
+                            </div>
+                            <span className="font-bold text-blue-700 dark:text-blue-300">
+                              {calculateDays(tp.admissionDate)} days
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <Bed className="h-4 w-4 text-green-600" />
+                              <span className="text-green-700 dark:text-green-300">General Ward:</span>
+                            </div>
+                            <span className="font-bold text-green-700 dark:text-green-300">
+                              {tp.isInIcu
+                                ? (tp.icuTransferDate
+                                    ? calculateDays(tp.admissionDate) - calculateDays(tp.icuTransferDate)
+                                    : 0)
+                                : calculateDays(tp.admissionDate)
+                              } days
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <HeartPulse className="h-4 w-4 text-red-600" />
+                              <span className="text-red-700 dark:text-red-300">ICU Stay:</span>
+                            </div>
+                            <span className="font-bold text-red-700 dark:text-red-300">
+                              {tp.isInIcu && tp.icuTransferDate
+                                ? calculateDays(tp.icuTransferDate)
+                                : (tp.icuDays || 0)
+                              } days
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-2 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <Wind className="h-4 w-4 text-cyan-600" />
+                              <span className="text-cyan-700 dark:text-cyan-300">Ventilator:</span>
+                            </div>
+                            <span className="font-bold text-cyan-700 dark:text-cyan-300">
+                              {tp.ventilatorDays || 0} days
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  {/* Row 2: Additional Information */}
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-semibold text-sm flex items-center gap-1.5 mb-3">
-                      <FileText className="h-4 w-4" /> Additional Information
-                    </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground text-xs mb-1">Currently in ICU</p>
-                        <Badge variant={tp.isInIcu ? "destructive" : "secondary"}>{tp.isInIcu ? "Yes" : "No"}</Badge>
+                  {/* Additional Information Card */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-muted-foreground" /> Additional Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Currently in ICU:</span>
+                          <Badge variant={tp.isInIcu ? "destructive" : "secondary"}>
+                            {tp.isInIcu ? "Yes" : "No"}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Department:</span>
+                          <span>{tp.department || "N/A"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Assigned Nurse:</span>
+                          <span>{tp.assignedNurse || "N/A"}</span>
+                        </div>
+                        {tp.icuTransferDate && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">ICU Transfer Date:</span>
+                            <span>{new Date(tp.icuTransferDate).toLocaleDateString()}</span>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs mb-1">Department</p>
-                        <p className="font-medium capitalize">{tp.department || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs mb-1">Assigned Nurse</p>
-                        <p className="font-medium">{tp.assignedNurse || tp.nurse || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs mb-1">ICU Transfer Date</p>
-                        <p className="font-medium">{tp.icuTransferDate ? new Date(tp.icuTransferDate).toLocaleDateString() : "N/A"}</p>
-                      </div>
-                    </div>
-                    {tp.notes && (
-                      <div className="mt-3 pt-3 border-t">
-                        <p className="text-muted-foreground text-xs mb-1">Notes</p>
-                        <p className="text-sm">{tp.notes}</p>
-                      </div>
-                    )}
-                  </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Movement Timeline */}
+                  <PatientHistoryTimeline patientId={tp.id} />
                 </div>
               )}
             </DialogContent>
