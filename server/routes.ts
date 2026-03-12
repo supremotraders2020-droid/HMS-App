@@ -431,25 +431,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // CRITICAL: Staff list validation - Staff roles must have an ACTIVE entry in staff_master table
       // SUPER_ADMIN, ADMIN and PATIENT roles are exempt from this check
       if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN" && user.role !== "PATIENT" && STAFF_ROLES_REQUIRING_VALIDATION.includes(user.role)) {
-        // Try to find staff record by userId first (primary link)
-        let staffRecord = await storage.getStaffMasterByUserId(user.id);
+        // Try to find staff record by userId first (primary link) - use databaseStorage for production persistence
+        let staffRecord = await databaseStorage.getStaffMasterByUserId(user.id);
         
         // If no userId link, try finding by email (fallback for legacy staff records)
         if (!staffRecord && user.email) {
-          staffRecord = await storage.getStaffMasterByEmail(user.email);
+          staffRecord = await databaseStorage.getStaffMasterByEmail(user.email);
           // If found by email, automatically link the userId for future logins
           if (staffRecord && !staffRecord.userId) {
-            await storage.updateStaffMaster(staffRecord.id, { userId: user.id });
+            await databaseStorage.updateStaffMaster(staffRecord.id, { userId: user.id });
             console.log(`Auto-linked staff ${staffRecord.fullName} to user ${user.id} via email`);
           }
         }
         
         // If still not found, try finding by username as employeeCode (fallback for legacy records)
         if (!staffRecord) {
-          staffRecord = await storage.getStaffMasterByEmployeeCode(username);
+          staffRecord = await databaseStorage.getStaffMasterByEmployeeCode(username);
           // If found by employeeCode, automatically link the userId for future logins
           if (staffRecord && !staffRecord.userId) {
-            await storage.updateStaffMaster(staffRecord.id, { userId: user.id });
+            await databaseStorage.updateStaffMaster(staffRecord.id, { userId: user.id });
             console.log(`Auto-linked staff ${staffRecord.fullName} to user ${user.id} via employeeCode`);
           }
         }
@@ -461,10 +461,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        if (staffRecord.status !== "ACTIVE") {
+        if (staffRecord.status?.toUpperCase() !== "ACTIVE") {
           console.log(`Login denied for ${username}: Staff status is ${staffRecord.status}`);
           return res.status(403).json({ 
-            error: `Access denied. Your staff account is ${staffRecord.status.toLowerCase()}. Please contact the administrator.` 
+            error: `Access denied. Your staff account is ${(staffRecord.status || 'inactive').toLowerCase()}. Please contact the administrator.` 
           });
         }
       }
@@ -3215,7 +3215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // CRITICAL: Create staff_master entry for login validation
       const empCode = `EMP${Date.now().toString().slice(-6)}`;
-      await storage.createStaffMaster({
+      await databaseStorage.createStaffMaster({
         userId: newUser.id,
         employeeCode: empCode,
         fullName: trimmedName,
@@ -16750,7 +16750,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
         return res.status(403).json({ error: "Unauthorized" });
       }
-      const staff = await storage.getAllStaffMaster();
+      const staff = await databaseStorage.getAllStaffMaster();
       res.json(staff);
     } catch (error) {
       console.error("Error fetching staff:", error);
@@ -16764,10 +16764,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const user = session?.user;
       if (!user) return res.status(401).json({ error: "Unauthorized" });
       
-      let staff = await storage.getStaffMasterByUserId(user.id);
+      let staff = await databaseStorage.getStaffMasterByUserId(user.id);
       if (!staff && STAFF_MANAGEMENT_ALL_ROLES.includes(user.role)) {
         const empCode = `EMP${Date.now().toString().slice(-6)}`;
-        staff = await storage.createStaffMaster({
+        staff = await databaseStorage.createStaffMaster({
           userId: user.id,
           employeeCode: empCode,
           fullName: user.name || user.username || "Staff Member",
@@ -16790,7 +16790,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const user = session?.user;
       if (!user) return res.status(401).json({ error: "Unauthorized" });
       
-      const staff = await storage.getStaffMaster(req.params.id);
+      const staff = await databaseStorage.getStaffMaster(req.params.id);
       if (!staff) return res.status(404).json({ error: "Staff not found" });
       
       // Staff can only see their own profile unless admin
@@ -16810,7 +16810,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const user = session?.user;
       if (!user) return res.status(401).json({ error: "Unauthorized" });
       
-      const staff = await storage.getStaffMasterByUserId(req.params.userId);
+      const staff = await databaseStorage.getStaffMasterByUserId(req.params.userId);
       if (!staff) return res.status(404).json({ error: "Staff profile not found" });
       
       // Staff can only see their own profile unless admin
@@ -16831,7 +16831,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
         return res.status(403).json({ error: "Unauthorized" });
       }
-      const staff = await storage.getStaffMasterByDepartment(req.params.department);
+      const staff = await databaseStorage.getStaffMasterByDepartment(req.params.department);
       res.json(staff);
     } catch (error) {
       console.error("Error fetching staff by department:", error);
@@ -16846,7 +16846,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
         return res.status(403).json({ error: "Unauthorized" });
       }
-      const staff = await storage.getStaffMasterByRole(req.params.role);
+      const staff = await databaseStorage.getStaffMasterByRole(req.params.role);
       res.json(staff);
     } catch (error) {
       console.error("Error fetching staff by role:", error);
@@ -16868,7 +16868,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Unauthorized" });
       }
       console.log("POST /api/staff - Creating staff with:", req.body);
-      const staff = await storage.createStaffMaster(req.body);
+      const staff = await databaseStorage.createStaffMaster(req.body);
       res.status(201).json(staff);
     } catch (error) {
       console.error("Error creating staff:", error);
@@ -16883,7 +16883,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       if (!user || !STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role)) {
         return res.status(403).json({ error: "Unauthorized" });
       }
-      const staff = await storage.updateStaffMaster(req.params.id, req.body);
+      const staff = await databaseStorage.updateStaffMaster(req.params.id, req.body);
       if (!staff) return res.status(404).json({ error: "Staff not found" });
       res.json(staff);
     } catch (error) {
@@ -16901,7 +16901,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       }
       
       // Get staff record before deletion to find linked user
-      const staffRecord = await storage.getStaffMaster(req.params.id);
+      const staffRecord = await databaseStorage.getStaffMaster(req.params.id);
       if (!staffRecord) {
         return res.status(404).json({ error: "Staff not found" });
       }
@@ -16924,7 +16924,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
           console.log(`User account ${linkedUserId} deleted due to staff removal`);
           
           // Step 3: Delete the staff record
-          const deleted = await storage.deleteStaffMaster(staffId);
+          const deleted = await databaseStorage.deleteStaffMaster(staffId);
           if (!deleted) {
             // Staff record deletion failed - log and return error so admin knows to retry
             await storage.createActivityLog({
@@ -16973,7 +16973,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         }
       } else {
         // No linked user - just delete the staff record
-        const deleted = await storage.deleteStaffMaster(staffId);
+        const deleted = await databaseStorage.deleteStaffMaster(staffId);
         if (!deleted) return res.status(404).json({ error: "Staff not found" });
         
         await storage.createActivityLog({
@@ -17042,7 +17042,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       if (!user) return res.status(401).json({ error: "Unauthorized" });
       
       // Staff can see their own roster
-      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      const staffProfile = await databaseStorage.getStaffMasterByUserId(user.id);
       if (!STAFF_MANAGEMENT_ADMIN_ROLES.includes(user.role) && 
           (!staffProfile || staffProfile.id !== req.params.staffId)) {
         return res.status(403).json({ error: "Unauthorized" });
@@ -17112,7 +17112,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       });
       
       // Notify staff member of new shift assignment
-      const staffMember = await storage.getStaffMaster(req.body.staffId);
+      const staffMember = await databaseStorage.getStaffMaster(req.body.staffId);
       if (staffMember?.userId) {
         await notificationService.notifyRosterUpdated(
           staffMember.userId,
@@ -17155,7 +17155,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       });
       
       // Notify staff member of shift update
-      const staffMember = await storage.getStaffMaster(roster!.staffId);
+      const staffMember = await databaseStorage.getStaffMaster(roster!.staffId);
       if (staffMember?.userId) {
         await notificationService.notifyRosterUpdated(
           staffMember.userId,
@@ -17195,7 +17195,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       });
       
       // Notify staff member of shift removal
-      const staffMember = await storage.getStaffMaster(existingRoster.staffId);
+      const staffMember = await databaseStorage.getStaffMaster(existingRoster.staffId);
       if (staffMember?.userId) {
         await notificationService.notifyRosterUpdated(
           staffMember.userId,
@@ -17229,7 +17229,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       }
       
       // Non-admin staff can only see their own tasks
-      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      const staffProfile = await databaseStorage.getStaffMasterByUserId(user.id);
       if (!staffProfile) return res.json([]);
       
       const tasks = await storage.getTaskLogsByStaff(staffProfile.id);
@@ -17350,10 +17350,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Unauthorized" });
       }
       
-      let staffProfile = await storage.getStaffMasterByUserId(user.id);
+      let staffProfile = await databaseStorage.getStaffMasterByUserId(user.id);
       if (!staffProfile) {
         const empCode = `EMP${Date.now().toString().slice(-6)}`;
-        staffProfile = await storage.createStaffMaster({
+        staffProfile = await databaseStorage.createStaffMaster({
           userId: user.id,
           employeeCode: empCode,
           fullName: user.name || user.username || "Staff Member",
@@ -17393,10 +17393,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Unauthorized" });
       }
       
-      let staffProfile = await storage.getStaffMasterByUserId(user.id);
+      let staffProfile = await databaseStorage.getStaffMasterByUserId(user.id);
       if (!staffProfile) {
         const empCode = `EMP${Date.now().toString().slice(-6)}`;
-        staffProfile = await storage.createStaffMaster({
+        staffProfile = await databaseStorage.createStaffMaster({
           userId: user.id,
           employeeCode: empCode,
           fullName: user.name || user.username || "Staff Member",
@@ -17488,7 +17488,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       }
       
       // Staff can only see their own leave requests
-      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      const staffProfile = await databaseStorage.getStaffMasterByUserId(user.id);
       if (!staffProfile) return res.json([]);
       
       const leaves = await storage.getLeaveRequestsByStaff(staffProfile.id);
@@ -17538,10 +17538,10 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.status(403).json({ error: "Unauthorized" });
       }
       
-      let staffProfile = await storage.getStaffMasterByUserId(user.id);
+      let staffProfile = await databaseStorage.getStaffMasterByUserId(user.id);
       if (!staffProfile) {
         const empCode = `EMP${Date.now().toString().slice(-6)}`;
-        staffProfile = await storage.createStaffMaster({
+        staffProfile = await databaseStorage.createStaffMaster({
           userId: user.id,
           employeeCode: empCode,
           fullName: user.name || user.username || "Staff Member",
@@ -17603,7 +17603,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
           rejectionReason: req.body.reason,
         };
       } else if (action === "cancel") {
-        const staffProfile = await storage.getStaffMasterByUserId(user.id);
+        const staffProfile = await databaseStorage.getStaffMasterByUserId(user.id);
         if (!staffProfile || existingLeave.staffId !== staffProfile.id) {
           return res.status(403).json({ error: "Cannot cancel this leave request" });
         }
@@ -17616,7 +17616,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       if (!leave) return res.status(404).json({ error: "Leave request not found" });
       
       if (action === "approve" || action === "reject") {
-        const staffProfile = await storage.getStaffMaster(existingLeave.staffId);
+        const staffProfile = await databaseStorage.getStaffMaster(existingLeave.staffId);
         if (staffProfile?.userId) {
           const startDate = typeof existingLeave.startDate === 'string' 
             ? existingLeave.startDate 
@@ -17662,7 +17662,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
         return res.json(overtime);
       }
       
-      const staffProfile = await storage.getStaffMasterByUserId(user.id);
+      const staffProfile = await databaseStorage.getStaffMasterByUserId(user.id);
       if (!staffProfile) return res.json([]);
       
       const overtime = await storage.getOvertimeLogsByStaff(staffProfile.id);
@@ -17860,7 +17860,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       
       for (const slot of dateSlots) {
         // Check if staff profile exists for this doctor
-        const staffProfile = await storage.getStaffMasterByUserId(slot.doctorId);
+        const staffProfile = await databaseStorage.getStaffMasterByUserId(slot.doctorId);
         if (!staffProfile) continue;
         
         // Check if shift already exists
@@ -17913,7 +17913,7 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
       const { startDate, endDate, department } = req.query;
       
       // Get all staff
-      const allStaff = await storage.getAllStaffMaster();
+      const allStaff = await databaseStorage.getAllStaffMaster();
       const filteredStaff = department 
         ? allStaff.filter(s => s.department === department)
         : allStaff;
@@ -20442,7 +20442,7 @@ Important:
         const empCodePrefix = role === "DOCTOR" ? "DOC" : role === "NURSE" ? "NUR" : role === "OPD_MANAGER" ? "OPD" : role === "ADMIN" ? "ADM" : role === "PATHOLOGY_LAB" ? "LAB" : "STR";
         const empCode = `${empCodePrefix}${Date.now().toString().slice(-6)}`;
         
-        await storage.createStaffMaster({
+        await databaseStorage.createStaffMaster({
           fullName: name,
           email: email || null,
           role: role,

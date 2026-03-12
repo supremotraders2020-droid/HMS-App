@@ -117,6 +117,12 @@ Gravity AI Manager encompasses 23 core modules with robust role-based access con
 - **Allergy Fields**: Drug Allergies, Food Allergies, Isolation Precautions
 - **Risk Flags**: Fall Risk, Pressure Ulcer Risk checkboxes
 
+## Critical Architecture Note (March 2026)
+- **ALWAYS use `databaseStorage.*` for staff_master operations** (not `storage.*` which is in-memory and empty in production)
+- `databaseStorage.getStaffMasterByUserId()`, `databaseStorage.getStaffMasterByEmail()`, `databaseStorage.getStaffMasterByEmployeeCode()`, `databaseStorage.updateStaffMaster()`, `databaseStorage.createStaffMaster()`, `databaseStorage.deleteStaffMaster()`, `databaseStorage.getAllStaffMaster()` — all staff_master CRUD must go through databaseStorage
+- The login route uses `databaseStorage` for staff_master validation (DOCTOR/NURSE/OPD_MANAGER/TECHNICIAN/PATHOLOGY_LAB/MEDICAL_STORE roles require an ACTIVE staff_master entry; SUPER_ADMIN, ADMIN, PATIENT are exempt)
+- Status field in staff_master must be uppercase "ACTIVE" (not lowercase)
+
 ## Documentation Updates (January 2026)
 - **docs/RECENT_UPDATES.md**: Comprehensive changelog for all recent changes
 - **docs/TECHNICIAN_SOP.md**: New SOP for Technician role with workflow isolation details
