@@ -2383,10 +2383,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                     <HeartPulse className="h-3 w-3 hidden sm:block" />
                     <span>ICU</span>
                   </TabsTrigger>
-                  <TabsTrigger value="monitoring" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
-                    <Activity className="h-3 w-3 hidden sm:block" />
-                    <span>Monitor</span>
-                  </TabsTrigger>
                   <TabsTrigger value="medication" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <Pill className="h-3 w-3 hidden sm:block" />
                     <span>Meds</span>
@@ -2673,80 +2669,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       )}
                     </CardContent>
                   </Card>
-                </TabsContent>
-
-                {/* Patient Monitoring Sessions */}
-                <TabsContent value="monitoring" className="space-y-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-blue-500" />
-                        Monitoring Sessions ({longitudinalProfile.monitoringSessions?.length || 0})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {!longitudinalProfile.monitoringSessions?.length ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">No monitoring sessions recorded</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {longitudinalProfile.monitoringSessions.map((session: any) => (
-                            <div key={session.id} className="p-3 border rounded-lg space-y-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex gap-2">
-                                  <Badge variant="outline" className="text-xs">{session.sessionDate}</Badge>
-                                  {session.isVentilated && <Badge variant="destructive" className="text-xs">Ventilated</Badge>}
-                                  {session.isLocked && <Badge variant="secondary" className="text-xs">Locked</Badge>}
-                                </div>
-                                <span className="text-xs text-muted-foreground">
-                                  {session.createdAt ? new Date(session.createdAt).toLocaleDateString() : "N/A"}
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <p><strong>Ward/Bed:</strong> {session.ward} / {session.bedNumber}</p>
-                                <p><strong>UHID:</strong> {session.uhid}</p>
-                                <p><strong>Primary Diagnosis:</strong> {session.primaryDiagnosis}</p>
-                                <p><strong>Consultant:</strong> {session.admittingConsultant}</p>
-                                {session.bloodGroup && <p><strong>Blood Group:</strong> {session.bloodGroup}</p>}
-                                {session.weightKg && <p><strong>Weight:</strong> {session.weightKg} kg</p>}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Movement/Transfer Log */}
-                  {longitudinalProfile.movementLog?.length > 0 && (
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-purple-500" />
-                          Movement & Transfer Log ({longitudinalProfile.movementLog.length})
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {longitudinalProfile.movementLog.map((move: any) => (
-                            <div key={move.id} className="flex items-start gap-3 p-2 border rounded-lg text-sm">
-                              <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0" />
-                              <div className="flex-1">
-                                <p className="font-medium">{move.movementType?.replace(/_/g, " ") || "Transfer"}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {move.fromLocation && <span>From: {move.fromLocation} → </span>}
-                                  {move.toLocation && <span>To: {move.toLocation}</span>}
-                                </p>
-                                {move.notes && <p className="text-xs text-muted-foreground">{move.notes}</p>}
-                              </div>
-                              <span className="text-xs text-muted-foreground shrink-0">
-                                {move.occurredAt ? new Date(move.occurredAt).toLocaleDateString() : "N/A"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
                 </TabsContent>
 
                 {/* Diagnostic Tests & Lab Reports */}
