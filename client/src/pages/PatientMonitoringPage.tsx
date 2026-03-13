@@ -2132,7 +2132,7 @@ export function InotropesTab({ session }: { session: Session }) {
     }
   });
 
-  const FREQUENCY_OPTIONS = ["OD", "BD", "TDS", "QID", "HS"];
+  const FREQUENCY_OPTIONS = ["OD", "BD", "TDS", "QID", "HS", "Stat", "Freq."];
 
   const resetForm = () => setForm({
     diagnosis: "",
