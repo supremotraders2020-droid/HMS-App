@@ -23,7 +23,7 @@ import {
   PlusCircle, RefreshCw, Download, Stethoscope,
   Wind, Syringe, FlaskConical, ClipboardList, Baby,
   BedDouble, FileCheck, Hospital, Timer, Info, CalendarDays, ArrowLeft,
-  Beaker, Plus, CheckCircle, XCircle, Loader2, Eye, Trash2, Edit, Printer, ClipboardCheck, Scan
+  Beaker, Plus, Minus, CheckCircle, XCircle, Loader2, Eye, Trash2, Edit, Printer, ClipboardCheck, Scan
 } from "lucide-react";
 
 // Reusable hospital print header HTML
@@ -2101,11 +2101,21 @@ export function VitalsTab({ session }: { session: Session }) {
   );
 }
 
+const emptyInjRow = () => ({ name: "", frequency: "" });
+const emptyMedRow = () => ({ name: "", frequency: "" });
+
 export function InotropesTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ injectionName: "", injectionFrequency: "", medicineName: "", medicineFrequency: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
+  const [form, setForm] = useState({
+    diagnosis: "",
+    date: format(new Date(), "yyyy-MM-dd"),
+    nurseId: "",
+    nurseName: "",
+    injections: [emptyInjRow()],
+    medicines: [emptyMedRow()],
+  });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/inotropes/${sessionId}`]
@@ -2117,37 +2127,83 @@ export function InotropesTab({ session }: { session: Session }) {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/inotropes", data),
-    onSuccess: () => { 
-      refetch(); 
-      toast({ title: "Injection Added", description: "Record saved successfully" }); 
-      setForm({ injectionName: "", injectionFrequency: "", medicineName: "", medicineFrequency: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
-      setDialogOpen(false);
-    },
     onError: () => {
-      toast({ title: "Error", description: "Failed to save injection", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to save record", variant: "destructive" });
     }
   });
 
   const FREQUENCY_OPTIONS = ["OD", "BD", "TDS", "QID", "HS"];
 
-  const handleSave = () => {
-    saveMutation.mutate({ 
-      sessionId, 
-      drugName: form.injectionName,
-      diagnosis: form.diagnosis,
-      injectionFrequency: form.injectionFrequency || null,
-      medicineName: form.medicineName || null,
-      medicineFrequency: form.medicineFrequency || null,
-      startTime: new Date(form.date).toISOString(),
-      nurseId: form.nurseId,
-      nurseName: form.nurseName
-    });
+  const resetForm = () => setForm({
+    diagnosis: "",
+    date: format(new Date(), "yyyy-MM-dd"),
+    nurseId: "",
+    nurseName: "",
+    injections: [emptyInjRow()],
+    medicines: [emptyMedRow()],
+  });
+
+  const handleSave = async () => {
+    const maxLen = Math.max(form.injections.length, form.medicines.length);
+    const calls: Promise<any>[] = [];
+    for (let i = 0; i < maxLen; i++) {
+      const inj = form.injections[i];
+      const med = form.medicines[i];
+      if (inj?.name || med?.name) {
+        calls.push(saveMutation.mutateAsync({
+          sessionId,
+          drugName: inj?.name || null,
+          diagnosis: form.diagnosis,
+          injectionFrequency: inj?.frequency || null,
+          medicineName: med?.name || null,
+          medicineFrequency: med?.frequency || null,
+          startTime: new Date(form.date).toISOString(),
+          nurseId: form.nurseId,
+          nurseName: form.nurseName
+        }));
+      }
+    }
+    try {
+      await Promise.all(calls);
+      refetch();
+      toast({ title: "Records Saved", description: `${calls.length} record(s) added successfully` });
+      resetForm();
+      setDialogOpen(false);
+    } catch {
+      // error handled in onError
+    }
   };
 
   const handleNurseChange = (nurseId: string) => {
     const selectedNurse = nurses.find((n: any) => n.id === nurseId);
     setForm({ ...form, nurseId, nurseName: selectedNurse?.fullName || "" });
   };
+
+  const updateInjection = (idx: number, field: "name" | "frequency", value: string) => {
+    const updated = [...form.injections];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setForm({ ...form, injections: updated });
+  };
+
+  const addInjectionRow = () => setForm({ ...form, injections: [...form.injections, emptyInjRow()] });
+  const removeInjectionRow = (idx: number) => {
+    if (form.injections.length === 1) return;
+    setForm({ ...form, injections: form.injections.filter((_, i) => i !== idx) });
+  };
+
+  const updateMedicine = (idx: number, field: "name" | "frequency", value: string) => {
+    const updated = [...form.medicines];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setForm({ ...form, medicines: updated });
+  };
+
+  const addMedicineRow = () => setForm({ ...form, medicines: [...form.medicines, emptyMedRow()] });
+  const removeMedicineRow = (idx: number) => {
+    if (form.medicines.length === 1) return;
+    setForm({ ...form, medicines: form.medicines.filter((_, i) => i !== idx) });
+  };
+
+  const hasAtLeastOneEntry = form.injections.some(r => r.name) || form.medicines.some(r => r.name);
 
   const handlePrint = () => {
     const rows = records.map((r: any, idx: number) => 
@@ -2207,34 +2263,83 @@ export function InotropesTab({ session }: { session: Session }) {
             <DialogTrigger asChild>
               <Button size="sm" data-testid="button-add-inotrope"><PlusCircle className="h-4 w-4 mr-1" /> Add Injection</Button>
             </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add Injection</DialogTitle>
               <DialogDescription>Add injection/medication details</DialogDescription>
             </DialogHeader>
-            <div className="space-y-3">
-              <div><Label>Diagnosis</Label><Input value={form.diagnosis} onChange={(e) => setForm({...form, diagnosis: e.target.value})} placeholder="e.g., Septic Shock" /></div>
-              <div><Label>Injection Name</Label><Input value={form.injectionName} onChange={(e) => setForm({...form, injectionName: e.target.value})} placeholder="e.g., Noradrenaline" /></div>
+            <div className="space-y-4">
               <div>
-                <Label>Frequency (Injection)</Label>
-                <Select value={form.injectionFrequency} onValueChange={(v) => setForm({...form, injectionFrequency: v})}>
-                  <SelectTrigger><SelectValue placeholder="Select frequency..." /></SelectTrigger>
-                  <SelectContent>
-                    {FREQUENCY_OPTIONS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label>Diagnosis</Label>
+                <Input value={form.diagnosis} onChange={(e) => setForm({...form, diagnosis: e.target.value})} placeholder="e.g., Septic Shock" />
               </div>
-              <div><Label>Medicine Name</Label><Input value={form.medicineName} onChange={(e) => setForm({...form, medicineName: e.target.value})} placeholder="e.g., Paracetamol 500mg" /></div>
+
+              {/* Injections - multi-row */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Injection Name</Label>
+                  <Button type="button" size="sm" variant="outline" onClick={addInjectionRow} className="h-7 px-2 gap-1 text-xs">
+                    <Plus className="h-3 w-3" /> Add Row
+                  </Button>
+                </div>
+                {form.injections.map((inj, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input
+                      className="flex-1"
+                      value={inj.name}
+                      onChange={(e) => updateInjection(idx, "name", e.target.value)}
+                      placeholder={`e.g., Noradrenaline`}
+                    />
+                    <Select value={inj.frequency} onValueChange={(v) => updateInjection(idx, "frequency", v)}>
+                      <SelectTrigger className="w-24"><SelectValue placeholder="Freq." /></SelectTrigger>
+                      <SelectContent>
+                        {FREQUENCY_OPTIONS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    {form.injections.length > 1 && (
+                      <Button type="button" size="icon" variant="ghost" onClick={() => removeInjectionRow(idx)} className="text-destructive shrink-0">
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Medicines - multi-row */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Medicine Name</Label>
+                  <Button type="button" size="sm" variant="outline" onClick={addMedicineRow} className="h-7 px-2 gap-1 text-xs">
+                    <Plus className="h-3 w-3" /> Add Row
+                  </Button>
+                </div>
+                {form.medicines.map((med, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input
+                      className="flex-1"
+                      value={med.name}
+                      onChange={(e) => updateMedicine(idx, "name", e.target.value)}
+                      placeholder={`e.g., Paracetamol 500mg`}
+                    />
+                    <Select value={med.frequency} onValueChange={(v) => updateMedicine(idx, "frequency", v)}>
+                      <SelectTrigger className="w-24"><SelectValue placeholder="Freq." /></SelectTrigger>
+                      <SelectContent>
+                        {FREQUENCY_OPTIONS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    {form.medicines.length > 1 && (
+                      <Button type="button" size="icon" variant="ghost" onClick={() => removeMedicineRow(idx)} className="text-destructive shrink-0">
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
               <div>
-                <Label>Frequency (Medicine)</Label>
-                <Select value={form.medicineFrequency} onValueChange={(v) => setForm({...form, medicineFrequency: v})}>
-                  <SelectTrigger><SelectValue placeholder="Select frequency..." /></SelectTrigger>
-                  <SelectContent>
-                    {FREQUENCY_OPTIONS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label>Date</Label>
+                <Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} />
               </div>
-              <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
               <div>
                 <Label>Staff Name</Label>
                 <Select value={form.nurseId} onValueChange={handleNurseChange}>
@@ -2253,7 +2358,7 @@ export function InotropesTab({ session }: { session: Session }) {
               <DialogClose asChild>
                 <Button variant="outline" type="button">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleSave} disabled={!form.injectionName || !form.nurseId || saveMutation.isPending}>
+              <Button onClick={handleSave} disabled={!hasAtLeastOneEntry || !form.nurseId || saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save"}
               </Button>
             </DialogFooter>
