@@ -4191,7 +4191,7 @@ export function InvestigationChartTab({ session }: { session: Session }) {
   ];
 
   const INFECTION_FIELDS = [
-    { key: "hiv", label: "HIV" }, { key: "hbsag", label: "HBsAg" }, { key: "hcv", label: "HCV" }, { key: "malaria", label: "Malaria" },
+    { key: "hiv", label: "HIV 1&2" }, { key: "hbsag", label: "HBsAg" }, { key: "hcv", label: "HCV" }, { key: "malaria", label: "Malaria" },
     { key: "dengueNs1", label: "Dengue NS1" }, { key: "dengueIgG", label: "Dengue IgG" }, { key: "dengueIgM", label: "Dengue IgM" },
     { key: "chikungunyaIgG", label: "Chikungunya IgG" }, { key: "chikungunyaIgM", label: "Chikungunya IgM" },
     { key: "weilFelix", label: "Weil-Felix" }, { key: "widal", label: "Widal" }, { key: "hPylori", label: "H.Pylori" },
@@ -5978,7 +5978,7 @@ const INVESTIGATIONS_LIST = [
   { key: "bloodCS", label: "BLOOD C/S" },
   { key: "urineCS", label: "URINE C/S" },
   { key: "hbsAg", label: "Hbs AG" },
-  { key: "hiv", label: "HIV" },
+  { key: "hiv", label: "HIV 1&2" },
   { key: "tsh", label: "TSH" },
   { key: "t3t4", label: "T3, T4" },
   { key: "hba1c", label: "HBA 1c" },

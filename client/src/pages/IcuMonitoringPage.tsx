@@ -3068,7 +3068,7 @@ const TEST_CATEGORIES = {
       { name: "ASO", type: "LAB", department: "Serology" },
       { name: "RA Factor", type: "LAB", department: "Serology" },
       { name: "ANA", type: "LAB", department: "Serology" },
-      { name: "HIV", type: "LAB", department: "Serology" },
+      { name: "HIV 1&2", type: "LAB", department: "Serology" },
       { name: "HBsAg", type: "LAB", department: "Serology" },
       { name: "HCV", type: "LAB", department: "Serology" },
       { name: "Dengue (NS1, IgM, IgG)", type: "LAB", department: "Serology" },
