@@ -53,7 +53,7 @@ import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/s
 import type { ServicePatient, MedicalRecord, PatientConsent, Doctor, IdCardScan, CriticalAlert } from "@shared/schema";
 import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, AlertCircle, ImageIcon, ExternalLink, ClipboardList, Bed, DollarSign, History, ChevronRight, Wind, LogOut } from "lucide-react";
+import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, AlertCircle, ImageIcon, ExternalLink, ClipboardList, Bed, DollarSign, History, ChevronRight, Wind, LogOut, FlaskConical, Syringe } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 function calculateDays(dateString: string | Date | null | undefined): number {
@@ -577,7 +577,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     refetchInterval: 30000,
   });
 
-  // Fetch longitudinal patient profile when a patient is selected
+  // Fetch longitudinal patient profile when a patient is selected - real-time refresh every 30s
   const { data: longitudinalProfile, isLoading: profileLoading } = useQuery({
     queryKey: ["/api/service-patients", selectedProfilePatient?.id, "longitudinal-profile"],
     queryFn: async () => {
@@ -591,7 +591,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       if (!response.ok) throw new Error("Failed to fetch profile");
       return response.json();
     },
-    enabled: !!selectedProfilePatient?.id && showProfileDialog
+    enabled: !!selectedProfilePatient?.id && showProfileDialog,
+    refetchInterval: showProfileDialog ? 30000 : false,
   });
 
   // Filter patients for the "All Patients" tab
@@ -2369,30 +2370,42 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
           ) : longitudinalProfile ? (
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
               <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full flex-1 flex flex-col min-h-0">
-                <TabsList className="flex-shrink-0 grid w-full grid-cols-5 sm:grid-cols-5 mb-4 h-auto">
-                  <TabsTrigger value="opd" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                <TabsList className="flex-shrink-0 grid w-full grid-cols-4 sm:grid-cols-8 mb-4 h-auto gap-0.5">
+                  <TabsTrigger value="opd" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <ClipboardList className="h-3 w-3 hidden sm:block" />
                     <span>OPD</span>
                   </TabsTrigger>
-                  <TabsTrigger value="ipd" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                  <TabsTrigger value="ipd" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <Bed className="h-3 w-3 hidden sm:block" />
                     <span>IPD</span>
                   </TabsTrigger>
-                  <TabsTrigger value="medication" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                  <TabsTrigger value="icu" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
+                    <HeartPulse className="h-3 w-3 hidden sm:block" />
+                    <span>ICU</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="monitoring" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
+                    <Activity className="h-3 w-3 hidden sm:block" />
+                    <span>Monitor</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="medication" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <Pill className="h-3 w-3 hidden sm:block" />
                     <span>Meds</span>
                   </TabsTrigger>
-                  <TabsTrigger value="consent" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                  <TabsTrigger value="tests" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
+                    <FlaskConical className="h-3 w-3 hidden sm:block" />
+                    <span>Tests</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="consent" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <FileCheck className="h-3 w-3 hidden sm:block" />
                     <span>Consents</span>
                   </TabsTrigger>
-                  <TabsTrigger value="billing" className="flex items-center justify-center gap-1 text-[10px] sm:text-xs py-2 px-1 sm:px-3">
+                  <TabsTrigger value="billing" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <DollarSign className="h-3 w-3 hidden sm:block" />
                     <span>Billing</span>
                   </TabsTrigger>
                 </TabsList>
                 
-                <ScrollArea className="flex-1 min-h-0 pr-2 sm:pr-4" style={{ height: 'calc(85vh - 180px)', maxHeight: '500px' }}>
+                <ScrollArea className="flex-1 min-h-0 pr-2 sm:pr-4" style={{ height: 'calc(85vh - 180px)', maxHeight: '520px' }}>
 
                 {/* OPD History Section */}
                 <TabsContent value="opd" className="space-y-4">
@@ -2416,7 +2429,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </div>
                               <p className="text-sm"><strong>Doctor:</strong> {visit.doctorName || "N/A"}</p>
                               <p className="text-sm"><strong>Diagnosis:</strong> {visit.diagnosis || visit.reasonForVisit || "N/A"}</p>
-                              <p className="text-sm"><strong>Status:</strong> <Badge variant={visit.status === "completed" ? "default" : "secondary"}>{visit.status}</Badge></p>
+                              <div className="text-sm flex items-center gap-2"><strong>Status:</strong> <Badge variant={visit.status === "completed" ? "default" : "secondary"}>{visit.status}</Badge></div>
                             </div>
                           ))}
                         </div>
@@ -2595,6 +2608,233 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                     </CardContent>
                   </Card>
                 </TabsContent>
+
+                {/* ICU Charts Section */}
+                <TabsContent value="icu" className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <HeartPulse className="h-4 w-4 text-red-500" />
+                        ICU Charts ({longitudinalProfile.icuHistory?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {!longitudinalProfile.icuHistory?.length ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No ICU charts recorded</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {longitudinalProfile.icuHistory.map((chart: any) => (
+                            <div key={chart.id} className="p-3 border rounded-lg space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Badge variant="destructive" className="text-xs">ICU Chart</Badge>
+                                <span className="text-xs text-muted-foreground">{chart.chartDate}</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <p><strong>Ward/Bed:</strong> {chart.ward || "N/A"} / {chart.bedNo || "N/A"}</p>
+                                <p><strong>Diagnosis:</strong> {chart.diagnosis || "N/A"}</p>
+                                <p><strong>Consultant:</strong> {chart.admittingConsultant || "N/A"}</p>
+                                <p><strong>ICU Consultant:</strong> {chart.icuConsultant || "N/A"}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Drug Chart from ICU/IPD Monitoring */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Syringe className="h-4 w-4 text-orange-500" />
+                        Drug Chart — Injections & Medications ({longitudinalProfile.drugChart?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {!longitudinalProfile.drugChart?.length ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No drug chart entries recorded</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {longitudinalProfile.drugChart.map((entry: any) => (
+                            <div key={entry.id} className="flex items-start justify-between p-3 border rounded-lg gap-3">
+                              <div className="flex-1 space-y-0.5 text-sm">
+                                <p className="font-medium">{entry.drugName || "—"}</p>
+                                {entry.diagnosis && <p className="text-xs text-muted-foreground">Indication: {entry.diagnosis}</p>}
+                                {entry.medicineName && <p className="text-xs">Medicine: <span className="font-medium">{entry.medicineName}</span></p>}
+                                <p className="text-xs text-muted-foreground">By: {entry.nurseName || "N/A"}</p>
+                              </div>
+                              <div className="text-right text-xs text-muted-foreground shrink-0">
+                                <p>{entry.injectionFrequency || entry.medicineFrequency || "—"}</p>
+                                <p>{entry.startTime ? new Date(entry.startTime).toLocaleDateString() : "N/A"}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Patient Monitoring Sessions */}
+                <TabsContent value="monitoring" className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-blue-500" />
+                        Monitoring Sessions ({longitudinalProfile.monitoringSessions?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {!longitudinalProfile.monitoringSessions?.length ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No monitoring sessions recorded</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {longitudinalProfile.monitoringSessions.map((session: any) => (
+                            <div key={session.id} className="p-3 border rounded-lg space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex gap-2">
+                                  <Badge variant="outline" className="text-xs">{session.sessionDate}</Badge>
+                                  {session.isVentilated && <Badge variant="destructive" className="text-xs">Ventilated</Badge>}
+                                  {session.isLocked && <Badge variant="secondary" className="text-xs">Locked</Badge>}
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  {session.createdAt ? new Date(session.createdAt).toLocaleDateString() : "N/A"}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <p><strong>Ward/Bed:</strong> {session.ward} / {session.bedNumber}</p>
+                                <p><strong>UHID:</strong> {session.uhid}</p>
+                                <p><strong>Primary Diagnosis:</strong> {session.primaryDiagnosis}</p>
+                                <p><strong>Consultant:</strong> {session.admittingConsultant}</p>
+                                {session.bloodGroup && <p><strong>Blood Group:</strong> {session.bloodGroup}</p>}
+                                {session.weightKg && <p><strong>Weight:</strong> {session.weightKg} kg</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Movement/Transfer Log */}
+                  {longitudinalProfile.movementLog?.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-purple-500" />
+                          Movement & Transfer Log ({longitudinalProfile.movementLog.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {longitudinalProfile.movementLog.map((move: any) => (
+                            <div key={move.id} className="flex items-start gap-3 p-2 border rounded-lg text-sm">
+                              <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0" />
+                              <div className="flex-1">
+                                <p className="font-medium">{move.movementType?.replace(/_/g, " ") || "Transfer"}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {move.fromLocation && <span>From: {move.fromLocation} → </span>}
+                                  {move.toLocation && <span>To: {move.toLocation}</span>}
+                                </p>
+                                {move.notes && <p className="text-xs text-muted-foreground">{move.notes}</p>}
+                              </div>
+                              <span className="text-xs text-muted-foreground shrink-0">
+                                {move.occurredAt ? new Date(move.occurredAt).toLocaleDateString() : "N/A"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                {/* Diagnostic Tests & Lab Reports */}
+                <TabsContent value="tests" className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <FlaskConical className="h-4 w-4 text-teal-500" />
+                        Diagnostic Tests & Lab Reports ({longitudinalProfile.diagnosticTests?.length || 0})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {!longitudinalProfile.diagnosticTests?.length ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No diagnostic tests ordered</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {longitudinalProfile.diagnosticTests.map((test: any) => (
+                            <div key={test.id} className="p-3 border rounded-lg space-y-1.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-medium text-sm">{test.testName}</span>
+                                  <Badge
+                                    variant={
+                                      test.status === "COMPLETED" ? "default" :
+                                      test.status === "REPORT_UPLOADED" ? "default" :
+                                      test.status === "IN_PROGRESS" ? "secondary" :
+                                      test.status === "CANCELLED" ? "destructive" : "outline"
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {test.status}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs">{test.priority}</Badge>
+                                </div>
+                                <span className="text-xs text-muted-foreground shrink-0">
+                                  {test.orderedDate ? new Date(test.orderedDate).toLocaleDateString() : "N/A"}
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground flex gap-4 flex-wrap">
+                                <span>Department: {test.department}</span>
+                                <span>Type: {test.testType}</span>
+                                <span>Source: {test.source}</span>
+                                {test.doctorName && <span>Doctor: {test.doctorName}</span>}
+                              </div>
+                              {test.reportUrl && (
+                                <div className="flex items-center gap-1 mt-1">
+                                  <FileText className="h-3.5 w-3.5 text-green-500" />
+                                  <span className="text-xs text-green-600 font-medium">Report Available: {test.reportFileName || "View Report"}</span>
+                                </div>
+                              )}
+                              {test.clinicalNotes && (
+                                <p className="text-xs text-muted-foreground italic">Notes: {test.clinicalNotes}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Medical Records/Documents */}
+                  {longitudinalProfile.medicalRecords?.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-blue-500" />
+                          Medical Records & Documents ({longitudinalProfile.medicalRecords.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {longitudinalProfile.medicalRecords.map((rec: any) => (
+                            <div key={rec.id} className="flex items-center justify-between p-3 border rounded-lg text-sm">
+                              <div>
+                                <p className="font-medium">{rec.recordType || rec.title || "Medical Record"}</p>
+                                <p className="text-xs text-muted-foreground">{rec.description || rec.notes || "—"}</p>
+                              </div>
+                              <span className="text-xs text-muted-foreground shrink-0">
+                                {rec.recordDate ? new Date(rec.recordDate).toLocaleDateString() : "N/A"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
                 </ScrollArea>
               </Tabs>
             </div>

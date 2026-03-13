@@ -97,7 +97,7 @@ import { users, doctors, doctorProfiles, staffMaster, insertAppointmentSchema, i
   insertIcuPreviousDayNotesSchema, insertIcuAllergyPrecautionsSchema,
   icuCharts,
   appointments, trackingPatients, patientConsents, patientBills, billPayments, patientInsurance, medicalRecords,
-  patientMovementLog, insertPatientMovementLogSchema,
+  patientMovementLog, insertPatientMovementLogSchema, diagnosticTestOrders,
   signedDigitalConsents,
   systemSettings, backupLogs
 } from "@shared/schema";
@@ -10672,7 +10672,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .where(eq(medicalRecords.patientId, patientId))
           .orderBy(desc(medicalRecords.recordDate));
       } catch (e) { console.log("No medical records found"); }
-      
+
+      // 6. IPD Monitoring Sessions (Patient Monitoring / ICU)
+      let monitoringSessions: any[] = [];
+      try {
+        monitoringSessions = await db.select().from(patientMonitoringSessions)
+          .where(or(
+            eq(patientMonitoringSessions.patientName, patientName),
+            eq(patientMonitoringSessions.patientId, patientId)
+          ))
+          .orderBy(desc(patientMonitoringSessions.createdAt));
+      } catch (e) { console.log("No monitoring sessions found"); }
+
+      // 7. Drug Chart (Inotropes/Sedation) linked to monitoring sessions
+      let drugChart: any[] = [];
+      try {
+        if (monitoringSessions.length > 0) {
+          const sessionIds = monitoringSessions.map((s: any) => s.id);
+          for (const sid of sessionIds.slice(0, 10)) {
+            const drugs = await db.select().from(inotropesSedation)
+              .where(eq(inotropesSedation.sessionId, sid))
+              .orderBy(desc(inotropesSedation.createdAt));
+            drugChart.push(...drugs);
+          }
+        }
+      } catch (e) { console.log("No drug chart found"); }
+
+      // 8. ICU Charts
+      let icuHistory: any[] = [];
+      try {
+        icuHistory = await db.select().from(icuCharts)
+          .where(or(
+            eq(icuCharts.patientName, patientName),
+            eq(icuCharts.patientId, patientId)
+          ))
+          .orderBy(desc(icuCharts.createdAt));
+      } catch (e) { console.log("No ICU charts found"); }
+
+      // 9. Diagnostic Test Orders
+      let diagnosticTests: any[] = [];
+      try {
+        diagnosticTests = await db.select().from(diagnosticTestOrders)
+          .where(or(
+            eq(diagnosticTestOrders.patientName, patientName),
+            eq(diagnosticTestOrders.patientId, patientId)
+          ))
+          .orderBy(desc(diagnosticTestOrders.createdAt));
+      } catch (e) { console.log("No diagnostic tests found"); }
+
+      // 10. Movement Log (ward transfers, ICU transfers etc.)
+      let movementLog: any[] = [];
+      try {
+        if (ipdHistory.length > 0) {
+          const tpIds = ipdHistory.map((tp: any) => tp.id);
+          for (const tpId of tpIds.slice(0, 5)) {
+            const movements = await db.select().from(patientMovementLog)
+              .where(eq(patientMovementLog.trackingPatientId, tpId))
+              .orderBy(desc(patientMovementLog.occurredAt));
+            movementLog.push(...movements);
+          }
+        }
+      } catch (e) { console.log("No movement log found"); }
+
       res.json({
         patient,
         opdHistory,
@@ -10684,7 +10745,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           payments,
           insurance
         },
-        medicalRecords: records
+        medicalRecords: records,
+        monitoringSessions,
+        drugChart,
+        icuHistory,
+        diagnosticTests,
+        movementLog
       });
     } catch (error) {
       console.error("Failed to fetch longitudinal profile:", error);
