@@ -33,7 +33,12 @@ import {
   Tag,
   Trash2,
   ExternalLink,
-  Printer
+  Printer,
+  CreditCard,
+  ScanLine,
+  Check,
+  X,
+  AlertCircle
 } from "lucide-react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -113,6 +118,59 @@ export default function OPDService() {
   const [bookingDate, setBookingDate] = useState<string>("");
   const [bookingTimeSlot, setBookingTimeSlot] = useState<string>("");
   const [bookingLocation, setBookingLocation] = useState<string>("");
+
+  // ID Card Scanning states for Book Appointment
+  const [bookingIdCardType, setBookingIdCardType] = useState<string>("");
+  const [bookingFrontImage, setBookingFrontImage] = useState<string | null>(null);
+  const [bookingBackImage, setBookingBackImage] = useState<string | null>(null);
+  const [isBookingOcr, setIsBookingOcr] = useState(false);
+  const [bookingOcrSessionId, setBookingOcrSessionId] = useState<string>(() => crypto.randomUUID());
+  const bookingFrontInputRef = useRef<HTMLInputElement>(null);
+  const bookingBackInputRef = useRef<HTMLInputElement>(null);
+  const patientNameInputRef = useRef<HTMLInputElement>(null);
+  const patientPhoneInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBookingImageUpload = (side: "front" | "back", file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setBookingOcrSessionId(crypto.randomUUID());
+      if (side === "front") setBookingFrontImage(base64);
+      else setBookingBackImage(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleBookingOcr = async () => {
+    if (!bookingIdCardType) {
+      toast({ title: "Select ID Type", description: "Please select an ID card type before processing.", variant: "destructive" });
+      return;
+    }
+    setIsBookingOcr(true);
+    const currentSession = bookingOcrSessionId;
+    try {
+      const response = await fetch("/api/id-card-scans/process-ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ frontImage: bookingFrontImage, backImage: bookingBackImage, idCardType: bookingIdCardType, sessionId: currentSession })
+      });
+      const result = await response.json();
+      if (currentSession !== bookingOcrSessionId) return;
+      if (!result.success) throw new Error(result.error || "OCR processing failed");
+      const info = result.data;
+      const fullName = `${info.firstName || ""} ${info.lastName || ""}`.trim();
+      if (patientNameInputRef.current && fullName) {
+        patientNameInputRef.current.value = fullName;
+        patientNameInputRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      toast({ title: "OCR Complete", description: `Extracted: ${fullName}${info.age ? `, Age: ${info.age}` : ""}${info.idNumber ? `, ID: ${info.idNumber}` : ""}` });
+    } catch (err) {
+      toast({ title: "OCR Failed", description: err instanceof Error ? err.message : "Failed to extract data", variant: "destructive" });
+    } finally {
+      setIsBookingOcr(false);
+    }
+  };
 
   const { data: doctors = [] } = useQuery<Doctor[]>({
     queryKey: ["/api/doctors"],
@@ -1346,6 +1404,115 @@ export default function OPDService() {
             </CardHeader>
             <CardContent className="pt-6">
               <form onSubmit={handleBookAppointment} className="space-y-6">
+
+                {/* Hidden file inputs for ID card upload */}
+                <input
+                  ref={bookingFrontInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleBookingImageUpload("front", f); e.target.value = ""; }}
+                />
+                <input
+                  ref={bookingBackInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleBookingImageUpload("back", f); e.target.value = ""; }}
+                />
+
+                {/* ID Card Scanning & Alert System */}
+                <div className="p-4 border border-blue-200 dark:border-blue-800 rounded-lg bg-blue-50/50 dark:bg-blue-900/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CreditCard className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold text-blue-900 dark:text-blue-100">ID Card Scanning &amp; Alert System</h3>
+                  </div>
+
+                  {/* ID Card Type */}
+                  <div className="mb-3">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 block">ID Card Type</label>
+                    <Select value={bookingIdCardType} onValueChange={setBookingIdCardType}>
+                      <SelectTrigger className="w-full" data-testid="select-booking-id-card-type">
+                        <SelectValue placeholder="Select ID card type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="aadhaar">Aadhaar Card</SelectItem>
+                        <SelectItem value="pan">PAN Card</SelectItem>
+                        <SelectItem value="driving_license">Driving License</SelectItem>
+                        <SelectItem value="voter_id">Voter ID</SelectItem>
+                        <SelectItem value="passport">Passport</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Upload Front / Back */}
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={`w-full ${bookingFrontImage ? 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900/30 dark:border-green-600 dark:text-green-400' : ''}`}
+                      onClick={() => bookingFrontInputRef.current?.click()}
+                    >
+                      {bookingFrontImage ? <><Check className="h-4 w-4 mr-2" />Front Uploaded</> : <><Upload className="h-4 w-4 mr-2" />Upload Front Side</>}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={`w-full ${bookingBackImage ? 'bg-green-100 border-green-400 text-green-700 dark:bg-green-900/30 dark:border-green-600 dark:text-green-400' : ''}`}
+                      onClick={() => bookingBackInputRef.current?.click()}
+                    >
+                      {bookingBackImage ? <><Check className="h-4 w-4 mr-2" />Back Uploaded</> : <><Upload className="h-4 w-4 mr-2" />Upload Back Side</>}
+                    </Button>
+                  </div>
+
+                  {/* Image Previews */}
+                  {(bookingFrontImage || bookingBackImage) && (
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      {bookingFrontImage && (
+                        <div className="relative">
+                          <img src={bookingFrontImage} alt="Front of ID" className="w-full h-20 object-cover rounded border" />
+                          <Badge variant="secondary" className="absolute top-1 left-1 text-xs">Front</Badge>
+                          <Button type="button" size="icon" variant="destructive" className="absolute top-1 right-1" onClick={() => { setBookingFrontImage(null); setBookingOcrSessionId(crypto.randomUUID()); }}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                      {bookingBackImage && (
+                        <div className="relative">
+                          <img src={bookingBackImage} alt="Back of ID" className="w-full h-20 object-cover rounded border" />
+                          <Badge variant="secondary" className="absolute top-1 left-1 text-xs">Back</Badge>
+                          <Button type="button" size="icon" variant="destructive" className="absolute top-1 right-1" onClick={() => { setBookingBackImage(null); setBookingOcrSessionId(crypto.randomUUID()); }}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Warning: only one side uploaded */}
+                  {((bookingFrontImage && !bookingBackImage) || (!bookingFrontImage && bookingBackImage)) && (
+                    <div className="p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded text-sm text-amber-700 dark:text-amber-300 flex items-center gap-2 mb-3">
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                      <span>Please upload both front and back images to process OCR</span>
+                    </div>
+                  )}
+
+                  {/* Process OCR */}
+                  {bookingFrontImage && bookingBackImage && (
+                    <Button
+                      type="button"
+                      variant="default"
+                      className="w-full"
+                      onClick={handleBookingOcr}
+                      disabled={isBookingOcr}
+                      data-testid="button-booking-process-ocr"
+                    >
+                      {isBookingOcr ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing OCR...</> : <><ScanLine className="h-4 w-4 mr-2" />Process OCR &amp; Auto-Fill Name</>}
+                    </Button>
+                  )}
+                </div>
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="patientName">Patient Name</Label>
@@ -1354,6 +1521,7 @@ export default function OPDService() {
                       name="patientName"
                       placeholder="Enter full name"
                       required
+                      ref={patientNameInputRef}
                       data-testid="input-patient-name"
                     />
                   </div>
