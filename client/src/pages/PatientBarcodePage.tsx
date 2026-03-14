@@ -899,7 +899,8 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="inline-flex flex-wrap gap-1">
+        <div className="overflow-x-auto pb-1">
+        <TabsList className="inline-flex w-max gap-1">
           <TabsTrigger value="overview" data-testid="tab-overview">
             <User className="h-4 w-4 mr-2" />
             Overview
@@ -945,6 +946,8 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
             </TabsTrigger>
           )}
         </TabsList>
+        </div>
+
 
         <TabsContent value="overview" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
