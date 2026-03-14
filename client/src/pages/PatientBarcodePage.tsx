@@ -709,32 +709,29 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
           </div>
           <p className="text-sm font-mono text-muted-foreground mb-2">{scannedPatient.patient.uhid}</p>
           <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
-            {scannedPatient.patient.age && (
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5" />
-                Age: <span className="text-foreground font-medium">{scannedPatient.patient.age} yrs</span>
-              </span>
-            )}
             {scannedPatient.patient.gender && (
               <span>Gender: <span className="text-foreground font-medium capitalize">{scannedPatient.patient.gender}</span></span>
             )}
-            {scannedPatient.patient.wardBed && (
-              <span className="flex items-center gap-1">
-                <Bed className="h-3.5 w-3.5" />
-                Ward/Bed: <span className="text-foreground font-medium">{scannedPatient.patient.wardBed}</span>
-              </span>
-            )}
-            {scannedPatient.patient.treatingDoctor && (
-              <span className="flex items-center gap-1">
-                <Stethoscope className="h-3.5 w-3.5" />
-                Doctor: <span className="text-foreground font-medium">{scannedPatient.patient.treatingDoctor}</span>
-              </span>
+            {(longitudinalProfile?.patient?.dateOfBirth) && (
+              <span>DOB: <span className="text-foreground font-medium">{longitudinalProfile.patient.dateOfBirth}</span></span>
             )}
             {longitudinalProfile?.patient?.phone && (
               <span className="flex items-center gap-1">
                 <Phone className="h-3.5 w-3.5" />
-                <span className="text-foreground font-medium">{longitudinalProfile.patient.phone}</span>
+                Phone: <span className="text-foreground font-medium">{longitudinalProfile.patient.phone}</span>
               </span>
+            )}
+            {scannedPatient.patient.wardBed && (
+              <span>Ward/Bed: <span className="text-foreground font-medium">{scannedPatient.patient.wardBed}</span></span>
+            )}
+            {scannedPatient.patient.treatingDoctor && (
+              <span>Doctor: <span className="text-foreground font-medium">{scannedPatient.patient.treatingDoctor}</span></span>
+            )}
+            {(scannedPatient.monitoringSession?.primaryDiagnosis || scannedPatient.monitoringSession?.diagnosis || longitudinalProfile?.ipdHistory?.[0]?.diagnosis) && (
+              <span>Diagnosis: <span className="text-foreground font-medium">{scannedPatient.monitoringSession?.primaryDiagnosis || scannedPatient.monitoringSession?.diagnosis || longitudinalProfile?.ipdHistory?.[0]?.diagnosis}</span></span>
+            )}
+            {scannedPatient.patient.age && !longitudinalProfile?.patient?.dateOfBirth && (
+              <span>Age: <span className="text-foreground font-medium">{scannedPatient.patient.age} yrs</span></span>
             )}
             {longitudinalProfile?.patient?.email && (
               <span className="flex items-center gap-1">
@@ -748,10 +745,15 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
                 <span className="text-foreground font-medium">{longitudinalProfile.patient.address}</span>
               </span>
             )}
-            {(longitudinalProfile?.patient?.insuranceProvider) && (
+            {longitudinalProfile?.patient?.insuranceProvider && (
               <span>Insurance: <span className="text-foreground font-medium">{longitudinalProfile.patient.insuranceProvider}</span></span>
             )}
           </div>
+          {longitudinalLoading && (
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> Loading additional details...
+            </p>
+          )}
         </div>
       </div>
 

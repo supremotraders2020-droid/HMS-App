@@ -2870,16 +2870,15 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
         const historyBarcode = selectedHistoryPatient ? getPatientBarcode(selectedHistoryPatient) : null;
         return (
           <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
-            <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
-              <DialogHeader className="flex-shrink-0">
+            <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <History className="h-5 w-5 text-purple-600" />
                   Patient History - {fullName}
                 </DialogTitle>
               </DialogHeader>
 
-              <ScrollArea className="flex-1 min-h-0" style={{ maxHeight: 'calc(90vh - 100px)' }}>
-                <div className="space-y-4 pr-2">
+              <div className="space-y-4 mt-2">
                   {/* Patient Identity Banner */}
                   <div className="bg-muted/40 border rounded-lg p-3 flex flex-wrap gap-3 items-start">
                     <div className={`p-2.5 rounded-full flex-shrink-0 ${historyBarcode ? 'bg-primary/10' : 'bg-muted'}`}>
@@ -3072,8 +3071,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
                   {/* Movement Timeline — only when tracked */}
                   {tp && <PatientHistoryTimeline patientId={tp.id} />}
-                </div>
-              </ScrollArea>
+              </div>
             </DialogContent>
           </Dialog>
         );
