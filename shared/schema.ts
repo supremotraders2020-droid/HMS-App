@@ -2016,6 +2016,7 @@ export const vitalsHourly = pgTable("vitals_hourly", {
   cpp: decimal("cpp"),
   sanction: text("sanction"),
   secretion: text("secretion"),
+  suction: text("suction"),
   urineTube: text("urine_tube"),
   entryMethod: text("entry_method").default("MANUAL"),
   missedReason: text("missed_reason"),

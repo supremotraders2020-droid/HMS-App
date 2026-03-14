@@ -1742,7 +1742,7 @@ export function OverviewTab({ session }: { session: Session }) {
             {vitals.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th><th className="p-1">Secretion</th><th className="p-1">Urine Tube</th><th className="p-1">By</th></tr></thead>
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th><th className="p-1">Secretion</th><th className="p-1">Suction</th><th className="p-1">Urine Tube</th><th className="p-1">By</th></tr></thead>
                   <tbody>
                     {vitals.slice(0, 5).map((v: any, i: number) => (
                       <tr key={i} className="border-b border-muted/30">
@@ -1752,6 +1752,7 @@ export function OverviewTab({ session }: { session: Session }) {
                         <td className="p-1 text-center">{v.temperature ? `${v.temperature}°C` : '-'}</td>
                         <td className="p-1 text-center">{v.spo2 ? `${v.spo2}%` : '-'}</td>
                         <td className="p-1 text-center">{v.secretion || '-'}</td>
+                        <td className="p-1 text-center">{v.suction || '-'}</td>
                         <td className="p-1 text-center">{v.urineTube || '-'}</td>
                         <td className="p-1 text-center">{v.nurseName || '-'}</td>
                       </tr>
@@ -1778,10 +1779,10 @@ export function VitalsTab({ session }: { session: Session }) {
   const [selectedNurse, setSelectedNurse] = useState("");
   const [editSelectedNurse, setEditSelectedNurse] = useState("");
   const [vitalsForm, setVitalsForm] = useState({
-    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", secretion: "", urineTube: ""
+    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", secretion: "", suction: "", urineTube: ""
   });
   const [editForm, setEditForm] = useState({
-    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", secretion: "", urineTube: ""
+    pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", secretion: "", suction: "", urineTube: ""
   });
 
   const { data: nurses = [] } = useQuery<any[]>({ queryKey: ["/api/users/nurses"] });
@@ -1795,7 +1796,7 @@ export function VitalsTab({ session }: { session: Session }) {
     onSuccess: () => {
       refetch();
       toast({ title: "Vitals Saved", description: "Record added successfully" });
-      setVitalsForm({ pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", secretion: "", urineTube: "" });
+      setVitalsForm({ pulse: "", sbp: "", temperature: "", respiratoryRate: "", spo2: "", secretion: "", suction: "", urineTube: "" });
       setSelectedSlot("");
       setSelectedNurse("");
       setDialogOpen(false);
@@ -1830,6 +1831,7 @@ export function VitalsTab({ session }: { session: Session }) {
       respiratoryRate: vitalsForm.respiratoryRate ? parseInt(vitalsForm.respiratoryRate) : null,
       spo2: vitalsForm.spo2 ? parseInt(vitalsForm.spo2) : null,
       secretion: vitalsForm.secretion || null,
+      suction: vitalsForm.suction || null,
       urineTube: vitalsForm.urineTube || null,
       nurseId: selectedNurse || "system-nurse",
       nurseName: selectedNurse ? (nurses.find((n: any) => n.id === selectedNurse)?.fullName || selectedNurse) : "ICU Nurse"
@@ -1845,6 +1847,7 @@ export function VitalsTab({ session }: { session: Session }) {
       respiratoryRate: v.respiratoryRate ? String(v.respiratoryRate) : "",
       spo2: v.spo2 ? String(v.spo2) : "",
       secretion: v.secretion || "",
+      suction: v.suction || "",
       urineTube: v.urineTube || ""
     });
     setEditSelectedNurse(v.nurseId || "");
@@ -1864,6 +1867,7 @@ export function VitalsTab({ session }: { session: Session }) {
       respiratoryRate: editForm.respiratoryRate ? parseInt(editForm.respiratoryRate) : null,
       spo2: editForm.spo2 ? parseInt(editForm.spo2) : null,
       secretion: editForm.secretion || null,
+      suction: editForm.suction || null,
       urineTube: editForm.urineTube || null,
       nurseId: editSelectedNurse || editingVital.nurseId || "system-nurse",
       nurseName: editSelectedNurse ? (nurses.find((n: any) => n.id === editSelectedNurse)?.fullName || editSelectedNurse) : (editingVital.nurseName || "ICU Nurse")
@@ -1963,6 +1967,10 @@ export function VitalsTab({ session }: { session: Session }) {
                   <Input value={vitalsForm.secretion} onChange={(e) => setVitalsForm({...vitalsForm, secretion: e.target.value})} placeholder="Secretion" />
                 </div>
                 <div className="space-y-1">
+                  <Label>Suction</Label>
+                  <Input value={vitalsForm.suction} onChange={(e) => setVitalsForm({...vitalsForm, suction: e.target.value})} placeholder="Suction" />
+                </div>
+                <div className="space-y-1">
                   <Label>Urine Tube</Label>
                   <Select value={vitalsForm.urineTube} onValueChange={(v) => setVitalsForm({...vitalsForm, urineTube: v})}>
                     <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
@@ -2015,6 +2023,10 @@ export function VitalsTab({ session }: { session: Session }) {
                   <Input value={editForm.secretion} onChange={(e) => setEditForm({...editForm, secretion: e.target.value})} placeholder="Secretion" />
                 </div>
                 <div className="space-y-1">
+                  <Label>Suction</Label>
+                  <Input value={editForm.suction} onChange={(e) => setEditForm({...editForm, suction: e.target.value})} placeholder="Suction" />
+                </div>
+                <div className="space-y-1">
                   <Label>Urine Tube</Label>
                   <Select value={editForm.urineTube} onValueChange={(v) => setEditForm({...editForm, urineTube: v})}>
                     <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
@@ -2050,6 +2062,7 @@ export function VitalsTab({ session }: { session: Session }) {
                 <TableHead>RR</TableHead>
                 <TableHead>SpO2</TableHead>
                 <TableHead>Secretion</TableHead>
+                <TableHead>Suction</TableHead>
                 <TableHead>Urine Tube</TableHead>
                 <TableHead>By</TableHead>
                 <TableHead></TableHead>
@@ -2067,6 +2080,7 @@ export function VitalsTab({ session }: { session: Session }) {
                     <TableCell>{v?.respiratoryRate || "-"}</TableCell>
                     <TableCell>{v?.spo2 ? `${v.spo2}%` : "-"}</TableCell>
                     <TableCell>{v?.secretion || "-"}</TableCell>
+                    <TableCell>{v?.suction || "-"}</TableCell>
                     <TableCell>{v?.urineTube || "-"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{v?.nurseName || "-"}</TableCell>
                     <TableCell>
