@@ -3044,16 +3044,16 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       )}
 
                       {/* Prescriptions */}
-                      {historyProfile.medicationHistory?.length > 0 && (
+                      {historyProfile?.medicationHistory?.length > 0 && (
                         <Card>
                           <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
                               <Pill className="h-4 w-4 text-green-500" />
-                              Prescriptions ({historyProfile.medicationHistory.length})
+                              Prescriptions ({historyProfile.medicationHistory?.length})
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-2">
-                            {historyProfile.medicationHistory.slice(0, 5).map((rx: any) => (
+                            {historyProfile.medicationHistory?.slice(0, 5).map((rx: any) => (
                               <div key={rx.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
                                 <div>
                                   <p className="font-medium">{rx.diagnosis || rx.chiefComplaint || "Prescription"}</p>
@@ -3067,16 +3067,16 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       )}
 
                       {/* Diagnostic Tests */}
-                      {historyProfile.diagnosticTests?.length > 0 && (
+                      {historyProfile?.diagnosticTests?.length > 0 && (
                         <Card>
                           <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
                               <FlaskConical className="h-4 w-4 text-orange-500" />
-                              Lab / Diagnostic Tests ({historyProfile.diagnosticTests.length})
+                              Lab / Diagnostic Tests ({historyProfile.diagnosticTests?.length})
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-2">
-                            {historyProfile.diagnosticTests.slice(0, 5).map((t: any) => (
+                            {historyProfile.diagnosticTests?.slice(0, 5).map((t: any) => (
                               <div key={t.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
                                 <p className="font-medium">{t.testName || t.panelName || "Test"}</p>
                                 <div className="flex items-center gap-2">
@@ -3090,16 +3090,16 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       )}
 
                       {/* Consent Forms */}
-                      {historyProfile.consentRecords?.length > 0 && (
+                      {historyProfile?.consentRecords?.length > 0 && (
                         <Card>
                           <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
                               <FileCheck className="h-4 w-4 text-purple-500" />
-                              Consent Forms ({historyProfile.consentRecords.length})
+                              Consent Forms ({historyProfile.consentRecords?.length})
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-2">
-                            {historyProfile.consentRecords.slice(0, 5).map((c: any) => (
+                            {historyProfile.consentRecords?.slice(0, 5).map((c: any) => (
                               <div key={c.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
                                 <p className="font-medium">{c.title || c.consentType || "Consent"}</p>
                                 <span className="text-xs text-muted-foreground">{c.uploadedAt ? new Date(c.uploadedAt).toLocaleDateString() : "—"}</span>
