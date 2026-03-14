@@ -338,6 +338,86 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
     refetchInterval: 30000,
   });
 
+  const scannedPatientId = scannedPatient?.patient?.id;
+
+  const { data: ipdSessions = [], isLoading: ipdSessionsLoading } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/sessions/patient", scannedPatientId],
+    queryFn: async () => {
+      if (!scannedPatientId) return [];
+      const res = await fetch(`/api/patient-monitoring/sessions/patient/${scannedPatientId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!scannedPatientId && !showScanner,
+    refetchInterval: 10000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
+  const latestIpdSession = ipdSessions[0];
+  const latestSessionId = latestIpdSession?.id;
+
+  const { data: ipdVitals = [], isLoading: ipdVitalsLoading } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/vitals", latestSessionId],
+    queryFn: async () => {
+      if (!latestSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/vitals/${latestSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!latestSessionId && !showScanner,
+    refetchInterval: 10000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
+  const { data: ipdIntake = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/intake", latestSessionId],
+    queryFn: async () => {
+      if (!latestSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/intake/${latestSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!latestSessionId && !showScanner,
+    refetchInterval: 10000,
+    staleTime: 0,
+  });
+
+  const { data: ipdOutput = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/output", latestSessionId],
+    queryFn: async () => {
+      if (!latestSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/output/${latestSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!latestSessionId && !showScanner,
+    refetchInterval: 10000,
+    staleTime: 0,
+  });
+
+  const { data: icuCharts = [], isLoading: icuChartsLoading } = useQuery<any[]>({
+    queryKey: ["/api/patients", scannedPatientId, "icu-charts"],
+    queryFn: async () => {
+      if (!scannedPatientId) return [];
+      const res = await fetch(`/api/patients/${scannedPatientId}/icu-charts`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!scannedPatientId && !showScanner,
+    refetchInterval: 30000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
+  const latestIcuChart = icuCharts[0];
+
+  const totalIntake = ipdIntake.reduce((sum: number, r: any) => sum + (r.hourlyTotal || 0), 0);
+  const totalOutput = ipdOutput.reduce((sum: number, r: any) => sum + (r.hourlyTotal || 0), 0);
+  const fluidBalance = totalIntake - totalOutput;
+  const lastVital = ipdVitals.length > 0 ? ipdVitals[ipdVitals.length - 1] : null;
+
   const getTrackingPatientId = (name: string): string | null => {
     if (!name || !allTrackingPatients.length) return null;
     const lower = name.toLowerCase().trim();
@@ -1413,246 +1493,403 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
 
         {canSeeNursing && (
           <TabsContent value="ipd-monitoring" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    Vital Signs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {scannedPatient.vitals ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-red-500" />
-                        <div>
-                          <div className="text-2xl font-bold">{scannedPatient.vitals.heartRate || "—"}</div>
-                          <div className="text-xs text-muted-foreground">Heart Rate (bpm)</div>
-                        </div>
+            {ipdSessionsLoading ? (
+              <div className="flex items-center justify-center py-12 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                Loading IPD monitoring data...
+              </div>
+            ) : !latestIpdSession ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p className="font-medium">No IPD monitoring sessions found</p>
+                <p className="text-sm mt-1">Data will appear once a monitoring session is started for this patient.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Session Header */}
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Date</p>
+                        <p className="font-medium">{latestIpdSession.sessionDate}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Droplets className="h-4 w-4 text-blue-500" />
-                        <div>
-                          <div className="text-2xl font-bold">
-                            {scannedPatient.vitals.systolicBp || "—"}/{scannedPatient.vitals.diastolicBp || "—"}
-                          </div>
-                          <div className="text-xs text-muted-foreground">Blood Pressure</div>
-                        </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Ward / Bed</p>
+                        <p className="font-medium">{latestIpdSession.ward} / {latestIpdSession.bedNumber}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Thermometer className="h-4 w-4 text-orange-500" />
-                        <div>
-                          <div className="text-2xl font-bold">{scannedPatient.vitals.temperature || "—"}°F</div>
-                          <div className="text-xs text-muted-foreground">Temperature</div>
-                        </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Consultant</p>
+                        <p className="font-medium">{latestIpdSession.admittingConsultant || "—"}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Wind className="h-4 w-4 text-green-500" />
-                        <div>
-                          <div className="text-2xl font-bold">{scannedPatient.vitals.spo2 || "—"}%</div>
-                          <div className="text-xs text-muted-foreground">SpO2</div>
-                        </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Primary Diagnosis</p>
+                        <p className="font-medium">{latestIpdSession.primaryDiagnosis || "—"}</p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No vitals recorded</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5" />
-                    IPD Nursing Notes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {scannedPatient.monitoringSession ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <Badge variant="outline">Session #{scannedPatient.monitoringSession.id}</Badge>
-                        <Badge variant={scannedPatient.monitoringSession.status === "active" ? "default" : "secondary"}>
-                          {scannedPatient.monitoringSession.status}
-                        </Badge>
-                      </div>
-                      {scannedPatient.monitoringSession.notes && (
-                        <p className="text-sm text-muted-foreground">{scannedPatient.monitoringSession.notes}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Latest Vital Signs */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Activity className="h-4 w-4" />
+                        Latest Vital Signs
+                        {lastVital && <span className="text-xs font-normal text-muted-foreground ml-auto">@ {lastVital.hourSlot}</span>}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {ipdVitalsLoading ? (
+                        <div className="flex items-center justify-center py-4"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : lastVital ? (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex items-center gap-2">
+                            <Heart className="h-4 w-4 text-red-500 shrink-0" />
+                            <div>
+                              <div className="text-xl font-bold">{lastVital.heartRate || "—"}</div>
+                              <div className="text-xs text-muted-foreground">HR (bpm)</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Droplets className="h-4 w-4 text-blue-500 shrink-0" />
+                            <div>
+                              <div className="text-xl font-bold">{lastVital.systolicBp || "—"}/{lastVital.diastolicBp || "—"}</div>
+                              <div className="text-xs text-muted-foreground">BP (mmHg)</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Thermometer className="h-4 w-4 text-orange-500 shrink-0" />
+                            <div>
+                              <div className="text-xl font-bold">{lastVital.temperature || "—"}°F</div>
+                              <div className="text-xs text-muted-foreground">Temperature</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Wind className="h-4 w-4 text-green-500 shrink-0" />
+                            <div>
+                              <div className="text-xl font-bold">{lastVital.spo2 || "—"}%</div>
+                              <div className="text-xs text-muted-foreground">SpO2</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-purple-500 shrink-0" />
+                            <div>
+                              <div className="text-xl font-bold">{lastVital.respiratoryRate || "—"}</div>
+                              <div className="text-xs text-muted-foreground">RR (/min)</div>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground">Nurse</div>
+                            <div className="text-sm font-medium">{lastVital.nurseName || "—"}</div>
+                          </div>
+                          {lastVital.secretion && (
+                            <div>
+                              <div className="text-xs text-muted-foreground">Secretion</div>
+                              <div className="text-sm font-medium">{lastVital.secretion}</div>
+                            </div>
+                          )}
+                          {lastVital.suction && (
+                            <div>
+                              <div className="text-xs text-muted-foreground">Suction</div>
+                              <div className="text-sm font-medium">{lastVital.suction}</div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <Activity className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-sm">No vitals recorded yet</p>
+                        </div>
                       )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <ClipboardList className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No monitoring sessions</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
 
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <History className="h-5 w-5" />
-                    Recent IPD Monitoring Sessions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {scannedPatient.allSessions && scannedPatient.allSessions.length > 0 ? (
-                    <div className="space-y-2">
-                      {scannedPatient.allSessions.slice(0, 5).map((session: any) => (
-                        <div key={session.id} className="flex items-center justify-between p-2 border rounded-lg">
-                          <div className="text-sm">
-                            <p className="font-medium">{new Date(session.sessionDate).toLocaleDateString()}</p>
-                            <p className="text-muted-foreground text-xs">{session.shift || "Day Shift"}</p>
-                          </div>
-                          <Badge variant="outline">{session.status}</Badge>
+                  {/* Intake / Output Summary */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Droplets className="h-4 w-4" />
+                        Fluid Balance
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                          <span className="text-sm font-medium">Total Intake</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400">{totalIntake} mL</span>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No IPD monitoring sessions</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                          <span className="text-sm font-medium">Total Output</span>
+                          <span className="font-bold text-orange-600 dark:text-orange-400">{totalOutput} mL</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border">
+                          <span className="text-sm font-semibold">Fluid Balance</span>
+                          <span className={`font-bold text-lg ${fluidBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                            {fluidBalance >= 0 ? "+" : ""}{fluidBalance} mL
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">
+                          Based on {ipdIntake.length} intake + {ipdOutput.length} output records
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Hourly Vitals Table */}
+                {ipdVitals.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <ClipboardList className="h-4 w-4" />
+                        Hourly Vitals — {latestIpdSession.sessionDate}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="p-2 text-left font-medium">Time</th>
+                              <th className="p-2 text-center font-medium">HR</th>
+                              <th className="p-2 text-center font-medium">BP</th>
+                              <th className="p-2 text-center font-medium">Temp</th>
+                              <th className="p-2 text-center font-medium">RR</th>
+                              <th className="p-2 text-center font-medium">SpO2</th>
+                              <th className="p-2 text-center font-medium">Secretion</th>
+                              <th className="p-2 text-center font-medium">Suction</th>
+                              <th className="p-2 text-center font-medium">Urine Tube</th>
+                              <th className="p-2 text-center font-medium">By</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ipdVitals.map((v: any) => (
+                              <tr key={v.id} className="border-b border-muted/40 hover-elevate">
+                                <td className="p-2 font-medium">{v.hourSlot}</td>
+                                <td className="p-2 text-center">{v.heartRate || "—"}</td>
+                                <td className="p-2 text-center">{v.systolicBp ? `${v.systolicBp}/${v.diastolicBp || "—"}` : "—"}</td>
+                                <td className="p-2 text-center">{v.temperature ? `${v.temperature}°F` : "—"}</td>
+                                <td className="p-2 text-center">{v.respiratoryRate || "—"}</td>
+                                <td className="p-2 text-center">{v.spo2 ? `${v.spo2}%` : "—"}</td>
+                                <td className="p-2 text-center">{v.secretion || "—"}</td>
+                                <td className="p-2 text-center">{v.suction || "—"}</td>
+                                <td className="p-2 text-center">{v.urineTube || "—"}</td>
+                                <td className="p-2 text-center text-muted-foreground">{v.nurseName || "—"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Past Sessions */}
+                {ipdSessions.length > 1 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <History className="h-4 w-4" />
+                        Past IPD Sessions ({ipdSessions.length - 1} more)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {ipdSessions.slice(1, 6).map((session: any) => (
+                          <div key={session.id} className="flex items-center justify-between p-2 border rounded-lg">
+                            <div className="text-sm">
+                              <p className="font-medium">{session.sessionDate}</p>
+                              <p className="text-muted-foreground text-xs">{session.ward} / {session.bedNumber} — {session.primaryDiagnosis}</p>
+                            </div>
+                            <Badge variant="outline">{session.admittingConsultant}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
           </TabsContent>
         )}
 
         {canSeeNursing && (
           <TabsContent value="icu-monitoring" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <HeartPulse className="h-5 w-5" />
-                    ICU Vital Signs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {scannedPatient.vitals ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-red-500" />
-                        <div>
-                          <div className="text-2xl font-bold">{scannedPatient.vitals.heartRate || "—"}</div>
-                          <div className="text-xs text-muted-foreground">Heart Rate (bpm)</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Droplets className="h-4 w-4 text-blue-500" />
-                        <div>
-                          <div className="text-2xl font-bold">
-                            {scannedPatient.vitals.systolicBp || "—"}/{scannedPatient.vitals.diastolicBp || "—"}
+            {icuChartsLoading ? (
+              <div className="flex items-center justify-center py-12 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                Loading ICU monitoring data...
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* ICU Chart Summary */}
+                {latestIcuChart ? (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <HeartPulse className="h-4 w-4" />
+                        Latest ICU Chart
+                        <Badge variant="outline" className="ml-auto text-xs">{latestIcuChart.date || latestIcuChart.sessionDate || "—"}</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        {latestIcuChart.ward && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Ward</p>
+                            <p className="font-medium">{latestIcuChart.ward}</p>
                           </div>
-                          <div className="text-xs text-muted-foreground">Blood Pressure</div>
-                        </div>
+                        )}
+                        {latestIcuChart.bedNo && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Bed</p>
+                            <p className="font-medium">{latestIcuChart.bedNo}</p>
+                          </div>
+                        )}
+                        {latestIcuChart.diagnosis && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Diagnosis</p>
+                            <p className="font-medium">{latestIcuChart.diagnosis}</p>
+                          </div>
+                        )}
+                        {latestIcuChart.consultant && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Consultant</p>
+                            <p className="font-medium">{latestIcuChart.consultant}</p>
+                          </div>
+                        )}
+                        {latestIcuChart.bp && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">BP</p>
+                            <p className="font-medium">{latestIcuChart.bp}</p>
+                          </div>
+                        )}
+                        {latestIcuChart.pulse && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Pulse</p>
+                            <p className="font-medium">{latestIcuChart.pulse}</p>
+                          </div>
+                        )}
+                        {latestIcuChart.spo2 && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">SpO2</p>
+                            <p className="font-medium">{latestIcuChart.spo2}%</p>
+                          </div>
+                        )}
+                        {latestIcuChart.respiratoryRate && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">RR</p>
+                            <p className="font-medium">{latestIcuChart.respiratoryRate}/min</p>
+                          </div>
+                        )}
+                        {latestIcuChart.totalIntake && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Total Intake</p>
+                            <p className="font-medium">{latestIcuChart.totalIntake}</p>
+                          </div>
+                        )}
+                        {latestIcuChart.totalOutput && (
+                          <div>
+                            <p className="text-muted-foreground text-xs">Total Output</p>
+                            <p className="font-medium">{latestIcuChart.totalOutput}</p>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Thermometer className="h-4 w-4 text-orange-500" />
-                        <div>
-                          <div className="text-2xl font-bold">{scannedPatient.vitals.temperature || "—"}°F</div>
-                          <div className="text-xs text-muted-foreground">Temperature</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Wind className="h-4 w-4 text-green-500" />
-                        <div>
-                          <div className="text-2xl font-bold">{scannedPatient.vitals.spo2 || "—"}%</div>
-                          <div className="text-xs text-muted-foreground">SpO2</div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <HeartPulse className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No ICU vitals recorded</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground border rounded-lg">
+                    <HeartPulse className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                    <p className="font-medium">No ICU charts recorded</p>
+                    <p className="text-sm mt-1">ICU chart data will appear here once recorded.</p>
+                  </div>
+                )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5" />
-                    Allergies & Precautions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {hasAllergies || scannedPatient.allergies?.specialPrecautions ? (
-                    <div className="space-y-3">
-                      {drugAllergies.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium mb-1">Drug Allergies:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {drugAllergies.map((a, i) => (
-                              <Badge key={i} variant="destructive">{a}</Badge>
-                            ))}
-                          </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Allergies & Precautions */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <AlertTriangle className="h-4 w-4" />
+                        Allergies & Precautions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {hasAllergies || scannedPatient.allergies?.specialPrecautions ? (
+                        <div className="space-y-3">
+                          {drugAllergies.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium mb-1">Drug Allergies:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {drugAllergies.map((a, i) => (
+                                  <Badge key={i} variant="destructive">{a}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {foodAllergies.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium mb-1">Food Allergies:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {foodAllergies.map((a, i) => (
+                                  <Badge key={i} variant="outline">{a}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {scannedPatient.allergies?.specialPrecautions && (
+                            <div>
+                              <p className="text-sm font-medium mb-1">Special Precautions:</p>
+                              <p className="text-sm text-muted-foreground">{scannedPatient.allergies.specialPrecautions}</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500 opacity-50" />
+                          <p className="text-sm">No known allergies</p>
                         </div>
                       )}
-                      {foodAllergies.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium mb-1">Food Allergies:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {foodAllergies.map((a, i) => (
-                              <Badge key={i} variant="outline">{a}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {scannedPatient.allergies?.specialPrecautions && (
-                        <div>
-                          <p className="text-sm font-medium mb-1">Special Precautions:</p>
-                          <p className="text-sm text-muted-foreground">{scannedPatient.allergies.specialPrecautions}</p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500 opacity-50" />
-                      <p className="text-sm">No known allergies</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
 
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Stethoscope className="h-5 w-5" />
-                    ICU Nursing Notes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {scannedPatient.monitoringSession ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <Badge variant="outline">Session #{scannedPatient.monitoringSession.id}</Badge>
-                        <Badge variant={scannedPatient.monitoringSession.status === "active" ? "default" : "secondary"}>
-                          {scannedPatient.monitoringSession.status}
-                        </Badge>
-                      </div>
-                      {scannedPatient.monitoringSession.notes && (
-                        <p className="text-sm text-muted-foreground">{scannedPatient.monitoringSession.notes}</p>
+                  {/* ICU Chart History */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <History className="h-4 w-4" />
+                        ICU Chart History
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {icuCharts.length > 0 ? (
+                        <div className="space-y-2">
+                          {icuCharts.slice(0, 6).map((chart: any) => (
+                            <div key={chart.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                              <div>
+                                <p className="font-medium">{chart.date || chart.sessionDate || "—"}</p>
+                                <p className="text-xs text-muted-foreground">{chart.ward || "ICU"} {chart.bedNo ? `/ ${chart.bedNo}` : ""}</p>
+                              </div>
+                              <div className="text-right text-xs text-muted-foreground">
+                                {chart.bp && <p>BP: {chart.bp}</p>}
+                                {chart.spo2 && <p>SpO2: {chart.spo2}%</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <History className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-sm">No ICU chart history</p>
+                        </div>
                       )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <Stethoscope className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No ICU monitoring notes</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
           </TabsContent>
         )}
 
