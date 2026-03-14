@@ -282,6 +282,9 @@ export default function PatientTrackingService() {
 
   const { data: patients = [], isLoading: patientsLoading } = useQuery<TrackingPatient[]>({
     queryKey: ["/api/tracking/patients"],
+    refetchInterval: 30000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const { data: servicePatients = [] } = useQuery<ServicePatient[]>({
@@ -371,6 +374,9 @@ export default function PatientTrackingService() {
   }>({
     queryKey: ["/api/tracking/patients", selectedPatientId, "history"],
     enabled: !!selectedPatientId,
+    refetchInterval: selectedPatientId ? 30000 : false,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const { data: doctorVisits = [] } = useQuery<DoctorVisit[]>({

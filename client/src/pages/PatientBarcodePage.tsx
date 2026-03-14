@@ -226,6 +226,9 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
       return res.json();
     },
     enabled: !!scannedPatient?.patient?.id && !showScanner,
+    refetchInterval: scannedPatient?.patient?.id && !showScanner ? 30000 : false,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const generateAllMutation = useMutation({
