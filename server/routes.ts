@@ -12900,10 +12900,14 @@ IMPORTANT: Follow ICMR/MoHFW guidelines. Include disclaimer that this is for edu
 
   app.post("/api/patient-monitoring/output", async (req, res) => {
     try {
-      // Calculate hourly total
+      // Calculate hourly total — always use Number() to avoid string concatenation
       const data = req.body;
-      data.hourlyTotal = (data.urineOutput || 0) + (data.drainOutput || 0) + 
-                         (data.vomitus || 0) + (data.stool || 0) + (data.otherLosses || 0);
+      const urineNum = Number(data.urineOutput) || 0;
+      const drainNum = Number(data.drainOutput) || 0;
+      const vomitusNum = Number(data.vomitus) || 0;
+      const stoolNum = Number(data.stool) || 0;
+      const otherNum = Number(data.otherLosses) || 0;
+      data.hourlyTotal = urineNum + drainNum + vomitusNum + stoolNum + otherNum;
       
       const parsed = insertOutputHourlySchema.safeParse(data);
       if (!parsed.success) {
