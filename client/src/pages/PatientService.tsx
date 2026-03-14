@@ -577,6 +577,11 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     refetchInterval: 30000,
   });
 
+  const { data: allBarcodes = [] } = useQuery<any[]>({
+    queryKey: ["/api/barcodes"],
+    refetchInterval: 60000,
+  });
+
   // Fetch longitudinal patient profile when a patient is selected - real-time refresh every 30s
   const { data: longitudinalProfile, isLoading: profileLoading } = useQuery({
     queryKey: ["/api/service-patients", selectedProfilePatient?.id, "longitudinal-profile"],
@@ -594,6 +599,41 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     enabled: !!selectedProfilePatient?.id && showProfileDialog,
     refetchInterval: showProfileDialog ? 30000 : false,
   });
+
+  // Fetch history profile for History dialog - real-time refresh every 30s
+  const { data: historyProfile, isLoading: historyProfileLoading } = useQuery({
+    queryKey: ["/api/service-patients", selectedHistoryPatient?.id, "longitudinal-profile"],
+    queryFn: async () => {
+      if (!selectedHistoryPatient?.id) return null;
+      const response = await fetch(`/api/service-patients/${selectedHistoryPatient.id}/longitudinal-profile`, {
+        headers: { 'x-user-id': currentUserId || '', 'x-user-role': currentRole }
+      });
+      if (!response.ok) throw new Error("Failed to fetch history profile");
+      return response.json();
+    },
+    enabled: !!selectedHistoryPatient?.id && showHistoryDialog,
+    refetchInterval: showHistoryDialog ? 30000 : false,
+  });
+
+  // Helper to find barcode for a service patient
+  const getPatientBarcode = (patient: ServicePatient) => {
+    const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase().trim();
+    return (allBarcodes as any[]).find((b: any) =>
+      b.patientId === patient.id ||
+      (b.patientName || "").toLowerCase().trim() === fullName
+    );
+  };
+
+  // Helper to find tracking patient for a service patient
+  const getTrackingPatient = (patient: ServicePatient) => {
+    const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase().trim();
+    return (allTrackingPatients as any[]).find((t: any) => {
+      const tn = (t.name || "").toLowerCase().trim();
+      if (tn === fullName) return true;
+      const parts = fullName.split(" ").filter(Boolean);
+      return parts.length > 0 && parts.every((p: string) => tn.includes(p));
+    });
+  };
 
   // Filter patients for the "All Patients" tab
   const filteredAllPatients = patients.filter((patient) => {
@@ -2261,78 +2301,86 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg font-medium text-sm text-slate-600 dark:text-slate-300">
-                      <div className="col-span-3">Patient Name</div>
-                      <div className="col-span-2">Gender / DOB</div>
-                      <div className="col-span-2">Phone</div>
-                      <div className="col-span-3">Email</div>
-                      <div className="col-span-2 text-right">Action</div>
-                    </div>
-                    <ScrollArea className="h-[400px]">
-                      {filteredAllPatients.map((patient) => (
-                        <div 
-                          key={patient.id} 
-                          className="grid grid-cols-12 gap-4 px-4 py-3 border-b hover:bg-slate-50 dark:hover:bg-slate-800/50 items-center cursor-pointer"
-                          onClick={() => {
-                            setSelectedProfilePatient(patient);
-                            setShowProfileDialog(true);
-                          }}
-                          data-testid={`patient-row-${patient.id}`}
-                        >
-                          <div className="col-span-3 flex items-center gap-3">
-                            <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
-                              <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-900 dark:text-white">
-                                {patient.firstName} {patient.lastName}
-                              </p>
-                              <p className="text-xs text-slate-500">ID: {patient.id.slice(0, 8)}...</p>
-                            </div>
-                          </div>
-                          <div className="col-span-2 text-sm text-slate-600 dark:text-slate-300">
-                            <Badge variant="outline" className="mr-2">{patient.gender}</Badge>
-                            {patient.dateOfBirth}
-                          </div>
-                          <div className="col-span-2 text-sm text-slate-600 dark:text-slate-300">
-                            {patient.phone || "—"}
-                          </div>
-                          <div className="col-span-3 text-sm text-slate-600 dark:text-slate-300 truncate">
-                            {patient.email || "—"}
-                          </div>
-                          <div className="col-span-2 flex gap-1 justify-end flex-wrap">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-blue-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
+                  <div className="space-y-3">
+                    <ScrollArea className="h-[480px] pr-2">
+                      <div className="space-y-2">
+                        {filteredAllPatients.map((patient) => {
+                          const barcode = getPatientBarcode(patient);
+                          const tp = getTrackingPatient(patient);
+                          return (
+                            <div
+                              key={patient.id}
+                              className="flex items-center justify-between p-3 rounded-lg border hover-elevate cursor-pointer gap-3"
+                              onClick={() => {
                                 setSelectedProfilePatient(patient);
                                 setShowProfileDialog(true);
                               }}
+                              data-testid={`patient-row-${patient.id}`}
                             >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View Profile
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-emerald-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedHistoryPatient(patient);
-                                setShowHistoryDialog(true);
-                              }}
-                            >
-                              <History className="h-4 w-4 mr-1" />
-                              History
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <div className={`p-2 rounded-full flex-shrink-0 ${barcode ? 'bg-primary/10' : 'bg-muted'}`}>
+                                  <User className={`h-4 w-4 ${barcode ? 'text-primary' : 'text-muted-foreground'}`} />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-medium truncate">{patient.firstName} {patient.lastName}</p>
+                                  {barcode ? (
+                                    <p className="text-xs text-muted-foreground font-mono truncate">{barcode.uhid}</p>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground">
+                                      {patient.gender} · {patient.dateOfBirth}
+                                      {patient.phone ? ` · ${patient.phone}` : ""}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {barcode && (
+                                  <Badge variant={barcode.admissionType === "IPD" ? "default" : "secondary"}>
+                                    {barcode.admissionType}
+                                  </Badge>
+                                )}
+                                {(barcode?.wardBed || tp?.room) && (
+                                  <Badge variant="outline" className="hidden sm:inline-flex">
+                                    {barcode?.wardBed || tp?.room}
+                                  </Badge>
+                                )}
+                                {tp && (
+                                  <Badge variant={tp.status === "critical" ? "destructive" : tp.status === "admitted" ? "default" : "secondary"} className="hidden md:inline-flex text-xs">
+                                    {tp.status}
+                                  </Badge>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProfilePatient(patient);
+                                    setShowProfileDialog(true);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View Profile
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-emerald-600"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedHistoryPatient(patient);
+                                    setShowHistoryDialog(true);
+                                  }}
+                                >
+                                  <History className="h-4 w-4 mr-1" />
+                                  History
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </ScrollArea>
-                    <div className="text-sm text-slate-500 text-center pt-2">
+                    <div className="text-sm text-slate-500 text-center pt-1">
                       Showing {filteredAllPatients.length} of {patients.length} patients
                       {allPatientsPeriod !== "all" && (
                         <span className="ml-1 text-blue-500">
@@ -2368,7 +2416,46 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               <span className="ml-2">Loading patient profile...</span>
             </div>
           ) : longitudinalProfile ? (
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col gap-3">
+              {/* Patient Identity Card */}
+              {(() => {
+                const profileBarcode = selectedProfilePatient ? getPatientBarcode(selectedProfilePatient) : null;
+                const profileTp = selectedProfilePatient ? getTrackingPatient(selectedProfilePatient) : null;
+                return (
+                  <div className="flex-shrink-0 bg-muted/40 border rounded-lg p-3 flex flex-wrap gap-3 items-start">
+                    <div className={`p-2.5 rounded-full flex-shrink-0 ${profileBarcode ? 'bg-primary/10' : 'bg-muted'}`}>
+                      <User className={`h-6 w-6 ${profileBarcode ? 'text-primary' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="font-semibold text-base">{selectedProfilePatient?.firstName} {selectedProfilePatient?.lastName}</span>
+                        {profileBarcode && (
+                          <Badge variant={profileBarcode.admissionType === "IPD" ? "default" : "secondary"}>
+                            {profileBarcode.admissionType}
+                          </Badge>
+                        )}
+                        {profileTp && (
+                          <Badge variant={profileTp.status === "critical" ? "destructive" : profileTp.status === "admitted" ? "default" : "secondary"}>
+                            {profileTp.status}
+                          </Badge>
+                        )}
+                      </div>
+                      {profileBarcode && (
+                        <p className="text-xs font-mono text-muted-foreground mb-1">{profileBarcode.uhid}</p>
+                      )}
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        {selectedProfilePatient?.gender && <span>Gender: <span className="text-foreground font-medium capitalize">{selectedProfilePatient.gender}</span></span>}
+                        {selectedProfilePatient?.dateOfBirth && <span>DOB: <span className="text-foreground font-medium">{selectedProfilePatient.dateOfBirth}</span></span>}
+                        {selectedProfilePatient?.phone && <span>Phone: <span className="text-foreground font-medium">{selectedProfilePatient.phone}</span></span>}
+                        {(profileBarcode?.wardBed || profileTp?.room) && <span>Ward/Bed: <span className="text-foreground font-medium">{profileBarcode?.wardBed || profileTp?.room}</span></span>}
+                        {(profileBarcode?.treatingDoctor || profileTp?.attendingDoctor || profileTp?.doctor) && <span>Doctor: <span className="text-foreground font-medium">{profileBarcode?.treatingDoctor || profileTp?.attendingDoctor || profileTp?.doctor}</span></span>}
+                        {profileTp?.diagnosis && <span>Diagnosis: <span className="text-foreground font-medium">{profileTp.diagnosis}</span></span>}
+                        {profileTp?.bloodGroup && <span>Blood Group: <span className="text-foreground font-medium">{profileTp.bloodGroup}</span></span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full flex-1 flex flex-col min-h-0">
                 <TabsList className="flex-shrink-0 grid w-full grid-cols-4 sm:grid-cols-8 mb-4 h-auto gap-0.5">
                   <TabsTrigger value="opd" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
@@ -2780,157 +2867,213 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               return parts.length > 0 && parts.every((p) => tn.includes(p));
             })
           : null;
+        const historyBarcode = selectedHistoryPatient ? getPatientBarcode(selectedHistoryPatient) : null;
         return (
           <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
-            <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
+            <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="flex items-center gap-2">
                   <History className="h-5 w-5 text-purple-600" />
                   Patient History - {fullName}
                 </DialogTitle>
               </DialogHeader>
 
-              {!tp ? (
-                <div className="py-10 text-center text-muted-foreground">
-                  <Bed className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                  <p className="font-medium">No admission record found</p>
-                  <p className="text-sm mt-1">This patient has not been admitted through the Patient Monitoring module.</p>
-                </div>
-              ) : (
-                <div className="space-y-6 mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Patient Details Card */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" /> Patient Details
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2 text-sm">
-                        {[
-                          { label: "Name", value: tp.name },
-                          { label: "Age", value: tp.age ? `${tp.age} years` : "N/A" },
-                          { label: "Gender", value: tp.gender ? <span className="capitalize">{tp.gender}</span> : "N/A" },
-                          { label: "Blood Group", value: tp.bloodGroup || "N/A" },
-                          { label: "Room", value: tp.room || "N/A" },
-                          { label: "Diagnosis", value: tp.diagnosis || "N/A" },
-                          { label: "Attending Doctor", value: tp.attendingDoctor || "N/A" },
-                        ].map(({ label, value }) => (
-                          <div key={label} className="flex justify-between">
-                            <span className="text-muted-foreground">{label}:</span>
-                            <span className="font-medium text-right max-w-[55%]">{value}</span>
-                          </div>
-                        ))}
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Status:</span>
-                          <Badge variant={tp.status === "critical" ? "destructive" : tp.status === "stable" ? "default" : "secondary"}>
+              <ScrollArea className="flex-1 min-h-0" style={{ maxHeight: 'calc(90vh - 100px)' }}>
+                <div className="space-y-4 pr-2">
+                  {/* Patient Identity Banner */}
+                  <div className="bg-muted/40 border rounded-lg p-3 flex flex-wrap gap-3 items-start">
+                    <div className={`p-2.5 rounded-full flex-shrink-0 ${historyBarcode ? 'bg-primary/10' : 'bg-muted'}`}>
+                      <User className={`h-6 w-6 ${historyBarcode ? 'text-primary' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="font-semibold text-base">{fullName}</span>
+                        {historyBarcode && (
+                          <Badge variant={historyBarcode.admissionType === "IPD" ? "default" : "secondary"}>
+                            {historyBarcode.admissionType}
+                          </Badge>
+                        )}
+                        {tp && (
+                          <Badge variant={tp.status === "critical" ? "destructive" : tp.status === "admitted" ? "default" : "secondary"}>
                             {tp.status}
                           </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Admission & Stay Duration Card */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" /> Admission & Stay Duration
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Admission Date:</span>
-                          <span className="font-medium">
-                            {tp.admissionDate ? new Date(tp.admissionDate).toLocaleDateString() : "N/A"}
-                          </span>
-                        </div>
-                        <div className="border-t pt-3 space-y-2">
-                          <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <Bed className="h-4 w-4 text-blue-600" />
-                              <span className="text-blue-700 dark:text-blue-300">Total Hospital Stay:</span>
-                            </div>
-                            <span className="font-bold text-blue-700 dark:text-blue-300">
-                              {calculateDays(tp.admissionDate)} days
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <Bed className="h-4 w-4 text-green-600" />
-                              <span className="text-green-700 dark:text-green-300">General Ward:</span>
-                            </div>
-                            <span className="font-bold text-green-700 dark:text-green-300">
-                              {tp.isInIcu
-                                ? (tp.icuTransferDate
-                                    ? calculateDays(tp.admissionDate) - calculateDays(tp.icuTransferDate)
-                                    : 0)
-                                : calculateDays(tp.admissionDate)
-                              } days
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <HeartPulse className="h-4 w-4 text-red-600" />
-                              <span className="text-red-700 dark:text-red-300">ICU Stay:</span>
-                            </div>
-                            <span className="font-bold text-red-700 dark:text-red-300">
-                              {tp.isInIcu && tp.icuTransferDate
-                                ? calculateDays(tp.icuTransferDate)
-                                : (tp.icuDays || 0)
-                              } days
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between p-2 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <Wind className="h-4 w-4 text-cyan-600" />
-                              <span className="text-cyan-700 dark:text-cyan-300">Ventilator:</span>
-                            </div>
-                            <span className="font-bold text-cyan-700 dark:text-cyan-300">
-                              {tp.ventilatorDays || 0} days
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Additional Information Card */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-muted-foreground" /> Additional Information
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Currently in ICU:</span>
-                          <Badge variant={tp.isInIcu ? "destructive" : "secondary"}>
-                            {tp.isInIcu ? "Yes" : "No"}
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Department:</span>
-                          <span>{tp.department || "N/A"}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Assigned Nurse:</span>
-                          <span>{tp.assignedNurse || "N/A"}</span>
-                        </div>
-                        {tp.icuTransferDate && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">ICU Transfer Date:</span>
-                            <span>{new Date(tp.icuTransferDate).toLocaleDateString()}</span>
-                          </div>
                         )}
                       </div>
-                    </CardContent>
-                  </Card>
+                      {historyBarcode && (
+                        <p className="text-xs font-mono text-muted-foreground mb-1">{historyBarcode.uhid}</p>
+                      )}
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        {selectedHistoryPatient?.gender && <span>Gender: <span className="text-foreground font-medium capitalize">{selectedHistoryPatient.gender}</span></span>}
+                        {selectedHistoryPatient?.dateOfBirth && <span>DOB: <span className="text-foreground font-medium">{selectedHistoryPatient.dateOfBirth}</span></span>}
+                        {selectedHistoryPatient?.phone && <span>Phone: <span className="text-foreground font-medium">{selectedHistoryPatient.phone}</span></span>}
+                        {(historyBarcode?.wardBed || tp?.room) && <span>Ward/Bed: <span className="text-foreground font-medium">{historyBarcode?.wardBed || tp?.room}</span></span>}
+                        {(historyBarcode?.treatingDoctor || tp?.attendingDoctor || tp?.doctor) && <span>Doctor: <span className="text-foreground font-medium">{historyBarcode?.treatingDoctor || tp?.attendingDoctor || tp?.doctor}</span></span>}
+                        {tp?.diagnosis && <span>Diagnosis: <span className="text-foreground font-medium">{tp.diagnosis}</span></span>}
+                      </div>
+                    </div>
+                  </div>
 
-                  {/* Movement Timeline */}
-                  <PatientHistoryTimeline patientId={tp.id} />
+                  {/* IPD Admission Details — only when tracked */}
+                  {tp && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <Bed className="h-4 w-4 text-muted-foreground" /> Admission Details
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm">
+                          {[
+                            { label: "Admitted", value: tp.admissionDate ? new Date(tp.admissionDate).toLocaleDateString() : "N/A" },
+                            { label: "Department", value: tp.department || "N/A" },
+                            { label: "Room", value: tp.room || "N/A" },
+                            { label: "Assigned Nurse", value: tp.assignedNurse || "N/A" },
+                          ].map(({ label, value }) => (
+                            <div key={label} className="flex justify-between">
+                              <span className="text-muted-foreground">{label}:</span>
+                              <span className="font-medium text-right">{value}</span>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-muted-foreground" /> Stay Duration
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm">
+                          <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <span className="text-blue-700 dark:text-blue-300">Total Stay:</span>
+                            <span className="font-bold text-blue-700 dark:text-blue-300">{calculateDays(tp.admissionDate)} days</span>
+                          </div>
+                          <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                            <span className="text-red-700 dark:text-red-300">ICU Days:</span>
+                            <span className="font-bold text-red-700 dark:text-red-300">{tp.isInIcu && tp.icuTransferDate ? calculateDays(tp.icuTransferDate) : (tp.icuDays || 0)} days</span>
+                          </div>
+                          <div className="flex items-center justify-between p-2 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
+                            <span className="text-cyan-700 dark:text-cyan-300">Ventilator:</span>
+                            <span className="font-bold text-cyan-700 dark:text-cyan-300">{tp.ventilatorDays || 0} days</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
+                  {/* Comprehensive History from longitudinal profile */}
+                  {historyProfileLoading ? (
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+                      <span className="ml-2 text-sm text-muted-foreground">Loading history...</span>
+                    </div>
+                  ) : historyProfile ? (
+                    <>
+                      {/* OPD Visits */}
+                      {historyProfile.opdHistory?.length > 0 && (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium flex items-center gap-2">
+                              <ClipboardList className="h-4 w-4 text-blue-500" />
+                              OPD Visits ({historyProfile.opdHistory.length})
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {historyProfile.opdHistory.slice(0, 5).map((visit: any) => (
+                              <div key={visit.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                                <div>
+                                  <p className="font-medium">{visit.department || "General"}</p>
+                                  <p className="text-xs text-muted-foreground">{visit.doctorName || visit.doctor || "—"}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-muted-foreground">{visit.appointmentDate ? new Date(visit.appointmentDate).toLocaleDateString() : "—"}</p>
+                                  <Badge variant="outline" className="text-xs">{visit.status || "—"}</Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Prescriptions */}
+                      {historyProfile.medicationHistory?.length > 0 && (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium flex items-center gap-2">
+                              <Pill className="h-4 w-4 text-green-500" />
+                              Prescriptions ({historyProfile.medicationHistory.length})
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {historyProfile.medicationHistory.slice(0, 5).map((rx: any) => (
+                              <div key={rx.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                                <div>
+                                  <p className="font-medium">{rx.diagnosis || rx.chiefComplaint || "Prescription"}</p>
+                                  <p className="text-xs text-muted-foreground">{rx.doctorName || "—"}</p>
+                                </div>
+                                <span className="text-xs text-muted-foreground">{rx.createdAt ? new Date(rx.createdAt).toLocaleDateString() : "—"}</span>
+                              </div>
+                            ))}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Diagnostic Tests */}
+                      {historyProfile.diagnosticTests?.length > 0 && (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium flex items-center gap-2">
+                              <FlaskConical className="h-4 w-4 text-orange-500" />
+                              Lab / Diagnostic Tests ({historyProfile.diagnosticTests.length})
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {historyProfile.diagnosticTests.slice(0, 5).map((t: any) => (
+                              <div key={t.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                                <p className="font-medium">{t.testName || t.panelName || "Test"}</p>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">{t.status || "ordered"}</Badge>
+                                  <span className="text-xs text-muted-foreground">{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "—"}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Consent Forms */}
+                      {historyProfile.consentRecords?.length > 0 && (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium flex items-center gap-2">
+                              <FileCheck className="h-4 w-4 text-purple-500" />
+                              Consent Forms ({historyProfile.consentRecords.length})
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {historyProfile.consentRecords.slice(0, 5).map((c: any) => (
+                              <div key={c.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                                <p className="font-medium">{c.title || c.consentType || "Consent"}</p>
+                                <span className="text-xs text-muted-foreground">{c.uploadedAt ? new Date(c.uploadedAt).toLocaleDateString() : "—"}</span>
+                              </div>
+                            ))}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {!tp && historyProfile.opdHistory?.length === 0 && historyProfile.medicationHistory?.length === 0 && historyProfile.consentRecords?.length === 0 && historyProfile.diagnosticTests?.length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <History className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                          <p className="font-medium">No history records found</p>
+                          <p className="text-sm mt-1">Medical activities will appear here as they are recorded.</p>
+                        </div>
+                      )}
+                    </>
+                  ) : null}
+
+                  {/* Movement Timeline — only when tracked */}
+                  {tp && <PatientHistoryTimeline patientId={tp.id} />}
                 </div>
-              )}
+              </ScrollArea>
             </DialogContent>
           </Dialog>
         );
