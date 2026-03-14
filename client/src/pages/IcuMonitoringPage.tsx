@@ -860,9 +860,9 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
     { key: "pulse", label: "Pulse", unit: "bpm", icon: <Heart className="w-4 h-4" /> },
     { key: "bp", label: "BP", unit: "mmHg", icon: <Activity className="w-4 h-4" /> },
     { key: "respiratoryRate", label: "RR", unit: "/min", icon: <Wind className="w-4 h-4" /> },
+    { key: "sanction", label: "Suction", unit: "", icon: <FileText className="w-4 h-4" /> },
     { key: "spo2", label: "SpO2", unit: "%", icon: <Droplets className="w-4 h-4" /> },
     { key: "cvp", label: "CVP", unit: "cmH2O", icon: <BarChart3 className="w-4 h-4" /> },
-    { key: "sanction", label: "Suction", unit: "", icon: <FileText className="w-4 h-4" /> },
     { key: "secretion", label: "Secretion", unit: "", icon: <FlaskConical className="w-4 h-4" /> },
     { key: "urineTube", label: "Urine Tube", unit: "", icon: <Beaker className="w-4 h-4" /> },
   ];
@@ -935,6 +935,15 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
               />
             </div>
             <div className="space-y-2">
+              <Label>Suction</Label>
+              <Input
+                value={newEntry.sanction}
+                onChange={e => setNewEntry(prev => ({ ...prev, sanction: e.target.value }))}
+                placeholder="Suction"
+                data-testid="input-vitals-sanction"
+              />
+            </div>
+            <div className="space-y-2">
               <Label>SpO2 (%)</Label>
               <Input
                 value={newEntry.spo2}
@@ -950,15 +959,6 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
                 onChange={e => setNewEntry(prev => ({ ...prev, cvp: e.target.value }))}
                 placeholder="8"
                 data-testid="input-vitals-cvp"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Suction</Label>
-              <Input
-                value={newEntry.sanction}
-                onChange={e => setNewEntry(prev => ({ ...prev, sanction: e.target.value }))}
-                placeholder="Suction"
-                data-testid="input-vitals-sanction"
               />
             </div>
             <div className="space-y-2">
