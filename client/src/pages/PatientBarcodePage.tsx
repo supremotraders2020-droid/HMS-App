@@ -915,9 +915,15 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
             </TabsTrigger>
           )}
           {canSeeNursing && (
-            <TabsTrigger value="nursing" data-testid="tab-nursing">
-              <Stethoscope className="h-4 w-4 mr-2" />
-              Nursing
+            <TabsTrigger value="ipd-monitoring" data-testid="tab-ipd-monitoring">
+              <Activity className="h-4 w-4 mr-2" />
+              IPD Monitoring
+            </TabsTrigger>
+          )}
+          {canSeeNursing && (
+            <TabsTrigger value="icu-monitoring" data-testid="tab-icu-monitoring">
+              <HeartPulse className="h-4 w-4 mr-2" />
+              ICU Monitoring
             </TabsTrigger>
           )}
           {canSeeDocuments && (
@@ -1403,7 +1409,7 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
         )}
 
         {canSeeNursing && (
-          <TabsContent value="nursing" className="mt-4">
+          <TabsContent value="ipd-monitoring" className="mt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
@@ -1459,7 +1465,7 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ClipboardList className="h-5 w-5" />
-                    Nursing Notes
+                    IPD Nursing Notes
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1479,6 +1485,91 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
                     <div className="text-center py-4 text-muted-foreground">
                       <ClipboardList className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">No monitoring sessions</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <History className="h-5 w-5" />
+                    Recent IPD Monitoring Sessions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {scannedPatient.allSessions && scannedPatient.allSessions.length > 0 ? (
+                    <div className="space-y-2">
+                      {scannedPatient.allSessions.slice(0, 5).map((session: any) => (
+                        <div key={session.id} className="flex items-center justify-between p-2 border rounded-lg">
+                          <div className="text-sm">
+                            <p className="font-medium">{new Date(session.sessionDate).toLocaleDateString()}</p>
+                            <p className="text-muted-foreground text-xs">{session.shift || "Day Shift"}</p>
+                          </div>
+                          <Badge variant="outline">{session.status}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No IPD monitoring sessions</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        )}
+
+        {canSeeNursing && (
+          <TabsContent value="icu-monitoring" className="mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <HeartPulse className="h-5 w-5" />
+                    ICU Vital Signs
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {scannedPatient.vitals ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4 text-red-500" />
+                        <div>
+                          <div className="text-2xl font-bold">{scannedPatient.vitals.heartRate || "—"}</div>
+                          <div className="text-xs text-muted-foreground">Heart Rate (bpm)</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Droplets className="h-4 w-4 text-blue-500" />
+                        <div>
+                          <div className="text-2xl font-bold">
+                            {scannedPatient.vitals.systolicBp || "—"}/{scannedPatient.vitals.diastolicBp || "—"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Blood Pressure</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Thermometer className="h-4 w-4 text-orange-500" />
+                        <div>
+                          <div className="text-2xl font-bold">{scannedPatient.vitals.temperature || "—"}°F</div>
+                          <div className="text-xs text-muted-foreground">Temperature</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Wind className="h-4 w-4 text-green-500" />
+                        <div>
+                          <div className="text-2xl font-bold">{scannedPatient.vitals.spo2 || "—"}%</div>
+                          <div className="text-xs text-muted-foreground">SpO2</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <HeartPulse className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No ICU vitals recorded</p>
                     </div>
                   )}
                 </CardContent>
@@ -1530,30 +1621,30 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="md:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <History className="h-5 w-5" />
-                    Recent Monitoring Sessions
+                    <Stethoscope className="h-5 w-5" />
+                    ICU Nursing Notes
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {scannedPatient.allSessions && scannedPatient.allSessions.length > 0 ? (
-                    <div className="space-y-2">
-                      {scannedPatient.allSessions.slice(0, 5).map((session: any) => (
-                        <div key={session.id} className="flex items-center justify-between p-2 border rounded-lg">
-                          <div className="text-sm">
-                            <p className="font-medium">{new Date(session.sessionDate).toLocaleDateString()}</p>
-                            <p className="text-muted-foreground text-xs">{session.shift || "Day Shift"}</p>
-                          </div>
-                          <Badge variant="outline">{session.status}</Badge>
-                        </div>
-                      ))}
+                  {scannedPatient.monitoringSession ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <Badge variant="outline">Session #{scannedPatient.monitoringSession.id}</Badge>
+                        <Badge variant={scannedPatient.monitoringSession.status === "active" ? "default" : "secondary"}>
+                          {scannedPatient.monitoringSession.status}
+                        </Badge>
+                      </div>
+                      {scannedPatient.monitoringSession.notes && (
+                        <p className="text-sm text-muted-foreground">{scannedPatient.monitoringSession.notes}</p>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-4 text-muted-foreground">
-                      <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No monitoring sessions</p>
+                      <Stethoscope className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No ICU monitoring notes</p>
                     </div>
                   )}
                 </CardContent>
