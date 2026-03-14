@@ -1418,7 +1418,7 @@ export class DatabaseStorage implements IStorage {
       { id: "cat-isolation", name: "Isolation", code: "ISO", description: "Isolation rooms for infectious cases", categoryType: "isolation", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
       { id: "cat-nicu", name: "NICU", code: "NICU", description: "Neonatal Intensive Care Unit", categoryType: "icu", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
       { id: "cat-private", name: "Private", code: "PVT", description: "Private single-bed rooms", categoryType: "inpatient", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
-      { id: "cat-semi-private", name: "Semi-Private", code: "SP", description: "Semi-private rooms with 2 beds", categoryType: "inpatient", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
+      { id: "cat-casualty", name: "Casualty", code: "CAS", description: "Emergency casualty beds for acute care", categoryType: "inpatient", documentationIntensity: "STANDARD", requiresIcuAdmission: false, requiresPediatricPatient: false, isActive: true },
     ];
 
     for (const cat of categories) {
@@ -1809,7 +1809,7 @@ export class DatabaseStorage implements IStorage {
     console.log("Seeding default beds...");
 
     const bedData: InsertBed[] = [
-      ...Array.from({ length: 10 }, (_, i) => ({
+      ...Array.from({ length: 7 }, (_, i) => ({
         bedNumber: `GF-${String(i + 1).padStart(2, '0')}`,
         bedName: `General Ward (F) - ${i + 1}`,
         categoryId: "cat-general",
@@ -1819,7 +1819,7 @@ export class DatabaseStorage implements IStorage {
         occupancyStatus: "available",
         isActive: true,
       } as InsertBed)),
-      ...Array.from({ length: 10 }, (_, i) => ({
+      ...Array.from({ length: 8 }, (_, i) => ({
         bedNumber: `GM-${String(i + 1).padStart(2, '0')}`,
         bedName: `General Ward (M) - ${i + 1}`,
         categoryId: "cat-general",
@@ -1832,8 +1832,7 @@ export class DatabaseStorage implements IStorage {
       { bedNumber: "ICU-01", bedName: "ICU - 1", categoryId: "cat-icu", wardName: "ICU", floor: "2nd Floor", department: "Critical Care", occupancyStatus: "available", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
       { bedNumber: "NICU-01", bedName: "NICU - 1", categoryId: "cat-nicu", wardName: "NICU", floor: "2nd Floor", department: "NICU", occupancyStatus: "available", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
       { bedNumber: "OBT-01", bedName: "Orbit - 1", categoryId: "cat-hdu", wardName: "Orbit", floor: "2nd Floor", department: "HDU", occupancyStatus: "available", hasOxygenCapability: true, isActive: true },
-      { bedNumber: "STD-01", bedName: "Standard - 1", categoryId: "cat-private", wardName: "Standard", floor: "3rd Floor", department: "Private", occupancyStatus: "available", isActive: true },
-      { bedNumber: "SSR-01", bedName: "Semi Special Room AC - 1", categoryId: "cat-semi-private", wardName: "Semi Special Room AC", floor: "2nd Floor", department: "Semi-Private", occupancyStatus: "available", isActive: true },
+      { bedNumber: "CAS-01", bedName: "Casualty - 1", categoryId: "cat-casualty", wardName: "Casualty", floor: "Ground Floor", department: "Emergency", occupancyStatus: "available", hasOxygenCapability: true, isActive: true },
       { bedNumber: "HRZ-01", bedName: "Horizon - 1", categoryId: "cat-isolation", wardName: "Horizon", floor: "Ground Floor", department: "Infectious Disease", occupancyStatus: "available", isIsolationBed: true, infectionControlFlag: true, ppeProtocolRequired: true, isActive: true },
       { bedNumber: "NOV-01", bedName: "Nova - 1", categoryId: "cat-daycare", wardName: "Nova", floor: "1st Floor", department: "Day Care", occupancyStatus: "available", isActive: true },
       { bedNumber: "NEX-01", bedName: "Nexus - 1", categoryId: "cat-general", wardName: "Nexus", floor: "3rd Floor", department: "General", occupancyStatus: "available", isActive: true },
