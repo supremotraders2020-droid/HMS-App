@@ -20,9 +20,14 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  const replitDomain = process.env.REPLIT_DOMAINS?.split(",")[0];
+  const hmrConfig = replitDomain
+    ? { server, clientPort: 443, host: replitDomain }
+    : { server };
+
   const serverOptions = {
     middlewareMode: true,
-    hmr: { server },
+    hmr: hmrConfig,
     allowedHosts: true as const,
   };
 
