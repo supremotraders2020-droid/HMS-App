@@ -18,6 +18,15 @@ import { Activity, Heart, Wind, Droplets, Pill, ClipboardList, Users, Clock, Plu
 import { format } from "date-fns";
 import { Pencil, Check, X } from "lucide-react";
 import type { IcuCharts, ServicePatient } from "@shared/schema";
+import {
+  type Session as IpdSession,
+  OverviewTab, VitalsTab, InotropesTab, VentilatorTab, ABGLabTab,
+  IntakeTab, OutputTab, DiabeticTab, OxygenTab, MARTab,
+  ShiftNotesTab, AirwayTab, DutyStaffTab, AllergiesTab,
+  InvestigationChartTab, TestsTab, CarePlanTab, InitialAssessmentTab,
+  IndoorConsultationTab, DoctorsProgressTab, DoctorsVisitTab,
+  SurgeryNotesTab, NursingProgressTab, NursingAssessmentCarePlanTab
+} from "./PatientMonitoringPage";
 
 function EditableCell({ 
   value, 
@@ -392,9 +401,8 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
           </Button>
         </div>
 
-        <IcuDataTabs
-          chart={selectedChart}
-          chartData={completeChart as any}
+        <IcuChartDetail 
+          chart={selectedChart} 
           canEdit={canEdit}
           userId={userId}
           userRole={userRole}
@@ -651,112 +659,101 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
   );
 }
 
-function IcuDataTabs({ chart, chartData, canEdit, userId, userRole }: {
+function IcuChartDetail({ chart, canEdit, userId, userRole }: {
   chart: IcuCharts;
-  chartData: any;
   canEdit: boolean;
   userId?: string;
   userRole: string;
 }) {
-  const [activeTab, setActiveTab] = useState("vitals");
-  const d = chartData || {};
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const { data: sessions = [], isLoading: loadingSessions, refetch: refetchSessions } = useQuery<IpdSession[]>({
+    queryKey: ["/api/patient-monitoring/sessions/patient", chart.patientId],
+    queryFn: async () => {
+      const res = await fetch(`/api/patient-monitoring/sessions/patient/${chart.patientId}`);
+      if (!res.ok) throw new Error("Failed to fetch sessions");
+      return res.json();
+    },
+    enabled: !!chart.patientId,
+  });
+
+  const ensureSessionMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/icu/ensure-ipd-session/${chart.patientId}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchSessions();
+    },
+  });
+
+  useEffect(() => {
+    if (!loadingSessions && sessions.length === 0 && chart.patientId) {
+      ensureSessionMutation.mutate();
+    }
+  }, [loadingSessions, sessions.length, chart.patientId]);
+
+  const selectedSession = sessions[0] ?? null;
+
+  if (loadingSessions || ensureSessionMutation.isPending) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-muted-foreground">Loading patient data...</CardContent>
+      </Card>
+    );
+  }
+
+  if (!selectedSession) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-muted-foreground">Setting up patient records...</CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardContent className="pt-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="inline-flex flex-wrap h-auto gap-1 p-1.5 bg-muted/50 rounded-lg">
-            <TabsTrigger value="vitals" className="text-xs gap-1.5 data-[state=active]:bg-background"><Heart className="h-3.5 w-3.5" />Vitals</TabsTrigger>
-            <TabsTrigger value="ventilator" className="text-xs gap-1.5 data-[state=active]:bg-background"><Wind className="h-3.5 w-3.5" />Ventilator</TabsTrigger>
-            <TabsTrigger value="hemodynamic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Hemodynamic</TabsTrigger>
-            <TabsTrigger value="fluid" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Fluid Balance</TabsTrigger>
-            <TabsTrigger value="medications" className="text-xs gap-1.5 data-[state=active]:bg-background"><Pill className="h-3.5 w-3.5" />Medications</TabsTrigger>
-            <TabsTrigger value="labs" className="text-xs gap-1.5 data-[state=active]:bg-background"><FlaskConical className="h-3.5 w-3.5" />Labs & ABG</TabsTrigger>
-            <TabsTrigger value="oxygen" className="text-xs gap-1.5 data-[state=active]:bg-background"><Gauge className="h-3.5 w-3.5" />Oxygen</TabsTrigger>
-            <TabsTrigger value="nursing" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardCheck className="h-3.5 w-3.5" />Nursing</TabsTrigger>
-            <TabsTrigger value="body" className="text-xs gap-1.5 data-[state=active]:bg-background"><User className="h-3.5 w-3.5" />Body Chart</TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Overview</TabsTrigger>
+            <TabsTrigger value="allergies" className="text-xs gap-1.5 data-[state=active]:bg-background"><AlertTriangle className="h-3.5 w-3.5" />Allergies</TabsTrigger>
+            <TabsTrigger value="care-plan" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileCheck className="h-3.5 w-3.5" />Care Plan</TabsTrigger>
+            <TabsTrigger value="diabetic" className="text-xs gap-1.5 data-[state=active]:bg-background"><Activity className="h-3.5 w-3.5" />Diabetic</TabsTrigger>
+            <TabsTrigger value="doctors-progress" className="text-xs gap-1.5 data-[state=active]:bg-background"><Stethoscope className="h-3.5 w-3.5" />Doctor's Progress Sheet</TabsTrigger>
+            <TabsTrigger value="doctors-visit" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Doctor's Visit Sheet</TabsTrigger>
+            <TabsTrigger value="drugchart" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Drug Chart</TabsTrigger>
+            <TabsTrigger value="indoor-consultation" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Indoor Continuation Sheet</TabsTrigger>
+            <TabsTrigger value="initial-assessment" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Initial Assessment</TabsTrigger>
+            <TabsTrigger value="intake" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Intake</TabsTrigger>
+            <TabsTrigger value="investigation" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />Investigation</TabsTrigger>
+            <TabsTrigger value="nursing-assessment" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardCheck className="h-3.5 w-3.5" />Nursing Assessment & Care Plan</TabsTrigger>
+            <TabsTrigger value="nursing-progress" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Nursing Progress Sheet</TabsTrigger>
+            <TabsTrigger value="output" className="text-xs gap-1.5 data-[state=active]:bg-background"><Droplets className="h-3.5 w-3.5" />Output</TabsTrigger>
+            <TabsTrigger value="oxygen" className="text-xs gap-1.5 data-[state=active]:bg-background"><Wind className="h-3.5 w-3.5" />Oxygen</TabsTrigger>
+            <TabsTrigger value="surgery-notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Hospital className="h-3.5 w-3.5" />Surgery Notes</TabsTrigger>
             <TabsTrigger value="tests" className="text-xs gap-1.5 data-[state=active]:bg-background"><Beaker className="h-3.5 w-3.5" />Tests</TabsTrigger>
-            <TabsTrigger value="notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Doctor/Nurse Notes</TabsTrigger>
+            <TabsTrigger value="vitals" className="text-xs gap-1.5 data-[state=active]:bg-background"><Heart className="h-3.5 w-3.5" />Vitals</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="vitals">
-            <VitalsSection chartId={chart.id} data={d.vitalCharts || []} canEdit={canEdit} userId={userId} />
-          </TabsContent>
-          <TabsContent value="ventilator">
-            <VentilatorSection chartId={chart.id} data={d.ventilator || []} canEdit={canEdit} userId={userId} />
-          </TabsContent>
-          <TabsContent value="hemodynamic">
-            <HemodynamicSection chartId={chart.id} data={d.hemodynamic || []} canEdit={canEdit} userId={userId} />
-          </TabsContent>
-          <TabsContent value="fluid">
-            <FluidBalanceSection
-              chartId={chart.id}
-              intakeData={d.intakeChart || []}
-              outputData={d.outputChart || []}
-              targetData={d.fluidBalanceTarget || null}
-              canEdit={canEdit}
-              userId={userId}
-            />
-          </TabsContent>
-          <TabsContent value="medications">
-            <MedicationsSection
-              chartId={chart.id}
-              ordersData={d.medicationOrders || []}
-              onceOnlyData={d.onceOnlyDrugs || []}
-              canEdit={canEdit}
-              userId={userId}
-            />
-          </TabsContent>
-          <TabsContent value="labs">
-            <LabsSection
-              chartId={chart.id}
-              abgData={d.abgReports || []}
-              investigationsData={d.dailyInvestigations || null}
-              diabeticData={d.diabeticChart || []}
-              canEdit={canEdit}
-              userId={userId}
-            />
-          </TabsContent>
-          <TabsContent value="oxygen">
-            <OxygenSection chartId={chart.id} data={d.oxygenRecords || []} canEdit={canEdit} userId={userId} />
-          </TabsContent>
-          <TabsContent value="nursing">
-            <NursingSection
-              chartId={chart.id}
-              remarksData={d.nursingRemarks || []}
-              dutyData={d.nursingDuty || []}
-              diaryData={d.nurseDiary || []}
-              canEdit={canEdit}
-              userId={userId}
-            />
-          </TabsContent>
-          <TabsContent value="body">
-            <BodyChartSection
-              chartId={chart.id}
-              markingsData={d.bodyMarkings || []}
-              allergyData={d.allergyPrecautions || null}
-              canEdit={canEdit}
-              userId={userId}
-            />
-          </TabsContent>
-          <TabsContent value="tests">
-            <TestsSection
-              chartId={chart.id}
-              patientId={chart.patientId || ""}
-              patientName={chart.patientName || ""}
-              canEdit={canEdit}
-              userId={userId}
-            />
-          </TabsContent>
-          <TabsContent value="notes">
-            <DoctorNurseNotesSection
-              chartId={chart.id}
-              notesData={d.doctorNurseNotes || []}
-              canEdit={canEdit}
-              userId={userId}
-              userRole={userRole}
-            />
-          </TabsContent>
+          <TabsContent value="overview"><OverviewTab session={selectedSession} /></TabsContent>
+          <TabsContent value="allergies"><AllergiesTab session={selectedSession} /></TabsContent>
+          <TabsContent value="care-plan"><CarePlanTab session={selectedSession} /></TabsContent>
+          <TabsContent value="diabetic"><DiabeticTab session={selectedSession} /></TabsContent>
+          <TabsContent value="doctors-progress"><DoctorsProgressTab session={selectedSession} /></TabsContent>
+          <TabsContent value="doctors-visit"><DoctorsVisitTab session={selectedSession} /></TabsContent>
+          <TabsContent value="drugchart"><InotropesTab session={selectedSession} /></TabsContent>
+          <TabsContent value="indoor-consultation"><IndoorConsultationTab session={selectedSession} /></TabsContent>
+          <TabsContent value="initial-assessment"><InitialAssessmentTab session={selectedSession} /></TabsContent>
+          <TabsContent value="intake"><IntakeTab session={selectedSession} /></TabsContent>
+          <TabsContent value="investigation"><InvestigationChartTab session={selectedSession} /></TabsContent>
+          <TabsContent value="nursing-assessment"><NursingAssessmentCarePlanTab session={selectedSession} /></TabsContent>
+          <TabsContent value="nursing-progress"><NursingProgressTab session={selectedSession} /></TabsContent>
+          <TabsContent value="output"><OutputTab session={selectedSession} /></TabsContent>
+          <TabsContent value="oxygen"><OxygenTab session={selectedSession} /></TabsContent>
+          <TabsContent value="surgery-notes"><SurgeryNotesTab session={selectedSession} /></TabsContent>
+          <TabsContent value="tests"><TestsTab session={selectedSession} /></TabsContent>
+          <TabsContent value="vitals"><VitalsTab session={selectedSession} /></TabsContent>
         </Tabs>
       </CardContent>
     </Card>
