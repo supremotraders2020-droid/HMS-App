@@ -2858,8 +2858,10 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
         const fullName = selectedHistoryPatient
           ? `${selectedHistoryPatient.firstName} ${selectedHistoryPatient.lastName}`.trim()
           : "";
+        const historyBarcode = selectedHistoryPatient ? getPatientBarcode(selectedHistoryPatient) : null;
         const tp = selectedHistoryPatient
           ? allTrackingPatients.find((t: any) => {
+              if (t.id === selectedHistoryPatient.id) return true;
               const tn = (t.name || "").trim().toLowerCase();
               const fn = fullName.toLowerCase();
               if (tn === fn) return true;
@@ -2867,7 +2869,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               return parts.length > 0 && parts.every((p) => tn.includes(p));
             })
           : null;
-        const historyBarcode = selectedHistoryPatient ? getPatientBarcode(selectedHistoryPatient) : null;
         return (
           <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
             <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto">
@@ -2878,7 +2879,29 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 </DialogTitle>
               </DialogHeader>
 
+              {historyProfileLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading history...</span>
+                </div>
+              ) : (
               <div className="space-y-4 mt-2">
+                {(() => {
+                  const latestIpd = historyProfile?.ipdHistory?.[0] || tp;
+                  const admDate = latestIpd?.admissionDate;
+                  const totalDays = admDate ? Math.floor((Date.now() - new Date(admDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+                  const icuDays = latestIpd?.icuDays || 0;
+                  const genWardDays = Math.max(0, totalDays - icuDays);
+                  const ventDays = latestIpd?.ventilatorDays || 0;
+                  const patientAge = latestIpd?.age;
+                  const patientGender = latestIpd?.gender || selectedHistoryPatient?.gender;
+                  const bloodGroup = latestIpd?.bloodGroup || "N/A";
+                  const room = latestIpd?.room || historyBarcode?.wardBed || "N/A";
+                  const diagnosis = latestIpd?.diagnosis || "N/A";
+                  const doctor = latestIpd?.attendingDoctor || latestIpd?.doctor || historyBarcode?.treatingDoctor || "N/A";
+                  const status = latestIpd?.status || historyBarcode?.admissionType || "N/A";
+                  return (
+                    <>
                   {/* Top 2-column grid: Patient Details + Admission & Stay Duration */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Left: Patient Details */}
@@ -2891,12 +2914,12 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       <CardContent className="space-y-1.5 text-sm">
                         {[
                           { label: "Name", value: fullName },
-                          { label: "Age", value: tp?.age ? `${tp.age} years` : (selectedHistoryPatient?.dateOfBirth ? `${Math.floor((Date.now() - new Date(selectedHistoryPatient.dateOfBirth).getTime()) / (365.25 * 24 * 3600 * 1000))} years` : "N/A") },
-                          { label: "Gender", value: tp?.gender || selectedHistoryPatient?.gender || "N/A" },
-                          { label: "Blood Group", value: tp?.bloodGroup || "N/A" },
-                          { label: "Room", value: tp?.room || historyBarcode?.wardBed || "N/A" },
-                          { label: "Diagnosis", value: tp?.diagnosis || "N/A" },
-                          { label: "Attending Doctor", value: tp?.attendingDoctor || tp?.doctor || historyBarcode?.treatingDoctor || "N/A" },
+                          { label: "Age", value: patientAge ? `${patientAge} years` : (selectedHistoryPatient?.dateOfBirth ? `${Math.floor((Date.now() - new Date(selectedHistoryPatient.dateOfBirth).getTime()) / (365.25 * 24 * 3600 * 1000))} years` : "N/A") },
+                          { label: "Gender", value: patientGender || "N/A" },
+                          { label: "Blood Group", value: bloodGroup },
+                          { label: "Room", value: room },
+                          { label: "Diagnosis", value: diagnosis },
+                          { label: "Attending Doctor", value: doctor },
                         ].map(({ label, value }) => (
                           <div key={label} className="flex justify-between gap-2">
                             <span className="text-muted-foreground shrink-0">{label}:</span>
@@ -2905,8 +2928,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         ))}
                         <div className="flex justify-between gap-2 pt-1">
                           <span className="text-muted-foreground shrink-0">Status:</span>
-                          <Badge variant={tp?.status === "critical" ? "destructive" : tp?.status === "admitted" ? "default" : "secondary"} className="text-xs">
-                            {tp?.status || "N/A"}
+                          <Badge variant={status === "critical" ? "destructive" : status === "admitted" || status === "active" ? "default" : "secondary"} className="text-xs">
+                            {status}
                           </Badge>
                         </div>
                       </CardContent>
@@ -2922,33 +2945,33 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       <CardContent className="space-y-2 text-sm">
                         <div className="flex justify-between pb-1">
                           <span className="text-muted-foreground">Admission Date:</span>
-                          <span className="font-medium">{tp?.admissionDate ? new Date(tp.admissionDate).toLocaleDateString() : "N/A"}</span>
+                          <span className="font-medium">{admDate ? new Date(admDate).toLocaleDateString() : "N/A"}</span>
                         </div>
-                        {tp ? (
+                        {admDate ? (
                           <>
                             <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
                               <span className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
                                 <Bed className="h-3.5 w-3.5" /> Total Hospital Stay:
                               </span>
-                              <span className="font-bold text-blue-700 dark:text-blue-300">{calculateDays(tp.admissionDate)} days</span>
+                              <span className="font-bold text-blue-700 dark:text-blue-300">{totalDays} days</span>
                             </div>
                             <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950/40 rounded-lg">
                               <span className="flex items-center gap-1.5 text-green-700 dark:text-green-300">
                                 <Activity className="h-3.5 w-3.5" /> General Ward:
                               </span>
-                              <span className="font-bold text-green-700 dark:text-green-300">{Math.max(0, calculateDays(tp.admissionDate) - (tp.icuDays || 0))} days</span>
+                              <span className="font-bold text-green-700 dark:text-green-300">{genWardDays} days</span>
                             </div>
                             <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-950/40 rounded-lg">
                               <span className="flex items-center gap-1.5 text-red-700 dark:text-red-300">
                                 <HeartPulse className="h-3.5 w-3.5" /> ICU Stay:
                               </span>
-                              <span className="font-bold text-red-700 dark:text-red-300">{tp.isInIcu && tp.icuTransferDate ? calculateDays(tp.icuTransferDate) : (tp.icuDays || 0)} days</span>
+                              <span className="font-bold text-red-700 dark:text-red-300">{latestIpd?.isInIcu && latestIpd?.icuTransferDate ? Math.floor((Date.now() - new Date(latestIpd.icuTransferDate).getTime()) / (1000*60*60*24)) : icuDays} days</span>
                             </div>
                             <div className="flex items-center justify-between p-2 bg-cyan-50 dark:bg-cyan-950/40 rounded-lg">
                               <span className="flex items-center gap-1.5 text-cyan-700 dark:text-cyan-300">
                                 <Wind className="h-3.5 w-3.5" /> Ventilator:
                               </span>
-                              <span className="font-bold text-cyan-700 dark:text-cyan-300">{tp.ventilatorDays || 0} days</span>
+                              <span className="font-bold text-cyan-700 dark:text-cyan-300">{ventDays} days</span>
                             </div>
                           </>
                         ) : (
@@ -2959,7 +2982,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   </div>
 
                   {/* Additional Information */}
-                  {tp && (
+                  {latestIpd && (
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -2970,37 +2993,32 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-muted-foreground">Currently in ICU:</span>
-                            <Badge variant={tp.isInIcu ? "default" : "secondary"} className="text-xs">
-                              {tp.isInIcu ? "Yes" : "No"}
+                            <Badge variant={latestIpd.isInIcu ? "default" : "secondary"} className="text-xs">
+                              {latestIpd.isInIcu ? "Yes" : "No"}
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-muted-foreground">Department:</span>
-                            <span className="font-medium">{tp.department || "N/A"}</span>
+                            <span className="font-medium">{latestIpd.department || "N/A"}</span>
                           </div>
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-muted-foreground">Assigned Nurse:</span>
-                            <span className="font-medium">{tp.assignedNurse || "N/A"}</span>
+                            <span className="font-medium">{latestIpd.assignedNurse || "N/A"}</span>
                           </div>
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-muted-foreground">ICU Transfer Date:</span>
-                            <span className="font-medium">{tp.icuTransferDate ? new Date(tp.icuTransferDate).toLocaleDateString() : "N/A"}</span>
+                            <span className="font-medium">{latestIpd.icuTransferDate ? new Date(latestIpd.icuTransferDate).toLocaleDateString() : "N/A"}</span>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   )}
 
-                  {/* Comprehensive History from longitudinal profile */}
-                  {historyProfileLoading ? (
-                    <div className="flex items-center justify-center py-6">
-                      <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
-                      <span className="ml-2 text-sm text-muted-foreground">Loading history...</span>
-                    </div>
-                  ) : historyProfile ? (
-                    <>
-                      {/* OPD Visits */}
-                      {historyProfile.opdHistory?.length > 0 && (
+                  {/* Movement Timeline */}
+                  {tp && <PatientHistoryTimeline patientId={tp.id} />}
+
+                  {/* OPD Visits */}
+                  {historyProfile?.opdHistory?.length > 0 && (
                         <Card>
                           <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -3091,19 +3109,18 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         </Card>
                       )}
 
-                      {!tp && historyProfile.opdHistory?.length === 0 && historyProfile.medicationHistory?.length === 0 && historyProfile.consentRecords?.length === 0 && historyProfile.diagnosticTests?.length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <History className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                          <p className="font-medium">No history records found</p>
-                          <p className="text-sm mt-1">Medical activities will appear here as they are recorded.</p>
-                        </div>
-                      )}
+                  {!latestIpd && !historyProfile?.opdHistory?.length && !historyProfile?.medicationHistory?.length && !historyProfile?.consentRecords?.length && !historyProfile?.diagnosticTests?.length && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <History className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                      <p className="font-medium">No history records found</p>
+                      <p className="text-sm mt-1">Medical activities will appear here as they are recorded.</p>
+                    </div>
+                  )}
                     </>
-                  ) : null}
-
-                  {/* Movement Timeline — only when tracked */}
-                  {tp && <PatientHistoryTimeline patientId={tp.id} />}
+                  );
+                })()}
               </div>
+              )}
             </DialogContent>
           </Dialog>
         );
