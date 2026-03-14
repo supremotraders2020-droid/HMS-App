@@ -1,5 +1,130 @@
 # Gravity AI Manager - Recent Updates & Changelog
 
+## Version 2.6.0 - March 2026
+
+### Patient Movement History — Real-Time Cross-Page Sync
+
+**Date:** March 14, 2026
+**Impacted Roles:** NURSE, DOCTOR, ADMIN, OPD_MANAGER
+
+#### Features:
+1. **Unified History Timeline Across All Three Pages**
+   - Patient Tracking, Patient Service, and Patient Barcode pages now show the same live movement history
+   - All three use the identical query key `["/api/tracking/patients", patientId, "movements"]` — TanStack Query's shared cache means a single action instantly updates all open pages
+
+2. **Real-Time Refresh Configuration**
+   - `refetchInterval: 10000` (10 seconds) — reduced from 30 seconds
+   - `staleTime: 0` — data considered immediately stale after any invalidation
+   - `refetchOnWindowFocus: true` — re-fetches when nurse switches back to the browser tab
+
+3. **Movement Timeline Added to Patient Barcode Page**
+   - History tab now includes the `PatientMovementTimeline` component (previously missing)
+   - Matches by patient name to find the tracking patient UUID, then fetches all movements
+   - Shows admission, ICU transfer, ward transfer, and discharge events with color-coded cards
+
+4. **Automatic Cache Invalidation**
+   - Every ICU transfer, ward transfer, admit, and discharge in Patient Tracking automatically invalidates the movements cache for all patients via TanStack Query prefix matching
+
+#### Technical Details:
+- All three pages share the same `PatientMovementTimeline` component pattern
+- TanStack Query prefix `["/api/tracking/patients"]` covers all nested movement queries
+- PatientService history profile query also tightened to `refetchInterval: 10000, staleTime: 0`
+
+---
+
+### Bed Management Restructure
+
+**Date:** March 14, 2026
+**Impacted Roles:** ADMIN, SUPER_ADMIN, NURSE, DOCTOR, OPD_MANAGER
+
+#### Changes Made:
+1. **Removed Wards:**
+   - "Standard" (STD-01) — removed from database and seed
+   - "Semi Special Room AC" (SSR-01) — removed from database and seed
+
+2. **Added Casualty Ward:**
+   - New ward: **Casualty** (bed CAS-01)
+   - Floor: Ground Floor, Department: Emergency
+   - Equipped with oxygen capability
+   - New bed category: `cat-casualty` (code: CAS)
+
+3. **General Ward Bed Count Updates:**
+   - **General Ward (F):** 10 beds → **7 beds** (GF-01 to GF-07)
+   - **General Ward (M):** 10 beds → **8 beds** (GM-01 to GM-08)
+
+4. **Final Ward Configuration:**
+
+| Ward | Beds | Floor | Department |
+|------|------|-------|------------|
+| Casualty | 1 | Ground Floor | Emergency |
+| General Ward (F) | 7 | 1st Floor | General Medicine |
+| General Ward (M) | 8 | 1st Floor | General Medicine |
+| ICU | 1 | 2nd Floor | Critical Care |
+| NICU | 1 | 2nd Floor | NICU |
+| Orbit | 1 | 2nd Floor | HDU |
+| Horizon | 1 | Ground Floor | Infectious Disease |
+| Nova | 1 | 1st Floor | Day Care |
+| Nexus | 1 | 3rd Floor | General |
+
+**Total Active Beds: 22**
+
+#### Technical Details:
+- Database updated directly via SQL — all changes reflected immediately
+- Seed code in `server/database-storage.ts` updated to match
+- `cat-semi-private` bed category replaced by `cat-casualty` in seed data
+
+---
+
+### Bug Fix: Available Rooms Not Showing in Admit Patient Form
+
+**Date:** March 14, 2026
+**Impacted Roles:** NURSE, ADMIN, DOCTOR
+
+#### Issue:
+The "Room Number" dropdown in the Admit Patient form showed "No rooms available" even though 22 beds existed in the database.
+
+#### Root Cause:
+The seed data inserted beds with `occupancyStatus: "available"` (lowercase), but the API route `/api/bed-management/beds/available` queried with `eq(beds.occupancyStatus, "AVAILABLE")` (uppercase). The case mismatch caused zero results.
+
+#### Fix:
+- All 22 beds in the database updated to uppercase `"AVAILABLE"`
+- Seed code updated to use uppercase throughout: `"AVAILABLE"`, `"OCCUPIED"`, etc.
+- Two additional query comparisons in `database-storage.ts` also corrected to uppercase
+- All subsequent status changes (admit, discharge, transfer) already used uppercase consistently
+
+---
+
+### Bug Fix: Failed to Save Output in Patient Monitoring
+
+**Date:** March 14, 2026
+**Impacted Roles:** NURSE
+
+#### Issue:
+Saving fluid output records in Patient Monitoring → Output tab threw "Failed to save output" error toast.
+
+#### Root Cause:
+In the POST `/api/patient-monitoring/output` route, the `hourlyTotal` calculation used JavaScript `+` with mixed string and number types:
+```js
+// BEFORE — vomitus and stool are strings (e.g., "3", "12")
+data.hourlyTotal = (data.urineOutput || 0) + (data.drainOutput || 0) +
+                   (data.vomitus || 0) + (data.stool || 0) + ...;
+// Result: 3 + 34 + "3" + "12" = "37312" (string!) → fails integer schema check
+```
+
+#### Fix:
+```js
+// AFTER — all values wrapped with Number() before summing
+const urineNum = Number(data.urineOutput) || 0;
+const drainNum = Number(data.drainOutput) || 0;
+const vomitusNum = Number(data.vomitus) || 0;
+const stoolNum = Number(data.stool) || 0;
+const otherNum = Number(data.otherLosses) || 0;
+data.hourlyTotal = urineNum + drainNum + vomitusNum + stoolNum + otherNum;
+// Result: 3 + 34 + 3 + 12 + 0 = 52 (integer) → passes schema check ✓
+```
+
+---
+
 ## Version 2.5.1 - January 2026
 
 ### IPD Investigation Chart Module

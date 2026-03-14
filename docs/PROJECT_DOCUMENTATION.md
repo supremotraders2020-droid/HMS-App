@@ -859,45 +859,63 @@ npm run dev
 
 ## Recent Updates
 
-### January 2026
+### March 2026 (v2.6.0)
+
+**Patient Movement History — Real-Time Sync:**
+- History tab/button in Patient Tracking, Patient Service, and Patient Barcode now show identical live movement data
+- `refetchInterval` reduced from 30s → 10s; `staleTime: 0`; `refetchOnWindowFocus: true` across all three pages
+- Movement timeline added to Patient Barcode History tab (was previously missing)
+- TanStack Query prefix matching ensures any transfer/discharge action instantly invalidates all movement caches
+
+**Bed Management Restructure:**
+- Removed: "Standard" (STD-01) and "Semi Special Room AC" (SSR-01) wards
+- Added: "Casualty" ward (CAS-01, Ground Floor, Emergency department, oxygen-equipped)
+- General Ward (F): 10 beds → 7 beds (GF-01 to GF-07)
+- General Ward (M): 10 beds → 8 beds (GM-01 to GM-08)
+- New bed category: `cat-casualty` (code: CAS)
+- Total active beds: 22
+
+**Bug Fixes:**
+- **Available Rooms Dropdown**: Fixed `occupancyStatus` case mismatch — beds were seeded as `"available"` (lowercase) but the API queried `"AVAILABLE"` (uppercase); all 22 beds and seed code updated to uppercase
+- **Output Recording**: Fixed "Failed to save output" error caused by JavaScript string concatenation when computing `hourlyTotal` — `vomitus` and `stool` are text fields; route now uses `Number()` on all inputs before summing
+
+### January 2026 (v2.5.1)
+
+**IPD Investigation Chart:**
+- New tab in Patient Monitoring with 50+ investigation fields
+- Covers Haematology, RFT, LFT, Cardiac Enzymes, Lipid Profile, Imaging
+
+**ICU Allergy & Precautions:**
+- Add Allergy form when no allergy data exists
+- Drug/Food allergies, isolation precautions, fall risk and pressure ulcer flags
+
+### January 2026 (v2.5.0)
 
 **OPD Scheduling Enhancements:**
 - Schedule-based availability display on doctor cards
 - Real-time slot availability with "X available, Y booked / Z total"
-- Non-working days show informative message with scheduled days
 - Doctor identity mapping via `doctorTableId` for reliable schedule matching
 - New API endpoint: `/api/schedule-availability`
 
 **Technician Portal & Workflow:**
-- New TECHNICIAN role added (ninth user role)
-- Workflow isolation: Technicians receive only Patient Monitoring tests
+- TECHNICIAN role — workflow isolation: receives only Patient Monitoring tests
 - Prescription-based tests route to Medical Store instead
-- Dedicated portal with pending tests dashboard
 
 **Smart OPD Flow Engine:**
-- 24 department-specific consultation workflows
-- Symptom-driven forms with auto-observations
-- Intelligent test and referral suggestions
-- Rule-based clinical logic engine
+- 24 department-specific consultation workflows with symptom-driven forms
 
 **ICU Patient Monitoring:**
-- 27 comprehensive monitoring data tables
-- NABH-compliant 24-hour data collection
-- Shift-based logging (Morning/Evening/Night)
-- Critical value alerts with auto-escalation
-- Integration with Technician Portal
+- 27 monitoring data tables, NABH-compliant 24-hour data collection
+- Shift-based logging, critical value alerts, Technician Portal integration
 
 **Dashboard Updates:**
 - Active Patients card shows real `tracking_patients` count
 - Critical Alerts card displays actual critical alert count
-- Consistent data between summary cards and detailed panels
 
 ### December 2025
-- **BMW Report Filtering**: Click report type buttons (Daily/Monthly/MPCB/Annual) to filter the Generated Reports list to show only that type
-- **Report Preview Dialogs**: Detailed statistics, category breakdown, and bag listings with "Save to Reports" option
-- **Patient Notifications**: Automatic notifications sent to patients when medical records are created
-- **Medical Records**: Dropdown now fetches only admin-created doctors (Kapil Saxena, Anil Kumar, Jay Gupta, Ajay)
-- **Info Button**: Functionality implemented across all portals showing detailed activity popup
+- BMW Report Filtering with Daily/Monthly/MPCB/Annual types
+- Patient Notifications on medical record creation
+- Info Button activity popups across all portals
 
 ---
 
@@ -905,8 +923,8 @@ npm run dev
 
 For technical support or queries regarding HMS Core, please contact the development team.
 
-**Version**: 2.5.0  
-**Last Updated**: January 2026  
+**Version**: 2.6.0
+**Last Updated**: March 2026
 **Developed for**: Gravity Hospital, Pune
 
 ---

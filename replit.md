@@ -77,6 +77,25 @@ Gravity AI Manager encompasses 23 core modules with robust role-based access con
 ### AI Integration
 - **OpenAI API**: Utilized for GPT-4o for chatbot, health tips, and personalized care plans.
 
+## Recent Enhancements (March 2026)
+
+### Patient Movement History Real-Time Sync (March 14, 2026)
+- **Three-Page History Linked**: Patient Tracking, Patient Service, and Patient Barcode all share the same TanStack Query cache key `["/api/tracking/patients", patientId, "movements"]` — a transfer in one page instantly propagates to all
+- **Timeline Added to Barcode Page**: `PatientMovementTimeline` component added to Patient Barcode History tab (was missing)
+- **Faster Refresh**: All movement queries now use `refetchInterval: 10000` (was 30s), `staleTime: 0`, `refetchOnWindowFocus: true`
+
+### Bed Management Restructure (March 14, 2026)
+- **Removed**: "Standard" (STD-01) and "Semi Special Room AC" (SSR-01) wards
+- **Added**: "Casualty" ward — 1 bed (CAS-01), Ground Floor, Emergency, oxygen-capable
+- **General Ward (F)**: 10 beds → **7 beds** (GF-01 to GF-07)
+- **General Ward (M)**: 10 beds → **8 beds** (GM-01 to GM-08)
+- **Total active beds**: 22 across 9 wards
+- New bed category: `cat-casualty` (code: CAS)
+
+### Bug Fixes (March 14, 2026)
+- **Available Rooms Dropdown (Admit Patient)**: Fixed `occupancyStatus` case mismatch — seed inserted lowercase `"available"` but API queried uppercase `"AVAILABLE"`; all 22 beds and seed code corrected to uppercase
+- **Output Recording (Patient Monitoring)**: Fixed "Failed to save output" error — `vomitus` and `stool` (text fields) caused `hourlyTotal` to be computed as a string via JS concatenation; route now wraps all values with `Number()` before summing
+
 ## Recent Enhancements (January 2026)
 
 ### OPD Scheduling Improvements

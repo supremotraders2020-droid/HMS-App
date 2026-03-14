@@ -1,9 +1,9 @@
 # HMS Core - Complete Feature Documentation
 
 ## System Overview
-HMS Core is a comprehensive Hospital Management System for Gravity Hospital with 21+ specialized modules. The system supports 7 user roles with role-based access control, 24 departments with 4,830+ hospital services including 1,148 pathology tests.
+HMS Core (Gravity AI Manager) is a comprehensive Hospital Management System for Gravity Hospital with 23+ specialized modules. The system supports 9 user roles with role-based access control, 24 departments with 4,830+ hospital services including 1,148 pathology tests, and 22 active beds across 9 wards.
 
-**Last Updated:** January 2026
+**Last Updated:** March 2026
 
 ---
 
@@ -11,13 +11,15 @@ HMS Core is a comprehensive Hospital Management System for Gravity Hospital with
 
 | Role | Access Level | Primary Functions |
 |------|--------------|-------------------|
-| ADMIN | Full Access | System management, user management, all modules |
-| DOCTOR | Clinical | Patient care, prescriptions, schedules, monitoring |
-| NURSE | Clinical | Patient monitoring, medication administration |
+| SUPER_ADMIN | Enterprise | System settings, billing finalization, claims, audit logs |
+| ADMIN | Full Access | User management, all modules, hospital operations |
+| DOCTOR | Clinical | Patient care, prescriptions, schedules, monitoring, oath |
+| NURSE | Clinical | Patient monitoring, medication, ICU charts, dept preferences |
 | OPD_MANAGER | Operational | OPD operations, appointments, scheduling |
 | PATIENT | Limited | View own records, book appointments |
 | PATHOLOGY_LAB | Lab Operations | Test orders, sample collection, result entry, reports |
 | MEDICAL_STORE | Pharmacy | Prescriptions, dispensing, billing, stock management |
+| TECHNICIAN | Diagnostic | Pending tests from Patient Monitoring, report uploads |
 
 ---
 
@@ -246,33 +248,38 @@ All forms available in English, Hindi, and Marathi
 - Automated allocation
 - Transfer logging with authorization
 - Discharge workflows
-- Status tracking
+- Status tracking (AVAILABLE, OCCUPIED, CLEANING, BLOCKED, MAINTENANCE)
+
+### Current Ward Configuration (as of March 2026)
+
+| Ward | Beds | Floor | Department | Category |
+|------|------|-------|------------|----------|
+| Casualty | 1 | Ground Floor | Emergency | cat-casualty |
+| General Ward (F) | 7 | 1st Floor | General Medicine | cat-general |
+| General Ward (M) | 8 | 1st Floor | General Medicine | cat-general |
+| ICU | 1 | 2nd Floor | Critical Care | cat-icu |
+| NICU | 1 | 2nd Floor | NICU | cat-nicu |
+| Orbit | 1 | 2nd Floor | HDU | cat-hdu |
+| Horizon | 1 | Ground Floor | Infectious Disease | cat-isolation |
+| Nova | 1 | 1st Floor | Day Care | cat-daycare |
+| Nexus | 1 | 3rd Floor | General | cat-general |
+
+**Total Active Beds: 22**
 
 ### Bed Categories
-- General Ward
-- Semi-Private
-- Private
-- Deluxe
-- Suite
-- ICU
-- HDU
-- NICU
-- PICU
-- Isolation
-- Day Care
-- Emergency
-
-### Bed Statuses
-- Available
-- Occupied
-- Cleaning
-- Blocked
-- Maintenance
+- General Ward (GEN)
+- Casualty (CAS) — Emergency/Acute care
+- ICU — Intensive Care Unit
+- NICU — Neonatal Intensive Care
+- HDU — High Dependency Unit
+- Isolation (ISO)
+- Day-Care (DC)
+- Private (PVT)
 
 ### Dashboard Analytics
 - Occupancy rates
-- Category-wise availability
-- Transfer statistics
+- Category-wise and ward-wise availability
+- Transfer statistics via Bed Utilization panel
 
 ---
 
