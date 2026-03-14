@@ -69,7 +69,9 @@ interface PatientMovement {
 function PatientMovementTimeline({ patientId }: { patientId: string | null }) {
   const { data: movements = [], isLoading } = useQuery<PatientMovement[]>({
     queryKey: ["/api/tracking/patients", patientId, "movements"],
-    refetchInterval: 30000,
+    refetchInterval: 10000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     enabled: Boolean(patientId),
   });
 

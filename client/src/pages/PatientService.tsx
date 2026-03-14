@@ -612,7 +612,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       return response.json();
     },
     enabled: !!selectedHistoryPatient?.id && showHistoryDialog,
-    refetchInterval: showHistoryDialog ? 30000 : false,
+    refetchInterval: showHistoryDialog ? 10000 : false,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   // Helper to find barcode for a service patient
