@@ -45,7 +45,11 @@ import {
   MapPin,
   Calendar,
   Printer,
-  Download
+  Download,
+  FlaskConical,
+  FileCheck,
+  Bed,
+  HeartPulse
 } from "lucide-react";
 
 interface PatientBarcodePageProps {
@@ -211,6 +215,17 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
   const { data: patientsWithBarcodes, refetch: refetchPatients, isLoading: loadingPatients } = useQuery<any[]>({
     queryKey: ["/api/patients/with-barcodes"],
     enabled: showScanner,
+  });
+
+  const { data: longitudinalProfile, isLoading: longitudinalLoading } = useQuery<any>({
+    queryKey: ["/api/service-patients", scannedPatient?.patient?.id, "longitudinal-profile"],
+    queryFn: async () => {
+      if (!scannedPatient?.patient?.id) return null;
+      const res = await fetch(`/api/service-patients/${scannedPatient.patient.id}/longitudinal-profile`, { credentials: "include" });
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!scannedPatient?.patient?.id && !showScanner,
   });
 
   const generateAllMutation = useMutation({
@@ -666,24 +681,77 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={resetScanner} data-testid="button-back-scanner">
-            <X className="h-4 w-4 mr-2" />
-            Back to Scanner
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{scannedPatient.patient.name}</h1>
-            <p className="text-muted-foreground font-mono">{scannedPatient.patient.uhid}</p>
-          </div>
+        <Button variant="outline" onClick={resetScanner} data-testid="button-back-scanner">
+          <X className="h-4 w-4 mr-2" />
+          Back to Scanner
+        </Button>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Clock className="h-3.5 w-3.5" />
+          Scanned at {new Date(scannedPatient.scanInfo.scannedAt).toLocaleTimeString()} by {scannedPatient.scanInfo.scannedBy}
+          <Badge variant="outline" className="text-xs">{scannedPatient.scanInfo.role}</Badge>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">{scannedPatient.scanInfo.role}</Badge>
-          <Badge variant={scannedPatient.patient.admissionType === "IPD" ? "default" : "secondary"}>
-            {scannedPatient.patient.admissionType}
-          </Badge>
-          <Badge variant={scannedPatient.patient.status === "active" ? "default" : "secondary"}>
-            {scannedPatient.patient.status}
-          </Badge>
+      </div>
+
+      {/* Patient Identity Banner */}
+      <div className="bg-muted/40 border rounded-lg p-4 flex flex-wrap gap-4 items-start">
+        <div className="p-3 rounded-full bg-primary/10 flex-shrink-0">
+          <User className="h-7 w-7 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <h1 className="text-xl font-bold">{scannedPatient.patient.name}</h1>
+            <Badge variant={scannedPatient.patient.admissionType === "IPD" ? "default" : "secondary"}>
+              {scannedPatient.patient.admissionType}
+            </Badge>
+            <Badge variant={scannedPatient.patient.status === "active" || scannedPatient.patient.status === "admitted" ? "default" : "secondary"}>
+              {scannedPatient.patient.status}
+            </Badge>
+          </div>
+          <p className="text-sm font-mono text-muted-foreground mb-2">{scannedPatient.patient.uhid}</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
+            {scannedPatient.patient.age && (
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" />
+                Age: <span className="text-foreground font-medium">{scannedPatient.patient.age} yrs</span>
+              </span>
+            )}
+            {scannedPatient.patient.gender && (
+              <span>Gender: <span className="text-foreground font-medium capitalize">{scannedPatient.patient.gender}</span></span>
+            )}
+            {scannedPatient.patient.wardBed && (
+              <span className="flex items-center gap-1">
+                <Bed className="h-3.5 w-3.5" />
+                Ward/Bed: <span className="text-foreground font-medium">{scannedPatient.patient.wardBed}</span>
+              </span>
+            )}
+            {scannedPatient.patient.treatingDoctor && (
+              <span className="flex items-center gap-1">
+                <Stethoscope className="h-3.5 w-3.5" />
+                Doctor: <span className="text-foreground font-medium">{scannedPatient.patient.treatingDoctor}</span>
+              </span>
+            )}
+            {longitudinalProfile?.patient?.phone && (
+              <span className="flex items-center gap-1">
+                <Phone className="h-3.5 w-3.5" />
+                <span className="text-foreground font-medium">{longitudinalProfile.patient.phone}</span>
+              </span>
+            )}
+            {longitudinalProfile?.patient?.email && (
+              <span className="flex items-center gap-1">
+                <Mail className="h-3.5 w-3.5" />
+                <span className="text-foreground font-medium">{longitudinalProfile.patient.email}</span>
+              </span>
+            )}
+            {longitudinalProfile?.patient?.address && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                <span className="text-foreground font-medium">{longitudinalProfile.patient.address}</span>
+              </span>
+            )}
+            {(longitudinalProfile?.patient?.insuranceProvider) && (
+              <span>Insurance: <span className="text-foreground font-medium">{longitudinalProfile.patient.insuranceProvider}</span></span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -711,6 +779,10 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
           <TabsTrigger value="overview" data-testid="tab-overview">
             <User className="h-4 w-4 mr-2" />
             Overview
+          </TabsTrigger>
+          <TabsTrigger value="history" data-testid="tab-history">
+            <History className="h-4 w-4 mr-2" />
+            History
           </TabsTrigger>
           {canSeePrescriptions && (
             <TabsTrigger value="prescriptions" data-testid="tab-prescriptions">
@@ -856,6 +928,209 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* History Tab */}
+        <TabsContent value="history" className="mt-4">
+          {longitudinalLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading patient history...</span>
+            </div>
+          ) : longitudinalProfile ? (
+            <div className="space-y-4">
+              {/* OPD Visits */}
+              {longitudinalProfile.opdHistory?.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4 text-blue-500" />
+                      OPD Visits ({longitudinalProfile.opdHistory.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {longitudinalProfile.opdHistory.map((visit: any) => (
+                      <div key={visit.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium text-sm">{visit.department || "General"}</p>
+                          <p className="text-xs text-muted-foreground">{visit.doctorName || visit.doctor || "—"}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">{visit.appointmentDate ? new Date(visit.appointmentDate).toLocaleDateString() : "—"}</p>
+                          <Badge variant="outline" className="text-xs">{visit.status || "—"}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* IPD Admissions */}
+              {longitudinalProfile.ipdHistory?.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Bed className="h-4 w-4 text-purple-500" />
+                      IPD Admissions ({longitudinalProfile.ipdHistory.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {longitudinalProfile.ipdHistory.map((adm: any) => (
+                      <div key={adm.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium text-sm">{adm.diagnosis || "Admission"}</p>
+                          <p className="text-xs text-muted-foreground">Dr. {adm.attendingDoctor || adm.doctor || "—"} · {adm.room || adm.ward || "—"}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">{adm.admissionDate ? new Date(adm.admissionDate).toLocaleDateString() : "—"}</p>
+                          <Badge variant={adm.status === "critical" ? "destructive" : adm.isInIcu ? "destructive" : "secondary"} className="text-xs">
+                            {adm.isInIcu ? "ICU" : adm.status || "admitted"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Prescriptions */}
+              {longitudinalProfile.medicationHistory?.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Pill className="h-4 w-4 text-green-500" />
+                      Prescriptions ({longitudinalProfile.medicationHistory.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {longitudinalProfile.medicationHistory.map((rx: any) => (
+                      <div key={rx.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium text-sm">{rx.diagnosis || rx.chiefComplaint || "Prescription"}</p>
+                          <p className="text-xs text-muted-foreground">{rx.doctorName || "—"}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs text-muted-foreground">{rx.createdAt ? new Date(rx.createdAt).toLocaleDateString() : "—"}</span>
+                          <Badge variant={rx.status === "finalized" ? "default" : "secondary"} className="text-xs ml-1">{rx.status || "draft"}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Diagnostic Tests */}
+              {longitudinalProfile.diagnosticTests?.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FlaskConical className="h-4 w-4 text-orange-500" />
+                      Diagnostic Tests ({longitudinalProfile.diagnosticTests.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {longitudinalProfile.diagnosticTests.map((t: any) => (
+                      <div key={t.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <p className="font-medium text-sm">{t.testName || t.panelName || "Test"}</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">{t.status || "ordered"}</Badge>
+                          <span className="text-xs text-muted-foreground">{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "—"}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Consent Forms */}
+              {longitudinalProfile.consentRecords?.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileCheck className="h-4 w-4 text-purple-500" />
+                      Consent Forms ({longitudinalProfile.consentRecords.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {longitudinalProfile.consentRecords.map((c: any) => (
+                      <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <p className="font-medium text-sm">{c.title || c.consentType || "Consent"}</p>
+                        <span className="text-xs text-muted-foreground">{c.uploadedAt ? new Date(c.uploadedAt).toLocaleDateString() : "—"}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Medical Records */}
+              {longitudinalProfile.medicalRecords?.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-blue-500" />
+                      Medical Records ({longitudinalProfile.medicalRecords.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {longitudinalProfile.medicalRecords.slice(0, 5).map((rec: any) => (
+                      <div key={rec.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium text-sm">{rec.recordType || "Record"}</p>
+                          <p className="text-xs text-muted-foreground">{rec.description || "—"}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{rec.recordDate ? new Date(rec.recordDate).toLocaleDateString() : "—"}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Billing Summary */}
+              {longitudinalProfile.billingHistory?.bills?.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-500" />
+                      Billing Summary ({longitudinalProfile.billingHistory.bills.length} bills)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {longitudinalProfile.billingHistory.bills.slice(0, 3).map((bill: any) => (
+                      <div key={bill.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium text-sm">Bill #{bill.billNumber}</p>
+                          <p className="text-xs text-muted-foreground">{bill.billDate ? new Date(bill.billDate).toLocaleDateString() : "—"}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold">₹{bill.totalAmount}</p>
+                          <Badge variant={bill.paymentStatus === "PAID" ? "default" : "secondary"} className="text-xs">{bill.paymentStatus}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Empty state */}
+              {longitudinalProfile.opdHistory?.length === 0 &&
+               longitudinalProfile.ipdHistory?.length === 0 &&
+               longitudinalProfile.medicationHistory?.length === 0 &&
+               longitudinalProfile.diagnosticTests?.length === 0 &&
+               longitudinalProfile.consentRecords?.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <History className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                  <p className="font-medium">No history records found</p>
+                  <p className="text-sm mt-1">Medical activities will appear here as they are recorded.</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <HeartPulse className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <p className="font-medium">No history available</p>
+              <p className="text-sm mt-1">Patient history could not be loaded at this time.</p>
+            </div>
+          )}
         </TabsContent>
 
         {canSeePrescriptions && (
