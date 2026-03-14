@@ -229,11 +229,16 @@ export default function PatientMonitoringPage() {
 
   const selectedSession = sessions.find(s => s.id === selectedSessionId);
 
+  // Exclude ICU sessions — those belong to ICU Monitoring only
+  const ipdSessions = sessions.filter(session =>
+    !session.ward || !session.ward.toLowerCase().includes("icu")
+  );
+
   // Filter sessions by patient type (current = last 7 days, old = older than 7 days)
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   
-  const sessionsFilteredByType = sessions.filter(session => {
+  const sessionsFilteredByType = ipdSessions.filter(session => {
     const sessionDate = parseISO(session.sessionDate);
     if (patientTypeFilter === "current") {
       return sessionDate >= sevenDaysAgo;
