@@ -317,7 +317,7 @@ export default function IcuMonitoringPage({ userRole, userId, onBack }: IcuMonit
               <div class="info-row"><span class="label">Ventilator:</span> ${(selectedChart as any).isVentilated ? 'Yes' : 'No'}</div>
             </div>
 
-            ${generateTable('Vitals', ['Hour', 'Pulse', 'BP', 'Temp (°C)', 'Core Temp', 'RR', 'SpO2 (%)', 'CVP', 'Sanction', 'Secretion', 'Urine Tube'], vitals, (r: any) => 
+            ${generateTable('Vitals', ['Hour', 'Pulse', 'BP', 'Temp (°C)', 'Core Temp', 'RR', 'SpO2 (%)', 'CVP', 'Suction', 'Secretion', 'Urine Tube'], vitals, (r: any) => 
               `<tr><td>${r.hour || '-'}</td><td>${r.pulse || '-'}</td><td>${r.bp || '-'}</td><td>${r.temperature || '-'}</td><td>${r.coreTemp || '-'}</td><td>${r.respiratoryRate || '-'}</td><td>${r.spo2 || '-'}</td><td>${r.cvp || '-'}</td><td>${r.sanction || '-'}</td><td>${r.secretion || '-'}</td><td>${r.urineTube || '-'}</td></tr>`
             )}
 
@@ -862,7 +862,7 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
     { key: "respiratoryRate", label: "RR", unit: "/min", icon: <Wind className="w-4 h-4" /> },
     { key: "spo2", label: "SpO2", unit: "%", icon: <Droplets className="w-4 h-4" /> },
     { key: "cvp", label: "CVP", unit: "cmH2O", icon: <BarChart3 className="w-4 h-4" /> },
-    { key: "sanction", label: "Sanction", unit: "", icon: <FileText className="w-4 h-4" /> },
+    { key: "sanction", label: "Suction", unit: "", icon: <FileText className="w-4 h-4" /> },
     { key: "secretion", label: "Secretion", unit: "", icon: <FlaskConical className="w-4 h-4" /> },
     { key: "urineTube", label: "Urine Tube", unit: "", icon: <Beaker className="w-4 h-4" /> },
   ];
@@ -953,11 +953,11 @@ function VitalsSection({ chartId, data, canEdit, userId }: { chartId: string; da
               />
             </div>
             <div className="space-y-2">
-              <Label>Sanction</Label>
+              <Label>Suction</Label>
               <Input
                 value={newEntry.sanction}
                 onChange={e => setNewEntry(prev => ({ ...prev, sanction: e.target.value }))}
-                placeholder="Sanction"
+                placeholder="Suction"
                 data-testid="input-vitals-sanction"
               />
             </div>

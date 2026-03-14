@@ -1742,7 +1742,7 @@ export function OverviewTab({ session }: { session: Session }) {
             {vitals.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th><th className="p-1">Sanction</th><th className="p-1">Secretion</th><th className="p-1">Urine Tube</th><th className="p-1">By</th></tr></thead>
+                  <thead><tr className="border-b"><th className="p-1 text-left">Time</th><th className="p-1">HR</th><th className="p-1">BP</th><th className="p-1">Temp</th><th className="p-1">SpO2</th><th className="p-1">Suction</th><th className="p-1">Secretion</th><th className="p-1">Urine Tube</th><th className="p-1">By</th></tr></thead>
                   <tbody>
                     {vitals.slice(0, 5).map((v: any, i: number) => (
                       <tr key={i} className="border-b border-muted/30">
@@ -1963,8 +1963,8 @@ export function VitalsTab({ session }: { session: Session }) {
                 <div><Label>Temp (°F)</Label><NumericInput value={vitalsForm.temperature} onValueChange={(value) => setVitalsForm({...vitalsForm, temperature: value})} allowDecimal={true} data-testid="input-temp" /></div>
                 <div><Label>RR (/min)</Label><IntegerInput value={vitalsForm.respiratoryRate} onValueChange={(value) => setVitalsForm({...vitalsForm, respiratoryRate: value})} min={5} max={60} data-testid="input-rr" /></div>
                 <div className="space-y-1">
-                  <Label>Sanction</Label>
-                  <Input value={vitalsForm.sanction} onChange={(e) => setVitalsForm({...vitalsForm, sanction: e.target.value})} placeholder="Sanction" />
+                  <Label>Suction</Label>
+                  <Input value={vitalsForm.sanction} onChange={(e) => setVitalsForm({...vitalsForm, sanction: e.target.value})} placeholder="Suction" />
                 </div>
                 <div className="space-y-1">
                   <Label>Secretion</Label>
@@ -2019,8 +2019,8 @@ export function VitalsTab({ session }: { session: Session }) {
                 <div><Label>Temp (°F)</Label><NumericInput value={editForm.temperature} onValueChange={(value) => setEditForm({...editForm, temperature: value})} allowDecimal={true} /></div>
                 <div><Label>RR (/min)</Label><IntegerInput value={editForm.respiratoryRate} onValueChange={(value) => setEditForm({...editForm, respiratoryRate: value})} min={5} max={60} /></div>
                 <div className="space-y-1">
-                  <Label>Sanction</Label>
-                  <Input value={editForm.sanction} onChange={(e) => setEditForm({...editForm, sanction: e.target.value})} placeholder="Sanction" />
+                  <Label>Suction</Label>
+                  <Input value={editForm.sanction} onChange={(e) => setEditForm({...editForm, sanction: e.target.value})} placeholder="Suction" />
                 </div>
                 <div className="space-y-1">
                   <Label>Secretion</Label>
@@ -2061,7 +2061,7 @@ export function VitalsTab({ session }: { session: Session }) {
                 <TableHead>Temp</TableHead>
                 <TableHead>RR</TableHead>
                 <TableHead>SpO2</TableHead>
-                <TableHead>Sanction</TableHead>
+                <TableHead>Suction</TableHead>
                 <TableHead>Secretion</TableHead>
                 <TableHead>Urine Tube</TableHead>
                 <TableHead>By</TableHead>
