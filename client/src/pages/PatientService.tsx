@@ -2879,84 +2879,116 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               </DialogHeader>
 
               <div className="space-y-4 mt-2">
-                  {/* Patient Identity Banner */}
-                  <div className="bg-muted/40 border rounded-lg p-3 flex flex-wrap gap-3 items-start">
-                    <div className={`p-2.5 rounded-full flex-shrink-0 ${historyBarcode ? 'bg-primary/10' : 'bg-muted'}`}>
-                      <User className={`h-6 w-6 ${historyBarcode ? 'text-primary' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="font-semibold text-base">{fullName}</span>
-                        {historyBarcode && (
-                          <Badge variant={historyBarcode.admissionType === "IPD" ? "default" : "secondary"}>
-                            {historyBarcode.admissionType}
+                  {/* Top 2-column grid: Patient Details + Admission & Stay Duration */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Left: Patient Details */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" /> Patient Details
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1.5 text-sm">
+                        {[
+                          { label: "Name", value: fullName },
+                          { label: "Age", value: tp?.age ? `${tp.age} years` : (selectedHistoryPatient?.dateOfBirth ? `${Math.floor((Date.now() - new Date(selectedHistoryPatient.dateOfBirth).getTime()) / (365.25 * 24 * 3600 * 1000))} years` : "N/A") },
+                          { label: "Gender", value: tp?.gender || selectedHistoryPatient?.gender || "N/A" },
+                          { label: "Blood Group", value: tp?.bloodGroup || "N/A" },
+                          { label: "Room", value: tp?.room || historyBarcode?.wardBed || "N/A" },
+                          { label: "Diagnosis", value: tp?.diagnosis || "N/A" },
+                          { label: "Attending Doctor", value: tp?.attendingDoctor || tp?.doctor || historyBarcode?.treatingDoctor || "N/A" },
+                        ].map(({ label, value }) => (
+                          <div key={label} className="flex justify-between gap-2">
+                            <span className="text-muted-foreground shrink-0">{label}:</span>
+                            <span className="font-medium text-right">{value}</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between gap-2 pt-1">
+                          <span className="text-muted-foreground shrink-0">Status:</span>
+                          <Badge variant={tp?.status === "critical" ? "destructive" : tp?.status === "admitted" ? "default" : "secondary"} className="text-xs">
+                            {tp?.status || "N/A"}
                           </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Right: Admission & Stay Duration */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" /> Admission &amp; Stay Duration
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        <div className="flex justify-between pb-1">
+                          <span className="text-muted-foreground">Admission Date:</span>
+                          <span className="font-medium">{tp?.admissionDate ? new Date(tp.admissionDate).toLocaleDateString() : "N/A"}</span>
+                        </div>
+                        {tp ? (
+                          <>
+                            <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
+                              <span className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
+                                <Bed className="h-3.5 w-3.5" /> Total Hospital Stay:
+                              </span>
+                              <span className="font-bold text-blue-700 dark:text-blue-300">{calculateDays(tp.admissionDate)} days</span>
+                            </div>
+                            <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950/40 rounded-lg">
+                              <span className="flex items-center gap-1.5 text-green-700 dark:text-green-300">
+                                <Activity className="h-3.5 w-3.5" /> General Ward:
+                              </span>
+                              <span className="font-bold text-green-700 dark:text-green-300">{Math.max(0, calculateDays(tp.admissionDate) - (tp.icuDays || 0))} days</span>
+                            </div>
+                            <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-950/40 rounded-lg">
+                              <span className="flex items-center gap-1.5 text-red-700 dark:text-red-300">
+                                <HeartPulse className="h-3.5 w-3.5" /> ICU Stay:
+                              </span>
+                              <span className="font-bold text-red-700 dark:text-red-300">{tp.isInIcu && tp.icuTransferDate ? calculateDays(tp.icuTransferDate) : (tp.icuDays || 0)} days</span>
+                            </div>
+                            <div className="flex items-center justify-between p-2 bg-cyan-50 dark:bg-cyan-950/40 rounded-lg">
+                              <span className="flex items-center gap-1.5 text-cyan-700 dark:text-cyan-300">
+                                <Wind className="h-3.5 w-3.5" /> Ventilator:
+                              </span>
+                              <span className="font-bold text-cyan-700 dark:text-cyan-300">{tp.ventilatorDays || 0} days</span>
+                            </div>
+                          </>
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-4">No IPD admission found</p>
                         )}
-                        {tp && (
-                          <Badge variant={tp.status === "critical" ? "destructive" : tp.status === "admitted" ? "default" : "secondary"}>
-                            {tp.status}
-                          </Badge>
-                        )}
-                      </div>
-                      {historyBarcode && (
-                        <p className="text-xs font-mono text-muted-foreground mb-1">{historyBarcode.uhid}</p>
-                      )}
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        {selectedHistoryPatient?.gender && <span>Gender: <span className="text-foreground font-medium capitalize">{selectedHistoryPatient.gender}</span></span>}
-                        {selectedHistoryPatient?.dateOfBirth && <span>DOB: <span className="text-foreground font-medium">{selectedHistoryPatient.dateOfBirth}</span></span>}
-                        {selectedHistoryPatient?.phone && <span>Phone: <span className="text-foreground font-medium">{selectedHistoryPatient.phone}</span></span>}
-                        {(historyBarcode?.wardBed || tp?.room) && <span>Ward/Bed: <span className="text-foreground font-medium">{historyBarcode?.wardBed || tp?.room}</span></span>}
-                        {(historyBarcode?.treatingDoctor || tp?.attendingDoctor || tp?.doctor) && <span>Doctor: <span className="text-foreground font-medium">{historyBarcode?.treatingDoctor || tp?.attendingDoctor || tp?.doctor}</span></span>}
-                        {tp?.diagnosis && <span>Diagnosis: <span className="text-foreground font-medium">{tp.diagnosis}</span></span>}
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  {/* IPD Admission Details — only when tracked */}
+                  {/* Additional Information */}
                   {tp && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium flex items-center gap-2">
-                            <Bed className="h-4 w-4 text-muted-foreground" /> Admission Details
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
-                          {[
-                            { label: "Admitted", value: tp.admissionDate ? new Date(tp.admissionDate).toLocaleDateString() : "N/A" },
-                            { label: "Department", value: tp.department || "N/A" },
-                            { label: "Room", value: tp.room || "N/A" },
-                            { label: "Assigned Nurse", value: tp.assignedNurse || "N/A" },
-                          ].map(({ label, value }) => (
-                            <div key={label} className="flex justify-between">
-                              <span className="text-muted-foreground">{label}:</span>
-                              <span className="font-medium text-right">{value}</span>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium flex items-center gap-2">
-                            <Activity className="h-4 w-4 text-muted-foreground" /> Stay Duration
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
-                          <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <span className="text-blue-700 dark:text-blue-300">Total Stay:</span>
-                            <span className="font-bold text-blue-700 dark:text-blue-300">{calculateDays(tp.admissionDate)} days</span>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-muted-foreground" /> Additional Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-muted-foreground">Currently in ICU:</span>
+                            <Badge variant={tp.isInIcu ? "default" : "secondary"} className="text-xs">
+                              {tp.isInIcu ? "Yes" : "No"}
+                            </Badge>
                           </div>
-                          <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                            <span className="text-red-700 dark:text-red-300">ICU Days:</span>
-                            <span className="font-bold text-red-700 dark:text-red-300">{tp.isInIcu && tp.icuTransferDate ? calculateDays(tp.icuTransferDate) : (tp.icuDays || 0)} days</span>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-muted-foreground">Department:</span>
+                            <span className="font-medium">{tp.department || "N/A"}</span>
                           </div>
-                          <div className="flex items-center justify-between p-2 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
-                            <span className="text-cyan-700 dark:text-cyan-300">Ventilator:</span>
-                            <span className="font-bold text-cyan-700 dark:text-cyan-300">{tp.ventilatorDays || 0} days</span>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-muted-foreground">Assigned Nurse:</span>
+                            <span className="font-medium">{tp.assignedNurse || "N/A"}</span>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-muted-foreground">ICU Transfer Date:</span>
+                            <span className="font-medium">{tp.icuTransferDate ? new Date(tp.icuTransferDate).toLocaleDateString() : "N/A"}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
 
                   {/* Comprehensive History from longitudinal profile */}

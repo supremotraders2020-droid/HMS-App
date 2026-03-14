@@ -939,198 +939,296 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
               <span className="ml-2 text-muted-foreground">Loading patient history...</span>
             </div>
-          ) : longitudinalProfile ? (
-            <div className="space-y-4">
-              {/* OPD Visits */}
-              {longitudinalProfile.opdHistory?.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <ClipboardList className="h-4 w-4 text-blue-500" />
-                      OPD Visits ({longitudinalProfile.opdHistory.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {longitudinalProfile.opdHistory.map((visit: any) => (
-                      <div key={visit.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-sm">{visit.department || "General"}</p>
-                          <p className="text-xs text-muted-foreground">{visit.doctorName || visit.doctor || "—"}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">{visit.appointmentDate ? new Date(visit.appointmentDate).toLocaleDateString() : "—"}</p>
-                          <Badge variant="outline" className="text-xs">{visit.status || "—"}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* IPD Admissions */}
-              {longitudinalProfile.ipdHistory?.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Bed className="h-4 w-4 text-purple-500" />
-                      IPD Admissions ({longitudinalProfile.ipdHistory.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {longitudinalProfile.ipdHistory.map((adm: any) => (
-                      <div key={adm.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-sm">{adm.diagnosis || "Admission"}</p>
-                          <p className="text-xs text-muted-foreground">Dr. {adm.attendingDoctor || adm.doctor || "—"} · {adm.room || adm.ward || "—"}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">{adm.admissionDate ? new Date(adm.admissionDate).toLocaleDateString() : "—"}</p>
-                          <Badge variant={adm.status === "critical" ? "destructive" : adm.isInIcu ? "destructive" : "secondary"} className="text-xs">
-                            {adm.isInIcu ? "ICU" : adm.status || "admitted"}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Prescriptions */}
-              {longitudinalProfile.medicationHistory?.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Pill className="h-4 w-4 text-green-500" />
-                      Prescriptions ({longitudinalProfile.medicationHistory.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {longitudinalProfile.medicationHistory.map((rx: any) => (
-                      <div key={rx.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-sm">{rx.diagnosis || rx.chiefComplaint || "Prescription"}</p>
-                          <p className="text-xs text-muted-foreground">{rx.doctorName || "—"}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs text-muted-foreground">{rx.createdAt ? new Date(rx.createdAt).toLocaleDateString() : "—"}</span>
-                          <Badge variant={rx.status === "finalized" ? "default" : "secondary"} className="text-xs ml-1">{rx.status || "draft"}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Diagnostic Tests */}
-              {longitudinalProfile.diagnosticTests?.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FlaskConical className="h-4 w-4 text-orange-500" />
-                      Diagnostic Tests ({longitudinalProfile.diagnosticTests.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {longitudinalProfile.diagnosticTests.map((t: any) => (
-                      <div key={t.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <p className="font-medium text-sm">{t.testName || t.panelName || "Test"}</p>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">{t.status || "ordered"}</Badge>
-                          <span className="text-xs text-muted-foreground">{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "—"}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Consent Forms */}
-              {longitudinalProfile.consentRecords?.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileCheck className="h-4 w-4 text-purple-500" />
-                      Consent Forms ({longitudinalProfile.consentRecords.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {longitudinalProfile.consentRecords.map((c: any) => (
-                      <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <p className="font-medium text-sm">{c.title || c.consentType || "Consent"}</p>
-                        <span className="text-xs text-muted-foreground">{c.uploadedAt ? new Date(c.uploadedAt).toLocaleDateString() : "—"}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Medical Records */}
-              {longitudinalProfile.medicalRecords?.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-blue-500" />
-                      Medical Records ({longitudinalProfile.medicalRecords.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {longitudinalProfile.medicalRecords.slice(0, 5).map((rec: any) => (
-                      <div key={rec.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-sm">{rec.recordType || "Record"}</p>
-                          <p className="text-xs text-muted-foreground">{rec.description || "—"}</p>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{rec.recordDate ? new Date(rec.recordDate).toLocaleDateString() : "—"}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Billing Summary */}
-              {longitudinalProfile.billingHistory?.bills?.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-green-500" />
-                      Billing Summary ({longitudinalProfile.billingHistory.bills.length} bills)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {longitudinalProfile.billingHistory.bills.slice(0, 3).map((bill: any) => (
-                      <div key={bill.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium text-sm">Bill #{bill.billNumber}</p>
-                          <p className="text-xs text-muted-foreground">{bill.billDate ? new Date(bill.billDate).toLocaleDateString() : "—"}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold">₹{bill.totalAmount}</p>
-                          <Badge variant={bill.paymentStatus === "PAID" ? "default" : "secondary"} className="text-xs">{bill.paymentStatus}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Empty state */}
-              {longitudinalProfile.opdHistory?.length === 0 &&
-               longitudinalProfile.ipdHistory?.length === 0 &&
-               longitudinalProfile.medicationHistory?.length === 0 &&
-               longitudinalProfile.diagnosticTests?.length === 0 &&
-               longitudinalProfile.consentRecords?.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <History className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                  <p className="font-medium">No history records found</p>
-                  <p className="text-sm mt-1">Medical activities will appear here as they are recorded.</p>
-                </div>
-              )}
-            </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <HeartPulse className="h-12 w-12 mx-auto mb-3 opacity-40" />
-              <p className="font-medium">No history available</p>
-              <p className="text-sm mt-1">Patient history could not be loaded at this time.</p>
+            <div className="space-y-4">
+              {(() => {
+                const latestIpd = longitudinalProfile?.ipdHistory?.[0];
+                const monSess = scannedPatient.monitoringSession;
+                const admDate = latestIpd?.admissionDate || monSess?.admissionDateTime;
+                const totalDays = admDate ? Math.floor((Date.now() - new Date(admDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+                const icuDays = latestIpd?.icuDays || 0;
+                const genWardDays = Math.max(0, totalDays - icuDays);
+                const ventDays = latestIpd?.ventilatorDays || 0;
+                const patientName = scannedPatient.patient.name;
+                const patientAge = monSess?.age || scannedPatient.patient.age;
+                const patientGender = monSess?.sex || scannedPatient.patient.gender;
+                const bloodGroup = monSess?.bloodGroup || latestIpd?.bloodGroup || "N/A";
+                const room = monSess ? `${monSess.ward} ${monSess.bedNumber}` : (scannedPatient.patient.wardBed || latestIpd?.room || "N/A");
+                const diagnosis = monSess?.primaryDiagnosis || latestIpd?.diagnosis || "N/A";
+                const doctor = monSess?.admittingConsultant || scannedPatient.patient.treatingDoctor || latestIpd?.attendingDoctor || latestIpd?.doctor || "N/A";
+                const status = scannedPatient.patient.status;
+                return (
+                  <>
+                    {/* Top 2-column grid: Patient Details + Admission & Stay Duration */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Left: Patient Details */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" /> Patient Details
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-1.5 text-sm">
+                          {[
+                            { label: "Name", value: patientName },
+                            { label: "Age", value: patientAge ? `${patientAge} years` : "N/A" },
+                            { label: "Gender", value: patientGender || "N/A" },
+                            { label: "Blood Group", value: bloodGroup },
+                            { label: "Room", value: room },
+                            { label: "Diagnosis", value: diagnosis },
+                            { label: "Attending Doctor", value: doctor },
+                          ].map(({ label, value }) => (
+                            <div key={label} className="flex justify-between gap-2">
+                              <span className="text-muted-foreground shrink-0">{label}:</span>
+                              <span className="font-medium text-right">{value}</span>
+                            </div>
+                          ))}
+                          <div className="flex justify-between gap-2 pt-1">
+                            <span className="text-muted-foreground shrink-0">Status:</span>
+                            <Badge variant={status === "critical" ? "destructive" : status === "admitted" || status === "active" ? "default" : "secondary"} className="text-xs">
+                              {status || "N/A"}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Right: Admission & Stay Duration */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" /> Admission &amp; Stay Duration
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm">
+                          <div className="flex justify-between pb-1">
+                            <span className="text-muted-foreground">Admission Date:</span>
+                            <span className="font-medium">{admDate ? new Date(admDate).toLocaleDateString() : "N/A"}</span>
+                          </div>
+                          {admDate ? (
+                            <>
+                              <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
+                                <span className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
+                                  <Bed className="h-3.5 w-3.5" /> Total Hospital Stay:
+                                </span>
+                                <span className="font-bold text-blue-700 dark:text-blue-300">{totalDays} days</span>
+                              </div>
+                              <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950/40 rounded-lg">
+                                <span className="flex items-center gap-1.5 text-green-700 dark:text-green-300">
+                                  <Activity className="h-3.5 w-3.5" /> General Ward:
+                                </span>
+                                <span className="font-bold text-green-700 dark:text-green-300">{genWardDays} days</span>
+                              </div>
+                              <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-950/40 rounded-lg">
+                                <span className="flex items-center gap-1.5 text-red-700 dark:text-red-300">
+                                  <HeartPulse className="h-3.5 w-3.5" /> ICU Stay:
+                                </span>
+                                <span className="font-bold text-red-700 dark:text-red-300">{icuDays} days</span>
+                              </div>
+                              <div className="flex items-center justify-between p-2 bg-cyan-50 dark:bg-cyan-950/40 rounded-lg">
+                                <span className="flex items-center gap-1.5 text-cyan-700 dark:text-cyan-300">
+                                  <Wind className="h-3.5 w-3.5" /> Ventilator:
+                                </span>
+                                <span className="font-bold text-cyan-700 dark:text-cyan-300">{ventDays} days</span>
+                              </div>
+                            </>
+                          ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">No IPD admission found</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Additional Information */}
+                    {latestIpd && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-muted-foreground" /> Additional Information
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">Currently in ICU:</span>
+                              <Badge variant={latestIpd.isInIcu ? "default" : "secondary"} className="text-xs">
+                                {latestIpd.isInIcu ? "Yes" : "No"}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">Department:</span>
+                              <span className="font-medium">{latestIpd.department || "N/A"}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">Assigned Nurse:</span>
+                              <span className="font-medium">{latestIpd.assignedNurse || "N/A"}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-muted-foreground">ICU Transfer Date:</span>
+                              <span className="font-medium">{latestIpd.icuTransferDate ? new Date(latestIpd.icuTransferDate).toLocaleDateString() : "N/A"}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* OPD Visits */}
+                    {longitudinalProfile?.opdHistory?.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <ClipboardList className="h-4 w-4 text-blue-500" />
+                            OPD Visits ({longitudinalProfile.opdHistory.length})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {longitudinalProfile.opdHistory.map((visit: any) => (
+                            <div key={visit.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div>
+                                <p className="font-medium text-sm">{visit.department || "General"}</p>
+                                <p className="text-xs text-muted-foreground">{visit.doctorName || visit.doctor || "—"}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-muted-foreground">{visit.appointmentDate ? new Date(visit.appointmentDate).toLocaleDateString() : "—"}</p>
+                                <Badge variant="outline" className="text-xs">{visit.status || "—"}</Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Prescriptions */}
+                    {longitudinalProfile?.medicationHistory?.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <Pill className="h-4 w-4 text-green-500" />
+                            Prescriptions ({longitudinalProfile.medicationHistory.length})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {longitudinalProfile.medicationHistory.map((rx: any) => (
+                            <div key={rx.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div>
+                                <p className="font-medium text-sm">{rx.diagnosis || rx.chiefComplaint || "Prescription"}</p>
+                                <p className="text-xs text-muted-foreground">{rx.doctorName || "—"}</p>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-xs text-muted-foreground">{rx.createdAt ? new Date(rx.createdAt).toLocaleDateString() : "—"}</span>
+                                <Badge variant={rx.status === "finalized" ? "default" : "secondary"} className="text-xs ml-1">{rx.status || "draft"}</Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Diagnostic Tests */}
+                    {longitudinalProfile?.diagnosticTests?.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <FlaskConical className="h-4 w-4 text-orange-500" />
+                            Diagnostic Tests ({longitudinalProfile.diagnosticTests.length})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {longitudinalProfile.diagnosticTests.map((t: any) => (
+                            <div key={t.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <p className="font-medium text-sm">{t.testName || t.panelName || "Test"}</p>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs">{t.status || "ordered"}</Badge>
+                                <span className="text-xs text-muted-foreground">{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "—"}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Consent Forms */}
+                    {longitudinalProfile?.consentRecords?.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <FileCheck className="h-4 w-4 text-purple-500" />
+                            Consent Forms ({longitudinalProfile.consentRecords.length})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {longitudinalProfile.consentRecords.map((c: any) => (
+                            <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <p className="font-medium text-sm">{c.title || c.consentType || "Consent"}</p>
+                              <span className="text-xs text-muted-foreground">{c.uploadedAt ? new Date(c.uploadedAt).toLocaleDateString() : "—"}</span>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Medical Records */}
+                    {longitudinalProfile?.medicalRecords?.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-blue-500" />
+                            Medical Records ({longitudinalProfile.medicalRecords.length})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {longitudinalProfile.medicalRecords.slice(0, 5).map((rec: any) => (
+                            <div key={rec.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div>
+                                <p className="font-medium text-sm">{rec.recordType || "Record"}</p>
+                                <p className="text-xs text-muted-foreground">{rec.description || "—"}</p>
+                              </div>
+                              <span className="text-xs text-muted-foreground">{rec.recordDate ? new Date(rec.recordDate).toLocaleDateString() : "—"}</span>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Billing Summary */}
+                    {longitudinalProfile?.billingHistory?.bills?.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-green-500" />
+                            Billing Summary ({longitudinalProfile.billingHistory.bills.length} bills)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {longitudinalProfile.billingHistory.bills.slice(0, 3).map((bill: any) => (
+                            <div key={bill.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div>
+                                <p className="font-medium text-sm">Bill #{bill.billNumber}</p>
+                                <p className="text-xs text-muted-foreground">{bill.billDate ? new Date(bill.billDate).toLocaleDateString() : "—"}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold">₹{bill.totalAmount}</p>
+                                <Badge variant={bill.paymentStatus === "PAID" ? "default" : "secondary"} className="text-xs">{bill.paymentStatus}</Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Empty state */}
+                    {!latestIpd && !monSess && longitudinalProfile?.opdHistory?.length === 0 &&
+                     longitudinalProfile?.medicationHistory?.length === 0 &&
+                     longitudinalProfile?.diagnosticTests?.length === 0 &&
+                     longitudinalProfile?.consentRecords?.length === 0 && (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <History className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                        <p className="font-medium">No history records found</p>
+                        <p className="text-sm mt-1">Medical activities will appear here as they are recorded.</p>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
         </TabsContent>
