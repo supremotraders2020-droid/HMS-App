@@ -1816,7 +1816,7 @@ export class DatabaseStorage implements IStorage {
         wardName: "General Ward (F)",
         floor: "1st Floor",
         department: "General Medicine",
-        occupancyStatus: "available",
+        occupancyStatus: "AVAILABLE",
         isActive: true,
       } as InsertBed)),
       ...Array.from({ length: 8 }, (_, i) => ({
@@ -1826,16 +1826,16 @@ export class DatabaseStorage implements IStorage {
         wardName: "General Ward (M)",
         floor: "1st Floor",
         department: "General Medicine",
-        occupancyStatus: "available",
+        occupancyStatus: "AVAILABLE",
         isActive: true,
       } as InsertBed)),
-      { bedNumber: "ICU-01", bedName: "ICU - 1", categoryId: "cat-icu", wardName: "ICU", floor: "2nd Floor", department: "Critical Care", occupancyStatus: "available", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
-      { bedNumber: "NICU-01", bedName: "NICU - 1", categoryId: "cat-nicu", wardName: "NICU", floor: "2nd Floor", department: "NICU", occupancyStatus: "available", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
-      { bedNumber: "OBT-01", bedName: "Orbit - 1", categoryId: "cat-hdu", wardName: "Orbit", floor: "2nd Floor", department: "HDU", occupancyStatus: "available", hasOxygenCapability: true, isActive: true },
-      { bedNumber: "CAS-01", bedName: "Casualty - 1", categoryId: "cat-casualty", wardName: "Casualty", floor: "Ground Floor", department: "Emergency", occupancyStatus: "available", hasOxygenCapability: true, isActive: true },
-      { bedNumber: "HRZ-01", bedName: "Horizon - 1", categoryId: "cat-isolation", wardName: "Horizon", floor: "Ground Floor", department: "Infectious Disease", occupancyStatus: "available", isIsolationBed: true, infectionControlFlag: true, ppeProtocolRequired: true, isActive: true },
-      { bedNumber: "NOV-01", bedName: "Nova - 1", categoryId: "cat-daycare", wardName: "Nova", floor: "1st Floor", department: "Day Care", occupancyStatus: "available", isActive: true },
-      { bedNumber: "NEX-01", bedName: "Nexus - 1", categoryId: "cat-general", wardName: "Nexus", floor: "3rd Floor", department: "General", occupancyStatus: "available", isActive: true },
+      { bedNumber: "ICU-01", bedName: "ICU - 1", categoryId: "cat-icu", wardName: "ICU", floor: "2nd Floor", department: "Critical Care", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
+      { bedNumber: "NICU-01", bedName: "NICU - 1", categoryId: "cat-nicu", wardName: "NICU", floor: "2nd Floor", department: "NICU", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, hasVentilatorCapability: true, isActive: true },
+      { bedNumber: "OBT-01", bedName: "Orbit - 1", categoryId: "cat-hdu", wardName: "Orbit", floor: "2nd Floor", department: "HDU", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, isActive: true },
+      { bedNumber: "CAS-01", bedName: "Casualty - 1", categoryId: "cat-casualty", wardName: "Casualty", floor: "Ground Floor", department: "Emergency", occupancyStatus: "AVAILABLE", hasOxygenCapability: true, isActive: true },
+      { bedNumber: "HRZ-01", bedName: "Horizon - 1", categoryId: "cat-isolation", wardName: "Horizon", floor: "Ground Floor", department: "Infectious Disease", occupancyStatus: "AVAILABLE", isIsolationBed: true, infectionControlFlag: true, ppeProtocolRequired: true, isActive: true },
+      { bedNumber: "NOV-01", bedName: "Nova - 1", categoryId: "cat-daycare", wardName: "Nova", floor: "1st Floor", department: "Day Care", occupancyStatus: "AVAILABLE", isActive: true },
+      { bedNumber: "NEX-01", bedName: "Nexus - 1", categoryId: "cat-general", wardName: "Nexus", floor: "3rd Floor", department: "General", occupancyStatus: "AVAILABLE", isActive: true },
     ];
 
     for (const bed of bedData) {
@@ -6046,7 +6046,7 @@ export class DatabaseStorage implements IStorage {
           eq(beds.department, "ICU"),
           eq(beds.department, "Critical Care")
         ),
-        eq(beds.occupancyStatus, "available"),
+        eq(beds.occupancyStatus, "AVAILABLE"),
         eq(beds.isActive, true)
       ))
       .orderBy(beds.bedNumber);
@@ -6129,7 +6129,7 @@ export class DatabaseStorage implements IStorage {
         wardName: "Intensive Care Unit",
         floor: "2",
         department: "Critical Care",
-        occupancyStatus: "available",
+        occupancyStatus: "AVAILABLE",
         hasOxygenCapability: true,
         hasVentilatorCapability: i <= 10, // First 10 beds have ventilator
         isIsolationBed: i === 19 || i === 20, // Last 2 are isolation beds
