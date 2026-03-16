@@ -54,7 +54,7 @@ import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/s
 import type { ServicePatient, MedicalRecord, PatientConsent, Doctor, IdCardScan, CriticalAlert } from "@shared/schema";
 import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, AlertCircle, ImageIcon, ExternalLink, Bed, DollarSign, History, ChevronRight, Wind, LogOut, FlaskConical, Syringe, Heart, Droplets, ClipboardCheck, UserCheck, Scissors } from "lucide-react";
+import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, AlertCircle, ImageIcon, ExternalLink, ClipboardList, Bed, DollarSign, History, ChevronRight, Wind, LogOut, FlaskConical, Syringe, Heart, Droplets, ClipboardCheck, UserCheck, Scissors } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 function calculateDays(dateString: string | Date | null | undefined): number {
