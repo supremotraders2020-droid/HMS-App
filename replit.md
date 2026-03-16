@@ -79,6 +79,16 @@ Gravity AI Manager encompasses 23 core modules with robust role-based access con
 
 ## Recent Enhancements (March 2026)
 
+### IPD Monitoring Tab Data Field Fixes (March 16, 2026)
+- **All 13 IPD sub-tabs now use exact schema field names**: Diabetic (`bloodSugarLevel`, `recordedTime`, `alertType`), Nursing Notes (`observation`, `actionTaken`, `noteTime`, `shift`, `eventType`), Care Plan (`provisionalDiagnosis`, `carePlanDetails`, `treatmentAdvised`, `investigationsAdvised`, `treatingConsultantName`, `planDate`), Oxygen (`hourSlot`, `oxygenLiter`, `spo2`), Ventilator (`ventilationMode`, `setTidalVolume`, `respiratoryRateSet`, `peepCpap`, `fio2`, `peakAirwayPressure`, `recordedAt`), Inotropes (`drugName`, `dose`, `rate`, `startTime`), Drug Chart MAR (`drugName`, `actualGivenTime`, `scheduledTime`, uppercase `status`), Tests (`testName`, `testType`, `doctorName`, `createdAt`, uppercase `status`)
+- **DB verified**: For Prachi Deshmukh — vitals (5), intake (3), output (1), allergies (1), diabetic (3), inotropes (8), tests (2), care plan (1), oxygen (1), investigation (1) all displaying correctly via tracking ID
+
+### Patient Monitoring ID Fix — PatientService & PatientBarcodePage (March 16, 2026)
+- **Root cause fixed**: `patient_monitoring_sessions.patient_id` stores TRACKING patient ID (from `tracking_patients` table), NOT the service/barcode patient ID
+- **PatientService.tsx**: `profilePatientId` now resolves via name matching against `allTrackingPatients` instead of using `selectedProfilePatient?.id` (service ID)
+- **PatientBarcodePage.tsx**: `scannedPatientId` now resolves via name matching against `allTrackingPatients` instead of using `selectedBarcode?.patientId` (barcode/service ID)
+- **Verified**: Using service ID gave 0 sessions; using tracking ID gives 1 session (and all 13 monitoring sub-tabs load data correctly)
+
 ### Patient Movement History Real-Time Sync (March 14, 2026)
 - **Three-Page History Linked**: Patient Tracking, Patient Service, and Patient Barcode all share the same TanStack Query cache key `["/api/tracking/patients", patientId, "movements"]` — a transfer in one page instantly propagates to all
 - **Timeline Added to Barcode Page**: `PatientMovementTimeline` component added to Patient Barcode History tab (was missing)

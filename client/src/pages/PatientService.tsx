@@ -618,7 +618,20 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   });
 
   // ---- IPD Monitoring queries (for Profile dialog IPD tab) ----
-  const profilePatientId = selectedProfilePatient?.id;
+  // Monitoring sessions store tracking_patient ID, NOT service_patient ID
+  // So we must look up the tracking patient by name match first
+  const profilePatientId = selectedProfilePatient
+    ? (() => {
+        const fullName = `${selectedProfilePatient.firstName} ${selectedProfilePatient.lastName}`.toLowerCase().trim();
+        const tp = (allTrackingPatients as any[]).find((t: any) => {
+          const tn = (t.name || "").toLowerCase().trim();
+          if (tn === fullName) return true;
+          const parts = fullName.split(" ").filter(Boolean);
+          return parts.length > 0 && parts.every((p: string) => tn.includes(p));
+        });
+        return tp?.id || null;
+      })()
+    : null;
 
   const { data: profileMonitoringSessions = [] } = useQuery<any[]>({
     queryKey: ["/api/patient-monitoring/sessions/patient", profilePatientId],
@@ -2902,15 +2915,17 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           ) : (
                             <div className="space-y-2">
                               {profileCarePlan.map((cp: any) => (
-                                <div key={cp.id} className="p-3 border rounded-lg text-sm">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <Badge variant="outline">{cp.date || cp.createdAt ? new Date(cp.createdAt || cp.date).toLocaleDateString() : "—"}</Badge>
-                                    <span className="text-xs text-muted-foreground">{cp.nurseName || cp.createdByName || "—"}</span>
+                                <div key={cp.id} className="p-3 border rounded-lg text-sm space-y-1">
+                                  <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                                    <Badge variant="outline">{cp.planDate ? new Date(cp.planDate).toLocaleDateString() : cp.createdAt ? new Date(cp.createdAt).toLocaleDateString() : "—"}</Badge>
+                                    <span className="text-xs text-muted-foreground">{cp.treatingConsultantName || cp.createdByName || "—"}</span>
                                   </div>
-                                  {cp.diagnosis && <p><span className="text-muted-foreground">Diagnosis:</span> {cp.diagnosis}</p>}
-                                  {cp.treatment && <p><span className="text-muted-foreground">Treatment:</span> {cp.treatment}</p>}
-                                  {cp.investigations && <p><span className="text-muted-foreground">Investigations:</span> {cp.investigations}</p>}
-                                  {cp.consultant && <p><span className="text-muted-foreground">Consultant:</span> {cp.consultant}</p>}
+                                  {cp.provisionalDiagnosis && <p><span className="text-muted-foreground">Diagnosis:</span> {cp.provisionalDiagnosis}</p>}
+                                  {cp.carePlanDetails && <p><span className="text-muted-foreground">Care Plan:</span> {cp.carePlanDetails}</p>}
+                                  {cp.treatmentAdvised && <p><span className="text-muted-foreground">Treatment:</span> {cp.treatmentAdvised}</p>}
+                                  {cp.investigationsAdvised && <p><span className="text-muted-foreground">Investigations:</span> {cp.investigationsAdvised}</p>}
+                                  {cp.referralDepartments && <p><span className="text-muted-foreground">Referrals:</span> {cp.referralDepartments}</p>}
+                                  {cp.departmentSpecialty && <p><span className="text-muted-foreground">Dept:</span> {cp.departmentSpecialty}</p>}
                                 </div>
                               ))}
                             </div>
@@ -2937,10 +2952,15 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                 <tbody>
                                   {profileDiabetic.map((d: any) => (
                                     <tr key={d.id} className="border-b border-muted/30">
-                                      <td className="p-1.5">{d.time || d.hourSlot || d.recordedAt ? new Date(d.recordedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—"}</td>
-                                      <td className="p-1.5 text-center font-medium">{d.bsl || d.bloodGlucose || "—"}</td>
+                                      <td className="p-1.5">{d.recordedTime ? new Date(d.recordedTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—"}</td>
+                                      <td className="p-1.5 text-center font-medium">
+                                        <span className={d.alertType === "HYPOGLYCEMIA" ? "text-red-500" : d.alertType === "HYPERGLYCEMIA" ? "text-orange-500" : ""}>
+                                          {d.bloodSugarLevel ?? "—"}
+                                        </span>
+                                        {d.alertType && <span className="ml-1 text-[9px] text-muted-foreground">({d.alertType})</span>}
+                                      </td>
                                       <td className="p-1.5 text-center">{d.insulinType || "—"}</td>
-                                      <td className="p-1.5 text-center">{d.insulinDose || d.dose || "—"}</td>
+                                      <td className="p-1.5 text-center">{d.insulinDose ?? "—"}</td>
                                       <td className="p-1.5 text-center">{d.route || "—"}</td>
                                       <td className="p-1.5 text-center text-muted-foreground">{d.nurseName || "—"}</td>
                                     </tr>
@@ -3068,14 +3088,14 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                 <tbody>
                                   {profileMAR.map((m: any) => (
                                     <tr key={m.id} className="border-b border-muted/30">
-                                      <td className="p-1.5">{m.administeredAt ? new Date(m.administeredAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : m.scheduledTime || "—"}</td>
-                                      <td className="p-1.5 font-medium">{m.medicineName || m.drugName || "—"}</td>
-                                      <td className="p-1.5 text-center">{m.dose || m.dosage || "—"}</td>
+                                      <td className="p-1.5">{(m.actualGivenTime || m.scheduledTime) ? new Date(m.actualGivenTime || m.scheduledTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—"}</td>
+                                      <td className="p-1.5 font-medium">{m.drugName || "—"}</td>
+                                      <td className="p-1.5 text-center">{m.dose || "—"}</td>
                                       <td className="p-1.5 text-center">{m.route || "—"}</td>
                                       <td className="p-1.5 text-center">{m.frequency || "—"}</td>
                                       <td className="p-1.5 text-center">
-                                        <Badge variant={m.status === "given" || m.isGiven ? "default" : "secondary"} className="text-[9px]">
-                                          {m.status || (m.isGiven ? "Given" : "Pending")}
+                                        <Badge variant={m.status === "GIVEN" ? "default" : m.status === "MISSED" ? "destructive" : "secondary"} className="text-[9px]">
+                                          {m.status || "—"}
                                         </Badge>
                                       </td>
                                       <td className="p-1.5 text-center text-muted-foreground">{m.nurseName || "—"}</td>
@@ -3096,12 +3116,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               {profileTests.map((t: any) => (
                                 <div key={t.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
                                   <div>
-                                    <p className="font-medium">{t.testName || t.name || "—"}</p>
-                                    <p className="text-xs text-muted-foreground">{t.testType || t.category || "—"} · {t.orderedBy || t.orderedByName || "—"}</p>
+                                    <p className="font-medium">{t.testName || "—"}</p>
+                                    <p className="text-xs text-muted-foreground">{t.testType || t.category || "—"} · Dr. {t.doctorName || "—"}</p>
+                                    {t.priority && t.priority !== "ROUTINE" && <p className="text-xs text-orange-500">{t.priority}</p>}
                                   </div>
                                   <div className="text-right">
-                                    <Badge variant={t.status === "completed" ? "default" : t.status === "pending" ? "secondary" : "outline"} className="text-xs">{t.status || "ordered"}</Badge>
-                                    <p className="text-xs text-muted-foreground mt-0.5">{t.orderedAt ? new Date(t.orderedAt).toLocaleString() : "—"}</p>
+                                    <Badge variant={t.status === "COMPLETED" ? "default" : t.status === "PENDING" ? "secondary" : "outline"} className="text-xs">{t.status || "—"}</Badge>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{t.createdAt ? new Date(t.createdAt).toLocaleString() : "—"}</p>
                                   </div>
                                 </div>
                               ))}
@@ -3117,12 +3138,18 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                             <div className="space-y-2">
                               {profileShiftNotes.map((note: any) => (
                                 <div key={note.id} className="p-3 border rounded-lg text-sm">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <Badge variant="outline">{note.shift || note.shiftType || "—"}</Badge>
-                                    <span className="text-xs text-muted-foreground">{note.nurseName || note.createdByName || "—"} · {note.createdAt ? new Date(note.createdAt).toLocaleString() : "—"}</span>
+                                  <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                                    <div className="flex items-center gap-1">
+                                      <Badge variant="outline">{note.shift || "—"}</Badge>
+                                      {note.eventType && note.eventType !== "ROUTINE" && (
+                                        <Badge variant={note.eventType === "CRITICAL" ? "destructive" : "secondary"} className="text-[9px]">{note.eventType}</Badge>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">{note.nurseName || "—"} · {note.noteTime ? new Date(note.noteTime).toLocaleString() : "—"}</span>
                                   </div>
-                                  {note.generalObservations && <p className="text-muted-foreground mt-1">{note.generalObservations}</p>}
-                                  {note.notes && <p className="text-muted-foreground mt-1">{note.notes}</p>}
+                                  {note.observation && <p className="font-medium mt-1">{note.observation}</p>}
+                                  {note.actionTaken && <p className="text-muted-foreground mt-1 text-xs">Action: {note.actionTaken}</p>}
+                                  {note.doctorInformed && note.doctorName && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Dr. {note.doctorName} informed</p>}
                                 </div>
                               ))}
                             </div>
@@ -3172,12 +3199,14 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               {profileOxygen.map((o: any) => (
                                 <div key={o.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
                                   <div>
-                                    <p className="font-medium">{o.oxygenDevice || o.deliveryDevice || "—"}</p>
-                                    <p className="text-xs text-muted-foreground">Flow: {o.flowRate || o.litersPerMin || "—"} L/min · FiO2: {o.fio2 || "—"}%</p>
+                                    <p className="font-medium">Slot: {o.hourSlot || "—"}</p>
+                                    <p className="text-xs text-muted-foreground">O2: {o.oxygenLiter ?? "—"} L/min · SpO2: {o.spo2 ?? "—"}%</p>
+                                    {o.centralLine && <p className="text-xs text-muted-foreground">Central Line: {o.centralLine}</p>}
+                                    {o.rylesTube && <p className="text-xs text-muted-foreground">Ryles Tube: {o.rylesTube}</p>}
                                   </div>
                                   <div className="text-right text-xs text-muted-foreground">
                                     <p>{o.nurseName || "—"}</p>
-                                    <p>{o.recordedAt ? new Date(o.recordedAt).toLocaleString() : "—"}</p>
+                                    <p>{o.createdAt ? new Date(o.createdAt).toLocaleString() : "—"}</p>
                                   </div>
                                 </div>
                               ))}
@@ -3207,13 +3236,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                 <tbody>
                                   {profileVentilator.map((v: any) => (
                                     <tr key={v.id} className="border-b border-muted/30">
-                                      <td className="p-1.5">{v.hourSlot || (v.recordedAt ? new Date(v.recordedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—")}</td>
-                                      <td className="p-1.5 text-center">{v.ventilatorMode || v.mode || "—"}</td>
-                                      <td className="p-1.5 text-center">{v.tidalVolume || v.tv || "—"}</td>
-                                      <td className="p-1.5 text-center">{v.rrSet || v.respiratoryRate || "—"}</td>
-                                      <td className="p-1.5 text-center">{v.peep || "—"}</td>
-                                      <td className="p-1.5 text-center">{v.fio2 || "—"}</td>
-                                      <td className="p-1.5 text-center">{v.pip || v.peakInspiratoryPressure || "—"}</td>
+                                      <td className="p-1.5">{v.recordedAt ? new Date(v.recordedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—"}</td>
+                                      <td className="p-1.5 text-center">{v.ventilationMode || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.setTidalVolume ?? v.expiredTidalVolume ?? "—"}</td>
+                                      <td className="p-1.5 text-center">{v.respiratoryRateSet ?? "—"}</td>
+                                      <td className="p-1.5 text-center">{v.peepCpap ?? "—"}</td>
+                                      <td className="p-1.5 text-center">{v.fio2 ?? "—"}</td>
+                                      <td className="p-1.5 text-center">{v.peakAirwayPressure ?? "—"}</td>
                                       <td className="p-1.5 text-center text-muted-foreground">{v.nurseName || "—"}</td>
                                     </tr>
                                   ))}
@@ -3243,10 +3272,10 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                 <tbody>
                                   {profileInotropes.map((ino: any) => (
                                     <tr key={ino.id} className="border-b border-muted/30">
-                                      <td className="p-1.5">{ino.hourSlot || (ino.recordedAt ? new Date(ino.recordedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—")}</td>
-                                      <td className="p-1.5 font-medium">{ino.drugName || ino.drug || "—"}</td>
+                                      <td className="p-1.5">{ino.startTime ? new Date(ino.startTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—"}</td>
+                                      <td className="p-1.5 font-medium">{ino.drugName || "—"}</td>
                                       <td className="p-1.5 text-center">{ino.dose || "—"}</td>
-                                      <td className="p-1.5 text-center">{ino.rate || "—"} {ino.rateUnit || ""}</td>
+                                      <td className="p-1.5 text-center">{ino.rate || "—"}</td>
                                       <td className="p-1.5 text-center">{ino.route || "—"}</td>
                                       <td className="p-1.5 text-center text-muted-foreground">{ino.nurseName || "—"}</td>
                                     </tr>

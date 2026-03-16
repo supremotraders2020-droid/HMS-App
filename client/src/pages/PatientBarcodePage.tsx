@@ -338,7 +338,20 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
     refetchInterval: 30000,
   });
 
-  const scannedPatientId = scannedPatient?.patient?.id;
+  // Monitoring sessions store tracking_patient ID, NOT service_patient ID (barcode.patientId)
+  // Resolve the tracking patient ID by name matching against allTrackingPatients
+  const scannedPatientName = scannedPatient?.patient?.name;
+  const scannedPatientId = (() => {
+    if (!scannedPatientName || !allTrackingPatients.length) return null;
+    const lower = scannedPatientName.toLowerCase().trim();
+    const match = (allTrackingPatients as any[]).find((t: any) => {
+      const tn = (t.name || "").toLowerCase().trim();
+      if (tn === lower) return true;
+      const parts = lower.split(" ").filter(Boolean);
+      return parts.length > 0 && parts.every((p: string) => tn.includes(p));
+    });
+    return match?.id || null;
+  })();
 
   const { data: ipdSessions = [], isLoading: ipdSessionsLoading } = useQuery<any[]>({
     queryKey: ["/api/patient-monitoring/sessions/patient", scannedPatientId],
