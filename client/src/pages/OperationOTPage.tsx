@@ -760,7 +760,7 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const [viewHtml, setViewHtml] = useState<string | null>(null);
+  const [viewingConsent, setViewingConsent] = useState<any | null>(null);
 
   const isSurgical = consentKind === "surgery";
 
@@ -833,21 +833,53 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
     },
   });
 
-  const handleView = async (templateId: string) => {
-    try {
-      const url = `/api/consent-templates/${templateId}/render?patientId=${patientId}`;
-      const res = await fetch(url, { credentials: "include" });
-      if (res.ok) {
-        const html = await res.text();
-        setViewHtml(html);
-      }
-    } catch {
-      toast({ title: "Error", description: "Could not load consent preview.", variant: "destructive" });
-    }
+  const handlePrint = (html: string, title: string) => {
+    const printWin = window.open("", "_blank", "width=900,height=700");
+    if (!printWin) return;
+    printWin.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
+      <style>body{font-family:Arial,sans-serif;margin:20px;color:#000}@media print{body{margin:0}}</style>
+      </head><body>${html}</body></html>`);
+    printWin.document.close();
+    printWin.focus();
+    printWin.print();
   };
 
   return (
     <div className="space-y-4">
+      {/* Consent view dialog */}
+      <Dialog open={!!viewingConsent} onOpenChange={(open) => { if (!open) setViewingConsent(null); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between gap-2 pr-6">
+              <span className="truncate">{viewingConsent?.consentTitle}</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handlePrint(viewingConsent?.consentContent || "", viewingConsent?.consentTitle || "Consent")}
+              >
+                <Printer className="h-3.5 w-3.5 mr-1" /> Print
+              </Button>
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground pt-1">
+              Patient: {viewingConsent?.patientName}
+              {viewingConsent?.patientUhid && ` · UHID: ${viewingConsent.patientUhid}`}
+              {viewingConsent?.doctorName && ` · Dr. ${viewingConsent.doctorName}`}
+              {viewingConsent?.signedAt && ` · ${format(new Date(viewingConsent.signedAt), "dd MMM yyyy, hh:mm a")}`}
+            </p>
+          </DialogHeader>
+          {viewingConsent?.consentContent ? (
+            <div
+              className="border rounded-lg p-4 bg-white dark:bg-gray-950 text-sm"
+              dangerouslySetInnerHTML={{ __html: viewingConsent.consentContent }}
+            />
+          ) : (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              No content available for this consent record.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {loadingConsents ? (
         <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm">
           <RefreshCw className="h-4 w-4 animate-spin" /> Loading saved consents…
@@ -865,7 +897,7 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
                 </p>
               </div>
               <div className="flex gap-1 shrink-0">
-                <Button size="sm" variant="outline" onClick={() => handleView(c.templateId || c.id)}>
+                <Button size="sm" variant="outline" onClick={() => setViewingConsent(c)}>
                   <Eye className="h-3.5 w-3.5 mr-1" /> View
                 </Button>
                 <Button size="sm" variant="ghost" asChild>
@@ -878,16 +910,6 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
       ) : (
         <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground text-sm">
           No {isSurgical ? "surgical" : "anaesthesia"} consent on file for this patient.
-        </div>
-      )}
-
-      {viewHtml && (
-        <div className="border rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 bg-muted border-b">
-            <span className="text-sm font-medium">Consent Preview</span>
-            <Button size="sm" variant="ghost" onClick={() => setViewHtml(null)}>Close</Button>
-          </div>
-          <div className="max-h-64 overflow-y-auto p-3 text-sm" dangerouslySetInnerHTML={{ __html: viewHtml }} />
         </div>
       )}
 
