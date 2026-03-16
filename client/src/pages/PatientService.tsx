@@ -651,7 +651,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const profileSessionId = profileLatestSession?.id;
 
   const { data: profileVitals = [] } = useQuery<any[]>({
-    queryKey: ["/api/patient-monitoring/vitals", profileSessionId],
+    queryKey: [`/api/patient-monitoring/vitals/${profileSessionId}`],
     queryFn: async () => {
       if (!profileSessionId) return [];
       const res = await fetch(`/api/patient-monitoring/vitals/${profileSessionId}`, { credentials: "include" });
@@ -659,7 +659,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       return res.json();
     },
     enabled: !!profileSessionId && showProfileDialog,
-    refetchInterval: showProfileDialog ? 10000 : false,
+    refetchInterval: showProfileDialog ? 3000 : false,
     staleTime: 0,
   });
 
