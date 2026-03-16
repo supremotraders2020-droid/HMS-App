@@ -1190,6 +1190,11 @@ export default function PatientMonitoringPage() {
                   <TabsTrigger value="surgery-notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Hospital className="h-3.5 w-3.5" />Surgery Notes</TabsTrigger>
                   <TabsTrigger value="tests" className="text-xs gap-1.5 data-[state=active]:bg-background"><Beaker className="h-3.5 w-3.5" />Tests</TabsTrigger>
                   <TabsTrigger value="vitals" className="text-xs gap-1.5 data-[state=active]:bg-background"><Heart className="h-3.5 w-3.5" />Vitals</TabsTrigger>
+                  <TabsTrigger value="inotropes" className="text-xs gap-1.5 data-[state=active]:bg-background"><Syringe className="h-3.5 w-3.5" />Inotropes</TabsTrigger>
+                  <TabsTrigger value="ventilator" className="text-xs gap-1.5 data-[state=active]:bg-background"><Wind className="h-3.5 w-3.5" />Ventilator</TabsTrigger>
+                  <TabsTrigger value="abg-lab" className="text-xs gap-1.5 data-[state=active]:bg-background"><ClipboardList className="h-3.5 w-3.5" />ABG Lab</TabsTrigger>
+                  <TabsTrigger value="shift-notes" className="text-xs gap-1.5 data-[state=active]:bg-background"><FileText className="h-3.5 w-3.5" />Shift Notes</TabsTrigger>
+                  <TabsTrigger value="duty-staff" className="text-xs gap-1.5 data-[state=active]:bg-background"><Users className="h-3.5 w-3.5" />Duty Staff</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -1199,7 +1204,7 @@ export default function PatientMonitoringPage() {
                   <VitalsTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="drugchart">
-                  <InotropesTab session={selectedSession} />
+                  <MARTab session={selectedSession} />
                 </TabsContent>
                 <TabsContent value="intake">
                   <IntakeTab session={selectedSession} />
@@ -1247,6 +1252,21 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="nursing-assessment">
                   <NursingAssessmentCarePlanTab session={selectedSession} />
+                </TabsContent>
+                <TabsContent value="inotropes">
+                  <InotropesTab session={selectedSession} />
+                </TabsContent>
+                <TabsContent value="ventilator">
+                  <VentilatorTab sessionId={selectedSession.id} isOnVentilator={selectedSession.isVentilated} />
+                </TabsContent>
+                <TabsContent value="abg-lab">
+                  <ABGLabTab sessionId={selectedSession.id} />
+                </TabsContent>
+                <TabsContent value="shift-notes">
+                  <ShiftNotesTab session={selectedSession} />
+                </TabsContent>
+                <TabsContent value="duty-staff">
+                  <DutyStaffTab session={selectedSession} />
                 </TabsContent>
               </Tabs>
             </div>
