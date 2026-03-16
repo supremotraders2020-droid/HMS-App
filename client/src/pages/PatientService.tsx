@@ -2711,8 +2711,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
       {/* Longitudinal Patient Profile Dialog */}
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="max-w-5xl w-[95vw] md:w-full max-h-[92vh] overflow-hidden flex flex-col">
-          <DialogHeader className="flex-shrink-0">
+        <DialogContent className="max-w-5xl w-[95vw] md:w-full max-h-[92vh] overflow-y-auto flex flex-col">
+          <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
               <History className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               <span className="truncate">Complete Patient Profile - {selectedProfilePatient?.firstName} {selectedProfilePatient?.lastName}</span>
@@ -2728,7 +2728,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
               <span className="ml-2">Loading patient profile...</span>
             </div>
           ) : longitudinalProfile ? (
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col gap-3">
+            <div className="flex flex-col gap-3">
               {/* Patient Identity Card */}
               {(() => {
                 const profileBarcode = selectedProfilePatient ? getPatientBarcode(selectedProfilePatient) : null;
@@ -2768,8 +2768,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   </div>
                 );
               })()}
-              <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full flex-1 flex flex-col min-h-0">
-                <TabsList className="flex-shrink-0 grid w-full grid-cols-4 sm:grid-cols-8 mb-4 h-auto gap-0.5">
+              <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 mb-4 h-auto gap-0.5">
                   <TabsTrigger value="opd" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <ClipboardList className="h-3 w-3 hidden sm:block" />
                     <span>OPD</span>
@@ -2834,7 +2834,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 </TabsContent>
 
                 {/* IPD History Section */}
-                <TabsContent value="ipd" className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
+                <TabsContent value="ipd" className="space-y-3">
                   {/* IPD Admission Cards */}
                   {longitudinalProfile.ipdHistory?.length > 0 && (
                     <Card>
@@ -2888,7 +2888,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       </div>
 
                       <Tabs defaultValue="overview" className="w-full">
-                        <TabsList className="sticky top-0 z-10 flex flex-wrap h-auto gap-0.5 p-1.5 bg-muted/70 backdrop-blur-sm rounded-lg w-full mb-3 border-b border-border pb-3">
+                        <TabsList className="flex flex-wrap h-auto gap-0.5 p-1.5 bg-muted/50 rounded-lg w-full mb-3 border-b border-border pb-3">
                           <TabsTrigger value="overview" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Activity className="h-3.5 w-3.5 shrink-0" />Overview</TabsTrigger>
                           <TabsTrigger value="vitals" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Heart className="h-3.5 w-3.5 shrink-0" />Vitals</TabsTrigger>
                           <TabsTrigger value="allergies" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><AlertTriangle className="h-3.5 w-3.5 shrink-0" />Allergies</TabsTrigger>
