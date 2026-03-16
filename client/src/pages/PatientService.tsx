@@ -2612,7 +2612,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
       {/* Longitudinal Patient Profile Dialog */}
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-        <DialogContent className="max-w-5xl w-[95vw] md:w-full max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-5xl w-[95vw] md:w-full max-h-[92vh] overflow-hidden flex flex-col">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
               <History className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
@@ -2701,7 +2701,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   </TabsTrigger>
                 </TabsList>
                 
-                <ScrollArea className="flex-1 min-h-0 pr-2 sm:pr-4" style={{ height: 'calc(85vh - 180px)', maxHeight: '520px' }}>
+                <ScrollArea className="flex-1 min-h-0 pr-2 sm:pr-4" style={{ height: 'calc(92vh - 200px)' }}>
 
                 {/* OPD History Section */}
                 <TabsContent value="opd" className="space-y-4">
