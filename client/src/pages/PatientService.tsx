@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { OverviewTab } from "@/pages/PatientMonitoringPage";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -53,7 +54,7 @@ import { insertServicePatientSchema, insertMedicalRecordSchema } from "@shared/s
 import type { ServicePatient, MedicalRecord, PatientConsent, Doctor, IdCardScan, CriticalAlert } from "@shared/schema";
 import { z } from "zod";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, AlertCircle, ImageIcon, ExternalLink, ClipboardList, Bed, DollarSign, History, ChevronRight, Wind, LogOut, FlaskConical, Syringe, Heart, Activity, Droplets, FileText, ClipboardCheck, Stethoscope, Users, UserCheck, Scissors } from "lucide-react";
+import { Printer, FileCheck, CreditCard, Camera, ScanLine, AlertTriangle, AlertCircle, ImageIcon, ExternalLink, Bed, DollarSign, History, ChevronRight, Wind, LogOut, FlaskConical, Syringe, Heart, Droplets, ClipboardCheck, UserCheck, Scissors } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 function calculateDays(dateString: string | Date | null | undefined): number {
@@ -2886,8 +2887,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         {profileMonitoringSessions.length > 1 && <Badge variant="outline" className="ml-auto">{profileMonitoringSessions.length} sessions</Badge>}
                       </div>
 
-                      <Tabs defaultValue="vitals" className="w-full">
+                      <Tabs defaultValue="overview" className="w-full">
                         <TabsList className="flex flex-wrap h-auto gap-0.5 p-1.5 bg-muted/50 rounded-lg w-full mb-3 border-b border-border pb-3">
+                          <TabsTrigger value="overview" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Activity className="h-3.5 w-3.5 shrink-0" />Overview</TabsTrigger>
                           <TabsTrigger value="vitals" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Heart className="h-3.5 w-3.5 shrink-0" />Vitals</TabsTrigger>
                           <TabsTrigger value="allergies" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><AlertTriangle className="h-3.5 w-3.5 shrink-0" />Allergies</TabsTrigger>
                           <TabsTrigger value="careplan" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><FileCheck className="h-3.5 w-3.5 shrink-0" />Care Plan</TabsTrigger>
@@ -2907,6 +2909,15 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           <TabsTrigger value="initialassessment" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><ClipboardList className="h-3.5 w-3.5 shrink-0" />Initial Assessment</TabsTrigger>
                           <TabsTrigger value="surgerynotes" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Scissors className="h-3.5 w-3.5 shrink-0" />Surgery Notes</TabsTrigger>
                         </TabsList>
+
+                        {/* Overview Tab */}
+                        <TabsContent value="overview" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                          {profileLatestSession ? (
+                            <OverviewTab session={profileLatestSession} />
+                          ) : (
+                            <p className="text-sm text-muted-foreground text-center py-8">No monitoring session found for this patient.</p>
+                          )}
+                        </TabsContent>
 
                         {/* Vitals Tab */}
                         <TabsContent value="vitals" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2 space-y-3">
