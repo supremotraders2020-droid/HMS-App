@@ -1020,8 +1020,8 @@ export default function PatientMonitoringPage() {
                           `<tr><td>${r._index}</td><td>${formatDate(r.visitDate)}</td><td>${r.visitTime || '-'}</td><td>${r.nameOfDoctor || '-'}</td><td>${r.visitType || '-'}</td><td>${r.procedure || '-'}</td></tr>`
                         )}
 
-                        ${generateTable('DUTY STAFF / NURSE NOTES', ['S.No', 'Shift', 'Staff Name', 'Role', 'Date'], dutyStaff, (r: any) => 
-                          `<tr><td>${r._index}</td><td>${r.shift || '-'}</td><td>${r.staffName || '-'}</td><td>${r.role || '-'}</td><td>${formatDate(r.createdAt)}</td></tr>`
+                        ${generateTable('DUTY STAFF / NURSE NOTES', ['S.No', 'Date & Time', 'Nurse Name', 'Notes', 'Emp No.'], dutyStaff, (r: any) => 
+                          `<tr><td>${r._index}</td><td>${r.shiftStartTime ? formatDate(r.shiftStartTime) : formatDate(r.createdAt)}</td><td>${r.nurseName || '-'}</td><td>${r.nursesNotes || '-'}</td><td>${r.staffSignEmpNo || '-'}</td></tr>`
                         )}
 
                         ${generateTable('INDOOR CONSULTATION SHEET', ['S.No', 'Date', 'Time', 'Doctor', 'Clinical Findings', 'Orders'], indoorConsultation, (r: any) => 
@@ -1584,22 +1584,20 @@ export function OverviewTab({ session }: { session: Session }) {
           <SectionHeader icon={Users} title="Nurse Notes / Duty Staff" count={dutyStaff.length} color="indigo" />
           <CardContent className="p-2">
             {dutyStaff.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead><tr className="border-b"><th className="p-1 text-left">Staff</th><th className="p-1">Role</th><th className="p-1">Shift</th><th className="p-1">Date</th></tr></thead>
-                  <tbody>
-                    {dutyStaff.slice(0, 4).map((r: any, i: number) => (
-                      <tr key={i} className="border-b border-muted/30">
-                        <td className="p-1 font-medium truncate max-w-[100px]">{r.staffName || '-'}</td>
-                        <td className="p-1 text-center">{r.role || '-'}</td>
-                        <td className="p-1 text-center">{r.shift || '-'}</td>
-                        <td className="p-1 text-center">{formatDate(r.createdAt)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-1">
+                {dutyStaff.slice(0, 4).map((r: any, i: number) => (
+                  <div key={i} className="text-xs border-b border-muted/30 pb-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{r.nurseName || r.staffSignEmpNo || '—'}</span>
+                      <span className="text-muted-foreground">{r.shiftStartTime ? formatDate(r.shiftStartTime) : formatDate(r.createdAt)}</span>
+                    </div>
+                    {r.nursesNotes && <p className="text-muted-foreground truncate mt-0.5">{r.nursesNotes}</p>}
+                    {r.shift && <span className="text-[10px] text-muted-foreground">{r.shift}</span>}
+                  </div>
+                ))}
+                {dutyStaff.length > 4 && <p className="text-[10px] text-muted-foreground text-center">+{dutyStaff.length - 4} more</p>}
               </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No duty staff assigned</p>}
+            ) : <p className="text-xs text-muted-foreground text-center py-2">No nurse notes recorded</p>}
           </CardContent>
         </Card>
 
@@ -1609,8 +1607,25 @@ export function OverviewTab({ session }: { session: Session }) {
             {nursingAssessment ? (
               <div className="text-xs space-y-1">
                 <div><span className="font-medium">Diagnosis:</span> {nursingAssessment.provisionalDiagnosis || '-'}</div>
-                <div><span className="font-medium">Patient History:</span> {nursingAssessment.patientHistory || '-'}</div>
-                <div><span className="font-medium">Fall Risk:</span> {nursingAssessment.morseFallRiskScore || '-'}</div>
+                <div>
+                  <span className="font-medium">Patient History:</span>{' '}
+                  {(() => {
+                    const ph = nursingAssessment.patientHistory;
+                    if (!ph) return '-';
+                    try {
+                      const obj = typeof ph === 'string' ? JSON.parse(ph) : ph;
+                      if (typeof obj === 'object' && obj !== null) {
+                        const positives = Object.entries(obj).filter(([, v]) => v && v !== 'No' && v !== 'false' && v !== false);
+                        return positives.length > 0
+                          ? positives.map(([k, v]) => `${k}: ${v}`).join(', ')
+                          : 'No significant history';
+                      }
+                    } catch { /* not JSON */ }
+                    return ph;
+                  })()}
+                </div>
+                <div><span className="font-medium">Fall Risk Score:</span> {nursingAssessment.morseFallRiskScore || '-'}</div>
+                {nursingAssessment.chiefComplaints && <div><span className="font-medium">Complaints:</span> {nursingAssessment.chiefComplaints}</div>}
               </div>
             ) : <p className="text-xs text-muted-foreground text-center py-2">No assessment recorded</p>}
           </CardContent>
@@ -3819,11 +3834,17 @@ export function DutyStaffTab({ session }: { session: Session }) {
   const [form, setForm] = useState({ 
     dateTime: new Date().toISOString().slice(0, 16), 
     nursesNotes: "", 
-    staffSignEmpNo: "" 
+    staffSignEmpNo: "",
+    nurseId: "",
+    nurseName: ""
   });
 
   const { data: records = [], refetch } = useQuery<any[]>({
     queryKey: [`/api/patient-monitoring/duty-staff/${sessionId}`]
+  });
+
+  const { data: nurses = [] } = useQuery<any[]>({
+    queryKey: ["/api/users/nurses"]
   });
 
   const saveMutation = useMutation({
@@ -3831,7 +3852,7 @@ export function DutyStaffTab({ session }: { session: Session }) {
     onSuccess: () => { 
       refetch(); 
       toast({ title: "Nurse Note Added", description: "Note saved successfully" });
-      setForm({ dateTime: new Date().toISOString().slice(0, 16), nursesNotes: "", staffSignEmpNo: "" });
+      setForm({ dateTime: new Date().toISOString().slice(0, 16), nursesNotes: "", staffSignEmpNo: "", nurseId: "", nurseName: "" });
       setDialogOpen(false);
     },
     onError: () => {
@@ -3843,10 +3864,10 @@ export function DutyStaffTab({ session }: { session: Session }) {
     saveMutation.mutate({ 
       sessionId, 
       shift: "GENERAL",
-      nurseId: "nurse-" + Date.now(),
-      nurseName: form.staffSignEmpNo,
+      nurseId: form.nurseId,
+      nurseName: form.nurseName,
       nursesNotes: form.nursesNotes,
-      staffSignEmpNo: form.staffSignEmpNo,
+      staffSignEmpNo: form.staffSignEmpNo || form.nurseName,
       shiftStartTime: new Date(form.dateTime).toISOString()
     });
   };
@@ -3916,18 +3937,27 @@ export function DutyStaffTab({ session }: { session: Session }) {
               <div><Label>Date & Time</Label>
                 <Input type="datetime-local" value={form.dateTime} onChange={(e) => setForm({...form, dateTime: e.target.value})} />
               </div>
+              <div><Label>Nurse / Staff Name</Label>
+                <Select value={form.nurseId} onValueChange={(v) => {
+                  const nurse = (nurses as any[]).find((n: any) => n.id === v || String(n.id) === v);
+                  setForm({...form, nurseId: String(v), nurseName: nurse?.fullName || nurse?.name || ""});
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Select nurse / staff..." /></SelectTrigger>
+                  <SelectContent>{(nurses as any[]).map((n: any) => <SelectItem key={n.id} value={String(n.id)}>{n.fullName || n.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
               <div><Label>Nurses Notes</Label>
                 <Textarea value={form.nursesNotes} onChange={(e) => setForm({...form, nursesNotes: e.target.value})} rows={5} placeholder="Enter nursing observations, patient status, treatments..." />
               </div>
-              <div><Label>Staff Sign & Emp No.</Label>
-                <Input value={form.staffSignEmpNo} onChange={(e) => setForm({...form, staffSignEmpNo: e.target.value})} placeholder="Nurse name & employee number" />
+              <div><Label>Staff Sign & Emp No. <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input value={form.staffSignEmpNo} onChange={(e) => setForm({...form, staffSignEmpNo: e.target.value})} placeholder="Employee number or signature" />
               </div>
             </div>
             <DialogFooter className="gap-2">
               <DialogClose asChild>
                 <Button variant="outline" type="button">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleSave} disabled={!form.nursesNotes || saveMutation.isPending}>
+              <Button onClick={handleSave} disabled={!form.nursesNotes || !form.nurseId || saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save Note"}
               </Button>
             </DialogFooter>

@@ -1,7 +1,7 @@
 # Gravity AI Manager - Hospital Management System
 
 ## Overview
-Gravity AI Manager is a comprehensive Hospital Management System for Gravity Hospital, offering role-based access for nine distinct user roles. It provides specialized dashboards and workflows to enhance clinical clarity, professional trust, and operational efficiency within a healthcare setting. The system integrates AI for advanced decision-making and features 24 departments with over 4,830 hospital services, including 1,148 pathology tests.
+Gravity AI Manager is a comprehensive Hospital Management System designed for Gravity Hospital. It provides specialized dashboards and workflows for nine distinct user roles, aiming to enhance clinical clarity, professional trust, and operational efficiency. The system integrates AI for advanced decision-making and manages 24 departments offering over 4,830 hospital services, including 1,148 pathology tests. The project's vision is to deliver an AI-powered healthcare management solution that streamlines hospital operations and improves patient care.
 
 ## User Preferences
 - Preferred communication style: Simple, everyday language
@@ -11,56 +11,57 @@ Gravity AI Manager is a comprehensive Hospital Management System for Gravity Hos
 ## System Architecture
 
 ### UI/UX Decisions
-The system adheres to Material Design 3 principles adapted for healthcare, supporting light/dark modes and multiple theme color systems (Healthcare Blue, Medical Teal, Clinical Green, Warm Coral, Purple, Indigo). Role-based UI filtering ensures relevant information and actions are displayed to each user.
+The system follows Material Design 3 principles, adapted for healthcare, with support for light/dark modes and multiple theme color systems (Healthcare Blue, Medical Teal, Clinical Green, Warm Coral, Purple, Indigo). Role-based UI filtering ensures users see only relevant information and actions.
 
 ### Technical Implementations
-The frontend is built with React 18 and TypeScript, using Radix UI and shadcn/ui for accessible components, Tailwind CSS for styling, Wouter for routing, TanStack Query v5 for server state, React Hook Form with Zod for validation, Framer Motion for animations, and Lucide React for icons.
+The frontend uses React 18 with TypeScript, Radix UI and shadcn/ui for components, Tailwind CSS for styling, Wouter for routing, TanStack Query v5 for server state management, React Hook Form with Zod for validation, Framer Motion for animations, and Lucide React for icons.
 
-The backend uses Node.js with Express, Drizzle ORM for type-safe database interactions, PostgreSQL (Neon) as the serverless database, bcrypt for password hashing, Express Sessions for authentication, and WebSockets for real-time notifications. OpenAI GPT-4o is integrated for AI services.
+The backend is built with Node.js and Express, utilizing Drizzle ORM for type-safe database interactions, PostgreSQL (Neon) as the serverless database, bcrypt for password hashing, Express Sessions for authentication, and WebSockets for real-time notifications. OpenAI GPT-4o is integrated for AI services.
 
 ### Feature Specifications
-Gravity AI Manager encompasses 23 core modules with robust role-based access control (RBAC) for SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE, and TECHNICIAN roles. Key features include:
-- **Authentication & RBAC**: Session-based authentication, daily Doctor Oath, and role-based UI filtering.
-- **OPD Service & Smart OPD Consultation**: Doctor scheduling, appointment booking, Google Maps integration, department-specific clinical workflows (24 departments), symptom-driven forms, auto-observations, and intelligent test/referral suggestions using a flow logic rule engine.
-- **Patient Management**: Demographics, admission, medical records, insurance, tracking, and NABH-compliant ICU Chart & Nursing Workflow (24-hour data collection, shift-based logging, critical alerts).
-- **Inventory Service**: Stock management with alerts for disposables, medicines, and equipment.
+Gravity AI Manager includes 23 core modules with robust role-based access control (RBAC) for SUPER_ADMIN, ADMIN, DOCTOR, NURSE, OPD_MANAGER, PATIENT, PATHOLOGY_LAB, MEDICAL_STORE, and TECHNICIAN roles. Key features include:
+- **Authentication & RBAC**: Session-based authentication and role-based UI filtering.
+- **OPD Service & Smart OPD Consultation**: Doctor scheduling, appointment booking, Google Maps integration, department-specific clinical workflows, symptom-driven forms, auto-observations, and intelligent test/referral suggestions using a flow logic rule engine.
+- **Patient Management**: Demographics, admission, medical records, insurance, tracking, and NABH-compliant ICU Chart & Nursing Workflow.
+- **Inventory Service**: Stock management with alerts.
 - **Biometric Service**: Fingerprint/facial recognition with AES-256 encryption and HIPAA compliance.
 - **Equipment Servicing**: Asset inventory, maintenance scheduling, and AMC management.
-- **Bed Management**: NABH-compliant centralized control, automated allocation, transfer logs, and discharge workflows.
-- **Notification Service**: Multi-channel (Push, Email, SMS, WhatsApp) and multi-priority notifications with real-time delivery.
+- **Bed Management**: NABH-compliant centralized control, automated allocation, and discharge workflows.
+- **Notification Service**: Multi-channel (Push, Email, SMS, WhatsApp) and multi-priority notifications.
 - **Chatbot Service**: OpenAI GPT-powered for context-aware information.
-- **Biomedical Waste Management (BMW)**: CPCB-compliant tracking (Yellow, Red, White, Blue categories).
+- **Biomedical Waste Management (BMW)**: CPCB-compliant tracking.
 - **Oxygen Tracking System**: NABH-compliant cylinder management and consumption tracking.
 - **Consent Forms Management**: 14 trilingual templates with version tracking.
 - **Prescription Management**: Comprehensive workflow with auto-generated medication schedules.
 - **Medicine Database**: Searchable database of Indian medicines.
-- **OT & ICU Swab Contamination Monitoring**: NABH-compliant environmental surveillance with auto-interpretation.
+- **OT & ICU Swab Contamination Monitoring**: NABH-compliant environmental surveillance.
 - **Disease Knowledge, Diet & Medication Scheduling**: AI-powered clinical knowledge, Indian diet plans, and personalized medication schedules using OpenAI GPT-4o, adhering to ICMR/MoHFW guidelines.
 - **AI Intelligence Layer**: Hospital-wide analytics and predictions (Doctor/Nurse/OPD efficiency, Hospital Health Index, Compliance Risk, ICU load, oxygen demand) using AI Analytics Snapshots and Anomaly Detection.
-- **Medical Store Integration**: Prescription sharing, dispensing workflow, billing with GST, and audit logging.
-- **Pathology Lab Service**: Test order management, sample collection (barcode tracking), result entry, report generation, quality control, lab inventory, and walk-in patient report generation.
-- **Face Recognition Identity Verification**: Privacy-compliant biometric verification for patient identification and staff attendance using browser-based face detection (face-api.js).
+- **Medical Store Integration**: Prescription sharing, dispensing, billing with GST, and audit logging.
+- **Pathology Lab Service**: Test order management, sample collection (barcode tracking), result entry, and report generation.
+- **Face Recognition Identity Verification**: Privacy-compliant biometric verification for patient identification and staff attendance.
 - **Hospital Services Module**: Catalog of 4,830+ services across 24 departments.
-- **Super Admin Portal**: Enterprise-level control for system settings, user/role management, billing finalization, stock control, surgery/hospital packages, claims management, and audit logs.
+- **Super Admin Portal**: Enterprise-level control for system settings, user/role management, billing, stock control, packages, claims, and audit logs.
 - **ID Card Scanning & Alert System**: Dual-mode patient registration via ID card scanning with critical alert generation.
 - **Nurse Department Preferences**: Nurses select 3 unique department preferences for scheduling.
-- **Technician Portal**: Dedicated portal for diagnostic technicians for pending tests, report uploads (PDF/DICOM), and notifications.
+- **Technician Portal**: Dedicated portal for diagnostic technicians for pending tests, report uploads, and notifications.
 
 ### System Design Choices
 - **Role-Based Access Control**: Strict hierarchical permissions across all modules.
-- **Session-Based Authentication**: Secure user sessions managed via Express Sessions.
+- **Session-Based Authentication**: Secure user sessions.
 - **Real-time Capabilities**: WebSockets for instant notifications and data updates.
 - **Microservice-like Architecture**: Logical separation of concerns.
 - **Database Schema**: Extensive schema with over 60 tables.
 - **Scalability**: Utilizes serverless PostgreSQL (Neon) and a robust Node.js backend.
 - **Security & Data Isolation**: Patient data isolation, staff authentication via `staff_master` table, and comprehensive audit trails.
+- **Critical Architecture Note**: All `staff_master` operations (CRUD) must use `databaseStorage.*` functions for persistence, as `storage.*` is in-memory. Login validation for specific roles also depends on an "ACTIVE" `staff_master` entry.
 
 ## External Dependencies
 
 ### Database
 - **Neon Database**: Serverless PostgreSQL.
 - **Drizzle ORM**: Type-safe ORM for PostgreSQL.
-- **@neondatabase/serverless**: Enables WebSocket connection pooling for database access.
+- **@neondatabase/serverless**: For WebSocket connection pooling to the database.
 
 ### UI/Styling
 - **Radix UI**: Unstyled, accessible components.
@@ -76,85 +77,3 @@ Gravity AI Manager encompasses 23 core modules with robust role-based access con
 
 ### AI Integration
 - **OpenAI API**: Utilized for GPT-4o for chatbot, health tips, and personalized care plans.
-
-## Recent Enhancements (March 2026)
-
-### IPD Monitoring Tab Data Field Fixes (March 16, 2026)
-- **All 13 IPD sub-tabs now use exact schema field names**: Diabetic (`bloodSugarLevel`, `recordedTime`, `alertType`), Nursing Notes (`observation`, `actionTaken`, `noteTime`, `shift`, `eventType`), Care Plan (`provisionalDiagnosis`, `carePlanDetails`, `treatmentAdvised`, `investigationsAdvised`, `treatingConsultantName`, `planDate`), Oxygen (`hourSlot`, `oxygenLiter`, `spo2`), Ventilator (`ventilationMode`, `setTidalVolume`, `respiratoryRateSet`, `peepCpap`, `fio2`, `peakAirwayPressure`, `recordedAt`), Inotropes (`drugName`, `dose`, `rate`, `startTime`), Drug Chart MAR (`drugName`, `actualGivenTime`, `scheduledTime`, uppercase `status`), Tests (`testName`, `testType`, `doctorName`, `createdAt`, uppercase `status`)
-- **DB verified**: For Prachi Deshmukh — vitals (5), intake (3), output (1), allergies (1), diabetic (3), inotropes (8), tests (2), care plan (1), oxygen (1), investigation (1) all displaying correctly via tracking ID
-
-### Patient Monitoring ID Fix — PatientService & PatientBarcodePage (March 16, 2026)
-- **Root cause fixed**: `patient_monitoring_sessions.patient_id` stores TRACKING patient ID (from `tracking_patients` table), NOT the service/barcode patient ID
-- **PatientService.tsx**: `profilePatientId` now resolves via name matching against `allTrackingPatients` instead of using `selectedProfilePatient?.id` (service ID)
-- **PatientBarcodePage.tsx**: `scannedPatientId` now resolves via name matching against `allTrackingPatients` instead of using `selectedBarcode?.patientId` (barcode/service ID)
-- **Verified**: Using service ID gave 0 sessions; using tracking ID gives 1 session (and all 13 monitoring sub-tabs load data correctly)
-
-### Patient Movement History Real-Time Sync (March 14, 2026)
-- **Three-Page History Linked**: Patient Tracking, Patient Service, and Patient Barcode all share the same TanStack Query cache key `["/api/tracking/patients", patientId, "movements"]` — a transfer in one page instantly propagates to all
-- **Timeline Added to Barcode Page**: `PatientMovementTimeline` component added to Patient Barcode History tab (was missing)
-- **Faster Refresh**: All movement queries now use `refetchInterval: 10000` (was 30s), `staleTime: 0`, `refetchOnWindowFocus: true`
-
-### Bed Management Restructure (March 14, 2026)
-- **Removed**: "Standard" (STD-01) and "Semi Special Room AC" (SSR-01) wards
-- **Added**: "Casualty" ward — 1 bed (CAS-01), Ground Floor, Emergency, oxygen-capable
-- **General Ward (F)**: 10 beds → **7 beds** (GF-01 to GF-07)
-- **General Ward (M)**: 10 beds → **8 beds** (GM-01 to GM-08)
-- **Total active beds**: 22 across 9 wards
-- New bed category: `cat-casualty` (code: CAS)
-
-### Bug Fixes (March 14, 2026)
-- **Available Rooms Dropdown (Admit Patient)**: Fixed `occupancyStatus` case mismatch — seed inserted lowercase `"available"` but API queried uppercase `"AVAILABLE"`; all 22 beds and seed code corrected to uppercase
-- **Output Recording (Patient Monitoring)**: Fixed "Failed to save output" error — `vomitus` and `stool` (text fields) caused `hourlyTotal` to be computed as a string via JS concatenation; route now wraps all values with `Number()` before summing
-
-## Recent Enhancements (January 2026)
-
-### OPD Scheduling Improvements
-- **Schedule-Based Availability**: Doctor cards display real-time slot availability based on schedule configuration
-- **Smart Display Logic**: When doctors have clinic hours, shows "X available, Y booked / Z total"; when no schedule exists for a date, shows "No clinic hours for this date (Available: [scheduled days])"
-- **Doctor Identity Mapping**: Reliable `doctorTableId` mapping between `doctors` and `users` tables eliminates name-matching issues
-- **Conditional Slot Panel**: Time slots only display when doctor has active schedule for selected date
-
-### Technician Portal Workflow Isolation
-- **Source-Based Test Filtering**: Technician Portal exclusively receives tests from Patient Monitoring module
-- **Clear Workflow Separation**: Tests from Prescription Management route to Medical Store, not Technician Portal
-- **Notification Isolation**: Technician notifications only triggered for Patient Monitoring test orders
-
-### Dashboard Real-Time Statistics
-- **Active Patients Card**: Shows actual count from `tracking_patients` table
-- **Critical Alerts Card**: Displays real-time critical alert count from `/api/critical-alerts`
-- **Data Consistency**: All dashboard stat cards use correct data sources
-
-### Smart OPD Flow Engine
-- **24 Department-Specific Workflows**: Each department has customized consultation flow
-- **Symptom-Driven Forms**: Auto-generated observations based on symptom selection
-- **Intelligent Suggestions**: Rule-based test and referral recommendations
-
-### ICU Patient Monitoring
-- **27 Monitoring Data Tables**: Comprehensive critical care tracking
-- **NABH Compliance**: 24-hour data collection with shift-based logging
-- **Critical Value Alerts**: Auto-escalation for abnormal values
-- **Technician Integration**: Diagnostic test orders from Patient Monitoring route to Technician Portal
-
-### IPD Investigation Chart (January 16, 2026)
-- **Comprehensive Investigation Tab**: New tab in Patient Monitoring after Allergies
-- **50+ Investigation Fields**: Blood screening, Haematology, Renal/Liver Function, Cardiac Enzymes, Lipid Profile, Other Tests
-- **Imaging & Diagnostics**: ECG, Echo, USG, Doppler, X-Rays, CT/MRI, Histopathology, Fluid Analysis
-- **Date-Based Entries**: Each entry includes date and nurse attribution
-
-### ICU Allergy & Precautions Add Form (January 16, 2026)
-- **Add Allergy Button**: Appears when no allergy data exists
-- **Allergy Fields**: Drug Allergies, Food Allergies, Isolation Precautions
-- **Risk Flags**: Fall Risk, Pressure Ulcer Risk checkboxes
-
-## Critical Architecture Note (March 2026)
-- **ALWAYS use `databaseStorage.*` for staff_master operations** (not `storage.*` which is in-memory and empty in production)
-- `databaseStorage.getStaffMasterByUserId()`, `databaseStorage.getStaffMasterByEmail()`, `databaseStorage.getStaffMasterByEmployeeCode()`, `databaseStorage.updateStaffMaster()`, `databaseStorage.createStaffMaster()`, `databaseStorage.deleteStaffMaster()`, `databaseStorage.getAllStaffMaster()` — all staff_master CRUD must go through databaseStorage
-- The login route uses `databaseStorage` for staff_master validation (DOCTOR/NURSE/OPD_MANAGER/TECHNICIAN/PATHOLOGY_LAB/MEDICAL_STORE roles require an ACTIVE staff_master entry; SUPER_ADMIN, ADMIN, PATIENT are exempt)
-- Status field in staff_master must be uppercase "ACTIVE" (not lowercase)
-
-## Documentation Updates (January 2026)
-- **docs/RECENT_UPDATES.md**: Comprehensive changelog for all recent changes
-- **docs/TECHNICIAN_SOP.md**: New SOP for Technician role with workflow isolation details
-- **docs/SUPER_ADMIN_SOP.md**: Enterprise control documentation for Super Admin
-- **Updated SOPs**: OPD_MANAGER_SOP.md, ADMIN_SOP.md, DOCTOR_SOP.md updated with January 2026 changes
-- **docs/PROJECT_DOCUMENTATION.md**: Updated with architecture changes and new features
