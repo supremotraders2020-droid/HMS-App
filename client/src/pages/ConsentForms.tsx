@@ -673,11 +673,11 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
                       <span>{template.languages}</span>
                     </div>
 
-                    <div className="flex gap-2 pt-2">
+                    <div className="grid grid-cols-2 gap-2 pt-2">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1" 
+                        className="w-full" 
                         onClick={() => handleView(template)}
                         data-testid={`button-view-${template.id}`}
                       >
@@ -687,7 +687,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1"
+                        className="w-full"
                         onClick={() => handleSave(template)}
                         disabled={savingTemplateId === template.id}
                         data-testid={`button-save-${template.id}`}
@@ -698,7 +698,7 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1" 
+                        className="w-full" 
                         onClick={() => handleDownload(template)}
                         data-testid={`button-download-${template.id}`}
                       >
@@ -708,10 +708,12 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
                       <Button 
                         variant="outline" 
                         size="sm"
+                        className="w-full"
                         onClick={() => handlePrint(template)}
                         data-testid={`button-print-${template.id}`}
                       >
-                        <Printer className="h-4 w-4" />
+                        <Printer className="h-4 w-4 mr-1" />
+                        Print
                       </Button>
                     </div>
                   </CardContent>
