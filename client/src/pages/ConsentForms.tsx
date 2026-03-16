@@ -32,7 +32,8 @@ import {
   Bed,
   ShieldCheck,
   LogOut,
-  CheckCircle2
+  CheckCircle2,
+  Save
 } from "lucide-react";
 
 interface UserInfo {
@@ -107,6 +108,9 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
   // Persist edits after dialog close so card Download/Print can use them
   const [savedEditedHtml, setSavedEditedHtml] = useState<string | null>(null);
   const [savedEditedTemplateId, setSavedEditedTemplateId] = useState<string | null>(null);
+
+  // Track which template is currently being saved
+  const [savingTemplateId, setSavingTemplateId] = useState<string | null>(null);
 
   // Write HTML directly into iframe document so contentDocument is always accessible
   useEffect(() => {
@@ -309,6 +313,72 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
       toast({ title: "Download started", description: `Consent form for ${selectedPatient?.firstName} ${selectedPatient?.lastName}` });
     } catch {
       toast({ title: "Failed to download file", variant: "destructive" });
+    }
+  };
+
+  // Card-level Save — saves consent to patient's digital record
+  const handleSave = async (template: ConsentTemplate) => {
+    if (!selectedPatientId || selectedPatientId === 'none') {
+      toast({ 
+        title: "Please select a patient", 
+        description: "You must select a patient before saving a consent form.",
+        variant: "destructive" 
+      });
+      return;
+    }
+    setSavingTemplateId(template.id);
+    try {
+      // Get HTML — from live iframe if open, saved edits if available, or fetch fresh
+      let consentHtml: string;
+      if (viewDialogOpen && viewTemplate?.id === template.id) {
+        consentHtml = getCurrentHtml();
+      } else if (savedEditedTemplateId === template.id && savedEditedHtml) {
+        consentHtml = savedEditedHtml;
+      } else {
+        const response = await fetch(getPersonalizedPdfUrl(template, selectedPatientId), {
+          headers: { 'x-user-id': currentUser.id, 'x-user-role': currentUser.role },
+        });
+        if (!response.ok) throw new Error('Failed to load form');
+        consentHtml = await response.text();
+      }
+
+      const patient = selectedPatient;
+      const age = patient?.dateOfBirth
+        ? Math.floor((Date.now() - new Date(patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+        : null;
+
+      const saveRes = await fetch('/api/digital-consents', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': currentUser.id,
+          'x-user-role': currentUser.role,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          patientId: selectedPatientId,
+          patientName: patient ? `${patient.firstName} ${patient.lastName}` : selectedPatientId,
+          patientUhid: null,
+          patientAge: age,
+          patientGender: patient?.gender || null,
+          consentType: template.consentType,
+          consentTitle: template.title,
+          language: template.languages || 'English',
+          consentContent: consentHtml,
+          createdBy: currentUser.name || currentUser.username,
+        }),
+      });
+
+      if (!saveRes.ok) throw new Error('Failed to save');
+
+      toast({ 
+        title: "Consent form saved", 
+        description: `"${template.title}" saved to ${patient ? `${patient.firstName} ${patient.lastName}'s` : "patient's"} record.`,
+      });
+    } catch {
+      toast({ title: "Failed to save consent form", variant: "destructive" });
+    } finally {
+      setSavingTemplateId(null);
     }
   };
 
@@ -613,6 +683,17 @@ export default function ConsentForms({ currentUser }: ConsentFormsProps) {
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         View
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleSave(template)}
+                        disabled={savingTemplateId === template.id}
+                        data-testid={`button-save-${template.id}`}
+                      >
+                        <Save className="h-4 w-4 mr-1" />
+                        {savingTemplateId === template.id ? "Saving..." : "Save"}
                       </Button>
                       <Button 
                         variant="outline" 
