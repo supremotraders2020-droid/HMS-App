@@ -19,7 +19,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   Scissors, Plus, Search, Calendar as CalendarIcon, Clock, User, 
   FileText, ClipboardList, CheckCircle, AlertCircle, Activity,
-  Users, ChevronRight, ArrowLeft, Stethoscope, Printer, Heart
+  Users, ChevronRight, ArrowLeft, Stethoscope, Printer, Heart,
+  Eye, Save, RefreshCw, ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -750,10 +751,227 @@ function PhaseIndicator({ label, status, active, onClick }: { label: string; sta
   );
 }
 
+function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
+  patientId: string;
+  patientName: string;
+  consentKind: "surgery" | "anaesthesia";
+  caseData: any;
+}) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [viewHtml, setViewHtml] = useState<string | null>(null);
+
+  const isSurgical = consentKind === "surgery";
+
+  const uhid = caseData?.uhid || "";
+
+  const { data: allConsents = [], isLoading: loadingConsents } = useQuery<any[]>({
+    queryKey: ["/api/digital-consents/patient", patientId, uhid, patientName],
+    queryFn: async () => {
+      if (!patientId && !uhid && !patientName) return [];
+      const params = new URLSearchParams();
+      if (uhid) params.set("uhid", uhid);
+      if (patientName) params.set("name", patientName);
+      const res = await fetch(
+        `/api/digital-consents/patient/${patientId || "unknown"}?${params.toString()}`,
+        { credentials: "include" }
+      );
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!(patientId || uhid || patientName),
+  });
+
+  const { data: templates = [] } = useQuery<any[]>({
+    queryKey: ["/api/consent-templates"],
+  });
+
+  const relevantConsents = allConsents.filter((c: any) => {
+    const type = (c.consentType || "").toLowerCase();
+    const title = (c.consentTitle || "").toLowerCase();
+    if (isSurgical) {
+      return type.includes("surgical") || title.includes("surgical") || title.includes("surgery") || title.includes("operation");
+    } else {
+      return type.includes("anaesthesia") || type.includes("anesthesia") || title.includes("anaesthesia") || title.includes("anesthesia");
+    }
+  });
+
+  const availableTemplates = templates.filter((t: any) => {
+    if (isSurgical) {
+      return t.consentType === "Surgical & Procedural" || (t.title || "").toLowerCase().includes("surgical");
+    } else {
+      return (t.title || "").toLowerCase().includes("anaesthesia") ||
+             (t.title || "").toLowerCase().includes("anesthesia") ||
+             (t.consentType || "").toLowerCase().includes("anaesthesia");
+    }
+  });
+
+  const saveConsentMutation = useMutation({
+    mutationFn: async () => {
+      const template = templates.find((t: any) => t.id === selectedTemplateId);
+      if (!template) throw new Error("No template selected");
+      const payload = {
+        patientId,
+        patientName,
+        patientUhid: caseData?.uhid || "",
+        consentType: template.consentType || (isSurgical ? "Surgical & Procedural" : "Anaesthesia"),
+        consentTitle: template.title,
+        language: "English",
+        doctorName: caseData?.surgeonName || caseData?.doctorName || "",
+      };
+      return apiRequest("POST", "/api/digital-consents", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/digital-consents/patient", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ot-cases", caseData?.id, "full"] });
+      toast({ title: "Consent Saved", description: "The consent form has been recorded for this patient." });
+      setSelectedTemplateId("");
+    },
+    onError: () => {
+      toast({ title: "Save Failed", description: "Could not save consent. Please try again.", variant: "destructive" });
+    },
+  });
+
+  const handleView = async (templateId: string) => {
+    try {
+      const url = `/api/consent-templates/${templateId}/render?patientId=${patientId}`;
+      const res = await fetch(url, { credentials: "include" });
+      if (res.ok) {
+        const html = await res.text();
+        setViewHtml(html);
+      }
+    } catch {
+      toast({ title: "Error", description: "Could not load consent preview.", variant: "destructive" });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {loadingConsents ? (
+        <div className="flex items-center gap-2 py-4 text-muted-foreground text-sm">
+          <RefreshCw className="h-4 w-4 animate-spin" /> Loading saved consents…
+        </div>
+      ) : relevantConsents.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">Saved Consent Records</p>
+          {relevantConsents.map((c: any) => (
+            <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 gap-2">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{c.consentTitle}</p>
+                <p className="text-xs text-muted-foreground">
+                  {c.signedAt ? format(new Date(c.signedAt), "dd MMM yyyy, hh:mm a") : format(new Date(c.createdAt), "dd MMM yyyy")}
+                  {c.doctorName && ` · Dr. ${c.doctorName}`}
+                </p>
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <Button size="sm" variant="outline" onClick={() => handleView(c.templateId || c.id)}>
+                  <Eye className="h-3.5 w-3.5 mr-1" /> View
+                </Button>
+                <Button size="sm" variant="ghost" asChild>
+                  <Link href="/consent-forms"><ExternalLink className="h-3.5 w-3.5" /></Link>
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground text-sm">
+          No {isSurgical ? "surgical" : "anaesthesia"} consent on file for this patient.
+        </div>
+      )}
+
+      {viewHtml && (
+        <div className="border rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2 bg-muted border-b">
+            <span className="text-sm font-medium">Consent Preview</span>
+            <Button size="sm" variant="ghost" onClick={() => setViewHtml(null)}>Close</Button>
+          </div>
+          <div className="max-h-64 overflow-y-auto p-3 text-sm" dangerouslySetInnerHTML={{ __html: viewHtml }} />
+        </div>
+      )}
+
+      <div className="border-t pt-4 space-y-3">
+        <p className="text-sm font-medium">Record New {isSurgical ? "Surgical" : "Anaesthesia"} Consent</p>
+        <div className="flex gap-2">
+          <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+            <SelectTrigger className="flex-1 text-sm">
+              <SelectValue placeholder={`Select ${isSurgical ? "surgical" : "anaesthesia"} template…`} />
+            </SelectTrigger>
+            <SelectContent>
+              {availableTemplates.map((t: any) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            size="sm"
+            onClick={() => saveConsentMutation.mutate()}
+            disabled={!selectedTemplateId || saveConsentMutation.isPending}
+          >
+            <Save className="h-3.5 w-3.5 mr-1" />
+            {saveConsentMutation.isPending ? "Saving…" : "Save"}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Patient: <span className="font-medium">{patientName}</span> · 
+          UHID: <span className="font-medium">{caseData?.uhid || "—"}</span>
+        </p>
+        <div className="flex items-center gap-2">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground">or</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+        <Button variant="outline" className="w-full" size="sm" asChild>
+          <Link href="/consent-forms">
+            <ExternalLink className="h-3.5 w-3.5 mr-2" />
+            Open Full Consent Forms Module
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function PreOpPhase({ caseId, data, consents, caseData }: { caseId: string; data: any; consents: any; caseData: any }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeForm, setActiveForm] = useState<string | null>(null);
+
+  const patientId: string = caseData?.patientId || "";
+  const patientName: string = caseData?.patientName || "";
+  const patientUhid: string = caseData?.uhid || "";
+
+  const { data: patientDigitalConsents = [] } = useQuery<any[]>({
+    queryKey: ["/api/digital-consents/patient", patientId, patientUhid, patientName],
+    queryFn: async () => {
+      if (!patientId && !patientUhid && !patientName) return [];
+      const params = new URLSearchParams();
+      if (patientUhid) params.set("uhid", patientUhid);
+      if (patientName) params.set("name", patientName);
+      const res = await fetch(
+        `/api/digital-consents/patient/${patientId || "unknown"}?${params.toString()}`,
+        { credentials: "include" }
+      );
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!(patientId || patientUhid || patientName),
+  });
+
+  const hasSurgicalConsent = patientDigitalConsents.some((c: any) => {
+    const type = (c.consentType || "").toLowerCase();
+    const title = (c.consentTitle || "").toLowerCase();
+    return type.includes("surgical") || title.includes("surgical") || title.includes("surgery") || title.includes("operation");
+  });
+
+  const hasAnaesthesiaConsent = patientDigitalConsents.some((c: any) => {
+    const type = (c.consentType || "").toLowerCase();
+    const title = (c.consentTitle || "").toLowerCase();
+    return type.includes("anaesthesia") || type.includes("anesthesia") || title.includes("anaesthesia") || title.includes("anesthesia");
+  });
 
   const { data: counselling } = useQuery({
     queryKey: ["/api/ot-cases", caseId, "preop-counselling"],
@@ -840,8 +1058,8 @@ function PreOpPhase({ caseId, data, consents, caseData }: { caseId: string; data
     { key: "checklist", title: "Pre-Op Checklist", icon: <ClipboardList className="h-4 w-4" />, done: !!data?.checklist },
     { key: "pae", title: "Pre-Anaesthetic Evaluation", icon: <Stethoscope className="h-4 w-4" />, done: !!data?.pae },
     { key: "safety", title: "Safety Checklist (WHO)", icon: <CheckCircle className="h-4 w-4" />, done: !!data?.safetyChecklist },
-    { key: "consent_surgery", title: "Surgical Consent", icon: <FileText className="h-4 w-4" />, done: !!consents?.surgery },
-    { key: "consent_anaesthesia", title: "Anaesthesia Consent", icon: <FileText className="h-4 w-4" />, done: !!consents?.anaesthesia },
+    { key: "consent_surgery", title: "Surgical Consent", icon: <FileText className="h-4 w-4" />, done: hasSurgicalConsent || !!consents?.surgery },
+    { key: "consent_anaesthesia", title: "Anaesthesia Consent", icon: <FileText className="h-4 w-4" />, done: hasAnaesthesiaConsent || !!consents?.anaesthesia },
   ];
 
   return (
@@ -906,18 +1124,21 @@ function PreOpPhase({ caseId, data, consents, caseData }: { caseId: string; data
                     caseData={caseData}
                   />
                 )}
-                {(section.key === "consent_surgery" || section.key === "consent_anaesthesia") && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Consent forms are managed through the Consent Forms module.
-                    <Link href="/consent-forms">
-                      <Button 
-                        variant="outline" 
-                        className="mt-4 block mx-auto"
-                      >
-                        Go to Consent Forms
-                      </Button>
-                    </Link>
-                  </div>
+                {section.key === "consent_surgery" && (
+                  <OTConsentPanel
+                    patientId={patientId}
+                    patientName={patientName}
+                    consentKind="surgery"
+                    caseData={caseData}
+                  />
+                )}
+                {section.key === "consent_anaesthesia" && (
+                  <OTConsentPanel
+                    patientId={patientId}
+                    patientName={patientName}
+                    consentKind="anaesthesia"
+                    caseData={caseData}
+                  />
                 )}
               </DialogContent>
             </Dialog>

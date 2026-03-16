@@ -2693,13 +2693,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get digital consents by patient ID
+  // Get digital consents by patient ID (also matches by UHID or name as fallback)
   app.get("/api/digital-consents/patient/:patientId", async (req, res) => {
     try {
+      const { patientId } = req.params;
+      const { uhid, name } = req.query as { uhid?: string; name?: string };
+
+      // Build OR conditions: match by patient_id, or by uhid, or by name
+      const conditions = [eq(signedDigitalConsents.patientId, patientId)];
+      if (uhid) {
+        conditions.push(eq(signedDigitalConsents.patientUhid, uhid));
+      }
+      if (name) {
+        conditions.push(eq(signedDigitalConsents.patientName, name));
+      }
+
       const consents = await db.select().from(signedDigitalConsents)
-        .where(eq(signedDigitalConsents.patientId, req.params.patientId))
+        .where(conditions.length === 1 ? conditions[0] : or(...conditions))
         .orderBy(desc(signedDigitalConsents.createdAt));
-      res.json(consents);
+
+      // Deduplicate by id
+      const seen = new Set<string>();
+      const unique = consents.filter((c) => {
+        if (seen.has(c.id)) return false;
+        seen.add(c.id);
+        return true;
+      });
+
+      res.json(unique);
     } catch (error) {
       console.error("Failed to fetch patient digital consents:", error);
       res.status(500).json({ error: "Failed to fetch patient digital consents" });
