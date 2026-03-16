@@ -2887,10 +2887,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       </div>
 
                       <Tabs defaultValue="vitals" className="w-full">
-                        <div className="relative border-b border-border pb-0 mb-3">
-                          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pb-2">
-                            <TabsList className="inline-flex h-auto items-center gap-0.5 bg-muted/40 p-1 rounded-lg w-max"
-                              style={{ flexWrap: "nowrap" }}>
+                        <div className="overflow-x-auto pb-1 mb-2 border-b border-border">
+                          <TabsList className="inline-flex h-auto gap-0.5 p-1 bg-muted/50 rounded-lg w-max" style={{ flexWrap: "nowrap" }}>
                               <TabsTrigger value="vitals" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Vitals</TabsTrigger>
                               <TabsTrigger value="allergies" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Allergies</TabsTrigger>
                               <TabsTrigger value="careplan" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Care Plan</TabsTrigger>
@@ -2912,8 +2910,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               <TabsTrigger value="indoorconsultation" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Indoor Sheet</TabsTrigger>
                               <TabsTrigger value="initialassessment" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Initial Assessment</TabsTrigger>
                               <TabsTrigger value="surgerynotes" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Surgery Notes</TabsTrigger>
-                            </TabsList>
-                          </div>
+                          </TabsList>
                         </div>
 
                         {/* Vitals Tab */}
