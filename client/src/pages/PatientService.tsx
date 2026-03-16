@@ -617,6 +617,204 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     refetchOnWindowFocus: true,
   });
 
+  // ---- IPD Monitoring queries (for Profile dialog IPD tab) ----
+  const profilePatientId = selectedProfilePatient?.id;
+
+  const { data: profileMonitoringSessions = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/sessions/patient", profilePatientId],
+    queryFn: async () => {
+      if (!profilePatientId) return [];
+      const res = await fetch(`/api/patient-monitoring/sessions/patient/${profilePatientId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profilePatientId && showProfileDialog,
+    refetchInterval: showProfileDialog ? 10000 : false,
+    staleTime: 0,
+  });
+
+  const profileLatestSession = profileMonitoringSessions[0];
+  const profileSessionId = profileLatestSession?.id;
+
+  const { data: profileVitals = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/vitals", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/vitals/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    refetchInterval: showProfileDialog ? 10000 : false,
+    staleTime: 0,
+  });
+
+  const { data: profileIntake = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/intake", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/intake/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    refetchInterval: showProfileDialog ? 10000 : false,
+    staleTime: 0,
+  });
+
+  const { data: profileOutput = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/output", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/output/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    refetchInterval: showProfileDialog ? 10000 : false,
+    staleTime: 0,
+  });
+
+  const { data: profileDiabetic = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/diabetic", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/diabetic/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    refetchInterval: showProfileDialog ? 30000 : false,
+    staleTime: 0,
+  });
+
+  const { data: profileAllergies = null } = useQuery<any>({
+    queryKey: ["/api/patient-monitoring/allergies", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return null;
+      const res = await fetch(`/api/patient-monitoring/allergies/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return Array.isArray(data) ? data[0] || null : data;
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const { data: profileCarePlan = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/care-plan", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/care-plan/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const { data: profileTests = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/sessions", profileSessionId, "tests"],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/sessions/${profileSessionId}/tests`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const { data: profileShiftNotes = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/shift-notes", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/shift-notes/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const { data: profileOxygen = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/oxygen", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/oxygen/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const { data: profileInvestigation = null } = useQuery<any>({
+    queryKey: ["/api/patient-monitoring/sessions", profileSessionId, "investigation-chart"],
+    queryFn: async () => {
+      if (!profileSessionId) return null;
+      const res = await fetch(`/api/patient-monitoring/sessions/${profileSessionId}/investigation-chart`, { credentials: "include" });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return Array.isArray(data) ? data[0] || null : data;
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const { data: profileMAR = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/mar", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/mar/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const { data: profileInotropes = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/inotropes", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/inotropes/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const { data: profileAbgLab = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/abg-lab", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/abg-lab/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const { data: profileVentilator = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/ventilator", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/ventilator/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
+  const profileTotalIntake = profileIntake.reduce((s: number, r: any) => s + (r.hourlyTotal || 0), 0);
+  const profileTotalOutput = profileOutput.reduce((s: number, r: any) => s + (r.hourlyTotal || 0), 0);
+  const profileFluidBalance = profileTotalIntake - profileTotalOutput;
+  const profileLastVital = profileVitals.length > 0 ? profileVitals[profileVitals.length - 1] : null;
+
   // Helper to find barcode for a service patient
   const getPatientBarcode = (patient: ServicePatient) => {
     const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase().trim();
@@ -2524,43 +2722,543 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 </TabsContent>
 
                 {/* IPD History Section */}
-                <TabsContent value="ipd" className="space-y-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Bed className="h-4 w-4 text-green-500" />
-                        IPD Admissions ({longitudinalProfile.ipdHistory?.length || 0})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {longitudinalProfile.ipdHistory?.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">No IPD admissions recorded</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {longitudinalProfile.ipdHistory?.map((admission: any) => (
-                            <div key={admission.id} className="p-3 border rounded-lg">
-                              <div className="flex items-center justify-between mb-2">
+                <TabsContent value="ipd" className="space-y-3">
+                  {/* IPD Admission Cards */}
+                  {longitudinalProfile.ipdHistory?.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Bed className="h-4 w-4 text-green-500" />
+                          IPD Admissions ({longitudinalProfile.ipdHistory.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {longitudinalProfile.ipdHistory.map((admission: any) => (
+                            <div key={admission.id} className="p-3 border rounded-lg text-sm">
+                              <div className="flex items-center justify-between mb-1">
                                 <Badge variant={admission.status === "admitted" ? "default" : "secondary"}>{admission.status}</Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {admission.admissionDate ? new Date(admission.admissionDate).toLocaleDateString() : "N/A"}
-                                </span>
+                                <span className="text-xs text-muted-foreground">{admission.admissionDate ? new Date(admission.admissionDate).toLocaleDateString() : "N/A"}</span>
                               </div>
-                              <p className="text-sm"><strong>Ward/Room:</strong> {admission.room || admission.ward || "N/A"}</p>
-                              <p className="text-sm"><strong>Department:</strong> {admission.department || "N/A"}</p>
-                              <p className="text-sm"><strong>Diagnosis:</strong> {admission.diagnosis || "N/A"}</p>
-                              <p className="text-sm"><strong>Doctor:</strong> {admission.doctor || "N/A"}</p>
-                              {admission.isInIcu && (
-                                <Badge variant="destructive" className="mt-2">ICU Stay: {admission.icuDays || 0} days</Badge>
-                              )}
-                              {admission.dischargeDate && (
-                                <p className="text-sm text-green-600"><strong>Discharged:</strong> {new Date(admission.dischargeDate).toLocaleDateString()}</p>
-                              )}
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
+                                <p><span className="text-muted-foreground">Ward/Room:</span> {admission.room || admission.ward || "N/A"}</p>
+                                <p><span className="text-muted-foreground">Dept:</span> {admission.department || "N/A"}</p>
+                                <p><span className="text-muted-foreground">Diagnosis:</span> {admission.diagnosis || "N/A"}</p>
+                                <p><span className="text-muted-foreground">Doctor:</span> {admission.doctor || "N/A"}</p>
+                              </div>
+                              {admission.isInIcu && <Badge variant="destructive" className="mt-1">ICU Stay: {admission.icuDays || 0} days</Badge>}
+                              {admission.dischargeDate && <p className="text-green-600 mt-1">Discharged: {new Date(admission.dischargeDate).toLocaleDateString()}</p>}
                             </div>
                           ))}
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* IPD Monitoring Data — all sub-tabs from Patient Monitoring */}
+                  {!profileLatestSession ? (
+                    <div className="text-center py-6 text-muted-foreground border rounded-lg">
+                      <ClipboardList className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                      <p className="font-medium text-sm">No IPD monitoring session found</p>
+                      <p className="text-xs mt-1">Monitoring data will appear here once a session is started in Patient Monitoring.</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Session banner */}
+                      <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg text-xs text-muted-foreground">
+                        <Activity className="h-3.5 w-3.5 shrink-0" />
+                        <span>Monitoring session: <strong className="text-foreground">{profileLatestSession.sessionDate}</strong></span>
+                        <span>·</span>
+                        <span>Ward: <strong className="text-foreground">{profileLatestSession.ward} / {profileLatestSession.bedNumber}</strong></span>
+                        <span>·</span>
+                        <span>Dx: <strong className="text-foreground">{profileLatestSession.primaryDiagnosis}</strong></span>
+                        {profileMonitoringSessions.length > 1 && <Badge variant="outline" className="ml-auto">{profileMonitoringSessions.length} sessions</Badge>}
+                      </div>
+
+                      <Tabs defaultValue="vitals" className="w-full">
+                        <div className="overflow-x-auto">
+                          <TabsList className="w-max flex gap-1 h-auto flex-wrap">
+                            <TabsTrigger value="vitals" className="text-[10px] px-2 py-1">Vitals</TabsTrigger>
+                            <TabsTrigger value="allergies" className="text-[10px] px-2 py-1">Allergies</TabsTrigger>
+                            <TabsTrigger value="careplan" className="text-[10px] px-2 py-1">Care Plan</TabsTrigger>
+                            <TabsTrigger value="diabetic" className="text-[10px] px-2 py-1">Diabetic</TabsTrigger>
+                            <TabsTrigger value="intake" className="text-[10px] px-2 py-1">Intake</TabsTrigger>
+                            <TabsTrigger value="output" className="text-[10px] px-2 py-1">Output</TabsTrigger>
+                            <TabsTrigger value="drugchart" className="text-[10px] px-2 py-1">Drug Chart</TabsTrigger>
+                            <TabsTrigger value="tests" className="text-[10px] px-2 py-1">Tests</TabsTrigger>
+                            <TabsTrigger value="nursing" className="text-[10px] px-2 py-1">Nursing Notes</TabsTrigger>
+                            <TabsTrigger value="investigation" className="text-[10px] px-2 py-1">Investigation</TabsTrigger>
+                            <TabsTrigger value="oxygen" className="text-[10px] px-2 py-1">Oxygen</TabsTrigger>
+                            <TabsTrigger value="ventilator" className="text-[10px] px-2 py-1">Ventilator</TabsTrigger>
+                            <TabsTrigger value="inotropes" className="text-[10px] px-2 py-1">Inotropes</TabsTrigger>
+                          </TabsList>
+                        </div>
+
+                        {/* Vitals Tab */}
+                        <TabsContent value="vitals" className="mt-3 space-y-3">
+                          {/* Fluid balance strip */}
+                          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                            <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
+                              <p className="text-muted-foreground">Total Intake</p>
+                              <p className="font-bold text-blue-700 dark:text-blue-300">{profileTotalIntake} mL</p>
+                            </div>
+                            <div className="p-2 bg-orange-50 dark:bg-orange-950/40 rounded-lg">
+                              <p className="text-muted-foreground">Total Output</p>
+                              <p className="font-bold text-orange-700 dark:text-orange-300">{profileTotalOutput} mL</p>
+                            </div>
+                            <div className="p-2 bg-muted/60 rounded-lg">
+                              <p className="text-muted-foreground">Fluid Balance</p>
+                              <p className={`font-bold ${profileFluidBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                                {profileFluidBalance >= 0 ? "+" : ""}{profileFluidBalance} mL
+                              </p>
+                            </div>
+                          </div>
+                          {profileVitals.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No vitals recorded</p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b bg-muted/30">
+                                    <th className="p-1.5 text-left">Time</th>
+                                    <th className="p-1.5 text-center">HR</th>
+                                    <th className="p-1.5 text-center">BP</th>
+                                    <th className="p-1.5 text-center">Temp(°F)</th>
+                                    <th className="p-1.5 text-center">RR</th>
+                                    <th className="p-1.5 text-center">SpO2%</th>
+                                    <th className="p-1.5 text-center">GCS</th>
+                                    <th className="p-1.5 text-center">Secretion</th>
+                                    <th className="p-1.5 text-center">Suction</th>
+                                    <th className="p-1.5 text-center">Urine Tube</th>
+                                    <th className="p-1.5 text-center">Nurse</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {profileVitals.map((v: any) => (
+                                    <tr key={v.id} className="border-b border-muted/30">
+                                      <td className="p-1.5 font-medium">{v.hourSlot}</td>
+                                      <td className="p-1.5 text-center">{v.heartRate || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.systolicBp ? `${v.systolicBp}/${v.diastolicBp || "—"}` : "—"}</td>
+                                      <td className="p-1.5 text-center">{v.temperature || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.respiratoryRate || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.spo2 ? `${v.spo2}%` : "—"}</td>
+                                      <td className="p-1.5 text-center">{v.gcsScore || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.secretion || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.suction || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.urineTube || "—"}</td>
+                                      <td className="p-1.5 text-center text-muted-foreground">{v.nurseName || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Allergies Tab */}
+                        <TabsContent value="allergies" className="mt-3">
+                          {!profileAllergies ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No allergy record</p>
+                          ) : (
+                            <div className="space-y-3 text-sm">
+                              {profileAllergies.drugAllergies && (
+                                <div>
+                                  <p className="font-medium mb-1 text-red-600 dark:text-red-400">Drug Allergies</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {(profileAllergies.drugAllergies.split ? profileAllergies.drugAllergies.split(",") : [profileAllergies.drugAllergies]).map((a: string, i: number) => (
+                                      <Badge key={i} variant="destructive">{a.trim()}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {profileAllergies.foodAllergies && (
+                                <div>
+                                  <p className="font-medium mb-1">Food Allergies</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {(profileAllergies.foodAllergies.split ? profileAllergies.foodAllergies.split(",") : [profileAllergies.foodAllergies]).map((a: string, i: number) => (
+                                      <Badge key={i} variant="outline">{a.trim()}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {profileAllergies.isolationPrecautions && (
+                                <div>
+                                  <p className="font-medium mb-1">Isolation Precautions</p>
+                                  <p className="text-muted-foreground">{profileAllergies.isolationPrecautions}</p>
+                                </div>
+                              )}
+                              <div className="flex gap-4 pt-1">
+                                {profileAllergies.fallRisk && <Badge variant="destructive">Fall Risk</Badge>}
+                                {profileAllergies.pressureUlcerRisk && <Badge variant="destructive">Pressure Ulcer Risk</Badge>}
+                              </div>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Care Plan Tab */}
+                        <TabsContent value="careplan" className="mt-3">
+                          {profileCarePlan.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No care plan recorded</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {profileCarePlan.map((cp: any) => (
+                                <div key={cp.id} className="p-3 border rounded-lg text-sm">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <Badge variant="outline">{cp.date || cp.createdAt ? new Date(cp.createdAt || cp.date).toLocaleDateString() : "—"}</Badge>
+                                    <span className="text-xs text-muted-foreground">{cp.nurseName || cp.createdByName || "—"}</span>
+                                  </div>
+                                  {cp.diagnosis && <p><span className="text-muted-foreground">Diagnosis:</span> {cp.diagnosis}</p>}
+                                  {cp.treatment && <p><span className="text-muted-foreground">Treatment:</span> {cp.treatment}</p>}
+                                  {cp.investigations && <p><span className="text-muted-foreground">Investigations:</span> {cp.investigations}</p>}
+                                  {cp.consultant && <p><span className="text-muted-foreground">Consultant:</span> {cp.consultant}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Diabetic Monitoring Tab */}
+                        <TabsContent value="diabetic" className="mt-3">
+                          {profileDiabetic.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No diabetic monitoring records</p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b bg-muted/30">
+                                    <th className="p-1.5 text-left">Time</th>
+                                    <th className="p-1.5 text-center">BSL (mg/dL)</th>
+                                    <th className="p-1.5 text-center">Insulin Type</th>
+                                    <th className="p-1.5 text-center">Dose (U)</th>
+                                    <th className="p-1.5 text-center">Route</th>
+                                    <th className="p-1.5 text-center">Nurse</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {profileDiabetic.map((d: any) => (
+                                    <tr key={d.id} className="border-b border-muted/30">
+                                      <td className="p-1.5">{d.time || d.hourSlot || d.recordedAt ? new Date(d.recordedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—"}</td>
+                                      <td className="p-1.5 text-center font-medium">{d.bsl || d.bloodGlucose || "—"}</td>
+                                      <td className="p-1.5 text-center">{d.insulinType || "—"}</td>
+                                      <td className="p-1.5 text-center">{d.insulinDose || d.dose || "—"}</td>
+                                      <td className="p-1.5 text-center">{d.route || "—"}</td>
+                                      <td className="p-1.5 text-center text-muted-foreground">{d.nurseName || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Intake Tab */}
+                        <TabsContent value="intake" className="mt-3">
+                          {profileIntake.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No intake records</p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b bg-muted/30">
+                                    <th className="p-1.5 text-left">Time</th>
+                                    <th className="p-1.5 text-center">IV1</th>
+                                    <th className="p-1.5 text-center">IV2</th>
+                                    <th className="p-1.5 text-center">IV3</th>
+                                    <th className="p-1.5 text-center">Oral</th>
+                                    <th className="p-1.5 text-center">NG Tube</th>
+                                    <th className="p-1.5 text-center">Blood</th>
+                                    <th className="p-1.5 text-center">Meds</th>
+                                    <th className="p-1.5 text-center font-semibold">Total(mL)</th>
+                                    <th className="p-1.5 text-center">Nurse</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {profileIntake.map((r: any) => (
+                                    <tr key={r.id} className="border-b border-muted/30">
+                                      <td className="p-1.5">{r.hourSlot}</td>
+                                      <td className="p-1.5 text-center">{r.ivLine1 || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.ivLine2 || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.ivLine3 || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.oral || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.ngTube || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.bloodProducts || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.medications || "—"}</td>
+                                      <td className="p-1.5 text-center font-semibold">{r.hourlyTotal}</td>
+                                      <td className="p-1.5 text-center text-muted-foreground">{r.nurseName || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                                <tfoot>
+                                  <tr className="border-t-2 bg-muted/30">
+                                    <td className="p-1.5 font-bold" colSpan={8}>Total</td>
+                                    <td className="p-1.5 text-center font-bold text-blue-700 dark:text-blue-300">{profileTotalIntake} mL</td>
+                                    <td></td>
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Output Tab */}
+                        <TabsContent value="output" className="mt-3">
+                          {profileOutput.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No output records</p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b bg-muted/30">
+                                    <th className="p-1.5 text-left">Time</th>
+                                    <th className="p-1.5 text-center">Urine(mL)</th>
+                                    <th className="p-1.5 text-center">Drain(mL)</th>
+                                    <th className="p-1.5 text-center">Drain Type</th>
+                                    <th className="p-1.5 text-center">Vomitus</th>
+                                    <th className="p-1.5 text-center">Stool</th>
+                                    <th className="p-1.5 text-center">Other(mL)</th>
+                                    <th className="p-1.5 text-center font-semibold">Total(mL)</th>
+                                    <th className="p-1.5 text-center">Nurse</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {profileOutput.map((r: any) => (
+                                    <tr key={r.id} className="border-b border-muted/30">
+                                      <td className="p-1.5">{r.hourSlot}</td>
+                                      <td className="p-1.5 text-center">{r.urineOutput || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.drainOutput || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.drainType || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.vomitus || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.stool || "—"}</td>
+                                      <td className="p-1.5 text-center">{r.otherLosses || "—"}</td>
+                                      <td className="p-1.5 text-center font-semibold">{r.hourlyTotal}</td>
+                                      <td className="p-1.5 text-center text-muted-foreground">{r.nurseName || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                                <tfoot>
+                                  <tr className="border-t-2 bg-muted/30">
+                                    <td className="p-1.5 font-bold" colSpan={7}>Total</td>
+                                    <td className="p-1.5 text-center font-bold text-orange-700 dark:text-orange-300">{profileTotalOutput} mL</td>
+                                    <td></td>
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Drug Chart / MAR Tab */}
+                        <TabsContent value="drugchart" className="mt-3">
+                          {profileMAR.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No drug chart records</p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b bg-muted/30">
+                                    <th className="p-1.5 text-left">Time</th>
+                                    <th className="p-1.5 text-left">Medicine</th>
+                                    <th className="p-1.5 text-center">Dose</th>
+                                    <th className="p-1.5 text-center">Route</th>
+                                    <th className="p-1.5 text-center">Frequency</th>
+                                    <th className="p-1.5 text-center">Given</th>
+                                    <th className="p-1.5 text-center">Nurse</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {profileMAR.map((m: any) => (
+                                    <tr key={m.id} className="border-b border-muted/30">
+                                      <td className="p-1.5">{m.administeredAt ? new Date(m.administeredAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : m.scheduledTime || "—"}</td>
+                                      <td className="p-1.5 font-medium">{m.medicineName || m.drugName || "—"}</td>
+                                      <td className="p-1.5 text-center">{m.dose || m.dosage || "—"}</td>
+                                      <td className="p-1.5 text-center">{m.route || "—"}</td>
+                                      <td className="p-1.5 text-center">{m.frequency || "—"}</td>
+                                      <td className="p-1.5 text-center">
+                                        <Badge variant={m.status === "given" || m.isGiven ? "default" : "secondary"} className="text-[9px]">
+                                          {m.status || (m.isGiven ? "Given" : "Pending")}
+                                        </Badge>
+                                      </td>
+                                      <td className="p-1.5 text-center text-muted-foreground">{m.nurseName || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Tests Tab */}
+                        <TabsContent value="tests" className="mt-3">
+                          {profileTests.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No tests ordered</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {profileTests.map((t: any) => (
+                                <div key={t.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                                  <div>
+                                    <p className="font-medium">{t.testName || t.name || "—"}</p>
+                                    <p className="text-xs text-muted-foreground">{t.testType || t.category || "—"} · {t.orderedBy || t.orderedByName || "—"}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <Badge variant={t.status === "completed" ? "default" : t.status === "pending" ? "secondary" : "outline"} className="text-xs">{t.status || "ordered"}</Badge>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{t.orderedAt ? new Date(t.orderedAt).toLocaleString() : "—"}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Nursing Notes / Shift Notes Tab */}
+                        <TabsContent value="nursing" className="mt-3">
+                          {profileShiftNotes.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No nursing notes recorded</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {profileShiftNotes.map((note: any) => (
+                                <div key={note.id} className="p-3 border rounded-lg text-sm">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <Badge variant="outline">{note.shift || note.shiftType || "—"}</Badge>
+                                    <span className="text-xs text-muted-foreground">{note.nurseName || note.createdByName || "—"} · {note.createdAt ? new Date(note.createdAt).toLocaleString() : "—"}</span>
+                                  </div>
+                                  {note.generalObservations && <p className="text-muted-foreground mt-1">{note.generalObservations}</p>}
+                                  {note.notes && <p className="text-muted-foreground mt-1">{note.notes}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Investigation Chart Tab */}
+                        <TabsContent value="investigation" className="mt-3">
+                          {!profileInvestigation ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No investigation chart recorded</p>
+                          ) : (
+                            <div className="space-y-3 text-sm">
+                              {[
+                                { label: "Blood Screening", fields: [["bloodGroup","Blood Group"],["hbsAg","HbsAg"],["hiv","HIV"],["hcv","HCV"],["vdrl","VDRL"]] },
+                                { label: "Haematology", fields: [["hemoglobin","Hb (g/dL)"],["tlc","TLC"],["platelet","Platelet"],["rbc","RBC"],["hematocrit","Hematocrit"]] },
+                                { label: "Renal Function", fields: [["urea","Urea"],["creatinine","Creatinine"],["sodium","Na+"],["potassium","K+"],["chloride","Cl-"]] },
+                                { label: "Liver Function", fields: [["totalBilirubin","T.Bilirubin"],["directBilirubin","D.Bilirubin"],["sgot","SGOT"],["sgpt","SGPT"],["alkPhos","Alk Phos"],["albumin","Albumin"]] },
+                                { label: "Cardiac", fields: [["troponin","Troponin"],["ckMb","CK-MB"],["bnp","BNP"],["dDimer","D-Dimer"]] },
+                                { label: "Imaging", fields: [["ecg","ECG"],["echo","Echo"],["xrayChest","X-Ray Chest"],["ctScan","CT Scan"],["mri","MRI"],["usg","USG"]] },
+                              ].map(({ label, fields }) => {
+                                const hasData = fields.some(([key]) => profileInvestigation[key]);
+                                if (!hasData) return null;
+                                return (
+                                  <div key={label}>
+                                    <p className="font-medium text-xs text-muted-foreground mb-1 uppercase tracking-wide">{label}</p>
+                                    <div className="grid grid-cols-3 gap-1">
+                                      {fields.map(([key, display]) => profileInvestigation[key] ? (
+                                        <div key={key} className="p-1.5 border rounded text-xs">
+                                          <span className="text-muted-foreground">{display}: </span>
+                                          <span className="font-medium">{profileInvestigation[key]}</span>
+                                        </div>
+                                      ) : null)}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Oxygen Tab */}
+                        <TabsContent value="oxygen" className="mt-3">
+                          {profileOxygen.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No oxygen therapy records</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {profileOxygen.map((o: any) => (
+                                <div key={o.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                                  <div>
+                                    <p className="font-medium">{o.oxygenDevice || o.deliveryDevice || "—"}</p>
+                                    <p className="text-xs text-muted-foreground">Flow: {o.flowRate || o.litersPerMin || "—"} L/min · FiO2: {o.fio2 || "—"}%</p>
+                                  </div>
+                                  <div className="text-right text-xs text-muted-foreground">
+                                    <p>{o.nurseName || "—"}</p>
+                                    <p>{o.recordedAt ? new Date(o.recordedAt).toLocaleString() : "—"}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Ventilator Tab */}
+                        <TabsContent value="ventilator" className="mt-3">
+                          {profileVentilator.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No ventilator records</p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b bg-muted/30">
+                                    <th className="p-1.5 text-left">Time</th>
+                                    <th className="p-1.5 text-center">Mode</th>
+                                    <th className="p-1.5 text-center">TV</th>
+                                    <th className="p-1.5 text-center">RR Set</th>
+                                    <th className="p-1.5 text-center">PEEP</th>
+                                    <th className="p-1.5 text-center">FiO2%</th>
+                                    <th className="p-1.5 text-center">PIP</th>
+                                    <th className="p-1.5 text-center">Nurse</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {profileVentilator.map((v: any) => (
+                                    <tr key={v.id} className="border-b border-muted/30">
+                                      <td className="p-1.5">{v.hourSlot || (v.recordedAt ? new Date(v.recordedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—")}</td>
+                                      <td className="p-1.5 text-center">{v.ventilatorMode || v.mode || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.tidalVolume || v.tv || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.rrSet || v.respiratoryRate || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.peep || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.fio2 || "—"}</td>
+                                      <td className="p-1.5 text-center">{v.pip || v.peakInspiratoryPressure || "—"}</td>
+                                      <td className="p-1.5 text-center text-muted-foreground">{v.nurseName || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Inotropes Tab */}
+                        <TabsContent value="inotropes" className="mt-3">
+                          {profileInotropes.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No inotrope records</p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b bg-muted/30">
+                                    <th className="p-1.5 text-left">Time</th>
+                                    <th className="p-1.5 text-left">Drug</th>
+                                    <th className="p-1.5 text-center">Dose</th>
+                                    <th className="p-1.5 text-center">Rate</th>
+                                    <th className="p-1.5 text-center">Route</th>
+                                    <th className="p-1.5 text-center">Nurse</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {profileInotropes.map((ino: any) => (
+                                    <tr key={ino.id} className="border-b border-muted/30">
+                                      <td className="p-1.5">{ino.hourSlot || (ino.recordedAt ? new Date(ino.recordedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—")}</td>
+                                      <td className="p-1.5 font-medium">{ino.drugName || ino.drug || "—"}</td>
+                                      <td className="p-1.5 text-center">{ino.dose || "—"}</td>
+                                      <td className="p-1.5 text-center">{ino.rate || "—"} {ino.rateUnit || ""}</td>
+                                      <td className="p-1.5 text-center">{ino.route || "—"}</td>
+                                      <td className="p-1.5 text-center text-muted-foreground">{ino.nurseName || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </TabsContent>
+                      </Tabs>
+                    </>
+                  )}
                 </TabsContent>
 
                 {/* Medication History Section */}
