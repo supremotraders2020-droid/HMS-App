@@ -1585,27 +1585,6 @@ export function OverviewTab({ session }: { session: Session }) {
         </Card>
 
         <Card>
-          <SectionHeader icon={Users} title="Nurse Notes / Duty Staff" count={dutyStaff.length} color="indigo" />
-          <CardContent className="p-2">
-            {dutyStaff.length > 0 ? (
-              <div className="space-y-1">
-                {dutyStaff.slice(0, 4).map((r: any, i: number) => (
-                  <div key={i} className="text-xs border-b border-muted/30 pb-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{r.nurseName || r.staffSignEmpNo || '—'}</span>
-                      <span className="text-muted-foreground">{r.shiftStartTime ? formatDate(r.shiftStartTime) : formatDate(r.createdAt)}</span>
-                    </div>
-                    {r.nursesNotes && <p className="text-muted-foreground truncate mt-0.5">{r.nursesNotes}</p>}
-                    {r.shift && <span className="text-[10px] text-muted-foreground">{r.shift}</span>}
-                  </div>
-                ))}
-                {dutyStaff.length > 4 && <p className="text-[10px] text-muted-foreground text-center">+{dutyStaff.length - 4} more</p>}
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No nurse notes recorded</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
           <SectionHeader icon={ClipboardCheck} title="Nursing Assessment & Care Plan" count={nursingAssessment ? 1 : 0} color="stone" />
           <CardContent className="p-2">
             {nursingAssessment ? (
@@ -1695,23 +1674,6 @@ export function OverviewTab({ session }: { session: Session }) {
                 {oxygenData.length > 5 && <p className="text-[10px] text-muted-foreground mt-1 text-center">+{oxygenData.length - 5} more</p>}
               </div>
             ) : <p className="text-xs text-muted-foreground text-center py-2">No oxygen records</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <SectionHeader icon={FileText} title="Shift Notes" count={shiftNotes.length} color="blue" />
-          <CardContent className="p-2">
-            {shiftNotes.length > 0 ? (
-              <div className="space-y-1">
-                {shiftNotes.slice(0, 3).map((r: any, i: number) => (
-                  <div key={i} className="text-xs border-b border-muted/30 pb-1">
-                    <div className="flex justify-between"><span className="font-medium">{r.shift}</span><span className="text-muted-foreground">{r.nurseName}</span></div>
-                    <p className="text-muted-foreground truncate">{r.notes || '-'}</p>
-                  </div>
-                ))}
-                {shiftNotes.length > 3 && <p className="text-[10px] text-muted-foreground text-center">+{shiftNotes.length - 3} more</p>}
-              </div>
-            ) : <p className="text-xs text-muted-foreground text-center py-2">No shift notes</p>}
           </CardContent>
         </Card>
 
