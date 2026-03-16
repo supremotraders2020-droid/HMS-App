@@ -2834,7 +2834,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 </TabsContent>
 
                 {/* IPD History Section */}
-                <TabsContent value="ipd" className="space-y-3">
+                <TabsContent value="ipd" className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
                   {/* IPD Admission Cards */}
                   {longitudinalProfile.ipdHistory?.length > 0 && (
                     <Card>
@@ -2888,7 +2888,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       </div>
 
                       <Tabs defaultValue="overview" className="w-full">
-                        <TabsList className="flex flex-wrap h-auto gap-0.5 p-1.5 bg-muted/50 rounded-lg w-full mb-3 border-b border-border pb-3">
+                        <TabsList className="sticky top-0 z-10 flex flex-wrap h-auto gap-0.5 p-1.5 bg-muted/70 backdrop-blur-sm rounded-lg w-full mb-3 border-b border-border pb-3">
                           <TabsTrigger value="overview" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Activity className="h-3.5 w-3.5 shrink-0" />Overview</TabsTrigger>
                           <TabsTrigger value="vitals" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Heart className="h-3.5 w-3.5 shrink-0" />Vitals</TabsTrigger>
                           <TabsTrigger value="allergies" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><AlertTriangle className="h-3.5 w-3.5 shrink-0" />Allergies</TabsTrigger>
@@ -2911,7 +2911,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         </TabsList>
 
                         {/* Overview Tab */}
-                        <TabsContent value="overview" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="overview" className="mt-2 pb-2">
                           {profileLatestSession ? (
                             <OverviewTab session={profileLatestSession} />
                           ) : (
@@ -2920,7 +2920,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         </TabsContent>
 
                         {/* Vitals Tab */}
-                        <TabsContent value="vitals" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2 space-y-3">
+                        <TabsContent value="vitals" className="mt-2 pb-2 space-y-3">
                           {/* Fluid balance strip */}
                           <div className="grid grid-cols-3 gap-2 text-center text-xs">
                             <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
@@ -2981,7 +2981,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Allergies Tab */}
-                        <TabsContent value="allergies" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="allergies" className="mt-2 pb-2">
                           {!profileAllergies ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No allergy record</p>
                           ) : (
@@ -3021,7 +3021,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Care Plan Tab */}
-                        <TabsContent value="careplan" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="careplan" className="mt-2 pb-2">
                           {profileCarePlan.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No care plan recorded</p>
                           ) : (
@@ -3045,7 +3045,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Diabetic Monitoring Tab */}
-                        <TabsContent value="diabetic" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="diabetic" className="mt-2 pb-2">
                           {profileDiabetic.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No diabetic monitoring records</p>
                           ) : (
@@ -3084,7 +3084,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Intake Tab */}
-                        <TabsContent value="intake" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="intake" className="mt-2 pb-2">
                           {profileIntake.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No intake records</p>
                           ) : (
@@ -3133,7 +3133,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Output Tab */}
-                        <TabsContent value="output" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="output" className="mt-2 pb-2">
                           {profileOutput.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No output records</p>
                           ) : (
@@ -3180,7 +3180,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Drug Chart / MAR Tab */}
-                        <TabsContent value="drugchart" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="drugchart" className="mt-2 pb-2">
                           {profileMAR.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No drug chart records</p>
                           ) : (
@@ -3220,7 +3220,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Tests Tab */}
-                        <TabsContent value="tests" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="tests" className="mt-2 pb-2">
                           {profileTests.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No tests ordered</p>
                           ) : (
@@ -3245,7 +3245,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         {/* Nursing Notes / Shift Notes Tab */}
 
                         {/* Investigation Chart Tab */}
-                        <TabsContent value="investigation" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="investigation" className="mt-2 pb-2">
                           {!profileInvestigation ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No investigation chart recorded</p>
                           ) : (
@@ -3279,7 +3279,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Oxygen Tab */}
-                        <TabsContent value="oxygen" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="oxygen" className="mt-2 pb-2">
                           {profileOxygen.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No oxygen therapy records</p>
                           ) : (
@@ -3303,7 +3303,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Ventilator Tab */}
-                        <TabsContent value="ventilator" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="ventilator" className="mt-2 pb-2">
                           {profileVentilator.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No ventilator records</p>
                           ) : (
@@ -3345,7 +3345,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         {/* Duty Staff Tab */}
 
                         {/* Doctor's Progress Sheet Tab */}
-                        <TabsContent value="doctorsprogress" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="doctorsprogress" className="mt-2 pb-2">
                           {profileDoctorsProgress.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No doctor's progress entries</p>
                           ) : (
@@ -3367,7 +3367,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Doctor's Visit Sheet Tab */}
-                        <TabsContent value="doctorsvisit" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="doctorsvisit" className="mt-2 pb-2">
                           {profileDoctorsVisit.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No doctor's visit entries</p>
                           ) : (
@@ -3399,7 +3399,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Nursing Assessment & Care Plan Tab */}
-                        <TabsContent value="nursingassessment" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="nursingassessment" className="mt-2 pb-2">
                           {!profileNursingAssessment ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No nursing assessment recorded</p>
                           ) : (
@@ -3431,7 +3431,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Nursing Progress Sheet Tab */}
-                        <TabsContent value="nursingprogress" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="nursingprogress" className="mt-2 pb-2">
                           {profileNursingProgressData.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No nursing progress notes</p>
                           ) : (
@@ -3451,7 +3451,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Indoor Continuation Sheet Tab */}
-                        <TabsContent value="indoorconsultation" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="indoorconsultation" className="mt-2 pb-2">
                           {profileIndoorConsultation.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No indoor consultation entries</p>
                           ) : (
@@ -3483,7 +3483,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Initial Assessment Tab */}
-                        <TabsContent value="initialassessment" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="initialassessment" className="mt-2 pb-2">
                           {!profileInitialAssessment ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No initial assessment recorded</p>
                           ) : (
@@ -3523,7 +3523,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Surgery Notes Tab */}
-                        <TabsContent value="surgerynotes" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <TabsContent value="surgerynotes" className="mt-2 pb-2">
                           {profileSurgeryNotes.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No surgery notes recorded</p>
                           ) : (
