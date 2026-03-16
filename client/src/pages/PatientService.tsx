@@ -213,6 +213,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [consentFileError, setConsentFileError] = useState<string | null>(null);
   const [consentPatientPopoverOpen, setConsentPatientPopoverOpen] = useState(false);
   const [consentPatientId, setConsentPatientId] = useState("");
+  const [viewingDigitalConsent, setViewingDigitalConsent] = useState<any | null>(null);
   const [consentTitle, setConsentTitle] = useState("");
   const [consentDescription, setConsentDescription] = useState("");
   const [consentType, setConsentType] = useState("");
@@ -599,6 +600,25 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     },
     enabled: !!selectedProfilePatient?.id && showProfileDialog,
     refetchInterval: showProfileDialog ? 30000 : false,
+  });
+
+  // Fetch digital consents (OT-signed, etc.) for selected profile patient — real-time refresh every 15s
+  const profilePatientName = selectedProfilePatient
+    ? `${selectedProfilePatient.firstName} ${selectedProfilePatient.lastName}`.trim()
+    : "";
+  const { data: profileDigitalConsents = [] } = useQuery<any[]>({
+    queryKey: ["/api/digital-consents/patient", selectedProfilePatient?.id, profilePatientName],
+    queryFn: async () => {
+      if (!selectedProfilePatient?.id) return [];
+      const params = new URLSearchParams({ name: profilePatientName });
+      const res = await fetch(`/api/digital-consents/patient/${selectedProfilePatient.id}?${params}`, {
+        credentials: "include",
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!selectedProfilePatient?.id && showProfileDialog,
+    refetchInterval: showProfileDialog ? 15000 : false,
   });
 
   // Fetch history profile for History dialog - real-time refresh every 30s
@@ -3598,16 +3618,60 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
                 {/* Consent Records Section */}
                 <TabsContent value="consent" className="space-y-4">
+                  {/* Digital Consents (from OT, Consent Forms module, etc.) */}
+                  {profileDigitalConsents.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <ClipboardCheck className="h-4 w-4 text-blue-500" />
+                          Digitally Signed Consents ({profileDigitalConsents.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {profileDigitalConsents.map((dc: any) => (
+                            <div key={dc.id} className="p-3 border rounded-lg">
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Badge variant="secondary" className="text-xs capitalize">
+                                    {dc.consentType || "consent"}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {dc.createdAt ? new Date(dc.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "N/A"}
+                                  </span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs"
+                                  onClick={() => setViewingDigitalConsent(dc)}
+                                >
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  View
+                                </Button>
+                              </div>
+                              <p className="text-sm font-medium mt-1">{dc.consentTitle || dc.consentType}</p>
+                              {dc.doctorName && (
+                                <p className="text-xs text-muted-foreground mt-0.5">Doctor: {dc.doctorName}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Traditional file-based consent uploads */}
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-center gap-2">
                         <FileCheck className="h-4 w-4 text-orange-500" />
-                        Consent Forms ({longitudinalProfile.consentRecords?.length || 0})
+                        Uploaded Consent Files ({longitudinalProfile.consentRecords?.length || 0})
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {longitudinalProfile.consentRecords?.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">No consent forms on record</p>
+                        <p className="text-sm text-muted-foreground text-center py-4">No uploaded consent files on record</p>
                       ) : (
                         <div className="space-y-3">
                           {longitudinalProfile.consentRecords?.map((consent: any) => (
@@ -3627,6 +3691,11 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       )}
                     </CardContent>
                   </Card>
+
+                  {/* Empty state when nothing at all */}
+                  {profileDigitalConsents.length === 0 && (longitudinalProfile.consentRecords?.length || 0) === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-6">No consent forms on record for this patient</p>
+                  )}
                 </TabsContent>
 
                 {/* Billing Section */}
@@ -4519,6 +4588,35 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   Delete Consent
                 </Button>
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Digital Consent View Dialog */}
+      <Dialog open={!!viewingDigitalConsent} onOpenChange={(open) => { if (!open) setViewingDigitalConsent(null); }}>
+        <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardCheck className="h-5 w-5 text-blue-500" />
+              {viewingDigitalConsent?.consentTitle || viewingDigitalConsent?.consentType || "Consent Form"}
+            </DialogTitle>
+          </DialogHeader>
+          {viewingDigitalConsent?.consentContent ? (
+            <div
+              className="prose prose-sm max-w-none text-foreground"
+              dangerouslySetInnerHTML={{ __html: viewingDigitalConsent.consentContent }}
+            />
+          ) : (
+            <div className="space-y-3 py-4">
+              <div className="p-4 border rounded-lg space-y-2">
+                <p className="text-sm"><span className="font-medium">Consent Title:</span> {viewingDigitalConsent?.consentTitle || "—"}</p>
+                <p className="text-sm"><span className="font-medium">Type:</span> {viewingDigitalConsent?.consentType || "—"}</p>
+                <p className="text-sm"><span className="font-medium">Patient:</span> {viewingDigitalConsent?.patientName || "—"}</p>
+                {viewingDigitalConsent?.doctorName && <p className="text-sm"><span className="font-medium">Doctor:</span> {viewingDigitalConsent.doctorName}</p>}
+                <p className="text-sm"><span className="font-medium">Date:</span> {viewingDigitalConsent?.createdAt ? new Date(viewingDigitalConsent.createdAt).toLocaleString("en-IN") : "—"}</p>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">Full form preview not available for this record. Detailed content is stored for consents signed after the latest system update.</p>
             </div>
           )}
         </DialogContent>
