@@ -1179,11 +1179,9 @@ export default function PatientMonitoringPage() {
                     <TabsTrigger value="doctors-progress" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Stethoscope className="h-3.5 w-3.5 shrink-0" />Doctor's Progress Sheet</TabsTrigger>
                     <TabsTrigger value="doctors-visit" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Users className="h-3.5 w-3.5 shrink-0" />Doctor's Visit Sheet</TabsTrigger>
                     <TabsTrigger value="drugchart" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Syringe className="h-3.5 w-3.5 shrink-0" />Drug Chart</TabsTrigger>
-                    <TabsTrigger value="duty-staff" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Users className="h-3.5 w-3.5 shrink-0" />Duty Staff</TabsTrigger>
                     <TabsTrigger value="indoor-consultation" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><FileText className="h-3.5 w-3.5 shrink-0" />Indoor Continuation Sheet</TabsTrigger>
                     <TabsTrigger value="initial-assessment" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><ClipboardList className="h-3.5 w-3.5 shrink-0" />Initial Assessment</TabsTrigger>
                     <TabsTrigger value="intake" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Droplets className="h-3.5 w-3.5 shrink-0" />Intake</TabsTrigger>
-                    <TabsTrigger value="inotropes" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Syringe className="h-3.5 w-3.5 shrink-0" />Inotropes</TabsTrigger>
                     <TabsTrigger value="investigation" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><ClipboardList className="h-3.5 w-3.5 shrink-0" />Investigation</TabsTrigger>
                     <TabsTrigger value="nursing-assessment" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><ClipboardCheck className="h-3.5 w-3.5 shrink-0" />Nursing Assessment &amp; Care Plan</TabsTrigger>
                     <TabsTrigger value="nursing-progress" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><FileText className="h-3.5 w-3.5 shrink-0" />Nursing Progress Sheet</TabsTrigger>
@@ -1191,8 +1189,6 @@ export default function PatientMonitoringPage() {
                     <TabsTrigger value="oxygen" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Wind className="h-3.5 w-3.5 shrink-0" />Oxygen</TabsTrigger>
                     <TabsTrigger value="surgery-notes" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Hospital className="h-3.5 w-3.5 shrink-0" />Surgery Notes</TabsTrigger>
                     <TabsTrigger value="tests" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Beaker className="h-3.5 w-3.5 shrink-0" />Tests</TabsTrigger>
-                    <TabsTrigger value="shift-notes" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><FileText className="h-3.5 w-3.5 shrink-0" />Shift Notes</TabsTrigger>
-                    <TabsTrigger value="abg-lab" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><ClipboardList className="h-3.5 w-3.5 shrink-0" />ABG Lab</TabsTrigger>
                     <TabsTrigger value="ventilator" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Wind className="h-3.5 w-3.5 shrink-0" />Ventilator</TabsTrigger>
                     <TabsTrigger value="vitals" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Heart className="h-3.5 w-3.5 shrink-0" />Vitals</TabsTrigger>
                   </TabsList>
@@ -1253,20 +1249,8 @@ export default function PatientMonitoringPage() {
                 <TabsContent value="nursing-assessment">
                   <NursingAssessmentCarePlanTab session={selectedSession} />
                 </TabsContent>
-                <TabsContent value="inotropes">
-                  <InotropesTab session={selectedSession} />
-                </TabsContent>
                 <TabsContent value="ventilator">
                   <VentilatorTab sessionId={selectedSession.id} isOnVentilator={selectedSession.isVentilated} />
-                </TabsContent>
-                <TabsContent value="abg-lab">
-                  <ABGLabTab sessionId={selectedSession.id} />
-                </TabsContent>
-                <TabsContent value="shift-notes">
-                  <ShiftNotesTab session={selectedSession} />
-                </TabsContent>
-                <TabsContent value="duty-staff">
-                  <DutyStaffTab session={selectedSession} />
                 </TabsContent>
               </Tabs>
             </div>

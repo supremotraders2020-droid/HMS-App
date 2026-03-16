@@ -2896,12 +2896,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           <TabsTrigger value="output" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Droplets className="h-3.5 w-3.5 shrink-0" />Output</TabsTrigger>
                           <TabsTrigger value="drugchart" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Syringe className="h-3.5 w-3.5 shrink-0" />Drug Chart</TabsTrigger>
                           <TabsTrigger value="tests" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><FlaskConical className="h-3.5 w-3.5 shrink-0" />Tests</TabsTrigger>
-                          <TabsTrigger value="nursing" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><FileText className="h-3.5 w-3.5 shrink-0" />Nursing Notes</TabsTrigger>
                           <TabsTrigger value="investigation" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><ClipboardList className="h-3.5 w-3.5 shrink-0" />Investigation</TabsTrigger>
                           <TabsTrigger value="oxygen" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Wind className="h-3.5 w-3.5 shrink-0" />Oxygen</TabsTrigger>
                           <TabsTrigger value="ventilator" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Wind className="h-3.5 w-3.5 shrink-0" />Ventilator</TabsTrigger>
-                          <TabsTrigger value="inotropes" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Syringe className="h-3.5 w-3.5 shrink-0" />Inotropes</TabsTrigger>
-                          <TabsTrigger value="dutystaff" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Users className="h-3.5 w-3.5 shrink-0" />Duty Staff</TabsTrigger>
                           <TabsTrigger value="doctorsprogress" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Stethoscope className="h-3.5 w-3.5 shrink-0" />Doctor's Progress Sheet</TabsTrigger>
                           <TabsTrigger value="doctorsvisit" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><UserCheck className="h-3.5 w-3.5 shrink-0" />Doctor's Visit Sheet</TabsTrigger>
                           <TabsTrigger value="nursingassessment" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><ClipboardCheck className="h-3.5 w-3.5 shrink-0" />Nursing Assessment &amp; Care Plan</TabsTrigger>
@@ -3235,30 +3232,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Nursing Notes / Shift Notes Tab */}
-                        <TabsContent value="nursing" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
-                          {profileShiftNotes.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-4">No nursing notes recorded</p>
-                          ) : (
-                            <div className="space-y-2">
-                              {profileShiftNotes.map((note: any) => (
-                                <div key={note.id} className="p-3 border rounded-lg text-sm">
-                                  <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
-                                    <div className="flex items-center gap-1">
-                                      <Badge variant="outline">{note.shift || "—"}</Badge>
-                                      {note.eventType && note.eventType !== "ROUTINE" && (
-                                        <Badge variant={note.eventType === "CRITICAL" ? "destructive" : "secondary"} className="text-[9px]">{note.eventType}</Badge>
-                                      )}
-                                    </div>
-                                    <span className="text-xs text-muted-foreground">{note.nurseName || "—"} · {note.noteTime ? new Date(note.noteTime).toLocaleString() : "—"}</span>
-                                  </div>
-                                  {note.observation && <p className="font-medium mt-1">{note.observation}</p>}
-                                  {note.actionTaken && <p className="text-muted-foreground mt-1 text-xs">Action: {note.actionTaken}</p>}
-                                  {note.doctorInformed && note.doctorName && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Dr. {note.doctorName} informed</p>}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          </TabsContent>
 
                         {/* Investigation Chart Tab */}
                         <TabsContent value="investigation" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
@@ -3357,61 +3330,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           </TabsContent>
 
                         {/* Inotropes Tab */}
-                        <TabsContent value="inotropes" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
-                          {profileInotropes.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-4">No inotrope records</p>
-                          ) : (
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-xs border-collapse">
-                                <thead>
-                                  <tr className="border-b bg-muted/30">
-                                    <th className="p-1.5 text-left">Time</th>
-                                    <th className="p-1.5 text-left">Drug</th>
-                                    <th className="p-1.5 text-center">Dose</th>
-                                    <th className="p-1.5 text-center">Rate</th>
-                                    <th className="p-1.5 text-center">Route</th>
-                                    <th className="p-1.5 text-center">Nurse</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {profileInotropes.map((ino: any) => (
-                                    <tr key={ino.id} className="border-b border-muted/30">
-                                      <td className="p-1.5">{ino.startTime ? new Date(ino.startTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—"}</td>
-                                      <td className="p-1.5 font-medium">{ino.drugName || "—"}</td>
-                                      <td className="p-1.5 text-center">{ino.dose || "—"}</td>
-                                      <td className="p-1.5 text-center">{ino.rate || "—"}</td>
-                                      <td className="p-1.5 text-center">{ino.route || "—"}</td>
-                                      <td className="p-1.5 text-center text-muted-foreground">{ino.nurseName || "—"}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                          </TabsContent>
 
                         {/* Duty Staff Tab */}
-                        <TabsContent value="dutystaff" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
-                          {profileDutyStaff.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-4">No duty staff records</p>
-                          ) : (
-                            <div className="space-y-2">
-                              {profileDutyStaff.map((r: any) => (
-                                <div key={r.id} className="border rounded-lg p-3 text-xs flex items-start justify-between gap-2">
-                                  <div className="space-y-0.5">
-                                    <p className="font-semibold text-sm">{r.nurseName || '—'}</p>
-                                    {r.nursesNotes && <p className="text-muted-foreground">{r.nursesNotes}</p>}
-                                    {r.shift && <Badge variant="outline" className="text-[9px]">{r.shift}</Badge>}
-                                  </div>
-                                  <div className="text-right text-muted-foreground shrink-0">
-                                    <p>{r.shiftStartTime ? new Date(r.shiftStartTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—'}</p>
-                                    {r.staffSignEmpNo && <p className="text-[9px]">Emp: {r.staffSignEmpNo}</p>}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          </TabsContent>
 
                         {/* Doctor's Progress Sheet Tab */}
                         <TabsContent value="doctorsprogress" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
