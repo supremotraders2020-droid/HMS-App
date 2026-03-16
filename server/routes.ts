@@ -6991,25 +6991,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <style>
     @page { size: A4; margin: 15mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #333; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
     .page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 10mm auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); page-break-after: always; }
     .page:last-child { page-break-after: auto; }
-    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; }
-    .logo-section { display: flex; align-items: center; }
+    .hospital-header { display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #4a2683; background: white; }
+    .logo-section { display: flex; align-items: center; background: white; }
     .hospital-logo { height: 50px; width: auto; }
     .hospital-info { flex: 1; }
     .hospital-name { font-size: 16pt; font-weight: bold; color: #2c5aa0; margin-bottom: 2px; }
     .hospital-address { font-size: 9pt; color: #333; margin: 2px 0; }
     .hospital-contact { font-size: 9pt; color: #333; font-weight: bold; }
-    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 20px 0; color: #333; background: #f5f5f5; padding: 10px; }
-    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 15px 0; background: #f9f9f9; display: flex; flex-wrap: wrap; gap: 15px; }
-    .patient-info-item { font-size: 10pt; min-width: 200px; }
+    .form-title { text-align: center; font-size: 14pt; font-weight: bold; margin: 15px 0; color: #333; background: #f5f5f5; padding: 10px; }
+    .patient-info-box { border: 1px solid #333; padding: 10px; margin: 12px 0; background: #f9f9f9; }
+    .patient-row { display: flex; flex-wrap: wrap; gap: 15px; margin: 5px 0; }
+    .patient-item { font-size: 10pt; min-width: 180px; }
     .patient-label { font-weight: bold; }
     .dept-date-row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 10pt; }
     .section { margin: 15px 0; }
-    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8px; color: #2c5aa0; }
-    .section-content { text-align: justify; line-height: 1.8; }
-    .consent-text { margin: 12px 0; text-align: justify; }
+    .section-title { font-weight: bold; margin: 15px 0 10px 0; font-size: 11pt; }
+    .section-content { text-align: justify; line-height: 1.6; }
+    .consent-text { text-align: justify; margin: 15px 0; font-size: 10.5pt; line-height: 1.6; }
+    .consent-text p { margin-bottom: 10px; }
     .signature-section { margin-top: 30px; }
     .signature-row { display: flex; justify-content: space-between; margin-top: 20px; }
     .signature-block { width: 45%; }
@@ -7027,7 +7029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <img src="${hospitalLogoBase64}" alt="Gravity Hospital Logo" class="hospital-logo">
     </div>
     <div class="hospital-info">
-      <div class="hospital-name">Gravity Hospital & Research Centre</div>
+      <div class="hospital-name">Gravity Hospital &amp; Research Centre</div>
       <div class="hospital-address">Gat No. 167, Sahyog Nagar, Triveni Nagar Chowk,<br>Pimpri-Chinchwad, Maharashtra - 411062</div>
       <div class="hospital-contact">Contact: 7796513130, 7769651310</div>
     </div>
@@ -7036,23 +7038,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <div class="form-title">SURGICAL HIGH RISK CONSENT FORM</div>
 
   <div class="patient-info-box">
-    <span class="patient-info-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
-    <span class="patient-info-item"><span class="patient-label">Patient ID / UHID:</span> ${patientUhid}</span>
-    <span class="patient-info-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
-  </div>
-  <div class="dept-date-row">
-    <span>Department / Consultant: ______________________</span>
-    <span>Date: ____ / ____ / ______</span>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Patient Name:</span> ${patientName}</span>
+      <span class="patient-item"><span class="patient-label">UHID:</span> ${patientUhid}</span>
+      <span class="patient-item"><span class="patient-label">Age / Gender:</span> ${patientAge} / ${patientGender}</span>
+    </div>
+    <div class="patient-row">
+      <span class="patient-item"><span class="patient-label">Department / Consultant:</span> ________________</span>
+      <span class="patient-item"><span class="patient-label">Date:</span> ________________</span>
+    </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Consent Statement</div>
-    <div class="section-content">
-      <p class="consent-text">I have been explained about the proposed surgical procedure and informed that due to my current medical condition, age, or associated illnesses, this surgery is considered a high-risk procedure.</p>
-      <p class="consent-text">I understand that possible complications may include bleeding, infection, anesthesia-related complications, organ damage, delayed recovery, need for additional procedures, prolonged hospital stay, or other unforeseen risks, including risk to life.</p>
-      <p class="consent-text">The surgeon has explained the nature of the surgery, expected benefits, possible risks, complications, and available alternatives in a language I understand. I was given sufficient opportunity to ask questions and all my questions have been answered satisfactorily.</p>
-      <p class="consent-text"><strong>I voluntarily give my consent to undergo the above-mentioned high-risk surgical procedure.</strong></p>
-    </div>
+  <div class="section-title">Consent Statement</div>
+  <div class="consent-text">
+    <p>I have been explained about the proposed surgical procedure and informed that due to my current medical condition, age, or associated illnesses, this surgery is considered a high-risk procedure.</p>
+    <p>I understand that possible complications may include bleeding, infection, anesthesia-related complications, organ damage, delayed recovery, need for additional procedures, prolonged hospital stay, or other unforeseen risks, including risk to life.</p>
+    <p>The surgeon has explained the nature of the surgery, expected benefits, possible risks, complications, and available alternatives in a language I understand. I was given sufficient opportunity to ask questions and all my questions have been answered satisfactorily.</p>
+    <p><strong>I voluntarily give my consent to undergo the above-mentioned high-risk surgical procedure.</strong></p>
   </div>
 
   <div class="signature-section">
