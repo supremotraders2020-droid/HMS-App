@@ -2886,35 +2886,12 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                         {profileMonitoringSessions.length > 1 && <Badge variant="outline" className="ml-auto">{profileMonitoringSessions.length} sessions</Badge>}
                       </div>
 
-                      <Tabs defaultValue="vitals" className="w-full">
-                        <div className="overflow-x-auto pb-1 mb-2 border-b border-border">
-                          <TabsList className="inline-flex h-auto gap-0.5 p-1 bg-muted/50 rounded-lg w-max" style={{ flexWrap: "nowrap" }}>
-                              <TabsTrigger value="vitals" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Vitals</TabsTrigger>
-                              <TabsTrigger value="allergies" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Allergies</TabsTrigger>
-                              <TabsTrigger value="careplan" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Care Plan</TabsTrigger>
-                              <TabsTrigger value="diabetic" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Diabetic</TabsTrigger>
-                              <TabsTrigger value="intake" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Intake</TabsTrigger>
-                              <TabsTrigger value="output" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Output</TabsTrigger>
-                              <TabsTrigger value="drugchart" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Drug Chart</TabsTrigger>
-                              <TabsTrigger value="tests" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Tests</TabsTrigger>
-                              <TabsTrigger value="nursing" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Nursing Notes</TabsTrigger>
-                              <TabsTrigger value="investigation" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Investigation</TabsTrigger>
-                              <TabsTrigger value="oxygen" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Oxygen</TabsTrigger>
-                              <TabsTrigger value="ventilator" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Ventilator</TabsTrigger>
-                              <TabsTrigger value="inotropes" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Inotropes</TabsTrigger>
-                              <TabsTrigger value="dutystaff" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Duty Staff</TabsTrigger>
-                              <TabsTrigger value="doctorsprogress" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Dr. Progress</TabsTrigger>
-                              <TabsTrigger value="doctorsvisit" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Dr. Visit</TabsTrigger>
-                              <TabsTrigger value="nursingassessment" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Nursing Assessment</TabsTrigger>
-                              <TabsTrigger value="nursingprogress" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Nursing Progress</TabsTrigger>
-                              <TabsTrigger value="indoorconsultation" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Indoor Sheet</TabsTrigger>
-                              <TabsTrigger value="initialassessment" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Initial Assessment</TabsTrigger>
-                              <TabsTrigger value="surgerynotes" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Surgery Notes</TabsTrigger>
-                          </TabsList>
-                        </div>
+                      <Accordion type="multiple" defaultValue={["vitals","doctorsprogress","dutystaff"]} className="space-y-1.5">
 
                         {/* Vitals Tab */}
-                        <TabsContent value="vitals" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2 space-y-3">
+                        <AccordionItem value="vitals" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Vitals</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3 space-y-3">
                           {/* Fluid balance strip */}
                           <div className="grid grid-cols-3 gap-2 text-center text-xs">
                             <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
@@ -2972,10 +2949,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </table>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Allergies Tab */}
-                        <TabsContent value="allergies" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="allergies" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Allergies</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {!profileAllergies ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No allergy record</p>
                           ) : (
@@ -3012,10 +2992,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </div>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Care Plan Tab */}
-                        <TabsContent value="careplan" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="careplan" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Care Plan</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileCarePlan.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No care plan recorded</p>
                           ) : (
@@ -3036,10 +3019,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               ))}
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Diabetic Monitoring Tab */}
-                        <TabsContent value="diabetic" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="diabetic" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Diabetic Monitoring</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileDiabetic.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No diabetic monitoring records</p>
                           ) : (
@@ -3075,10 +3061,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </table>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Intake Tab */}
-                        <TabsContent value="intake" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="intake" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Intake Chart</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileIntake.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No intake records</p>
                           ) : (
@@ -3124,10 +3113,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </table>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Output Tab */}
-                        <TabsContent value="output" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="output" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Output Chart</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileOutput.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No output records</p>
                           ) : (
@@ -3171,10 +3163,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </table>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Drug Chart / MAR Tab */}
-                        <TabsContent value="drugchart" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="drugchart" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Drug Chart (MAR)</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileMAR.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No drug chart records</p>
                           ) : (
@@ -3211,10 +3206,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </table>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Tests Tab */}
-                        <TabsContent value="tests" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="tests" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Tests Ordered</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileTests.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No tests ordered</p>
                           ) : (
@@ -3234,10 +3232,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               ))}
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Nursing Notes / Shift Notes Tab */}
-                        <TabsContent value="nursing" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="nursing" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Nursing Notes</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileShiftNotes.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No nursing notes recorded</p>
                           ) : (
@@ -3260,10 +3261,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               ))}
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Investigation Chart Tab */}
-                        <TabsContent value="investigation" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="investigation" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Investigation Chart</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {!profileInvestigation ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No investigation chart recorded</p>
                           ) : (
@@ -3294,10 +3298,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               })}
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Oxygen Tab */}
-                        <TabsContent value="oxygen" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="oxygen" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Oxygen Tracking</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileOxygen.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No oxygen therapy records</p>
                           ) : (
@@ -3318,10 +3325,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               ))}
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Ventilator Tab */}
-                        <TabsContent value="ventilator" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="ventilator" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Ventilator</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileVentilator.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No ventilator records</p>
                           ) : (
@@ -3356,10 +3366,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </table>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Inotropes Tab */}
-                        <TabsContent value="inotropes" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="inotropes" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Inotropes</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileInotropes.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No inotrope records</p>
                           ) : (
@@ -3390,10 +3403,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </table>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Duty Staff Tab */}
-                        <TabsContent value="dutystaff" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="dutystaff" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Duty Staff</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileDutyStaff.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No duty staff records</p>
                           ) : (
@@ -3413,10 +3429,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               ))}
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Doctor's Progress Sheet Tab */}
-                        <TabsContent value="doctorsprogress" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="doctorsprogress" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Doctor's Progress Sheet</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileDoctorsProgress.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No doctor's progress entries</p>
                           ) : (
@@ -3435,10 +3454,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               ))}
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Doctor's Visit Sheet Tab */}
-                        <TabsContent value="doctorsvisit" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="doctorsvisit" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Doctor's Visit Sheet</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileDoctorsVisit.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No doctor's visit entries</p>
                           ) : (
@@ -3467,10 +3489,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </table>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Nursing Assessment & Care Plan Tab */}
-                        <TabsContent value="nursingassessment" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="nursingassessment" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Nursing Assessment</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {!profileNursingAssessment ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No nursing assessment recorded</p>
                           ) : (
@@ -3499,10 +3524,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </div>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Nursing Progress Sheet Tab */}
-                        <TabsContent value="nursingprogress" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="nursingprogress" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Nursing Progress</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileNursingProgressData.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No nursing progress notes</p>
                           ) : (
@@ -3519,10 +3547,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               ))}
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Indoor Continuation Sheet Tab */}
-                        <TabsContent value="indoorconsultation" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="indoorconsultation" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Indoor Consultation Sheet</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileIndoorConsultation.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No indoor consultation entries</p>
                           ) : (
@@ -3551,10 +3582,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </table>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Initial Assessment Tab */}
-                        <TabsContent value="initialassessment" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="initialassessment" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Initial Assessment</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {!profileInitialAssessment ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No initial assessment recorded</p>
                           ) : (
@@ -3591,10 +3625,13 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               </div>
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
                         {/* Surgery Notes Tab */}
-                        <TabsContent value="surgerynotes" className="mt-2 overflow-y-auto max-h-[calc(92vh-380px)] pb-2">
+                        <AccordionItem value="surgerynotes" className="border rounded-lg">
+                          <AccordionTrigger className="px-3 py-2 text-sm font-medium hover:no-underline">Surgery Notes</AccordionTrigger>
+                          <AccordionContent className="px-3 pb-3">
                           {profileSurgeryNotes.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No surgery notes recorded</p>
                           ) : (
@@ -3618,9 +3655,10 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               ))}
                             </div>
                           )}
-                        </TabsContent>
+                          </AccordionContent>
+                        </AccordionItem>
 
-                      </Tabs>
+                      </Accordion>
                     </>
                   )}
                 </TabsContent>
