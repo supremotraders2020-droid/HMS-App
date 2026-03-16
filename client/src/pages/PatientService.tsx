@@ -909,6 +909,18 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     staleTime: 0,
   });
 
+  const { data: profileDutyStaff = [] } = useQuery<any[]>({
+    queryKey: ["/api/patient-monitoring/duty-staff", profileSessionId],
+    queryFn: async () => {
+      if (!profileSessionId) return [];
+      const res = await fetch(`/api/patient-monitoring/duty-staff/${profileSessionId}`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profileSessionId && showProfileDialog,
+    staleTime: 0,
+  });
+
   const profileTotalIntake = profileIntake.reduce((s: number, r: any) => s + (r.hourlyTotal || 0), 0);
   const profileTotalOutput = profileOutput.reduce((s: number, r: any) => s + (r.hourlyTotal || 0), 0);
   const profileFluidBalance = profileTotalIntake - profileTotalOutput;
@@ -2875,29 +2887,33 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       </div>
 
                       <Tabs defaultValue="vitals" className="w-full">
-                        <div className="overflow-x-auto">
-                          <TabsList className="w-max flex gap-1 h-auto flex-wrap">
-                            <TabsTrigger value="vitals" className="text-[10px] px-2 py-1">Vitals</TabsTrigger>
-                            <TabsTrigger value="allergies" className="text-[10px] px-2 py-1">Allergies</TabsTrigger>
-                            <TabsTrigger value="careplan" className="text-[10px] px-2 py-1">Care Plan</TabsTrigger>
-                            <TabsTrigger value="diabetic" className="text-[10px] px-2 py-1">Diabetic</TabsTrigger>
-                            <TabsTrigger value="intake" className="text-[10px] px-2 py-1">Intake</TabsTrigger>
-                            <TabsTrigger value="output" className="text-[10px] px-2 py-1">Output</TabsTrigger>
-                            <TabsTrigger value="drugchart" className="text-[10px] px-2 py-1">Drug Chart</TabsTrigger>
-                            <TabsTrigger value="tests" className="text-[10px] px-2 py-1">Tests</TabsTrigger>
-                            <TabsTrigger value="nursing" className="text-[10px] px-2 py-1">Nursing Notes</TabsTrigger>
-                            <TabsTrigger value="investigation" className="text-[10px] px-2 py-1">Investigation</TabsTrigger>
-                            <TabsTrigger value="oxygen" className="text-[10px] px-2 py-1">Oxygen</TabsTrigger>
-                            <TabsTrigger value="ventilator" className="text-[10px] px-2 py-1">Ventilator</TabsTrigger>
-                            <TabsTrigger value="inotropes" className="text-[10px] px-2 py-1">Inotropes</TabsTrigger>
-                            <TabsTrigger value="doctorsprogress" className="text-[10px] px-2 py-1">Doctor's Progress</TabsTrigger>
-                            <TabsTrigger value="doctorsvisit" className="text-[10px] px-2 py-1">Doctor's Visit</TabsTrigger>
-                            <TabsTrigger value="nursingassessment" className="text-[10px] px-2 py-1">Nursing Assessment</TabsTrigger>
-                            <TabsTrigger value="nursingprogress" className="text-[10px] px-2 py-1">Nursing Progress</TabsTrigger>
-                            <TabsTrigger value="indoorconsultation" className="text-[10px] px-2 py-1">Indoor Continuation</TabsTrigger>
-                            <TabsTrigger value="initialassessment" className="text-[10px] px-2 py-1">Initial Assessment</TabsTrigger>
-                            <TabsTrigger value="surgerynotes" className="text-[10px] px-2 py-1">Surgery Notes</TabsTrigger>
-                          </TabsList>
+                        <div className="relative border-b border-border pb-0 mb-3">
+                          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pb-2">
+                            <TabsList className="inline-flex h-auto items-center gap-0.5 bg-muted/40 p-1 rounded-lg w-max"
+                              style={{ flexWrap: "nowrap" }}>
+                              <TabsTrigger value="vitals" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Vitals</TabsTrigger>
+                              <TabsTrigger value="allergies" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Allergies</TabsTrigger>
+                              <TabsTrigger value="careplan" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Care Plan</TabsTrigger>
+                              <TabsTrigger value="diabetic" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Diabetic</TabsTrigger>
+                              <TabsTrigger value="intake" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Intake</TabsTrigger>
+                              <TabsTrigger value="output" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Output</TabsTrigger>
+                              <TabsTrigger value="drugchart" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Drug Chart</TabsTrigger>
+                              <TabsTrigger value="tests" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Tests</TabsTrigger>
+                              <TabsTrigger value="nursing" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Nursing Notes</TabsTrigger>
+                              <TabsTrigger value="investigation" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Investigation</TabsTrigger>
+                              <TabsTrigger value="oxygen" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Oxygen</TabsTrigger>
+                              <TabsTrigger value="ventilator" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Ventilator</TabsTrigger>
+                              <TabsTrigger value="inotropes" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Inotropes</TabsTrigger>
+                              <TabsTrigger value="dutystaff" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Duty Staff</TabsTrigger>
+                              <TabsTrigger value="doctorsprogress" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Dr. Progress</TabsTrigger>
+                              <TabsTrigger value="doctorsvisit" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Dr. Visit</TabsTrigger>
+                              <TabsTrigger value="nursingassessment" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Nursing Assessment</TabsTrigger>
+                              <TabsTrigger value="nursingprogress" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Nursing Progress</TabsTrigger>
+                              <TabsTrigger value="indoorconsultation" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Indoor Sheet</TabsTrigger>
+                              <TabsTrigger value="initialassessment" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Initial Assessment</TabsTrigger>
+                              <TabsTrigger value="surgerynotes" className="text-[10px] px-2 py-1 h-7 whitespace-nowrap rounded-md">Surgery Notes</TabsTrigger>
+                            </TabsList>
+                          </div>
                         </div>
 
                         {/* Vitals Tab */}
@@ -3375,6 +3391,29 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                   ))}
                                 </tbody>
                               </table>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        {/* Duty Staff Tab */}
+                        <TabsContent value="dutystaff" className="mt-3">
+                          {profileDutyStaff.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No duty staff records</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {profileDutyStaff.map((r: any) => (
+                                <div key={r.id} className="border rounded-lg p-3 text-xs flex items-start justify-between gap-2">
+                                  <div className="space-y-0.5">
+                                    <p className="font-semibold text-sm">{r.nurseName || '—'}</p>
+                                    {r.nursesNotes && <p className="text-muted-foreground">{r.nursesNotes}</p>}
+                                    {r.shift && <Badge variant="outline" className="text-[9px]">{r.shift}</Badge>}
+                                  </div>
+                                  <div className="text-right text-muted-foreground shrink-0">
+                                    <p>{r.shiftStartTime ? new Date(r.shiftStartTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—'}</p>
+                                    {r.staffSignEmpNo && <p className="text-[9px]">Emp: {r.staffSignEmpNo}</p>}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </TabsContent>
