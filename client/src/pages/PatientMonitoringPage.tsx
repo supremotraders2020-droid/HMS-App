@@ -2209,10 +2209,12 @@ export function InotropesTab({ session }: { session: Session }) {
     const rows = records.map((r: any, idx: number) => 
       `<tr>
         <td style="text-align:center;">${idx + 1}</td>
-        <td>${r.drugName || '-'}</td>
         <td>${r.diagnosis || '-'}</td>
+        <td>${r.drugName || '-'}</td>
+        <td style="text-align:center;">${r.injectionFrequency || '-'}</td>
+        <td>${r.medicineName || '-'}</td>
+        <td style="text-align:center;">${r.medicineFrequency || '-'}</td>
         <td style="text-align:center;">${r.startTime ? format(new Date(r.startTime), 'dd/MM/yyyy') : '-'}</td>
-        <td style="text-align:center;">${r.startTime ? format(new Date(r.startTime), 'HH:mm') : '-'}</td>
         <td>${r.nurseName || '-'}</td>
       </tr>`
     ).join('');
@@ -2224,17 +2226,19 @@ export function InotropesTab({ session }: { session: Session }) {
           <thead>
             <tr>
               <th style="width:40px;">S.No</th>
+              <th>Diagnosis</th>
               <th>Injection Name</th>
-              <th>Diagnosis/Indication</th>
+              <th style="width:60px;">Inj. Freq.</th>
+              <th>Medicine Name</th>
+              <th style="width:60px;">Med. Freq.</th>
               <th style="width:100px;">Date</th>
-              <th style="width:80px;">Time</th>
               <th>Administered By</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
           <tfoot>
             <tr class="summary-row">
-              <td colspan="6" style="text-align:right;">Total Injections: ${records.length}</td>
+              <td colspan="8" style="text-align:right;">Total Records: ${records.length}</td>
             </tr>
           </tfoot>
         </table>

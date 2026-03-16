@@ -2040,9 +2040,12 @@ export const inotropesSedation = pgTable("inotropes_sedation", {
   sessionId: varchar("session_id").notNull(),
   drugName: text("drug_name").notNull(),
   diagnosis: text("diagnosis"),
+  injectionFrequency: text("injection_frequency"),
   concentration: text("concentration"),
   dose: text("dose"),
   rate: text("rate"), // ml/hr or mcg/kg/min
+  medicineName: text("medicine_name"),
+  medicineFrequency: text("medicine_frequency"),
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time"),
   route: text("route"),
