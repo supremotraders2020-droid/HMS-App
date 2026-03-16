@@ -5381,12 +5381,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { patientId } = req.query;
       
-      // Check authentication via headers
-      const userId = req.headers['x-user-id'] as string;
-      const userRole = req.headers['x-user-role'] as string;
-      
-      // Only allow authenticated users with appropriate roles to access patient data
-      const allowedRoles = ['ADMIN', 'DOCTOR', 'NURSE', 'OPD_MANAGER'];
+      // Accept session auth OR custom header auth
+      const sessionUser = (req.session as any)?.user as any;
+      const headerUserId = req.headers['x-user-id'] as string;
+      const headerUserRole = req.headers['x-user-role'] as string;
+      const userId = sessionUser?.id || headerUserId;
+      const userRole = sessionUser?.role || headerUserRole;
+
+      const allowedRoles = ['SUPER_ADMIN', 'ADMIN', 'DOCTOR', 'NURSE', 'OPD_MANAGER'];
       if (!userId || !userRole || !allowedRoles.includes(userRole)) {
         return res.status(403).json({ error: "Access denied. Authentication required to generate consent forms." });
       }
@@ -5397,14 +5399,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Consent template not found" });
       }
 
-      // Get patient data if provided (scoped query by ID, not full table scan)
-      let patient = null;
+      // Get patient data if provided — try servicePatients first, then trackingPatients
+      let patient: any = null;
       if (patientId && typeof patientId === 'string' && patientId !== 'none') {
-        const [foundPatient] = await db.select().from(servicePatients).where(eq(servicePatients.id, patientId));
-        if (!foundPatient) {
-          return res.status(404).json({ error: "Patient not found" });
+        const [foundServicePatient] = await db.select().from(servicePatients).where(eq(servicePatients.id, patientId));
+        if (foundServicePatient) {
+          patient = foundServicePatient;
+        } else {
+          // Try tracking/IPD patient (used by OT, ICU, etc.)
+          const [foundTracking] = await db.select().from(trackingPatients).where(eq(trackingPatients.id, patientId));
+          if (foundTracking) {
+            // Normalise to service-patient shape expected by the template renderer
+            const nameParts = (foundTracking.name || "").split(" ");
+            patient = {
+              firstName: nameParts[0] || foundTracking.name || "",
+              lastName: nameParts.slice(1).join(" ") || "",
+              dateOfBirth: null,
+              gender: (foundTracking as any).gender || "",
+              phone: (foundTracking as any).phone || "",
+              address: (foundTracking as any).address || "",
+              _age: (foundTracking as any).age || "",  // already a string
+            };
+          }
+          // If not found in either table, continue with null patient (blank placeholders)
         }
-        patient = foundPatient;
       }
 
       // Handle dynamic consent forms that are generated on the fly (not from PDF files)
@@ -5428,7 +5446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Generate Patient Counselling, Education & Documentation Consent Form
           // Each language on separate page - matching Digital Consent Form format
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -5662,7 +5680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== 2. Patient Education Consent ==========
         if (consentType === 'PATIENT_EDUCATION') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -5882,7 +5900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== MJPJAY Scheme Consent ==========
         if (consentType === 'MJPJAY_SCHEME') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -6040,7 +6058,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Billing Acknowledgement ==========
         if (consentType === 'BILLING_ACKNOWLEDGEMENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -6147,7 +6165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Fitness Certificate ==========
         if (consentType === 'FITNESS_CERTIFICATE') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -6254,7 +6272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== General Procedure ==========
         if (consentType === 'GENERAL_PROCEDURE') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -6361,7 +6379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Minor Procedure ==========
         if (consentType === 'MINOR_PROCEDURE') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -6468,7 +6486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Physiotherapy ==========
         if (consentType === 'PHYSIOTHERAPY') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -6575,7 +6593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Recovery Sheet ==========
         if (consentType === 'RECOVERY_SHEET') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -6682,7 +6700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Anaesthesia Type ==========
         if (consentType === 'ANAESTHESIA_TYPE') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -6809,7 +6827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Anaesthesia High Risk Consent ==========
         if (consentType === 'ANAESTHESIA_HIGH_RISK') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -6960,7 +6978,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Surgical High Risk Consent ==========
         if (consentType === 'SURGICAL_HIGH_RISK') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -7117,7 +7135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Anaesthetist Notes - Format 1 ==========
         if (consentType === 'ANAESTHETIST_NOTES_F1') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -7321,7 +7339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Anaesthetist Notes - Format 2 ==========
         if (consentType === 'ANAESTHETIST_NOTES_F2') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -7570,7 +7588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== DAMA - Discharge Against Medical Advice ==========
         if (consentType === 'DAMA_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -7746,7 +7764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Absconding from Hospital Documentation ==========
         if (consentType === 'ABSCONDING_DOC') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -7910,7 +7928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Physical Restraint Request Form ==========
         if (consentType === 'RESTRAINT_REQUEST') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -8080,7 +8098,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Physical Restraint Informed Consent ==========
         if (consentType === 'RESTRAINT_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -8259,7 +8277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== Physical Restraint Monitoring Record ==========
         if (consentType === 'RESTRAINT_MONITORING') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -8448,7 +8466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== MTP - Medical Termination of Pregnancy Consent ==========
         if (consentType === 'MTP_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -8639,7 +8657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== THROMBOLYSIS CONSENT ==========
         if (consentType === 'THROMBOLYSIS_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -8815,7 +8833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== HAEMODIALYSIS CONSENT ==========
         if (consentType === 'HAEMODIALYSIS_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -8991,7 +9009,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== DIALYSIS CONSENT ==========
         if (consentType === 'DIALYSIS_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -9170,7 +9188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== SHIFT OTHER HOSPITAL CONSENT ==========
         if (consentType === 'SHIFT_OTHER_HOSPITAL_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -9350,7 +9368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== LUMBAR PUNCTURE (LP) CONSENT ==========
         if (consentType === 'LUMBAR_PUNCTURE_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -9527,7 +9545,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== VENTILATOR SUPPORT CONSENT ==========
         if (consentType === 'VENTILATOR_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -9704,7 +9722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== TRANSFER FOR DIAGNOSTIC PURPOSE CONSENT ==========
         if (consentType === 'TRANSFER_DIAGNOSTIC_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -9887,7 +9905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== INTUBATION CONSENT ==========
         if (consentType === 'INTUBATION_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
@@ -10067,7 +10085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // ========== CENTRAL LINE CONSENT ==========
         if (consentType === 'CENTRAL_LINE_CONSENT') {
           const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '__________';
-          const patientAge = patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________';
+          const patientAge = patient?._age || (patient?.dateOfBirth ? calculateAge(patient.dateOfBirth) : '__________');
           const patientGender = patient?.gender || '__________';
           const patientUhid = patient?.uhidNumber || patient?.id?.substring(0, 8).toUpperCase() || '__________';
           
