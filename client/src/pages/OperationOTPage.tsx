@@ -761,6 +761,8 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
   const { toast } = useToast();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [viewingConsent, setViewingConsent] = useState<any | null>(null);
+  const [viewHtmlFallback, setViewHtmlFallback] = useState<string>("");
+  const [viewHtmlLoading, setViewHtmlLoading] = useState(false);
 
   const isSurgical = consentKind === "surgery";
 
@@ -811,6 +813,19 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
     mutationFn: async () => {
       const template = templates.find((t: any) => t.id === selectedTemplateId);
       if (!template) throw new Error("No template selected");
+
+      // Fetch the rendered patient-specific HTML so View will show the filled form
+      let consentContent = "";
+      try {
+        const renderRes = await fetch(
+          `/api/consent-templates/${template.id}/render?patientId=${patientId}`,
+          { credentials: "include" }
+        );
+        if (renderRes.ok) consentContent = await renderRes.text();
+      } catch {
+        // non-fatal — save without content
+      }
+
       const payload = {
         patientId,
         patientName,
@@ -819,6 +834,7 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
         consentTitle: template.title,
         language: "English",
         doctorName: caseData?.surgeonName || caseData?.doctorName || "",
+        consentContent: consentContent || undefined,
       };
       return apiRequest("POST", "/api/digital-consents", payload);
     },
@@ -852,13 +868,18 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between gap-2 pr-6">
               <span className="truncate">{viewingConsent?.consentTitle}</span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handlePrint(viewingConsent?.consentContent || "", viewingConsent?.consentTitle || "Consent")}
-              >
-                <Printer className="h-3.5 w-3.5 mr-1" /> Print
-              </Button>
+              {(viewingConsent?.consentContent || viewHtmlFallback) && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handlePrint(
+                    viewingConsent?.consentContent || viewHtmlFallback,
+                    viewingConsent?.consentTitle || "Consent"
+                  )}
+                >
+                  <Printer className="h-3.5 w-3.5 mr-1" /> Print
+                </Button>
+              )}
             </DialogTitle>
             <p className="text-xs text-muted-foreground pt-1">
               Patient: {viewingConsent?.patientName}
@@ -867,10 +888,15 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
               {viewingConsent?.signedAt && ` · ${format(new Date(viewingConsent.signedAt), "dd MMM yyyy, hh:mm a")}`}
             </p>
           </DialogHeader>
-          {viewingConsent?.consentContent ? (
+          {viewHtmlLoading ? (
+            <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+              <RefreshCw className="h-5 w-5 animate-spin" />
+              <span className="text-sm">Loading consent form…</span>
+            </div>
+          ) : (viewingConsent?.consentContent || viewHtmlFallback) ? (
             <div
               className="border rounded-lg p-4 bg-white dark:bg-gray-950 text-sm"
-              dangerouslySetInnerHTML={{ __html: viewingConsent.consentContent }}
+              dangerouslySetInnerHTML={{ __html: viewingConsent?.consentContent || viewHtmlFallback }}
             />
           ) : (
             <div className="text-center py-8 text-muted-foreground text-sm">
@@ -897,7 +923,29 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
                 </p>
               </div>
               <div className="flex gap-1 shrink-0">
-                <Button size="sm" variant="outline" onClick={() => setViewingConsent(c)}>
+                <Button size="sm" variant="outline" onClick={async () => {
+                  setViewingConsent(c);
+                  setViewHtmlFallback("");
+                  if (!c.consentContent) {
+                    // Find matching template by title to render fallback
+                    const match = templates.find((t: any) =>
+                      t.title === c.consentTitle ||
+                      (t.title || "").toLowerCase() === (c.consentTitle || "").toLowerCase()
+                    );
+                    if (match) {
+                      setViewHtmlLoading(true);
+                      try {
+                        const res = await fetch(
+                          `/api/consent-templates/${match.id}/render?patientId=${patientId}`,
+                          { credentials: "include" }
+                        );
+                        if (res.ok) setViewHtmlFallback(await res.text());
+                      } finally {
+                        setViewHtmlLoading(false);
+                      }
+                    }
+                  }
+                }}>
                   <Eye className="h-3.5 w-3.5 mr-1" /> View
                 </Button>
                 <Button size="sm" variant="ghost" asChild>
