@@ -849,39 +849,14 @@ function OTConsentPanel({ patientId, patientName, consentKind, caseData }: {
     },
   });
 
-  const handlePrint = (html: string, title: string) => {
-    const printWin = window.open("", "_blank", "width=900,height=700");
-    if (!printWin) return;
-    printWin.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
-      <style>body{font-family:Arial,sans-serif;margin:20px;color:#000}@media print{body{margin:0}}</style>
-      </head><body>${html}</body></html>`);
-    printWin.document.close();
-    printWin.focus();
-    printWin.print();
-  };
-
   return (
     <div className="space-y-4">
       {/* Consent view dialog */}
-      <Dialog open={!!viewingConsent} onOpenChange={(open) => { if (!open) setViewingConsent(null); }}>
+      <Dialog open={!!viewingConsent} onOpenChange={(open) => { if (!open) { setViewingConsent(null); setViewHtmlFallback(""); } }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between gap-2 pr-6">
-              <span className="truncate">{viewingConsent?.consentTitle}</span>
-              {(viewingConsent?.consentContent || viewHtmlFallback) && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handlePrint(
-                    viewingConsent?.consentContent || viewHtmlFallback,
-                    viewingConsent?.consentTitle || "Consent"
-                  )}
-                >
-                  <Printer className="h-3.5 w-3.5 mr-1" /> Print
-                </Button>
-              )}
-            </DialogTitle>
-            <p className="text-xs text-muted-foreground pt-1">
+            <DialogTitle className="truncate pr-8">{viewingConsent?.consentTitle}</DialogTitle>
+            <p className="text-xs text-muted-foreground">
               Patient: {viewingConsent?.patientName}
               {viewingConsent?.patientUhid && ` · UHID: ${viewingConsent.patientUhid}`}
               {viewingConsent?.doctorName && ` · Dr. ${viewingConsent.doctorName}`}
