@@ -214,6 +214,9 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
   const [consentPatientPopoverOpen, setConsentPatientPopoverOpen] = useState(false);
   const [consentPatientId, setConsentPatientId] = useState("");
   const [viewingDigitalConsent, setViewingDigitalConsent] = useState<any | null>(null);
+  const [consentViewHtml, setConsentViewHtml] = useState<string>("");
+  const [consentViewLoading, setConsentViewLoading] = useState(false);
+  const consentIframeRef = useRef<HTMLIFrameElement>(null);
   const [consentTitle, setConsentTitle] = useState("");
   const [consentDescription, setConsentDescription] = useState("");
   const [consentType, setConsentType] = useState("");
@@ -1057,6 +1060,50 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       window.history.replaceState({}, '', newUrl);
     }
   }, [patientForm]);
+
+  // Load consent form HTML when viewing a digital consent
+  useEffect(() => {
+    if (!viewingDigitalConsent) {
+      setConsentViewHtml("");
+      return;
+    }
+    if (viewingDigitalConsent.consentContent) {
+      setConsentViewHtml(viewingDigitalConsent.consentContent);
+      return;
+    }
+    // No stored content — fetch from the template render API
+    const consentTypeKey = viewingDigitalConsent.consentType;
+    const patientId = viewingDigitalConsent.patientId || viewingDigitalConsent.patientUhid || "";
+    if (!consentTypeKey) return;
+    setConsentViewLoading(true);
+    setConsentViewHtml("");
+    fetch(`/api/consent-templates/${consentTypeKey}/render?patientId=${patientId}`, {
+      headers: {
+        'x-user-id': currentUserId || '',
+        'x-user-role': currentRole,
+      },
+    })
+      .then((res) => res.text())
+      .then((html) => {
+        setConsentViewHtml(html);
+        setConsentViewLoading(false);
+      })
+      .catch(() => {
+        setConsentViewLoading(false);
+      });
+  }, [viewingDigitalConsent, currentUserId, currentRole]);
+
+  // Write consent HTML into iframe
+  useEffect(() => {
+    if (consentIframeRef.current && consentViewHtml) {
+      const doc = consentIframeRef.current.contentDocument;
+      if (doc) {
+        doc.open();
+        doc.write(consentViewHtml);
+        doc.close();
+      }
+    }
+  }, [consentViewHtml]);
 
   const recordForm = useForm({
     resolver: zodResolver(medicalRecordFormSchema),
@@ -4560,31 +4607,40 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
       </Dialog>
 
       {/* Digital Consent View Dialog */}
-      <Dialog open={!!viewingDigitalConsent} onOpenChange={(open) => { if (!open) setViewingDigitalConsent(null); }}>
-        <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
-          <DialogHeader>
+      <Dialog open={!!viewingDigitalConsent} onOpenChange={(open) => { if (!open) { setViewingDigitalConsent(null); setConsentViewHtml(""); } }}>
+        <DialogContent className="max-w-4xl flex flex-col" style={{ height: "90vh", maxHeight: "90vh" }}>
+          <DialogHeader className="shrink-0 pb-2 border-b">
             <DialogTitle className="flex items-center gap-2">
               <ClipboardCheck className="h-5 w-5 text-blue-500" />
               {viewingDigitalConsent?.consentTitle || viewingDigitalConsent?.consentType || "Consent Form"}
             </DialogTitle>
-          </DialogHeader>
-          {viewingDigitalConsent?.consentContent ? (
-            <div
-              className="prose prose-sm max-w-none text-foreground"
-              dangerouslySetInnerHTML={{ __html: viewingDigitalConsent.consentContent }}
-            />
-          ) : (
-            <div className="space-y-3 py-4">
-              <div className="p-4 border rounded-lg space-y-2">
-                <p className="text-sm"><span className="font-medium">Consent Title:</span> {viewingDigitalConsent?.consentTitle || "—"}</p>
-                <p className="text-sm"><span className="font-medium">Type:</span> {viewingDigitalConsent?.consentType || "—"}</p>
-                <p className="text-sm"><span className="font-medium">Patient:</span> {viewingDigitalConsent?.patientName || "—"}</p>
-                {viewingDigitalConsent?.doctorName && <p className="text-sm"><span className="font-medium">Doctor:</span> {viewingDigitalConsent.doctorName}</p>}
-                <p className="text-sm"><span className="font-medium">Date:</span> {viewingDigitalConsent?.createdAt ? new Date(viewingDigitalConsent.createdAt).toLocaleString("en-IN") : "—"}</p>
-              </div>
-              <p className="text-xs text-muted-foreground text-center">Full form preview not available for this record. Detailed content is stored for consents signed after the latest system update.</p>
+            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-1">
+              {viewingDigitalConsent?.patientName && <span><span className="font-medium text-foreground">Patient:</span> {viewingDigitalConsent.patientName}</span>}
+              {viewingDigitalConsent?.doctorName && <span><span className="font-medium text-foreground">Doctor:</span> {viewingDigitalConsent.doctorName}</span>}
+              {viewingDigitalConsent?.createdAt && <span><span className="font-medium text-foreground">Date:</span> {new Date(viewingDigitalConsent.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>}
             </div>
-          )}
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {consentViewLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center space-y-2">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+                  <p className="text-sm text-muted-foreground">Loading consent form...</p>
+                </div>
+              </div>
+            ) : consentViewHtml ? (
+              <iframe
+                ref={consentIframeRef}
+                title="Consent Form"
+                className="w-full h-full border-0 rounded"
+                style={{ minHeight: "500px" }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-sm text-muted-foreground">Consent form content could not be loaded.</p>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
