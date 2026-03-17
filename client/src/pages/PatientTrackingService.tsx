@@ -69,7 +69,7 @@ import {
 import type { TrackingPatient, Medication, Meal, Vitals, ServicePatient, Doctor, DoctorVisit, PatientBill } from "@shared/schema";
 import { HOSPITAL_DEPARTMENTS } from "@shared/schema";
 
-type TabType = "patients" | "admit" | "doctor_visits" | "billing";
+type TabType = "patients" | "admit" | "billing";
 
 interface PatientMovement {
   id: number;
@@ -854,7 +854,6 @@ export default function PatientTrackingService() {
   const tabs = [
     { id: "patients" as TabType, label: "All Patients", icon: Bed },
     { id: "admit" as TabType, label: "Admit Patient", icon: Plus },
-    { id: "doctor_visits" as TabType, label: "Doctor Visit", icon: Stethoscope },
     { id: "billing" as TabType, label: "Billing", icon: IndianRupee },
   ];
 
@@ -1815,139 +1814,6 @@ export default function PatientTrackingService() {
               </form>
             </CardContent>
           </Card>
-        )}
-
-        {activeTab === "doctor_visits" && (
-          <>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Stethoscope className="h-5 w-5" />
-                Schedule Doctor Visit
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddDoctorVisit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="patientId">Select Patient</Label>
-                    <input type="hidden" name="patientId" value={selectedDoctorVisitPatientId} />
-                    <Popover open={doctorVisitPatientPopoverOpen} onOpenChange={setDoctorVisitPatientPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={doctorVisitPatientPopoverOpen}
-                          className={cn(
-                            "w-full justify-between h-10",
-                            !selectedDoctorVisitPatientId && "text-muted-foreground"
-                          )}
-                          data-testid="button-select-doctor-visit-patient"
-                        >
-                          {selectedDoctorVisitPatientId
-                            ? (() => {
-                                const p = patients.find(p => p.id === selectedDoctorVisitPatientId);
-                                return p ? `${p.name} (Room ${p.room})` : "Select patient";
-                              })()
-                            : "Select patient"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Search patients..." data-testid="input-doctor-visit-patient-search" />
-                          <CommandList>
-                            <CommandEmpty>No patients found.</CommandEmpty>
-                            <CommandGroup>
-                              {patients.filter(p => p.status !== "discharged").map((p) => (
-                                <CommandItem
-                                  key={p.id}
-                                  value={`${p.name} ${p.room}`}
-                                  onSelect={() => {
-                                    setSelectedDoctorVisitPatientId(p.id);
-                                    setDoctorVisitPatientPopoverOpen(false);
-                                  }}
-                                  data-testid={`doctor-visit-patient-option-${p.id}`}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      selectedDoctorVisitPatientId === p.id ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {p.name} - Room {p.room}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="visitDate">Date</Label>
-                    <Input type="date" name="visitDate" required data-testid="input-visit-date" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="visitTime">Time</Label>
-                    <Input type="time" name="visitTime" required data-testid="input-visit-time" />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="notes">Notes (Optional)</Label>
-                    <Textarea name="notes" placeholder="Any additional notes about the visit" data-testid="input-doctor-visit-notes" />
-                  </div>
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={addDoctorVisitMutation.isPending}
-                  data-testid="button-schedule-doctor-visit"
-                >
-                  {addDoctorVisitMutation.isPending ? "Scheduling..." : "Update"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {selectedDoctorVisitPatientId && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Previous Visits
-                  {(() => {
-                    const p = patients.find(p => p.id === selectedDoctorVisitPatientId);
-                    return p ? ` - ${p.name}` : "";
-                  })()}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {doctorVisits.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No previous visits recorded for this patient.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {doctorVisits.map((visit) => (
-                      <div key={visit.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg" data-testid={`doctor-visit-${visit.id}`}>
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-primary/10 rounded-full">
-                            <Stethoscope className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{visit.visitDate} at {visit.visitTime}</p>
-                            {visit.notes && <p className="text-sm text-muted-foreground">{visit.notes}</p>}
-                          </div>
-                        </div>
-                        <Badge variant={visit.status === "completed" ? "default" : visit.status === "cancelled" ? "destructive" : "secondary"}>
-                          {visit.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-          </>
         )}
 
         {activeTab === "billing" && (
