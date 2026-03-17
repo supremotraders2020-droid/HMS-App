@@ -5393,8 +5393,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied. Authentication required to generate consent forms." });
       }
       
-      // Get the template
-      const template = await databaseStorage.getConsentTemplate(req.params.id);
+      // Get the template — try by UUID first, then fall back to consent_type string
+      let template = await databaseStorage.getConsentTemplate(req.params.id);
+      if (!template) {
+        // Try lookup by consent_type (e.g. "SURGICAL_HIGH_RISK")
+        const byType = await databaseStorage.getConsentTemplatesByType(req.params.id);
+        if (byType && byType.length > 0) {
+          template = byType[0];
+        }
+      }
       if (!template) {
         return res.status(404).json({ error: "Consent template not found" });
       }
