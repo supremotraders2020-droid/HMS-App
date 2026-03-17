@@ -1002,8 +1002,8 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
         barcodeData={{
           uhid: scannedPatient.patient.uhid,
           admissionType: scannedPatient.patient.admissionType,
-          wardBed: scannedPatient.patient.wardBed,
-          treatingDoctor: scannedPatient.patient.treatingDoctor,
+          wardBed: scannedPatient.patient.wardBed ?? undefined,
+          treatingDoctor: scannedPatient.patient.treatingDoctor ?? undefined,
         }}
         trackingData={null}
         enabled={true}
