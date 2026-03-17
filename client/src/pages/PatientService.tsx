@@ -2873,14 +2873,21 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                       ) : (
                         <div className="space-y-3">
                           {longitudinalProfile.opdHistory?.map((visit: any) => (
-                            <div key={visit.id} className="p-3 border rounded-lg">
-                              <div className="flex items-center justify-between mb-2">
-                                <Badge variant="outline">{visit.department || "General"}</Badge>
-                                <span className="text-xs text-muted-foreground">{new Date(visit.appointmentDate).toLocaleDateString()}</span>
+                            <div key={visit.id} className="p-3 border rounded-lg space-y-1.5">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Badge variant="outline">{visit.department || "General OPD"}</Badge>
+                                  <Badge variant={visit.status === "completed" ? "default" : visit.status === "checked-in" ? "secondary" : "outline"} className="text-xs capitalize">{visit.status}</Badge>
+                                </div>
+                                <span className="text-xs text-muted-foreground">{visit.appointmentDate} {visit.timeSlot ? `• ${visit.timeSlot}` : ""}</span>
                               </div>
-                              <p className="text-sm"><strong>Doctor:</strong> {visit.doctorName || "N/A"}</p>
-                              <p className="text-sm"><strong>Diagnosis:</strong> {visit.diagnosis || visit.reasonForVisit || "N/A"}</p>
-                              <div className="text-sm flex items-center gap-2"><strong>Status:</strong> <Badge variant={visit.status === "completed" ? "default" : "secondary"}>{visit.status}</Badge></div>
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-sm">
+                                <p><span className="text-muted-foreground">Doctor:</span> {visit.doctorName || "N/A"}</p>
+                                <p><span className="text-muted-foreground">Appt ID:</span> {visit.appointmentId || visit.id?.slice(0,8)}</p>
+                              </div>
+                              {(visit.symptoms || visit.diagnosis) && (
+                                <p className="text-sm"><span className="text-muted-foreground">Symptoms:</span> {visit.symptoms || visit.diagnosis}</p>
+                              )}
                             </div>
                           ))}
                         </div>

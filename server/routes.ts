@@ -10659,22 +10659,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use patient name for lookups in tables that don't have patientId FK
       const patientName = `${patient.firstName} ${patient.lastName}`.trim();
       
-      // 1. OPD History - Get appointments by patient name or patient ID
+      // 1. OPD History - Get appointments by patient name (trimmed/ilike) or patient ID
       let opdHistory: any[] = [];
       try {
-        opdHistory = await db.select().from(appointments)
+        const rawAppts = await db.select().from(appointments)
           .where(or(
-            eq(appointments.patientName, patientName),
+            sql`TRIM(LOWER(${appointments.patientName})) = LOWER(${patientName})`,
             eq(appointments.patientId, patientId)
           ))
           .orderBy(desc(appointments.createdAt));
+
+        // Enrich with doctor name from doctors table
+        if (rawAppts.length > 0) {
+          const doctorIds = [...new Set(rawAppts.map(a => a.doctorId).filter(Boolean))];
+          let doctorMap: Record<string, string> = {};
+          if (doctorIds.length > 0) {
+            const doctorRows = await db.select({ id: doctors.id, name: doctors.name })
+              .from(doctors)
+              .where(sql`${doctors.id} = ANY(${doctorIds})`);
+            doctorRows.forEach(d => { doctorMap[d.id] = d.name; });
+            // Also try staff_master by userId
+            const smRows = await db.select({ userId: staffMaster.userId, fullName: staffMaster.fullName })
+              .from(staffMaster)
+              .where(sql`${staffMaster.userId} = ANY(${doctorIds})`);
+            smRows.forEach(s => { if (s.userId) doctorMap[s.userId] = s.fullName; });
+          }
+          opdHistory = rawAppts.map(a => ({
+            ...a,
+            doctorName: doctorMap[a.doctorId] || a.doctorId || "N/A",
+            diagnosis: a.symptoms || "",
+          }));
+        }
       } catch (e) { console.log("No OPD history found"); }
       
       // 2. IPD History - Get tracking patient data by patient name
       let ipdHistory: any[] = [];
       try {
         ipdHistory = await db.select().from(trackingPatients)
-          .where(eq(trackingPatients.name, patientName))
+          .where(sql`TRIM(LOWER(${trackingPatients.name})) = LOWER(${patientName})`)
           .orderBy(desc(trackingPatients.admissionDate));
       } catch (e) { console.log("No IPD history found"); }
       
