@@ -747,17 +747,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
     staleTime: 0,
   });
 
-  const { data: profileTests = [] } = useQuery<any[]>({
-    queryKey: ["/api/patient-monitoring/sessions", profileSessionId, "tests"],
-    queryFn: async () => {
-      if (!profileSessionId) return [];
-      const res = await fetch(`/api/patient-monitoring/sessions/${profileSessionId}/tests`, { credentials: "include" });
-      if (!res.ok) return [];
-      return res.json();
-    },
-    enabled: !!profileSessionId && showProfileDialog,
-    staleTime: 0,
-  });
 
   const { data: profileShiftNotes = [] } = useQuery<any[]>({
     queryKey: ["/api/patient-monitoring/shift-notes", profileSessionId],
@@ -2789,7 +2778,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 );
               })()}
               <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 mb-4 h-auto gap-0.5">
+                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-4 h-auto gap-0.5">
                   <TabsTrigger value="opd" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <ClipboardList className="h-3 w-3 hidden sm:block" />
                     <span>OPD</span>
@@ -2805,10 +2794,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   <TabsTrigger value="medication" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <Pill className="h-3 w-3 hidden sm:block" />
                     <span>Meds</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="tests" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
-                    <FlaskConical className="h-3 w-3 hidden sm:block" />
-                    <span>Tests</span>
                   </TabsTrigger>
                   <TabsTrigger value="consent" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <FileCheck className="h-3 w-3 hidden sm:block" />
@@ -3239,28 +3224,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           )}
                           </TabsContent>
 
-                        {/* Tests Tab */}
-                        <TabsContent value="tests" className="mt-2 pb-2">
-                          {profileTests.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-4">No tests ordered</p>
-                          ) : (
-                            <div className="space-y-2">
-                              {profileTests.map((t: any) => (
-                                <div key={t.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
-                                  <div>
-                                    <p className="font-medium">{t.testName || "—"}</p>
-                                    <p className="text-xs text-muted-foreground">{t.testType || t.category || "—"} · Dr. {t.doctorName || "—"}</p>
-                                    {t.priority && t.priority !== "ROUTINE" && <p className="text-xs text-orange-500">{t.priority}</p>}
-                                  </div>
-                                  <div className="text-right">
-                                    <Badge variant={t.status === "COMPLETED" ? "default" : t.status === "PENDING" ? "secondary" : "outline"} className="text-xs">{t.status || "—"}</Badge>
-                                    <p className="text-xs text-muted-foreground mt-0.5">{t.createdAt ? new Date(t.createdAt).toLocaleString() : "—"}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          </TabsContent>
 
                         {/* Nursing Notes / Shift Notes Tab */}
 
