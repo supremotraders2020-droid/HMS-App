@@ -2867,68 +2867,199 @@ export function MARTab({ session }: { session: Session }) {
   const sessionId = session.id;
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ medicineName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
+  const [form, setForm] = useState({
+    diagnosis: "",
+    date: format(new Date(), "yyyy-MM-dd"),
+    nurseId: "",
+    nurseName: "",
+    injections: [emptyInjRow()],
+    medicines: [emptyMedRow()],
+  });
 
   const { data: records = [], refetch } = useQuery<any[]>({
-    queryKey: [`/api/patient-monitoring/mar/${sessionId}`]
+    queryKey: [`/api/patient-monitoring/inotropes/${sessionId}`]
   });
 
   const { data: nurses = [] } = useQuery<any[]>({
     queryKey: ["/api/users/nurses"]
   });
 
+  const FREQUENCY_OPTIONS = ["OD", "BD", "TDS", "QID", "HS", "STAT", "SOS"];
+
   const saveMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/mar", data),
-    onSuccess: () => { 
-      refetch(); 
-      toast({ title: "Medicine Entry Added", description: "Medication recorded successfully" });
-      setForm({ medicineName: "", diagnosis: "", date: format(new Date(), "yyyy-MM-dd"), nurseId: "", nurseName: "" });
-      setDialogOpen(false);
-    },
+    mutationFn: (data: any) => apiRequest("POST", "/api/patient-monitoring/inotropes", data),
     onError: () => {
-      toast({ title: "Error", description: "Failed to save medication", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to save record", variant: "destructive" });
     }
   });
 
-  const handleSave = () => {
-    saveMutation.mutate({ 
-      sessionId, 
-      drugName: form.medicineName,
-      diagnosis: form.diagnosis,
-      route: "Oral",
-      dose: "As prescribed",
-      frequency: "1x",
-      scheduledTime: new Date(form.date).toISOString(),
-      nurseId: form.nurseId,
-      nurseName: form.nurseName,
-      status: "GIVEN"
-    });
+  const resetForm = () => setForm({
+    diagnosis: "",
+    date: format(new Date(), "yyyy-MM-dd"),
+    nurseId: "",
+    nurseName: "",
+    injections: [emptyInjRow()],
+    medicines: [emptyMedRow()],
+  });
+
+  const handleSave = async () => {
+    const maxLen = Math.max(form.injections.length, form.medicines.length);
+    const calls: Promise<any>[] = [];
+    for (let i = 0; i < maxLen; i++) {
+      const inj = form.injections[i];
+      const med = form.medicines[i];
+      if (inj?.name || med?.name) {
+        calls.push(saveMutation.mutateAsync({
+          sessionId,
+          drugName: inj?.name || (med?.name || "-"),
+          diagnosis: form.diagnosis,
+          injectionFrequency: inj?.frequency || null,
+          medicineName: med?.name || null,
+          medicineFrequency: med?.frequency || null,
+          startTime: new Date(form.date).toISOString(),
+          nurseId: form.nurseId,
+          nurseName: form.nurseName
+        }));
+      }
+    }
+    try {
+      await Promise.all(calls);
+      refetch();
+      toast({ title: "Records Saved", description: `${calls.length} record(s) added successfully` });
+      resetForm();
+      setDialogOpen(false);
+    } catch {
+      // error handled in onError
+    }
   };
+
+  const handleNurseChange = (nurseId: string) => {
+    const selectedNurse = nurses.find((n: any) => n.id === nurseId);
+    setForm({ ...form, nurseId, nurseName: selectedNurse?.fullName || "" });
+  };
+
+  const updateInjection = (idx: number, field: "name" | "frequency", value: string) => {
+    const updated = [...form.injections];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setForm({ ...form, injections: updated });
+  };
+
+  const addInjectionRow = () => setForm({ ...form, injections: [...form.injections, emptyInjRow()] });
+  const removeInjectionRow = (idx: number) => {
+    if (form.injections.length === 1) return;
+    setForm({ ...form, injections: form.injections.filter((_, i) => i !== idx) });
+  };
+
+  const updateMedicine = (idx: number, field: "name" | "frequency", value: string) => {
+    const updated = [...form.medicines];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setForm({ ...form, medicines: updated });
+  };
+
+  const addMedicineRow = () => setForm({ ...form, medicines: [...form.medicines, emptyMedRow()] });
+  const removeMedicineRow = (idx: number) => {
+    if (form.medicines.length === 1) return;
+    setForm({ ...form, medicines: form.medicines.filter((_, i) => i !== idx) });
+  };
+
+  const hasAtLeastOneEntry = form.injections.some(r => r.name) || form.medicines.some(r => r.name);
 
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-lg">Medication Administration Record</CardTitle>
+        <CardTitle className="text-lg">Drug Chart — Injections &amp; Medications</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm"><PlusCircle className="h-4 w-4 mr-1" /> Add Medicine</Button>
+            <Button size="sm" data-testid="button-add-mar-injection"><PlusCircle className="h-4 w-4 mr-1" /> Add Injection</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add Medicine</DialogTitle>
-              <DialogDescription>Record medication administration</DialogDescription>
+              <DialogTitle>Add Injection</DialogTitle>
+              <DialogDescription>Add injection/medication details</DialogDescription>
             </DialogHeader>
-            <div className="space-y-3">
-              <div><Label>Medicine Name</Label><Input value={form.medicineName} onChange={(e) => setForm({...form, medicineName: e.target.value})} /></div>
-              <div><Label>Diagnosis</Label><Input value={form.diagnosis} onChange={(e) => setForm({...form, diagnosis: e.target.value})} /></div>
-              <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
-              <div><Label>Staff Name</Label>
-                <Select value={form.nurseId} onValueChange={(v) => {
-                  const nurse = nurses.find((n: any) => n.id === v);
-                  setForm({...form, nurseId: v, nurseName: nurse?.fullName || ""});
-                }}>
-                  <SelectTrigger><SelectValue placeholder="Select nurse..." /></SelectTrigger>
-                  <SelectContent>{nurses.map((n: any) => <SelectItem key={n.id} value={n.id}>{n.fullName}</SelectItem>)}</SelectContent>
+            <div className="space-y-4">
+              <div>
+                <Label>Diagnosis</Label>
+                <Input value={form.diagnosis} onChange={(e) => setForm({...form, diagnosis: e.target.value})} placeholder="e.g., Septic Shock" />
+              </div>
+
+              {/* Injections - multi-row */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Injection Name</Label>
+                  <Button type="button" size="sm" variant="outline" onClick={addInjectionRow} className="h-7 px-2 gap-1 text-xs">
+                    <Plus className="h-3 w-3" /> Add Row
+                  </Button>
+                </div>
+                {form.injections.map((inj, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input
+                      className="flex-1"
+                      value={inj.name}
+                      onChange={(e) => updateInjection(idx, "name", e.target.value)}
+                      placeholder="e.g., Noradrenaline"
+                    />
+                    <Select value={inj.frequency} onValueChange={(v) => updateInjection(idx, "frequency", v)}>
+                      <SelectTrigger className="w-24"><SelectValue placeholder="Freq." /></SelectTrigger>
+                      <SelectContent>
+                        {FREQUENCY_OPTIONS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    {form.injections.length > 1 && (
+                      <Button type="button" size="icon" variant="ghost" onClick={() => removeInjectionRow(idx)} className="text-destructive shrink-0">
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Medicines - multi-row */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Medicine Name</Label>
+                  <Button type="button" size="sm" variant="outline" onClick={addMedicineRow} className="h-7 px-2 gap-1 text-xs">
+                    <Plus className="h-3 w-3" /> Add Row
+                  </Button>
+                </div>
+                {form.medicines.map((med, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input
+                      className="flex-1"
+                      value={med.name}
+                      onChange={(e) => updateMedicine(idx, "name", e.target.value)}
+                      placeholder="e.g., Paracetamol 500mg"
+                    />
+                    <Select value={med.frequency} onValueChange={(v) => updateMedicine(idx, "frequency", v)}>
+                      <SelectTrigger className="w-24"><SelectValue placeholder="Freq." /></SelectTrigger>
+                      <SelectContent>
+                        {FREQUENCY_OPTIONS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    {form.medicines.length > 1 && (
+                      <Button type="button" size="icon" variant="ghost" onClick={() => removeMedicineRow(idx)} className="text-destructive shrink-0">
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <Label>Date</Label>
+                <Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} />
+              </div>
+              <div>
+                <Label>Staff Name</Label>
+                <Select value={form.nurseId} onValueChange={handleNurseChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select nurse" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {nurses.map((nurse: any) => (
+                      <SelectItem key={nurse.id} value={nurse.id}>{nurse.fullName}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
             </div>
@@ -2936,8 +3067,8 @@ export function MARTab({ session }: { session: Session }) {
               <DialogClose asChild>
                 <Button variant="outline" type="button">Cancel</Button>
               </DialogClose>
-              <Button onClick={handleSave} disabled={!form.medicineName || !form.nurseId || saveMutation.isPending}>
-                {saveMutation.isPending ? "Saving..." : "Add"}
+              <Button onClick={handleSave} disabled={!hasAtLeastOneEntry || !form.nurseId || saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2945,23 +3076,29 @@ export function MARTab({ session }: { session: Session }) {
       </CardHeader>
       <CardContent>
         {records.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No medications recorded</p>
+          <p className="text-muted-foreground text-center py-8">No injections/medications recorded</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Medicine</TableHead>
                 <TableHead>Diagnosis</TableHead>
+                <TableHead>Injection Name</TableHead>
+                <TableHead>Freq.</TableHead>
+                <TableHead>Medicine Name</TableHead>
+                <TableHead>Freq.</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Staff</TableHead>
+                <TableHead>Staff Name</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {records.map((r: any) => (
                 <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.drugName}</TableCell>
                   <TableCell>{r.diagnosis || "-"}</TableCell>
-                  <TableCell className="text-xs">{r.scheduledTime ? format(new Date(r.scheduledTime), "dd/MM/yyyy") : "-"}</TableCell>
+                  <TableCell className="font-medium">{r.drugName}</TableCell>
+                  <TableCell>{r.injectionFrequency || "-"}</TableCell>
+                  <TableCell>{r.medicineName || "-"}</TableCell>
+                  <TableCell>{r.medicineFrequency || "-"}</TableCell>
+                  <TableCell>{r.startTime ? format(new Date(r.startTime), "dd/MM/yyyy") : format(new Date(r.createdAt), "dd/MM/yyyy")}</TableCell>
                   <TableCell>{r.nurseName || "-"}</TableCell>
                 </TableRow>
               ))}
