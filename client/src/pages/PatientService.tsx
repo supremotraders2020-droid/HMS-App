@@ -2778,7 +2778,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 );
               })()}
               <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-4 h-auto gap-0.5">
+                <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 mb-4 h-auto gap-0.5">
                   <TabsTrigger value="opd" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <ClipboardList className="h-3 w-3 hidden sm:block" />
                     <span>OPD</span>
@@ -2794,6 +2794,10 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   <TabsTrigger value="medication" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <Pill className="h-3 w-3 hidden sm:block" />
                     <span>Meds</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="tests" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
+                    <FlaskConical className="h-3 w-3 hidden sm:block" />
+                    <span>Tests</span>
                   </TabsTrigger>
                   <TabsTrigger value="consent" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <FileCheck className="h-3 w-3 hidden sm:block" />
@@ -2902,7 +2906,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           <TabsTrigger value="intake" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Droplets className="h-3.5 w-3.5 shrink-0" />Intake</TabsTrigger>
                           <TabsTrigger value="output" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Droplets className="h-3.5 w-3.5 shrink-0" />Output</TabsTrigger>
                           <TabsTrigger value="drugchart" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Syringe className="h-3.5 w-3.5 shrink-0" />Drug Chart</TabsTrigger>
-                          <TabsTrigger value="tests" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><FlaskConical className="h-3.5 w-3.5 shrink-0" />Tests</TabsTrigger>
                           <TabsTrigger value="investigation" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><ClipboardList className="h-3.5 w-3.5 shrink-0" />Investigation</TabsTrigger>
                           <TabsTrigger value="oxygen" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Wind className="h-3.5 w-3.5 shrink-0" />Oxygen</TabsTrigger>
                           <TabsTrigger value="ventilator" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Wind className="h-3.5 w-3.5 shrink-0" />Ventilator</TabsTrigger>
