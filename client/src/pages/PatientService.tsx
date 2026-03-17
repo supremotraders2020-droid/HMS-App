@@ -3328,7 +3328,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                     <th className="p-1.5 text-center">SpO2</th>
                                     <th className="p-1.5 text-center">Ryle's Tube</th>
                                     <th className="p-1.5 text-center">Central Line</th>
-                                    <th className="p-1.5 text-center">Staff</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -3352,7 +3351,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                           return <span className="text-blue-500 font-medium">Yes</span>;
                                         })()}
                                       </td>
-                                      <td className="p-1.5 text-center text-muted-foreground">{o.nurse_name || o.nurseName || "—"}</td>
                                     </tr>
                                   ))}
                                 </tbody>
@@ -4218,7 +4216,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                     <th className="p-1.5 text-center">SpO2</th>
                                     <th className="p-1.5 text-center">Ryle's Tube</th>
                                     <th className="p-1.5 text-center">Central Line</th>
-                                    <th className="p-1.5 text-center">Staff</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -4242,7 +4239,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                           return <span className="text-blue-500 font-medium">Yes</span>;
                                         })()}
                                       </td>
-                                      <td className="p-1.5 text-center text-muted-foreground">{o.nurse_name || o.nurseName || "—"}</td>
                                     </tr>
                                   ))}
                                 </tbody>
