@@ -11,7 +11,7 @@ import { HMS_MODULES, HMS_ACTIONS, DEFAULT_PERMISSIONS } from "../shared/permiss
 import { storage } from "./storage";
 import { databaseStorage } from "./database-storage";
 import { db, pool } from "./db";
-import { eq, desc, and, sql, or } from "drizzle-orm";
+import { eq, desc, and, sql, or, inArray, ilike } from "drizzle-orm";
 import { users, doctors, doctorProfiles, staffMaster, insertAppointmentSchema, insertInventoryItemSchema, insertInventoryTransactionSchema, insertStaffMemberSchema, insertInventoryPatientSchema, insertTrackingPatientSchema, insertMedicationSchema, insertMealSchema, insertVitalsSchema, insertDoctorVisitSchema, insertConversationLogSchema, insertServicePatientSchema, insertAdmissionSchema, insertMedicalRecordSchema, insertBiometricTemplateSchema, insertBiometricVerificationSchema, insertNotificationSchema, insertHospitalTeamMemberSchema, insertActivityLogSchema, insertEquipmentSchema, insertServiceHistorySchema, insertEmergencyContactSchema, insertHospitalSettingsSchema, insertPrescriptionSchema, insertDoctorScheduleSchema, insertDoctorPatientSchema, insertUserSchema, insertDoctorTimeSlotSchema, type InsertDoctorTimeSlot,
   patientBarcodes, insertPatientBarcodeSchema, barcodeScanLogs, insertBarcodeScanLogSchema, servicePatients,
   patientMonitoringSessions, insertPatientMonitoringSessionSchema,
@@ -10659,38 +10659,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use patient name for lookups in tables that don't have patientId FK
       const patientName = `${patient.firstName} ${patient.lastName}`.trim();
       
-      // 1. OPD History - Get appointments by patient name (trimmed/ilike) or patient ID
+      // 1. OPD History - Get appointments by trimmed/lowercased patient name or patient ID
       let opdHistory: any[] = [];
       try {
-        const rawAppts = await db.select().from(appointments)
-          .where(or(
-            sql`TRIM(LOWER(${appointments.patientName})) = LOWER(${patientName})`,
-            eq(appointments.patientId, patientId)
-          ))
-          .orderBy(desc(appointments.createdAt));
+        // Use raw SQL to handle trimmed name comparison (stored names may have leading/trailing spaces)
+        const apptRows = await db.execute(
+          sql`SELECT * FROM appointments WHERE TRIM(LOWER(patient_name)) = LOWER(${patientName}) OR patient_id = ${patientId} ORDER BY created_at DESC`
+        ) as any[];
 
-        // Enrich with doctor name from doctors table
-        if (rawAppts.length > 0) {
-          const doctorIds = [...new Set(rawAppts.map(a => a.doctorId).filter(Boolean))];
+        // Enrich with doctor name
+        if (apptRows.length > 0) {
+          const doctorIds = [...new Set(apptRows.map((a: any) => a.doctor_id).filter(Boolean))] as string[];
           let doctorMap: Record<string, string> = {};
           if (doctorIds.length > 0) {
             const doctorRows = await db.select({ id: doctors.id, name: doctors.name })
               .from(doctors)
-              .where(sql`${doctors.id} = ANY(${doctorIds})`);
+              .where(inArray(doctors.id, doctorIds));
             doctorRows.forEach(d => { doctorMap[d.id] = d.name; });
-            // Also try staff_master by userId
+            // Also check staff_master by userId
             const smRows = await db.select({ userId: staffMaster.userId, fullName: staffMaster.fullName })
               .from(staffMaster)
-              .where(sql`${staffMaster.userId} = ANY(${doctorIds})`);
+              .where(inArray(staffMaster.userId as any, doctorIds));
             smRows.forEach(s => { if (s.userId) doctorMap[s.userId] = s.fullName; });
           }
-          opdHistory = rawAppts.map(a => ({
-            ...a,
-            doctorName: doctorMap[a.doctorId] || a.doctorId || "N/A",
+          opdHistory = apptRows.map((a: any) => ({
+            id: a.id,
+            appointmentId: a.appointment_id,
+            patientName: a.patient_name,
+            patientId: a.patient_id,
+            doctorId: a.doctor_id,
+            appointmentDate: a.appointment_date,
+            timeSlot: a.time_slot,
+            department: a.department,
+            symptoms: a.symptoms,
+            status: a.status,
+            createdAt: a.created_at,
+            doctorName: doctorMap[a.doctor_id] || "N/A",
             diagnosis: a.symptoms || "",
           }));
         }
-      } catch (e) { console.log("No OPD history found"); }
+      } catch (e) { console.error("OPD history error:", e); }
       
       // 2. IPD History - Get tracking patient data by patient name
       let ipdHistory: any[] = [];
