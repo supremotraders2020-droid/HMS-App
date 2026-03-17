@@ -2825,7 +2825,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                 );
               })()}
               <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 mb-4 h-auto gap-0.5">
+                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-4 h-auto gap-0.5">
                   <TabsTrigger value="opd" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <ClipboardList className="h-3 w-3 hidden sm:block" />
                     <span>OPD</span>
@@ -2837,10 +2837,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   <TabsTrigger value="icu" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <HeartPulse className="h-3 w-3 hidden sm:block" />
                     <span>ICU</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="medication" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
-                    <Pill className="h-3 w-3 hidden sm:block" />
-                    <span>Meds</span>
                   </TabsTrigger>
                   <TabsTrigger value="tests" className="flex items-center justify-center gap-1 text-[9px] sm:text-xs py-1.5 px-1">
                     <FlaskConical className="h-3 w-3 hidden sm:block" />
@@ -3611,48 +3607,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                   )}
                 </TabsContent>
 
-                {/* Medication History Section */}
-                <TabsContent value="medication" className="space-y-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Pill className="h-4 w-4 text-purple-500" />
-                        Prescriptions ({longitudinalProfile.medicationHistory?.length || 0})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {longitudinalProfile.medicationHistory?.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">No prescriptions recorded</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {longitudinalProfile.medicationHistory?.map((rx: any) => (
-                            <div key={rx.id} className="p-3 border rounded-lg">
-                              <div className="flex items-center justify-between mb-2">
-                                <Badge variant={rx.status === "finalized" ? "default" : "secondary"}>{rx.status}</Badge>
-                                <span className="text-xs text-muted-foreground">{rx.createdAt ? new Date(rx.createdAt).toLocaleDateString() : "N/A"}</span>
-                              </div>
-                              <p className="text-sm"><strong>Diagnosis:</strong> {rx.diagnosis || "N/A"}</p>
-                              <p className="text-sm"><strong>Doctor:</strong> {rx.doctorName || "N/A"}</p>
-                              {rx.medicines && rx.medicines.length > 0 && (
-                                <div className="mt-2">
-                                  <p className="text-xs font-medium text-muted-foreground mb-1">Medicines:</p>
-                                  <div className="flex flex-wrap gap-1">
-                                    {rx.medicines.map((med: any, idx: number) => (
-                                      <Badge key={idx} variant="outline" className="text-xs">
-                                        {med.name || med.medicineName} - {med.dosage}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
                 {/* Consent Records Section */}
                 <TabsContent value="consent" className="space-y-4">
                   {/* Digital Consents (from OT, Consent Forms module, etc.) */}
@@ -3698,39 +3652,8 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                     </Card>
                   )}
 
-                  {/* Traditional file-based consent uploads */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <FileCheck className="h-4 w-4 text-orange-500" />
-                        Uploaded Consent Files ({longitudinalProfile.consentRecords?.length || 0})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {longitudinalProfile.consentRecords?.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">No uploaded consent files on record</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {longitudinalProfile.consentRecords?.map((consent: any) => (
-                            <div key={consent.id} className="p-3 border rounded-lg">
-                              <div className="flex items-center justify-between mb-2">
-                                <Badge variant="outline">{consent.consentType}</Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {consent.uploadedAt ? new Date(consent.uploadedAt).toLocaleDateString() : "N/A"}
-                                </span>
-                              </div>
-                              <p className="text-sm font-medium">{consent.title}</p>
-                              {consent.description && <p className="text-sm text-muted-foreground">{consent.description}</p>}
-                              <p className="text-xs text-green-600 mt-1">File: {consent.fileName}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
                   {/* Empty state when nothing at all */}
-                  {profileDigitalConsents.length === 0 && (longitudinalProfile.consentRecords?.length || 0) === 0 && (
+                  {profileDigitalConsents.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-6">No consent forms on record for this patient</p>
                   )}
                 </TabsContent>
