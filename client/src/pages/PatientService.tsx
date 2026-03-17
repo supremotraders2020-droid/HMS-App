@@ -3319,21 +3319,44 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           {profileOxygen.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No oxygen therapy records</p>
                           ) : (
-                            <div className="space-y-2">
-                              {profileOxygen.map((o: any) => (
-                                <div key={o.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
-                                  <div>
-                                    <p className="font-medium">Slot: {o.hourSlot || "—"}</p>
-                                    <p className="text-xs text-muted-foreground">O2: {o.oxygenLiter ?? "—"} L/min · SpO2: {o.spo2 ?? "—"}%</p>
-                                    {o.centralLine && <p className="text-xs text-muted-foreground">Central Line: {o.centralLine}</p>}
-                                    {o.rylesTube && <p className="text-xs text-muted-foreground">Ryles Tube: {o.rylesTube}</p>}
-                                  </div>
-                                  <div className="text-right text-xs text-muted-foreground">
-                                    <p>{o.nurseName || "—"}</p>
-                                    <p>{o.createdAt ? new Date(o.createdAt).toLocaleString() : "—"}</p>
-                                  </div>
-                                </div>
-                              ))}
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b bg-muted/30">
+                                    <th className="p-1.5 text-left">Time Slot</th>
+                                    <th className="p-1.5 text-center">Oxygen</th>
+                                    <th className="p-1.5 text-center">SpO2</th>
+                                    <th className="p-1.5 text-center">Ryle's Tube</th>
+                                    <th className="p-1.5 text-center">Central Line</th>
+                                    <th className="p-1.5 text-center">Staff</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {profileOxygen.map((o: any) => (
+                                    <tr key={o.id} className="border-b border-muted/30">
+                                      <td className="p-1.5 font-semibold">{o.hour_slot || o.hourSlot || "—"}</td>
+                                      <td className="p-1.5 text-center font-semibold text-sky-600 dark:text-sky-400">{o.oxygen_liter || o.oxygenLiter || "—"}</td>
+                                      <td className="p-1.5 text-center font-semibold">{o.spo2 != null ? `${o.spo2}%` : "—"}</td>
+                                      <td className="p-1.5 text-center">
+                                        {(() => {
+                                          const rt = o.ryles_tube || o.rylesTube;
+                                          const rtn = o.ryles_tube_note || o.rylesTubeNote;
+                                          if (!rt || rt === "No") return <span className="text-muted-foreground">No</span>;
+                                          return <span className="text-orange-500 font-medium">Yes{rtn ? ` (${rtn})` : ""}</span>;
+                                        })()}
+                                      </td>
+                                      <td className="p-1.5 text-center">
+                                        {(() => {
+                                          const cl = o.central_line || o.centralLine;
+                                          if (!cl || cl === "No") return <span className="text-muted-foreground">No</span>;
+                                          return <span className="text-blue-500 font-medium">Yes</span>;
+                                        })()}
+                                      </td>
+                                      <td className="p-1.5 text-center text-muted-foreground">{o.nurse_name || o.nurseName || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
                             </div>
                           )}
                           </TabsContent>
@@ -4186,21 +4209,44 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                           {profileOxygen.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No oxygen therapy records</p>
                           ) : (
-                            <div className="space-y-2">
-                              {profileOxygen.map((o: any) => (
-                                <div key={o.id} className="flex items-center justify-between p-2 border rounded-lg text-sm">
-                                  <div>
-                                    <p className="font-medium">Slot: {o.hourSlot || "—"}</p>
-                                    <p className="text-xs text-muted-foreground">O2: {o.oxygenLiter ?? "—"} L/min · SpO2: {o.spo2 ?? "—"}%</p>
-                                    {o.centralLine && <p className="text-xs text-muted-foreground">Central Line: {o.centralLine}</p>}
-                                    {o.rylesTube && <p className="text-xs text-muted-foreground">Ryles Tube: {o.rylesTube}</p>}
-                                  </div>
-                                  <div className="text-right text-xs text-muted-foreground">
-                                    <p>{o.nurseName || "—"}</p>
-                                    <p>{o.createdAt ? new Date(o.createdAt).toLocaleString() : "—"}</p>
-                                  </div>
-                                </div>
-                              ))}
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs border-collapse">
+                                <thead>
+                                  <tr className="border-b bg-muted/30">
+                                    <th className="p-1.5 text-left">Time Slot</th>
+                                    <th className="p-1.5 text-center">Oxygen</th>
+                                    <th className="p-1.5 text-center">SpO2</th>
+                                    <th className="p-1.5 text-center">Ryle's Tube</th>
+                                    <th className="p-1.5 text-center">Central Line</th>
+                                    <th className="p-1.5 text-center">Staff</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {profileOxygen.map((o: any) => (
+                                    <tr key={o.id} className="border-b border-muted/30">
+                                      <td className="p-1.5 font-semibold">{o.hour_slot || o.hourSlot || "—"}</td>
+                                      <td className="p-1.5 text-center font-semibold text-sky-600 dark:text-sky-400">{o.oxygen_liter || o.oxygenLiter || "—"}</td>
+                                      <td className="p-1.5 text-center font-semibold">{o.spo2 != null ? `${o.spo2}%` : "—"}</td>
+                                      <td className="p-1.5 text-center">
+                                        {(() => {
+                                          const rt = o.ryles_tube || o.rylesTube;
+                                          const rtn = o.ryles_tube_note || o.rylesTubeNote;
+                                          if (!rt || rt === "No") return <span className="text-muted-foreground">No</span>;
+                                          return <span className="text-orange-500 font-medium">Yes{rtn ? ` (${rtn})` : ""}</span>;
+                                        })()}
+                                      </td>
+                                      <td className="p-1.5 text-center">
+                                        {(() => {
+                                          const cl = o.central_line || o.centralLine;
+                                          if (!cl || cl === "No") return <span className="text-muted-foreground">No</span>;
+                                          return <span className="text-blue-500 font-medium">Yes</span>;
+                                        })()}
+                                      </td>
+                                      <td className="p-1.5 text-center text-muted-foreground">{o.nurse_name || o.nurseName || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
                             </div>
                           )}
                         </TabsContent>
