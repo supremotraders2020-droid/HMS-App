@@ -3243,35 +3243,31 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
                         {/* Drug Chart / MAR Tab */}
                         <TabsContent value="drugchart" className="mt-2 pb-2">
-                          {profileMAR.length === 0 ? (
+                          {profileInotropes.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No drug chart records</p>
                           ) : (
                             <div className="overflow-x-auto">
                               <table className="w-full text-xs border-collapse">
                                 <thead>
                                   <tr className="border-b bg-muted/30">
-                                    <th className="p-1.5 text-left">Time</th>
-                                    <th className="p-1.5 text-left">Medicine</th>
-                                    <th className="p-1.5 text-center">Dose</th>
-                                    <th className="p-1.5 text-center">Route</th>
-                                    <th className="p-1.5 text-center">Frequency</th>
-                                    <th className="p-1.5 text-center">Given</th>
-                                    <th className="p-1.5 text-center">Nurse</th>
+                                    <th className="p-1.5 text-left">Diagnosis</th>
+                                    <th className="p-1.5 text-left">Injection Name</th>
+                                    <th className="p-1.5 text-center">Freq.</th>
+                                    <th className="p-1.5 text-left">Medicine Name</th>
+                                    <th className="p-1.5 text-center">Freq.</th>
+                                    <th className="p-1.5 text-center">Date</th>
+                                    <th className="p-1.5 text-center">Staff</th>
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {profileMAR.map((m: any) => (
+                                  {profileInotropes.map((m: any) => (
                                     <tr key={m.id} className="border-b border-muted/30">
-                                      <td className="p-1.5">{(m.actualGivenTime || m.scheduledTime) ? new Date(m.actualGivenTime || m.scheduledTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—"}</td>
+                                      <td className="p-1.5">{m.diagnosis || "—"}</td>
                                       <td className="p-1.5 font-medium">{m.drugName || "—"}</td>
-                                      <td className="p-1.5 text-center">{m.dose || "—"}</td>
-                                      <td className="p-1.5 text-center">{m.route || "—"}</td>
-                                      <td className="p-1.5 text-center">{m.frequency || "—"}</td>
-                                      <td className="p-1.5 text-center">
-                                        <Badge variant={m.status === "GIVEN" ? "default" : m.status === "MISSED" ? "destructive" : "secondary"} className="text-[9px]">
-                                          {m.status || "—"}
-                                        </Badge>
-                                      </td>
+                                      <td className="p-1.5 text-center">{m.injectionFrequency || "—"}</td>
+                                      <td className="p-1.5">{m.medicineName || "—"}</td>
+                                      <td className="p-1.5 text-center">{m.medicineFrequency || "—"}</td>
+                                      <td className="p-1.5 text-center">{m.startTime ? new Date(m.startTime).toLocaleDateString() : m.createdAt ? new Date(m.createdAt).toLocaleDateString() : "—"}</td>
                                       <td className="p-1.5 text-center text-muted-foreground">{m.nurseName || "—"}</td>
                                     </tr>
                                   ))}
@@ -4117,35 +4113,31 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
 
                         {/* Drug Chart / MAR */}
                         <TabsContent value="drugchart" className="mt-2 pb-2">
-                          {profileMAR.length === 0 ? (
+                          {profileInotropes.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">No drug chart records</p>
                           ) : (
                             <div className="overflow-x-auto">
                               <table className="w-full text-xs border-collapse">
                                 <thead>
                                   <tr className="border-b bg-muted/30">
-                                    <th className="p-1.5 text-left">Time</th>
-                                    <th className="p-1.5 text-left">Medicine</th>
-                                    <th className="p-1.5 text-center">Dose</th>
-                                    <th className="p-1.5 text-center">Route</th>
-                                    <th className="p-1.5 text-center">Frequency</th>
-                                    <th className="p-1.5 text-center">Given</th>
-                                    <th className="p-1.5 text-center">Nurse</th>
+                                    <th className="p-1.5 text-left">Diagnosis</th>
+                                    <th className="p-1.5 text-left">Injection Name</th>
+                                    <th className="p-1.5 text-center">Freq.</th>
+                                    <th className="p-1.5 text-left">Medicine Name</th>
+                                    <th className="p-1.5 text-center">Freq.</th>
+                                    <th className="p-1.5 text-center">Date</th>
+                                    <th className="p-1.5 text-center">Staff</th>
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {profileMAR.map((m: any) => (
+                                  {profileInotropes.map((m: any) => (
                                     <tr key={m.id} className="border-b border-muted/30">
-                                      <td className="p-1.5">{(m.actualGivenTime || m.scheduledTime) ? new Date(m.actualGivenTime || m.scheduledTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "—"}</td>
+                                      <td className="p-1.5">{m.diagnosis || "—"}</td>
                                       <td className="p-1.5 font-medium">{m.drugName || "—"}</td>
-                                      <td className="p-1.5 text-center">{m.dose || "—"}</td>
-                                      <td className="p-1.5 text-center">{m.route || "—"}</td>
-                                      <td className="p-1.5 text-center">{m.frequency || "—"}</td>
-                                      <td className="p-1.5 text-center">
-                                        <Badge variant={m.status === "GIVEN" ? "default" : m.status === "MISSED" ? "destructive" : "secondary"} className="text-[9px]">
-                                          {m.status || "—"}
-                                        </Badge>
-                                      </td>
+                                      <td className="p-1.5 text-center">{m.injectionFrequency || "—"}</td>
+                                      <td className="p-1.5">{m.medicineName || "—"}</td>
+                                      <td className="p-1.5 text-center">{m.medicineFrequency || "—"}</td>
+                                      <td className="p-1.5 text-center">{m.startTime ? new Date(m.startTime).toLocaleDateString() : m.createdAt ? new Date(m.createdAt).toLocaleDateString() : "—"}</td>
                                       <td className="p-1.5 text-center text-muted-foreground">{m.nurseName || "—"}</td>
                                     </tr>
                                   ))}
