@@ -1007,6 +1007,7 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
         }}
         trackingData={null}
         enabled={true}
+        hideHeader={true}
       />
     </div>
   );

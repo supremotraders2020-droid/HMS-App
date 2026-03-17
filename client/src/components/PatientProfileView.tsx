@@ -42,6 +42,7 @@ interface PatientProfileViewProps {
     bloodGroup?: string;
   } | null;
   enabled?: boolean;
+  hideHeader?: boolean;
 }
 
 export function PatientProfileView({
@@ -51,6 +52,7 @@ export function PatientProfileView({
   barcodeData,
   trackingData,
   enabled = true,
+  hideHeader = false,
 }: PatientProfileViewProps) {
   const [profileActiveSection, setProfileActiveSection] = useState("opd");
   const [viewingDigitalConsent, setViewingDigitalConsent] = useState<any | null>(null);
@@ -963,41 +965,43 @@ export function PatientProfileView({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Identity Card */}
-      <div className="flex-shrink-0 bg-muted/40 border rounded-lg p-3 flex flex-wrap gap-3 items-start">
-        <div className={`p-2.5 rounded-full flex-shrink-0 ${barcodeData?.uhid ? 'bg-primary/10' : 'bg-muted'}`}>
-          <User className={`h-6 w-6 ${barcodeData?.uhid ? 'text-primary' : 'text-muted-foreground'}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="font-semibold text-base">{displayName}</span>
-            {barcodeData?.admissionType && (
-              <Badge variant={barcodeData.admissionType === "IPD" ? "default" : "secondary"}>
-                {barcodeData.admissionType}
-              </Badge>
-            )}
-            {trackingData?.status && (
-              <Badge variant={trackingData.status === "critical" ? "destructive" : trackingData.status === "admitted" ? "default" : "secondary"}>
-                {trackingData.status}
-              </Badge>
-            )}
+      {/* Identity Card — hidden when parent already shows patient info */}
+      {!hideHeader && (
+        <div className="flex-shrink-0 bg-muted/40 border rounded-lg p-3 flex flex-wrap gap-3 items-start">
+          <div className={`p-2.5 rounded-full flex-shrink-0 ${barcodeData?.uhid ? 'bg-primary/10' : 'bg-muted'}`}>
+            <User className={`h-6 w-6 ${barcodeData?.uhid ? 'text-primary' : 'text-muted-foreground'}`} />
           </div>
-          {barcodeData?.uhid && (
-            <p className="text-xs font-mono text-muted-foreground mb-1">{barcodeData.uhid}</p>
-          )}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            {demographics?.gender && <span>Gender: <span className="text-foreground font-medium capitalize">{demographics.gender}</span></span>}
-            {demographics?.dateOfBirth && <span>DOB: <span className="text-foreground font-medium">{demographics.dateOfBirth}</span></span>}
-            {demographics?.phone && <span>Phone: <span className="text-foreground font-medium">{demographics.phone}</span></span>}
-            {(barcodeData?.wardBed || trackingData?.room) && <span>Ward/Bed: <span className="text-foreground font-medium">{barcodeData?.wardBed || trackingData?.room}</span></span>}
-            {(barcodeData?.treatingDoctor || trackingData?.attendingDoctor || trackingData?.doctor) && <span>Doctor: <span className="text-foreground font-medium">{barcodeData?.treatingDoctor || trackingData?.attendingDoctor || trackingData?.doctor}</span></span>}
-            {trackingData?.diagnosis && <span>Diagnosis: <span className="text-foreground font-medium">{trackingData.diagnosis}</span></span>}
-            {trackingData?.bloodGroup && <span>Blood Group: <span className="text-foreground font-medium">{trackingData.bloodGroup}</span></span>}
-            {demographics?.email && <span>Email: <span className="text-foreground font-medium">{demographics.email}</span></span>}
-            {demographics?.address && <span>Address: <span className="text-foreground font-medium">{demographics.address}</span></span>}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="font-semibold text-base">{displayName}</span>
+              {barcodeData?.admissionType && (
+                <Badge variant={barcodeData.admissionType === "IPD" ? "default" : "secondary"}>
+                  {barcodeData.admissionType}
+                </Badge>
+              )}
+              {trackingData?.status && (
+                <Badge variant={trackingData.status === "critical" ? "destructive" : trackingData.status === "admitted" ? "default" : "secondary"}>
+                  {trackingData.status}
+                </Badge>
+              )}
+            </div>
+            {barcodeData?.uhid && (
+              <p className="text-xs font-mono text-muted-foreground mb-1">{barcodeData.uhid}</p>
+            )}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              {demographics?.gender && <span>Gender: <span className="text-foreground font-medium capitalize">{demographics.gender}</span></span>}
+              {demographics?.dateOfBirth && <span>DOB: <span className="text-foreground font-medium">{demographics.dateOfBirth}</span></span>}
+              {demographics?.phone && <span>Phone: <span className="text-foreground font-medium">{demographics.phone}</span></span>}
+              {(barcodeData?.wardBed || trackingData?.room) && <span>Ward/Bed: <span className="text-foreground font-medium">{barcodeData?.wardBed || trackingData?.room}</span></span>}
+              {(barcodeData?.treatingDoctor || trackingData?.attendingDoctor || trackingData?.doctor) && <span>Doctor: <span className="text-foreground font-medium">{barcodeData?.treatingDoctor || trackingData?.attendingDoctor || trackingData?.doctor}</span></span>}
+              {trackingData?.diagnosis && <span>Diagnosis: <span className="text-foreground font-medium">{trackingData.diagnosis}</span></span>}
+              {trackingData?.bloodGroup && <span>Blood Group: <span className="text-foreground font-medium">{trackingData.bloodGroup}</span></span>}
+              {demographics?.email && <span>Email: <span className="text-foreground font-medium">{demographics.email}</span></span>}
+              {demographics?.address && <span>Address: <span className="text-foreground font-medium">{demographics.address}</span></span>}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main 6-tab layout */}
       <Tabs value={profileActiveSection} onValueChange={setProfileActiveSection} className="w-full">
