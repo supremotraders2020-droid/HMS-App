@@ -955,12 +955,7 @@ export default function PatientBarcodePage({ currentRole }: PatientBarcodePagePr
                 <span className="text-foreground font-medium">{longitudinalProfile.patient.email}</span>
               </span>
             )}
-            {longitudinalProfile?.patient?.address && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" />
-                <span className="text-foreground font-medium">{longitudinalProfile.patient.address}</span>
-              </span>
-            )}
+
             {longitudinalProfile?.patient?.insuranceProvider && (
               <span>Insurance: <span className="text-foreground font-medium">{longitudinalProfile.patient.insuranceProvider}</span></span>
             )}
