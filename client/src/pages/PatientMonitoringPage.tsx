@@ -1176,7 +1176,6 @@ export default function PatientMonitoringPage() {
                     <TabsTrigger value="oxygen" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Wind className="h-3.5 w-3.5 shrink-0" />Oxygen</TabsTrigger>
                     <TabsTrigger value="surgery-notes" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Hospital className="h-3.5 w-3.5 shrink-0" />Surgery Notes</TabsTrigger>
                     <TabsTrigger value="tests" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Beaker className="h-3.5 w-3.5 shrink-0" />Tests</TabsTrigger>
-                    <TabsTrigger value="ventilator" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Wind className="h-3.5 w-3.5 shrink-0" />Ventilator</TabsTrigger>
                     <TabsTrigger value="vitals" className="text-xs gap-1 data-[state=active]:bg-background h-7 px-2"><Heart className="h-3.5 w-3.5 shrink-0" />Vitals</TabsTrigger>
                   </TabsList>
 
@@ -1235,9 +1234,6 @@ export default function PatientMonitoringPage() {
                 </TabsContent>
                 <TabsContent value="nursing-assessment">
                   <NursingAssessmentCarePlanTab session={selectedSession} />
-                </TabsContent>
-                <TabsContent value="ventilator">
-                  <VentilatorTab sessionId={selectedSession.id} isOnVentilator={selectedSession.isVentilated} />
                 </TabsContent>
               </Tabs>
             </div>
