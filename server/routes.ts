@@ -10659,13 +10659,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use patient name for lookups in tables that don't have patientId FK
       const patientName = `${patient.firstName} ${patient.lastName}`.trim();
       
-      // 1. OPD History - Get appointments by trimmed/lowercased patient name or patient ID
+      // 1. OPD History - Use raw pool.query() to avoid Drizzle result-format issues
       let opdHistory: any[] = [];
       try {
-        // Use raw SQL to handle trimmed name comparison (stored names may have leading/trailing spaces)
-        const apptRows = await db.execute(
-          sql`SELECT * FROM appointments WHERE TRIM(LOWER(patient_name)) = LOWER(${patientName}) OR patient_id = ${patientId} ORDER BY created_at DESC`
-        ) as any[];
+        const apptResult = await pool.query(
+          `SELECT * FROM appointments WHERE TRIM(LOWER(patient_name)) = LOWER($1) OR patient_id = $2 ORDER BY created_at DESC`,
+          [patientName, patientId]
+        );
+        const apptRows: any[] = apptResult.rows || [];
 
         // Enrich with doctor name
         if (apptRows.length > 0) {
