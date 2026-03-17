@@ -10640,8 +10640,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get complete longitudinal patient profile (all history sections)
   app.get("/api/service-patients/:id/longitudinal-profile", async (req, res) => {
     try {
-      const userId = req.headers['x-user-id'] as string;
-      const userRole = req.headers['x-user-role'] as string;
+      const headerUserId = req.headers['x-user-id'] as string;
+      const headerUserRole = req.headers['x-user-role'] as string;
+      const sessionUser = (req.session as any)?.user;
+      
+      const userId = headerUserId || sessionUser?.id;
+      const userRole = headerUserRole || sessionUser?.role;
       
       const allowedRoles = ['ADMIN', 'DOCTOR', 'NURSE', 'OPD_MANAGER', 'SUPER_ADMIN'];
       if (!userId || !userRole || !allowedRoles.includes(userRole)) {

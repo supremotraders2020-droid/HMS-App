@@ -623,6 +623,7 @@ function Router({ currentUser, currentPath }: { currentUser: User; currentPath: 
 
 function AppContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentHospital, setCurrentHospital] = useState<Hospital>({
     id: "1",
     name: "Gravity Hospital", 
@@ -824,10 +825,16 @@ function AppContent() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      onClick={() => queryClient.invalidateQueries()}
+                      onClick={async () => {
+                        setIsRefreshing(true);
+                        await queryClient.invalidateQueries();
+                        await queryClient.refetchQueries({ type: 'active' });
+                        setTimeout(() => setIsRefreshing(false), 800);
+                      }}
                       title="Refresh Data"
+                      disabled={isRefreshing}
                     >
-                      <RefreshCw className="h-4 w-4" />
+                      <RefreshCw className={`h-4 w-4 transition-transform ${isRefreshing ? 'animate-spin' : ''}`} />
                     </Button>
                     <ThemeSwitcher />
                   </div>
