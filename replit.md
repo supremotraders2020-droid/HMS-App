@@ -55,6 +55,7 @@ Gravity AI Manager includes 23 core modules with robust role-based access contro
 - **Scalability**: Utilizes serverless PostgreSQL (Neon) and a robust Node.js backend.
 - **Security & Data Isolation**: Patient data isolation, staff authentication via `staff_master` table, and comprehensive audit trails.
 - **Critical Architecture Note**: All `staff_master` operations (CRUD) must use `databaseStorage.*` functions for persistence, as `storage.*` is in-memory. Login validation for specific roles also depends on an "ACTIVE" `staff_master` entry.
+- **Team Members (hospital_team_members)**: ALL CRUD operations on team members (`/api/team-members`) now use `databaseStorage.*` for persistence across server restarts. The `storage.*` in-memory store is NO LONGER used for team member data. Both User Management and OPD Doctors pull from the same persistent DB source (`databaseStorage.getAllTeamMembers()` filtered by title).
 
 ## External Dependencies
 

@@ -828,27 +828,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all doctors - only those registered in User Management (hospital_team_members)
   app.get("/api/doctors", async (_req, res) => {
     try {
-      const doctors = await storage.getDoctors();
-      const allProfiles = await storage.getAllDoctorProfiles();
-
-      // Only return doctors present in User Management (hospital_team_members with title='Doctor')
+      // Step 1: Get team members from DB (persistent) — same source as User Management
       const teamMembers = await databaseStorage.getAllTeamMembers();
-      const registeredDoctorNames = teamMembers
-        .filter(m => m.title === "Doctor")
-        .map(m => m.name.toLowerCase().trim());
+      const adminDoctors = teamMembers.filter(m => m.title === "Doctor");
+
+      // Step 2: Get all doctors from doctors table (DB) — has correct IDs for time-slot lookups
+      const allDoctors = await databaseStorage.getDoctors();
+      const allProfiles = await storage.getAllDoctorProfiles();
 
       // Helper to normalize name (remove "Dr." prefix, lowercase, trim)
       const normalizeName = (name: string) => name.toLowerCase().replace(/^dr\.?\s*/i, '').trim();
-      
-      // Helper to find matching profile for a doctor
+
+      // Helper to find matching doctor entry by name
+      const findDoctorEntry = (memberName: string) => {
+        const normalizedMember = normalizeName(memberName);
+        return allDoctors.find(d => normalizeName(d.name) === normalizedMember) ||
+               allDoctors.find(d => normalizeName(d.name).startsWith(normalizedMember.split(' ')[0])) ||
+               allDoctors.find(d => normalizedMember.startsWith(normalizeName(d.name).split(' ')[0]));
+      };
+
+      // Helper to find matching profile for additional data
       const findMatchingProfile = (doctorName: string) => {
         const normalizedDoctorName = normalizeName(doctorName);
         const doctorFirstName = normalizedDoctorName.split(' ')[0];
-        
         for (const profile of allProfiles) {
           const normalizedProfileName = normalizeName(profile.fullName);
           const profileFirstName = normalizedProfileName.split(' ')[0];
-          
           if (normalizedDoctorName === normalizedProfileName) return profile;
           if (normalizedProfileName.startsWith(normalizedDoctorName)) return profile;
           if (normalizedDoctorName.startsWith(profileFirstName)) return profile;
@@ -856,40 +861,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         return null;
       };
-      
-      // Filter to only User Management doctors, then merge with profile data
-      const filteredDoctors = doctors
-        .filter(doctor => registeredDoctorNames.includes(normalizeName(doctor.name)))
-        .map(doctor => {
-          const profile = findMatchingProfile(doctor.name);
-          
-          if (profile) {
-            const expMatch = profile.experience?.match(/(\d+)/);
-            const profileExp = expMatch ? parseInt(expMatch[1]) : doctor.experience;
-            const feeMatch = profile.consultationFee?.match(/(\d+)/);
-            const profileFee = feeMatch ? feeMatch[1] : null;
-            
+
+      // Step 3: For each admin-added doctor, use their doctors-table entry (preserves IDs for time slots)
+      const seenIds = new Set<string>();
+      const mergedDoctors = adminDoctors
+        .map(member => {
+          const doctorEntry = findDoctorEntry(member.name);
+          const profile = findMatchingProfile(member.name);
+
+          if (doctorEntry) {
+            if (seenIds.has(doctorEntry.id)) return null;
+            seenIds.add(doctorEntry.id);
+            const expMatch = profile?.experience?.match(/(\d+)/);
+            const feeMatch = profile?.consultationFee?.match(/(\d+)/);
             return {
-              ...doctor,
-              name: profile.fullName || doctor.name,
-              specialty: profile.specialty || doctor.specialty,
-              qualification: profile.qualifications || doctor.qualification,
-              experience: profileExp,
-              consultationFee: profileFee
+              ...doctorEntry,
+              name: profile?.fullName || member.name,
+              specialty: profile?.specialty || doctorEntry.specialty,
+              qualification: profile?.qualifications || doctorEntry.qualification,
+              experience: expMatch ? parseInt(expMatch[1]) : doctorEntry.experience,
+              consultationFee: feeMatch ? feeMatch[1] : null,
             };
           }
-          return doctor;
-        });
 
-      // Deduplicate by normalized name — keep the first occurrence per unique doctor
-      const seenNames = new Set<string>();
-      const mergedDoctors = filteredDoctors.filter(doctor => {
-        const key = normalizeName(doctor.name);
-        if (seenNames.has(key)) return false;
-        seenNames.add(key);
-        return true;
-      });
-      
+          // No matching doctors-table entry — still show them using team member ID
+          const memberId = `tm-${member.id}`;
+          if (seenIds.has(memberId)) return null;
+          seenIds.add(memberId);
+          const initials = member.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+          return {
+            id: memberId,
+            name: member.name,
+            specialty: member.specialization || member.department || "General Medicine",
+            qualification: "MBBS",
+            experience: 0,
+            rating: "4.5",
+            availableDays: "Monday,Tuesday,Wednesday,Thursday,Friday",
+            avatarInitials: initials,
+            dateOfBirth: null,
+          };
+        })
+        .filter(Boolean);
+
       res.json(mergedDoctors);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch doctors" });
@@ -3104,7 +3117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all team members
   app.get("/api/team-members", async (_req, res) => {
     try {
-      const members = await storage.getAllTeamMembers();
+      const members = await databaseStorage.getAllTeamMembers();
       
       // Enrich with username and plainPassword from users table by matching email
       const enrichedMembers = await Promise.all(members.map(async (member) => {
@@ -3125,7 +3138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get team member by ID
   app.get("/api/team-members/:id", async (req, res) => {
     try {
-      const member = await storage.getTeamMemberById(req.params.id);
+      const member = await databaseStorage.getTeamMemberById(req.params.id);
       if (!member) {
         return res.status(404).json({ error: "Team member not found" });
       }
@@ -3138,7 +3151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get team members by department
   app.get("/api/team-members/department/:department", async (req, res) => {
     try {
-      const members = await storage.getTeamMembersByDepartment(req.params.department);
+      const members = await databaseStorage.getTeamMembersByDepartment(req.params.department);
       res.json(members);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch team members" });
@@ -3148,7 +3161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get on-call team members
   app.get("/api/team-members/on-call/list", async (_req, res) => {
     try {
-      const members = await storage.getOnCallTeamMembers();
+      const members = await databaseStorage.getOnCallTeamMembers();
       res.json(members);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch on-call team members" });
@@ -3193,8 +3206,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if username already exists
       const existingUser = await databaseStorage.getUserByUsername(trimmedUsername);
       if (existingUser) {
-        // Check if team member record exists - if not, create it (data sync fix)
-        const existingTeamMember = await storage.getTeamMemberByEmail(trimmedEmail);
+        // Check if team member record exists in DB - if not, create it (data sync fix)
+        const existingTeamMember = await databaseStorage.getTeamMemberByEmail(trimmedEmail);
         if (!existingTeamMember) {
           // Create the missing team member record to sync data
           const memberData = {
@@ -3207,7 +3220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: "available" as const,
             avatar: (existingUser.name || trimmedName).split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
           };
-          const member = await storage.createTeamMember(memberData);
+          const member = await databaseStorage.createTeamMember(memberData);
           return res.status(201).json({ ...member, synced: true, message: "User synced to team members" });
         }
         return res.status(400).json({ error: "Username already exists" });
@@ -3273,7 +3286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Create team member with proper department
+      // Create team member with proper department — saved to DB for persistence across restarts
       const memberData = {
         name: trimmedName,
         title,
@@ -3285,7 +3298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatar: trimmedName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
       };
       
-      const member = await storage.createTeamMember(memberData);
+      const member = await databaseStorage.createTeamMember(memberData);
       res.status(201).json(member);
     } catch (error) {
       console.error("Error creating team member:", error);
@@ -3310,7 +3323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const member = await storage.updateTeamMember(req.params.id, updates);
+      const member = await databaseStorage.updateTeamMember(req.params.id, updates);
       if (!member) {
         return res.status(404).json({ error: "Team member not found" });
       }
@@ -3324,8 +3337,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete team member
   app.delete("/api/team-members/:id", async (req, res) => {
     try {
-      // First get the team member to find their email
-      const member = await storage.getTeamMemberById(req.params.id);
+      // First get the team member from DB to find their email
+      const member = await databaseStorage.getTeamMemberById(req.params.id);
       if (!member) {
         return res.status(404).json({ error: "Team member not found" });
       }
@@ -3341,11 +3354,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Delete the team member
-      const deleted = await storage.deleteTeamMember(req.params.id);
-      if (!deleted) {
-        return res.status(404).json({ error: "Team member not found" });
-      }
+      // Delete the team member from DB
+      await databaseStorage.deleteTeamMember(req.params.id);
       res.json({ success: true, message: "Team member deleted" });
     } catch (error) {
       console.error("Error deleting team member:", error);
@@ -3360,7 +3370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (typeof isOnCall !== "boolean") {
         return res.status(400).json({ error: "isOnCall must be a boolean" });
       }
-      const member = await storage.updateTeamMemberOnCallStatus(req.params.id, isOnCall);
+      const member = await databaseStorage.updateTeamMemberOnCallStatus(req.params.id, isOnCall);
       if (!member) {
         return res.status(404).json({ error: "Team member not found" });
       }
