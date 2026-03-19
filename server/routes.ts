@@ -874,9 +874,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             seenIds.add(doctorEntry.id);
             const expMatch = profile?.experience?.match(/(\d+)/);
             const feeMatch = profile?.consultationFee?.match(/(\d+)/);
+            const displayName = (profile?.fullName || member.name || '').trim();
             return {
               ...doctorEntry,
-              name: profile?.fullName || member.name,
+              name: displayName,
               specialty: profile?.specialty || doctorEntry.specialty,
               qualification: profile?.qualifications || doctorEntry.qualification,
               experience: expMatch ? parseInt(expMatch[1]) : doctorEntry.experience,
@@ -888,10 +889,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const memberId = `tm-${member.id}`;
           if (seenIds.has(memberId)) return null;
           seenIds.add(memberId);
-          const initials = member.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+          const trimmedMemberName = (member.name || '').trim();
+          const initials = trimmedMemberName.split(' ').filter(Boolean).map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
           return {
             id: memberId,
-            name: member.name,
+            name: trimmedMemberName,
             specialty: member.specialization || member.department || "General Medicine",
             qualification: "MBBS",
             experience: 0,
@@ -4117,9 +4119,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Maps doctors table name to user with matching username and fetches their schedules
   app.get("/api/doctor-schedules-by-name/:doctorName", async (req, res) => {
     try {
-      const doctorName = decodeURIComponent(req.params.doctorName);
+      const doctorName = decodeURIComponent(req.params.doctorName).trim();
       // Remove "Dr." or "Dr " prefix if present and get the first name
-      const cleanedName = doctorName.replace(/^dr\.?\s*/i, '').toLowerCase();
+      const cleanedName = doctorName.replace(/^dr\.?\s*/i, '').trim().toLowerCase();
       const firstName = cleanedName.split(' ')[0];
       
       // Try to find user by matching first name in username
@@ -4480,8 +4482,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         s.isAvailable && (s.day === dayOfWeek || s.specificDate === date)
       );
       
-      // Get all users to map user IDs to doctor names
-      const allUsers = await storage.getAllUsers();
+      // Get all users to map user IDs to doctor names (from DB for persistence)
+      const allUsers = await databaseStorage.getAllUsers();
       const doctorUsers = allUsers.filter(u => u.role === 'DOCTOR');
       
       // Get existing appointments for this date
@@ -4509,7 +4511,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Get all doctors from doctors table to map names to doctor IDs
-      const allDoctors = await databaseStorage.getAllDoctors();
+      const allDoctors = await databaseStorage.getDoctors();
       
       // Build availability map for all doctors with schedules
       interface DoctorAvailability {
@@ -4534,13 +4536,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Find matching doctor table entry by name
           const matchingDoctor = allDoctors.find(d => {
-            const dName = d.name.replace(/^Dr\.?\s*/i, '').toLowerCase();
-            const uName = user.name.replace(/^Dr\.?\s*/i, '').toLowerCase();
+            const dName = d.name.replace(/^Dr\.?\s*/i, '').trim().toLowerCase();
+            const uName = (user.name || user.username || '').replace(/^Dr\.?\s*/i, '').trim().toLowerCase();
             return dName === uName;
           });
           
           availability[user.id] = {
-            doctorName: user.name,
+            doctorName: (user.name || user.username || '').trim(),
             userId: user.id,
             doctorTableId: matchingDoctor?.id || null,
             hasScheduleToday,

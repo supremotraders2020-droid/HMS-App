@@ -1247,179 +1247,181 @@ export default function OPDService() {
                   </CardHeader>
                   {selectedDoctor === doctor.id && (
                     <CardContent>
-                      <div className="space-y-4">
-                        {/* Doctor's Scheduled Time Blocks - only for selected date's day + future same-week days */}
-                        {(() => {
-                          const DAY_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-                          const now = new Date();
-                          const todayStr = now.toISOString().split('T')[0];
-                          const isToday = selectedDate === todayStr;
-                          const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                      {(() => {
+                        const DAY_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                        const now = new Date();
+                        const todayStr = now.toISOString().split('T')[0];
+                        const isToday = selectedDate === todayStr;
+                        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                        const selDateObj = new Date(selectedDate + 'T00:00:00');
+                        const selDayName = DAY_ORDER[selDateObj.getDay()];
 
-                          // Get day of week for the selected date
-                          const selDateObj = new Date(selectedDate + 'T00:00:00');
-                          const selDayName = DAY_ORDER[selDateObj.getDay()];
+                        const parseTime12h = (t: string) => {
+                          const mt = t?.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                          if (!mt) return 0;
+                          let h = parseInt(mt[1]);
+                          const min = parseInt(mt[2]);
+                          if (mt[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+                          if (mt[3].toUpperCase() === 'AM' && h === 12) h = 0;
+                          return h * 60 + min;
+                        };
 
-                          const parseTime12h = (t: string) => {
-                            const m = t?.match(/(\d+):(\d+)\s*(AM|PM)/i);
-                            if (!m) return 0;
-                            let h = parseInt(m[1]);
-                            const min = parseInt(m[2]);
-                            if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
-                            if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
-                            return h * 60 + min;
-                          };
+                        const minsToTime12h = (mins: number): string => {
+                          const h = Math.floor(mins / 60);
+                          const mn = mins % 60;
+                          const period = h >= 12 ? 'PM' : 'AM';
+                          const display = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                          return `${String(display).padStart(2, '0')}:${String(mn).padStart(2, '0')} ${period}`;
+                        };
 
-                          // Only show blocks matching the selected date's day of week
-                          const upcomingBlocks = doctorScheduleBlocks
-                            .filter(block => {
-                              if (block.day !== selDayName) return false;
-                              // For today: hide slots whose end time has already passed
-                              if (isToday) {
-                                return parseTime12h(block.endTime || '') > nowMinutes;
-                              }
-                              return true;
-                            })
-                            .sort((a, b) =>
-                              parseTime12h(a.startTime || '') - parseTime12h(b.startTime || '')
-                            );
+                        const upcomingBlocks = doctorScheduleBlocks
+                          .filter(block => {
+                            const blockDay = block.specificDate ? null : block.day;
+                            const matchesDay = block.specificDate === selectedDate || blockDay === selDayName;
+                            if (!matchesDay) return false;
+                            if (isToday) return parseTime12h(block.endTime || '') > nowMinutes;
+                            return true;
+                          })
+                          .sort((a, b) => parseTime12h(a.startTime || '') - parseTime12h(b.startTime || ''));
 
-                          if (upcomingBlocks.length === 0) return null;
+                        const hasScheduleTodayFinal = upcomingBlocks.length > 0 || hasScheduleToday;
 
-                          return (
-                            <div className="space-y-2">
-                              <span className="text-sm font-medium text-muted-foreground">Doctor's Schedule</span>
-                              <div className="grid gap-2">
-                                {upcomingBlocks.map((block) => (
-                                  <div
-                                    key={block.id}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20"
-                                    data-testid={`schedule-block-${block.id}`}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <Clock className="h-4 w-4 text-primary" />
-                                      <div>
-                                        <p className="font-medium text-sm">
-                                          {isToday ? 'Today' : selDayName}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {block.startTime} - {block.endTime}
-                                        </p>
+                        const virtualSlots: typeof timeSlots = [];
+                        if (timeSlots.length === 0 && upcomingBlocks.length > 0) {
+                          for (const block of upcomingBlocks) {
+                            const startMins = parseTime12h(block.startTime || '');
+                            const endMins = parseTime12h(block.endTime || '');
+                            for (let m = startMins; m < endMins; m += 30) {
+                              virtualSlots.push({
+                                id: `virtual-${block.id}-${m}`,
+                                scheduleId: block.id,
+                                doctorId: block.doctorId,
+                                doctorName: doctor.name,
+                                slotDate: selectedDate,
+                                startTime: minsToTime12h(m),
+                                endTime: minsToTime12h(m + 30),
+                                slotType: 'regular',
+                                location: block.location || null,
+                                status: 'available' as const,
+                                patientId: null,
+                                patientName: null,
+                                appointmentId: null,
+                                bookedAt: null,
+                                createdAt: null,
+                                updatedAt: null,
+                              });
+                            }
+                          }
+                        }
+                        const effectiveSlots = timeSlots.length > 0 ? timeSlots : virtualSlots;
+
+                        return (
+                          <div className="space-y-4">
+                            {/* Doctor's Scheduled Time Blocks */}
+                            {upcomingBlocks.length > 0 && (
+                              <div className="space-y-2">
+                                <span className="text-sm font-medium text-muted-foreground">Doctor's Schedule</span>
+                                <div className="grid gap-2">
+                                  {upcomingBlocks.map((block) => (
+                                    <div
+                                      key={block.id}
+                                      className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20"
+                                      data-testid={`schedule-block-${block.id}`}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <Clock className="h-4 w-4 text-primary" />
+                                        <div>
+                                          <p className="font-medium text-sm">
+                                            {isToday ? 'Today' : selDayName}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {block.startTime} - {block.endTime}
+                                          </p>
+                                        </div>
                                       </div>
+                                      <Badge variant={block.isAvailable ? "default" : "secondary"}>
+                                        {block.location || "OPD"}
+                                      </Badge>
                                     </div>
-                                    <Badge variant={block.isAvailable ? "default" : "secondary"}>
-                                      {block.location || "OPD"}
-                                    </Badge>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })()}
+                            )}
 
-                        {/* Show message when no schedule for selected date */}
-                        {!hasScheduleToday && (
-                          <div className="text-center py-6 text-muted-foreground">
-                            <Calendar className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                            <p>No clinic hours scheduled for this date</p>
-                            {scheduleInfo?.scheduledDays && scheduleInfo.scheduledDays.length > 0 && (
-                              <p className="text-sm mt-1">
-                                This doctor is available on: {scheduleInfo.scheduledDays.join(', ')}
-                              </p>
+                            {/* No schedule message */}
+                            {!hasScheduleTodayFinal && (
+                              <div className="text-center py-6 text-muted-foreground">
+                                <Calendar className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                                <p>No clinic hours scheduled for this date</p>
+                                {scheduleInfo?.scheduledDays && scheduleInfo.scheduledDays.length > 0 && (
+                                  <p className="text-sm mt-1">
+                                    This doctor is available on: {scheduleInfo.scheduledDays.join(', ')}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Time Slots - shown when schedule exists */}
+                            {hasScheduleTodayFinal && (
+                              <>
+                                <span className="text-sm text-muted-foreground">Time Slots (30-min intervals)</span>
+                                <div className="flex flex-wrap gap-2">
+                                  {(() => {
+                                    const legacySlots = getLegacyAppointmentsForDoctor(doctor.id);
+                                    const legacyTimeMap = new Map(legacySlots.map(ls => [ls.startTime, ls]));
+                                    const mergedSlots = effectiveSlots.map(slot => {
+                                      const legacyMatch = legacyTimeMap.get(slot.startTime);
+                                      if (legacyMatch && slot.status === 'available') {
+                                        return { ...slot, status: 'booked' as const, patientName: legacyMatch.patientName, appointmentId: legacyMatch.appointmentId };
+                                      }
+                                      return slot;
+                                    });
+                                    const realSlotTimes = effectiveSlots.map(s => s.startTime);
+                                    const uniqueLegacy = legacySlots.filter(ls => !realSlotTimes.includes(ls.startTime));
+                                    const combined = [...mergedSlots, ...uniqueLegacy];
+                                    combined.sort((a, b) => {
+                                      const toSortKey = (t: string) => t.replace(/(\d+):(\d+)\s*(AM|PM)/i, (_, h, m, p) => {
+                                        let hr = parseInt(h);
+                                        if (p.toUpperCase() === 'PM' && hr !== 12) hr += 12;
+                                        if (p.toUpperCase() === 'AM' && hr === 12) hr = 0;
+                                        return `${hr.toString().padStart(2, '0')}:${m}`;
+                                      });
+                                      return toSortKey(a.startTime).localeCompare(toSortKey(b.startTime));
+                                    });
+                                    return combined;
+                                  })()
+                                    .filter(slot => {
+                                      const f = slotFilters[doctor.id] || 'all';
+                                      if (f === 'available') return slot.status === 'available';
+                                      if (f === 'booked') return slot.status === 'booked';
+                                      return true;
+                                    })
+                                    .map(slot => (
+                                      <div
+                                        key={slot.id}
+                                        onClick={() => { setSelectedSlot(slot); setShowSlotDetail(true); }}
+                                        className={`relative px-3 py-2 rounded-lg border-2 text-center cursor-pointer transition-all ${
+                                          slot.status === 'booked'
+                                            ? 'bg-muted border-muted-foreground/30 hover:bg-muted/80'
+                                            : 'border-primary/30 hover:border-primary hover:bg-primary/5'
+                                        }`}
+                                        data-testid={`slot-${slot.id}`}
+                                      >
+                                        <p className="text-sm font-medium">{slot.startTime}</p>
+                                        {slot.status === 'booked' && (
+                                          <p className="text-xs text-muted-foreground">{slot.patientName?.split(' ')[0] || 'Booked'}</p>
+                                        )}
+                                      </div>
+                                    ))}
+                                  {effectiveSlots.length === 0 && (
+                                    <p className="text-sm text-muted-foreground">No slots scheduled for this date</p>
+                                  )}
+                                </div>
+                              </>
                             )}
                           </div>
-                        )}
-
-                        {/* Individual Time Slots from Database + Legacy Appointments - only show when schedule exists */}
-                        {hasScheduleToday && (
-                          <>
-                        <span className="text-sm text-muted-foreground">Time Slots (30-min intervals)</span>
-                        <div className="flex flex-wrap gap-2">
-                          {(() => {
-                            // Combine real time slots with legacy appointments
-                            const legacySlots = getLegacyAppointmentsForDoctor(doctor.id);
-                            
-                            // Create a map of legacy slot times for quick lookup
-                            const legacyTimeMap = new Map(legacySlots.map(ls => [ls.startTime, ls]));
-                            
-                            // Merge: If a real slot overlaps with a legacy appointment, mark real slot as booked
-                            const mergedRealSlots = timeSlots.map(slot => {
-                              const legacyMatch = legacyTimeMap.get(slot.startTime);
-                              if (legacyMatch && slot.status === 'available') {
-                                // Override the real slot with legacy booking info
-                                return {
-                                  ...slot,
-                                  status: 'booked' as const,
-                                  patientName: legacyMatch.patientName,
-                                  appointmentId: legacyMatch.appointmentId,
-                                };
-                              }
-                              return slot;
-                            });
-                            
-                            // Only add legacy slots that don't have a corresponding real slot
-                            const realSlotTimes = timeSlots.map(s => s.startTime);
-                            const uniqueLegacySlots = legacySlots.filter(ls => !realSlotTimes.includes(ls.startTime));
-                            const combinedSlots = [...mergedRealSlots, ...uniqueLegacySlots];
-                            
-                            // Sort by time
-                            combinedSlots.sort((a, b) => {
-                              const timeA = a.startTime.replace(/(\d+):(\d+)\s*(AM|PM)/i, (_, h, m, p) => {
-                                let hour = parseInt(h);
-                                if (p.toUpperCase() === 'PM' && hour !== 12) hour += 12;
-                                if (p.toUpperCase() === 'AM' && hour === 12) hour = 0;
-                                return `${hour.toString().padStart(2, '0')}:${m}`;
-                              });
-                              const timeB = b.startTime.replace(/(\d+):(\d+)\s*(AM|PM)/i, (_, h, m, p) => {
-                                let hour = parseInt(h);
-                                if (p.toUpperCase() === 'PM' && hour !== 12) hour += 12;
-                                if (p.toUpperCase() === 'AM' && hour === 12) hour = 0;
-                                return `${hour.toString().padStart(2, '0')}:${m}`;
-                              });
-                              return timeA.localeCompare(timeB);
-                            });
-                            
-                            return combinedSlots;
-                          })()
-                            .filter((slot) => {
-                              const currentFilter = slotFilters[doctor.id] || 'all';
-                              if (currentFilter === 'available') return slot.status === 'available';
-                              if (currentFilter === 'booked') return slot.status === 'booked';
-                              return true;
-                            })
-                            .map((slot) => (
-                            <div
-                              key={slot.id}
-                              onClick={() => {
-                                setSelectedSlot(slot);
-                                setShowSlotDetail(true);
-                              }}
-                              className={`relative px-3 py-2 rounded-lg border-2 text-center cursor-pointer transition-all ${
-                                slot.status === 'booked' 
-                                  ? 'bg-muted border-muted-foreground/30 hover:bg-muted/80' 
-                                  : 'border-primary/30 hover:border-primary hover:bg-primary/5'
-                              }`}
-                              data-testid={`slot-${slot.id}`}
-                            >
-                              <p className="text-sm font-medium">{slot.startTime}</p>
-                              {slot.status === 'booked' && (
-                                <p className="text-xs text-muted-foreground">{slot.patientName?.split(' ')[0] || 'Booked'}</p>
-                              )}
-                            </div>
-                          ))}
-                          {timeSlots.length === 0 && doctorScheduleBlocks.length > 0 && (
-                            <div className="w-full text-center py-4">
-                              <p className="text-sm text-muted-foreground mb-2">Doctor has schedule blocks but no individual slots generated yet.</p>
-                              <p className="text-xs text-muted-foreground">Slots will be auto-generated when the doctor sets up specific date schedules.</p>
-                            </div>
-                          )}
-                          {timeSlots.length === 0 && doctorScheduleBlocks.length === 0 && (
-                            <p className="text-sm text-muted-foreground">No slots scheduled for this date</p>
-                          )}
-                        </div>
-                          </>
-                        )}
-                      </div>
+                        );
+                      })()}
                     </CardContent>
                   )}
                 </Card>
