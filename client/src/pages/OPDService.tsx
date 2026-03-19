@@ -1248,12 +1248,17 @@ export default function OPDService() {
                   {selectedDoctor === doctor.id && (
                     <CardContent>
                       <div className="space-y-4">
-                        {/* Doctor's Scheduled Time Blocks - only present/future */}
+                        {/* Doctor's Scheduled Time Blocks - only for selected date's day + future same-week days */}
                         {(() => {
                           const DAY_ORDER = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
                           const now = new Date();
-                          const todayIdx = now.getDay();
+                          const todayStr = now.toISOString().split('T')[0];
+                          const isToday = selectedDate === todayStr;
                           const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+                          // Get day of week for the selected date
+                          const selDateObj = new Date(selectedDate + 'T00:00:00');
+                          const selDayName = DAY_ORDER[selDateObj.getDay()];
 
                           const parseTime12h = (t: string) => {
                             const m = t?.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -1265,25 +1270,19 @@ export default function OPDService() {
                             return h * 60 + min;
                           };
 
+                          // Only show blocks matching the selected date's day of week
                           const upcomingBlocks = doctorScheduleBlocks
                             .filter(block => {
-                              const idx = DAY_ORDER.indexOf(block.day);
-                              if (idx === -1) return true;
-                              const daysUntil = (idx - todayIdx + 7) % 7;
-                              if (daysUntil === 0) {
-                                // Today: only show if end time has NOT passed
+                              if (block.day !== selDayName) return false;
+                              // For today: hide slots whose end time has already passed
+                              if (isToday) {
                                 return parseTime12h(block.endTime || '') > nowMinutes;
                               }
                               return true;
                             })
-                            .sort((a, b) => {
-                              const aIdx = DAY_ORDER.indexOf(a.day);
-                              const bIdx = DAY_ORDER.indexOf(b.day);
-                              const aUntil = (aIdx - todayIdx + 7) % 7;
-                              const bUntil = (bIdx - todayIdx + 7) % 7;
-                              if (aUntil !== bUntil) return aUntil - bUntil;
-                              return parseTime12h(a.startTime || '') - parseTime12h(b.startTime || '');
-                            });
+                            .sort((a, b) =>
+                              parseTime12h(a.startTime || '') - parseTime12h(b.startTime || '')
+                            );
 
                           if (upcomingBlocks.length === 0) return null;
 
@@ -1291,31 +1290,28 @@ export default function OPDService() {
                             <div className="space-y-2">
                               <span className="text-sm font-medium text-muted-foreground">Doctor's Schedule</span>
                               <div className="grid gap-2">
-                                {upcomingBlocks.map((block) => {
-                                  const idx = DAY_ORDER.indexOf(block.day);
-                                  const daysUntil = (idx - todayIdx + 7) % 7;
-                                  const dayLabel = daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : block.day;
-                                  return (
-                                    <div
-                                      key={block.id}
-                                      className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20"
-                                      data-testid={`schedule-block-${block.id}`}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <Clock className="h-4 w-4 text-primary" />
-                                        <div>
-                                          <p className="font-medium text-sm">{dayLabel}</p>
-                                          <p className="text-xs text-muted-foreground">
-                                            {block.startTime} - {block.endTime}
-                                          </p>
-                                        </div>
+                                {upcomingBlocks.map((block) => (
+                                  <div
+                                    key={block.id}
+                                    className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20"
+                                    data-testid={`schedule-block-${block.id}`}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <Clock className="h-4 w-4 text-primary" />
+                                      <div>
+                                        <p className="font-medium text-sm">
+                                          {isToday ? 'Today' : selDayName}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {block.startTime} - {block.endTime}
+                                        </p>
                                       </div>
-                                      <Badge variant={block.isAvailable ? "default" : "secondary"}>
-                                        {block.location || "OPD"}
-                                      </Badge>
                                     </div>
-                                  );
-                                })}
+                                    <Badge variant={block.isAvailable ? "default" : "secondary"}>
+                                      {block.location || "OPD"}
+                                    </Badge>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           );
