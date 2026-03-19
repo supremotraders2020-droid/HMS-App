@@ -334,8 +334,8 @@ export default function HMSSidebar({ currentRole, currentUser, onNavigate, onLog
         </SidebarGroup>
         )}
 
-        {/* Support Services - Hidden for OPD_MANAGER, MEDICAL_STORE, PATHOLOGY_LAB, TECHNICIAN */}
-        {currentRole !== "OPD_MANAGER" && currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && currentRole !== "TECHNICIAN" && (
+        {/* Support Services - Hidden for OPD_MANAGER, MEDICAL_STORE, PATHOLOGY_LAB, TECHNICIAN, SUPER_ADMIN */}
+        {currentRole !== "OPD_MANAGER" && currentRole !== "MEDICAL_STORE" && currentRole !== "PATHOLOGY_LAB" && currentRole !== "TECHNICIAN" && currentRole !== "SUPER_ADMIN" && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1">Support Services</SidebarGroupLabel>
             <SidebarGroupContent>
