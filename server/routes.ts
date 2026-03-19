@@ -858,7 +858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Filter to only User Management doctors, then merge with profile data
-      const mergedDoctors = doctors
+      const filteredDoctors = doctors
         .filter(doctor => registeredDoctorNames.includes(normalizeName(doctor.name)))
         .map(doctor => {
           const profile = findMatchingProfile(doctor.name);
@@ -880,6 +880,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           return doctor;
         });
+
+      // Deduplicate by normalized name — keep the first occurrence per unique doctor
+      const seenNames = new Set<string>();
+      const mergedDoctors = filteredDoctors.filter(doctor => {
+        const key = normalizeName(doctor.name);
+        if (seenNames.has(key)) return false;
+        seenNames.add(key);
+        return true;
+      });
       
       res.json(mergedDoctors);
     } catch (error) {
