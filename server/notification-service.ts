@@ -95,6 +95,18 @@ class NotificationService {
     });
   }
 
+  // Public method to broadcast to ALL connected clients regardless of role
+  broadcastAll(data: any) {
+    const message = JSON.stringify(data);
+    this.clients.forEach((clients) => {
+      clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(message);
+        }
+      });
+    });
+  }
+
   // Public method to broadcast to a specific role (for critical alerts)
   broadcastToRole(role: string, data: any) {
     const message = JSON.stringify({

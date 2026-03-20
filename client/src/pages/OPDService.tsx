@@ -193,6 +193,8 @@ export default function OPDService() {
 
   const { data: appointments = [] } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments"],
+    refetchInterval: 30000, // Poll every 30s as fallback if WebSocket event is missed
+    staleTime: 0,
   });
 
   const { data: schedules = [] } = useQuery<Schedule[]>({

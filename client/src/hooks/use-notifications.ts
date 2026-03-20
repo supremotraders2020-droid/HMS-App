@@ -92,55 +92,119 @@ export function useNotifications({ userId, userRole, enabled = true }: UseNotifi
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data.type === "notification") {
-            // Refresh notifications
-            queryClient.invalidateQueries({ queryKey: ["/api/user-notifications", userId] });
-            
-            // If it's an appointment notification, also refresh appointments and schedules
-            // Use predicate-based invalidation to catch all appointment-related queries regardless of parameters
-            if (data.notification?.type === "appointment") {
-              queryClient.invalidateQueries({ 
-                predicate: (query) => {
-                  const key = query.queryKey;
-                  return Array.isArray(key) && (
-                    (typeof key[0] === 'string' && key[0].includes('/api/appointments')) ||
-                    (typeof key[0] === 'string' && key[0].includes('/api/doctors'))
-                  );
-                }
-              });
-            }
-          }
-          
-          // Handle admin broadcast notifications for real-time updates
-          if (data.type === "admin_notification") {
-            if (data.event === "appointment_created" || data.event === "appointment_updated") {
-              // Invalidate all appointment and doctor queries using predicate
-              queryClient.invalidateQueries({ 
-                predicate: (query) => {
-                  const key = query.queryKey;
-                  return Array.isArray(key) && typeof key[0] === 'string' && (
-                    key[0].includes('/api/appointments') ||
-                    key[0].includes('/api/doctors') ||
-                    key[0].includes('/api/activity-logs')
-                  );
-                }
-              });
-            }
-          }
-          
-          // Handle appointment update broadcasts to doctors
-          if (data.type === "appointment_update") {
-            // Invalidate all appointment and schedule queries
-            queryClient.invalidateQueries({ 
+
+          // Helper: invalidate appointment-related queries
+          const invalidateAppointments = () => {
+            queryClient.invalidateQueries({
               predicate: (query) => {
                 const key = query.queryKey;
                 return Array.isArray(key) && typeof key[0] === 'string' && (
                   key[0].includes('/api/appointments') ||
-                  key[0].includes('/api/doctors')
+                  key[0].includes('/api/time-slots') ||
+                  key[0].includes('/api/schedule-availability')
                 );
               }
             });
+          };
+
+          // Helper: invalidate prescription-related queries
+          const invalidatePrescriptions = () => {
+            queryClient.invalidateQueries({
+              predicate: (query) => {
+                const key = query.queryKey;
+                return Array.isArray(key) && typeof key[0] === 'string' &&
+                  key[0].includes('/api/prescriptions');
+              }
+            });
+          };
+
+          // Helper: invalidate patient/admission data
+          const invalidatePatients = () => {
+            queryClient.invalidateQueries({
+              predicate: (query) => {
+                const key = query.queryKey;
+                return Array.isArray(key) && typeof key[0] === 'string' && (
+                  key[0].includes('/api/patients') ||
+                  key[0].includes('/api/admissions') ||
+                  key[0].includes('/api/beds')
+                );
+              }
+            });
+          };
+
+          // Helper: invalidate schedule/doctor data
+          const invalidateSchedules = () => {
+            queryClient.invalidateQueries({
+              predicate: (query) => {
+                const key = query.queryKey;
+                return Array.isArray(key) && typeof key[0] === 'string' && (
+                  key[0].includes('/api/doctors') ||
+                  key[0].includes('/api/doctor-schedules') ||
+                  key[0].includes('/api/time-slots') ||
+                  key[0].includes('/api/schedule-availability')
+                );
+              }
+            });
+          };
+
+          if (data.type === "notification") {
+            queryClient.invalidateQueries({ queryKey: ["/api/user-notifications", userId] });
+            if (data.notification?.type === "appointment") {
+              invalidateAppointments();
+            }
           }
+
+          // Admin broadcasts
+          if (data.type === "admin_notification") {
+            const ev = data.event;
+            if (ev === "appointment_created" || ev === "appointment_updated" ||
+                ev === "appointment_confirmed" || ev === "appointment_cancelled") {
+              invalidateAppointments();
+              queryClient.invalidateQueries({ predicate: (q) => Array.isArray(q.queryKey) && typeof q.queryKey[0] === 'string' && q.queryKey[0].includes('/api/activity-logs') });
+            }
+            if (ev === "prescription_created") {
+              invalidatePrescriptions();
+            }
+            if (ev === "schedule_updated") {
+              invalidateSchedules();
+            }
+            if (ev === "patient_admitted" || ev === "patient_discharged") {
+              invalidatePatients();
+              invalidateAppointments();
+            }
+          }
+
+          // OPD Manager broadcasts (check-in, booking, cancellation)
+          if (data.type === "opd_notification") {
+            invalidateAppointments();
+          }
+
+          // Direct appointment update broadcast (sent to doctor on booking)
+          if (data.type === "appointment_update") {
+            invalidateAppointments();
+          }
+
+          // Check-in status updates broadcast
+          if (data.type === "appointment_status_update") {
+            invalidateAppointments();
+            invalidatePrescriptions();
+          }
+
+          // Slot updates
+          if (data.type === "slot_update") {
+            invalidateAppointments();
+          }
+
+          // Nurse notifications
+          if (data.type === "nurse_notification") {
+            invalidatePatients();
+          }
+
+          // Medical store / prescription push
+          if (data.type === "prescription_notification") {
+            invalidatePrescriptions();
+          }
+
         } catch (e) {
           console.error("WebSocket message parse error:", e);
         }

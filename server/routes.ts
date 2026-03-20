@@ -1054,6 +1054,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!appointment) {
         return res.status(404).json({ error: "Appointment not found" });
       }
+      // Broadcast to ALL connected clients so every open tab/user sees the update instantly
+      notificationService.broadcastAll({
+        type: "appointment_status_update",
+        event: "appointment_checked_in",
+        appointmentId: appointment.id,
+        patientName: appointment.patientName,
+        status: "checked-in",
+      });
       res.json(appointment);
     } catch (error) {
       res.status(500).json({ error: "Failed to check in appointment" });
