@@ -46,6 +46,7 @@ const patientRegistrationSchema = z.object({
   occupation: z.string().optional(),
   allergy: z.string().optional(),
   referralDoctor: z.string().optional(),
+  referralHospital: z.string().optional(),
   appointmentTime: z.string().optional(),
   languagePreferred: z.string().optional(),
   phone: z.string().optional(),
@@ -130,7 +131,8 @@ export function PatientRegistrationModal({
       maritalStatus: "SINGLE",
       occupation: "",
       allergy: "",
-      referralDoctor: "SELF",
+      referralDoctor: "",
+      referralHospital: "",
       appointmentTime: "",
       languagePreferred: "Hindi",
       phone: "",
@@ -171,7 +173,7 @@ export function PatientRegistrationModal({
       form.setValue("phone", appointmentData.phone || "");
       form.setValue("mobileNo", appointmentData.phone || "");
       form.setValue("appointmentTime", appointmentData.appointmentTime || "");
-      form.setValue("referralDoctor", appointmentData.doctorName || "SELF");
+      form.setValue("referralDoctor", "");
     }
   }, [open, appointmentData, savedRegistration, form]);
 
@@ -493,19 +495,50 @@ export function PatientRegistrationModal({
               />
             </div>
 
-            <div className="grid grid-cols-12 gap-3">
+            <div className="grid grid-cols-12 gap-3 items-end">
               <FormField
                 control={form.control}
                 name="referralDoctor"
                 render={({ field }) => (
-                  <FormItem className="col-span-6">
+                  <FormItem className="col-span-4">
                     <FormLabel>Referral Doctor</FormLabel>
                     <FormControl>
-                      <Input placeholder="SELF" {...field} />
+                      <Input placeholder="Doctor name" {...field} />
                     </FormControl>
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="referralHospital"
+                render={({ field }) => (
+                  <FormItem className="col-span-4">
+                    <FormLabel>Referral Hospital</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Hospital name" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <div className="col-span-4 pb-0.5">
+                <FormLabel className="block mb-2">Self</FormLabel>
+                <Button
+                  type="button"
+                  variant={form.watch("referralDoctor") === "SELF" ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => {
+                    if (form.watch("referralDoctor") === "SELF") {
+                      form.setValue("referralDoctor", "");
+                      form.setValue("referralHospital", "");
+                    } else {
+                      form.setValue("referralDoctor", "SELF");
+                      form.setValue("referralHospital", "");
+                    }
+                  }}
+                >
+                  Self Referred
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-12 gap-3">
