@@ -550,21 +550,6 @@ export function PatientRegistrationModal({
             <div className="grid grid-cols-12 gap-3">
               <FormField
                 control={form.control}
-                name="husbandName"
-                render={({ field }) => (
-                  <FormItem className="col-span-4">
-                    <FormLabel>Husband Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Husband's name" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-12 gap-3">
-              <FormField
-                control={form.control}
                 name="mobileNo"
                 render={({ field }) => (
                   <FormItem className="col-span-4">
@@ -597,6 +582,21 @@ export function PatientRegistrationModal({
                     <FormLabel>Ph.No (Off/Resi.)</FormLabel>
                     <FormControl>
                       <Input placeholder="Office/Home phone" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-12 gap-3">
+              <FormField
+                control={form.control}
+                name="husbandName"
+                render={({ field }) => (
+                  <FormItem className="col-span-4">
+                    <FormLabel>Husband Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Husband's name" {...field} />
                     </FormControl>
                   </FormItem>
                 )}
