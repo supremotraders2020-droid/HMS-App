@@ -550,34 +550,6 @@ export function PatientRegistrationModal({
             <div className="grid grid-cols-12 gap-3">
               <FormField
                 control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem className="col-span-6">
-                    <FormLabel>Email ID</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Email" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phoneOffice"
-                render={({ field }) => (
-                  <FormItem className="col-span-6">
-                    <FormLabel>Ph.No (Off/Resi.)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Office/Home phone" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-12 gap-3">
-              <FormField
-                control={form.control}
                 name="husbandName"
                 render={({ field }) => (
                   <FormItem className="col-span-6">
@@ -597,6 +569,34 @@ export function PatientRegistrationModal({
                     <FormLabel>Contact No / Mobile</FormLabel>
                     <FormControl>
                       <Input placeholder="Mobile number" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-12 gap-3">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className="col-span-6">
+                    <FormLabel>Email ID</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Email" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phoneOffice"
+                render={({ field }) => (
+                  <FormItem className="col-span-6">
+                    <FormLabel>Ph.No (Off/Resi.)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Office/Home phone" {...field} />
                     </FormControl>
                   </FormItem>
                 )}
