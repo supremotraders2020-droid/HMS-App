@@ -47,6 +47,9 @@ const patientRegistrationSchema = z.object({
   allergy: z.string().optional(),
   referralDoctor: z.string().optional(),
   referralHospital: z.string().optional(),
+  husbandName: z.string().optional(),
+  addressType: z.string().optional(),
+  ownerName: z.string().optional(),
   appointmentTime: z.string().optional(),
   languagePreferred: z.string().optional(),
   phone: z.string().optional(),
@@ -133,6 +136,9 @@ export function PatientRegistrationModal({
       allergy: "",
       referralDoctor: "",
       referralHospital: "",
+      husbandName: "",
+      addressType: "own",
+      ownerName: "",
       appointmentTime: "",
       languagePreferred: "Hindi",
       phone: "",
@@ -544,6 +550,21 @@ export function PatientRegistrationModal({
             <div className="grid grid-cols-12 gap-3">
               <FormField
                 control={form.control}
+                name="husbandName"
+                render={({ field }) => (
+                  <FormItem className="col-span-4">
+                    <FormLabel>Husband Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Husband's name" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-12 gap-3">
+              <FormField
+                control={form.control}
                 name="mobileNo"
                 render={({ field }) => (
                   <FormItem className="col-span-4">
@@ -582,18 +603,56 @@ export function PatientRegistrationModal({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Full address" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-12 gap-3 items-end">
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem className="col-span-8">
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Full address" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <div className="col-span-4 pb-0.5">
+                <FormLabel className="block mb-2">Residence Type</FormLabel>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={form.watch("addressType") !== "rent" ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => { form.setValue("addressType", "own"); form.setValue("ownerName", ""); }}
+                  >
+                    Own
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={form.watch("addressType") === "rent" ? "default" : "outline"}
+                    className="flex-1"
+                    onClick={() => form.setValue("addressType", "rent")}
+                  >
+                    Rent
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {form.watch("addressType") === "rent" && (
+              <FormField
+                control={form.control}
+                name="ownerName"
+                render={({ field }) => (
+                  <FormItem className="w-1/2">
+                    <FormLabel>Owner Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Property owner's name" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-12 gap-3">
               <FormField
