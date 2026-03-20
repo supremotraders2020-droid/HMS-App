@@ -118,6 +118,18 @@ export default function OPDService() {
   const [bookingDate, setBookingDate] = useState<string>("");
   const [bookingTimeSlot, setBookingTimeSlot] = useState<string>("");
   const [bookingLocation, setBookingLocation] = useState<string>("");
+  const [bookingDob, setBookingDob] = useState<string>("");
+  const [bookingAge, setBookingAge] = useState<string>("");
+
+  const calculateAgeFromDob = (dob: string): string => {
+    if (!dob) return "";
+    const today = new Date();
+    const birth = new Date(dob);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
+    return age >= 0 ? String(age) : "";
+  };
 
   // ID Card Scanning states for Book Appointment
   const [bookingIdCardType, setBookingIdCardType] = useState<string>("");
@@ -586,6 +598,8 @@ export default function OPDService() {
         title: "Appointment Booked",
         description: "Your appointment has been scheduled successfully.",
       });
+      setBookingDob("");
+      setBookingAge("");
       setActiveTab("appointments");
     },
     onError: (error: Error) => {
@@ -1585,6 +1599,36 @@ export default function OPDService() {
                       type="email"
                       placeholder="email@example.com"
                       data-testid="input-patient-email"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="patientDob">Date of Birth</Label>
+                    <Input
+                      id="patientDob"
+                      name="patientDob"
+                      type="date"
+                      max={new Date().toISOString().split('T')[0]}
+                      value={bookingDob}
+                      onChange={(e) => {
+                        const dob = e.target.value;
+                        setBookingDob(dob);
+                        setBookingAge(calculateAgeFromDob(dob));
+                      }}
+                      data-testid="input-patient-dob"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="patientAge">Age</Label>
+                    <Input
+                      id="patientAge"
+                      name="patientAge"
+                      type="number"
+                      min={0}
+                      max={150}
+                      placeholder="Auto-calculated from DOB"
+                      value={bookingAge}
+                      onChange={(e) => setBookingAge(e.target.value)}
+                      data-testid="input-patient-age"
                     />
                   </div>
                   <div className="space-y-2">
