@@ -102,11 +102,6 @@ const INDIAN_STATES = [
   "Uttarakhand", "West Bengal"
 ];
 
-const LANGUAGES = [
-  "Assamese", "Bengali", "Bodo", "Dogri", "English", "Gujarati", "Hindi", "Kannada",
-  "Kashmiri", "Konkani", "Maithili", "Malayalam", "Manipuri", "Marathi", "Nepali",
-  "Odia", "Punjabi", "Sanskrit", "Santali", "Sindhi", "Tamil", "Telugu", "Urdu"
-];
 
 export function PatientRegistrationModal({
   open,
@@ -503,46 +498,11 @@ export function PatientRegistrationModal({
                 control={form.control}
                 name="referralDoctor"
                 render={({ field }) => (
-                  <FormItem className="col-span-4">
+                  <FormItem className="col-span-6">
                     <FormLabel>Referral Doctor</FormLabel>
                     <FormControl>
                       <Input placeholder="SELF" {...field} />
                     </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="appointmentTime"
-                render={({ field }) => (
-                  <FormItem className="col-span-4">
-                    <FormLabel>Appointment Time</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="languagePreferred"
-                render={({ field }) => (
-                  <FormItem className="col-span-4">
-                    <FormLabel>Language Preferred</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {LANGUAGES.map((lang) => (
-                          <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </FormItem>
                 )}
               />
