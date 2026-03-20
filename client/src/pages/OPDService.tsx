@@ -103,6 +103,9 @@ export default function OPDService() {
   });
   const [pendingPrintAppointmentId, setPendingPrintAppointmentId] = useState<string | null>(null);
   const [printAfterSave, setPrintAfterSave] = useState(false);
+
+  // Prescription print dialog state
+  const [prescriptionViewApt, setPrescriptionViewApt] = useState<Appointment | null>(null);
   
   // Persist savedRegistrations to localStorage whenever it changes
   useEffect(() => {
@@ -578,6 +581,17 @@ export default function OPDService() {
       return response.json();
     },
     enabled: activeTab === "medicines",
+  });
+
+  const { data: viewedPrescriptions = [], isLoading: prescriptionsLoading } = useQuery<any[]>({
+    queryKey: ["/api/prescriptions/patient", prescriptionViewApt?.patientName],
+    queryFn: async () => {
+      if (!prescriptionViewApt) return [];
+      const res = await fetch(`/api/prescriptions/patient/${encodeURIComponent(prescriptionViewApt.patientName)}`);
+      if (!res.ok) throw new Error("Failed to fetch prescriptions");
+      return res.json();
+    },
+    enabled: !!prescriptionViewApt,
   });
 
   const bookAppointmentMutation = useMutation({
@@ -1898,6 +1912,19 @@ export default function OPDService() {
                           </Button>
                         </div>
                       )}
+                      {(apt.status === "completed" || apt.status === "checked-in") && (
+                        <div className="flex gap-2 mt-4 pt-4 border-t">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPrescriptionViewApt(apt)}
+                            data-testid={`button-print-prescription-${apt.id}`}
+                          >
+                            <Printer className="h-4 w-4 mr-2" />
+                            Print Prescription
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 );
@@ -2494,6 +2521,192 @@ export default function OPDService() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Prescription Print Dialog */}
+      <Dialog open={!!prescriptionViewApt} onOpenChange={(open) => { if (!open) setPrescriptionViewApt(null); }}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" data-testid="dialog-prescription-print">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Prescriptions — {prescriptionViewApt?.patientName}
+            </DialogTitle>
+            <DialogDescription>
+              All prescriptions issued for this patient during their visits
+            </DialogDescription>
+          </DialogHeader>
+
+          {prescriptionsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading prescriptions...</span>
+            </div>
+          ) : viewedPrescriptions.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p>No prescriptions found for this patient.</p>
+            </div>
+          ) : (
+            <div className="space-y-6" id="prescription-print-area">
+              {viewedPrescriptions.map((rx: any, idx: number) => {
+                let vitals: any = null;
+                try { vitals = rx.vitals ? JSON.parse(rx.vitals) : null; } catch {}
+                let medicineDetails: any[] = [];
+                try { medicineDetails = rx.medicineDetails ? JSON.parse(rx.medicineDetails) : []; } catch {}
+
+                return (
+                  <div key={rx.id} className="border rounded-md p-4 space-y-3 bg-card">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div>
+                        <p className="font-semibold text-base">{rx.prescriptionNumber || `Prescription #${idx + 1}`}</p>
+                        <p className="text-sm text-muted-foreground">Date: {rx.prescriptionDate}</p>
+                      </div>
+                      <Badge variant="outline" className={
+                        rx.prescriptionStatus === "finalized" ? "border-green-500 text-green-600" :
+                        rx.prescriptionStatus === "void" ? "border-red-500 text-red-600" :
+                        "border-yellow-500 text-yellow-600"
+                      }>
+                        {rx.prescriptionStatus?.replace(/_/g, " ").toUpperCase()}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                      <div><span className="text-muted-foreground">Doctor:</span> <span className="font-medium">{rx.doctorName}</span></div>
+                      {rx.doctorRegistrationNo && <div><span className="text-muted-foreground">Reg No:</span> <span>{rx.doctorRegistrationNo}</span></div>}
+                      <div><span className="text-muted-foreground">Patient:</span> <span>{rx.patientName}</span></div>
+                      {rx.patientAge && <div><span className="text-muted-foreground">Age:</span> <span>{rx.patientAge}</span></div>}
+                      {rx.patientGender && <div><span className="text-muted-foreground">Gender:</span> <span>{rx.patientGender}</span></div>}
+                    </div>
+
+                    {vitals && (
+                      <div className="bg-muted/40 rounded-md px-3 py-2 text-sm">
+                        <p className="font-medium mb-1 text-muted-foreground">Vitals</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1">
+                          {vitals.bp && <span>BP: {vitals.bp}</span>}
+                          {vitals.pulse && <span>Pulse: {vitals.pulse}</span>}
+                          {vitals.temp && <span>Temp: {vitals.temp}</span>}
+                          {vitals.weight && <span>Weight: {vitals.weight}</span>}
+                          {vitals.sugar && <span>Sugar: {vitals.sugar}</span>}
+                          {vitals.spo2 && <span>SpO2: {vitals.spo2}</span>}
+                        </div>
+                      </div>
+                    )}
+
+                    {rx.chiefComplaints && (
+                      <div className="text-sm">
+                        <p className="font-medium text-muted-foreground mb-0.5">Chief Complaints</p>
+                        <p>{rx.chiefComplaints}</p>
+                      </div>
+                    )}
+
+                    {rx.diagnosis && (
+                      <div className="text-sm">
+                        <p className="font-medium text-muted-foreground mb-0.5">Diagnosis</p>
+                        <p className="font-semibold">{rx.diagnosis}</p>
+                      </div>
+                    )}
+
+                    {rx.medicines && rx.medicines.length > 0 && (
+                      <div className="text-sm">
+                        <p className="font-medium text-muted-foreground mb-1">Medicines</p>
+                        {medicineDetails.length > 0 ? (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs border-collapse">
+                              <thead>
+                                <tr className="bg-muted/50">
+                                  <th className="text-left px-2 py-1 border">#</th>
+                                  <th className="text-left px-2 py-1 border">Medicine</th>
+                                  <th className="text-left px-2 py-1 border">Dosage</th>
+                                  <th className="text-left px-2 py-1 border">Frequency</th>
+                                  <th className="text-left px-2 py-1 border">Duration</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {medicineDetails.map((med: any, mi: number) => (
+                                  <tr key={mi} className="border-b">
+                                    <td className="px-2 py-1 border">{mi + 1}</td>
+                                    <td className="px-2 py-1 border font-medium">{med.name || med.medicineName}</td>
+                                    <td className="px-2 py-1 border">{med.dosage || med.dose || "—"}</td>
+                                    <td className="px-2 py-1 border">{med.frequency || "—"}</td>
+                                    <td className="px-2 py-1 border">{med.duration || "—"}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <ul className="list-disc list-inside space-y-0.5">
+                            {rx.medicines.map((med: string, mi: number) => (
+                              <li key={mi}>{med}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+
+                    {rx.investigations && (
+                      <div className="text-sm">
+                        <p className="font-medium text-muted-foreground mb-0.5">Investigations / Tests</p>
+                        <p>{rx.investigations}</p>
+                      </div>
+                    )}
+
+                    {rx.instructions && (
+                      <div className="text-sm">
+                        <p className="font-medium text-muted-foreground mb-0.5">Instructions</p>
+                        <p>{rx.instructions}</p>
+                      </div>
+                    )}
+
+                    {rx.followUpDate && (
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Follow-up:</span>{" "}
+                        <span className="font-medium">{rx.followUpDate}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {viewedPrescriptions.length > 0 && (
+            <div className="flex justify-end pt-2 border-t">
+              <Button
+                onClick={() => {
+                  const area = document.getElementById("prescription-print-area");
+                  if (!area) return;
+                  const win = window.open("", "_blank");
+                  if (!win) return;
+                  win.document.write(`
+                    <html><head><title>Prescriptions - ${prescriptionViewApt?.patientName}</title>
+                    <style>
+                      body { font-family: Arial, sans-serif; font-size: 13px; color: #000; margin: 20px; }
+                      h2 { margin-bottom: 4px; }
+                      .section { margin-bottom: 12px; }
+                      .label { color: #555; font-size: 11px; margin-bottom: 2px; }
+                      .card { border: 1px solid #ccc; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
+                      table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                      th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+                      th { background: #f0f0f0; }
+                      .badge { display: inline-block; border: 1px solid #999; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+                    </style></head><body>
+                    <h2>Gravity Hospital</h2>
+                    <p style="color:#555;margin-top:0">Prescriptions for: <strong>${prescriptionViewApt?.patientName}</strong></p>
+                    ${area.innerHTML}
+                    </body></html>
+                  `);
+                  win.document.close();
+                  win.focus();
+                  win.print();
+                }}
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Print All Prescriptions
+              </Button>
             </div>
           )}
         </DialogContent>
