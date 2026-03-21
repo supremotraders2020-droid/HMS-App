@@ -875,10 +875,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const expMatch = profile?.experience?.match(/(\d+)/);
             const feeMatch = profile?.consultationFee?.match(/(\d+)/);
             const displayName = (profile?.fullName || member.name || '').trim();
+            // Prefer: doctor profile specialty → team member department → doctors table specialty
+            // member.department is set by admin in User Management and is authoritative
+            const memberDept = member.department ? member.department.charAt(0).toUpperCase() + member.department.slice(1) : null;
+            const resolvedSpecialty = profile?.specialty || memberDept || doctorEntry.specialty;
             return {
               ...doctorEntry,
               name: displayName,
-              specialty: profile?.specialty || doctorEntry.specialty,
+              specialty: resolvedSpecialty,
               qualification: profile?.qualifications || doctorEntry.qualification,
               experience: expMatch ? parseInt(expMatch[1]) : doctorEntry.experience,
               consultationFee: feeMatch ? feeMatch[1] : null,
@@ -894,7 +898,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return {
             id: memberId,
             name: trimmedMemberName,
-            specialty: member.specialization || member.department || "General Medicine",
+            specialty: (() => {
+              const dept = member.department;
+              if (dept && dept.toLowerCase() !== 'doctor') return dept.charAt(0).toUpperCase() + dept.slice(1);
+              return "General Medicine";
+            })(),
             qualification: "MBBS",
             experience: 0,
             rating: "4.5",
