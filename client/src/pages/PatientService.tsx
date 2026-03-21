@@ -2074,34 +2074,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                             <div className="space-y-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Referred From Source</label>
-                                  <Select value={referralSourceId} onValueChange={setReferralSourceId}>
-                                    <SelectTrigger className="h-11 mt-1" data-testid="select-referral-source">
-                                      <SelectValue placeholder="Select referral source" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {referralSources.filter(s => s.sourceType === "Doctor").map((source) => (
-                                        <SelectItem key={source.id} value={source.id}>
-                                          {source.sourceName} ({source.specializations || source.sourceType})
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Or Enter Manually</label>
-                                  <Input
-                                    className="h-11 mt-1"
-                                    placeholder="Referring doctor/clinic name"
-                                    value={referredFromName}
-                                    onChange={(e) => setReferredFromName(e.target.value)}
-                                    data-testid="input-referred-from-name"
-                                  />
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Referring Doctor Name</label>
+                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Referred Doctor Name</label>
                                   <Input
                                     className="h-11 mt-1"
                                     placeholder="Dr. Name"
@@ -2111,27 +2084,27 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Urgency</label>
-                                  <Select value={referralUrgency} onValueChange={setReferralUrgency}>
-                                    <SelectTrigger className="h-11 mt-1" data-testid="select-referral-urgency">
-                                      <SelectValue placeholder="Select urgency" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="CRITICAL">Critical</SelectItem>
-                                      <SelectItem value="EMERGENCY">Emergency</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Referred Hospital Name</label>
+                                  <Input
+                                    className="h-11 mt-1"
+                                    placeholder="Hospital / clinic name"
+                                    value={referredFromName}
+                                    onChange={(e) => setReferredFromName(e.target.value)}
+                                    data-testid="input-referred-hospital-name"
+                                  />
                                 </div>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Diagnosis</label>
-                                <Input
-                                  className="h-11 mt-1"
-                                  placeholder="Primary diagnosis or suspected condition"
-                                  value={referralDiagnosis}
-                                  onChange={(e) => setReferralDiagnosis(e.target.value)}
-                                  data-testid="input-referral-diagnosis"
-                                />
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Urgency</label>
+                                <Select value={referralUrgency} onValueChange={setReferralUrgency}>
+                                  <SelectTrigger className="h-11 mt-1" data-testid="select-referral-urgency">
+                                    <SelectValue placeholder="Select urgency" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="CRITICAL">Critical</SelectItem>
+                                    <SelectItem value="EMERGENCY">Emergency</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Reason for Referral *</label>
@@ -2141,16 +2114,6 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                   value={referralReason}
                                   onChange={(e) => setReferralReason(e.target.value)}
                                   data-testid="input-referral-reason"
-                                />
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Clinical History</label>
-                                <Textarea
-                                  className="mt-1"
-                                  placeholder="Relevant clinical history and findings"
-                                  value={referralClinicalHistory}
-                                  onChange={(e) => setReferralClinicalHistory(e.target.value)}
-                                  data-testid="input-clinical-history"
                                 />
                               </div>
                               <div>
