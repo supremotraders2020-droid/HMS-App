@@ -1997,7 +1997,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               name="emergencyContact"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Contact Name</FormLabel>
+                                  <FormLabel>Name</FormLabel>
                                   <FormControl>
                                     <Input className="h-11" {...field} data-testid="input-emergency-contact" />
                                   </FormControl>
@@ -2010,7 +2010,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                               name="emergencyPhone"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Contact Phone</FormLabel>
+                                  <FormLabel>Contact No</FormLabel>
                                   <FormControl>
                                     <Input className="h-11" {...field} data-testid="input-emergency-phone" />
                                   </FormControl>
