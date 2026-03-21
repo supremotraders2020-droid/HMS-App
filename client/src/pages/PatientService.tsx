@@ -2101,6 +2101,7 @@ export default function PatientService({ currentRole = "ADMIN", currentUserId }:
                                     <SelectValue placeholder="Select urgency" />
                                   </SelectTrigger>
                                   <SelectContent>
+                                    <SelectItem value="ROUTINE">Routine</SelectItem>
                                     <SelectItem value="CRITICAL">Critical</SelectItem>
                                     <SelectItem value="EMERGENCY">Emergency</SelectItem>
                                   </SelectContent>
